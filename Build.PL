@@ -121,6 +121,7 @@ my $build = Module::Build->new(
         'Params::Validate'       => '1.13',
         'RRDs'                   => '1.4008',
         'URI'                    => '1.64',
+        'XML::Dumper'            => '0',
     },
     PL_files => {
         'lib/Munin.pm.PL'                 => 'lib/Munin.pm',

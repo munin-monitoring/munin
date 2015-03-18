@@ -1,4 +1,10 @@
 #! /bin/sh
 
-sqlite3  ./sandbox/var/opt/munin/datafile.sqlite '.dump' > ./sandbox/var/opt/munin/datafile.sql
-echo "./sandbox/var/opt/munin/datafile.sql"
+set -e
+set -u
+
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+. "${FINDBIN}/common.sh"
+
+sqlite3  "${SANDBOX}/var/lib/datafile.sqlite" '.dump' > "${SANDBOX}/var/lib/datafile.sql"
+echo "${SANDBOX}/var/lib/datafile.sql"

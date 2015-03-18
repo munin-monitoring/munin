@@ -1,83 +1,94 @@
-#!/bin/bash
+#!/bin/sh
 
-cat <<EOF
-
-This script is currently broken.
-
-do "perl Build.PL" to configure. "make", "make test" and "make install" in the meantime.
-
-Use "perldoc Build.PL" for options
-
-EOF
-
-exit 0
-
-
-fakeroot()
-{
-	# We don't care about permission in dev_script files
-	"$@"
-}
-
-banner()
-{
-	echo *************************************************
-	echo * "$@"
-	echo *************************************************
-}
-
-
+set -e
+set -u
 
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
-. $FINDBIN/common.sh
+. "${FINDBIN}/common.sh"
 
-cd $BASEDIR
+banner() {
+	echo "*************************************************"
+	echo "* " "$@"
+	echo "*************************************************"
+}
 
-if [ "$1" = "clean" ]; then
+clean_sandbox() {
 	banner CLEAN
-	./dev_scripts/stop_munin-node
 	./dev_scripts/stop_munin-sched
 
 	rm -rf sandbox
-	mkdir sandbox
-	make clean || exit
-fi
 
-banner BUILD
+	./Build distclean
+}
 
-# Avoiding the real CHOWN (/bin/true)
-make CHOWN=true DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
-make install DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin CHOWN=true USER=$(id -un) GROUP=$(id -gn) PLUGINUSER=$(id -un) CGIUSER=$(id -un) || exit
+make_sandbox() {
+	banner BUILD
+	perl Build.PL --install_base "${BASEDIR}/sandbox" --debug
+	./Build install
 
-# This is to have a local dev node.
-# Usually it is much more practical to install the real one, and use it
-if [ "$1" = "node" ]; then
-    banner INSTALL NODE
-    fakeroot make install-plugins-prime DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin CHOWN=true USER=$(shell id -un) GROUP=$(shell id -gn) PLUGINUSER=$(shell id -un) CGIUSER=$(shell id -un) || exit
-    banner CONFIGURE NODE
-    perl -pi -e "s/port 4949/port 4948/; 
-                 s/user root/user $USER/; 
-                 s/group root/group $GROUPS/;
-                 s|^(port .*)|\$1
+	xargs mkdir -p -v <<EOF
+		sandbox/etc/munin-conf.d
+		sandbox/etc/plugin-conf.d
+		sandbox/etc/plugins
+		sandbox/var/log
+		sandbox/var/lib
+		sandbox/var/run
+		sandbox/var/spool
+EOF
+}
+
+configure_plugins() {
+	banner CONFIGURE PLUGINS
+	munin-node-configure --suggest --shell --families=contrib,auto | sh -x
+}
+
+configure_node() {
+	banner CONFIGURE NODE
+	perl -pi -e "s/port 4949/port ${MUNIN_NODE_PORT}/;
+				 s/user root/user $USER/;
+				 s/group root/group $GROUP/;
+				 s|^(port .*)|\$1
 
 tls disabled
-tls_private_key $BASEDIR/common/t/tls/node_key.pem
-tls_certificate $BASEDIR/common/t/tls/node_cert.pem
-tls_ca_certificate $BASEDIR/common/t/tls/CA/ca_cert.pem
+tls_private_key $BASEDIR/t/tls/node_key.pem
+tls_certificate $BASEDIR/t/tls/node_cert.pem
+tls_ca_certificate $BASEDIR/t/tls/CA/ca_cert.pem
 tls_verify_certificate yes
 tls_verify_depth 5
-|; " $DESTDIR/etc/opt/munin/munin-node.conf
+|; " "${CONFDIR}/munin-node.conf"
 
-    perl -pi -e "s/(address 127\.0\.0\.1)/\$1\n    port 4948/;
-                 s|(# a simple host tree)|tls disabled
-tls_private_key $BASEDIR/common/t/tls/master_key.pem
-tls_certificate $BASEDIR/common/t/tls/master_cert.pem
-tls_ca_certificate $BASEDIR/common/t/tls/CA/ca_cert.pem
+}
+
+configure_master() {
+	banner CONFIGURE MASTER
+
+	perl -pi -e "s/(address 127\.0\.0\.1)/\$1\n    port ${MUNIN_NODE_PORT}/;
+				 s|(# a simple host tree)|tls disabled
+tls_private_key $BASEDIR/t/tls/master_key.pem
+tls_certificate $BASEDIR/t/tls/master_cert.pem
+tls_ca_certificate $BASEDIR/t/tls/CA/ca_cert.pem
 tls_verify_certificate yes
 tls_verify_depth 5
 
-\$1|" $DESTDIR/etc/opt/munin/munin.conf
+\$1|" "${CONFDIR}/munin.conf"
+}
 
-    banner CONFIGURE PLUGINS
-    ./dev_scripts/run munin-node-configure --shell --families=contrib,auto | sh -x
-fi
+stop_node() {
+	./dev_scripts/stop_munin-node
+}
+
+case ${1:-} in
+	clean)
+		stop_node
+		clean_sandbox
+		;;
+	node)
+		make_sandbox
+		configure_plugins
+		configure_node
+		configure_master
+		;;
+	*)
+		make_sandbox
+		;;
+esac
