@@ -572,6 +572,8 @@ $graphs{bin_relay_log} = {
     data_sources => [
 	{name => 'Binlog_cache_disk_use', label => 'Binlog Cache Disk Use'},
 	{name => 'Binlog_cache_use',      label => 'Binlog Cache Use'},
+	{name => 'Binlog_stmt_cache_disk_use', label => 'Binlog Statement Cache Disk Use'},
+	{name => 'Binlog_stmt_cache_use',      label => 'Binlog Statement Cache Use'},
 	{name => 'ma_binlog_size',        label => 'Binary Log Space'},
 	{name => 'relay_log_space',       label => 'Relay Log Space'},
     ],
