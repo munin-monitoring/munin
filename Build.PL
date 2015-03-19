@@ -142,7 +142,6 @@ my $build = Module::Build->new(
             script/munin-asyncd
             script/munin-cron
             script/munin-doc
-            script/munin-datafile2storable
             script/munin-graph
             script/munin-html
             script/munin-httpd
@@ -150,8 +149,6 @@ my $build = Module::Build->new(
             script/munin-node
             script/munin-node-configure
             script/munin-run
-            script/munin-sched
-            script/munin-storable2datafile
             script/munin-update
             )
     ],
