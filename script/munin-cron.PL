@@ -11,7 +11,7 @@ my $output_file = shift;
 open my $fh, ">", $output_file or die "Can't open $output_file: $!";
 
 print $fh <<"EOF";
-#!/usr/sh
+#!/bin/sh
 
 # This used to test if the executables were installed.  But that is
 # perfectly redundant and suppresses errors that the admin should see.
