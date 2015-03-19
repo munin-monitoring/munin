@@ -719,10 +719,10 @@ sub emit_main_index {
 
 sub copy_web_resources {
     my ($staticdir, $htmldir) = @_;
-	unless(dircopy($staticdir, "$htmldir/static")){
-		ERROR "[ERROR] Could not copy contents from $staticdir to $htmldir";
-		die "[ERROR] Could not copy contents from $staticdir to $htmldir";
-	}
+    $File::Copy::Recursive::CPRFComp = 1;
+    unless(dircopy($staticdir, "$htmldir/static")){
+        ERROR "Could not copy contents from $staticdir to $htmldir\n";
+    }
 }
 
 sub instanciate_comparison_templates {
