@@ -7,4 +7,4 @@ FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 . "${FINDBIN}/common.sh"
 
 find "${SANDBOX}/bin" -type f -perm -a-rx -print0 \
-	| xargs -0 -n 1 -r -t perl -pi -e "s,bin/perl -T,bin/perl,"
+	| xargs -0 -n 1 -t perl -pi -e "s,bin/perl -T,bin/perl,"

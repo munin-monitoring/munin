@@ -11,8 +11,16 @@ SANDBOX="${BASEDIR}/sandbox"
 CONFDIR="${SANDBOX}/etc"
 RUNDIR="${SANDBOX}/var/run"
 
-USER=$(id -un)
-GROUP=$(id -gn)
+case "$(uname)" in
+	Darwin)
+		USER=$(id -u -n)
+		GROUP=$(id -g -n)
+		;;
+	*)
+		USER=$(id -un)
+		GROUP=$(id -gr)
+		;;
+esac
 
 MUNIN_NODE_PORT=4947
 MUNIN_HTTPD_PORT=4948
