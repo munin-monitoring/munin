@@ -262,9 +262,15 @@ File::Find::find( { wanted => \&_find_web_templates_wanted }, 'master/www' );
 File::Find::find( { wanted => \&_find_web_static_wanted }, 'master/static' );
 
 sub _find_web_templates_wanted {
+	my ($src, $dst);
     if ( lstat && -f _ && /\.tmpl$/ ) {
-        my $src = $File::Find::name;
-        my $dst = join( '/', 'web/templates', $_ );
+		if ($File::Find::dir =~ m{/partial$}smx) {
+			$dst = join( '/', 'web/templates/partial/', $_ );
+		}
+		else {
+			$dst = join( '/', 'web/templates', $_ );
+		}
+		$src = $File::Find::name;
         $web_files->{$src} = $dst;
     }
 }
