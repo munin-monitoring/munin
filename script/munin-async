@@ -29,6 +29,7 @@ use Munin::Node::SpoolReader;
 use Munin::Node::SpoolWriter;
 use Munin::Common::Defaults;
 use Munin::Common::Logger;
+use Munin::Common::Utils qw( is_valid_hostname );
 
 # Disable buffering
 $| = 1;
@@ -69,6 +70,13 @@ if ($help) {
 if ($cleanupandexit) {
 	cleanup();
 	exit;
+}
+
+if ($overridehost) {
+    if (! is_valid_hostname($overridehost)) {
+        CRITICAL(sprintf("invalid hostname: %s\n", $overridehost));
+        exit(65);
+    }
 }
 
 if ( $verbose || $debug || $screen ) {
