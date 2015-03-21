@@ -27,11 +27,12 @@ use Pod::Usage;
 
 use Munin::Node::SpoolReader;
 use Munin::Node::SpoolWriter;
+use Munin::Common::Defaults;
 
 # Disable buffering
 $| = 1;
 
-my $SPOOLDIR = "@@SPOOLDIR@@";
+my $SPOOLDIR = $Munin::Common::Defaults::MUNIN_SPOOLDIR;
 my $hostname;
 my $overridehost;
 

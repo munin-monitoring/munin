@@ -29,10 +29,11 @@ use Pod::Usage;
 use List::Util qw(min max);
 
 use Munin::Node::SpoolWriter;
+use Munin::Common::Defaults;
 
 my $host = "localhost:4949";
 my $metahostname;
-my $SPOOLDIR = "@@SPOOLDIR@@";
+my $SPOOLDIR = $Munin::Common::Defaults::MUNIN_SPOOLDIR;
 my $intervalsize = 86400;
 my $timeout = 3600;
 my $minrate;
