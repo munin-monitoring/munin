@@ -12,51 +12,61 @@ use Fcntl qw(:DEFAULT :flock);
 use Munin::Common::Defaults;
 use Munin::Common::SyncDictFile;
 use Munin::Common::Logger;
+use Munin::Common::Utils;
 
+use Params::Validate qw( :all );
+use List::Util qw( first );
 
 use constant DEFAULT_TIME => 86_400;      # put 1 day of results into a spool file
 use constant MAXIMUM_AGE  => 7;           # remove spool files more than a week old
+use constant DEFAULT_HOSTNAME => 'munin.example.com';
 
 sub _snap_to_epoch_boundary { my $self = shift; return $_[0] - ($_[0] % $self->{interval_size}) }
 
+sub new {
+    my $class = shift;
+    my $validated = validate(
+        @_, {
+            spooldir => {
+                type => SCALAR,
+                default => $Munin::Common::Defaults::MUNIN_SPOOLDIR,
+            },
+            interval_size => { type => SCALAR, optional => 1 },
+            interval_keep => { type => SCALAR, optional => 1 },
+            hostname      => { type => SCALAR, optional => 1 },
+        }
+    );
+    my $self = bless {}, $class;
 
-sub new
-{
-    my ($class, %args) = @_;
+    $self->{spooldir} = $validated->{spooldir};
 
-    $args{spooldir} or croak "no spooldir provided";
+    my $spooldirhandle;
+    opendir $spooldirhandle, $self->{spooldir}
+      or croak "Could not open spooldir '$self->{spooldir}': $!";
+    $self->{spooldirhandle} = $spooldirhandle;
 
-    opendir $args{spooldirhandle}, $args{spooldir}
-        or croak "Could not open spooldir '$args{spooldir}': $!";
+    $self->{metadata} = _init_metadata($self->{spooldir});
 
-    $args{metadata} = _init_metadata($args{spooldir});
+    $self->{interval_size} = first { defined($_) and $_ > 0 } (
+        $validated->{interval_size},
+        $self->{metadata}->{interval_size},
+        DEFAULT_TIME
+    );
 
-    if(!$args{interval_size} && (my $interval_size = get_metadata(\%args, "interval_size"))) {
-	    $args{interval_size} = $interval_size;
-    }
+    $self->{interval_keep} = first { defined($_) and $_ > 0 } (
+        $validated->{interval_keep},
+        $self->{metadata}->{interval_keep},
+        MAXIMUM_AGE,
+    );
 
-    if(!$args{interval_keep} && (my $interval_keep = get_metadata(\%args, "interval_keep"))) {
-	    $args{interval_keep} = $interval_keep;
-    }
+    $self->{hostname} = first { defined($_) and _is_valid_hostname($_) } (
+        $validated->{hostname},
+        $self->{metadata}->{hostname},
+        DEFAULT_HOSTNAME,
+    );
 
-    if(!$args{hostname} && (my $hostname = get_metadata(\%args, "hostname"))) {
-	    $args{hostname} = $hostname;
-    }
+    return $self;
 
-    $args{interval_size} = DEFAULT_TIME unless ($args{interval_size});
-    $args{interval_keep} = MAXIMUM_AGE unless ($args{interval_keep});
-    $args{hostname} = "unknown" unless ($args{hostname});
-
-    set_metadata(\%args, "interval_size", $args{interval_size}) if $args{interval_size} != get_metadata(\%args, "interval_size");
-    set_metadata(\%args, "interval_keep", $args{interval_keep}) if $args{interval_keep} != get_metadata(\%args, "interval_keep");
-    set_metadata(\%args, "hostname", $args{hostname}) if $args{hostname} ne get_metadata(\%args, "hostname");
-
-    # TODO: paranoia check?  except dir doesn't (currently) have to be
-    # root-owned.
-
-    # TODO: set umask
-
-    return bless \%args, $class;
 }
 
 
