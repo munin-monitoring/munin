@@ -73,9 +73,9 @@ if ($cleanupandexit) {
 
 if ( $verbose || $debug || $screen ) {
     my %log;
-    $log{output} = 'screen'  if $screen;
-    $log{level}  = 'verbose' if $verbose;
-    $log{level}  = 'debug'   if $debug;
+    $log{output} = 'screen' if $screen;
+    $log{level}  = 'info'   if $verbose;
+    $log{level}  = 'debug'  if $debug;
     Munin::Common::Logger::configure(%log);
 }
 
