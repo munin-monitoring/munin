@@ -92,8 +92,6 @@ $hostname = $spoolreader->get_metadata("hostname") || hostname();
 $hostname = $overridehost if $overridehost;
 chomp($hostname);
 
-LOGCROAK("spooldir [$SPOOLDIR] not found") unless -d $SPOOLDIR;
-
 INFO("Starting");
 
 print "# munin node at $hostname\n";
