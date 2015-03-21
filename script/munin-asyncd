@@ -43,6 +43,7 @@ my $nocleanup;
 my $do_fork;
 my $verbose;
 my $debug;
+my $screen;
 my $help;
 my $update_rate = 300;
 my @nodes;
