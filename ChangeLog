@@ -1,4 +1,214 @@
 
+munin-2.1.11, 2015-03-23
+
+-------
+Summary
+-------
+
+That release brings 2 things : the _REMOVAL_ of CGI and a new build system.
+
+CGI is replaced by a full httpd server that is directly embedded in munin. It
+makes configuration *much* easier. No SSL or authentication is done. Security
+can be delegated to a reverse proxy, such as the popular nginx.
+
+Also building should now take a fraction of the time it used to take.
+
+------------------
+Detailed Changelog
+------------------
+
+Basil Upornikov (3):
+      Typo corrected
+      Typo corrected
+      Typo corrected
+
+Daniel Black (3):
+      add threads running to mysql plugin on connections graph
+      mysql: don't suggest galera graphs if no galera
+      mysql: Add Binlog_stmt_cache_* to graph bin_relay_log
+
+Dmitry Marakasov (5):
+      Whitespace consistency
+      Don't hardcode graph period
+      Remove duplicate label definition
+      Use consistent Nginx spelling among nginx_ plugins
+      Don't use unnecessary bold lines for nginx_* graphs
+
+Kenyon Ralph (1):
+      fix typo in graph_title
+
+Lee Clemens (4):
+      Use ReadBackwards to tail log, ignore graph if using graph_strategy cgi
+      Also match munin-html log when html_strategy cgi
+      logical simplification
+      Add File::ReadBackwards travis dependency
+
+Michael Scherer (1):
+      Add autoconfig support to mailman plugin
+
+Peter Palfrader (1):
+      master: also _sanitise_plugin_name() on spoolfetch
+
+Quentin S. (1):
+      Fix huge SVG graphs on report page
+
+Steve Schnepp (61):
+      cgi/g: handle CDEF fields
+      cgi/g: handle pure virtual plugin
+      cgi/g: adding a dump of the rrd command
+      cgi/g: adding some comment on regex
+      cgi/g: remove the 95%
+      Revert "cgi/g: fix error & logging"
+      cgi/g: retrieve last updated from aliased field
+      cgi/g: handling negatives
+      Adding a doc badge
+      Update the copyright date
+      dev_scripts: adding html to install_fast
+      cgi/h: suppress warnings in perl prior to 5.20
+      cgi/h: suppress warning and enable overriding
+      cgi/h: adding support for .xml & .json
+      cgi/h: pretty-print JSON
+      Revert "cgi/html: adding a DEBUG of the datastructure"
+      m/update: Add "service_categories" lines for "other"
+      doc: add some warn about tgz
+      doc: fix search JS
+      cgi/h: using the $cgi object
+      cgi/h: convert to http server
+      cgi/g: use a $cgi object
+      cgi/g: convert to http server
+      doc: adding dev environment
+      graph cat
+      cgi: have a munin-http that unifies everything
+      cgi: the $cgi->header doesn't understand status
+      cs: remove the specfic munin-api
+      cgi: remove the CGI.
+      master: adding munin-httpd
+      build: remove obsolete scripts
+      build: remove unused deps
+      dev: using clean & node as args
+      master: move munin-httpd
+      gitignore: update to the new build system
+      Makefile: fix typo in Munin.pm generation
+      httpd: should use the real perl
+      gitignore: add builded files
+      Revert "master: also _sanitise_plugin_name() on spoolfetch"
+      asyncd: uniform logs
+      master: mis-merged Graph.pm & HTML.pm
+      Makefile: uncondionnaly precise the destdir
+      dev_scripts: common should override FINDBIN
+      master: munin-cgi-graph is obsolete.
+      travis: perl 5.8 is not supported anymore
+      gitignore: adding sandbox
+      renamed munindoc to munin-doc for consistency
+      dev_scripts: adding some tainting support
+      Makefile: fix paths & be verbose
+      update: use --config in addition to --config_file
+      master: handle upper/lower limits in graph
+      master: fix the choosing of Graph.pm vs HTML.pm
+      master: svg is not forced anymore
+      master: R_PATH is empty with HTTP served directly
+      dev_scripts: adding deps script
+      dev_scripts: adding a deps script
+      m-u: fix --config arg
+      dev_scripts: adding some temp message
+      Build: IO::Socket::INET6 version 2.69 is enough
+      dev_scripts: the install_fast script is obsolete
+      Graph: handle undef values
+
+Stig Sandbeck Mathisen (82):
+      Add missing "timeout" option for munin.conf in the munin guide
+      Add a Build.PL
+      Move all perl modules to lib/
+      Move all tests to t/
+      Move all scripts to script/
+      Rewrite perl hashbangs in script/
+      Add dependencies and scripts
+      Add dependencies and scripts to Build.PL
+      Create MANIFEST and other build metadata automatically
+      Add test requirements for plugins
+      Remove the subdir Build.PL files
+      Make Build.PL handle munin-api
+      tidy
+      Install "munin-api" from Build.PL
+      Build.PL, script_files must be an array reference
+      Rewrite Makefile, add a generated Munin::Location
+      Settle on lib/Munin.pm
+      Ensure the mocked node object has config to satisfy the code it tests
+      Make travis-ci read dependencies from Build.PL
+      Add IO::Scalar to list of test dependencies
+      Replace looped cat|perl and cat|egrep|awk with pure perl
+      Generate lib/Munin.pm from Build.PL
+      Prepare Munin::Common::Defaults for automatic generation
+      Perltidy
+      Shrinkwrap Munin::Common::Defaults in PL
+      Generate lib/Munin/Common/Defaults.pm
+      Remove SVN tag
+      Ensure Module::Build gets correct metadata
+      Ignore more generated files
+      Add variables in Build.PL, use them from config and defaults
+      Make the rest of the paths configurable
+      Add test for syntax checking plugins to be installed
+      expand @@VARIABLES@@ in plugins
+      Remove preprocessing in hashbang
+      Remove preprocessing in hashbang
+      These plugins are written in bash
+      use single [] in if statement
+      remove bashism
+      Remove preprocessing in hashbang
+      Set "/usr/local/bin/bash" as shell for the hp-ux plugins
+      Use correct variable name
+      Declare variable before use
+      Remove dead code containing undeclared variable
+      Add test depdendency on File::ReadBackwards
+      Move plugin sybase_space to contrib
+      travis: Install devscript for "checkbashisms"
+      Add more test dependencies for plugins
+      Add more test dependencies for plugins
+      Add a "plugins" build element
+      Add POD for Build.PL
+      Install plugins
+      Use consistent naming
+      make make make munin
+      update Makefile comments
+      remove inactive java plugin parts from Makefile
+      Remove .in from all plugin files
+      Make plugins executable
+      Dereference hashrefs to support 5.10, 5.12
+      Clean up _find_plugins_wanted in Build.PL
+      Use File::Find for web static files and templates
+      Regroup and add comments for the install code
+      Sanitise branch name in generated version
+      Generate munin-cron with proper paths
+      Make the mktemp location a plugin env.variable
+      Skip installation of munin-check
+      Remove subversion $Id$ tags
+      Remove emacs mode hints
+      Remove vim mode hints
+      update dev_scripts after build system refactoring
+      Add dependency needed by munin-httpd
+      Remove munin-sched
+      Remove munin-storable2datafile
+      Remove munin-datafile2storable
+      bugfix: /bin/sh is the interpreter to use
+      dev scripts: get USER and GROUP for Darwin
+      xargs -r switch is not available on Darwin
+      bugfix: "scalar %hash" does not return number of keys
+      bugfix: handle templates under partial/
+      bugfix: no need to die() if we cannot copy the static files
+      add "monthly" to graph whitelist
+      Remove outdated editor coding style hints
+      Get spooldir from Munin::Common::Defaults
+
+Viktor Szépe (1):
+      Added graph_category
+
+chteuchteu (1):
+      Master report pages design enhancements
+
+duritong (1):
+      select correct avcstats location
+
+
 munin-2.1.10, 2014-12-07
 
 -------
