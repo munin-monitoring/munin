@@ -12,7 +12,7 @@ use Fcntl qw(:DEFAULT :flock);
 use Munin::Common::Defaults;
 use Munin::Common::SyncDictFile;
 use Munin::Common::Logger;
-use Munin::Common::Utils;
+use Munin::Common::Utils qw( is_valid_hostname );
 
 use Params::Validate qw( :all );
 use List::Util qw( first );
@@ -59,7 +59,7 @@ sub new {
         MAXIMUM_AGE,
     );
 
-    $self->{hostname} = first { defined($_) and _is_valid_hostname($_) } (
+    $self->{hostname} = first { defined($_) and is_valid_hostname($_) } (
         $validated->{hostname},
         $self->{metadata}->{hostname},
         DEFAULT_HOSTNAME,
