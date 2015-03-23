@@ -1,0 +1,104 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+snmp__memory - Munin plugin to monitor memory usage of a remote host
+via SNMP.
+
+=head1 CONFIGURATION
+
+The following configuration variables are used
+
+ host      - SNMP host to contact (default taken from link name)
+ port      - SNMP port to use (default 161)
+ community - SNMP community string to use (default "public")
+
+=head1 NOTES
+
+Based on snmp__df plugin.... If this plugin reports
+different numbers from the snmp_winmem plugin it must be due
+to snmp impementation quirks....
+
+=head1 AUTHOR
+
+Copyright (C) 2006 Lars Strand
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=head1 MAGIC MARKERS
+
+ #%# family=snmpauto
+ #%# capabilities=snmpconf
+
+=cut
+
+use strict;
+use Munin::Plugin::SNMP;
+
+
+# memory usage pr. process
+my $hrSWRunPerfMem = "1.3.6.1.2.1.25.5.1.1.2.";
+my $hrMemorySize = "1.3.6.1.2.1.25.2.2.0";
+
+if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
+{
+    print "require $hrSWRunPerfMem\n";
+    print "require $hrSWRunPerfMem [1-9]\n";
+    print "require $hrMemorySize\n"; # memsize
+    exit 0;
+}
+
+my $session = Munin::Plugin::SNMP->session();
+my $memsize = $session->get_single($hrMemorySize) * 1024;
+
+if (defined $ARGV[0] and $ARGV[0] eq "config")
+{
+    my ($host) = Munin::Plugin::SNMP->config_session();
+    print "host_name $host\n";
+    print "graph_title Memory usage\n";
+    print "graph_category system\n";
+    print "graph_vlabel Bytes\n";
+    print "graph_info This grap shows memory usage.\n";
+
+    # some devices reports negative memtotal value
+    print "# Total memsize reported $memsize..." if $Munin::Plugin::SNMP::DEBUG;
+
+    if ($memsize > 0) 
+    {
+	print "graph_args --base 1024 -l 0 --upper-limit $memsize\n";
+    }
+    else
+    {
+	print "graph_args --base 1024 -l 0\n";
+    }
+
+    print "memory.draw AREA\n";
+    print "memory.label memory\n";
+   
+    exit 0;
+}
+
+# calculate total memory
+my $processes = $session->get_by_regex ($hrSWRunPerfMem, "[1-9]");
+
+# the values
+my $memtotal = 0;
+while (my ($pid, $mem) = each(%$processes)) {
+    $memtotal += $mem;
+}
+
+printf "memory.value %d\n", $memtotal * 1024;

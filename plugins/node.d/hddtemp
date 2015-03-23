@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# Plugin to monitor harddrive temperatures through SMART.
+#
+# This plugin is an alternative to hddtemp_smartctl, which is
+# the preferred one.
+#
+# client-conf.d/-options:
+# 	
+# 	drives		-- List drives to monitor. E.g. "hda hdc".
+#
+#%# family=contrib
+
+HDDTEMP=/usr/sbin/hddtemp
+
+if [ "$1" = "autoconf" ]; then
+        if [ -x "$HDDTEMP" ]; then
+                echo yes
+                exit 0
+        else
+                echo no
+                exit 0
+        fi
+fi
+
+if [ "$1" = "config" ]; then
+
+        echo 'graph_title HDD temperature'
+        echo 'graph_args --base 1000 -l 0'
+        echo 'graph_vlabel Degrees Celsius'
+        echo 'graph_category sensors'
+        for a in $drives ; do echo $a.label $a ; done
+        exit 0
+fi
+
+for a in $drives ; do printf "$a.value $(hddtemp -n -q /dev/$a)\n" ; done
+

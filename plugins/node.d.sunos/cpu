@@ -1,0 +1,103 @@
+#!/bin/sh
+
+: << =cut
+
+=head1 NAME
+
+cpu - Plugin to monitor CPU usage
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+	if [ -x /usr/bin/kstat ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 0
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title CPU usage'
+	echo 'graph_order system user waitio idle'
+	echo 'graph_category system'
+	ncpu=`kstat -p -c misc -n system_misc -s '/^ncpus$/' | cut -f2 -d'	'`
+	cpumax=`expr "$ncpu" '*' 100`
+	if [ "$scaleto100" = "yes" ]; then
+		graphlimit=100
+	else
+		graphlimit=$cpumax
+	fi
+	echo "graph_args --base 1000 --lower-limit 0 --rigid --upper-limit $graphlimit"
+	echo 'graph_vlabel %'
+	echo 'graph_scale no'
+	echo 'graph_period ${graph_period}'
+	echo 'system.label system'
+	echo 'system.draw AREA'
+	echo 'system.type DERIVE'
+	echo 'system.min 0'
+	echo "system.max $cpumax"
+	print_adjusted_thresholds system "$graphlimit"
+	echo 'user.label user'
+	echo 'user.draw STACK'
+	echo 'user.type DERIVE'
+	echo 'user.min 0'
+	echo "user.max $cpumax"
+	print_adjusted_thresholds user "$graphlimit"
+	echo "waitio.max $cpumax"
+	echo 'waitio.label waitio'
+	echo 'waitio.draw STACK'
+	echo 'waitio.type DERIVE'
+	echo 'waitio.min 0'
+	print_adjusted_thresholds waitio "$graphlimit"
+	echo 'idle.label idle'
+	echo 'idle.draw STACK'
+	echo 'idle.type DERIVE'
+	echo 'idle.min 0'
+	echo "idle.max $cpumax"
+	print_adjusted_thresholds idle "$graphlimit"
+	if [ "$scaleto100" = "yes" ]; then
+		echo "system.cdef system,$ncpu,/"
+		echo "user.cdef user,$ncpu,/"
+		echo "waitio.cdef waitio,$ncpu,/"
+		echo "idle.cdef idle,$ncpu,/"
+	fi
+	exit 0
+fi
+
+kstat -p -c misc -m cpu_stat -s '/^(user|kernel|wait|idle)$/' | sed -e 's/.*://' | awk '
+BEGIN {
+	map["user"] = "user"
+	map["kernel"] = "system"
+	map["wait"] = "waitio"
+	map["idle"] = "idle"
+}
+length(map[$1]) > 0 {
+	sum[map[$1]] += $2
+	total += $2
+}
+END {
+	for (item in sum) {
+		print item ".value", sum[item]
+	}
+}'

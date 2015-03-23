@@ -1,0 +1,188 @@
+#!/bin/sh
+
+: <<'=cut'
+
+=head1 NAME
+
+numa - Plugin to graph  NUMA page hits and misses
+
+=head1 APPLICABLE SYSTEMS
+
+Linux kernels since 2.6.12
+
+=head1 CONFIGURATION
+
+This plugin does not require configuration.
+
+The number after numa_ indicates the numa node. It is followed by
+either 'memory' or 'process'.
+
+numa_0_memory
+numa_1_process
+
+=head1 INTERPRETATION
+
+Remote and foreign access takes more time than local access.
+
+Hugepages have separate counters and aren't included in these graphs.
+
+=head1 AUTHORS
+
+Copyright (C) 2014 Daniel Black - Open Query
+
+=head1 LICENSE
+
+GNU GPLv2
+
+=begin comment
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=end comment
+
+=head1 REFERENCE
+
+Reference: https://www.kernel.org/doc/Documentation/numastat.txt
+
+=head1 BUGS
+
+Possibly some.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf suggest
+
+=cut
+
+
+# A single node isn't interesting so we look for node 1 (not node 0)
+if [ "$1" = "autoconf" ]; then
+  if [ -r /sys/devices/system/node/node1/numastat ]; then
+    echo yes
+  else
+    echo "no (/sys/devices/system/node/node1/numastat not found)"
+  fi
+  exit 0
+fi
+
+if [ "$1" = "suggest" ]; then
+  node=0
+  while [ 1 ]; do
+    if [ -r "/sys/devices/system/node/node${node}/numastat" ]; then
+      echo "${node}_process"
+      echo "${node}_memory"
+    else
+      exit 0
+    fi
+    node=$(( $node + 1 ))
+  done
+fi
+
+parts=${0##*numa_}
+NODE=${parts%%_*}
+RESOURCE=${0##*_}
+
+if [ "$1" = "config" ]; then
+
+  case "$RESOURCE" in
+  process)
+      echo 'graph_order local_node other_node'
+      echo "graph_title NUMA allocations from processes running on node ${NODE}"
+      echo 'graph_args -l 0'
+      echo 'graph_vlabel pages'
+      echo 'graph_info Shows where processes on this node got memory.'
+    	echo 'graph_category system'
+      echo "local_node.label local_node"
+      echo "local_node.info A process ran on this node and got memory from it."
+      echo "local_node.type DERIVE"
+      echo "other_node.label other_node"
+      echo "other_node.info A process ran on this node and got memory from another node."
+      echo "other_node.type DERIVE"
+      ;;
+  memory)
+      echo 'graph_order numa_hit numa_miss numa_foreign interleave_hit'
+      echo "graph_title NUMA Memory allocations against node ${NODE}"
+      echo 'graph_args -l 0'
+      echo 'graph_vlabel pages'
+      echo 'graph_info Status of memory allocation requests of this node'
+    	echo 'graph_category system'
+      echo "numa_hit.label numa_hit"
+      echo "numa_hit.info A process wanted to allocate memory from this node and succeeded."
+      echo "numa_hit.type DERIVE"
+      echo "numa_miss.label numa_miss"
+      echo "numa_miss.info A process wanted to allocate memory from another node but ended up with memory from this node."
+      echo "numa_miss.type DERIVE"
+      echo "numa_foreign.label numa_foreign"
+      echo "numa_foreign.info A process wanted to allocate memory from this node but ended up with memory from another node."
+      echo "numa_miss.type DERIVE"
+      echo "interleave_hit.label interleave_hit"
+      echo "interleave_hit.info Interleaving wanted to allocate memory from this node and succeeded."
+      echo "interleave_hit.type DERIVE"
+      ;;
+  *)
+      echo "$RESOURCE not defined."
+      exit 1
+      ;;
+  esac
+  exit 0
+fi
+
+numa_hit=U
+numa_miss=U
+numa_foreign=U
+interleave_hit=U
+local_node=U
+other_node=U
+
+while read line ; do
+  key=${line%% *}
+  value=${line##* }
+  case "${key}" in
+  numa_hit)
+    numa_hit=$value
+    ;;
+  numa_miss)
+    numa_miss=$value
+    ;;
+  numa_foreign)
+  	numa_foreign=$value
+  	;;
+  interleave_hit)
+    interleave_hit=$value
+    ;;
+  local_node)
+    local_node=$value
+    ;;
+  other_node)
+    other_node=$value
+    ;;
+  esac
+done < /sys/devices/system/node/node${NODE}/numastat 
+
+case "$RESOURCE" in
+  process)
+    echo "local_node.value $local_node"
+    echo "other_node.value $other_node"
+    ;;
+  memory)
+    echo "numa_hit.value $numa_hit"
+    echo "numa_miss.value $numa_miss"
+    echo "numa_foreign.value $numa_foreign"
+    echo "interleave_hit.value $interleave_hit"
+    ;;
+  *)
+    exit 1
+    ;;
+esac

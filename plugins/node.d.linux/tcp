@@ -1,0 +1,94 @@
+#!/bin/sh
+
+: <<EOF
+
+=head1 NAME
+
+tcp - Plugin to monitor IPV4/6 TCP socket status on a Linux host.
+
+=head1 AUTHOR
+
+Copyright 2009 Tim Small <tim@seoss.co.uk>
+
+=head1 LICENSE
+
+GPLv2
+
+=begin comment
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=end comment
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf
+
+=cut
+
+EOF
+
+case $1 in
+    config)
+        cat <<EOF
+graph_title TCP
+graph_vlabel TCP Sockets
+graph_category network
+graph_args -l 0
+graph_info TCP socket states for the local machine
+EOF
+
+		for i in established syn_sent syn_recv fin_wait1 \
+			fin_wait2 time_wait close close_wait last_ack \
+			listen closing
+		do
+			echo ${i}.label $i
+			echo ${i}.info Sockets in state $i
+		done
+
+        exit 0
+		;;
+    autoconf)
+        if [ -f /proc/net/tcp -o -f /proc/net/tcp6 ]
+		then
+			echo yes
+			exit 0
+		else
+			echo no
+			exit 1
+		fi
+esac
+
+# See #include <netinet/tcp.h>
+
+cat /proc/net/tcp* | awk '
+
+  match ($4, /0[0-9A-B]/) {
+      STATE[$4]++;
+  }
+
+  END {
+      printf "established.value %d\n", STATE["01"];
+      printf "syn_sent.value %d\n",    STATE["02"];
+      printf "syn_recv.value %d\n",    STATE["03"];
+      printf "fin_wait1.value %d\n",   STATE["04"];
+      printf "fin_wait2.value %d\n",   STATE["05"];
+      printf "time_wait.value %d\n",   STATE["06"];
+      printf "close.value %d\n",       STATE["07"];
+      printf "close_wait.value %d\n",  STATE["08"];
+      printf "last_ack.value %d\n",    STATE["09"];
+      printf "listen.value %d\n",      STATE["0A"];
+      printf "closing.value %d\n",     STATE["0B"];
+  }'

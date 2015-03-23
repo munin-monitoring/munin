@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- cperl  -*-
 #
 # Merge munin db (datafile{,.storable} / limits) for multi-update masters
 # environment
@@ -12,7 +11,7 @@ use strict;
 use Storable;
 use Munin::Master::Utils;
 
-# Exemple of config (munin-merge.conf):
+# Example of config (munin-merge.conf):
 #   # what to merge ?
 #   merge_datafile yes
 #   merge_limits yes
@@ -44,7 +43,7 @@ Usage:
 	$0 merge_dbdir
 
 merge_dbdir should include a config file named $configfile_name.
-This is also a security to avoid accidentaly breaking everything.
+This is also a security to avoid accidentally breaking everything.
 EOF
 	exit 1;
 }
@@ -169,5 +168,3 @@ merge_datafile if ($config->{'merge_datafile'});
 merge_limits if ($config->{'merge_limits'});
 
 exit 0;
-
-# vim: syntax=perl ts=8

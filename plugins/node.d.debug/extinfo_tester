@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#%# family=test
+
+do_ () {
+	cat <<EOF
+pending.value 2
+pending.extinfo +dash +diffutils
+hold.value 0
+EOF
+}
+
+do_config () {
+	cat <<EOF
+graph_title Extinfo tester
+pending.label pending
+pending.warning 0:0
+hold.label hold
+EOF
+}
+
+do_$1

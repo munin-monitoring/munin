@@ -1,0 +1,70 @@
+#!/bin/sh
+
+#%# family=test
+
+random() {
+	head -c4 /dev/urandom | od -l | awk ' { print $2 } '
+}
+
+if [ "$1" = "" ]; then
+
+cat <<EOF
+multigraph mg_donald_mb
+temp1.value $(( 20 + $(( $(random) % 5 )) ))
+
+multigraph mg_ferdinand_mb
+temp1.value $(( 20 + $(( $(random) % 5 )) ))
+
+multigraph mg_donald_disk
+sda.value $(( 20 + $(( $(random) % 5 )) ))
+sdb.value $(( 20 + $(( $(random) % 5 )) ))
+sdc.value $(( 20 + $(( $(random) % 5 )) ))
+
+multigraph mg_ferdinand_disk
+sda.value $(( 20 + $(( $(random) % 5 )) ))
+EOF
+
+exit 0
+
+fi
+
+if [ "$1" = "config" ]; then
+
+cat <<EOF
+multigraph mg_donald_mb
+temp1.label temp1
+
+multigraph mg_donald_disk
+sda.label sda
+sdb.label sdb
+sdc.label sdc
+
+multigraph mg_ferdinand_disk
+sda.label sda
+
+multigraph mg_ferdinand_mb
+temp1.label temp1
+
+multigraph mg_temperatures
+graph_args --base 1000 -l 0
+graph_category Sensors
+graph_title Different temperatures
+graph_order \
+        donald_disk \
+        ferdinand_disk=mg_ferdinand_disk.sda \
+        donald_mb=mg_donald_mb.temp1 \
+        ferdinand_mb=mg_ferdinand_mb.temp1 
+temperatures.donald_disk.sum \
+        mg_donald_disk.sda \
+        mg_donald_disk.sdb \
+        mg_donald_disk.sdc 
+temperatures.donald_disk.cdef donald_disk,3,/
+temperatures.donald_mb.label Mainboard donald
+EOF
+
+exit 0
+
+fi
+
+echo "Do what now?">&2
+exit 1

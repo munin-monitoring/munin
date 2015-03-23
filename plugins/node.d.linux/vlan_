@@ -1,0 +1,70 @@
+#!/bin/sh
+#
+# Wildcard-script to monitor network interfaces. To monitor an
+# interface, link vlan_<interface> to this file. E.g.
+#
+#    ln /usr/share/munin/node/plugins-contrib/vlan_ /etc/munin/node.d/vlan_eth0_1
+#
+# ...will monitor eth0.1
+#
+# Parameters:
+#
+# 	config
+# 	autoconf
+# 	suggest
+#
+#%# family=manual
+#%# capabilities=autoconf suggest
+
+INTERFACE=$(basename $0 | sed 's/^vlan_//g' | tr '_' '.')
+
+if [ "$1" = "autoconf" ]; then
+    if [ ! -d /proc/net/vlan ] ; then 
+	echo "no (no vlan support)"
+	exit 0
+    fi
+    if [ ! -d -r /proc/net/vlan ] ; then
+	echo "no (cannot not read /proc/net/vlan)"
+	exit 0
+    fi
+    if [ ! -x /proc/net/vlan ] ; then
+	echo "no (cannot cd to /proc/net/vlan)"
+	exit 0
+    fi
+
+    echo yes
+    exit 0
+fi
+
+if [ "$1" = "suggest" ]; then
+    for file in /proc/net/vlan/*; do
+	if [ ! "$file" = "/proc/net/vlan/config" ]; then
+	    basename $file | tr '.' '_'
+	fi
+    done
+    exit 0
+fi
+
+if [ "$1" = "config" ]; then
+	echo "graph_order received transmitted" 
+	echo "graph_title VLAN $INTERFACE Traffic"
+	echo 'graph_args --base 1024'
+	echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'
+	echo 'graph_category network'
+	echo 'received.label bps'
+        echo 'received.type DERIVE'
+        echo 'received.min 0'
+	echo 'received.graph no'
+	echo 'received.cdef received,8,*'
+	echo 'received.draw AREA'
+        echo 'transmitted.label bps'
+	echo 'transmitted.type DERIVE'
+	echo 'transmitted.min 0'
+	echo 'transmitted.negative received'
+	echo 'transmitted.cdef transmitted,8,*'
+	echo 'transmitted.draw AREA'
+	exit 0
+fi
+
+awk "/bytes received/ { print \"received.value \" \$4 } /bytes transmitted/ { print \"transmitted.value \" \$4 }" < /proc/net/vlan/$INTERFACE
+

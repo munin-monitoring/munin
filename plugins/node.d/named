@@ -1,0 +1,172 @@
+#!/bin/sh
+
+: << =cut
+
+=head1 NAME
+
+named - Plugin to monitor named statistics
+
+=head1 ABOUT
+
+This is a bit experimental, we will have to see which statistics prove to have
+any meaning to get a feel with what happens on the nameserver.
+
+=head1 USAGE
+
+In your named.conf you must have statistics-interval set:
+
+ options {
+    ...
+    statistics-interval 1;
+    ...
+ };
+
+The number is in minutes.  At each interval just 3 lines is dumped.  It can be
+desturbing if you usually read the logs yourself, but a 1 minute interval
+ensures very updated information to munin.  5 minutes is the maximum I'd say.
+
+The name of the file where syslog puts daemon output - ie the named statistics
+output.  On solaris this is /var/adm/messages, on most linuxes it is
+/var/log/messages.  But on Debian it is /var/log/daemon.log which is read
+restricted so we have to run as a group or user with read rights, or remove the
+restrictions on the log file.
+
+=head1 CONFIGURATION
+
+Configuration parameters for /etc/munin/named,
+if you need to override the defaults below:
+
+ [named]
+  env.logfile   - set which log file to use
+
+To ensure read access to the log files, you will need to add something like:
+
+ [named]
+  group adm
+
+=head2 DEFAULT CONFIGURATION
+
+ [named]
+  env.logfile /var/adm/messages or /var/log/daemon.log
+
+=head1 AUTHOR
+
+Nicolai Langfeldt (janl@linpro.no) 27.8.2003
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+=begin comment
+
+These magic markers are used by munin-node-configure when installing
+munin-node.
+
+=end comment
+
+ #%# family=contrib
+
+=cut
+
+if [ -n "$logfile" ]; then
+    SYSLOGFILE=$logfile
+else 
+    if [ -f /var/adm/messages ]; then
+	SYSLOGFILE=/var/adm/messages
+    else
+	SYSLOGFILE=/var/log/daemon.log
+    fi
+fi
+
+# ----------------------------------------------------------------------
+
+pick_stat () {
+    ret=`echo "$2" | sed "s/.* *$1=\([0-9]*\).*/\1/"`
+    if [ ! "$ret" ]; then
+    	echo 0;
+    else
+    	echo $ret
+    fi
+}
+
+do_stats () {
+
+    if [ ! -f $SYSLOGFILE ] ; then 
+	echo $SYSLOGFILE is unavailable to me >&2
+	exit 1
+    fi
+
+    # Get out the last XSTATS and NSTATS lines
+    XSTATS=`grep 'named.*XSTATS' "$SYSLOGFILE" | tail -1`
+    # NSTATS=`grep 'named.*NSTATS' "$SYSLOGFILE" | tail -1`
+
+    # We concentrate on what clients communicate with us about
+    # and counters that we suspect can indicate abuse or error conditions
+
+    # Received Queries: Total volume of queries received. 
+    # This should be nice and smooth.
+    echo "queries.value `pick_stat RQ "$XSTATS"`"
+
+    # Sent Answers: This should be the same as RQ except when there are
+    # errors.  May not be very interesting.
+    echo "answers.value `pick_stat SAns "$XSTATS"`"
+
+    # Sent and Forwarded queries, in a proxy setting this should be
+    # the same as Received Queries (?)
+    echo "forwarded.value `pick_stat SFwdQ "$XSTATS"`" 
+
+    # Received Zone Transfer queries - should be low.  High value could
+    # indicate some odd error or some kind of abuse
+    echo "axfr.value `pick_stat RAXFR "$XSTATS"`"	# Received AXFR Qs
+
+    # Received TCP connections: These are used for zone transfers or
+    # oversized (>512 byte) answers.  A high value here could indicate
+    # that you need to trim down the size of your answers somehow (Do you
+    # have a ton of MXes or NSes that gets reported back?), or this could
+    # be due to an error.  Or it could be due to abuse.
+    echo "tcp.value `pick_stat RTCP "$XSTATS"`"
+    
+    # Get a total of errors
+    errexpr="
+	    `pick_stat RNXD "$XSTATS"` +
+	    `pick_stat RFail "$XSTATS"` +
+	    `pick_stat RErr "$XSTATS"` +
+	    `pick_stat SErr "$XSTATS"` +
+	    `pick_stat RIQ "$XSTATS"` + 
+	    `pick_stat RFErr "$XSTATS"` ";
+
+    echo "errors.value `expr $errexpr`"
+}
+
+case $1 in
+    config)
+	cat <<'EOF'
+graph_title BIND DNS Query statistics
+graph_vlabel Queries / ${graph_period}
+graph_scale no
+queries.label Queries
+queries.type DERIVE
+queries.min 0
+answers.label Answers
+answers.type DERIVE
+answers.min 0
+forwarded.label Forwarded
+forwarded.type DERIVE
+forwarded.min 0
+axfr.label AXFRs
+axfr.type DERIVE
+axfr.min 0
+tcp.label Qs by TCP
+tcp.type DERIVE
+tcp.min 0
+errors.label Errors
+errors.type DERIVE
+errors.min 0
+EOF
+	exit 0
+	;;
+esac
+
+do_stats

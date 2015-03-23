@@ -1,0 +1,125 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+tomcat_jvm - Plugin to monitor the memory of the JVM in Tomcat
+servers.
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+=over 4
+
+=item url
+
+Override default status-url
+
+=item port
+
+HTTP port number
+
+=item user
+
+Manager username
+
+=item password
+
+Manager password
+
+=back
+
+=head1 USAGE
+
+Needs access to http://<user>:<password>@localhost:8080/manager/status?XML=true (or modify the address for another host). 
+
+Tomcat 5.0 or higher.
+
+A munin-user in $CATALINA_HOME/conf/tomcat-users.xml should be set up for this to work.
+
+Tip: To see if it's already set up correctly, just run this plugin with the parameter "autoconf". If you get a "yes", everything should work like a charm already.
+
+tomcat-users.xml example:
+  <user username="munin" password="<set this>"
+        roles="standard,manager"/>
+
+=head1 AUTHOR
+
+Rune Nordbøe Skillingstad <runesk@linpro.no>
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use Munin::Plugin::HTTP;
+
+my $ret = undef;
+
+if(!eval "require XML::Simple;") {
+    $ret .= "XML::Simple not found";
+}
+
+my $UA       = Munin::Plugin::HTTP->new;
+my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@%s:%d/manager/status?XML=true";
+my $PORT     = exists $ENV{'port'}     ? $ENV{'port'}     : exists $ENV{'ports'} ? $ENV{'ports'} : 8080;
+my $HOST     = exists $ENV{'host'}     ? $ENV{'host'}     : "127.0.0.1";
+my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
+my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
+
+my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
+
+if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
+    if($ret) {
+	print "no ($ret)\n";
+	exit 0;
+    }
+    my $repsonse = $UA->get($url);
+    if($repsonse->is_success and $repsonse->content =~ /<status>.*<\/status>/im) {
+	print "yes\n";
+	exit 0;
+    } else {
+	print "no (no tomcat status)\n";
+	exit 0;
+    }
+}
+
+if(exists $ARGV[0] and $ARGV[0] eq "config") {
+    print "graph_title Tomcat JVM memory\n";
+    print "graph_args --base 1024 -l 0\n";
+    print "graph_vlabel Bytes\n";
+    print "graph_category tomcat\n";
+    print "graph_order free used max\n";
+    print "free.label free bytes\n";
+    print "free.draw AREA\n";
+    print "used.label used bytes \n";
+    print "used.draw STACK\n";
+    print "max.label maximum bytes\n";
+    print "max.draw LINE2\n";
+    exit 0;
+}
+
+my $xs = new XML::Simple;
+my $response = $UA->get($url);
+my $xml = $xs->XMLin($response->content);
+
+if($xml->{'jvm'}->{'memory'}->{'free'} && 
+    $xml->{'jvm'}->{'memory'}->{'total'} &&
+    $xml->{'jvm'}->{'memory'}->{'max'}) {
+    print "free.value " . $xml->{'jvm'}->{'memory'}->{'free'} . "\n";
+    print "used.value " . 
+	  ($xml->{'jvm'}->{'memory'}->{'total'} - 
+	      $xml->{'jvm'}->{'memory'}->{'free'}) . "\n";
+    print "max.value " . $xml->{'jvm'}->{'memory'}->{'max'} . "\n";
+} else {
+    print "free.value U\n";
+    print "used.value U\n";
+    print "max.value U\n";
+}

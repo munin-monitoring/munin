@@ -1,0 +1,138 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+jmx_tomcat_dbpools - Plugin to monitor the database connection pools of a Tomcat application server via JMX
+
+=head1 APPLICABLE SYSTEMS
+
+Tested with Tomcat 5.5/6.0 on Sun JVM 6. Please use this plugin as a template for other application-server specific monitoring.
+
+Any JVM that supports JMX should in theory do.
+
+=head1 CONFIGURATION
+
+  [jmx_tomcat_dbpools*]
+    env.ip 127.0.0.1
+    env.port 5400
+    env.username monitorRole
+    env.password SomethingSecret
+    # The critical and warning levels are in % of the pool size
+    env.critical 90
+    env.warning 70
+
+    env.JRE_HOME /usr/lib/jvm/java-6-sun/jre
+
+Needed configuration on the Tomcat side: add
+
+  -Dcom.sun.management.jmxremote \
+  -Dcom.sun.management.jmxremote.port=5400 \
+  -Dcom.sun.management.jmxremote.ssl=false \
+  -Dcom.sun.management.jmxremote.authenticate=false
+
+to CATALINA_OPTS in your startup scripts.
+
+Replace authenticate=false with 
+  -Dcom.sun.management.jmxremote.password.file=/etc/tomcat/jmxremote.password \
+  -Dcom.sun.management.jmxremote.access.file=/etc/tomcat/jmxremote.access
+ ...if you want authentication.
+
+jmxremote.password:
+ monitorRole SomethingSecret
+
+jmxremote.access:
+ monitorRole readonly
+
+=head1 BUGS
+
+No encryption supported in the JMX connection.
+
+=head1 AUTHORS
+
+=encoding UTF-8
+
+Code written by Jimmy Olsen, Redpill Linpro AS. This code also 
+uses code written by Mo Amini, Diyar Amin and Younes Hajji, 
+Høgskolen i Oslo/Oslo University College.
+
+Previous work on JMX plugin by Aleksey Studnev. Support for
+authentication added by Ingvar Hagelund, Redpill Linpro AS.
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+
+=cut
+
+use strict;
+
+my $beans="Catalina:type=DataSource,class=javax.sql.DataSource,name=*";
+my $munin_jar='@@JAVALIBDIR@@/munin-jmx-plugins.jar';
+my $java='@@JAVARUN@@';
+my $ip=$ENV{'ip'} || "127.0.0.1";
+my $port=$ENV{'port'} || "5400";
+
+if($ENV{'JRE_HOME'}) {
+    $java="$ENV{'JRE_HOME'}/bin/java";
+}
+
+sub config() {
+    open(CMD, "-|", $java, "-cp", $munin_jar, "org.munin.plugin.jmx.Beans", $beans, "maxActive") or die "Error: could not run \"$java -cp $munin_jar org.munin.plugin.jmx.Beans maxActive\": $!";
+
+    print "graph_title Tomcat database pool overview\n";
+    print "graph_vlabel current connections\n";
+    print "graph_info Shows the number of connections used for every pool in a Tomcat instance\n";
+    print "graph_category tomcat\n";
+
+    while(my $line = <CMD>) {
+        chomp($line);
+        if($line =~ /^[^\t]+,name="([^\t"]+)"\t([^\t]+)\t([^\t]+)$/) {
+            my $max   = $3;
+            my $label = $1;
+            my $field = "v" . $label; # Prefix with a known good char, as field names can't start with a number
+            $field =~ s/[^A-Za-z0-9]/_/g;
+            print "$field.label $label\n$field.max $max\n";
+            if(defined $ENV{'critical'}) {
+                print "$field.critical " . ($max * $ENV{'critical'} / 100), "\n";
+            }
+            if(defined $ENV{'warning'}) {
+                print "$field.warning " . ($max * $ENV{'warning'} / 100), "\n";
+            }
+        }
+    }
+    close(CMD);
+}
+
+sub fetch() {
+
+    # Fetch bean values (through jmx) via the command line. We basically run the class "org.munin.plugin.jmx.Beans"
+    # with the parameters <bean> and <filter>, the <bean> being a bean pattern to fetch (in this case 
+    # "Catalina:type=DataSource,class=javax.sql.DataSource,name=*", and <filter> being "numActive" (the single field
+    # we're actually interested in). We can fetch multiple fields by listing them all as parameters, or list all fields
+    # by not supplying a filter (only a bean).
+    open(CMD, "-|", $java, "-cp", $munin_jar, "org.munin.plugin.jmx.Beans", $beans, "numActive") or die "Error: could not run \"$java -cp $munin_jar org.munin.plugin.jmx.Beans maxActive\": $!";
+
+    while(my $line = <CMD>) {
+        chomp($line);
+        if($line =~ /^[^\t]+,name="([^\t"]+)"\t([^\t]+)\t([^\t]+)$/) {
+            my $num   = $3;
+            my $field = "v" . $1; # Prefix with a known good char, as field names can't start with a number
+            $field =~ s/[^A-Za-z0-9]/_/g;
+            print "$field.value $num\n";
+        }
+    }
+    close(CMD);
+}
+
+$ENV{'ip'} = $ip;
+$ENV{'port'} = $port;
+
+if(defined $ARGV[0] and $ARGV[0] eq "config") {
+    config();
+} else {
+    fetch();
+}

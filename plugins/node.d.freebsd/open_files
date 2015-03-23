@@ -1,0 +1,53 @@
+#!/bin/sh
+# 
+# Plugin to monitor the number of open files in the system.
+#
+# Parameters:
+# 	
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# Magic markers (Used by munin-config and some installation scripts.
+# Optional):
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+    if [ -x /sbin/sysctl ]; then
+        /sbin/sysctl kern.openfiles > /dev/null
+    	if [ $? = "0" ]; then
+	    	echo yes
+    		exit 0
+    	else
+		    echo no
+		    exit 0
+	    fi
+    else
+        echo no
+        exit 0
+    fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title File table usage'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel number of open files'
+	echo 'graph_category system'
+	echo 'graph_info This graph monitors the number of open files.'
+	echo 'used.label open files'
+	echo 'used.info The number of currently open files.'
+	echo 'max.label max open files'
+	echo 'max.info The maximum supported number of open files.'
+	/sbin/sysctl -n kern.maxfiles | awk  '{printf "used.warning %d\nused.critical %d\n",$1*0.92,$1*0.98}'
+	exit 0
+fi
+
+#awk '{print "used.value " $1-$2 "\nmax.value " $3}' < /proc/sys/fs/file-nr
+echo -n 'max.value '
+/sbin/sysctl -n kern.maxfiles
+echo -n 'used.value '
+/sbin/sysctl -n kern.openfiles

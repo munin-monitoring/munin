@@ -1,0 +1,225 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+
+use English qw(-no_match_vars);
+use Getopt::Long;
+use Pod::Usage;
+use Munin::Common::Logger;
+
+use Munin::Master::Update;
+use Munin::Master::Config;
+use Munin::Master::Utils;
+
+
+# TODO
+#
+# - Include data from Munin::Master::Config in config dump?
+# - nested groups
+
+Getopt::Long::Configure(qw(auto_help));
+
+my $globconfig = Munin::Master::Config->instance();
+my $config = $globconfig->{'config'};
+
+sub main {
+    exit_if_run_by_super_user();
+
+    configure();
+
+    if ( $config->{debug} || $config->{screen} ) {
+        my %log;
+        $log{output} = 'screen' if $config->{screen};
+        $log{level}  = 'debug'  if $config->{debug};
+        Munin::Common::Logger::configure(%log);
+    }
+
+    my $update = Munin::Master::Update->new();
+    $update->run();
+
+    return 0;
+}
+
+
+sub configure {
+    my %args = parse_args();
+
+    # Uses default file if config_file is not defined by arguments.
+    $config->parse_config_from_file($args{config});
+
+    if (defined $config->{'includedir'}) {
+	my $dirname = $config->{'includedir'};
+
+	my $DIR;
+	opendir($DIR, $dirname) or
+	    WARN "[Warning] Could not open includedir directory $dirname: $OS_ERROR\n";
+	my @files = grep { ! /^\.|~$/ } readdir($DIR);
+	closedir($DIR);
+
+	@files = map { $_ = $dirname.'/'.$_; } (sort @files);
+
+	foreach my $f (@files) {
+	    $config->parse_config_from_file($f);
+	}
+    }
+
+    # Arguments overrides settings from config file.  Note that
+    # this only handles settings that are on the base level, not
+    # anything within groups or hosts.
+    $config->set(\%args);
+}
+
+
+sub parse_args {
+    my $do_usage = 0;
+    my $do_version = 0;
+
+    my %args = (
+        "version" => \&print_version_and_exit,
+    );
+
+    GetOptions (
+        \%args, 
+        "config|config_file=s",
+        "debug",
+        "screen",
+        "fork!",
+        "host=s@",
+        "service=s@",
+        "timeout=s",
+        "version!",
+    ) or pod2usage(1);
+
+    delete $args{version};
+
+    $args{limit_hosts} = { map { $_ => 1 } @{$args{host}} };
+    delete $args{host};
+
+    $args{limit_services} = { map { $_ => 1 } @{$args{service}} };;
+    delete $args{service};
+
+    return %args;
+}
+
+
+exit main() unless caller;
+
+
+1;
+
+__END__
+
+=encoding utf8
+
+=head1 NAME
+
+munin-update - A program to gather data from machines running munin-node
+
+=head1 SYNOPSIS
+
+munin-update [options]
+
+ Options:
+     --config_file=<file>    Use <file> as configuration file. 
+     --debug                 Enable debug messages.
+     --screen                Send log messages the screen (STDERR).
+     --[no]fork              Query hosts in parallell (--fork), or 
+                             sequentially (--nofork). [--fork]
+     --host <host>	     Limit graphed hosts to <host>. Multiple --host 
+                             options may be supplied.
+     --service <service>     Limit graphed services to <service>. Multiple
+ 			     --service options may be supplied.
+     --timeout=<seconds>     TCP timeout when talking to clients. [$timeout]
+     --help                  View this message.
+     --version               View version information.
+
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<< --config_file=<file> >>
+
+Use E<lt>fileE<gt> as the configuration file. [@@CONFDIR@@/munin.conf]
+
+=item B<< --[no]debug >>
+
+If set, log debug messages. [--nodebug]
+
+=item B<< --[no]fork >>
+
+If set, will fork off one process for each host. [--fork]
+
+=item B<< --host <host> >>
+
+Limit fetched data to those from E<lt>host<gt>. Multiple --host
+options may be supplied. [unset]
+
+=item B<< --service <service> >>
+
+Limit fetched data to those of E<lt>serviceE<gt>. Multiple --service
+options may be supplied. [unset]
+
+=item B<< --timeout <seconds> >>
+
+Set the network timeout to <seconds>. [180]
+
+=item B<< --help >>
+
+Print the help message then exit.
+
+=item B<< --version >>
+
+Print version information then exit.
+
+=back
+
+
+=head1 DESCRIPTION
+
+
+Munin-update is a part of the package Munin, which is used in
+combination with Munin's node.  Munin is a group of programs to gather
+data from Munin's nodes, graph them, create html-pages, and optionally
+warn Nagios about any off-limit values.
+
+Munin-update does the gathering. It is usually only used from within
+munin-cron.
+
+It contacts each host's munin-node in turn, gathers data from it, and
+stores them in .rrd-files. If necessary, it will create the rrd-files
+and the directories to store them in.
+
+
+=head1 FILES
+
+	@@CONFDIR@@/munin.conf
+	@@DBDIR@@/*
+	@@LOGDIR@@/munin-update
+	@@STATEDIR@@/*
+
+
+=head1 BUGS
+
+For a list of bugs concerning munin-update, see FIX<point to right
+ticket report>.
+
+Please report bugs in the bug tracker at L<http://munin-monitoring.org/>.
+
+
+=head1 AUTHORS
+
+The Munin Team. FIX
+
+
+=head1 COPYRIGHT
+
+Copyright © 2002-2009 Jimmy Olsen, Audun Ytterdal, Tore Andersson, Kjell-Magne Øierud, Linpro AS, Redpill Linpro AS
+
+This is free software; see the source for copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
+This program is released under the GNU General Public License.

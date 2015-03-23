@@ -1,8 +1,10 @@
 #! /bin/sh
 
+set -e
+set -u
+
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
-. $FINDBIN/common.sh
+. "${FINDBIN}/common.sh"
 
-cd $BASEDIR
-
-perl -pi -e "s,bin/perl -T,bin/perl," $( find $FINDDIR -type f -executable )
+find "${SANDBOX}/bin" -type f -perm -a-rx -print0 \
+	| xargs -0 -n 1 -t perl -pi -e "s,bin/perl -T,bin/perl,"

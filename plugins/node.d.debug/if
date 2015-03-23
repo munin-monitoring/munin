@@ -1,0 +1,216 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+if - plugin to monitor network interfaces
+
+=head1 APPLICABLE SYSTEMS
+
+Every Linux system with network interfaces configured.
+
+=head1 CONFIGURATION
+
+This plugin automatically detects the network interfaces that have seen traffic by using /proc/net/dev.
+
+To specify the location of the /proc/net/dev, set the PROCNETDEV environment
+variable.  For example:
+
+  [if]
+  env.PROCNETDEV /proc/net/dev
+
+=head1 USAGE
+
+Link this plugin to /etc/munin/plugins/ and restart the munin-node.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 BUGS
+
+None known.
+
+=head1 AUTHOR
+
+Brian De Wolf
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+
+use warnings;
+use strict;
+
+use Munin::Plugin;
+
+my $PROCNETDEV = ($ENV{procnetdev} or
+            (-r "/proc/net/dev" and "/proc/net/dev"));
+my $mode = ($ARGV[0] or "print");
+
+if($mode eq "autoconf") {
+	if($PROCNETDEV and -r $PROCNETDEV) {
+		print "yes\n";
+	} else {
+		print "no\n";
+	}
+	exit 0;
+}
+
+
+# Collect data
+# 
+open(FH, $PROCNETDEV)
+    or die "Failed to open $PROCNETDEV: $!";
+
+my %nics;
+
+# Skip the header
+<FH>;<FH>;
+while(<FH>) {
+    chomp;
+    my @fields = split(/:?\s+/);
+
+    # This regex is from if_ autoconf
+    next if $fields[1] !~ /^(eth|tap|bond|wlan|ath|ra|sw|vlan|venet|veth|msh)[0-9]+(\.[0-9]+)?$/;
+    # Skip this interface if all counters are zero
+    next if !grep { /^\d+$/ and $_ != 0 } @fields;
+
+    my $nic = $fields[1];
+    $nic =~ s/\./_/;
+
+    $nics{$nic}{in_bytes} = $fields[2];
+    $nics{$nic}{out_bytes} = $fields[10];
+    $nics{$nic}{in_packets} = $fields[3];
+    $nics{$nic}{out_packets} = $fields[11];
+    $nics{$nic}{in_errors} = $fields[4];
+    $nics{$nic}{out_errors} = $fields[12];
+
+}
+
+close FH
+    or die "Failed to close $PROCNETDEV: $!";
+
+
+# Print data
+#
+foreach my $type (qw(bytes packets errors)) {
+    my ($unit);
+    if($type eq "bytes") {
+        $unit = "bits";
+    } elsif($type eq "packets") {
+        $unit = "packets";
+    } elsif($type eq "errors") {
+        $unit = "errors";
+    }
+    print "\nmultigraph if_$type\n";
+    if($mode eq 'config') {
+        print <<EOF;
+graph_title Network $unit per interface
+graph_args --base 1000
+graph_vlabel $unit in (-) / out (+) per second
+graph_category network
+EOF
+        print "graph_order";
+        foreach my $dir (qw(in out)) {
+            foreach my $nic (keys %nics) {
+                print " $type\_$nic\_$dir=if_$type.if_$type\_$nic.if_$type\_$nic\_$dir.$type\_$nic\_$dir";
+            }
+        }
+        print "\n\n";
+    }
+    # Print overview graphs
+    foreach my $nic (keys %nics) {
+        foreach my $dir (qw(in out)) {
+            my $fname = "$type\_$nic\_$dir";
+            if($mode eq 'config') {
+                print <<EOF;
+$fname.label $nic
+$fname.type DERIVE
+$fname.min 0
+$fname.info $unit $dir by $nic
+$fname.draw LINE1
+$fname.update no
+EOF
+                print "$fname.cdef $fname,8,*\n"
+                    if($type eq 'bytes');
+                print "$fname.negative $type\_$nic\_in\n"
+                    if($dir eq 'out');
+                print "$fname.graph no\n"
+                    if($dir eq 'in');
+                print_thresholds($fname);
+            } else {
+                print "$fname.value " . $nics{$nic}{"${dir}_$type"} . "\n";
+            }
+        }
+    }
+
+    # Per-interface graphs
+    foreach my $nic (keys %nics) {
+        print "\nmultigraph if_$type.if_$type\_$nic\n";
+        if($mode eq 'config') {
+            print <<EOF;
+graph_title $nic $unit per second
+graph_args --base 1000
+graph_vlabel $unit per second
+graph_category network
+EOF
+            print "graph_order";
+            foreach my $dir (qw(in out)) {
+                print " $type\_$nic\_$dir=if_$type\_$nic\_$dir.$type\_$nic\_$dir";
+            }
+            print "\n\n";
+        }
+
+        foreach my $dir (qw(in out)) {
+            my $fname = "$type\_$nic\_$dir";
+            if($mode eq 'config') {
+                print <<EOF;
+$fname.label $nic
+$fname.type DERIVE
+$fname.min 0
+$fname.update no
+EOF
+                print "$fname.cdef $fname,8,*\n"
+                    if($type eq 'bytes');
+                print "$fname.negative $type\_$nic\_in\n"
+                    if($dir eq 'out');
+                print "$fname.graph no\n"
+                    if($dir eq 'in');
+            } else {
+                print "$fname.value " . $nics{$nic}{"${dir}_$type"} . "\n";
+            }
+        }
+    }
+    # Per-interface-direction graphs
+    foreach my $nic (keys %nics) {
+        foreach my $dir (qw(in out)) {
+            print "\nmultigraph if_$type.if_$type\_$nic.if_$type\_$nic\_$dir\n";
+            if($mode eq 'config') {
+                print <<EOF;
+graph_title $nic $unit $dir per second
+graph_args --base 1000
+graph_vlabel $unit per second
+graph_category network
+EOF
+            }
+
+            my $fname = "$type\_$nic\_$dir";
+            if($mode eq 'config') {
+                print <<EOF;
+$fname.label $nic
+$fname.type DERIVE
+$fname.min 0
+$fname.draw AREA
+EOF
+                print "$fname.cdef $fname,8,*\n"
+                    if($type eq 'bytes');
+            } else {
+                print "$fname.value " . $nics{$nic}{"${dir}_$type"} . "\n";
+            }
+        }
+    }
+}

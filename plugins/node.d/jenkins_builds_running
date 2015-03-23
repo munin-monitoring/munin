@@ -1,0 +1,51 @@
+#!/bin/sh
+
+: << =cut
+
+=head1 NAME
+
+jenkins_builds_running - Plugin to measure number of jenkins builds which are currently running
+
+=head1 AUTHOR
+
+Contributed by Holger Levsen. I wrote and used them first for
+https://jenkins.debian.net and very much like to hear about
+other users of these plugins! Please do tell me!
+
+Use at your own risk and monitor the ressource usage of the plugins
+too - it will vary depending on your setup!
+
+Patches, postcards and pancakes are all very much welcome!
+
+=head1 LICENSE
+
+Copyright 2012-2014 Holger Levsen <holger@layer-acht.org>
+
+Released under the GPLv2.
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title Jenkins Builds running'
+	echo 'graph_args --base 1000 -l 0 '
+	echo 'graph_scale no'
+	echo 'graph_vlabel Jenkins Builds currently running'
+	echo 'graph_category jenkins'
+	echo "jenkins_builds_running.label $PREFIX builds_running"
+	echo "jenkins_builds_running.draw AREA"
+	exit 0
+fi
+
+echo "jenkins_builds_running.value $(ps fax|grep /tmp/hudson|grep -v grep|wc -l)"

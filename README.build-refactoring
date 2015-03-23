@@ -1,0 +1,70 @@
+=========================
+ Munin build refactoring
+=========================
+
+Abstract
+========
+
+The build system is being rewritten.
+
+Parts of munin needing to know the locations of directories, and
+configuration values, will get them dynamically, and not hardcoded.
+
+This means we will no longer rewrite hardcoded settings in files at
+build time.
+
+Moving a munin directory should be handled by updating the relevant
+setting in the munin configuration.
+
+Commands
+========
+
+The executable daemons and command line utilities are found in the
+shell PATH.
+
+Libraries
+=========
+
+Perl scripts will find the Munin libraries in the perl module path.
+Depending on the installation method, "site" or "vendor" directories
+are used.
+
+If and when modules are made for other languages, they will follow the
+same pattern.
+
+Settings
+========
+
+Perl scripts will find all settings and directories using variables
+from Munin::*::Config
+
+Shell scripts will find munin's directories using variables settings
+emitted by a perl script using the above method.
+
+The path to the configuration file is the only thing hardcoded on
+build, added to Munin::InstallPaths. (TODO: name needs bikeshedding)
+
+Source
+======
+
+The top level builder is the Makefile. "make", "make test" and "make
+install" will perform the expected actions.
+
+The perl modules are handled by Build.PL.
+
+The scripts and commands are handled by Build.PL (but could be handled
+by the Makefile)
+
+The plugins are handled by Makefile
+
+Installation
+============
+
+The installation installs everything as the user running the
+installation routine.
+
+In case of a system installation, everything should be owned by
+"root".
+
+A script running after installation installs (or changes the owner of)
+directories storing variable data used by munin, and munin node.

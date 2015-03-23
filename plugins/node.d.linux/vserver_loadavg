@@ -1,0 +1,143 @@
+#!/bin/bash
+
+: <<'=cut'
+
+=head1 NAME
+
+vserver_loadavg - Plugin to graph vserver load average
+
+=head1 CONFIGURATION
+
+The following configuration variables are used by this plugin
+
+ [vserver_loadavg]
+  env.vservers - A list of vservers to include in the graph
+
+This plugin should run as the "root" user
+
+=head2 DEFAULT CONFIGURATION
+
+The default configuration will graph all vservers.
+
+ [vserver_loadavg]
+  env.vservers all
+
+=head1 AUTHORS
+
+Copyright (C) 2008 Micah Anderson
+
+Copyright (C) 2007 Andrei Morgan
+
+=head1 LICENSE
+
+GNU GPLv2
+
+=begin comment
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=end comment
+
+=head1 BUGS
+
+None known.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=cut
+
+# If run with the "autoconf"-parameter, give our opinion on whether we
+# should be run on this system or not. This is optional, and only used by
+# munin-node-config.
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/virtual/info ]; then
+		echo yes
+	else
+		echo "no (/proc/virtual/info not found)"
+	fi
+	exit 0
+fi
+
+# if vservers are specified, use them; the default is to use all.
+VSERVERS="$vservers"
+
+INFO=(`sed 's/.*:\t//' /proc/virtual/info 2>/dev/null || echo '<none>'`)
+KCIN="$[ 16#${INFO[2]} ]";
+
+# If this is 1, then VCI_SPACES is present in the kernel (new in 2.6.19)
+if [ $[ (KCIN >> 10) & 1 ] -eq 1 ]
+then 
+    NAMELOC="nsproxy"
+else 
+    NAMELOC="cvirt"
+fi
+
+if [ -z "$VSERVERS" ] ; then
+    XIDS=`find /proc/virtual/* -type d -exec basename {} \;`
+else
+    # it's really more performant to specify vservers by ids or not at all
+    XIDS=""
+    for i in $VSERVERS ; do
+	if [ -d /proc/virtual/$i ] ; then
+	    XIDS="${XIDS}${i} "
+	else
+	    for j in `find /proc/virtual/* -type d -exec basename {} \;` ; do
+		if [ "$i" = "`cat /proc/virtual/$j/$NAMELOC |grep NodeName |cut -f2`" ] ; then
+		    XIDS="${XIDS}${j} "
+		fi
+	    done
+	fi
+    done
+fi
+	
+# If run with the "config"-parameter, give out information on how the
+# graphs should look.  
+if [ "$1" = "config" ]; then
+        # The title of the graph
+	echo 'graph_title loadavg of vserver'
+        # Arguments to "rrdtool graph". In this case, tell it that the
+        # lower limit of the graph is '0', and that 1k=1000 (not 1024)
+	echo 'graph_args --base 1000 -l 0'
+        # We want Cur/Min/Avg/Max unscaled (i.e. 0.42 load instead of
+        # 420 milliload)
+	echo 'graph_scale no'
+        # The Y-axis label
+	echo 'graph_vlabel loadavg'
+	# graph information for the main table
+	echo 'graph_info Shows 5-minute load average per vserver.'
+        # Graph category. Defaults to 'other'
+	echo 'graph_category vserver'
+	for xid in $XIDS ; do
+	# Specify the vservers
+		LABEL=`cat /proc/virtual/$xid/$NAMELOC |grep NodeName |cut -f2`
+		NAME=`echo $LABEL | cut -d. -f1 |  tr '-' '_'`
+		echo "$NAME.label $LABEL: load average"
+		echo "$NAME.info $NAME average load for the past 5 minutes"
+	done 
+        # Last, if run with the "config"-parameter, quit here (don't
+        # display any data)
+        exit 0
+fi
+
+for xid in $XIDS ; do
+	LABEL=`cat /proc/virtual/$xid/$NAMELOC |grep NodeName |cut -f2`
+	NAME=`echo $LABEL | cut -d. -f1 |  tr '-' '_'`
+	echo -n "$NAME.value ";
+	cat /proc/virtual/$xid/cvirt | grep loadavg: | cut -d' ' -f2	
+done

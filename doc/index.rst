@@ -6,16 +6,27 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   preface/index.rst
+   tutorial/index.rst
+
+.. toctree::
+   :maxdepth: 3
+
+   architecture/index.rst
+
+.. toctree::
+   :maxdepth: 2
+
    installation/index.rst
-   master/index.rst
-   node/index.rst
-   plugin/index.rst
-   documentation/index.rst
+   advanced/index.rst
    reference/index.rst
-   example/index.rst
+
+.. toctree::
+   :maxdepth: 3
+
+   others/index.rst
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`search`

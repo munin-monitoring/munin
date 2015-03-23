@@ -1,0 +1,171 @@
+#!/usr/bin/perl -w
+#
+
+=head1 NAME
+
+snmp__fc_if_ - Plugin to fetch fibrechannel data from remote hosts via
+SNMP.
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ host      - SNMP host (default taken from plugin link name)
+ port      - SNMP port (default 161)
+ community - SNMP community (default "private")
+ interface - Fibrechannel interface to monitor (default taken from
+             plugin link name)
+
+=head1 AUTHOR
+
+Copyright (C) 2004 Jimmy Olsen
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
+
+=head1 MAGIC MARKERS
+
+ #%# family=snmpauto
+ #%# capabilities=snmpconf
+
+=cut
+
+use strict;
+
+use Net::SNMP;
+use Munin::Plugin::SNMP;
+
+my $host      = $ENV{host}      || undef;
+my $port      = $ENV{port}      || 161;
+my $community = $ENV{community} || "public";
+my $iface     = $ENV{interface} || undef;
+
+my $response;
+
+if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
+{
+	print "index   1.3.6.1.2.1.8888.1.1.6.1.1.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.\n";
+	print "require 1.3.6.1.2.1.8888.1.1.6.1.5.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0. ^2\$\n"; # state = online
+	print "require 1.3.6.1.2.1.8888.1.1.6.1.14.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0. [1-9]\n"; # Speed
+	exit 0;
+}
+
+if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_fc_if_(.+)$/)
+{
+	$host  = $1;
+	$iface = $2;
+	if ($host =~ /^([^:]+):(\d+)$/)
+	{
+		$host = $1;
+		$port = $2;
+	}
+}
+elsif (!defined($host))
+{
+	print "# Debug: $0 -- $1 -- $2\n" if $Munin::Plugin::SNMP::DEBUG;
+	die "# Error: couldn't understand what I'm supposed to monitor.";
+}
+
+my $fcEntryDescr     = "1.3.6.1.2.1.8888.1.1.6.1.16.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface"; 
+my $fcEntrySpeed     = "1.3.6.1.2.1.8888.1.1.6.1.14.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
+my $fcEntryStatus    = "1.3.6.1.2.1.8888.1.1.6.1.6.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
+my $fcEntryInOctets  = "1.3.6.1.2.1.8888.1.3.1.1.6.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
+my $fcEntryOutOctets = "1.3.6.1.2.1.8888.1.3.1.1.5.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
+my $fcPhysPort       = "1.3.6.1.2.1.8888.1.1.6.1.17.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
+
+my ($session, $error) = Net::SNMP->session(
+		-hostname  => $host,
+		-community => $community,
+		-port      => $port,
+		-version   => "2c"
+	);
+
+if (!defined ($session))
+{
+	die "Croaking: $error";
+}
+
+if ($ARGV[0] and $ARGV[0] eq "config")
+{
+	print "host_name $host\n" unless $host eq 'localhost';
+	if (!defined ($response = $session->get_request($fcEntryDescr)))
+	{
+		die "Croaking: " . $session->error();
+	}
+	my $name = $response->{$fcEntryDescr};
+	if (defined ($response = $session->get_request($fcPhysPort)))
+	{
+		$name .= " (" . $response->{$fcPhysPort} . ")";
+	}
+	my $warn = undef;
+	if (defined ($response = $session->get_request($fcEntrySpeed)))
+	{
+		$warn = $response->{$fcEntrySpeed}*8000;
+	}
+	print "graph_title FC $name traffic\n";
+	print "graph_order recv send\n";
+	print "graph_args --base 1000\n";
+	print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
+	print "graph_category network\n";
+	print "graph_info This graph shows network usage for fibrechannel controllers.\n";
+	print "send.info Bits sent/received by this interface.\n";
+	print "recv.label recv\n";
+	print "recv.type DERIVE\n";
+	print "recv.min 0\n";
+	print "recv.graph no\n";
+	print "recv.cdef recv,8,*\n";
+	print "recv.max 4000000000\n";
+	print "recv.warning ", (-$warn), "\n" if defined $warn;
+	print "send.label bps\n";
+	print "send.type DERIVE\n";
+	print "send.min 0\n";
+	print "send.negative recv\n";
+	print "send.cdef send,8,*\n";
+	print "send.max 4000000000\n";
+	print "send.warning $warn\n" if defined $warn;
+	exit 0; 
+}
+
+my $status = 1;
+if (defined ($response = $session->get_request($fcEntryStatus)))
+{
+	$status = $response->{$fcEntryStatus};
+}
+
+if ($status != 3)
+{
+	print "recv.value U\n";
+	print "send.value U\n";
+	exit 0;
+}
+
+if (defined ($response = $session->get_request($fcEntryInOctets)))
+{
+	print "recv.value ", $response->{$fcEntryInOctets}, "\n";
+}
+else
+{
+	print "recv.value U\n";
+}
+
+if (defined ($response = $session->get_request($fcEntryOutOctets)))
+{
+	print "send.value ", $response->{$fcEntryOutOctets}, "\n";
+}
+else
+{
+	print "send.value U\n";
+}

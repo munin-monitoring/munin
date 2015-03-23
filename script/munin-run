@@ -1,0 +1,261 @@
+#!/usr/bin/perl -T
+#
+# Copyright (C) 2004-2009
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+use strict;
+use warnings;
+
+# Trust PERL5LIB from environment
+use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
+
+use Getopt::Long;
+
+use Munin::Common::Defaults;
+use Munin::Node::Config;
+use Munin::Node::OS;
+use Munin::Node::Service;
+
+my $services;
+my $servicedir;
+my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $DEBUG    = 0;
+my $PIDEBUG  = 0;
+my $paranoia = 0;
+
+my $config = Munin::Node::Config->instance();
+
+
+sub main
+{
+    # "Clean" environment to disable taint-checking on the environment. We _know_
+    # that the environment is insecure, but we want to let admins shoot themselves
+    # in the foot with it, if they want to.
+    foreach my $key (keys %ENV) {
+        $ENV{$key} =~ /^(.*)$/;
+        $ENV{$key} = $1;
+    }
+
+    $0 =~ /^(.*)$/;
+    $0 = $1;
+
+    my ($plugin, $arg) = parse_args();
+
+    # Loads the settings from munin-node.conf.
+    # Ensures that, where options can be set both in the config and in
+    # @ARGV, the latter takes precedence.
+    $paranoia = $config->{paranoia};
+
+    my $config = Munin::Node::Config->instance();
+    $config->parse_config_from_file($conffile);
+
+    $services = Munin::Node::Service->new(
+        servicedir => $servicedir,
+        defuser    => $config->{defuser},
+        defgroup   => $config->{defgroup},
+        pidebug    => $PIDEBUG,
+    );
+
+    $config->reinitialize({
+        %$config,
+        paranoia   => $paranoia,
+    });
+
+    unless ($services->is_a_runnable_service($plugin)) {
+        print STDERR "# Unknown service '$plugin'\n";
+        exit 1;
+    }
+
+    $services->prepare_plugin_environment($plugin);
+
+    # no need for a timeout -- the user can kill this process any
+    # time they want.
+    $services->exec_service($plugin, $arg);
+
+    # Never reached, but just in case...
+    print STDERR "# FATAL: Failed to exec.\n";
+    exit 42;
+}
+
+
+sub parse_args
+{
+    # Default configuration values
+    my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
+    my $sconffile;
+
+    my ($plugin, $arg);
+
+    print_usage_and_exit() unless GetOptions(
+            "config=s"     => \$conffile,
+            "debug!"       => \$DEBUG,
+            "pidebug!"     => \$PIDEBUG,
+            "servicedir=s" => \$servicedir,
+            "sconfdir=s"   => \$sconfdir,
+            "sconffile=s"  => \$sconffile,
+            "paranoia!"    => \$paranoia,
+            "version"      => \&print_version_and_exit,
+            "help"         => \&print_usage_and_exit,
+    );
+
+    print_usage_and_exit() unless $ARGV[0];
+
+    # Detaint the plugin name
+    ($plugin) = ($ARGV[0] =~ m/^([-\w.:]+)$/) or die "# ERROR: Invalid plugin name '$ARGV[0].\n";
+    if ($ARGV[1]) {
+        ($arg) = ($ARGV[1] =~ m/^(\w+)$/)
+            or die "# ERROR: Invalid characters in argument '$ARGV[1]'.\n";
+    }
+
+    # Detaint service directory.  FIXME: do more strict detainting?
+    if ($servicedir) {
+        $servicedir =~ /(.*)/;
+        $servicedir = $1;
+    }
+
+    # Update the config
+    $config->reinitialize({
+        %$config,
+
+        sconfdir   => $sconfdir,
+        conffile   => $conffile,
+        sconffile  => $sconffile,
+        DEBUG      => $DEBUG,
+        paranoia   => $paranoia,
+    });
+
+    return ($plugin, $arg);
+}
+
+
+sub print_usage_and_exit
+{
+    require Pod::Usage;
+    Pod::Usage::pod2usage(-verbose => 1);
+}
+
+
+sub print_version_and_exit
+{
+    require Pod::Usage;
+    Pod::Usage::pod2usage(
+        -verbose => 99,
+        -sections => 'VERSION|COPYRIGHT',
+    );
+}
+
+
+exit main() unless caller;
+
+
+1;
+
+__END__
+
+=head1 NAME
+
+munin-run - A program to run Munin plugins from the command line
+
+=head1 SYNOPSIS
+
+munin-run [options] <plugin> [ config | autoconf | snmpconf | suggest ]
+
+=head1 DESCRIPTION
+
+munin-run is a script to run Munin plugins from the command-line.
+It's useful when debugging plugins, as they are run in the same conditions
+as they are under munin-node.
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<< --config <configfile> >>
+
+Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin-node.conf]
+
+=item B<< --servicedir <dir> >>
+
+Use E<lt>dirE<gt> as plugin dir. [@@CONFDIR@@/plugins/]
+
+=item B<< --sconfdir <dir> >>
+
+Use E<lt>dirE<gt> as plugin configuration dir. [@@CONFDIR@@/plugin-conf.d/]
+
+=item B<< --sconffile <file> >>
+
+Use E<lt>fileE<gt> as plugin configuration. Overrides sconfdir.  [undefined]
+
+=item B<--paranoia >
+
+Only run plugins owned by root and check permissions.  [disabled]
+
+=item B<--help >
+
+View this help message.
+
+=item B<--debug >
+
+Print debug messages.  Debug messages are sent to STDOUT and are
+prefixed with "#" (this makes it easier for other parts of munin to
+use munin-run and still have --debug on).  Only errors go to STDERR.
+
+=item B<--pidebug >
+
+Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so
+that plugins may enable debugging.  [disabled]
+
+=item B<--version >
+
+Show version information.
+
+=back
+
+=head1 FILES
+
+    @@CONFDIR@@/munin-node.conf
+    @@CONFDIR@@/plugins/*
+    @@CONFDIR@@/plugin-conf.d/*
+    @@STATEDIR@@/munin-node.pid
+    @@LOGDIR@@/munin-node.log
+
+=head1 VERSION
+
+This is munin-run (munin-node) v@@VERSION@@
+
+
+=head1 AUTHORS
+
+Audun Ytterdal, Jimmy Olsen, Tore Anderson, Nicolai Langfeldt.
+
+=head1 BUGS
+
+Please see L<http://munin-monitoring.org/report/1>.
+
+=head1 COPYRIGHT
+
+Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
+Nicolai Langfeldt / Linpro AS.
+
+This is free software; see the source for copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
+This program is released under the GNU General Public License
+
+=cut

@@ -1,0 +1,122 @@
+#!/bin/sh
+
+: << =cut
+
+=head1 NAME
+
+selinux_avcstat - Plugin to monitor SELinux Access Vector Cache (AVC)
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 AUTHOR
+
+Lars Strand
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+if [ -r /selinux/avc/cache_stats ]; then
+  AVCSTATS="/selinux/avc/cache_stats"
+else
+  AVCSTATS="/sys/fs/selinux/avc/cache_stats"
+fi
+
+if [ "$1" = "autoconf" ]; then
+        if [ -r $AVCSTATS ]; then
+                echo yes
+        else
+                echo "no (missing $AVCSTATS file)"
+        fi
+        exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+        echo "graph_title SELinux Access Vector Cache"
+        echo 'graph_args -l 0 --base 1000'
+        echo 'graph_vlabel AVC operations'
+        echo 'graph_category system'
+        echo 'graph_order lookups hits misses allocations reclaims frees'
+
+        echo 'lookups.label lookups'
+        echo 'lookups.type DERIVE'
+        echo 'lookups.min 0'
+        echo 'lookups.max 1000000000'
+        echo 'lookups.draw AREA'
+        echo 'lookups.colour ff0000' # Red
+        echo 'lookups.info Number of access vector lookups. This number is a good indicator of the load being placed on the AVC.'
+
+        echo 'hits.label hits'
+        echo 'hits.type DERIVE'
+        echo 'hits.min 0'
+        echo 'hits.max 1000000000'
+        echo 'hits.draw STACK'
+        echo 'hits.colour 0022ff' # Blue
+        echo 'hits.info Number of access vector hits.'
+
+        echo 'misses.label misses'
+        echo 'misses.type DERIVE'
+        echo 'misses.min 0'
+        echo 'misses.max 1000000000'
+        echo 'misses.draw STACK'
+        echo 'misses.colour 990000' # Darker red
+        echo 'misses.info Number of cache misses.'
+
+        echo 'allocations.label allocations'
+        echo 'allocations.type DERIVE'
+        echo 'allocations.min 0'
+        echo 'allocations.max 100000000'
+        echo 'allocations.draw STACK'
+        echo 'allocations.colour ffa500' # Orange
+        echo 'allocations.info Number of AVC entries allocated.'
+
+        echo 'reclaims.label reclaims'
+        echo 'reclaims.type DERIVE'
+        echo 'reclaims.min 0'
+        echo 'reclaims.max 1000000000'
+        echo 'reclaims.draw STACK'
+        echo 'reclaims.colour 00aaaa' # Darker turquoise
+        echo 'reclaims.info Number of current total reclaimed AVC entries. If this keeps changing, you may need to increase the cache size (/selinux/avc/cache_threshold).'
+
+        echo 'frees.label frees'
+        echo 'frees.type DERIVE'
+        echo 'frees.min 0'
+        echo 'frees.max 1000000000'
+        echo 'frees.draw STACK'
+        echo 'frees.colour 00ff7f' # Spring green
+        echo 'frees.info Number of free AVC entries.'
+
+        exit 0
+fi
+
+if [ -r $AVCSTATS ]; then
+    { read HEADER
+      while read lookups hits misses allocations reclaims frees; do
+        LOOKUPS=$(($LOOKUPS + $lookups))
+        HITS=$(($HITS + $hits))
+        MISSES=$(($MISSES + $misses))
+        ALLOCATIONS=$(($ALLOCATIONS + $allocations))
+        RECLAIMS=$(($RECLAIMS + $reclaims))
+        FREES=$(($FREES + $frees))
+      done
+    } < $AVCSTATS
+    echo "lookups.value $LOOKUPS"
+    echo "hits.value $HITS"
+    echo "misses.value $MISSES"
+    echo "allocations.value $ALLOCATIONS"
+    echo "reclaims.value $RECLAIMS"
+    echo "frees.value $FREES"
+else
+    echo "lookups.value U"
+    echo "hits.value U"
+    echo "misses.value U"
+    echo "allocations.value U"
+    echo "reclaims.value U"
+    echo "frees.value U"
+fi

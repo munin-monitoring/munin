@@ -1,0 +1,126 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+tomcat_volume - Plugin to monitor the volume of data sent from Tomcat
+servers.
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin
+
+=over 4
+
+=item url
+
+Override default status-url
+
+=item port
+
+HTTP port number
+
+=item user
+
+Manager username
+
+=item password
+
+Manager password
+
+=back
+
+=head2 CONFIGURATION EXAMPLE
+
+ [tomcat_volume]
+  env.ports     8081
+  env.user      someuser
+  env.password  somepassword
+  env.connector http-8081
+
+=head1 AUTHOR
+
+Rune Nordbøe Skillingstad <runesk@linpro.no>
+
+=head1 USAGE
+
+Needs access to
+http://<user>:<password>@localhost:8080/manager/status?XML=true (or
+modify the address for another host).
+
+Tomcat 5.0 or higher.
+
+A munin-user in $CATALINA_HOME/conf/tomcat-users.xml should be set up
+for this to work.
+
+Tip: To see if it's already set up correctly, just run this plugin
+with the parameter "autoconf". If you get a "yes", everything should
+work like a charm already.
+
+tomcat-users.xml example:
+  <user username="munin" password="<set this>"
+        roles="standard,manager"/>
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use Munin::Plugin::HTTP;
+
+my $ret = undef;
+
+if(!eval "require XML::Simple;") {
+    $ret .= "XML::Simple not found";
+}
+
+my $UA       = Munin::Plugin::HTTP->new;
+my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@%s:%d/manager/status?XML=true";
+my $PORT     = exists $ENV{'port'}     ? $ENV{'port'}     : exists $ENV{'ports'} ? $ENV{'ports'} : 8080;
+my $HOST     = exists $ENV{'host'}     ? $ENV{'host'}     : "127.0.0.1";
+my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
+my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
+my $CONNECTOR= exists $ENV{'connector'}? $ENV{'connector'}: "http-".$PORT;
+
+my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
+
+if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
+    if($ret) {
+	print "no ($ret)\n";
+	exit 0;
+    }
+    my $repsonse = $UA->get($url);
+    if($repsonse->is_success and $repsonse->content =~ /<status>.*<\/status>/im) {
+	print "yes\n";
+	exit 0;
+    } else {
+	print "no (no tomcat status)\n";
+	exit 0;
+    }
+}
+
+if(exists $ARGV[0] and $ARGV[0] eq "config") {
+    print "graph_title Tomcat volume\n";
+    print "graph_args --base 1000\n";
+    print "graph_vlabel bytes per \${graph_period}\n";
+    print "graph_category tomcat\n";
+    print "volume.label bytes\n";
+    print "volume.type DERIVE\n";
+    print "volume.max 1000000000\n";
+    print "volume.min 0\n";
+    exit 0;
+}
+
+my $xs = new XML::Simple;
+my $response = $UA->get($url);
+my %options = ( KeyAttr => { connector => 'name' }, ForceArray => 1 );
+my $xml = $xs->XMLin($response->content, %options);
+
+
+if($xml->{'connector'}->{$CONNECTOR}->{'requestInfo'}->[0]->{'bytesSent'}) {
+    print "volume.value " . $xml->{'connector'}->{$CONNECTOR}->{'requestInfo'}->[0]->{'bytesSent'} . "\n";
+} else {
+    print "volume.value U\n";
+}

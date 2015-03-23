@@ -1,0 +1,59 @@
+#!/bin/sh
+
+: << =cut
+
+=head1 NAME
+
+df - Script to monitor disk usage
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ warning  - Warning percentage (Default: 92)
+ critical - Critical percentage (Default: 98)
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+print_values () {
+    df -P -l 2>/dev/null | sed -e 1d -e '/\/\//d' -e 's/%//' | 
+    while read dev size used free pct fs; do
+	echo "$(clean_fieldname $dev).value $pct"
+    done
+}
+
+
+if [ "$1" = "autoconf" ]; then
+    if [ -z "$(print_values)" ] ; then
+	echo no
+    else
+	echo yes
+    fi
+    exit 0
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title Disk usage in percent'
+    echo 'graph_args --upper-limit 100 -l 0'
+    echo 'graph_vlabel %'
+    echo 'graph_category disk'
+    echo 'graph_scale no'
+    df -P -l  | sed -e 1d -e '/\/\//d' -e 's/%//' | sort |
+    while read dev size used free pct fs; do
+	name=$(clean_fieldname $dev)
+	echo "$name.label $fs"
+	print_warning $name
+	print_critical $name
+    done
+    exit 0
+fi
+
+print_values
+

@@ -1,0 +1,78 @@
+#!/bin/sh
+
+: << =cut
+
+=head1 NAME
+
+external_ - Plugin that enables delegation of config and fetch
+
+=head1 CONFIGURATION
+
+[external_*]
+# "config" is the output of "$plugin config"
+# default is /dev/null
+env.config /var/run/my_plugin.config
+
+# "fetch" is the output of "$plugin"
+# default is /dev/null
+env.fetch /var/run/my_plugin.fetch
+
+# What should be done after a "config" or "fetch" read.
+# Possible options are :
+# "nothing" : does nothing, this is the default
+# "unlink" : unlink() the file just after read.
+#            Useful if the external plugin is launched
+#            regularly, via cron for example.
+# "truncate" : truncate() the file just after read.
+#              Useful if you have a long-running process
+#              that keeps the file open.
+# on_config nothing
+# on_fetch truncate
+env.on_fetch unlink
+
+=head1 AUTHOR
+
+Steve Schnepp
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "config" ]; then
+	cat ${config}
+
+	# Handling HOOK
+	case ${on_config} in
+		unlink)
+			rm -f ${config}
+			;;
+		truncate)
+			> ${config}
+			;;
+		*)
+			# Do nothing
+			;;
+	esac
+	exit 0
+fi
+
+cat ${fetch}
+
+# Handling HOOK
+case ${on_fetch} in
+	unlink)
+		rm -f ${fetch}
+		;;
+	truncate)
+		> ${fetch}
+		;;
+	*)
+		# Do nothing
+		;;
+esac
+
+exit 0

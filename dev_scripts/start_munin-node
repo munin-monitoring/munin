@@ -1,16 +1,12 @@
 #!/bin/bash
 
+set -e
+set -u
+
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
-. $FINDBIN/common.sh
+. "${FINDBIN}/common.sh"
 
-cd $BASEDIR
+echo "Starting munin-node"
+./dev_scripts/run munin-node
 
-
-if [ -f $DESTDIR/var/run/munin/munin-node.pid ]; then
-    echo "Pid file found. Not starting"
-else
-    env PERL5LIB=$DESTDIR/$PERLSITELIB $DESTDIR/opt/munin/sbin/munin-node "$@"
-fi
-
-tail -f $DESTDIR/opt/munin/log/munin/munin-node.log
-
+tail -f "${SANDBOX}/var/log/munin-node.log"

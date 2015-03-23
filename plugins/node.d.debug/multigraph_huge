@@ -1,0 +1,54 @@
+#! /bin/sh
+# Plugin to test a HUGE multigraph plugin
+
+# This plugin, creates a multigraph tree that is 2 levels deep.
+# But with 300 sub graphs, it should bring munin-update to its kneels.
+#
+
+nb=${nb:-"300"}
+dirty_config=${dirty_config:-""}
+all="$(seq 1 $nb)"
+
+config() {
+	echo "multigraph $1"
+	echo "graph_title Main for $1"
+	for field_id in $all
+	do
+		echo "field_${field_id}.label Field $field_id for $1"
+	done
+}
+
+fetch() {
+	echo "multigraph $1"
+	for field_id in $all
+	do
+		echo "field_${field_id}.value $(($i - $field_id))"
+	done
+}
+
+if [ "$1" = "config" ]; then
+	config a
+	config b
+	config c
+	for i in $all
+	do
+		config a.$i
+		config b.$i
+		config c.$i
+	done
+
+	# exit if not dirty config enabled
+	[ -z "$dirty_config" ] && exit 0
+fi
+
+fetch a
+fetch b
+fetch c
+for i in $all
+do
+	fetch a.$i
+	fetch b.$i
+	fetch c.$i
+done
+
+exit 0

@@ -1,0 +1,205 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+port_ - Munin wildcard plugin to monitor netwok port usage.
+
+=head1 CONFIGURATION
+
+To monitor a port link port_<service> to this file. E.g.
+
+  ln -s /usr/share/munin/plugins/port_ /etc/munin/plugins/port_ssh
+
+will monitor ssh connections. Services are those from /etc/services or
+a numeric port number.
+
+=head1 MAGIC MARKERS
+
+  #%# family=manual
+  #%# capabilities=autoconf suggest
+
+=head1 BUGS
+
+The plugin doesnt count the tcp6 connections if tcp and tcp6 is used.
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+use Munin::Plugin;
+
+use constant {
+    ST_ESTABLISHED => 1,
+    ST_LISTEN => 10,
+};
+
+
+sub cache_open
+{
+    my ($fd, $file) = @_;
+
+    my $cache_dir = "$ENV{MUNIN_PLUGSTATE}";
+    my $cache = $file;
+    $cache =~ s:/:_:g;
+    $cache = "$cache_dir/$cache";
+
+    my $ttl = $ENV{'cache_ttl'};
+    $ttl = 60 unless (defined $ttl);
+
+    # The user can disable caching by setting cache_ttl to something
+    # other than a positive integer.
+
+    if ($ttl !~ /^\d+$/ || $ttl == 0)
+    {
+	return open($fd, $file);
+    }
+
+    if (-e $cache && -M _ < $ttl / 86400)
+    {
+	return open($fd, $cache);
+    }
+
+    unless (-d $cache_dir)
+    {
+	mkdir($cache_dir) || die "$cache_dir: mkdir: $!\n";
+    }
+
+    my $retval;
+    $retval = open(CACHE_INPUT, $file);
+    return $retval unless ($retval);
+
+    my $tmpfile = "$cache.$$";
+    open(CACHE_OUTPUT, ">$tmpfile") || die "$tmpfile: open: $!\n";
+    while (<CACHE_INPUT>)
+    {
+	print CACHE_OUTPUT;
+    }
+    close(CACHE_OUTPUT) || die "$tmpfile: close: $!\n";
+    close(CACHE_INPUT);
+    rename($tmpfile, $cache) || die "$cache: rename: $!\n";
+
+    # Okay, we have a fresh copy in our cache.
+    return open($fd, $cache);
+}
+
+
+if ($ARGV[0] and $ARGV[0] =~ /^\s*autoconf\s*$/i)
+{
+    if (-r "/proc/net/tcp" or  -r "/proc/net/tcp6")
+    {
+	print "yes\n";
+	exit 0;
+    }
+    else
+    {
+	print "no\n";
+	exit 0;
+    }
+}
+
+
+sub count_tcp_ports
+{
+    my ($state, $ports) = @_;
+
+    cache_open("NETSTAT", "/proc/net/tcp") or exit 1;
+
+    # Skip header line, else hex($curstate) will complain
+    my $header = <NETSTAT>;
+
+    # 32/4 + 1 corresponds to the IP address in hex + ":"
+    my $local_port_offset = 32/4 + 1;
+
+    while (<NETSTAT>)
+    {
+	my ($linenr, $local, $remote, $curstate) = split;
+	next unless (hex($curstate) == $state);
+	++$ports->{hex(substr($local, $local_port_offset, 4))};
+    }
+    close NETSTAT;
+}
+
+
+sub count_tcp6_ports
+{
+    my ($state, $ports) = @_;
+
+    cache_open("NETSTAT", "/proc/net/tcp6") or exit 1;
+
+    # Skip header line, else hex($curstate) will complain
+    my $header = <NETSTAT>;
+
+    # 128/4 + 1 corresponds to the IP address in hex + ":"
+    my $local_port_offset = 128/4 + 1;
+
+    while (<NETSTAT>)
+    {
+	my ($linenr, $local, $remote, $curstate) = split;
+	next unless (hex($curstate) == $state);
+	++$ports->{hex(substr($local, $local_port_offset, 4))};
+    }
+    close(NETSTAT);
+}
+
+if ($ARGV[0] and $ARGV[0] =~ /^\s*suggest\s*$/i)
+{
+    if (-r "/proc/net/tcp" or -r "/proc/net/tcp6")
+    {
+	my %ports = ();
+
+	count_tcp_ports(ST_LISTEN, \%ports) if (-r "/proc/net/tcp");
+	count_tcp6_ports(ST_LISTEN, \%ports) if (-r "/proc/net/tcp6");
+
+	foreach my $port (keys %ports)
+	{
+	    my $p = (getservbyport($port, "tcp"))[0];
+	    print $p || $port, "\n";
+	}
+	exit 0;
+    }
+    exit 1;
+}
+
+my ($name, $port);
+
+if ($0 =~ /port_(.+)*$/) {
+    $name = $port = $1;
+    if ($port =~ /\D/) {
+	$port = (getservbyname ($name, "tcp"))[2];
+    }
+} else {
+    exit 2;
+}
+
+if ($ARGV[0] and $ARGV[0] =~ /^\s*config\s*$/i)
+{
+    if (int($name)) {
+	print "graph_title TCP port $name connection count\n";
+    } else {
+	print "graph_title $name connection count\n";
+    }
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_vlabel concurrent connections\n";
+    print "graph_category network\n";
+    print "count.label $name\n";
+    print_thresholds("count");
+    exit 0;
+}
+
+
+
+my %ports = ();
+
+count_tcp_ports(ST_ESTABLISHED, \%ports) if (-r "/proc/net/tcp");
+count_tcp6_ports(ST_ESTABLISHED, \%ports) if (-r "/proc/net/tcp6");
+
+# If there aint any the right answer is 0, not blank or U.
+$ports{$port} = 0 if (!exists $ports{$port}) or ($ports{$port} eq '');
+
+print "count.value ", $ports{$port}, "\n";

@@ -1,0 +1,116 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+openvpn - Plugin to monitor number of users connected to openvpn server
+
+=head1 USAGE
+
+To use this plugin, add the following text to your openvpn server
+configuration file:
+
+ status /var/log/openvpn.status
+ status-version 1
+
+If you change the path to the status file, remember to change
+env.statusfile in the plugin configuration to match the new path.
+
+=head1 CONFIGURATION
+
+This script uses the following configuration variables
+
+ [openvpn]
+  env.statusfile <path to status log file>
+
+=head2 DEFAULT CONFIGURATION
+
+The default configuration is
+
+ [openvpn]
+  env.statusfile /var/log/openvpn.status
+
+=head1 AUTHOR
+
+Copyright (C) 2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
+
+=head1 LICENSE
+
+Gnu GPLv2
+
+=begin comment
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+If you improve this script please send your version to my email address
+with the copyright notice upgrade with your name.
+
+=end comment
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+
+my $statuslogfile = $ENV{'statusfile'} || '/var/log/openvpn.status';
+my $users = 0;
+
+if($ARGV[0] and $ARGV[0] eq "autoconf" ) {
+    if(-f $statuslogfile) {
+	if(-r $statuslogfile) {
+	    print "yes\n";
+	    exit 0;
+	} else {
+	    print "no (logfile not readable)\n";
+	}
+    } else {
+	print "no (logfile not found)\n";
+    }
+    exit 0;
+}
+
+if ($ARGV[0] and $ARGV[0] eq "config" ){
+    print "graph_title OpenVpn\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_scale yes\n";
+    print "graph_vlabel users\n";
+    print "graph_category network\n";
+    print "graph_info This graph shows the numbers of users connected to openvpn server.\n";
+    print "users.label users\n";
+    print "users.info The number of users connected to openvpn server\n";
+    exit 0;
+}
+
+if (-f "$statuslogfile") {
+    open(IN, "$statuslogfile") or exit 4;
+    my $flagu = 0;
+    while(<IN>) {
+	if(/^ROUTING TABLE$/) {
+	    $flagu = 0;
+	}
+	if ($flagu) {
+	    $users = $users + 1;
+	}
+	if(/^Common Name,Real Address,Bytes Received,Bytes Sent,Connected Since$/) {
+	    $flagu = 1;
+	}
+    }
+    close(IN);
+}
+
+print "users.value " . $users."\n";

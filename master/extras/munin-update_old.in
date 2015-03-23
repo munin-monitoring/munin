@@ -1,5 +1,4 @@
-#!@@PERL@@ -w
-# -*- cperl -*-
+#!/usr/bin/perl -w
 #
 # Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal
 #
@@ -19,7 +18,6 @@
 #
 # Script to update the RRD-files with current information.
 #
-# $Id$
 
 use strict;
 
@@ -1159,5 +1157,3 @@ For information on configuration options, please refer to the man page for
 F<munin.conf>.
 
 =cut
-
-# vim:syntax=perl:ts=8
