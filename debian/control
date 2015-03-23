@@ -23,7 +23,7 @@ Testsuite: autopkgtest
 
 Package: munin-node
 Architecture: all
-Depends: ${perl:Depends}, ${misc:Depends}, libnet-server-perl, procps, adduser, lsb-base (>= 3.2-4), gawk, munin-common (>= ${binary:Version}), munin-plugins-core
+Depends: ${perl:Depends}, ${misc:Depends}, libnet-server-perl, procps, adduser, lsb-base, gawk, munin-common (>= ${binary:Version}), munin-plugins-core
 Recommends: libnet-snmp-perl, munin-plugins-extra
 Suggests:
  acpi | lm-sensors,
@@ -43,7 +43,7 @@ Suggests:
  net-tools,
  python,
  ruby,
- smartmontools (>= 5.37-6~bpo40+1),
+ smartmontools,
 Description: network-wide graphing framework (node)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
