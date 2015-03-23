@@ -1,0 +1,165 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+loggrep - Counts the number of matching log lines
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ logfile       - Files to grep (shellglob) (required)
+ regex         - Regex to look for (required)
+ label         - Label
+ counter       - If set the value captured by the first paren
+                 in the regex is summed instead of coutning lines.
+                 The value is used for the vertical label.
+ regex_<key>   - Additional regexes
+ label_<key>   - Additional labels
+ counter_<key> - Additional counters (the value is ignored).
+ title         - Graph title
+
+=head1 NOTES
+
+TODO: Handle rotated logs
+
+=head1 AUTHOR
+
+Copyright (C) 2004 Dagfinn Ilmari Mannsaaker
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+
+=cut
+
+use strict;
+
+my %regex;
+my $logfile = $ENV{logfile};
+my $vlabel = defined $ENV{'counter'} ? $ENV{'counter'} : 'entries';
+
+(my $name = $0) =~ s|.*/||;
+
+(my $host_name = $name) =~ s|.*_([^_]+)_.*|$1|;
+
+
+die("No log file specified") unless defined $logfile;
+
+if (exists $ENV{'regex'}) {
+    $regex{'count'}{'regex'} = qr/$ENV{'regex'}/;
+    $regex{'count'}{'label'} = $ENV{'label'} || $ENV{'regex'};
+    $regex{'count'}{'value'} = 0;
+    $regex{'count'}{'counter'} = defined $ENV{'counter'};
+}
+
+for my $key (map {/^regex_(.+)/} keys %ENV) {
+    $regex{$key}{'regex'} = qr/$ENV{"regex_$key"}/;
+    $regex{$key}{'label'} = $ENV{"label_$key"} || $ENV{"regex_$key"};
+    $regex{$key}{'value'} = 0;
+    $regex{$key}{'counter'} = defined $ENV{"counter_$key"};
+}
+
+die("No regexes specified") unless keys %regex;
+
+my $statefile = "$ENV{MUNIN_PLUGSTATE}/$name.state";
+
+if ($ARGV[0] and $ARGV[0] eq 'config') {
+    my $title = $ENV{title} || "Entries in $logfile";
+    print "graph_title $title\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_vlabel $vlabel / \${graph_period}\n";
+    print "graph_category other\n";
+    if ($host_name && $host_name ne $name) {
+       print "host_name $host_name\n";
+    }
+    for my $key (keys %regex) {
+	print "$key.label $regex{$key}{'label'}\n";
+	print "$key.type DERIVE\n";
+	print "$key.min 0\n";
+	print "$key.draw LINE2\n";
+    }
+    exit 0;
+}
+
+my %pos = map { $_ => undef } glob($logfile);
+
+if (-f $statefile) {
+    open(my $in, '<', $statefile) or die("Can't read $statefile: $!\n");
+    while (<$in>) {
+	chomp;
+	if (/^([^=]+)=(\d+)$/ && exists $regex{$1}) {
+	    $regex{$1}{'value'} = $2;
+	} else {
+	    last;
+	}
+    }
+    do {
+	chomp;
+	if (<$in> =~ /^(\d+)$/ and exists $pos{$_}) {
+	    $pos{$_} = $1
+	}
+    } while (<$in>);
+    close $in;
+}
+
+for my $log (keys %pos) {
+    $pos{$log} = parse_log($log, $pos{$log});
+}
+
+for my $key (keys %regex) {
+    print "$key.value $regex{$key}{'value'}\n";
+}
+
+if(-l $statefile) {
+ 	die("$statefile is a symbolic link, refusing to touch it.\n");
+}				
+open(my $out, '>', $statefile) or die("Can't write $statefile: $!\n");
+for my $key (keys %regex) {
+    print $out "$key=$regex{$key}{'value'}\n";
+}
+for my $log (keys %pos) {
+    print $out "$log\n$pos{$log}\n";
+}
+close $out;
+
+sub parse_log {
+    my ($fname, $start) = @_;
+    open(my $logfh, $fname) or die ("Can't open log file $fname: $!\n");
+    my $size = (stat $logfh)[7];
+
+    # First encounter
+    $start = $size unless defined $start;
+
+    # The log has been rotated, start over
+    $start = 0 if $size < $start;
+
+    seek($logfh, $start, 0) or die ("Can't seek to $fname:$start: $!\n");
+
+    while (tell($logfh) < $size) {
+	my $line = <$logfh>;
+
+	for my $match (values %regex) {
+	    if ($line =~ $match->{'regex'}) {
+		$match->{'value'} += $match->{'counter'} ? $1 : 1;
+	    }
+	}
+    }
+    close($logfh);
+    return $size;
+}

@@ -1,0 +1,49 @@
+HOW TO SETUP
+------------
+
+1. Directory of the build process
+---------------------------------
+
+Create a directory (outside from webserver access)
+for the scripts, temporary files and logs of the build process.
+Set variable SCRIPTDIR in gallery-build.sh to this PATH
+and put all the files and also the directory 'static'
+from this directory thereto
+
+2. Webserver DocumentRoot
+-------------------------
+
+Create a directory to put the webfiles to.
+Set variable HTMLDIR in gallery-build.sh to this PATH.
+Create a subdirectory 'distro' therin.
+Put the directory 'static' from the subdirectory 'www' into HTMLDIR
+
+So HTMLDIR should initially have this structure:
+
+.
+./distro
+./static
+./static/info.gif
+./static/logo-h.png
+./static/download.gif
+./static/favicon.ico
+./static/style-2.1.css
+
+Setup vhost for the gallery in your webservers configuration.
+
+3. Ownership of webserver files
+-------------------------------
+
+If you want to set another ownership for the webserver files
+run the build process under user root, and set variable 
+WWWUSER and WWWGROUP in gallery-build.sh accordingly.
+
+4. Setup a daily cronjob
+------------------------
+
+Place a file with content like this under /etc/cron.d/ 
+
+------ 8< ------
+# Create fresh build of the Munin Plugin Gallery
+10 22 * * * gap /home/gap/projects/munin/github/munin/contrib/plugin-gallery/gallery-build.sh
+------ >8 ------

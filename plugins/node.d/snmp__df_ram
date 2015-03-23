@@ -1,0 +1,271 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+snmp__df_ram - Plugin to check ram/flash usage of a remote host via SNMP
+
+=head1 CONFIGURATION
+
+The following environment variables are used
+
+ host      - SNMP hostname to probe (default undef)
+ port      - SNMP port to use (default 161)
+ community - SNMP community string (default "public")
+
+=head1 AUTHOR
+
+=encoding UTF-8
+
+Copyright (C) 2011 Erik Inge Bolsø, Redpill Linpro AS for OSL
+
+Based on snmp__df (C) 2004 Jimmy Olsen 
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=head1 MAGIC MARKERS
+
+ #%# family=snmpauto
+ #%# capabilities=snmpconf
+
+=cut
+
+use strict;
+use Net::SNMP;
+
+my $MAXLABEL = 20;
+
+my $host      = $ENV{host}      || undef;
+my $port      = $ENV{port}      || 161;
+my $community = $ENV{community} || "public";
+
+my $response;
+
+if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
+{
+	print "require 1.3.6.1.2.1.25.2.3.1.1.\n";
+	print "require 1.3.6.1.2.1.25.2.3.1.2. 1.3.6.1.2.1.25.2.1.(1|2|3|9)\n"; # Type=Other/Ram/VirtualMemory/FlashMemory
+	print "require 1.3.6.1.2.1.25.2.3.1.5. [1-9]\n"; # Size > 0
+	exit 0;
+}
+
+if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_df_ram$/)
+{
+	$host  = $1;
+	if ($host =~ /^([^:]+):(\d+)$/)
+	{
+		$host = $1;
+		$port = $2;
+	}
+}
+elsif (!defined($host))
+{
+	print "# Debug: $0 -- $1\n" if $Munin::Plugin::SNMP::DEBUG;
+	die "# Error: couldn't understand what I'm supposed to monitor.";
+}
+
+# Disk level
+my $hrDeviceType           = "1.3.6.1.2.1.25.3.2.1.2."; # Should be iso.3.6.1.2.1.25.3.1.6 (DiskStorage)
+my $hrDiskStorageRemoveble = "1.3.6.1.2.1.25.3.6.1.3."; # Should be false (2).
+                                                        # Windows reports 0.
+my $hrDiskStorageCapacity  = "1.3.6.1.2.1.25.3.6.1.4."; # Should be more than 0
+
+# Partition level
+my $hrPartitionFSIndex     = "1.3.6.1.2.1.25.3.7.1.5."; # Should be more than 0
+my $hrFSMountPoint         = "1.3.6.1.2.1.25.3.8.1.2."; # Used to look up filesystem
+
+# Filesystem level
+my $hrStorageType          = "1.3.6.1.2.1.25.2.3.1.2."; # Backup for hrFS*
+my $hrStorageDesc          = "1.3.6.1.2.1.25.2.3.1.3."; # Used as key from partitions
+my $hrStorageSize          = "1.3.6.1.2.1.25.2.3.1.5."; # Data point 1
+my $hrStorageUsed          = "1.3.6.1.2.1.25.2.3.1.6."; # Data point 2
+
+
+my ($session, $error) = Net::SNMP->session(
+		-hostname  => $host,
+		-community => $community,
+		-port      => $port
+	);
+
+if (!defined ($session))
+{
+	die "Croaking: $error";
+}
+
+# First we want to find the harddisks...
+my $correct_capacity  = get_by_regex ($session, $hrDiskStorageCapacity, "[1-9]");
+my $correct_type      = get_by_regex ($session, $hrDeviceType, "^1.3.6.1.2.1.25.3.1.6\$");
+my $correct_removable = get_by_regex ($session, $hrDiskStorageRemoveble, "^(0|2)\$");
+
+my @keep = ();
+
+foreach my $id (keys %$correct_capacity)
+{
+	if (exists $correct_type->{$id} and 
+	    exists $correct_removable->{$id})
+	{
+	    push (@keep, $id);
+	}
+}
+
+print "# Kept: ", join (',', @keep), "\n" if $Munin::Plugin::SNMP::DEBUG;
+
+# Then we take a look at the partitions...
+
+my %partitions;
+
+foreach my $kept (@keep) # For each disk...
+{
+    my $parts = get_by_regex ($session, $hrPartitionFSIndex . "$kept.", "[1-9]");
+
+    foreach my $partition (keys %$parts)
+    {
+	my $mp = get_single ($session, $hrFSMountPoint . $partition);
+	$partitions{$mp}{partition} = $partition;
+	print "# Added partition \"$mp\" as $partition...\n" if $Munin::Plugin::SNMP::DEBUG
+    }
+}
+
+my $stor_id;
+
+my $foundpartitions = keys %partitions;
+
+if ($foundpartitions == 0 or defined $partitions{""})
+{ # Oh bugger. Some (or all) mountpoints were undeterminable. The backup
+  # solution is to just graph everything that claims to be a Other/Ram/VirtualMemory/FlashMemory,
+  # without checking if it's removable etc
+
+    	print "# Unable to map mountpoints from filesystems to storages. Bugger.\n" if $Munin::Plugin::SNMP::DEBUG;
+	$stor_id = get_by_regex ($session, $hrStorageType, "1.3.6.1.2.1.25.2.1.(1|2|3|9)");
+	%partitions = ();
+
+	foreach my $id (keys %$stor_id)
+	{
+		my $part = get_single ($session, $hrStorageDesc . $id);
+		my $spart = $part;
+		$spart =~ s/:\\ Label:.*/:/;
+		$partitions{$spart}{storage} = $id;
+		$partitions{$spart}{extinfo} = $part;
+		$stor_id->{$id} = $spart;
+	}
+} else 
+{ # Get the ones we're sure about
+
+	$stor_id   = get_by_regex ($session, $hrStorageDesc, '(^'.join('$|^',keys(%partitions)).'$)');
+}
+
+if (defined $ARGV[0] and $ARGV[0] eq "config")
+{
+	print "host_name $host\n" unless $host eq 'localhost';
+	print "graph_title Memory usage in percent\n";
+	print "graph_args --upper-limit 100 -l 0\n";
+	print "graph_vlabel %\n";
+	print "graph_category system\n";
+	print "graph_info This graph shows memory usage in percent.\n";
+
+	foreach my $part (keys %partitions)
+	{
+		print (&get_name_by_mp ($part), ".label ");
+		print (length($part)<=$MAXLABEL ? $part : "...".substr($part,-($MAXLABEL-3)));
+		print ("\n");
+		print (&get_name_by_mp ($part), ".warning 92\n");
+		print (&get_name_by_mp ($part), ".critical 98\n");
+		print (&get_name_by_mp ($part), ".info Usage for ". ($partitions{$part}{extinfo}||$part)."\n");
+	}
+	exit 0;
+}
+
+foreach my $storage (keys %$stor_id)
+{
+    $partitions{$stor_id->{$storage}}{storage} = $storage;
+    $partitions{$stor_id->{$storage}}{size}    = get_single ($session, $hrStorageSize . $storage);
+    $partitions{$stor_id->{$storage}}{used}    = get_single ($session, $hrStorageUsed . $storage);
+}
+
+foreach my $part (keys %partitions)
+{
+    print (&get_name_by_mp ($part), ".value ", ($partitions{$part}{used}*100/$partitions{$part}{size}), "\n");
+}
+
+sub get_single
+{
+	my $handle = shift;
+	my $oid    = shift;
+
+	print "# Getting single $oid..." if $Munin::Plugin::SNMP::DEBUG;
+
+	$response = $handle->get_request ($oid);
+
+	if (!defined $response->{$oid})
+	{
+	    print "undef\n" if $Munin::Plugin::SNMP::DEBUG;
+	    return undef;
+	}
+	else
+	{
+	    print "\"$response->{$oid}\"\n" if $Munin::Plugin::SNMP::DEBUG;
+	    return $response->{$oid};
+	}
+}
+
+sub get_by_regex
+{
+	my $handle = shift;
+	my $oid    = shift;
+	my $regex  = shift;
+	my $result = {};
+	my $num    = 0;
+	my $ret    = $oid . "0";
+	my $response;
+
+	print "# Starting browse of $oid...\n" if $Munin::Plugin::SNMP::DEBUG;
+
+	while (1)
+	{
+		if ($num == 0)
+		{
+			print "# Checking for $ret...\n" if $Munin::Plugin::SNMP::DEBUG;
+			$response = $handle->get_request ($ret);
+		}
+		if ($num or !defined $response)
+		{
+			print "# Checking for sibling of $ret...\n" if $Munin::Plugin::SNMP::DEBUG;
+			$response = $handle->get_next_request ($ret);
+		}
+		if (!$response)
+		{
+			return undef;
+		}
+		my @keys = keys %$response;
+		$ret = $keys[0];
+		print "# Analyzing $ret (compared to $oid)...\n" if $Munin::Plugin::SNMP::DEBUG;
+		last unless ($ret =~ /^$oid/);
+		$num++;
+		next unless ($response->{$ret} =~ /$regex/);
+		@keys = split (/\./, $ret);
+		$result->{$keys[-1]} = $response->{$ret};;
+		print "# Index $num: ", $keys[-1], " (", $response->{$ret}, ")\n" if $Munin::Plugin::SNMP::DEBUG;
+	};
+	return $result;
+}
+
+sub get_name_by_mp
+{
+    my $mp = shift;
+    $mp =~ s/[^a-z0-9_]/_/gi;
+    $mp =~ tr/A-Z/a-z/;
+    return "p" . $mp;
+}

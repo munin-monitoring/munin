@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+swap - Plugin to monitor memory usage on AIX
+
+=head1 COFIGURATION
+
+No configuration
+
+=head1 NOTES
+
+This will measure the total amount of swap/paging space available on
+the server, and will also measure how much of that swap space is being
+used.  It uses /usr/sbin/lsps to find all this out.  If you have more
+than one paging space they will be added together, so will the total
+amount of space used.  This is the total amount used after all.
+
+=head1 AUTHOR
+
+Developed 05/28/2003 by Mike Discenza <mike.discenza@dillards.com>
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use POSIX;
+
+if($ARGV[0] && $ARGV[0] eq "autoconf")
+  {
+    if(-e "/usr/sbin/lsps" && -X "/usr/sbin/lsps")
+      {
+        print "yes\n";
+        exit 0;
+      }
+    else
+      {
+        print "no\n";
+        exit 0;
+      }
+  }
+
+if($ARGV[0] && $ARGV[0] eq "config")
+  {
+    print "graph_args --base 1024 -l 0 --vertical-label Bytes --upper-limit ".getTotalSwapBytes()."\n";
+    print "graph_title Swap usage\n";
+    print "graph_order used total\n";
+    print "graph_category system\n";
+    print "used.label used\n";
+    print "used.draw STACK\n";
+    print "total.label total\n";
+    print "total.draw AREA\n";
+    exit 0
+  }
+
+my(@swapInfo) = getSwapSpace();
+print "total.value $swapInfo[0]\n";
+print "used.value $swapInfo[1]\n";
+  
+sub getSwapSpace
+{
+  my($line,@lineArray,$amountUsed,$totalSpace);
+  open SWAPINFO, "/usr/sbin/lsps -a|tail +2|";
+  while($line = <SWAPINFO>)
+    {
+      @lineArray = split(/ +/,$line);
+      $totalSpace += (substr($lineArray[3],0,-2) * 1024) * 1024;
+      $amountUsed += ((substr($lineArray[3],0,-2) * ($lineArray[4]/100)) * 1024) * 1024;
+    }
+  return (ceil($totalSpace),ceil($amountUsed));
+}
+
+sub getTotalSwapBytes
+{
+  my($line,@lineArray,$totalSpace);
+  open SWAPINFO, "/usr/sbin/lsps -a|tail +2|";
+  while($line = <SWAPINFO>)
+    {
+      @lineArray = split(/ +/,$line);
+      $totalSpace += (substr($lineArray[3],0,-2) * 1024) * 1024;
+    }
+  return (ceil($totalSpace));
+}

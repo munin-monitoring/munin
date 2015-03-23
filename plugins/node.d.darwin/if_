@@ -1,0 +1,85 @@
+#!/bin/bash
+
+: << =cut
+
+=head1 NAME
+
+if_ - Wildcard-plugin to monitor traffic on network interfaces
+
+=head1 CONFIGURATION
+
+=head2 WILDCARD PLUGIN
+
+This is a wildcard plugin.  To monitor an interface, link
+if_<interface> to this file. E.g.
+
+  ln -s /usr/share/node/node/plugins-auto/if_ \
+        /etc/munin/node.d/if_en0
+
+...will monitor en0.
+
+=head1 NOTES
+
+Any device found in netstat -ib can be monitored. Examples include
+en*, fw* and lo (the latter is not monitored by default).
+Please note that aliases cannot be monitored with this plugin.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknownl LICENSE
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+INTERFACE=${0##*if_}
+
+case $1 in
+    autoconf)
+	if type -p netstat >/dev/null; then
+	    echo yes
+	    exit 0
+	else
+	    echo "no (netstat not found)"
+	    exit 0
+	fi
+	;;
+    suggest)
+	if type -p netstat >/dev/null; then
+	    netstat -nib | awk '$3 ~ /Link/ && $1 !~ /(Name|lo|gif|stf)/ && $5 != "0" && $7 != "0" { print $1 }'
+	fi
+	exit 0
+	;;
+    config)
+	echo "graph_order down up"
+	echo "graph_title $INTERFACE traffic"
+	echo 'graph_args --base 1000'
+	echo 'graph_vlabel bits in (-) / out (+) per ${graph_period}'
+	echo 'graph_category network'
+	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is shown in bits per second, not bytes. IMPORTANT: Since the data source for this plugin use 32bit counters, this plugin is really unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps. This means that this plugin is unsuitable for most production environments."
+	echo 'down.label received'
+        echo 'down.type DERIVE'
+        echo 'down.graph no'
+        echo 'down.cdef down,8,*'
+	echo 'down.min 0'
+        echo 'up.label bps'
+	echo 'up.type DERIVE'
+	echo 'up.negative down'
+	echo 'up.cdef up,8,*'
+	echo 'up.min 0'
+        echo "up.info Traffic sent (+) and received (-) on the $INTERFACE network interface."
+	exit 0
+	;;
+esac
+
+# Escape dots in the interface name (eg. vlans) before using it as a regex
+# Name  Mtu   Network       Address            Ipkts Ierrs     Ibytes    Opkts Oerrs     Obytes  Coll
+# en1   1500  <Link#5>    00:17:f2:e8:f8:3c 11548082 38116  702690133 22938005   170 16013565627     0
+netstat -nib -I "$INTERFACE" | awk '$3 ~ /Link/ { print "down.value " $7 "\nup.value " $10 }'

@@ -1,0 +1,181 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+mailman - Plugin to monitor activity on mailman mailing list
+management systems
+
+=head1 CONFIGURATION
+
+Configuration for this plugin depends on the mailman's settings on the
+system. Here are the defaults:
+
+[mailman]
+  env.logfile /var/log/mailman/post
+  env.libdir  /var/lib/mailman
+  env.lister  /usr/lib/mailman/bin/list_members
+
+=head1 AUTHOR
+
+Author unknown.  Source code strongly related to the Exim plugin of old.
+
+=head1 LICENSE
+
+License unknown
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
+
+$statefile = "$ENV{MUNIN_PLUGSTATE}/munin-mailman-log.state";
+$pos = undef;
+$posts = 0;
+$members = 0;
+
+# System paths
+$logfile = $ENV{'logfile'} || "/var/log/mailman/post";
+$libdir  = $ENV{'libdir'}  || "/var/lib/mailman";
+$lister  = $ENV{'lister'}  || "/usr/lib/mailman/bin/list_members";
+
+if (-f "$logfile.0")
+{
+    $rotlogfile = $logfile . ".0";
+}
+elsif (-f "$logfile.1")
+{
+    $rotlogfile = $logfile . ".1";
+}
+elsif (-f "$logfile.01")
+{
+    $rotlogfile = $logfile . ".01";
+}
+else
+{
+    $rotlogfile = $logfile . ".0";
+}
+
+if($ARGV[0] and $ARGV[0] eq "config") {
+    print "graph_title Mailman usage\n";
+    print "graph_args --base 1000\n";
+    print "posts.label posts per minute\n";
+    print "posts.type DERIVE\n";
+    print "posts.min 0\n";
+    print "members.label members\n";
+    print "members.type GAUGE\n";
+    exit 0;
+}
+
+if($ARGV[0] and $ARGV[0] eq "autoconf") {
+    if(-f $logfile && -d $libdir && -x $lister ) {
+        print "yes\n";
+    } else {
+        print "no\n";
+    }
+    exit 0;
+}
+
+if(! -f $logfile &&
+   ! -d $libdir &&
+   ! -x $lister &&
+   ! -f $rotlogfile) {
+    print "posts.value U\n";
+    print "posts.extinfo Can't find any log files\n";
+    print "members.value U\n";
+    exit 0;
+}
+
+if(-f $statefile) {
+    open(IN, "<$statefile") or die "Can't open $statefile for reading: $!";
+    if(<IN> =~ /^(\d+):(\d+)/) {
+	($pos,$posts) = ($1, $2);
+    }
+    close(IN);
+}
+
+$startsize = (stat $logfile)[7];
+
+if(!defined $pos) {
+    # Initial run.
+    $pos = $startsize;
+    $startsize = 0;
+} elsif($startsize < $pos) {
+    # Log rotated
+    parseMailmanLog($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    $pos = 0;
+}
+
+parseMailmanLog($logfile, $pos, $startsize);
+$pos = $startsize;
+
+parseMailmanLists();
+
+print "posts.value $posts\n";
+print "members.value $members\n";
+
+open (OUT, ">$statefile") or die "Can't open $statefile for writing: $!";
+print OUT "$pos:$posts\n";
+close OUT;
+
+sub parseMailmanLog {
+    my($fname, $start, $stop) = @_;
+    open(LOGFILE, $fname) or die "Can't open $fname for reading: $!";
+    seek(LOGFILE, $start, 0) or die "Can't seek in $fname: $!";
+    while(tell(LOGFILE) < $stop) {
+	my $line = <LOGFILE>;
+	if($line =~ / post to/) {
+	    $posts++;
+	}
+    }
+    close(LOGFILE);
+}
+
+sub parseMailmanLists {
+    my @domains = &mailmanDomains;
+    for(my $i = 0; $i < @domains; $i++) {
+        my @lists = &mailmanLists($domains[$i]);
+        for(my $j = 0; $j < @lists; $j++) {
+            $members += &mailmanMembers($domains[$i], $lists[$j]);
+        }
+    }
+}
+
+sub mailmanDomains {
+    my @domains;
+    if (-e "$libdir/data") {
+	@domains = (".");
+    } else {
+	opendir(DOMAINS, $libdir) or 
+	    die "Can't open directory $libdir for reading: $!";
+	@domains = grep ( { !/^\@/ && !/^\./ && -d "$libdir/$_" }
+			  readdir(DOMAINS) );
+	closedir(DOMAINS);
+    }
+    return @domains;
+}
+
+sub mailmanLists {
+    my ($domain) = @_;
+    opendir(LISTS, "$libdir/$domain/lists") or
+	die "Can't open directory $libdir/$domain/lists for reading: $!";
+    my @lists = grep ( { !/^\@/ && !/^\./ && -d "$libdir/$domain/lists/$_" } 
+		       readdir(LISTS) );
+    closedir(LISTS);
+    return @lists;
+}
+
+sub mailmanMembers {
+    my ($domain, $list) = @_;
+    return 0 unless $domain;
+    return 0 unless $list;
+    my $cnt = 0;
+    open(MEMBERS, "DOMAIN=$domain $lister $list|") or
+	die "Cannot execute pipe: $lister $list: $!";
+    while(<MEMBERS>) {
+        $cnt++;
+    }
+    close(MEMBERS);
+    return $cnt;
+}

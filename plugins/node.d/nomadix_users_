@@ -1,0 +1,176 @@
+#!/usr/bin/perl
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+nomadix_users_ - SNMP wildcard plugin to monitor the number of users of Nomadix Enterprise WiFi devices
+
+=head1 APPLICABLE SYSTEMS
+
+The plugin was written specifically for OSL's nomadix equipment.  It
+uses SNMP to monitor the devices.  Any devices that support one or
+more of these OIDs:
+
+  .1.3.6.1.4.1.3309.1.1.2.18.1.1.8 from USG-II
+  .1.3.6.1.4.1.3309.1.4.2.18.1.1.8 for AG5000
+  .1.3.6.1.4.1.3309.1.5.2.18.1.1.8 for AG3000
+
+should be able to get their users counted.
+
+=head1 CONFIGURATION
+
+Configuration is done by editing the plugin.
+
+=head1 BUGS
+
+Should support configuration via the environment
+
+Should be rewritten as a autoconfigurable snmp__users (or some such
+name, not sure how specific the OIDs it presents are) plugin using the
+Plugin::SNMP module.
+
+=head1 AUTHOR
+
+(C) Copyright 2006-2009.  Written by Espen Braastad, Linpro AS for OSL
+(2006) Further modified by Erik Inge Bolsø, Linpro AS for OSL (2007)
+
+=head1 LICENSE
+
+GPLv2.
+
+=head1 MAGIC MARKERS
+
+None.  No autoconfiguration is supported and indeed the plugin must be
+configured by editing it.
+
+=cut
+
+use strict;
+use Net::SNMP;
+
+my $snmpwalk="/usr/bin/snmpwalk";       # Path to the snmpwalk executable
+my $timeout=1;                          # snmp timeout
+my $debug=0;                            # Enable/disable debugging
+my $community="public";
+my $oid_users=".1.3.6.1.4.1.3309.1.1.2.18.1.1.8"; #USG-II
+my $oid_users_2=".1.3.6.1.4.1.3309.1.4.2.18.1.1.8"; #AG5000
+my $oid_users_3=".1.3.6.1.4.1.3309.1.5.2.18.1.1.8"; #AG3000
+my $oid_name=".1.3.6.1.2.1.1.5.0";
+
+my $target=`basename $0 | sed 's/^nomadix_users_//g'`;
+exit 2 unless defined $target;
+$target=~s/\_/\./g;
+
+chomp($target);
+
+my $status=2;
+
+if ($ARGV[0] and $ARGV[0] eq "autoconf")
+{
+        if(-x ${snmpwalk}){
+                my ${test}=`${snmpwalk} -v 1 -c ${community} -t ${timeout} ${target} ${oid_users} -Cp -OQv 2>/dev/null`;
+                if($?==0){
+                        print "yes\n";
+                        exit 0;
+                }
+                exit 1;
+        }
+        exit 1;
+}
+
+if($ARGV[0] and $ARGV[0] eq "config") {
+        my ${sysname}=`${snmpwalk} -v 1 -c ${community} -t ${timeout} ${target} ${oid_name} -OQv 2>/dev/null`;
+        chomp(${sysname});
+        print "graph_title Users on " . ${sysname} . " (" . ${target} . ")\n";
+        print "graph_args --base 1000\n";
+        print "graph_vlabel Active users\n";
+        print "graph_category Nomadix\n";
+        print 'graph_info This graph shows the amount of users in AAA state "Valid" connected to ' . ${target} . ".\n";
+        print "valid.label Valid users\n";
+        print "valid.type GAUGE\n";
+        exit 0;
+}
+
+# Checking if snmpwalk is found and executable
+if(! -x ${snmpwalk}){
+        ${status}=2;
+        print STDERR "Error: " . ${snmpwalk} . " not found.\n"; 
+        if(${debug}){
+                print "Exit code: " . ${status} . "\n";
+        }
+        exit ${status};
+}
+# Let's see if we are able to talk to the SNMP host
+my @{users}=split("\n",`${snmpwalk} -v 1 -c ${community} -t ${timeout} ${target} ${oid_users} -Cp -OQv 2>/dev/null`);
+
+my ${snmpexit}=$?;
+if(${snmpexit}!=0){
+        ${status}=2;
+        print STDERR "Error: Unable to connect to ${target}. Exit code was " . ${snmpexit} . ".\n";
+        if(${debug}){
+                print "Exit code: " . ${status} . "\n";
+        }
+        exit ${status};
+}
+
+# Count users, both valid and otherwise
+my ${number_of_users}=(split(" ",${users[-1]}))[-1];
+
+if (${number_of_users} == 0)
+{
+        @{users}=split("\n",`${snmpwalk} -v 1 -c ${community} -t ${timeout} ${target} ${oid_users_2} -Cp -OQv 2>/dev/null`);
+}
+
+${number_of_users}=(split(" ",${users[-1]}))[-1];
+
+if (${number_of_users} == 0)
+{
+        @{users}=split("\n",`${snmpwalk} -v 1 -c ${community} -t ${timeout} ${target} ${oid_users_3} -Cp -OQv 2>/dev/null`);
+}
+
+${number_of_users}=(split(" ",${users[-1]}))[-1];
+
+if(${debug}){
+        print "Total number of users found: " . ${number_of_users} . "\n";
+}
+# Checking if the number of users is a numeric value
+if (${number_of_users} =~ /^-?\d/){
+        # Loop through users, extract authentication state
+        my ${valid_users}=0;
+        for(my ${i}=1 ; ${i}<=${number_of_users} ; ${i}++){
+                my ${state}=${users[${i}-1]};
+                if(${state} =~ /Valid/){
+                        ${valid_users}+=1;
+                }
+                if(${debug}){
+                        print "User in state " . ${state} . "\n";
+                }
+        }
+
+        # Write human readable output
+        print "valid.value " . ${valid_users} . "\n";
+        if(${debug}){
+                print "Exit code: " . ${status} . "\n";
+        }
+        ${status}=0;
+        exit ${status};
+} else {
+        ${status}=2;
+        print STDERR "Error: The number of users found is not a numerical value. Unable to monitor correctly.\n";
+        if(${debug}){
+                print "Exit code: " . ${status} . "\n";
+        }
+        exit ${status};
+}
+
+# Obs!
+print STDERR "This is not supposed to happen. Debugging is needed!\n";
+${status}=2;
+if(${debug}){
+        print "Exit code: " . ${status} . "\n";
+}
+exit ${status};
+

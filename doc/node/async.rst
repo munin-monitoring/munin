@@ -86,17 +86,17 @@ defined as one per plugin, rotated per a timeframe.
 
 Theses files are later read by munin-async client part that is
 typically accessed via ssh from munin-update. Here again no fancy
-proceessing is done, just plainly read back to the calling
+processing is done, just plainly read back to the calling
 munin-update to be processed there. This way the overhead on the node
 is minimal.
 
 The nice part is that the munin-async client does not need to run on
 the node, it can run on a completely different host. All it takes is
 to synchronize the spoolfetch dir. Sync can be periodic (think rsync)
-or realtime (think NFS).
+or real-time (think NFS).
 
 In the same idea, the munin-asyncd can also be hosted elsewhere for
-diskless nodes.
+disk-less nodes.
 
 Specific update rates 
 +++++++++++++++++++++

@@ -1,0 +1,83 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2009 Magnus Hagander, Redpill Linpro AB
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+=head1 NAME
+
+postgres_xlog - Plugin to monitor the size of the PostgreSQL transaction log
+
+=head1 CONFIGURATION
+
+Configuration is done through libpq environment variables, for example
+PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
+
+To monitor several instances, link to postgres_<tag>_xlog
+The <tag> can be what you want but without "_". It allows you to define several
+database configuration.
+
+Example :
+  [postgres_pg91_*]
+  env.PGPORT 5432
+  [postgres_pg92_*]
+  env.PGPORT 5432
+
+=head1 SEE ALSO
+
+L<Munin::Plugin::Pgsql>
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=head1 AUTHOR
+
+Magnus Hagander <magnus@hagander.net>, Redpill Linpro AB
+
+=head1 COPYRIGHT/License.
+
+Copyright (c) 2009 Magnus Hagander, Redpill Linpro AB
+
+All rights reserved. This program is free software; you can
+redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+=cut
+
+use strict;
+use warnings;
+
+use Munin::Plugin::Pgsql;
+
+my $pg = Munin::Plugin::Pgsql->new(
+    minversion => 8.1,
+    title      => 'PostgreSQL transaction log',
+    info       => 'PostgreSQL transaction log',
+    vlabel     => 'Log segments',
+    basequery =>
+        "SELECT count(*) AS segments FROM pg_ls_dir('pg_xlog') t(fn) WHERE fn ~ '^[0-9A-Z]{24}\$'",
+    pivotquery  => 1,
+    configquery => [
+        "VALUES('segments','WAL segments')",
+        [8.1, "SELECT 'segments','WAL segments'"]
+    ]
+);
+
+$pg->Process();
+

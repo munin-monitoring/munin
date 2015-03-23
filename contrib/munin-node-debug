@@ -154,13 +154,22 @@ sub service
 			print $client "update_rate $update_rate\n";
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				print $client "field_". $plugin_number . "_$i.label field $i of plugin $plugin_name on $hostname\n";
-				print $client "field_". $plugin_number . "_$i.type GAUGE\n";
+				my @PLUGIN_TYPES = qw/
+					GAUGE
+					DERIVE
+					ABSOLUTE
+				/;
+				my $plugin_type = $PLUGIN_TYPES[($i + $plugin_number) % 3];
+
+				print $client "field_". $plugin_number . "_$i.type $plugin_type\n";
 			}
 			print $client ".\n";
 		} elsif ($line =~ m/^fetch (\w+)/) {
 			my $plugin_number = get_plugin_number($1);
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				my $value = sin( (time / 3600) * $plugin_number + $i);
+
+				$value = int($value * 1024) if ($plugin_number + $i) % 3;
 				print $client "field_". $plugin_number . "_$i.value $value\n";
 			}
 			print $client ".\n";

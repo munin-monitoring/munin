@@ -1,0 +1,135 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+bind9 - Plugin to monitor usage of bind 9 servers
+
+=head1 CONFIGURATION
+
+This plugin is configurable environment variables.  The following
+shows the default settings:
+
+ [bind9]
+    env.logfile   /var/log/bind9/query.log
+
+You must also configure query logging in your named.conf. Use a stanza
+such as this:
+
+ logging {
+     channel query {
+         file "query.log" versions 2 size 1m;
+         print-time yes;
+         severity info;
+     };
+
+     category queries { query; };
+ };
+
+Remark : depending on the traffic level of your bind server, you shall adjust
+the maximum size of the query.log file, above, to cover the five minutes delay
+between two munin polls.
+
+=head1 SEE ALSO
+
+=over
+
+=item * L<http://blog.larsstrand.org/2008/02/how-to-monitor-bind-with-munin.html>
+
+=item * BIND Administrator Reference Manual
+
+=back
+
+=head1 AUTHOR
+
+Nicolai Langfeldt
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+  #%# family=manual
+
+=cut
+
+use strict;
+
+my $QUERYLOG = $ENV{logfile} || '/var/log/bind9/query.log';
+my $STATEFILE= "$ENV{MUNIN_PLUGSTATE}/bind9.state";
+
+my $OTHER=0;
+my %IN;
+
+sub get_state {
+    if (! -f $STATEFILE) {
+        open(Q, ">", $STATEFILE);
+        close(Q);
+    }
+    open(Q,"< $STATEFILE") or die ("Cannot open state file");
+    while (<Q>) {
+        chomp;
+        my ($q,$n) = split(/\s+/,$_,2);
+        $IN{$q}=$n unless defined($IN{$q});
+    }
+    close(Q);
+}
+
+
+sub do_stats {
+    my $k;
+
+    open(Q,"< $QUERYLOG") or die "$!";
+    while (<Q>) {
+        chomp;
+        if (/: (view \S+\: |)query\: \S+ (\w+) (\w+)/) {
+            if ($2 eq 'IN' and $3 !~ /^TYPE/) {
+                $IN{$3}++;
+            } else {
+                $OTHER++;
+            }
+        }
+    }
+    close(Q);
+
+    get_state;
+
+    open(Q,"> $STATEFILE") or die;
+    foreach $k (keys %IN) {
+        print "query_$k.value ",$IN{$k},"\n";
+        print Q "$k ",$IN{$k},"\n";
+    }
+    close(Q);
+
+    print "query_other.value ",$OTHER,"\n";
+}
+
+
+sub do_config {
+    my $k;
+
+    print "graph_title DNS Queries by type
+graph_category BIND
+graph_vlabel Queries / \${graph_period}
+query_other.label Other
+query_other.type DERIVE
+query_other.min 0
+query_other.draw AREA
+";
+    get_state;
+
+    foreach $k (keys %IN) {
+        print "query_$k.label $k
+query_$k.type DERIVE
+query_$k.min 0
+query_$k.draw STACK
+";
+    }
+};
+
+if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
+    do_config;
+    exit(0);
+}
+
+do_stats;

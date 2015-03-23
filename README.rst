@@ -2,7 +2,7 @@ This is Munin
 =============
 
 Munin is distributed under the GNU GPL version 2.  Munin is copyrighted
-2002-2012 by its various authors as identified in the source files.
+2002-2014 by its various authors as identified in the source files.
 
 Munin is homed at http://munin-monitoring.org/.  After you have completed 
 the INSTALL all the documentation can be found there.
@@ -40,9 +40,14 @@ stable-2.0 : |build-stable2.0|
 
 devel : |build-devel|
 
+docs : |docs-latest|
+
 .. |build-stable2.0| image:: https://travis-ci.org/munin-monitoring/munin.png?branch=stable-2.0
    :target: https://travis-ci.org/munin-monitoring/munin
 
 .. |build-devel| image:: https://travis-ci.org/munin-monitoring/munin.png?branch=devel
    :target: https://travis-ci.org/munin-monitoring/munin
+
+.. |docs-latest| image:: https://readthedocs.org/projects/munin/badge/?version=latest
+   :target: http://guide.munin-monitoring.org/
 

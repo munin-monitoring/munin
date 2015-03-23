@@ -1,0 +1,245 @@
+#!/usr/bin/perl -T
+#
+# Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
+#    Nicolai Langfeldt
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+use strict;
+use warnings;
+
+# Trust PERL5LIB from environment
+use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
+
+use Getopt::Long;
+
+use Munin::Common::Defaults;
+use Munin::Node::Config;
+use Munin::Node::OS;
+use Munin::Node::Service;
+use Munin::Node::Server;
+
+my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
+my $sconfdir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
+my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $DEBUG    = 0;
+my $PIDEBUG  = 0;
+my $paranoia = 0;
+
+sub main
+{
+    chdir ("/");
+
+    # "Clean" environment to disable taint-checking on the environment. We _know_
+    # that the environment is insecure, but we want to let admins shoot themselves
+    # in the foot with it, if they want to.
+    foreach my $key (keys %ENV) {
+        $ENV{$key} =~ /^(.*)$/;
+        $ENV{$key} = $1;
+    }
+
+    parse_args();
+
+    my $config = Munin::Node::Config->instance();
+    $config->parse_config_from_file($conffile);
+
+    $paranoia = $config->{paranoia} if defined $config->{paranoia};
+
+    my $services = Munin::Node::Service->new(
+        servicedir => $servicedir,
+        defuser    => $config->{defuser},
+        defgroup   => $config->{defgroup},
+        pidebug    => $PIDEBUG,
+        timeout    => $config->{timeout},
+    );
+
+    $config->reinitialize({
+        %$config,
+
+        services => $services,
+        sconfdir => $sconfdir,
+        conffile => $conffile,
+
+        DEBUG    => $DEBUG,
+
+        paranoia => $paranoia,
+    });
+
+    Munin::Node::Server->run(
+        syslog_ident => 'munin-node',
+        conf_file    => $conffile,
+    );
+
+    # Untaint $0 after Munin::Node::Server has had a chance of getting
+    # the original value
+    $0 =~ /([^\/]*)$/;
+    $0 = $1;
+
+    return 0;
+}
+
+
+sub parse_args
+{
+    my @ORIG_ARGV  = @ARGV;
+
+    my $servicedir_cmdline;
+    my $sconfdir_cmdline;
+    print_usage_and_exit() unless GetOptions(
+        "config=s"     => \$conffile,
+        "servicedir=s" => \$servicedir_cmdline,
+        'sconfdir=s'   => \$sconfdir_cmdline,
+        "debug!"       => \$DEBUG,
+        "pidebug!"     => \$PIDEBUG,
+        "paranoia!"    => \$paranoia,
+        "version"      => \&print_version_and_exit,
+        "help"         => \&print_usage_and_exit,
+    );
+
+    # We untaint the args brutally, since the sysadm should know what he does
+    $servicedir = $1 if defined $servicedir_cmdline && $servicedir_cmdline =~ m/(.*)/;
+    $sconfdir   = $1 if defined $sconfdir_cmdline   && $sconfdir_cmdline   =~ m/(.*)/;
+
+    # Reset ARGV (for HUPing)
+    @ARGV = @ORIG_ARGV;
+
+    return;
+}
+
+
+sub print_usage_and_exit
+{
+    require Pod::Usage;
+    Pod::Usage::pod2usage(-verbose => 1);
+}
+
+
+sub print_version_and_exit
+{
+    require Pod::Usage;
+    Pod::Usage::pod2usage(
+        -verbose => 99,
+        -sections => 'VERSION|COPYRIGHT',
+    );
+}
+
+
+exit main() unless caller;
+
+
+1;
+
+__END__
+
+=head1 NAME
+
+munin-node - A daemon to gather information in cooperation with the main
+Munin program
+
+=head1 SYNOPSIS
+
+munin-node [--options]
+
+=head1 DESCRIPTION
+
+munin-node is a daemon for reporting statistics on system performance.
+
+It doesn't produce these itself, but instead relies on a number of plugins
+which are responsible for gathering the data they require, and
+describing how this should be graphed.  In fact, it does little more than
+fielding requests from the Munin master, running the appropriate plugins,
+and returning the output they produce.
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<< --config <configfile> >>
+
+Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin-node.conf]
+
+=item B<< --servicedir <dir> >>
+
+Override plugin directory [@@CONFDIR@@/plugins/]
+
+=item B<< --sconfdir <dir> >>
+
+Override plugin configuration directory [@@CONFDIR@@/plugin-conf.d/]
+
+=item B< --[no]paranoia >
+
+Only run plugins owned by root. Check permissions as well. [--noparanoia]
+
+=item B< --help >
+
+View this help message.
+
+=item B< --[no]debug >
+
+View debug messages.  This can be very verbose.
+
+=item B< --[no]pidebug >
+
+Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so that plugins
+may enable debugging. [--nopidebug]
+
+=back
+
+=head1 FILES
+
+    @@CONFDIR@@/munin-node.conf
+    @@CONFDIR@@/plugins/*
+    @@CONFDIR@@/plugin-conf.d/*
+    @@STATEDIR@@/munin-node.pid
+    @@LOGDIR@@/munin-node.log
+
+=head1 VERSION
+
+This is munin-node v@@VERSION@@
+
+
+=head1 AUTHORS
+
+Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
+
+=head1 BUGS
+
+Please see L<http://munin-monitoring.org/report/1>.
+
+=head1 COPYRIGHT
+
+Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
+
+This is free software; see the source for copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
+This program is released under the GNU General Public License
+
+=head1 SEE ALSO
+
+For information on configuration options, please refer to the man page for
+F<munin-node.conf>.
+
+Many plugins can report whether or not they can reasonably be used on the
+node.  C<munin-node-configure> can use this information to help manage
+installed plugins.
+
+The network protocol is documented at
+L<http://munin-monitoring.org/wiki/network-protocol>
+
+=cut

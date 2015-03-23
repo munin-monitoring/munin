@@ -1,6 +1,5 @@
 package MasterBuilder;
 
-# $Id$
 
 use base qw(Module::Build);
 

@@ -1,0 +1,131 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+snmp__netapp_inodeusage_ - Munin plugin to retrieve inodes usage on
+NetApp storage appliances.
+
+=head1 APPLICABLE SYSTEMS
+
+Inodes usage stats should be reported by any NetApp storage appliance
+with SNMP agent daemon activated. See na_snmp(8) for details.
+
+=head1 CONFIGURATION
+
+Unfortunately, SNMPv3 is not fully supported on all NetApp equipments.
+For this reason, this plugin will use SNMPv2 by default, which is
+insecure because it doesn't encrypt the community string. 
+
+The following parameters will help you get this plugin working :
+
+  [snmp_*]
+     env.community MyCommunity
+
+If your community name is 'public', you should really worry about
+security and immediately reconfigure your appliance.
+
+Please see 'perldoc Munin::Plugin::SNMP' for further configuration.
+
+=head1 MIB INFORMATION
+
+This plugin requires support for the NETWORK-APPLIANCE-MIB issued by
+Network Appliance. It reports the content of the DfEntry OID.
+
+=head1 MAGIC MARKERS
+
+  #%# family=snmpauto
+  #%# capabilities=snmpconf
+
+=head1 VERSION
+
+v1.0 - 06/22/2009 14:05:03 CEST
+Initial revision
+
+
+=head1 AUTHOR
+
+This plugin is copyright (c) 2009 by Guillaume Blairon.
+
+NetApp is a registered trademark and Network Appliance is a trademark
+of Network Appliance, Inc. in the U.S. and other countries.
+
+=head1 BUGS
+
+This plugin wasn't tested on many hardware. If you encounter bugs,
+please report any to Guillaume Blairon E<lt>L<g@yom.be>E<gt>.
+
+=head1 LICENSE
+
+GPLv2 or (at your option) any later version.
+
+=cut
+
+use strict;
+use warnings;
+
+use Munin::Plugin::SNMP;
+
+my %oids = (
+    dfInodesUsed => '1.3.6.1.4.1.789.1.5.4.1.7.',
+    dfInodesFree => '1.3.6.1.4.1.789.1.5.4.1.8.',
+);
+
+if (defined $ARGV[0] and $ARGV[0] eq 'snmpconf') {
+    print "index 1.3.6.1.4.1.789.1.5.4.1.1.\n";
+    foreach (keys %oids) {
+        print "require $oids{$_} [0-9]\n";
+    }
+    exit 0;
+}
+
+my $session = Munin::Plugin::SNMP->session();
+my ($host, undef, undef, $tail) = Munin::Plugin::SNMP->config_session();
+my ($df_id, $name_oid);
+
+if ($tail =~ /^netapp_inodeusage_(\d)*$/) {
+    $df_id    = $1;
+    $name_oid = '1.3.6.1.4.1.789.1.5.4.1.2.' . $df_id;
+} else {
+    die "Couldn't understand what I'm supposed to monitor";
+}
+
+if (defined $ARGV[0] and $ARGV[0] eq "config") {
+    my $df_name = $session->get_single($name_oid);
+
+    print "host_name $host\n" unless $host eq 'localhost';
+    print "graph_title $host inodes usage on $df_name\n";
+    print "graph_args --base 1000 --lower-limit 0\n";
+    print "graph_vlabel bytes\n";
+    print "graph_category disk\n";
+    print "graph_info This graph shows the inodes usage for $df_name on NetApp host $host\n";
+    print "graph_order used avail total\n";
+    print "used.info The total inodes number of inodes in use on the $df_name file system.\n";
+    print "used.type GAUGE\n";
+    print "used.draw AREA\n";
+    print "used.label Used\n";
+    print "used.min 0\n";
+    print "avail.info The total number of inodes that are free for use on the $df_name file system.\n";
+    print "avail.type GAUGE\n";
+    print "avail.draw STACK\n";
+    print "avail.label Available\n";
+    print "avail.min 0\n";
+    print "total.info The total capacity for the $df_name file system.\n";
+    print "total.type GAUGE\n";
+    print "total.draw LINE2\n";
+    print "total.label Total\n";
+    print "total.min 0\n";
+
+    exit 0;
+}
+
+my $used  = $session->get_single($oids{dfInodesUsed}.$df_id);
+my $avail = $session->get_single($oids{dfInodesFree}.$df_id);
+my $total = $used + $avail;
+
+print "used.value $used\n";
+print "avail.value $avail\n";
+print "total.value $total\n";
+
+exit 0;
+
+__END__

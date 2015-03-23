@@ -1,27 +1,23 @@
 #!/bin/bash
 
+set -e
+set -u
+
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
-. $FINDBIN/common.sh
+. "${FINDBIN}/common.sh"
 
-cd $BASEDIR
-
+cd "$BASEDIR"
 
 usage() {
-    echo "Usage: $0 <NAME>"
-    exit 1
+	echo "Usage: $0 <NAME>"
+	exit 1
 }
 
-
 if [ -z "$1" ]; then
-    usage
+	usage
 fi
 
-
-RUN=$(find $FINDDIR -name $1 -type f -executable)
-shift
-
-if [ -z "$RUN" ]; then
-    usage
-fi
-
-env PERL5LIB=$DESTDIR$PERLSITELIB $RUN "$@"
+command=$(command -v "$1")
+echo "Found: ${command}"
+echo "Command line: " "$@"
+exec "$@"

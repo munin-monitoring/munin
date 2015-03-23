@@ -1,0 +1,154 @@
+#!/bin/sh
+#
+# Wildcard-plugin to monitor disks. To monitor a disk,
+# link io_<function>_<disk> to this file. E.g.
+#
+#    ln -s /usr/share/munin/plugins-auto/io_.kstat /etc/munin/node.d/io_busy_sd0
+#
+# ...will monitor busy and wait on sd0.
+#
+# These functions are implemented:
+#	busy bytes ops
+#
+# Any device found in /usr/bin/kstat can be monitored.
+#
+# Configuration variables
+#
+#   io_*_ignore	 - Perl expression to select devices to ignore
+#
+#   E.g. io_dad_ignore = $F[1] == 0 ignores dad0.
+#   All fields from the kstat line are in @F. Fields are separated
+#   by ':' or "\t". $F[0] is the module name, e.g. 'dad'.
+#   $F[1] is the instance number. $F[2] is the device name , e.g.
+#   'dad0'.
+#
+# Magic markers (optional - used by munin-config and some installation
+# scripts):
+#
+#%# family=auto
+#%# capabilities=autoconf suggest
+
+FUNCTION=`basename $0 | sed -e 's/io_//' -e 's/_.*//'`
+MODULE=`basename $0 | sed 's/^.*_//g'`
+CLASS=disk
+PERL=${PERL:-/usr/bin/perl}
+
+if [ -z "$FUNCTION" ]; then
+	exit
+elif [ $FUNCTION = "busy" ]; then
+	TITLE="Busy & Wait"
+	IN=rtime
+	INNAME=busy
+	OUT=wtime
+	OUTNAME=wait
+	CDEF=",100,*"
+elif [ $FUNCTION = "bytes" ]; then
+	TITLE="I/O"
+	IN=nread
+	INNAME=$IN
+	OUT=nwritten
+	OUTNAME=$OUT
+elif [ $FUNCTION = "ops" ]; then
+	TITLE="Operations"
+	IN=reads
+	INNAME=$IN
+	OUT=writes
+	OUTNAME=$OUT
+fi
+
+if [ "$1" = "autoconf" ]; then
+	if [ -x /usr/bin/kstat ]; then
+		echo yes
+		exit 0
+	else
+		echo "no (/usr/bin/kstat not found)"
+		exit 0
+	fi
+fi
+
+if [ "$1" = "suggest" ]; then
+	if [ -x /usr/bin/kstat ]; then
+		kstat -p -c '/disk|nfs|tape/' -s "/^$IN\$/" | sed -e 's/:.*//' -e 's/ssd/sd/' -e '/^fd$/d' | sort -u
+		exit 0
+	else
+		exit 1
+	fi
+fi
+
+REGEX="$MODULE"
+if [ $MODULE = "sd" ]; then
+	REGEX="/^s?sd$/"
+	NAME="Disk Device"
+elif [ $MODULE = "dad" ]; then
+	NAME="IDE Disk Device"
+elif [ $MODULE = "md" ]; then
+	NAME="Disksuite"
+elif [ $MODULE = "nfs" ]; then
+	NAME="NFS"
+	CLASS=nfs
+elif [ $MODULE = "st" ]; then
+	NAME="Tape"
+	CLASS=tape
+else
+	NAME="Unknown"
+fi
+
+if $PERL -MSolaris::MapDev -e '' >/dev/null 2>&1; then
+	HAS_MAPDEV=1
+fi
+
+eval IGNORE="\$io_${MODULE}_ignore"
+if [ -n "$IGNORE" ]; then
+	IGNORE="next if $IGNORE;"
+fi
+
+if [ "$1" = "config" ]; then
+	echo "graph_title $NAME $TITLE"
+	echo 'graph_args --base 1024'
+	echo 'graph_category disk'
+
+	export IN INNAME OUT OUTNAME CDEF
+	if [ "$HAS_MAPDEV" ]; then
+		kstat -p -c $CLASS -m $REGEX -s "/^$IN\$/" | \
+		  $PERL -MSolaris::MapDev=inst_to_dev -n -a -F':|\t' \
+		       -e $IGNORE'
+			  $dev = $F[2];
+			  $name = inst_to_dev($dev);
+			  $name =~ s/:/_/g;
+			  $name = length $name ? $name : $dev;
+			  print "${dev}_$ENV{IN}.label ${name}_$ENV{INNAME}\n";
+			  print "${dev}_$ENV{IN}.type DERIVE\n";
+			  print "${dev}_$ENV{IN}.min 0\n";
+			  print "${dev}_$ENV{IN}.max 1000000000\n";
+			  print "${dev}_$ENV{IN}.cdef ${dev}_$ENV{IN}$ENV{CDEF}\n" if exists $ENV{CDEF};
+			  print "${dev}_$ENV{OUT}.label ${name}_$ENV{OUTNAME}\n";
+			  print "${dev}_$ENV{OUT}.type DERIVE\n";
+			  print "${dev}_$ENV{OUT}.min 0\n";
+			  print "${dev}_$ENV{OUT}.max 1000000000\n";
+			  print "${dev}_$ENV{OUT}.cdef ${dev}_$ENV{OUT}$ENV{CDEF}\n" if exists $ENV{CDEF};'
+		exit 0
+	else
+		for dev in `kstat -p -c $CLASS -m $REGEX -s "/^$IN\$/" | $PERL -n -a -F':|\t' -e "$IGNORE"'print $F[2], "\n";'`; do
+			echo "${dev}_$IN.label ${dev}_$INNAME"
+			echo "${dev}_$IN.type DERIVE"
+			echo "${dev}_$IN.min 0"
+			echo "${dev}_$IN.max 1000000000"
+			if [ -n "$CDEV" ]; then
+				echo "${dev}_$IN.cdef ${dev}_$IN$CDEF"
+			fi
+			echo "${dev}_$OUT.label ${dev}_$OUTNAME"
+			echo "${dev}_$OUT.type DERIVE"
+			echo "${dev}_$OUT.min 0"
+			echo "${dev}_$OUT.max 1000000000"
+			if [ -n "$CDEV" ]; then
+				echo "${dev}_$OUT.cdef ${dev}_$OUT$CDEF"
+			fi
+		done
+		exit 0
+	fi
+fi
+
+kstat -p -c $CLASS -m $REGEX -s "/^($IN|$OUT)\$/" | $PERL -n -a -F':|\t' -e "$IGNORE"'
+	chomp $F[4];
+	print $F[2]."_".$F[3].".value ", int($F[4]), "\n";
+'

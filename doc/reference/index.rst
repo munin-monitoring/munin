@@ -6,6 +6,14 @@
 
 This section contains man pages and other reference material
 
+Nomenclature
+============
+
+.. toctree::
+   :maxdepth: 2
+
+   nomenclature.rst
+
 Man pages
 =========
 
@@ -28,7 +36,15 @@ Man pages
    munin-update.rst
    munin.conf.rst
    munin-node.conf.rst
-   munindoc.rst
+   munin-doc.rst
+
+Examples and Templates
+======================
+
+.. toctree::
+   :maxdepth: 2
+
+   ../example/index.rst
 
 Other reference material
 ========================
@@ -38,3 +54,4 @@ Other reference material
 
    directories.rst
    plugin.rst
+   history.rst

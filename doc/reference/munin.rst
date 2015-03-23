@@ -52,7 +52,7 @@ Command line scripts
 --------------------
 
 * :ref:`munin-node-configure` can automatically configure plugins for the local node.
-* :ref:`munindoc` outputs plugin documentation.
+* :ref:`munin-doc` outputs plugin documentation.
 * :ref:`munin-run` runs a plugin with the same environment as if run from :ref:`munin-node`. Very
   useful for debugging.
 * :ref:`munin-async` is a command line utility, known as an "asyncronous proxy node".

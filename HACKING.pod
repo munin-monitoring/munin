@@ -19,9 +19,6 @@ The munin code is marked by years on the battle front. You will
 therefore find code that deviates from the guidelines defined
 here. However, all new code should be made to comply.
 
-These guidelines are an RFC for the time being and are of course
-negotiable.
-
 
 =head1 GETTING STARTED
 
@@ -95,10 +92,33 @@ recognized.
 
 =head1 FORMATTING
 
-=head2 perltidy
+=over 12
 
-FIX
+=item C<Tabs>
 
+We prefer indentation via tabs. Space-based indentation is usually relying on
+editor magic to ease the pain.  That said, nothing should be vertical-aligned.
+Only indentated correctly.
+
+When a subblock is started, always use one level.
+
+=item C<Braces>
+
+Braces should go on the same line.
+
+=item C<Wrapping>
+
+Wrapping in code is discouraged. It does not make any sense to force wrap at a
+fixed amount of columns. A much better rule is the following (1 stmt/line).
+
+Comments on the other side, are to be wrapped at 78 chars, since they are a
+block of text anyway. Any space formatting is encouraged, since it usually
+helps. ASCII art is a must ;-)
+
+=item C<1 stmt/line>
+
+Only put 1 statement per line. If the expression is complex, break it in
+elementary subexpressions, with meaniful temp vars.
 
 =head1 TESTS AND COVERAGE
 

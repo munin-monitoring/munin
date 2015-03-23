@@ -1,10 +1,34 @@
-#!/bin/bash
+# shell fragment to be sourced.
 
-BASEDIR=$(readlink -f -- "$FINDBIN/..")
-DESTDIR="$BASEDIR/sandbox"
-FINDDIR="$BASEDIR/sandbox $BASEDIR/contrib"
-PERLSITELIB=$(perl -V:sitelib | cut -d"'" -f2)
+# - set sandbox environment variables
+#
+# - change directory to basedir
 
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+BASEDIR="$(cd "$FINDBIN/.." && pwd -P)"
 
-cd $BASEDIR
+SANDBOX="${BASEDIR}/sandbox"
+CONFDIR="${SANDBOX}/etc"
+RUNDIR="${SANDBOX}/var/run"
 
+case "$(uname)" in
+	Darwin)
+		USER=$(id -u -n)
+		GROUP=$(id -g -n)
+		;;
+	*)
+		USER=$(id -un)
+		GROUP=$(id -gr)
+		;;
+esac
+
+MUNIN_NODE_PORT=4947
+MUNIN_HTTPD_PORT=4948
+
+PATH="${SANDBOX}/bin":$PATH
+export PATH
+
+PERL5LIB="${SANDBOX}/lib/perl5"
+export PERL5LIB
+
+cd "$BASEDIR"

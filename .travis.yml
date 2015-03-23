@@ -1,36 +1,20 @@
 language: perl
 perl:
+  - "5.20"
   - "5.18"
   - "5.16"
   - "5.14"
   - "5.12"
   - "5.10"
-  - "5.8"
 branches:
  only:
   - stable-2.0
   - devel
   - master
-install: "/bin/true"
 before_install:
- - "cpanm --notest File::Copy::Recursive"
- - "cpanm --notest File::Slurp"
- - "cpanm --notest HTML::Template"
- - "cpanm --notest IO::Scalar"
- - "cpanm --notest IO::Socket::INET6"
- - "cpanm --notest Log::Log4perl"
- - "cpanm --notest Module::Build"
- - "cpanm --notest Net::SNMP"
- - "cpanm --notest Net::Server"
- - "cpanm --notest Net::SSLeay"
- - "cpanm --notest Test::Deep"
- - "cpanm --notest Test::Differences"
- - "cpanm --notest Test::LongString"
- - "cpanm --notest Test::MockModule"
- - "cpanm --notest Test::MockObject::Extends"
- - "cpanm --notest Time::HiRes"
- - "cpanm --notest DBI"
- - "cpanm --notest DBD::SQLite"
+ - sudo apt-get update
+ - sudo apt-get install devscripts
+ - sh contrib/install_rrd.sh
 notifications:
   email: false
   irc:

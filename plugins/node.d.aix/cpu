@@ -1,0 +1,147 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+cpu - Plugin to monitor CPU usage on AIX (4.3.3 and 5.x)
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+This will monitor the cpu usage on your server.  It measures the amount
+of time spent on user requests, system requests, in iowait, and
+finally in idle.  It uses /usr/bin/iostat, which is usually installed.
+
+=head2 RESTRICTIONS
+
+None known of.  Should be safe to run this under any user -- this is
+not restricted to root.
+
+=head1 AUTHOR
+
+Developed 05/28/2003 by Mike Discenza <mike.discenza@dillards.com>
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use POSIX;
+
+my($arg) = shift;
+
+if($arg eq 'autoconf')
+  {
+    if(-e '/usr/bin/iostat' && -X '/usr/bin/iostat')
+      {
+        print "yes\n";
+        exit 0;
+      }
+    else
+      {
+        print "no\n";
+        exit 0;
+      }
+  }
+
+  
+if($arg eq 'config')
+  {
+    my($percent) = 100;
+    my($warn) = $percent*30/100;
+    my($critical) = $percent*50/100;
+    my($usrwarn) = $percent*80/100;
+    print "graph_title CPU usage\n";
+    print "graph_order idle iowait system user\n";
+    print "graph_args -r --lower-limit 0 --upper-limit $percent \n";
+    print "graph_vlabel %\n";
+    print "graph_scale no\n";
+    print "graph_category system\n";
+    print "system.label system\n";
+    print "system.type GAUGE\n";
+    print "system.max 5000\n";
+    print "system.type GAUGE\n";
+    print "system.warning $warn\n";
+    print "system.critical $critical\n";
+    print "user.label user\n";
+    print "user.type GAUGE\n";
+    print "user.max 5000\n";
+    print "user.warning $usrwarn\n";
+    print "user.type GAUGE\n";
+    print "iowait.label iowait\n";
+    print "iowait.type STACK\n";
+    print "iowait.max 5000\n";
+    print "iowait.type GAUGE\n";
+    print "idle.label idle\n";
+    print "idle.max 5000\n";
+    print "idle.type GAUGE\n";
+    exit 0;
+  }
+
+my($user,$sys,$idle,$iowait) = getMeasurements();
+my($uptime) = getUptime();
+
+findTotalTime($user,$sys,$idle,$iowait,$uptime);
+
+sub findTotalTime
+{
+  my($user,$sys,$idle,$iowait,$uptime) = @_;
+  my($userTime) = ceil($user);
+  my($sysTime) = ceil($sys);
+  my($idleTime) = ceil($idle);
+  my($iowaitTime) = ceil($iowait);
+  
+  
+  print "user.value $userTime\nsystem.value $sysTime\nidle.value $idleTime\niowait.value $iowaitTime\n";
+}
+
+sub getMaxPercent
+{
+  my($numCPUs) = `/usr/sbin/lscfg|grep proc|wc -l`;
+  my($percent) = $numCPUs * 100;
+  return $percent;
+}
+
+sub getUptime
+{
+  my($uptimeSTR) = `/usr/bin/uptime`;
+  my(@upArray) = split(/ +/,$uptimeSTR);
+  my($upItem,$upDays,$upHours,$upMinutes,@timeArray,$upDays);
+  my($itemCount) = 0;
+  foreach $upItem (@upArray)
+    {
+      if(lc(substr($upItem,0,3)) eq 'day')
+        {$upDays =  $upArray[$itemCount - 1];}
+      if(index($upItem,":") != -1 && length($upHours) == 0 && length($upMinutes) == 0 && $itemCount > 1)
+        {
+          @timeArray = split(/:/,$upItem);
+          ($upHours,$upMinutes) = @timeArray;
+        }
+      $itemCount++;
+    }
+  my($upMinutes) = (((($upDays * 24) + $upHours) * 60) + $upMinutes) * 60;
+  return $upMinutes;
+}
+
+sub getMeasurements
+{
+  my($percents) = `/usr/bin/iostat -t 1 2|tail +3`;
+  my(@items) = split(/ +/,$percents);
+  my($user) = $items[3];
+  my($sys) = $items[4];
+  my($idle)= $items[5];
+  my($iowait)= $items[6];
+  return ($user,$sys,$idle,$iowait);
+}
+    

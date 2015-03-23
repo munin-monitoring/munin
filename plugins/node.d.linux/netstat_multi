@@ -1,0 +1,1027 @@
+#!/usr/bin/perl
+#
+# netstat_multi - Munin plugin for detailed Network statistics
+# Copyright (C) 2011 Redpill Linpro AS
+#
+# Author: Trygve Vea <tv@redpill-linpro.com>
+# Author: Ørjan Ommundsen <orjan@redpill-linpro.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=head1 NAME
+
+netstat_multi - Munin plugin to monitor verbose Network statistics
+
+=head1 APPLICABLE SYSTEMS
+
+Works on any Linux-system with /proc/net/snmp and /proc/net/netstat.
+
+=head1 CONFIGURATION
+
+No configuration needed.
+
+=head1 INTERPRETATION
+
+Each graph uses data from the proc filesystem.
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf multigraph
+
+=head1 PATCHES-TO
+
+The munin-project.
+
+=head1 AUTHOR
+
+Trygve Vea <tv@redpill-linpro.com>
+Ørjan Ommundsen <orjan@redpill-linpro.com>
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+
+use strict;
+use warnings;
+use Munin::Plugin;
+
+need_multigraph();
+
+my %sets = ();
+my %datas = ();
+my $key;
+my @columns;
+
+my @statfiles = ('/proc/net/netstat','/proc/net/snmp');
+my @graph_parameters = ('title','total','order','scale','vlabel','args', 'category');
+my @field_parameters = ('graph', 'min', 'max', 'draw', 'cdef', 'warning', 'colour', 'info', 'type', 'negative');
+
+my %aspects = (
+    'TCPSynCookies' => {
+        'title' => 'TCP Syncookies',
+        'category' => 'Network',
+        'vlabel' => 'packets in (-) / out (+) per second',
+        'min' => 0,
+        'values' => {
+            'TcpExt_SyncookiesSent' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'label' => 'SYN cookies',
+                'min' => 0,
+                'negative' => 'TcpExt_SyncookiesRecv'
+            },
+            'TcpExt_SyncookiesRecv' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'TcpExt_SyncookiesFailed' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'label' => 'Invalid SYN cookies received',
+                'min' => 0,
+                'info' => 'Invalid SYN cookies received'
+            }
+        }
+    },
+    'TCPSockets' => {
+        'title' => 'TCP Sockets',
+        'category' => 'Network',
+        'vlabel' => 'events per second',
+        'width' => 600,
+        'values' => {
+            'Tcp_ActiveOpens' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Active connection openings',
+            },
+            'Tcp_PassiveOpens' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Passive connection openings',
+            },
+            'Tcp_EstabResets' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Connection resets received',
+            },
+            'Tcp_AttemptFails' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Failed connection attempts',
+            }
+        }
+    },
+
+    'TCPSegments' => {
+        'title' => 'TCP Segments',
+        'category' => 'Network',
+        'vlabel' => 'segments in (-) / out (+) per second',
+        'width' => 600,
+        'values' => {
+            'Tcp_InSegs' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Segments received',
+                'graph' => 'no',
+            },
+            'Tcp_OutSegs' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'label' => 'Segments',
+                'min' => 0,
+                'negative' => 'Tcp_InSegs'
+            },
+            'Tcp_RetransSegs' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'label' => 'Segments retransmitted',
+                'min' => 0,
+            },
+            'Tcp_InErrs' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'label' => 'Bad segments received',
+                'min' => 0,
+            },
+        }
+    },
+    'TCPCurrConn' => {
+        'title' => 'TCP Open Connections',
+        'category' => 'Network',
+        'vlabel' => 'number of connections',
+        'width' => 600,
+        'values' => {
+            'Tcp_CurrEstab' => {
+                'type' => 'GAUGE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Active TCP connections',
+                'info' => 'Currently active TCP connections',
+            }
+        }
+    },
+    'TCPTimeouts' => {
+        'title' => 'TCP other timeouts',
+        'category' => 'Network',
+        'vlabel' => 'timeouts per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TCPTimeouts' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Other timeouts',
+                'info' => 'TCP other (unspecified) timeouts',
+            }
+        }
+    },
+    'TCPDatalossEvents' => {
+        'title' => 'TCP data loss events',
+        'category' => 'Network',
+        'vlabel' => 'events per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TCPLoss' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Data loss events',
+                'info' => 'TCP data loss events',
+            },
+            'TcpExt_TCPLostRetransmit' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Retransmits lost',
+                'info' => 'TCP retransmits lost',
+            }
+        }
+    },
+    'SOCKBUFERR' => {
+        'title' => 'TCP socket buffer errors',
+        'category' => 'Network',
+        'vlabel' => 'errors per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TCPRcvCollapsed' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Receives collapsed',
+                'info' => 'Packets collapsed in receive queue due to low socket buffer',
+            },
+            'TcpExt_PruneCalled' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Prunes in recv_queue',
+                'info' => 'Packets pruned from receive queue because of socket buffer overrun',
+            },
+            'TcpExt_ListenOverflows' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Listen overflows',
+                'info' => 'Times the listen queue of a socket overflowed',
+            },
+            'TcpExt_ListenDrops' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'SYNs ignored',
+                'info' => 'SYNs to LISTEN sockets ignored',
+            },
+            'TcpExt_TCPSchedulerFailed' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Scheduler failures',
+                'info' => 'Receiver schedulations too late for direct processing',
+            },
+            'TcpExt_EmbryonicRsts' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Embryonic resets',
+                'info' => 'Resets received for embryonic SYN_RECV sockets',
+            }
+        }
+    },
+    'TCPReorder' => {
+        'title' => 'TCP SACK/FACK reorders',
+        'category' => 'Network',
+        'vlabel' => 'reorders per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TCPFACKReorder' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'FACK reorder',
+                'info' => 'Reordering using FACK',
+            },
+            'TcpExt_TCPSACKReorder' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'SACK reorder',
+                'info' => 'Reordering using SACK',
+            },
+            'TcpExt_TCPRenoReorder' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Reno reorder',
+                'info' => 'Reordering using Reno',
+            },
+            'TcpExt_TCPTSReorder' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Timestamp reorder',
+                'info' => 'Reordering using timestamps',
+            }
+        }
+    },
+    'TCPSACKFACK' => {
+        'title' => 'TCP Selective ACK / Forward ACK',
+        'category' => 'Network',
+        'vlabel' => 'packets per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TCPSackRecovery' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'SACK recovery',
+                'info' => 'Recovered from packet loss due to SACK data',
+            },
+            'TcpExt_TCPSACKReneging' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'SACK renegotiations',
+                'info' => 'Renegotiations after bad SACKs received',
+            },
+            'TcpExt_TCPSackFailures' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'SACK failures',
+                'info' => 'Timeouts after SACK recovery',
+            },
+            'TcpExt_TCPSackRecoveryFail' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'SACK retransmit failures',
+                'info' => 'SACK retransmit failures',
+            }
+        }
+    },
+    'TCPDSACK' => {
+        'title' => 'TCP Duplicate Selective ACKs',
+        'category' => 'Network',
+        'vlabel' => 'packets per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TCPDSACKOldSent' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'DSACK old sent',
+                'info' => 'DSACKs sent for old packets',
+            },
+            'TcpExt_TCPDSACKOfoRecv' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'DSACKS for Ofo received',
+                'info' => 'DSACKS received for Out of order packets',
+            },
+            'TcpExt_TCPDSACKRecv' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'DSACKs received',
+                'info' => 'DSACKs received',
+            },
+            'TcpExt_TCPDSACKOfoSent' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'DSACKs for Ofo sent',
+                'info' => 'DSACKs sent for Out of order packets',
+            },
+            'TcpExt_TCPDSACKUndo' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'DSACK undos',
+            }
+        }
+    },
+    'TCPAborted' => {
+        'title' => 'TCP aborted connections',
+        'category' => 'Network',
+        'vlabel' => 'connections per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TCPAbortOnSyn' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Abort on SYN',
+            },
+            'TcpExt_TCPAbortOnData' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Abort on data',
+                'info' => 'Connections reset due to unexpected data',
+            },
+            'TcpExt_TCPAbortOnClose' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Abort on close',
+                'info' => 'Connections reset due to early user close',
+            },
+            'TcpExt_TCPAbortOnMemory' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Abort on memory',
+            },
+            'TcpExt_TCPAbortOnTimeout' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Abort on timeout',
+                'info' => 'Connections aborted due to timeout',
+            },
+            'TcpExt_TCPAbortOnLinger' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Abort on linger',
+            },
+            'TcpExt_TCPAbortFailed' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Abort failure',
+            },
+            'TcpExt_TCPMemoryPressures' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Memory pressures',
+            }
+        }
+    },
+    'TCPDelayedACK' => {
+        'title' => 'TCP delayed ACKs',
+        'category' => 'Network',
+        'vlabel' => 'packets per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_DelayedACKs' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Delayed ACKs',
+                'info' => 'Delayed ACKs sent',
+            },
+            'TcpExt_DelayedACKLocked' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Delayed ACKs locked',
+                'info' => 'Delayed ACKs further delayed because of locked socket',
+            },
+            'TcpExt_DelayedACKLost' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Delayed ACKs lost',
+            }
+        }
+    },
+    'TCPRetrans' => {
+        'title' => 'TCP retransmissions',
+        'category' => 'Network',
+        'vlabel' => 'events per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TCPFastRetrans' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Fast retransmissions',
+            },
+            'TcpExt_TCPForwardRetrans' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Forward retransmissions',
+            },
+            'TcpExt_TCPSlowStartRetrans' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Slow Start retransmissions',
+            },
+            'TcpExt_TCPLossFailures' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Timeouts in loss state',
+            }
+        }
+    },
+    'TCPPAWS' => {
+        'title' => 'PAWS (Protect against wrapped sequence numbers)',
+        'category' => 'Network',
+        'vlabel' => 'packets per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_PAWSPassive' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Active',
+            },
+            'TcpExt_PAWSActive' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Passive',
+            },
+            'TcpExt_PAWSEstab' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Established',
+            }
+        }
+    },
+    'IPReassembly' => {
+        'title' => 'IP packet reassembly',
+        'category' => 'Network',
+        'vlabel' => 'packets per second',
+        'width' => 600,
+        'values' => {
+            'Ip_ReasmTimeout' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Reassembly timeouts',
+                'info' => 'IP packet fragments dropped after timeout',
+            },
+            'Ip_ReasmReqds' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Reassemblies required',
+                'info' => 'IP packet reassemblies required',
+            },
+            'Ip_ReasmOKs' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Reassembly successes',
+                'info' => 'IP packet reassemblies succeeded',
+            },
+            'Ip_ReasmFails' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Reassembly failures',
+                'info' => 'IP packet reassemblies failed',
+            },
+            'Ip_FragFails' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Fragments failed',
+                'info' => 'IP packet fragments failed',
+            }
+        }
+    },
+    'TCPTimeWait' => {
+        'title' => 'TCP Time-Wait',
+        'category' => 'Network',
+        'vlabel' => 'connections per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TW' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'TimeWait',
+            },
+            'TcpExt_TWRecycled' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'TimeWait Recycled',
+            },
+            'TcpExt_TWKilled' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'TimeWait killed',
+            }
+        }
+    },
+    'UDPDatagrams' => {
+        'title' => 'UDP datagrams',
+        'category' => 'Network',
+        'vlabel' => 'datagrams per second',
+        'width' => 600,
+        'values' => {
+            'Udp_InDatagrams' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Incoming datagrams',
+                'info' => 'UDP packets received',
+            },
+            'Udp_NoPorts' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Unknown ports',
+                'info' => 'Packets to unknown port received',
+            },
+            'Udp_InErrors' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Incoming errors',
+                'info' => 'UDP incoming packet errors',
+            },
+            'Udp_OutDatagrams' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Outgoing datagrams',
+                'info' => 'UDP packets sent',
+            }
+        }
+    },
+    'TCPQueueing' => {
+        'title' => 'TCP Queueing',
+        'category' => 'Network',
+        'vlabel' => 'packets per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TCPPrequeued' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Prequeued',
+                'info' => 'Packets directly queued to recvmsg prequeue',
+            },
+            'TcpExt_TCPDirectCopyFromBacklog' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Direct copy from backlog',
+                'info' => 'Packets directly received from backlog',
+            },
+            'TcpExt_TCPDirectCopyFromPrequeue' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Direct copy from prequeue',
+                'info' => 'Packets directly received from prequeue',
+            },
+            'TcpExt_TCPPrequeueDropped' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Prequeue items dropped',
+                'info' => 'Prequeue items dropped',
+            }
+        }
+    },
+    'TCPHP' => {
+        'title' => 'TCP Packet headers predicted',
+        'category' => 'Network',
+        'vlabel' => 'packets per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TCPHPHits' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Headers predicted',
+                'info' => 'TCP packets header predicted',
+            },
+            'TcpExt_TCPHPHitsToUser' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Headers predicted to user',
+                'info' => 'Packets header predicted and directly queued to user',
+            },
+            'TcpExt_TCPPureAcks' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Pure ACKs received',
+                'info' => 'Acknowledgments not containing data received',
+            },
+            'TcpExt_TCPHPAcks' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Predicted ACKs',
+                'info' => 'Predicted acknowledgments',
+            }
+        }
+    },
+    'IPEXT' => {
+        'title' => 'IP packet types',
+        'category' => 'Network',
+        'vlabel' => 'packets in (-) / out (+) per second',
+        'width' => 600,
+        'values' => {
+            'IpExt_InNoRoutes' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'No route',
+            },
+            'IpExt_InTruncatedPkts' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Incoming truncated packets',
+            },
+            'IpExt_InMcastPkts' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'IpExt_OutMcastPkts' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Multicast packets',
+                'negative' => 'IpExt_InMcastPkts'
+            },
+            'IpExt_InBcastPkts' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'IpExt_OutBcastPkts' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Broadcast packets',
+                'negative' => 'IpExt_InBcastPkts'
+            }
+
+        }
+    },
+    'TCPReno' => {
+        'title' => 'TCP Congestion avoidance algorithm (Reno)',
+        'category' => 'Network',
+        'vlabel' => 'events per second',
+        'width' => 600,
+        'values' => {
+            'TcpExt_TCPRenoReorder' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Reorder successes',
+                'info' => 'Reno packet window reordering successful',
+            },
+            'TcpExt_TCPRenoFailures' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Fast retransmit failures',
+                'info' => 'Timeouts after reno fast retransmit',
+            },
+            'TcpExt_TCPRenoRecovery' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Fast Retransmit successes',
+                'info' => 'Reno recoveries from packet loss due to fast retransmit',
+            },
+            'TcpExt_TCPRenoRecoveryFail' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Recovery failures',
+                'info' => 'Reno fast recovery failure',
+            },
+            'TcpExt_TCPFullUndo' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Full recoveries',
+                'info' => 'Congestion windows fully recovered',
+            },
+            'TcpExt_TCPPartialUndo' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Partial recoveries',
+                'info' => 'Congestion windows partially recovered using Hoe heuristic',
+            },
+            'TcpExt_TCPLossUndo' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Partial ACK recoveries',
+                'info' => 'Congestion windows recovered after partial ack',
+            }
+        }
+    },
+    'ICMP' => {
+        'title' => 'ICMP',
+        'category' => 'Network',
+        'vlabel' => 'packets in (-) / out (+) per second',
+        'width' => 600,
+        'values' => {
+            'Icmp_InDestUnreachs' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'Icmp_OutDestUnreachs' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Unreachables',
+                'info' => 'ICMP Destination Unreachables',
+                'negative' => 'Icmp_InDestUnreachs'
+            },
+            'Icmp_InEchoReps' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'Icmp_OutEchoReps' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Echo Replies',
+                'info' => 'ICMP Echo Replies',
+                'negative' => 'Icmp_InEchoReps'
+            },
+            'Icmp_InEchos' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'Icmp_OutEchos' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Echos',
+                'info' => 'ICMP Echos',
+                'negative' => 'Icmp_InEchos'
+            },
+            'Icmp_InRedirects' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'Icmp_OutRedirects' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Redirects',
+                'info' => 'ICMP Redirects',
+                'negative' => 'Icmp_InRedirects'
+            },
+            'Icmp_InTimeExcds' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'Icmp_OutTimeExcds' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Time exceededs',
+                'info' => 'ICMP Time Exceeded',
+                'negative' => 'Icmp_InTimeExcds'
+            },
+            'Icmp_InParmProbs' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'Icmp_OutParmProbs' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Parameter Problems',
+                'negative' => 'Icmp_InParmProbs'
+            },
+            'Icmp_InSrcQuenchs' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'Icmp_OutSrcQuenchs' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Source Quenches',
+                'negative' => 'Icmp_InSrcQuenchs'
+            },
+            'Icmp_InAddrMaskReps' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'Icmp_OutAddrMaskReps' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Address Mask replies',
+                'negative' => 'Icmp_InAddrMaskReps'
+            },
+            'Icmp_InAddrMasks' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'Icmp_OutAddrMasks' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Address Mask requests',
+                'negative' => 'Icmp_InAddrMasks'
+            },
+            'Icmp_InTimestampReps' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'Icmp_OutTimestampReps' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Timestamp Replies',
+                'negative' => 'Icmp_InTimestampReps'
+            },
+            'Icmp_InTimestamps' => {
+                'type' => 'DERIVE',
+                'min' => 0,
+                'graph' => 'no'
+            },
+            'Icmp_OutTimestamps' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Timestamps',
+                'negative' => 'Icmp_InTimestamps'
+            }
+        }
+    }
+);
+
+
+foreach (@statfiles) {
+    open F, $_;
+    while(<F>)
+    {
+        chomp($_);
+        my @line = split(/ /,$_);
+        $line[0] =~ s/\://;
+        if ( !$sets{$line[0]} ) {
+            $sets{$line[0]} = 1;
+            @columns = @line;
+            next;
+        }
+        for (my $i = 1; $i < @line; $i++) {
+            if ( length($columns[$i]) > 0 ) {
+                $datas{"$columns[0]_$columns[$i]"} = $line[$i];
+            }
+        }
+    }
+    close F;
+}
+
+foreach $key (sort keys %aspects) {
+    my $val;
+    print "multigraph $key\n";
+    if ( defined($ARGV[0]) and $ARGV[0] eq 'config' ) {
+        foreach (@graph_parameters) {
+            if (!defined($aspects{$key}{$_})) {
+                next;
+            }
+            print "graph_$_ $aspects{$key}{$_}\n";
+        }
+        print "\n";
+        foreach $val (sort keys %{$aspects{$key}{'values'}}) {
+            if (defined($aspects{$key}{'values'}{$val}{'label'})) {
+                print "$val.label $aspects{$key}{'values'}{$val}{'label'}\n";
+            } else {
+                print "$val.label $val\n";
+            }
+            if (!defined($datas{$val})) {
+                next;
+            }
+            foreach (@field_parameters) {
+                if (!defined($aspects{$key}{'values'}{$val}{$_})) {
+                    next;
+                }
+                print "$val.$_ $aspects{$key}{'values'}{$val}{$_}\n";
+            }
+        }
+        print "\n";
+    }
+    elsif ( defined($ARGV[0]) and $ARGV[0] eq 'debug' ) {
+        foreach $key (sort keys %datas) {
+            print "$key = $datas{$key}\n";
+        }
+    }
+    elsif ( defined($ARGV[0]) and $ARGV[0] eq 'autoconf' ) {
+        print "no (defaults to no, because it generates 22 graphs - which may be a bit too verbose)\n";
+        exit 0;
+    }
+    else {
+        foreach $val (sort keys %{$aspects{$key}{'values'}}) {
+            if (!defined($datas{$val})) {
+                next;
+            }
+            print "$val.value $datas{$val}\n";
+        }
+        print "\n";
+    }
+}

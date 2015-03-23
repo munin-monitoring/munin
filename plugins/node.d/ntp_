@@ -1,0 +1,181 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+ntp_ - Wildcard plugin to monitor NTP statistics for a particular remote NTP peer
+
+=head1 CONFIGURATION
+
+This is a wildcard plugin. The wildcard suffix in the symlink is the
+hostname, IPv4, or IPv6 address of the NTP peer that you want to
+monitor. The IP address must be one which appears in C<ntpq -np>
+output. If given a hostname, it must resolve to an IP address which
+appears in C<ntpq -np> output; this plugin will try all of the A or
+AAAA records returned. If you use a dynamic association method, such
+as "pool" or one of the broadcast or multicast methods, this plugin
+will probably not work very well for you, as your NTP peers could be
+changing frequently.
+
+Examples:
+
+=over
+
+=item ntp_time.example.com
+
+=item ntp_203.0.113.1
+
+=item ntp_2001:db8::1
+
+=back
+
+The following environment variables are used by this plugin:
+
+ [ntp_*]
+  env.lowercase - Lowercase hostnames after lookup
+  env.nodelay 1 - Set to 1 to disable graphing of delay
+
+=head1 AUTHOR
+
+Original author unknown. Rewritten by Kenyon Ralph <kenyon@kenyonralph.com>.
+
+=head1 LICENSE
+
+Same as munin.
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+use English qw( -no_match_vars );
+use strict;
+use warnings;
+use Net::DNS;
+use Net::IP;
+
+if ($ARGV[0] and $ARGV[0] eq "autoconf") {
+        `ntpq -c help >/dev/null 2>/dev/null`;
+        if ($CHILD_ERROR eq "0") {
+                if (`ntpq -n -c peers | wc -l` > 0) {
+                        print "yes\n";
+                        exit 0;
+                } else {
+                        print "no (ntpq -p returned no peers)\n";
+                        exit 0;
+                }
+        } else {
+                print "no (ntpq not found)\n";
+                exit 0;
+        }
+}
+
+if ($ARGV[0] and $ARGV[0] eq "suggest") {
+        foreach my $line (`ntpq -c associations`) {
+                if ($line =~ m/^\s*\d+/) {
+                        my (undef, undef, $assid, undef, undef, undef, undef, undef, undef, undef) = split(/\s+/, $line);
+                        chomp(my $peerinfo = `ntpq -n -c "readvar $assid srcadr"`);
+                        $peerinfo =~ s/\R/ /g;
+                        my ($peer_addr) = ($peerinfo =~ m/srcadr=(.*)/);
+                        print $peer_addr, "\n" unless $peer_addr eq "0.0.0.0";
+                }
+        }
+        exit 0;
+}
+
+my $nodelay = $ENV{'nodelay'} || 0;
+$0 =~ /ntp_(.+)*$/;
+my $name = $1;
+die "No hostname or IP address provided" unless defined $name;
+
+if ($ARGV[0] and $ARGV[0] eq "config") {
+        print "graph_title NTP statistics for peer $name\n";
+        print "graph_args --base 1000 --vertical-label seconds --lower-limit 0\n";
+        print "graph_category time\n";
+        print "delay.label Delay\n";
+        print "delay.graph no\n" if $nodelay;
+        print "delay.cdef delay,1000,/\n";
+        print "offset.label Offset\n";
+        print "offset.cdef offset,1000,/\n";
+        print "jitter.label Jitter\n";
+        print "jitter.cdef jitter,1000,/\n";
+        exit 0;
+}
+
+my $srcadr;
+my $delay;
+my $offset;
+my $jitter;
+my @associations = `ntpq -c associations`;
+
+foreach my $line (@associations) {
+        if ($line =~ m/^\s*\d+/) {
+                my (undef, undef, $assid, undef, undef, undef, undef, undef, undef, undef) = split(/\s+/, $line);
+                chomp(my $peerinfo = `ntpq -n -c "readvar $assid srcadr,delay,offset,jitter"`);
+                $peerinfo =~ s/\R/ /g;
+                ($srcadr) = ($peerinfo =~ m/srcadr=([^, ]+)/);
+                ($delay) = ($peerinfo =~ m/delay=([^, ]+)/);
+                ($offset) = ($peerinfo =~ m/offset=([^, ]+)/);
+                ($jitter) = ($peerinfo =~ m/jitter=([^, ]+)/);
+                last if lc($srcadr) eq lc($name);
+        }
+}
+
+my $matched = 0;
+
+if (lc($srcadr) ne lc($name)) {
+        my @addresses;
+        my $resolver = Net::DNS::Resolver->new;
+        my $query = $resolver->search($name, "AAAA");
+
+        if ($query) {
+                foreach my $rr ($query->answer) {
+                        if ("AAAA" eq $rr->type) {
+                                push(@addresses, new Net::IP($rr->address));
+                        }
+                }
+        }
+
+        $query = $resolver->search($name, "A");
+
+        if ($query) {
+                foreach my $rr ($query->answer) {
+                        if ("A" eq $rr->type) {
+                                push(@addresses, new Net::IP($rr->address));
+                        }
+                }
+        }
+
+        ASSOCS: foreach my $line (@associations) {
+                if ($line =~ m/^\s*\d+/) {
+                        my (undef, undef, $assid, undef, undef, undef, undef, undef, undef, undef) = split(/\s+/, $line);
+                        chomp(my $peerinfo = `ntpq -n -c "readvar $assid srcadr,delay,offset,jitter"`);
+                        $peerinfo =~ s/\R/ /g;
+                        ($srcadr) = ($peerinfo =~ m/srcadr=([^, ]+)/);
+                        ($delay) = ($peerinfo =~ m/delay=([^, ]+)/);
+                        ($offset) = ($peerinfo =~ m/offset=([^, ]+)/);
+                        ($jitter) = ($peerinfo =~ m/jitter=([^, ]+)/);
+                        ($srcadr) = new Net::IP($srcadr);
+
+                        ADDRS: foreach my $addr (@addresses) {
+                                if (defined($srcadr->overlaps($addr)) and $srcadr->overlaps($addr) == $IP_IDENTICAL) {
+                                        $matched = 1;
+                                        last ASSOCS;
+                                }
+                        }
+                }
+        }
+}
+
+if (lc($srcadr) ne lc($name) and $matched == 0) {
+        die "$name is not a peer of this ntpd";
+}
+
+print <<"EOT";
+delay.value $delay
+offset.value $offset
+jitter.value $jitter
+EOT
+
+exit 0;

@@ -1,0 +1,90 @@
+#!/bin/sh
+
+: << =cut
+
+=head1 NAME
+
+paging_out - Plugin to monitor CPU usage.
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+	if [ -x /usr/bin/kstat ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 0
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title Paging Out'
+	echo 'graph_order pgout pgpgout pgfree scan'
+	echo "graph_args --base 1000"
+	echo 'graph_category system'
+	echo 'pgout.label pgout'
+	echo 'pgout.draw LINE2'
+	echo 'pgout.type DERIVE'
+	echo 'pgout.min 0'
+	echo 'pgout.max 1000000000'
+	print_warning pgout
+	print_critical pgout
+	echo 'pgpgout.label pgpgout'
+	echo 'pgpgout.draw LINE2'
+	echo 'pgpgout.type DERIVE'
+	echo 'pgpgout.min 0'
+	echo 'pgpgout.max 1000000000'
+	print_warning pgpgout
+	print_critical pgpgout
+	echo 'pgfree.label pgfree'
+	echo 'pgfree.draw LINE2'
+	echo 'pgfree.type DERIVE'
+	echo 'pgfree.min 0'
+	echo 'pgfree.max 1000000000'
+	print_warning pgfree
+	print_critical pgfree
+	echo 'scan.label scan'
+	echo 'scan.draw LINE2'
+	echo 'scan.type DERIVE'
+	echo 'scan.min 0'
+	echo 'scan.max 1000000000'
+	print_warning scan
+	print_critical scan
+	exit 0
+fi
+
+kstat -p -c misc -m cpu_stat -s '/^(pgout|pgpgout|dfree|scan)$/' | sed -e 's/.*://' | awk '
+BEGIN {
+	map["pgout"] = "pgout"
+	map["pgpgout"] = "pgpgout"
+	map["dfree"] = "pgfree"
+	map["scan"] = "scan"
+}
+length(map[$1]) > 0 {
+	sum[map[$1]] += $2
+}
+END {
+	for (item in sum) {
+		print item ".value", sum[item]
+	}
+}'

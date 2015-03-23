@@ -187,5 +187,5 @@ field name, namely "output" (lines 31 - 35).
 Further reading
 ===============
 
- * [wiki:Using_SNMP_plugins Using SNMP plugins]
- * [wiki:munin.conf munin.conf] directives explained
+ * :ref:`Using SNMP plugins <tutorial-snmp>`
+ * :ref:`munin.conf <munin.conf>` directives explained

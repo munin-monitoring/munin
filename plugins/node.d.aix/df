@@ -1,0 +1,79 @@
+#!/bin/sh
+
+: << =cut
+
+=head1 NAME
+
+df - Script to monitor disk usage
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+=over 4
+
+=item warning
+
+Warning percentage (Default: 92)
+
+=item critical
+
+Critical percentage (Default: 98)
+
+=back
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+This will report back the sizes of the filesystems currently mounted.
+All measurements are reported in percents, not in actual 512KB pages.
+It uses /usr/bin/df.
+
+=head2 RESCTRICTIONS
+
+None, unless you have restricted who can use /usr/bin/df.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Disk usage in percent'
+	echo 'graph_args --upper-limit 100 -l 0'
+	echo 'graph_vlabel %'
+	echo 'graph_category disk'
+	echo 'graph_scale no'
+	df -P -k | sed 1d | grep -v "//" | grep -v "nfs" | while read i; do
+		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $6 }'`
+		devName="$name.label "
+		fsLabel=`echo $i | awk '{ print $6 }'`
+                echo $devName$fsLabel
+		echo "$name.warning ${warning:-92}"
+		echo "$name.critical ${critical:-98}"
+	done
+	exit 0
+fi
+
+df -P -k | sed 1d | grep -v "//" | grep -v "nfs" | while read i; do
+	name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $6 ".value " }'`
+	name2=`echo $i | awk '{ print $5 }' | cut -f1 -d%`
+        echo $name $name2
+done

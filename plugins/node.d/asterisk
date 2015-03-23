@@ -1,0 +1,366 @@
+#!/usr/bin/perl -w
+
+=encoding utf8
+
+=head1 NAME
+
+asterisk - Multigraph-capable plugin to monitor Asterisk
+
+=head1 NOTES
+
+This plugin will produce multiple graphs showing:
+
+ - total number of active channels (replaces asterisk_channels),
+   together with breakdown of specific channel types (replaces
+   asterisk_channelstypes);
+
+ - the number of messages in all voicemail boxes (replaces
+   asterisk_voicemail);
+
+ - the number of active MeetMe conferences and users connected to them
+   (replace asterisk_meetme and asterisk_meetmeusers, respectively);
+
+ - the number of active channels for a given codec, for both SIP and
+   IAX2 channels (replaces asterisk_sipchannels and asterisk_codecs).
+
+=head1 CONFIGURATION
+
+The following configuration parameters are used by this plugin
+
+ [asterisk]
+  env.host     - hostname to connect to
+  env.port     - port number to connect to
+  env.username - username used for authentication
+  env.secret   - secret used for authentication
+  env.channels - The channel types to look for
+  env.codecsx  - List of codec IDs (hexadecimal values)
+  env.codecs   - List of codecs names, matching codecsx order
+
+The "username" and "secret" parameters are mandatory, and have no
+defaults.
+
+=head2 DEFAULT CONFIGURATION
+
+ [asterisk]
+  env.host 127.0.0.1
+  env.port 5038
+  env.channels Zap IAX2 SIP
+  env.codecsx 0x2 0x4 0x8
+  env.codecs gsm ulaw alaw
+
+=head2 WILDCARD CONFIGURATION
+
+It's possible to use the plugin in a virtual-node capacity, in which
+case the host configuration will default to the hostname following the
+underscore:
+
+ [asterisk_someserver]
+  env.host someserver
+  env.port 5038
+
+=head1 AUTHOR
+
+ Copyright (C) 2005-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
+ Copyright (C) 2012 Diego Elio Pettenò <flameeyes@flameeyes.eu>
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use Munin::Plugin;
+use Munin::Plugin::Framework;
+use IO::Socket;
+
+sub asterisk_command {
+  my ($socket, $command) = @_;
+  my $line, my $reply;
+
+  $socket->print("Action: command\nCommand: $command\n\n");
+
+  # Response: (Error|Follows|???)
+  $line = $socket->getline;
+  if ($line ne "Response: Follows\r\n") {
+    while ( $line = $socket->getline and $line ne "\r\n" ) {}
+    return undef;
+  }
+
+  # Privilege: Command
+  $line = $socket->getline;
+
+  # Until we get the --END COMMAND-- marker, it's the command's output.
+  while ( $line = $socket->getline and $line ne "--END COMMAND--\r\n" ) {
+    $reply .= $line;
+  }
+
+  # And then wait for the empty line that says we're done
+  while ( $line = $socket->getline and $line ne "\r\n" ) {}
+
+  return $reply;
+}
+
+my $plugin = Munin::Plugin::Framework->new;
+
+$0 =~ /asterisk(?:_(.+))$/;
+$plugin->{hostname} = $1;
+
+my $peeraddr = $ENV{'host'} || $plugin->{hostname} || '127.0.0.1';
+my $peerport = $ENV{'port'} || '5038';
+
+my $username = $ENV{'username'};
+my $secret   = $ENV{'secret'};
+
+my @CHANNELS = exists $ENV{'channels'} ? split ' ',$ENV{'channels'} : qw(Zap IAX2 SIP);
+my @CODECS = exists $ENV{'codecs'} ? split ' ',$ENV{'codecs'} : qw(gsm ulaw alaw);
+my @CODECSX = exists $ENV{'codecsx'} ? split ' ',$ENV{'codecsx'} : qw(0x2 0x4 0x8);
+
+my %CODEC_IDS;
+@CODEC_IDS{@CODECS} = @CODECSX;
+
+my $line, my $error;
+my $socket = new IO::Socket::INET(PeerAddr => $peeraddr,
+				  PeerPort => $peerport,
+				  Proto => 'tcp')
+  or $error = "Could not create socket: $!";
+
+if ( $socket ) {
+  # This will consume the "Asterisk Call Manager" welcome line.
+  $socket->getline;
+
+  $socket->print("Action: login\nUsername: $username\nSecret: $secret\nEvents: off\n\n");
+  my $response_status = $socket->getline;
+
+  if ( $response_status ne "Response: Success\r\n" ) {
+    my $response_message = $socket->getline;
+    $response_message =~ s/Message: (.*)\r\n/$1/;
+    $error = "Asterisk authentication error: " . $response_message;
+  }
+
+  while ( $line = $socket->getline and $line ne "\r\n" ) {}
+}
+
+my ($active_channels, $messages, @channels_list, $users, $conferences, %codecs);
+
+if ( !$error ) {
+  my $channels_response = asterisk_command($socket, "core show channels");
+  #Channel              Location             State   Application(Data)
+  #Zap/pseudo-198641660 s@frompstn:1         Rsrvd   (None)
+  #Zap/1-1              4@frompstn:1         Up      MeetMe(5500)
+  #2 active channels
+  #1 active call
+  $active_channels = $1 if $channels_response =~ /\n([0-9]+) active channels/;
+  @channels_list = split(/\r\n/, $channels_response);
+
+  my $voicemail_response = asterisk_command($socket, "voicemail show users");
+  #Context    Mbox  User                      Zone       NewMsg
+  #default    1234  Example Mailbox                           1
+  #other      1234  Company2 User                             0
+  #2 voicemail users configured.
+  if ( $voicemail_response and $voicemail_response !~ /no voicemail users/ ) {
+    $messages = 0;
+    foreach my $line (split(/\r\n/, $voicemail_response)) {
+      next unless $line =~ / ([0-9]+)$/;
+      $messages += $1;
+    }
+  }
+
+  my $meetme_response = asterisk_command($socket, "meetme list");
+  #Conf Num       Parties        Marked     Activity  Creation
+  #5500           0001           N/A        00:00:03  Static
+  #* Total number of MeetMe users: 1
+  if ( $meetme_response ) {
+    if ( $meetme_response =~ /No active/ ) {
+      $users = 0;
+      $conferences = 0;
+    } else {
+      my @meetme_list = split(/\r\n/, $meetme_response);
+
+      $users = pop(@meetme_list);
+      $users =~ s/^Total number of MeetMe users: ([0-9]+)$/$1/;
+
+      $conferences = scalar(@meetme_list) -1;
+    }
+  }
+
+  my $sipchannels_response = asterisk_command($socket, "sip show channels");
+  #Peer             User/ANR    Call ID      Seq (Tx/Rx)   Format
+  #192.168.1.135    yann        6902112b3e0  00101/00002   g729
+  #1 active SIP channel(s)
+
+  my $iaxchannels_response = asterisk_command($socket, "iax2 show channels");
+  #Channel               Peer             Username    ID (Lo/Rem)  Seq (Tx/Rx)  Lag      Jitter  JitBuf  Format
+  #IAX2/rodolphe@rodolp  10.8.53.6        rodolphe    00003/01287  00006/00004  00000ms  0148ms  0000ms  gsm
+  #1 active IAX channel(s)
+
+  if ( $sipchannels_response or $iaxchannels_response ) {
+    %codecs = ( other => 0, unknown => 0 );
+    foreach my $codec (@CODECS) {
+      $codecs{$codec} = 0;
+    }
+
+    # split the channels' listing and drop header and footnotes
+    my @sipchannels = $sipchannels_response ? split(/\r\n/, $sipchannels_response) : ();
+    pop(@sipchannels); shift(@sipchannels);
+    my @iaxchannels = $iaxchannels_response ? split(/\r\n/, $iaxchannels_response) : ();
+    pop(@iaxchannels); shift(@iaxchannels);
+
+    foreach my $sipchan (@sipchannels) {
+      my $found = 0;
+      my @fields = split ' ', $sipchan;
+      if ($fields[4] eq '0x0') {
+	$codecs{unknown} += 1;
+	next;
+      }
+      foreach my $codec (@CODECS) {
+	if ($fields[4] eq $CODEC_IDS{$codec}) {
+	  $codecs{$codec} += 1;
+	  $found = 1;
+	  last;
+	}
+      }
+      if (! $found) {
+	$codecs{other} += 1;
+	print STDERR "CODEC: SIP other format $fields[4]\n" if $Munin::Plugin::DEBUG;
+      }
+    }
+
+    foreach my $iaxchan (@iaxchannels) {
+      my $found = 0;
+      my @fields = split ' ', $iaxchan;
+
+      if ($fields[8] eq '0x0') {
+	$codecs{unknown} += 1;
+	next;
+      }
+      foreach my $codec (@CODECS) {
+	if ($fields[8] eq $CODEC_IDS{$codec}) {
+	  $codecs{$codec} += 1;
+	  $found = 1;
+	  last;
+	}
+      }
+      if (! $found) {
+	$codecs{other} += 1;
+	print STDERR "CODEC: IAX2 other format: $fields[8]\n" if $Munin::Plugin::DEBUG;
+      }
+    }
+  }
+}
+
+# After all the data is fetched we can proceed to process it, the
+# connection can be closed as we don't need any more data.
+$socket->close() if $socket;
+
+$plugin->{autoconf} = "no ($error)" if $error;
+
+$plugin->add_graphs
+  (
+   asterisk_channels =>
+   {
+    title => "Asterisk active channels",
+    args => "--base 1000 -l 0",
+    vlabel => "channels",
+    category => "asterisk",
+    order => "total " . join(' ', @CHANNELS),
+    fields =>
+    {
+     total =>
+     {
+      label => "channels",
+      min => 0,
+      value => $active_channels,
+     },
+    },
+   },
+   asterisk_voicemail =>
+   {
+    title => "Asterisk voicemail messages",
+    args => "--base 1000 -l 0",
+    vlabel => "messages",
+    category => "asterisk",
+    fields =>
+    {
+     messages =>
+     {
+      label => "Total messages",
+      min => 0,
+      value => $messages,
+     },
+    },
+   },
+   asterisk_meetme =>
+   {
+    title => "Asterisk meetme statistics",
+    args => "--base 1000 -l 0",
+    category => "asterisk",
+    fields =>
+    {
+     users =>
+     {
+      label => "Connected Users",
+      min => 0,
+      value => $users,
+     },
+     conferences =>
+     {
+      label => "Active conferences",
+      min => 0,
+      value => $conferences,
+     },
+    },
+   },
+   asterisk_codecs =>
+   {
+    title => "Asterisk channels per codec",
+    args => "--base 1000 -l 0",
+    vlabel => "channels",
+    category => "asterisk",
+    order => join(' ', @CODECS) . " other unknown",
+    fields =>
+    {
+     other =>
+     {
+      label => "Other known codecs",
+      min => 0,
+      draw => "AREASTACK",
+      value => $codecs{other},
+     },
+     unknown =>
+     {
+      label => "Unknown codec",
+      min => 0,
+      draw => "AREASTACK",
+      value => $codecs{unknown},
+     },
+    },
+   },
+  );
+
+foreach my $channel (@CHANNELS) {
+  $plugin->{graphs}->{asterisk_channels}->{fields}->{$channel} =
+    {
+     draw => "AREASTACK",
+     label => "$channel channels",
+     min => 0,
+     value => @channels_list ? scalar(grep(/^$channel\//, @channels_list)) : undef,
+    };
+}
+
+foreach my $codec (@CODECS) {
+  $plugin->{graphs}->{asterisk_codecs}->{fields}->{$codec} =
+    {
+     label => "$codec channels",
+     min => 0,
+     draw => "AREASTACK",
+     value => $codecs{$codec},
+    };
+}
+
+$plugin->run;

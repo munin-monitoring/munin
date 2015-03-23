@@ -38,8 +38,11 @@ help:
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
+# Using 2 commands, since $(BUILDDIR) can be a symlink.
+# Usually to a subdir in $HOME/public_html/
 clean:
-	-rm -rf $(BUILDDIR)/
+	-rm -Rf -- $(BUILDDIR)/*
+	-[ ! -d $(BUILDDIR) ] || rmdir -p -- $(BUILDDIR)
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html

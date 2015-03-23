@@ -1,0 +1,148 @@
+#!/usr/bin/perl
+
+=encoding utf8
+
+=begin comment
+
+Copyright (C) 2004-2008 Jimmy Olsen
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+
+=end comment
+
+=cut
+
+use warnings;
+use strict;
+
+use Munin::Master::LimitsOld;
+
+limits_startup(\@ARGV);
+
+limits_main();
+
+# ### The End
+
+exit 0;
+
+=head1 NAME
+
+munin-limits - A program to check for any off-limit values
+
+=head1 SYNOPSIS
+
+munin-limits [options]
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<< --service <service> >>
+
+Limit services to those of E<lt>serviceE<gt>. Multiple --service options may be supplied. [unset]
+
+=item B<< --host <host> >>
+
+Limit hosts to those of E<lt>host<gt>. Multiple --host options may be supplied. [unset]
+
+=item B<< --contact <contact> >>
+
+Limit contacts to those of E<lt>contact<gt>. Multiple --contact options may be supplied. [unset]
+
+=item B<< --config <file> >>
+
+Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin.conf]
+
+=item B<< --always-send <severity list> >>
+
+Force sending of messages even if you normally wouldn't.
+
+The <severity list> can be a whitespace or comma separated list of the
+values "ok", "warning", "critical" or "unknown".
+
+This option may be specified several times, to add more values.
+
+Use of "--always-send" overrides the "always_send" value in munin.conf
+for configured contacts. See also --force.
+
+=item B<< --force >>
+
+Alias for "--always-send ok,warning,critical,unknown"
+
+=item B<< --[no]force-run-as-root >>
+
+Force running as root (stupid and unnecessary). [--noforce-root]
+
+=item B<< --help >>
+
+View help message.
+
+=item B<< --[no]debug >>
+
+If set, view debug messages. [--nodebug]
+
+=back
+
+=head1 DESCRIPTION
+
+Munin-limits is a part of the package Munin, which is used in combination
+with Munin's node.  Munin is a group of programs to gather data from
+Munin's nodes, graph them, create html-pages, and optionally warn Nagios
+about any off-limit values.
+
+Munin-limits checks if any values are above or below the set limits, and saves these notes to a file. This file
+is later used by programs like munin-nagios (to warn nagios) and munin-html (to incorporate them in the web
+display).
+
+If a service has fields with "warning" or "critical"-options (e.g. "load.warning 10"), and the munin-server
+configuration file contains the necessary configuration options, munin-limits will check its value.
+
+=head1 FILES
+
+	@@CONFDIR@@/munin.conf
+	@@DBDIR@@/*
+	@@STATEDIR@@/*
+
+=head1 VERSION
+
+This is munin-limits version @@VERSION@@
+
+=head1 AUTHORS
+
+Knut Haugen, Audun Ytterdal and Jimmy Olsen.
+
+=head1 BUGS
+
+munin-limits does, as of now, not check the syntax of the configuration file.
+
+Please report other bugs in the bug tracker at L<http://munin-monitoring.org/>.
+
+=head1 COPYRIGHT
+
+Copyright (C) 2002-2006 Knut Haugen, Audun Ytterdal, and Jimmy Olsen / Linpro AS.
+
+This is free software; see the source for copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
+This program is released under the GNU General Public License
+
+=head1 SEE ALSO
+
+For information on configuration options, please refer to the man page for
+F<munin.conf>.
+
+=cut
