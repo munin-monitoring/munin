@@ -88,4 +88,4 @@ if [ "$1" = "config" ]; then
 fi
 
 
-${PING:-ping} ${ping_args:-'-c 2'} ${host} ${ping_args2} | perl -n -e 'print "ping.value ", $1 / 1000, "\n" if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@; print "packetloss.value $1\n" if /(\d+)% packet loss/;'
+${ping:-$PING} ${ping_args:-'-c 2'} ${host} ${ping_args2} | perl -n -e 'print "ping.value ", $1 / 1000, "\n" if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@; print "packetloss.value $1\n" if /(\d+)% packet loss/;'

@@ -148,7 +148,7 @@ sub _do_connect {
 	$self->_extract_name_from_greeting($greeting);
     };
 
-    INFO "node $self->{host} advertised itself as $self->{node_name} instead." if $self->{node_name} && $self->{node_name} ne $self->{host};
+    INFO "[INFO] node $self->{host} advertised itself as $self->{node_name} instead." if $self->{node_name} && $self->{node_name} ne $self->{host};
 
     return 1;
 }

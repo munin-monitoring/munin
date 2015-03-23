@@ -862,7 +862,7 @@ will return a reference to an empty array.
 
 sub validate_severities {
     my $severities_ref = shift;
-    my @severities     = @{$severities_ref};
+    my @severities     = grep { defined $_ }  @{$severities_ref};
 
     my @allowed_severities = qw{ok warning critical unknown};
 

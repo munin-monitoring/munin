@@ -1338,6 +1338,137 @@ leeclemens (1):
 tsaavik (1):
       dynazoom: added logo and backlink
 
+munin-2.0.25, 2014-11-24
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: GH:304, D:769415, D:770745, D:770746, D:770826
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Biedl (1):
+      p/irqstats: Improve generated labels
+
+Daniel Black (1):
+      ip/iostat_ios: also support /dev/xvdX devices
+
+Holger Levsen (1):
+      p/iostat_ios: also support /dev/vdX devices
+
+Picnic Pete (1):
+      Issue warning if no data
+
+Steve Schnepp (5):
+      m/Node: add [INFO] in a log
+      m/limits: remove warning about uninitialized
+      plugins/df_abs: fix the naming for regular devices
+      p/pgsql: Detect "rc" postgresql versions.
+      p/ping_: honor ping env variable
+
+
+munin-2.0.24, 2014-10-26
+
+-------
+Summary
+-------
+
+Bugfix release. It reopens D:675318, as it wasn't really fixed anyway.
+
+Closes: D:696981
+Reopens: D:675318
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (3):
+      m/update: fix "not a reference at /../Utils.pm"
+      Revert "p/postfix_mail: fix incorrect delivered message count"
+      p/postfix_mailstats: proper fix, but partial
+
+
+munin-2.0.23, 2014-10-17
+
+-------
+Summary
+-------
+
+Bugfix release. It enable the use of Perl 5.20, which broke CGI.
+( commit 9fabbe7 was forgotten in the previous release )
+
+Closes: D:762796
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      cgi/html: fix CGI for perl 5.20
+
+
+munin-2.0.22, 2014-10-15
+
+-------
+Summary
+-------
+
+Bugfix release. It enable the use of Perl 5.20, which broke CGI.
+
+Closes: #1224, D:675318, D:711465, D:750954, D:751190, D:753506, D:761841, D:762904
+
+------------------
+Detailed Changelog
+------------------
+
+Chen-Yu Tsai (1):
+      cgi/graph: Set RRDCACHED_ADDRESS during each request
+
+Daniel Black (1):
+      Corrects the truncating of negative values in the diskstats plugin
+
+Gerald Turner (2):
+      dhcpd3 plugin should support multiple ranges in a single subnet
+      lower-case the dictionary keys in ipmi_sensor_
+
+Joerg Jaspert (1):
+      make proc plugin more careful in /proc/
+
+Klaus S. Madsen (1):
+      prevent diskstats plugin from reporting negative latency
+
+Rob Shortt (1):
+      node: munin plugin config ignores leading *
+
+Steve Schnepp (15):
+      master: add "use_default_node"
+      travis: adding preliminary test for rrd
+      travis: be root for rrd install
+      travis: fix rrd tar extract
+      travis: customized rrd build
+      travis: be root to install rrdtools.
+      travis: install the Perl deps in the Perl dir
+      travis: add some whitespace
+      travis: optimize for compile times
+      node: Only spoolfetch send 5 samples per service
+      asyncd: Use SyncDictFile for plugin_rates
+      asyncd: just use the SpoolWriter META-DATA
+      p/postfix_mail: fix incorrect delivered message count
+      p/http_loadtime: fix escaping of user agent
+
+Stig Sandbeck Mathisen (3):
+      Remove linux-specific plugin files_ (ticket:1661)
+      Detect more postgresql versions.
+      Fix POD errors
+
+tbear2500 (1):
+      Generate correct rrd filename
+
 
 munin-2.0.21, 2014-04-22
 
