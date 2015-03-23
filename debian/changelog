@@ -1,3 +1,9 @@
+munin (2.1.11-1) UNRELEASED; urgency=medium
+
+  * Imported upstream release 2.1.11
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Mon, 23 Mar 2015 23:31:33 +0100
+
 munin (2.1.9-1) experimental; urgency=medium
 
   [ Holger Levsen ]
