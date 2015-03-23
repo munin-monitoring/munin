@@ -193,14 +193,14 @@ sub handle_request
 	# Note that graph_vtitle is *NOT* supported anymore
 	$sth->execute($id, "graph_vlabel");
 	my ($graph_vlabel) = $sth->fetchrow_array();
-	$graph_vlabel =~ s/\$\{graph_period\}/$graph_period/g;
+	$graph_vlabel =~ s/\$\{graph_period\}/$graph_period/g if $graph_vlabel;
 
 	$sth->execute($id, "graph_order");
-	my ($graph_order) = $sth->fetchrow_array();
+	my ($graph_order) = $sth->fetchrow_array() || "";
 	DEBUG "graph_order: $graph_order";
 
 	$sth->execute($id, "graph_args");
-	my ($graph_args) = $sth->fetchrow_array();
+	my ($graph_args) = $sth->fetchrow_array() || "";
 	DEBUG "graph_args: $graph_args";
 
 	$sth->execute($id, "graph_printf");
@@ -434,7 +434,6 @@ sub handle_request
 		"--watermark", "Munin " . $Munin::Common::Defaults::MUNIN_VERSION,
 		"--imgformat", $format,
 		"--start", $start,
-		"--vertical-label", $graph_vlabel,
 		"--slope-mode",
 
                 '--font', 'DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans',
@@ -453,6 +452,9 @@ sub handle_request
 		"--border", "0",
 	);
 	push @rrd_header, "--end" , $end if $end;
+
+	# Optional header args
+	push @rrd_header, "--vertical-label", $graph_vlabel if $graph_vlabel;
 
 	# Handle vertical limits
 	{
