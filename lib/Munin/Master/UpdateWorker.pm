@@ -562,6 +562,8 @@ sub _ensure_tuning {
     my $rrd_file
         = $self->_get_rrd_file_name( $service, $data_source, $ds_config );
 
+    return unless -f $rrd_file;
+
     $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
 
     for my $rrd_prop ( keys %$rrd_tune_flags ) {
