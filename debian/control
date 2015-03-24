@@ -139,26 +139,6 @@ Description: network-wide graphing framework (user contributed plugins for node)
  RRDtool. To see a real example of Munin in action, you can follow a link
  from <http://munin-monitoring.org/> to a live installation.
 
-Package: munin-plugins-java
-Architecture: all
-Depends: ${misc:Depends},
- default-jre-headless | java6-runtime-headless | java5-runtime-headless | java2-runtime-headless,
- munin-common (>= ${binary:Version}),
-Provides: munin-plugins
-Replaces: munin-java-plugins (<<1.999.4548-3~)
-Breaks: munin-java-plugins (<<1.999.4548-3~)
-Description: network-wide graphing framework (java plugins for node)
- Munin is a highly flexible and powerful solution used to create graphs of
- virtually everything imaginable throughout your network, while still
- maintaining a rattling ease of installation and configuration.
- .
- This package contains the java based plugins that are used by munin-node to
- monitor Java Management Extensions (JMX).
- .
- Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
- RRDtool. To see a real example of Munin in action, you can follow a link
- from <http://munin-monitoring.org/> to a live installation.
-
 Package: munin
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
