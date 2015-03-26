@@ -229,7 +229,7 @@ fields are used.
 .. _datapoint.value:
 
 :Field: **datapoint.value**
-:Value: integer, decimal numbers, or "U" (may be signed). See rrdcreate_ for restrictions.
+:Value: integer, decimal numbers, or "U" (may be signed). For DERIVE and COUNTER values this must be an integer. See rrdcreate_ for restrictions.
 :Type: required
 :Description: The value to be graphed.
 :See also:
