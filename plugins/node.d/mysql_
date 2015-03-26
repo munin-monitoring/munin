@@ -151,6 +151,7 @@ use Math::BigInt; # Used to append "=> lib 'GMP'" here, but GMP caused
 		  # segfault on some occasions. Removed as I don't
 		  # think the tiny performance boost is worth the
 		  # debugging effort.
+use Storable qw(freeze thaw);
 
 use Munin::Plugin;
 
@@ -1710,6 +1711,8 @@ sub db_connect {
 
 sub update_data {
     $data = $shared_memory_cache->get('data');
+    my $graphs_stored = $shared_memory_cache->get('graphs');
+    %graphs = %{thaw($graphs_stored)} if $graphs_stored;
     return if $data;
 
     $data = {};
@@ -1748,6 +1751,7 @@ sub update_data {
     delete $graphs{handler_temp} if not defined $data->{Handler_tmp_write};
 
     $shared_memory_cache->set('data', $data);
+    $shared_memory_cache->set('graphs', freeze(\%graphs));
 }
 
 
