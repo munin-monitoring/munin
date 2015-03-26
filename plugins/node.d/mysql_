@@ -1467,7 +1467,8 @@ $graph_plugins{query_response_time} = {
     count => {
         config => {
             global_attrs => {
-                title  => 'Query Response Time Count per ${graph_period}',
+                title  => 'Query Response Time Count',
+                vlabel  => 'queries per ${graph_period}',
             },
             data_source_attrs => {
                 draw  => 'LINE2',
@@ -1481,7 +1482,8 @@ $graph_plugins{query_response_time} = {
    total => {
         config => {
             global_attrs => {
-                title  => 'Query Response Time Total per ${graph_period}',
+                title  => 'Query Response Time Total',
+                vlabel  => 'query time breakdown per ${graph_period}',
             },
             data_source_attrs => {
                 draw  => 'LINE2',
