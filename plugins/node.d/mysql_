@@ -1483,7 +1483,7 @@ $graph_plugins{query_response_time} = {
         config => {
             global_attrs => {
                 title  => 'Query Response Time Total',
-                vlabel  => 'query time breakdown per ${graph_period}',
+                vlabel  => 'query time (microseconds) per ${graph_period}',
             },
             data_source_attrs => {
                 draw  => 'LINE2',
@@ -1929,7 +1929,7 @@ sub plugin_query_response_time {
         $data->{'query_response_time_count_' . $time} = $row->{'count'};
         push @{$graph_plugins{query_response_time}->{count}->{data_sources}}, {name => 'query_response_time_count_' . $time, label => $time };
         next if $row->{'total'} eq 'TOO LONG';
-        $data->{'query_response_time_total_' . $time} = $row->{'total'};
+        $data->{'query_response_time_total_' . $time} = $row->{'total'} * 1e6;
         push @{$graph_plugins{query_response_time}->{total}->{data_sources}}, {name => 'query_response_time_total_' . $time, label => $time };
     }
     $sth->finish();
