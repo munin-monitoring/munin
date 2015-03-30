@@ -19,6 +19,9 @@ Any MySQL platform, tested by the authors on:
 Plugins:
 * MariaDB-10 Query Response Time: https://mariadb.com/kb/en/mariadb/query_response_time-plugin/
 
+Information Schema tables:
+* User statistics - MariaDB-5.2+, OurDelta, Percona Server - https://mariadb.com/kb/en/mariadb/user-statistics
+
 =head1 CONFIGURATION
 
 This script is used to generate data for several graphs. To generate
@@ -1461,7 +1464,7 @@ $graphs{mrr} = {
 #  Plugin Graphs
 #  These are mysql plugins of type INFORMATION SCHEMA
 #
-#  These will be $added to graphs if available
+#  These will be added to $graphs if available
 #---------------------------------------------------------------------
 
 my %graph_plugins = ();
@@ -1499,6 +1502,84 @@ $graph_plugins{query_response_time} = {
    }
 };
 
+$graph_plugins{user_statistics} = {
+    connections => {
+        config => {
+            global_attrs => {
+                title  => 'User Connections',
+                vlabel  => 'connections per ${graph_period}',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        cols => { 'total_connections' => {}, 'concurrent_connections' => {}, 'denied_connections' => {}, 'lost_connections'  => {}},
+        data_sources => [
+        ],
+   },
+   usertime => {
+        config => {
+            global_attrs => {
+                title  => 'User Time',
+                vlabel  => 'seconds',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        cols => { 'connected_time' => {}, 'busy_time' => {}, 'cpu_time' => {} },
+        data_sources => [
+        ],
+   },
+   bytes => {
+        config => {
+            global_attrs => {
+                title  => 'User Bytes',
+                vlabel  => 'bytes',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        cols => { 'bytes_received' => {}, 'bytes_sent' => {}, 'binlog_bytes_written' => {} },
+        data_sources => [
+        ],
+   },
+   rows => {
+        config => {
+            global_attrs => {
+                title  => 'User Rows',
+                vlabel  => 'rows',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        cols => { 'rows_read' => {}, 'rows_sent' => {}, 'rows_deleted' => {}, 'rows_inserted' => {}, 'rows_updated' => {} },
+        data_sources => [
+        ],
+   },
+   commands => {
+        config => {
+            global_attrs => {
+                title  => 'Command breakdown by user',
+                vlabel  => 'commands',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        cols => { 'select_commands' => {}, 'update_commands' => {}, 'other_commands' => {}, 'commit_transactions' => {}, 'rollback_transactions' => {} },
+        data_sources => [
+        ],
+   }
+
+};
 #---------------------------------------------------------------------
 #  M A I N
 #---------------------------------------------------------------------
@@ -1764,17 +1845,35 @@ sub update_plugins {
 	'query_response_time'         => \&plugin_query_response_time,
     );
 
+    sub add_graphs {
+      my ($f, $sec, $dbh, %g) = @_;
+      if ($f->($dbh) == 0) {
+        while (my ($k, $v) = each %g) {
+          $graphs{$sec . '_' . $k} = $v;
+        }
+      }
+    }
+
     my $sth = $dbh->prepare("SHOW PLUGINS");
     $sth->execute();
     while (my $row = $sth->fetchrow_hashref()) {
         next if $row->{'type'} ne 'INFORMATION SCHEMA';
         my $sec = lc $row->{'name'};
         next if not exists $plugin_map{$sec};
-        if ($plugin_map{$sec}->($dbh) == 0) {
-          while (my ($k, $v) = each %{$graph_plugins{$sec}}) {
-            $graphs{$sec . '_' . $k} = $v;
-          }
-        }
+        add_graphs($plugin_map{$sec}, $sec, $dbh, %{$graph_plugins{$sec}});
+    }
+    $sth->finish();
+
+    my %is_map = (
+	'user_statistics'         => \&is_user_statistics,
+    );
+
+    $sth = $dbh->prepare("SHOW TABLES IN INFORMATION_SCHEMA");
+    $sth->execute();
+    while (my $row = $sth->fetchrow_hashref()) {
+        my $sec = lc $row->{'tables_in_information_schema'};
+        next if not exists $is_map{$sec};
+        add_graphs($is_map{$sec}, $sec, $dbh, %{$graph_plugins{$sec}});
     }
     $sth->finish();
 }
@@ -1939,6 +2038,31 @@ sub plugin_query_response_time {
     return 0;
 }
 
+sub is_user_statistics {
+    my ($dbh) = @_;
+
+    return 1 if not defined $data->{userstat};
+    return 1 if $data->{userstat} eq 'OFF';
+
+    my $sth = $dbh->prepare("SELECT * FROM INFORMATION_SCHEMA.USER_STATISTICS");
+    $sth->execute();
+    while (my $row = $sth->fetchrow_hashref()) {
+        my $user = $row->{'user'};
+        my $var;
+        while (my ($g, $v) = each %{$graph_plugins{user_statistics}}) {
+          while (my ($userstat,$conf) = each %{$v->{cols}}) {
+            $var = 'user_stats_' . $user . '_' . $userstat;
+            $data->{$var} = int $row->{$userstat};
+            my $ds = { %$conf };
+            $ds->{name} = $var;
+            $ds->{label} = $user . ' ' . $userstat;
+            push @{$graph_plugins{user_statistics}->{$g}->{data_sources}}, $ds;
+          }
+        }
+    }
+    $sth->finish();
+    return 0;
+}
 
 #
 # In 'SHOW ENGINE INNODB STATUS' 64 bit integers are not formated as
