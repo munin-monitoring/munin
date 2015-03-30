@@ -41,19 +41,19 @@ In addition you might need to specify connection parameters in the
 plugin configuration to override the defaults. These are the defaults:
 
   [mysql_*]
-    env.mysqlconnection DBI:mysql:mysql
+    env.mysqlconnection DBI:mysql:information_schema
     env.mysqluser root
 
 Non-default example:
 
   [mysql_*]
-    env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=3306
-    env.mysqluser root
+    env.mysqlconnection DBI:mysql:information_schema;host=127.0.0.1;port=3306
+    env.mysqluser munin
     env.mysqlpassword geheim
     env.cachenamespace munin_mysql_pri
   [mysql2_*]
-    env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=13306
-    env.mysqluser root
+    env.mysqlconnection DBI:mysql:information_schema;host=127.0.0.1;port=13306
+    env.mysqluser munin;
     env.mysqlpassword ryuWyawEv
     env.cachenamespace munin_mysql_alt
 
@@ -66,6 +66,9 @@ For example:
     env.seconds_behind_master_warning 300
     env.seconds_behind_master_critical 600
 
+The minimum required priviledges of the munin database user is:
+
+  GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'munin'@'localhost';
 
 =head1 DEPENDENCIES
 
@@ -171,7 +174,7 @@ BEGIN {
 #---------------------------------------------------------------------
 
 my %config = (
-    'dsn'        => $ENV{'mysqlconnection'} || 'DBI:mysql:mysql',
+    'dsn'        => $ENV{'mysqlconnection'} || 'DBI:mysql:information_schema',
     'user'       => $ENV{'mysqluser'}       || 'root',
     'password'   => $ENV{'mysqlpassword'}   || '',
     'cache_namespace' => $ENV{'cachenamespace'} || 'munin_mysql',
