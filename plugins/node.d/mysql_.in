@@ -1117,10 +1117,6 @@ sub update_slave {
 sub plugin_query_response_time {
     my ($dbh) = @_;
 
-    my %plugin_map = (
-	'QUERY_RESPONSE_TIME'         => \&plugin_query_response_time,
-    );
-
     return 1 if not defined $data->{query_response_time_stats};
     return 1 if $data->{query_response_time_stats} eq 'OFF';
 
