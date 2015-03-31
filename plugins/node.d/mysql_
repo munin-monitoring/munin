@@ -41,21 +41,43 @@ In addition you might need to specify connection parameters in the
 plugin configuration to override the defaults. These are the defaults:
 
   [mysql_*]
-    env.mysqlconnection DBI:mysql:mysql
+    env.mysqlconnection DBI:mysql:information_schema
     env.mysqluser root
 
 Non-default example:
 
   [mysql_*]
-    env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=3306
-    env.mysqluser root
+    env.mysqlconnection DBI:mysql:information_schema;host=127.0.0.1;port=3306
+    env.mysqluser munin
     env.mysqlpassword geheim
     env.cachenamespace munin_mysql_pri
   [mysql2_*]
-    env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=13306
-    env.mysqluser root
+    env.mysqlconnection DBI:mysql:information_schema;host=127.0.0.1;port=13306
+    env.mysqluser munin;
     env.mysqlpassword ryuWyawEv
     env.cachenamespace munin_mysql_alt
+  [mysql10_*]
+    user munin
+    env.mysqluser munin
+    env.mysqlconnection DBI:mysql:information_schema;mysql_read_default_file=/etc/munin/.my-10.cnf
+    env.cachenamespace munin_mysql_10
+    # here the [client] section of /etc/munin/.my-10.cnf is read. socket= can
+    # be specified here.
+
+Creating a munin user:
+
+  CREATE USER 'munin'@'localhost' IDENTIFIED BY 'ryuWyawEv';
+
+or with a unix_socket plugin (INSTALL PLUGIN unix_socket SONAME 'auth_socket')
+
+  CREATE USER 'munin'@'localhost' IDENTIFIED WITH unix_socket;
+
+Note: requires 'user munin' in the configuration.
+
+The minimum required priviledges of the munin database user is:
+
+  GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'munin'@'localhost';
+
 
 Warning and critical values can be set via the environment in the usual way.
 For example:
@@ -65,7 +87,6 @@ For example:
     env.slave_sql_running_warning 0.5
     env.seconds_behind_master_warning 300
     env.seconds_behind_master_critical 600
-
 
 =head1 DEPENDENCIES
 
@@ -171,7 +192,7 @@ BEGIN {
 #---------------------------------------------------------------------
 
 my %config = (
-    'dsn'        => $ENV{'mysqlconnection'} || 'DBI:mysql:mysql',
+    'dsn'        => $ENV{'mysqlconnection'} || 'DBI:mysql:information_schema',
     'user'       => $ENV{'mysqluser'}       || 'root',
     'password'   => $ENV{'mysqlpassword'}   || '',
     'cache_namespace' => $ENV{'cachenamespace'} || 'munin_mysql',
