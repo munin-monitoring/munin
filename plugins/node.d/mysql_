@@ -57,6 +57,7 @@ Non-default example:
     env.mysqlpassword ryuWyawEv
     env.cachenamespace munin_mysql_alt
   [mysql10_*]
+    user munin
     env.mysqluser munin
     env.mysqlconnection DBI:mysql:information_schema;mysql_read_default_file=/etc/munin/.my-10.cnf
     env.cachenamespace munin_mysql_10
@@ -67,9 +68,11 @@ Creating a munin user:
 
   CREATE USER 'munin'@'localhost' IDENTIFIED BY 'ryuWyawEv';
 
-  or with a unix_socket plugin (INSTALL PLUGIN unix_socket SONAME 'auth_socket')
+or with a unix_socket plugin (INSTALL PLUGIN unix_socket SONAME 'auth_socket')
 
   CREATE USER 'munin'@'localhost' IDENTIFIED WITH unix_socket;
+
+Note: requires 'user munin' in the configuration.
 
 The minimum required priviledges of the munin database user is:
 
