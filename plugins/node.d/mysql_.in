@@ -51,6 +51,25 @@ Non-default example:
     env.mysqluser munin;
     env.mysqlpassword ryuWyawEv
     env.cachenamespace munin_mysql_alt
+  [mysql10_*]
+    env.mysqluser munin
+    env.mysqlconnection DBI:mysql:information_schema;mysql_read_default_file=/etc/munin/.my-10.cnf
+    env.cachenamespace munin_mysql_10
+    # here the [client] section of /etc/munin/.my-10.cnf is read. socket= can
+    # be specified here.
+
+Creating a munin user:
+
+  CREATE USER 'munin'@'localhost' IDENTIFIED BY 'ryuWyawEv';
+
+  or with a unix_socket plugin (INSTALL PLUGIN unix_socket SONAME 'auth_socket')
+
+  CREATE USER 'munin'@'localhost' IDENTIFIED WITH unix_socket;
+
+The minimum required priviledges of the munin database user is:
+
+  GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'munin'@'localhost';
+
 
 Warning and critical values can be set via the environment in the usual way.
 For example:
@@ -60,10 +79,6 @@ For example:
     env.slave_sql_running_warning 0.5
     env.seconds_behind_master_warning 300
     env.seconds_behind_master_critical 600
-
-The minimum required priviledges of the munin database user is:
-
-  GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'munin'@'localhost';
 
 =head1 DEPENDENCIES
 
