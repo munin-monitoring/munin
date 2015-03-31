@@ -11,10 +11,10 @@ branches:
   - stable-2.0
   - devel
   - master
-before_install:
- - sudo apt-get update
- - sudo apt-get install devscripts
- - sh contrib/install_rrd.sh
+addons:
+  apt:
+    packages:
+      - devscripts
 notifications:
   email: false
   irc:
@@ -28,3 +28,6 @@ notifications:
 matrix:
   # we don't need to continue any build when 1 test is failing.
   fast_finish: true
+
+# Using the container-based infrastructure
+sudo: false
