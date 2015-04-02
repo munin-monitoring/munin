@@ -4,9 +4,8 @@
  Apache virtualhost configuration
 ==================================
 
-This example describes how to set up munin on a separate apache httpd
-virtual host. It uses FastCGI if this is available, and falls back to
-CGI if it is not.
+This example describes how to set up munin on a separate virtual host
+using apache httpd. It proxies all requests to :ref:`munin-httpd`
 
 Munin configuration
 ===================
