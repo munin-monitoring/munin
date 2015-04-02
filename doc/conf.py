@@ -51,7 +51,7 @@ copyright = '2012-2015, %s' % authors
 # built documents.
 #
 # The short X.Y version.
-version = '2.0'
+version = '2.1'
 # The full version, including alpha/beta/rc tags.
 release = os.popen('../getversion').read().strip()
 
