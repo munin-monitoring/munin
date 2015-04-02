@@ -16,8 +16,8 @@
 # Generated files (foo.PL -> foo)
 lib/Munin/Common/Defaults.pm
 lib/Munin.pm
-master/munin.conf
-node/munin-node.conf
+etc/munin.conf.sample
+etc/munin-node.conf.sample
 script/munin-cron
 
 
