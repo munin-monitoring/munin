@@ -44,7 +44,7 @@ master_doc = 'index'
 project = 'Munin'
 description = 'Munin monitoring'
 authors   = 'The Munin project and its contributors'
-copyright = '2012-2014, %s' % authors
+copyright = '2012-2015, %s' % authors
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
