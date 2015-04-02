@@ -76,13 +76,6 @@ dev_scripts/munin-graph
 # debug a plugin
 dev_scripts/munin-run --debug cpu config
 
-cgi
-
-This is the same as run, only for CGI. It sets up the whole environment vars that emulates a CGI call. Usage is very easy :
-
-dev_scripts/cgi munin-cgi-graph /localnet/localhost/cpu-day.png > out.dat
-
-The out.dat will contain the whole HTTP output, with the HTTP headers and the PNG content. Everything that is sent to STDERR won't be catched, so you can liberally use it while debugging.
 query_munin_node
 
 The query_munin_node is used to send commands to the node in a very simple way. Node commands are just args of the tool.
@@ -90,21 +83,3 @@ The query_munin_node is used to send commands to the node in a very simple way. 
 dev_scripts/query_munin_node list
 dev_scripts/query_munin_node config cpu
 dev_scripts/query_munin_node fetch cpu
-
-Real CGI usage with your web browser
-
-That's the holy grail. You will have a development version that behaves the same as a real munin install.
-
-First, let's assume you have a working user cgi configuration (ie ~user/cgi/whatever is working). If not you should refer yourself to the local documentation of your preferred webserver. Note that nginx will _not_ work, as it does not support CGI.
-
-I wrote a very simple cgi wrapper script. The home dir is hard coded in the script::
-
-        #! /bin/sh
-
-        ROOT=/home/me/src/munin
-        eval "$(perl -V:version)"
-
-        PERL5LIB=$ROOT/sandbox/usr/local/share/perl/$version
-        #export DBI_TRACE=2=/tmp/dbitrace.log
-
-        exec perl -T -I $PERL5LIB $ROOT/sandbox/opt/munin/www/cgi/$CGI_NAME
