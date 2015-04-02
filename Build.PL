@@ -131,8 +131,8 @@ my $build = Module::Build->new(
         'script/munin-cron.PL'            => 'script/munin-cron',
     },
     etc_files => {
-        'master/munin.conf'    => 'etc/munin.conf.example',
-        'node/munin-node.conf' => 'etc/munin-node.conf.example',
+        'master/munin.conf'    => 'etc/munin.conf.sample',
+        'node/munin-node.conf' => 'etc/munin-node.conf.sample',
     },
     plugins_files => $plugins_files,
     web_files     => $web_files,
