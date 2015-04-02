@@ -119,7 +119,7 @@ my $build = Module::Build->new(
         'Net::Server::Daemonize' => '0.06',
         'Net::Server::Fork'      => '0',
         'Params::Validate'       => '1.13',
-        'RRDs'                   => '1.4008',
+        'Alien::RRDtool'         => '0',
         'URI'                    => '1.64',
         'XML::Dumper'            => '0',
     },

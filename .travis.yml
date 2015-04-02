@@ -1,20 +1,16 @@
 language: perl
 perl:
   - "5.20"
-  - "5.18"
-  - "5.16"
-  - "5.14"
-  - "5.12"
-  - "5.10"
 branches:
  only:
   - stable-2.0
   - devel
   - master
-before_install:
- - sudo apt-get update
- - sudo apt-get install devscripts
- - sh contrib/install_rrd.sh
+  - travis-container
+addons:
+  apt:
+    packages:
+      - devscripts
 notifications:
   email: false
   irc:
@@ -28,3 +24,6 @@ notifications:
 matrix:
   # we don't need to continue any build when 1 test is failing.
   fast_finish: true
+
+# Using the container-based infrastructure
+sudo: false
