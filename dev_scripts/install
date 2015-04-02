@@ -43,6 +43,8 @@ configure_plugins() {
 
 configure_node() {
 	banner CONFIGURE NODE
+	install "${CONFDIR}/munin-node.conf.example" "${CONFDIR}/munin-node.conf"
+
 	perl -pi -e "s/port 4949/port ${MUNIN_NODE_PORT}/;
 				 s/user root/user $USER/;
 				 s/group root/group $GROUP/;
@@ -61,15 +63,34 @@ tls_verify_depth 5
 configure_master() {
 	banner CONFIGURE MASTER
 
-	perl -pi -e "s/(address 127\.0\.0\.1)/\$1\n    port ${MUNIN_NODE_PORT}/;
-				 s|(# a simple host tree)|tls disabled
-tls_private_key $BASEDIR/t/tls/master_key.pem
-tls_certificate $BASEDIR/t/tls/master_cert.pem
-tls_ca_certificate $BASEDIR/t/tls/CA/ca_cert.pem
-tls_verify_certificate yes
-tls_verify_depth 5
+        cat > "${CONFDIR}/munin.conf" <<EOF
+# Sandbox munin.conf
 
-\$1|" "${CONFDIR}/munin.conf"
+tls                    disabled
+tls_private_key        $BASEDIR/t/tls/master_key.pem
+tls_certificate        $BASEDIR/t/tls/master_cert.pem
+tls_ca_certificate     $BASEDIR/t/tls/CA/ca_cert.pem
+tls_verify_certificate yes
+tls_verify_depth       5
+
+# Read node definitions and other configuration
+includedir ${CONFDIR}/munin-conf.d
+EOF
+
+        cat > "${CONFDIR}/munin-conf.d/node.ipv4.sandbox.local.conf" <<EOF
+# Sandbox munin node definition
+[ipv4.sandbox.local]
+address 127.0.0.1
+port    $MUNIN_NODE_PORT
+EOF
+
+        cat > "${CONFDIR}/munin-conf.d/node.ipv6.sandbox.local.conf" <<EOF
+# Sandbox munin node definition
+[ipv6.sandbox.local]
+address [::1]
+port    $MUNIN_NODE_PORT
+EOF
+
 }
 
 stop_node() {
