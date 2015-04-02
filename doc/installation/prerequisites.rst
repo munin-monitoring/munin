@@ -9,60 +9,49 @@ Building munin
 
 In order to build munin, you need:
 
-* GNU Make — Please do not attempt to use any other make.
+* A reasonable Perl 5 (Version 5.10 or newer)
+* The Module::Build perl module
+* The perl modules listed in "requires" in Build.PL
 
-* A reasonable Perl 5 (Version 5.8 or newer)
+Developers / packagers need, in addition to the above
 
-* Perl modules: Module::Build
-
-Developers / packagers need
-
-* Test::MockModule
-* Test::MockObject
-* Test::Pod::Coverage
-* Test::Perl::Critic 1.096 or later
-* Test::Exception
-* Directory::Scratch (err, wherefrom?)
+* The dependencies listed in "test_requires" in Build.PL
+* RRDtool perl bindings
 
 In order to build the documentation, you need:
+
 * sphinx
+
+Installing RRDtool bindings
+---------------------------
+
+The RRDtool perl bindings needed by munin are normally only installed
+for the system perl.  To install munin using a separate perl
+installation, add the Alien::RRDtool perl module.
 
 Running munin
 =============
 
-In order to run munin, you need:
+Munin master
+------------
 
-* A reasonable perl 5 (Version 5.8 or newer)
+In order to run the munin master, you need:
 
-The munin node needs:
+* A reasonable perl 5 (Version 5.10 or newer)
+* All the perl modules used when building Munin
+* A web server (optional)
 
-* Perl modules
+Munin node
+----------
 
-  * Net::Server
-  * Net::Server::Fork
-  * Time::HiRes
-  * Net::SNMP (Optional, if you want to use SNMP plugins)
+The munin node is lighter on the requirements, and need only the
+following perl modules:
 
-* Java JRE (Optional, if you want to use java plugins)
-* Anything the separate plugins may need. These have diverse
-  requirements, not documented here.
+* Net::Server
+* Net::Server::Fork
+* Time::HiRes
+* Net::SNMP (Optional)
 
-The munin master needs
-
-* Perl modules:
-
-    * CGI::Fast
-    * Digest::MD5,
-    * File\::Copy::Recursive
-    * Getopt::Long
-    * HTML::Template
-    * IO::Socket::INET6
-    * Log::Dispatch
-    * Net::SSLeay (Optional, if you want to use SSL/TLS)
-    * Params::Validate
-    * Storable
-    * Text::Balanced
-    * Time::HiRes
-    * TimeDate
-
-* A web server capable of CGI or FastCGI
+The Munin plugins run by the node have their own needs. Many plugins
+need libraries or utilities related to what they monitor.  Please
+refer to each plugin.

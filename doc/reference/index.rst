@@ -23,12 +23,11 @@ Man pages
    munin.rst
    munin-async.rst
    munin-asyncd.rst
-   munin-cgi-graph.rst
-   munin-cgi-html.rst
    munin-check.rst
    munin-cron.rst
    munin-graph.rst
    munin-html.rst
+   munin-httpd.rst
    munin-limits.rst
    munin-node-configure.rst
    munin-node.rst
