@@ -43,7 +43,7 @@ configure_plugins() {
 
 configure_node() {
 	banner CONFIGURE NODE
-	install "${CONFDIR}/munin-node.conf.sample" "${CONFDIR}/munin-node.conf"
+	install -m 0644 "${CONFDIR}/munin-node.conf.sample" "${CONFDIR}/munin-node.conf"
 
 	perl -pi -e "s/port 4949/port ${MUNIN_NODE_PORT}/;
 				 s/user root/user $USER/;
@@ -104,8 +104,8 @@ case ${1:-} in
 		;;
 	node)
 		make_sandbox
-		configure_plugins
 		configure_node
+		configure_plugins
 		configure_master
 		;;
 	*)
