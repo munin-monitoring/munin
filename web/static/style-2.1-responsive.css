@@ -1,0 +1,86 @@
+/*
+ * This file contains everything that makes munin responsive
+ */
+
+/* Small devices (tablets) */
+@media (max-width: 768px) {
+    #header {
+        width: 100%;
+        border-left: 0;
+        border-right: 0;
+        border-radius: 0;
+        padding: 5px;
+    }
+
+    /* Different nav */
+    #main {
+        display: block;
+        width: 100%;
+    }
+    .navContainer {
+        display: block;
+        width: 100%;
+        max-width: 500px;
+        margin: auto;
+    }
+    #nav {
+        display: none;
+        border-top: 1px solid #fff;
+        padding: 0;
+    }
+    #nav ul li {
+        text-align: center;
+        padding-right: 0;
+    }
+    #content {
+        display: block;
+        padding: 1em 0 0 0;
+        width: 100%;
+    }
+    .navContainer > div#navToggle,
+    .navContainer > div#nav {
+        -moz-box-shadow: 0 0 2px 0 #777777;
+        -webkit-box-shadow: 0 0 2px 0 #777777;
+        -o-box-shadow: 0 0 2px 0 #777777;
+        box-shadow: 0 0 2px 0 #777777;
+        filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=2);
+    }
+    #navToggle {
+        display: block;
+        padding: 10px 15px;
+        background-color: rgba(0, 0, 0, 0.05);
+        font-weight: bold;
+        cursor: pointer;
+        font-family: sans-serif;
+    }
+    #navToggle:after {
+        content: "+";
+        float: right;
+        font-size: 18px;
+        font-family: initial;
+        font-weight: normal;
+        margin-top: -2px;
+        color: #797979;
+    }
+    #navToggle.expanded:after {
+        content: "-";
+        margin-top: -4px;
+    }
+
+    /* Graphs */
+    a.graphLink > img {
+        max-width: 97%;
+        display: block;
+        margin: auto;
+    }
+}
+
+/* Medium devices */
+@media (max-width: 992px) {
+
+}
+
+/* Large devices (large desktops) */
+@media (max-width: 1200px) {
+
+}
