@@ -159,6 +159,7 @@ my $build = Module::Build->new(
         'Test::MockObject'    => '0',
         'Test::Deep'          => '0',
         'Test::LongString'    => '0',
+        'Test::Perl::Critic'  => '0',
         'File::Slurp'         => '9999.19',
         'File::ReadBackwards' => '0',
         'XML::Parser'         => '0',
