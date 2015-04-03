@@ -3,29 +3,29 @@
 
 <!--
 
-   Solaris SMF method for site/munin-node
+Solaris SMF method for site/munin-node
 
-   2010-06-02 Stig Sandbeck Mathisen <ssm@fnord.no>
-   
-   Usage
-   =====
-   
-   Copy the munin-node script to /lib/svc/method/, and
-   make it executale
-   
-   Copy the munin-node.xml manifest to /var/svc/manifest/site/, and
-   then run:
-   
-   # svccfg import /var/svc/manifest/site/munin-node.xml
+2010-06-02 Stig Sandbeck Mathisen <ssm@fnord.no>
 
-   Check
-   =====
+Usage
+=====
 
-   Check the status of your running munin-node with:
+Copy the munin-node script to /lib/svc/method/, and
+make it executable
 
-   # svcs site/munin-node
-     
-  -->
+Copy the munin-node.xml manifest to /var/svc/manifest/site/, and
+then run:
+
+# svccfg import /var/svc/manifest/site/munin-node.xml
+
+Check
+=====
+
+Check the status of your running munin-node with:
+
+# svcs site/munin-node
+
+-->
 
 <service_bundle type='manifest' name='export'>
   <service name='site/munin-node' type='service' version='0'>
@@ -42,7 +42,7 @@
     </dependency>
 
     <dependency name='config' grouping='require_all' restart_on='none' type='path'>
-      <service_fmri value='file://localhost@@CONFDIR@@/munin-node.conf'/>
+      <service_fmri value='file://localhost/etc/munin/munin-node.conf'/>
     </dependency>
 
     <exec_method name='start' type='method' exec='/lib/svc/method/munin-node start' timeout_seconds='30'>
@@ -60,7 +60,7 @@
         <loctext xml:lang='C'>munin-node</loctext>
       </common_name>
       <documentation>
-        <manpage title='munin-node' section='1' manpath='@@MANDIR@@'/>
+        <manpage title='munin-node' section='1' manpath='/usr/local/share/man'/>
         <doc_link name='Munin Documentation' uri='http://munin-monitoring.org/wiki/Documentation'/>
       </documentation>
     </template>

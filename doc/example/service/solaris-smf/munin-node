@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Setup
+install -d -u munin -g munin /run/munin
+
+# Main
+exec /usr/bin/munin-node
