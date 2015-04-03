@@ -222,17 +222,19 @@ h1 span.problems { color: #fff; }
 
 /* Main */
 #main {
-    width: 95%;
-    margin: 0 auto;
+    width: 98%;
+    margin-left: auto;
+    display: table;
 }
 
-.contentpusher {
+.clear {
     clear: both;
 }
 
 /* Navigation */
 #nav {
-    float: left;
+    display: table-cell;
+    vertical-align: top;
     width: 200px;
     padding: 10px 0;
     -moz-box-shadow: inset -4px 0 10px -7px #656565;
@@ -279,7 +281,7 @@ h1 span.problems { color: #fff; }
 
 /* Content */
 #content {
-    margin-left: 200px;
+    display: table-cell;
     padding: 1em;
 }
 
