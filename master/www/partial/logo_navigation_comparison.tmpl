@@ -17,14 +17,12 @@
 			<a href="comparison-year.html">year</a> ]
         </span>
 	</h1>
-	<p>
-        <span class="categories"><TMPL_VAR NAME="NAME"> [
-		    <TMPL_LOOP NAME="CATEGORIES">
-			    <a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
-			    <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF>
-			    href="#<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">"><TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME"></a>
-		    </TMPL_LOOP>
-            ]
-	    </span>
-	</p>
+    <span class="categories"><TMPL_VAR NAME="NAME"> [
+        <TMPL_LOOP NAME="CATEGORIES">
+            <a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
+            <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF>
+            href="#<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">"><TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME"></a>
+        </TMPL_LOOP>
+        ]
+    </span>
 </div>

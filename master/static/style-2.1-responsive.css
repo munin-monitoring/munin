@@ -1,0 +1,24 @@
+/*
+ * This file contains everything that makes munin responsive
+ */
+
+/* Small devices (tablets) */
+@media (max-width: 768px) {
+    #header {
+        width: 100%;
+        border-left: 0;
+        border-right: 0;
+        border-radius: 0;
+        padding: 5px;
+    }
+}
+
+/* Medium devices */
+@media (max-width: 992px) {
+
+}
+
+/* Large devices (large desktops) */
+@media (max-width: 1200px) {
+
+}

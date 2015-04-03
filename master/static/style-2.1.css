@@ -107,7 +107,9 @@ img.iunkn  {
 /* Header */
 #header {
     width: 90%;
+    min-height: 50px;
     margin: 0 auto;
+    text-align: center;
     background-color: #388E3C;
     border: 1px solid #3A713C;
     border-top-width: 0;
@@ -123,14 +125,9 @@ img.iunkn  {
     box-shadow: 0 0 5px 0 #777777;
     filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=5);
     padding: 5px 50px;
-    height: 50px;
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
-}
-
-#header p {
-    margin: 0;
 }
 
 h1, h2 {
@@ -141,7 +138,7 @@ h1, h2 {
 }
 
 h1 {
-    padding: 5px 0;
+    padding: 3px 0;
 }
 
 #nav h2 {
@@ -151,22 +148,24 @@ h1 {
 h1 .logo {
     display: inline-block;
     float: left;
-    background-image: url('logo-h-neg.png');
-    background-repeat: no-repeat;
     width: 115px;
     height: 30px;
     -webkit-transition-duration: 200ms;
     -moz-transition-duration: 200ms;
     -o-transition-duration: 200ms;
     transition-duration: 200ms;
+    padding: 2px 5px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    background: url('logo-h-neg.png') no-repeat 4px 2px;
 }
 
 h1 .logo:hover {
-    opacity: 0.8;
+    border-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 h1 > .currentpage {
-    line-height: 30px;
     font-weight: 100;
     font-size: 16px;
     color: #eee;
@@ -174,7 +173,6 @@ h1 > .currentpage {
     text-align: center;
     display: block;
     width: 100%;
-    padding-right: 115px;
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
@@ -186,17 +184,17 @@ h1 > .currentpage > a {
     -moz-transition-duration: 200ms;
     -o-transition-duration: 200ms;
     transition-duration: 200ms;
-    padding: 4px 6px;
+    padding: 2px 6px;
     border-radius: 2px;
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
-    border: 1px solid rgba(255, 255, 255, 0);
+    border: 1px solid transparent;
 }
 
 h1 > .currentpage > a:hover {
     color: #fff;
-    background-color: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-color: rgba(0, 0, 0, 0.15);
+    background-color: rgba(0, 0, 0, 0.15);
     text-decoration: none;
 }
 
@@ -204,8 +202,22 @@ h1 span.problems a,
 h1 span.problems { color: #fff; }
 
 #header .comparison, #header .categories {
-    float: right;
-    margin-top: 9px;
+    display: inline-block;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    text-align: center;
+    -webkit-transition-duration: 200ms;
+    -moz-transition-duration: 200ms;
+    -o-transition-duration: 200ms;
+    transition-duration: 200ms;
+}
+#header .comparison > a,
+#header .categories > a {
+    color: #fff;
+}
+#header .comparison:hover,
+#header .categories:hover{
+    color: #fff;
 }
 
 /* Main */
