@@ -173,6 +173,7 @@ h1 > .currentpage {
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
 }
+h1 > .currentpage.singleLine { margin-top: 6px; }
 
 h1 > .currentpage > a {
     color: #fff;

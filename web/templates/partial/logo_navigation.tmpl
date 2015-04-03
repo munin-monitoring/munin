@@ -1,7 +1,7 @@
 <div id="header">
     <h1>
         <a href="<TMPL_VAR NAME="R_PATH">"><span class="logo"></span></a>
-        <span class="currentpage">
+        <span class="currentpage <TMPL_UNLESS NAME="NCATEGORIES">singleLine</TMPL_IF>">
             <TMPL_LOOP NAME="PATH">
                 <TMPL_IF NAME="PATHNAME"> &bull;
                     <TMPL_IF NAME="PATH"><a href="<TMPL_VAR NAME="PATH">"></TMPL_IF><TMPL_VAR NAME="PATHNAME"><TMPL_IF NAME="PATH"></a></TMPL_IF>
