@@ -305,8 +305,13 @@ Connect to munin-nodes on a remote site, through a bastion host, using ssh.
   [www.site2.example.org]
     address ssh://bastion.site2.example.org/bin/nc www.site2.example.org 4949
 
+Hint: When using the ssh\:// transport, you can configure how ssh
+behaves by editing `~munin/.ssh/config`.  See the :ref:`ssh transport
+configuration examples <example-transport-ssh>`.
+
 SEE ALSO
 ========
 
 See :ref:`munin` for an overview over munin.
 
+:ref:`example-transport-ssh`
