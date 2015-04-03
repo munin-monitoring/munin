@@ -230,6 +230,8 @@ if ( not $build->install_path('plugins') ) {
         'plugins' => $build->install_path('share') . '/plugins' );
 }
 
+$plugins_files->{'plugins/plugin.sh'} = 'plugins/plugin.sh';
+
 File::Find::find( { wanted => \&_find_plugins_wanted },
     'plugins/node.d', "plugins/node.d.$^O" );
 
