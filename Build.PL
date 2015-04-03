@@ -260,28 +260,12 @@ if ( not $build->install_path('web') ) {
     $build->install_path( 'web' => $build->install_path('etc') );
 }
 
-File::Find::find( { wanted => \&_find_web_templates_wanted }, 'master/www' );
-File::Find::find( { wanted => \&_find_web_static_wanted }, 'master/static' );
+File::Find::find( { wanted => \&_find_web_wanted }, 'web' );
 
-sub _find_web_templates_wanted {
-	my ($src, $dst);
-    if ( lstat && -f _ && /\.tmpl$/ ) {
-		if ($File::Find::dir =~ m{/partial$}smx) {
-			$dst = join( '/', 'web/templates/partial/', $_ );
-		}
-		else {
-			$dst = join( '/', 'web/templates', $_ );
-		}
-		$src = $File::Find::name;
-        $web_files->{$src} = $dst;
-    }
-}
-
-sub _find_web_static_wanted {
+sub _find_web_wanted {
     if ( lstat && -f _ ) {
-        my $src = $File::Find::name;
-        my $dst = join( '/', 'web/static', $_ );
-        $web_files->{$src} = $dst;
+        my $file = $File::Find::name;
+        $web_files->{$file} = $file;
     }
 }
 
