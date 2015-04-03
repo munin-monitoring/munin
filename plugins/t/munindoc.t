@@ -39,7 +39,6 @@ sub check_munindoc
         (m{snmp__} ? 'MIB INFORMATION' : ()),
         'MAGIC MARKERS',
         'BUGS',
-        'VERSION',
         'AUTHOR',
         'LICENSE',
     );
