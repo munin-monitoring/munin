@@ -88,7 +88,7 @@ sub do_work {
 
 	# Try Connecting to the Carbon Server
 	if ($config->{carbon_server} ne "") {
-		DEBUG "[DEBUG] Connecting to Carbon Server $config->{carbon_server}:$config->{carbon_port}...";
+		DEBUG "[DEBUG] Connecting to Carbon server $config->{carbon_server}:$config->{carbon_port}...";
 		$self->{carbon_socket} = IO::Socket::INET->new (
 				PeerAddr => $config->{carbon_server},
 				PeerPort => $config->{carbon_port},
@@ -607,7 +607,7 @@ sub _update_carbon_server {
 		}
 	}
 
-	$metric_path .= $self->{host}{host_name} . ".";
+	$metric_path .= (join ".", reverse split /\./, $self->{host}{host_name}) . ".";
 
 	for my $service (keys %{$nested_service_config->{data_source}}) {
 		my $service_config = $nested_service_config->{data_source}{$service};
@@ -620,9 +620,8 @@ sub _update_carbon_server {
 				# _update_rrd_files will already have warned about this so silently move on
 				next;
 			}
-
-	    	if (defined($service_data) and defined($service_data->{$ds_name})) {
-				# $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
+			
+			if (defined($service_data) and defined($service_data->{$ds_name})) {
 				my $values = $service_data->{$ds_name}{value};
 				next unless defined ($values);
 				for (my $i = 0; $i < scalar @$values; $i++) {
@@ -643,7 +642,8 @@ sub _update_carbon_server {
 						}
 					}
 
-					$self->{carbon_socket}->print("${metric_path}.$service.$ds_name $value $when");
+					DEBUG "[DEBUG] Sending ${metric_path}$service.$ds_name to Carbon";
+					$self->{carbon_socket}->print("${metric_path}$service.$ds_name $value $when\n");
 
 				}
 
