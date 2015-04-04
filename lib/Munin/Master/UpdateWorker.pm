@@ -87,7 +87,7 @@ sub do_work {
 	);
 
 	# Try Connecting to the Carbon Server
-	if $config->{carbon_server} ne "" {
+	if ($config->{carbon_server} ne "") {
 		DEBUG "[DEBUG] Connecting to Carbon Server $config->{carbon_server}:$config->{carbon_port}...";
 		$self->{carbon_socket} = IO::Socket::INET->new (
 				PeerAddr => $config->{carbon_server},
@@ -611,9 +611,9 @@ sub _update_carbon_server {
 
 	for my $service (keys %{$nested_service_config->{data_source}}) {
 		my $service_config = $nested_service_config->{data_source}{$service};
-		my $service_data   = $nested_sercice_data->{$service};
+		my $service_data   = $nested_service_data->{$service};
 
-		for my $ds_name (keys ${$service_config}) {
+		for my $ds_name (keys %{$service_config}) {
 			my $ds_config = $service_config->{$ds_name};
 
 			unless (defined($ds_config->{label})) {
@@ -627,7 +627,7 @@ sub _update_carbon_server {
 				next unless defined ($values);
 				for (my $i = 0; $i < scalar @$values; $i++) {
 					my $value = $values->[$i];
-					my $when  = $ds_values->{when}[$i];
+					my $when  = $service_data->{$ds_name}{when}[$i];
 
 					if ($value =~ /\d[Ee]([+-]?\d+)$/) {
 						# Looks like scientific format. I don't know how Carbon

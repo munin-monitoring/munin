@@ -22,6 +22,9 @@ my $fasit = {
     },
 
     config => {
+		carbon_server   => "localhost",
+		carbon_port     => "2003",
+		carbon_prefix   => "",
         config_file     => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf",
         dbdir           => '/opt/munin/sandbox/var/opt/munin',
         debug           => 0,
