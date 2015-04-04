@@ -12,6 +12,7 @@ use Munin::Common::Logger;
 use File::Basename;
 use File::Path;
 use File::Spec;
+use IO::Socket::INET;
 use Munin::Master::Config;
 use Munin::Master::Node;
 use Munin::Master::Utils;
@@ -19,7 +20,7 @@ use RRDs;
 use Time::HiRes;
 use Data::Dumper;
 use Scalar::Util qw(weaken);
-    
+
 use List::Util qw(max shuffle);
 
 my $config = Munin::Master::Config->instance()->{config};
@@ -84,6 +85,17 @@ sub do_work {
 	data_source => {},
 	global => {},
 	);
+
+	# Try Connecting to the Carbon Server
+	if $config->{carbon_server} ne "" {
+		DEBUG "[DEBUG] Connecting to Carbon Server $config->{carbon_server}:$config->{carbon_port}...";
+		$self->{carbon_socket} = IO::Socket::INET->new (
+				PeerAddr => $config->{carbon_server},
+				PeerPort => $config->{carbon_port},
+				Proto    => 'tcp',
+		) or WARN "[WARN] Couldn't connect to Carbon Server: $!";
+	}
+
 
     INFO "[INFO] starting work in $$ for $nodedesignation.\n";
     my $done = $self->{node}->do_in_session(sub {
@@ -234,7 +246,8 @@ sub do_work {
 		    %{$service_config{global}});
 
 		my $last_updated_timestamp = $self->_update_rrd_files(\%service_config, \%service_data);
-          	$self->set_spoolfetch_timestamp($last_updated_timestamp);
+		$self->_update_carbon_server(\%service_config, \%service_data);
+		$self->set_spoolfetch_timestamp($last_updated_timestamp);
 	    } # for @plugins
 
 	    # Send "quit" to node
@@ -256,6 +269,9 @@ sub do_work {
 		.$EVAL_ERROR;
 	    return;
 	}
+
+	DEBUG "[DEBUG] Closing Carbon socket";
+	$self->{carbon_socket}->close if exists $self->{carbon_socket};
 
 	# Everything went smoothly.
 	DEBUG "[DEBUG] Everything went smoothly.";
@@ -577,6 +593,66 @@ sub _ensure_tuning {
     return $success;
 }
 
+sub _update_carbon_server {
+	my ($self, $nested_service_config, $nested_service_data) = @_;
+
+	my $metric_path;
+
+	return unless exists $self->{carbon_socket};
+
+	if ($config->{carbon_prefix} ne "") {
+		$metric_path .= $config->{carbon_prefix};
+		if ($config->{carbon_prefix} !~ /\.$/) {
+			$metric_path .= '.';
+		}
+	}
+
+	$metric_path .= $self->{host}{host_name} . ".";
+
+	for my $service (keys %{$nested_service_config->{data_source}}) {
+		my $service_config = $nested_service_config->{data_source}{$service};
+		my $service_data   = $nested_sercice_data->{$service};
+
+		for my $ds_name (keys ${$service_config}) {
+			my $ds_config = $service_config->{$ds_name};
+
+			unless (defined($ds_config->{label})) {
+				# _update_rrd_files will already have warned about this so silently move on
+				next;
+			}
+
+	    	if (defined($service_data) and defined($service_data->{$ds_name})) {
+				# $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
+				my $values = $service_data->{$ds_name}{value};
+				next unless defined ($values);
+				for (my $i = 0; $i < scalar @$values; $i++) {
+					my $value = $values->[$i];
+					my $when  = $ds_values->{when}[$i];
+
+					if ($value =~ /\d[Ee]([+-]?\d+)$/) {
+						# Looks like scientific format. I don't know how Carbon
+						# handles that, but convert it anyway so it gets the same
+						# data as RRDtool
+						my $magnitude = $1;
+						if ($magnitude < 0) {
+							# Preserve at least 4 significant digits
+							$magnitude = abs($magnitude) + 4;
+							$value = sprintf("%.*f", $magnitude, $value);
+						} else {
+							$value = sprintf("%.4f", $value);
+						}
+					}
+
+					$self->{carbon_socket}->print("${metric_path}.$service.$ds_name $value $when");
+
+			} else {
+				# Again, _update_rrd_files will have warned
+			}
+		}
+	}
+}
+
+
 
 sub _update_rrd_files {
     my ($self, $nested_service_config, $nested_service_data) = @_;
@@ -618,7 +694,7 @@ sub _update_rrd_files {
 	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config, $first_epoch);
 
 	    if (defined($service_data) and defined($service_data->{$ds_name})) {
-		$last_timestamp = max($last_timestamp, $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
+			$last_timestamp = max($last_timestamp, $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
 	    }
            elsif (defined $ds_config->{cdef} && $ds_config->{cdef} !~ /\b${ds_name}\b/) {
                DEBUG "[DEBUG] Service $service on $nodedesignation label $ds_name is synthetic";
