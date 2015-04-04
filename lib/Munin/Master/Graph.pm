@@ -553,8 +553,6 @@ sub RRDs_graph_or_dump {
 
 	my $fileext = shift;
 	if ($fileext =~ m/PNG|SVG|EPS|PDF/) {
-		open (my $dump_sh, ">rrd.sh");
-		print $dump_sh "rrdtool graph '" . join("' \\\n\t'", @_) . "'\n";
 		return RRDs::graph(@_);
 	}
 
