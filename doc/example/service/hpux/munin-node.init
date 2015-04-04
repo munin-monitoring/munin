@@ -5,8 +5,8 @@
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 NAME=munin-node
-DAEMON=@@SBINDIR@@/$NAME
-CONFFILE=@@CONFDIR@@/munin-node.conf
+DAEMON=/usr/bin/$NAME
+CONFFILE=/etc/munin/munin-node.conf
 RUN_AS=$(awk '$1~/user/{print$2}' $CONFFILE)
 PIDFILE=$(awk '$1~/pid/{print$2}' $CONFFILE)
 MYCONF=/etc/rc.config.d/muninconf
@@ -26,12 +26,12 @@ fi
 get_pid() {
     local from=${1:-pidfile} pid
     if [[ $from = pidfile && -f $PIDFILE ]]; then
-	pid=$(cat $PIDFILE)
+        pid=$(cat $PIDFILE)
     else
-    	pid=$(UNIX95= ps -C $(basename $DAEMON) -o pid=)
+        pid=$(UNIX95= ps -C $(basename $DAEMON) -o pid=)
     fi
     if [[ -n $pid ]] && kill -0 $pid 2>/dev/null; then
-	echo $pid
+        echo $pid
     fi
 }
 
@@ -42,9 +42,9 @@ status() {
     printf $(basename $DAEMON)
     pid=$(get_pid)
     if [[ -z $pid ]]; then
-	echo " is stopped"
+        echo " is stopped"
     else
-	printf " (pid %d) is running...\n" $pid
+        printf " (pid %d) is running...\n" $pid
     fi
     exit $rc
 }
@@ -52,16 +52,16 @@ status() {
 down() {
     local pid=$(get_pid)
     if [[ -z $pid ]]; then
-	echo "No $(basename $DAEMON) process running"
-	exit 1
+        echo "No $(basename $DAEMON) process running"
+        exit 1
     fi
     if kill $pid && sleep 5 && ! kill -0 $pid 2>/dev/null; then
-	echo "Stopped $(basename $DAEMON)"
+        echo "Stopped $(basename $DAEMON)"
     else
-	echo "$(basename $DAEMON) didn't catch SIGTERM, sending it SIGKILL"
-	kill -9 $pid
+        echo "$(basename $DAEMON) didn't catch SIGTERM, sending it SIGKILL"
+        kill -9 $pid
     fi
-} 
+}
 
 up() {
     local pid=$(get_pid)
@@ -75,21 +75,21 @@ action=${1:-status}
 
 case $action in
     start)
-	shift
-	up $*
-	;;
+        shift
+        up $*
+        ;;
     stop)
-	down
-	;;
+        down
+        ;;
     status)
-	status
-	;;
+        status
+        ;;
     restart)
-	down
-	up
-	;;
+        down
+        up
+        ;;
     *)
-	echo "usage: munin {start [--debug]|stop|restart|status}" >&2
-	exit 1
-	;;
+        echo "usage: munin {start [--debug]|stop|restart|status}" >&2
+        exit 1
+        ;;
 esac
