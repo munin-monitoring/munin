@@ -5,6 +5,7 @@ html, body {
 	height: 100%;
 	background: #fdfdfd;
 	font-size: 90%;
+	background-color: #FDFDFD;
 }
 
 select {
@@ -285,9 +286,9 @@ h1 span.problems { color: #fff; }
 	-webkit-box-sizing: border-box;
 }
 
-#content li {
+/*#content li {
 	margin-left: -20px;
-}
+}*/
 
 #content > ul:first-of-type {
 	margin-left: 2em;
@@ -307,10 +308,6 @@ h1 span.problems { color: #fff; }
 	margin-bottom: 10px;
 	text-decoration: none;
 	letter-spacing: -0.3px;
-}
-
-ul.groupview li.last {
-	margin-bottom: 1em;
 }
 
 /* Content: comparison */
@@ -380,20 +377,117 @@ td {
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
-}
-
-#footer p.navigation {
-	margin: 0;
 	text-align: right;
 }
 
+#footer > * {
+	margin: 0;
+	display: inline-block;
+}
+#footer > .navigation {
+	display: block;
+}
 #footer p.tagline {
 	color: #aaa;
-	margin: 0;
-	font-size: 80%;
-	text-align: right;
+	font-size: 11px;
+	border-top: 1px solid #dedede;
+	padding: 5px 10px;
+	letter-spacing: -0.5px;
+	transition-duration: 200ms;
+	margin: 10px 0;
+}
+#footer p.tagline:hover {
+	color: #888;
 }
 
 .categoryview .node {
 	display: inline-block;
 }
+
+/* Overview */
+.groupview {
+	list-style: none;
+	margin: 20px 30px;
+	padding: 0;
+	max-width: 900px;
+}
+.groupview > li {
+	border-radius: 2px;
+	-moz-border-radius: 2px;
+	-webkit-border-radius: 2px;
+	margin-bottom: 20px;
+	background-color: #fff;
+	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+	border: 1px solid rgba(0, 0, 0, 0.35);
+}
+.groupview span.domain a {
+	font-family: Helvetica, sans-serif;
+	font-size: 16px;
+	font-weight: bold;
+	color: #fff;
+	text-shadow: 1px 1px 0 #37474F;
+	display: block;
+	padding: 10px 22px;
+	margin: -1px;
+	border-radius: 2px 2px 0 0;
+	border: 1px solid #37474F;
+	background-color: #546E7A;
+	box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
+	transition-duration: 100ms;
+}
+.groupview span.domain a:hover {
+	background-color: #4E656F;
+	box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.5);
+	text-decoration: none;
+}
+.groupview li ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.groupview li ul li {
+	border-bottom: 1px solid #999;
+}
+.groupview li ul li span.host {
+	display: block;
+}
+.groupview li ul li span.host a {
+	display: block;
+	padding: 11px 20px;
+	font-weight: bold;
+	font-family: Helvetica, sans-serif;
+	font-size: 14px;
+}
+div.compare {
+	border-bottom: 1px solid #aaa;
+	background-color: rgba(0, 0, 0, 0.1);
+	padding: 0 10px;
+	box-shadow: inset 0 -2px 2px 0 rgba(0, 0, 0, 0.05);
+}
+div.compare img.glyphicon-compare {
+	width: 12px;
+	vertical-align: sub;
+	opacity: 0.7;
+	margin-right: 5px;
+}
+div.compare a {
+	display: inline-block;
+	padding: 8px;
+	opacity: 0.8;
+}
+div.categories {
+	background-color: rgba(0, 0, 0, 0.04);
+	font-size: 0; /* Remove white spaces */
+	border-top: 1px solid #dedede;
+	border-bottom: 1px solid #dedede;
+	box-shadow: inset 0px 0px 4px 0 rgba(0, 0, 0, 0.1);
+}
+div.categories > * {
+	font-size: 13px;
+}
+div.categories a {
+	display: inline-block;
+	padding: 5px 10px;
+	color: #666;
+}
+

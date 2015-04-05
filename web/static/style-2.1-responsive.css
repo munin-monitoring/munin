@@ -73,6 +73,11 @@
 		display: block;
 		margin: auto;
 	}
+
+	/* Overview */
+	ul.groupview {
+		margin: 20px 15px!important;
+	}
 }
 
 /* Medium devices */
