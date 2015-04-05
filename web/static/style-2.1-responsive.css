@@ -77,9 +77,8 @@
 	}
 
 	/* Overview */
-	ul.groupview {
-		margin: 20px 15px!important;
-	}
+	ul.groupview { margin: 20px 15px!important; }
+	.overviewSearch { margin: 5px 15px 15px 15px; }
 	div.categories { padding-top: 0; }
 }
 
