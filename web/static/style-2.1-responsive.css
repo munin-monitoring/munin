@@ -12,6 +12,8 @@
 		padding: 5px;
 	}
 
+	h1 .logo { width: 19px; }
+
 	/* Different nav */
 	#main {
 		display: block;

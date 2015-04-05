@@ -3,9 +3,8 @@ html, body {
 	margin: 0;
 	padding: 0;
 	height: 100%;
-	background: #fdfdfd;
 	font-size: 90%;
-	background-color: #FDFDFD;
+	background-color: #fdfdfd;
 }
 
 select {
@@ -154,7 +153,14 @@ h1 .logo {
 	padding: 2px 5px;
 	border: 1px solid transparent;
 	border-radius: 3px;
-	background: url('logo-h-neg.png') no-repeat 4px 2px;
+	background-repeat: no-repeat;
+	background-position: 4px 2px;
+	/* SVG logo: fallback to png */
+	background-image: url('logo-h-neg.png');
+	background-image:
+		linear-gradient(transparent, transparent),
+		url('logo-h-neg.svg');
+	background-size: 115px 30px;
 }
 
 h1 .logo:hover {
@@ -448,6 +454,7 @@ td {
 .groupview li ul li {
 	border-bottom: 1px solid #999;
 }
+.groupview li ul li.last { border-bottom-width: 0; }
 .groupview li ul li span.host {
 	display: block;
 }
@@ -479,8 +486,6 @@ div.categories {
 	background-color: rgba(0, 0, 0, 0.04);
 	font-size: 0; /* Remove white spaces */
 	border-top: 1px solid #dedede;
-	border-bottom: 1px solid #dedede;
-	box-shadow: inset 0px 0px 4px 0 rgba(0, 0, 0, 0.1);
 }
 div.categories > * {
 	font-size: 13px;
@@ -490,4 +495,3 @@ div.categories a {
 	padding: 5px 10px;
 	color: #666;
 }
-
