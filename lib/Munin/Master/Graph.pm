@@ -456,6 +456,9 @@ sub handle_request
 	# Optional header args
 	push @rrd_header, "--vertical-label", $graph_vlabel if $graph_vlabel;
 
+	# Sparklines
+	push @rrd_header, "--only-graph" if $cgi->url_param("only_graph");
+
 	# Handle vertical limits
 	{
 		my $lower_limit  = $cgi->url_param("lower_limit");
@@ -553,8 +556,6 @@ sub RRDs_graph_or_dump {
 
 	my $fileext = shift;
 	if ($fileext =~ m/PNG|SVG|EPS|PDF/) {
-		open (my $dump_sh, ">rrd.sh");
-		print $dump_sh "rrdtool graph '" . join("' \\\n\t'", @_) . "'\n";
 		return RRDs::graph(@_);
 	}
 
