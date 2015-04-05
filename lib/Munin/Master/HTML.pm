@@ -36,6 +36,8 @@ sub handle_request
 			jpg => "image/jpeg",
 			jpeg => "image/jpeg",
 			js => "application/javascript",
+			svg => "image/svg+xml",
+			svgz => "image/svg+xml",
 		);
 
 		my $filename = get_param("staticdir"). "/$page";
