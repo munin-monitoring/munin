@@ -501,3 +501,31 @@ div.categories a:hover {
 	background-color: #dedede;
 	border-radius: 3px;
 }
+
+/* Search input */
+.overviewSearch {
+	margin: 15px 0 30px 2em;
+}
+.overviewSearch > #cancelSearch {
+	opacity: 0.6;
+	width: 12px;
+	margin-left: -26px;
+	cursor: pointer;
+}
+.overviewSearch > input[type=text] {
+	width: 300px;
+	padding: 8px 10px;
+	max-width: 100%;
+	border-radius: 2px;
+	border: 1px solid #B2B2B2;
+	color: #717171;
+	font-family: inherit;
+	-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.15);
+	box-shadow: inset 0 1px 1px rgba(0,0,0,0.15);
+	transition-duration: 150ms;
+	box-sizing: border-box;
+}
+.overviewSearch > #overview-search-noresult {
+	margin: 30px 15px;
+	text-decoration: blink;
+}
