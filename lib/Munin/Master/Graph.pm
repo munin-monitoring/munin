@@ -456,6 +456,9 @@ sub handle_request
 	# Optional header args
 	push @rrd_header, "--vertical-label", $graph_vlabel if $graph_vlabel;
 
+	# Sparklines
+	push @rrd_header, "--only-graph" if $cgi->url_param("only_graph");
+
 	# Handle vertical limits
 	{
 		my $lower_limit  = $cgi->url_param("lower_limit");
