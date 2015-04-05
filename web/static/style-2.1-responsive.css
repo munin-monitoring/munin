@@ -80,6 +80,7 @@
 	ul.groupview {
 		margin: 20px 15px!important;
 	}
+	div.categories { padding-top: 0; }
 }
 
 /* Medium devices */
