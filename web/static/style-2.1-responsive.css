@@ -70,7 +70,7 @@
 	}
 
 	/* Graphs */
-	a.graphLink > img {
+	.graph {
 		max-width: 97%;
 		display: block;
 		margin: auto;
