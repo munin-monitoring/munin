@@ -453,10 +453,14 @@ td {
 }
 .groupview li ul li {
 	border-bottom: 1px solid #999;
+	font-size: 0; /* Remove white spaces */
+	overflow: hidden;
 }
 .groupview li ul li.last { border-bottom-width: 0; }
 .groupview li ul li span.host {
 	display: block;
+	float: left;
+	min-width: 30%;
 }
 .groupview li ul li span.host a {
 	display: block;
@@ -483,15 +487,17 @@ div.compare a {
 	opacity: 0.8;
 }
 div.categories {
-	background-color: rgba(0, 0, 0, 0.04);
-	font-size: 0; /* Remove white spaces */
-	border-top: 1px solid #dedede;
-}
-div.categories > * {
-	font-size: 13px;
+	font-size: 11px;
+	display: block;
+	padding-top: 7px;
 }
 div.categories a {
 	display: inline-block;
 	padding: 5px 10px;
 	color: #666;
+	transition-duration: 150ms;
+}
+div.categories a:hover {
+	background-color: #dedede;
+	border-radius: 3px;
 }
