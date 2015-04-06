@@ -4,86 +4,86 @@
 
 /* Small devices (tablets, smartphones) */
 @media (max-width: 768px) {
-        #header {
-                width: 100%;
-                border-left: 0;
-                border-right: 0;
-                border-radius: 0;
-                padding: 5px;
-        }
+    #header {
+        border-left: 0;
+        border-right: 0;
+        border-radius: 0;
+        padding: 5px;
+    }
 
-        h1 .logo { width: 19px; }
+    h1 .logo { width: 19px; }
 
-        /* Different nav */
-        #main {
-                display: block;
-                width: 100%;
-        }
-        .navContainer {
-                display: block;
-                width: 100%;
-                max-width: 500px;
-                margin: auto;
-        }
-        #nav {
-                display: none;
-                border-top: 1px solid #fff;
-                padding: 0;
-        }
-        #nav ul li {
-                text-align: center;
-                padding-right: 0;
-        }
-        #content {
-                display: block;
-                padding: 1em 0 0 0;
-                width: 100%;
-        }
-        .navContainer > div#navToggle,
-        .navContainer > div#nav {
-                -moz-box-shadow: 0 0 2px 0 #777777;
-                -webkit-box-shadow: 0 0 2px 0 #777777;
-                -o-box-shadow: 0 0 2px 0 #777777;
-                box-shadow: 0 0 2px 0 #777777;
-                filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=2);
-        }
-        #navToggle {
-                display: block;
-                padding: 10px 15px;
-                background-color: rgba(0, 0, 0, 0.05);
-                font-weight: bold;
-                cursor: pointer;
-                font-family: sans-serif;
-        }
-        #navToggle:after {
-                content: "+";
-                float: right;
-                font-size: 18px;
-                font-family: initial;
-                font-weight: normal;
-                margin-top: -2px;
-                color: #797979;
-        }
-        #navToggle.expanded:after {
-                content: "-";
-                margin-top: -4px;
-        }
+    /* Different nav */
+    #main {
+        display: block;
+    }
+    .navContainer {
+        display: block;
+        width: 100%;
+        max-width: 500px;
+        margin: auto;
+    }
+    #nav {
+        display: none;
+        border-top: 1px solid #fff;
+        padding: 0;
+    }
+	#nav h2 { text-align: center; }
+    #nav ul li {
+        text-align: center;
+        padding-right: 0;
+    }
+	#nav ul li .timerangesList { opacity: 1; }
+    #content {
+        display: block;
+        padding: 1em 0 0 0;
+        width: 100%;
+    }
+    .navContainer > div#navToggle,
+    .navContainer > div#nav {
+        -moz-box-shadow: 0 0 2px 0 #777777;
+        -webkit-box-shadow: 0 0 2px 0 #777777;
+        -o-box-shadow: 0 0 2px 0 #777777;
+        box-shadow: 0 0 2px 0 #777777;
+        filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=2);
+    }
+    #navToggle {
+        display: block;
+        padding: 10px 15px;
+        background-color: rgba(0, 0, 0, 0.05);
+        font-weight: bold;
+        cursor: pointer;
+        font-family: sans-serif;
+    }
+    #navToggle:after {
+        content: "+";
+        float: right;
+        font-size: 18px;
+        font-family: initial;
+        font-weight: normal;
+        margin-top: -2px;
+        color: #797979;
+    }
+    #navToggle.expanded:after {
+        content: "-";
+        margin-top: -4px;
+    }
 
-        /* Graphs */
-        .graph {
-                max-width: 97%;
-                display: block;
-                margin: auto;
-        }
+    /* Graphs */
+    .graph {
+        max-width: 97%;
+        display: block;
+        margin: auto;
+    }
 
-        /* Overview */
-        ul.groupview { margin: 20px 15px!important; }
-        .overviewSearch { margin: 5px 15px 15px 15px; }
-        div.categories { padding-top: 0; }
+    /* Overview */
+    ul.groupview { margin: 20px 15px!important; }
+    .overviewSearch { margin: 5px 15px 15px 15px; }
+    div.categories { padding-top: 0; }
 
-        .timeRangeSwitchContainer {
-                top: 0;
-        }
+    .timeRangeSwitchContainer {
+        top: 0;
+    }
 }
 
 /* Medium devices */
