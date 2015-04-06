@@ -11,10 +11,6 @@ $(document).ready(function() {
         var currentRange = $(this).parent().find('.selected').first().text();
         var newRange = $(this).text();
 
-        // Image may still be loading (if the user is really quick on switching time range)
-        // Let's remove any loading image if necessary
-        $('.graph_loading[data-timerange="' + currentRange + '"]').remove();
-
         // Remove "selected" attribute
         $(this).parent().find('li').removeClass('selected');
 
@@ -44,16 +40,19 @@ $(document).ready(function() {
             $(this).attr('src', currentImg.replace(srcSelector, newSrcSelector));
         });
 
-        // Show a loading spinner on each changed image
-        images.css('opacity', '0.7');
-        var r_path = $('#r_path').val();
-        images.after('<img src="' + r_path + '/static/loading.gif" class="graph_loading" data-timerange="' + newRange + '" />');
-
-        // Detect image load
-        images.on('load', function() {
-            $(this).css('opacity', '1');
-            // Remove loading image
-            $(this).next().remove();
+        // Tell that the image is loading
+        images.each(function() {
+            setImageLoading($(this), true);
         });
+    });
+
+    // Keep it on top of window on scroll
+    var timeRangeSwitchContainer = $('.timeRangeSwitchContainer');
+    var header = $('#header');
+    $(window).scroll(function() {
+        if ($(this).scrollTop() > header.height())
+            timeRangeSwitchContainer.addClass('timeRangeFixed');
+        else
+            timeRangeSwitchContainer.removeClass('timeRangeFixed');
     });
 });
