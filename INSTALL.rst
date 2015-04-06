@@ -9,7 +9,8 @@ as packages in the packaging system of many operating systems.
 To install munin in /usr/local, install its `build requirements`, and
 then run:
 
-.. code-block:: shell
+.. code-block:: bash
+
    perl Build.PL
    ./Build
    ./Build test
