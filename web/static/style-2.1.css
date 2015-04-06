@@ -102,7 +102,6 @@ a.graphLink > img.iunkn  {
 
 /* Header */
 #header {
-    width: 90%;
     min-height: 50px;
     margin: 0 auto;
     text-align: center;
@@ -219,7 +218,7 @@ h1 span.problems { color: #fff; }
 
 /* Main */
 #main {
-    width: 98%;
+	width: 100%;
     margin-left: auto;
     display: table;
 }
