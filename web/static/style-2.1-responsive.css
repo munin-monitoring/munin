@@ -5,7 +5,6 @@
 /* Small devices (tablets) */
 @media (max-width: 768px) {
     #header {
-        width: 100%;
         border-left: 0;
         border-right: 0;
         border-radius: 0;
@@ -15,7 +14,6 @@
     /* Different nav */
     #main {
         display: block;
-        width: 100%;
     }
     .navContainer {
         display: block;
@@ -28,10 +26,12 @@
         border-top: 1px solid #fff;
         padding: 0;
     }
+	#nav h2 { text-align: center; }
     #nav ul li {
         text-align: center;
         padding-right: 0;
     }
+	#nav ul li .timerangesList { opacity: 1; }
     #content {
         display: block;
         padding: 1em 0 0 0;

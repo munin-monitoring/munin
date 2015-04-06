@@ -136,10 +136,6 @@ h1 {
     padding: 3px 0;
 }
 
-#nav h2 {
-    margin-top: 0.4em;
-}
-
 h1 .logo {
     display: inline-block;
     float: left;
@@ -241,33 +237,60 @@ h1 span.problems { color: #fff; }
     box-shadow: inset -4px 0 10px -7px #656565;
     filter: progid:DXImageTransform.Microsoft.Shadow(color=#656565, Direction=180, Strength=10);
 }
-
 #nav > h2 {
-    padding: 6px 0;
-    text-align: center;
-    background-color: rgba(0, 0, 0, 0.05);
+	padding: 6px 0 3px 3px;
+	margin: 0 0 10px 10px;
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+	border-bottom: 1px solid #eee;
     font-weight: normal;
     text-transform: uppercase;
     font-size: 12px;
 }
-
 #nav ul li {
     list-style-type: none;
     margin: 0;
-    padding: 2px 13px 2px 0;
-    text-align: right;
+	padding: 0;
     -webkit-transition-duration: 200ms;
     -moz-transition-duration: 200ms;
     -o-transition-duration: 200ms;
     transition-duration: 200ms;
     letter-spacing: -0.5px;
 }
-
+#nav ul li a {
+	display: block;
+	padding: 3px 0 3px 13px;
+}
+#nav ul li .timerangesList {
+	float: right;
+	font-size: 0;
+	margin-right: 4px;
+	opacity: 0.2;
+	transition-duration: 100ms;
+}
+#nav ul.categories:hover .timerangesList { opacity: 0.5; }
+#nav ul.categories li:hover .timerangesList { opacity: 1; }
+#nav ul li .timerangesList a {
+	display: inline-block;
+	font-size: 11px;
+	padding: 3px 4px;
+}
+#nav ul li .badge {
+	float: right;
+	display: inline-block;
+	margin-right: 9px;
+	margin-top: 2px;
+	min-width: 7px;
+	padding: 3px 7px;
+	font-size: 11px;
+	line-height: 1;
+	color: #fff;
+	text-align: center;
+	background-color: #999;
+	border-radius: 10px;
+}
 #nav ul li:hover {
     background-color: rgba(0, 0, 0, 0.1);
 }
-
 #nav ul {
     margin: 0.2em 0 0.8em 0;
     padding: 0;
