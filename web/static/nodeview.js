@@ -15,9 +15,7 @@ $(document).ready(function() {
 	});
 
 	// Auto-refresh
-	setInterval(function() {
-		refreshGraphs();
-	}, 5*60*1000);
+	setInterval(refreshGraphs, 5*60*1000);
 });
 
 /**
