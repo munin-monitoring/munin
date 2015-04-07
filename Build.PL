@@ -110,6 +110,7 @@ my $build = Module::Build->new(
         'File::Copy::Recursive'  => '0.38',
         'HTML::Template'         => '2.95',
         'HTML::Template::Pro'    => '0',
+        'HTTP::Server::Simple::CGI'    => '0',
         'IO::Socket::INET6'      => '2.69',
         'LWP::UserAgent'         => '6.06',
         'List::MoreUtils'        => '0.33',
