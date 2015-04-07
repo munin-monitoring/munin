@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+set -u
+
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+. "${FINDBIN}/common.sh"
+
+echo "Starting rrdcached…"
+
+set -x
+
+install -d "${SANDBOX}/var/spool/rrdcached"
+
+rrdcached -g -B -F -m 0660 \
+    -p "${SANDBOX}/var/run/rrdcached.pid" \
+    -b "${SANDBOX}/var/lib" \
+    -j "${SANDBOX}/var/spool/rrdcached" \
+    -l "unix:${SANDBOX}/var/run/rrdcached.sock"
