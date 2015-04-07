@@ -244,9 +244,16 @@ sub get_hostname
 	my @gods = keys( %{ $fun_names->{gods} } );
 
 	my $offset = int($i / scalar @gods);
-	my $hostname = $gods[$i % scalar @gods];
+	my $hostname = $gods[$i % scalar @gods] . $offset;
 
-	return "$hostname$offset.debug.lan";
+	my @worlds = keys( %{ $fun_names->{worlds} } );
+	my @groups = keys( %{ $fun_names->{groups} } );
+
+	my $world = $worlds[$i % scalar @worlds];
+	my $group = $groups[$i % scalar @groups];
+
+
+	return "$hostname.$world.$group";
 }
 
 sub get_category
