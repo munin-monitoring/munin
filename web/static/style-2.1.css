@@ -101,7 +101,7 @@ a.graphLink:hover {
 .graph.iunkn  {
 	color: #ffaa00;
 }
-.graphLoading {
+.graph_loading {
 	position: absolute;
 	top: 50%;
 	left: 50%;
