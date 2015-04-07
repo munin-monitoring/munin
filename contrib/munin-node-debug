@@ -76,13 +76,17 @@ Options:
 	exit 0;
 }
 
+my $fun_names = {};
+init_fun_names();
+
 # Convert relatives starting_epoch to absolute
 $starting_epoch = time + $starting_epoch if ($starting_epoch < 0);
 
 if ($dump_config) {
 	for (my $i = 0; $i < $nb_servers; $i++) {
 		my $port = $starting_port + $i;
-		print "[host$port.debug.lan]\n";
+		my $hostname = get_hostname($i);
+		print "[$hostname]\n";
 		print "     address 127.0.0.1\n";
 		print "     port $port\n";
 		print "\n";
@@ -131,7 +135,9 @@ while (my @ready = $select->can_read()) {
 sub service
 {
 	my $client = shift;
-	my $hostname = "host".$client->sockport().".debug.lan";
+	my $sockport = $client->sockport();
+
+	my $hostname = get_hostname($sockport);
 
 	print $client "# munin node at $hostname\n";
 
@@ -140,7 +146,7 @@ sub service
 		debug("[$$] client of $hostname asked : $line");
 		if ($line =~ m/^list$/ || $line =~ m/^list /) {
 			for (my $i = 0; $i < $nb_plugins; $i ++) {
-				print $client "debug_plugin_$i ";
+				print $client get_service($i) . " ";
 			}
 			print $client "\n";
 		} elsif ($line =~ m/^cap (\w+)/) {
@@ -149,11 +155,13 @@ sub service
 			print $client "cap @caps\n";
 		} elsif ($line =~ m/^config (\w+)/) {
 			my $plugin_number = get_plugin_number($1);
-			my $plugin_name = "debug_plugin_$plugin_number";
-			print $client "graph_title Debug plugin $plugin_number\n";
+			my $plugin_name = get_service($plugin_number);
+			print $client "graph_title " . get_service_title($plugin_number) . "\n";
 			print $client "update_rate $update_rate\n";
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
-				print $client "field_". $plugin_number . "_$i.label field $i of plugin $plugin_name on $hostname\n";
+				my $ds = get_ds($plugin_number, $i);
+				my $ds_info = get_ds_info($plugin_number, $i);
+				print $client "$ds.label $ds_info\n";
 				my @PLUGIN_TYPES = qw/
 					GAUGE
 					DERIVE
@@ -161,7 +169,7 @@ sub service
 				/;
 				my $plugin_type = $PLUGIN_TYPES[($i + $plugin_number) % 3];
 
-				print $client "field_". $plugin_number . "_$i.type $plugin_type\n";
+				print $client "$ds.type $plugin_type\n";
 			}
 			print $client ".\n";
 		} elsif ($line =~ m/^fetch (\w+)/) {
@@ -170,7 +178,7 @@ sub service
 				my $value = sin( (time / 3600) * $plugin_number + $i);
 
 				$value = int($value * 1024) if ($plugin_number + $i) % 3;
-				print $client "field_". $plugin_number . "_$i.value $value\n";
+				print $client get_ds($plugin_number, $i) . ".value $value\n";
 			}
 			print $client ".\n";
 		} elsif ($line =~ m/^spoolfetch (\d+)/) {
@@ -191,16 +199,18 @@ sub service
 			for (my $epoch = ($timestamp - $timestamp % $update_rate + $update_rate);
 				$epoch < time; $epoch += $update_rate) { 
 			for (my $plugin_number = 0; $plugin_number < $nb_plugins; $plugin_number ++) {
-				my $plugin_name = "debug_plugin_$plugin_number";
+				my $plugin_name = get_service($plugin_number);
 				print $client "multigraph $plugin_name\n";
-				print $client "graph_title Debug plugin $plugin_number\n";
+				print $client "graph_title " . get_service_title($plugin_number) . "\n";
 				print $client "update_rate $update_rate\n";
 				for (my $i = 0; $i < $fields_per_plugin; $i ++) {
-					print $client "field_". $plugin_number . "_$i.label field $i of plugin $plugin_name on $hostname\n";
-					print $client "field_".$plugin_number."_$i.type GAUGE\n";
+					my $ds = get_ds($plugin_number, $i);
+					my $ds_info = get_ds_info($plugin_name, $i);
+					print $client "$ds.label field $ds_info\n";
+					print $client "$ds.type GAUGE\n";
 
 					my $value = sin( ($epoch / 3600) * $plugin_number + $i);
-					print $client "field_".$plugin_number."_$i.value $epoch:$value\n";
+					print $client "$ds.value $epoch:$value\n";
 				}
 			}
 		}
@@ -223,6 +233,41 @@ sub get_plugin_number
 sub debug 
 {
 	print join(" ", @_) . "\n" if $is_debug; 
+}
+
+sub get_hostname
+{
+	my ($i) = @_;
+	return "host$i.debug.lan";
+}
+
+sub get_category
+{
+	return "other";
+}
+
+sub get_service
+{
+	my ($plugin_number) = @_;
+	return "debug_plugin_$plugin_number";
+}
+
+sub get_service_title
+{
+	my ($plugin_number )= @_;
+	return "Debug plugin $plugin_number";
+}
+
+sub get_ds
+{
+	my ($plugin_number, $i) = @_;
+	return "field_". $plugin_number . "_$i";
+}
+
+sub get_ds_info
+{
+	my ($plugin_name, $i) = @_;
+	return "field $i of plugin $plugin_name";
 }
 
 __END__
