@@ -238,19 +238,28 @@ sub debug
 	print join(" ", @_) . "\n" if $is_debug; 
 }
 
+sub _get_from_array
+{
+	my ($i, $ary, $is_unique) = @_;
+
+	my $offset = $is_unique ? int($i / scalar @$ary) : "";
+	my $name = $ary->[$i % scalar @$ary] . $offset;
+
+	return $name;
+}
+
 sub get_hostname
 {
 	my ($i) = @_;
+
 	my @gods = keys( %{ $fun_names->{gods} } );
-
-	my $offset = int($i / scalar @gods);
-	my $hostname = $gods[$i % scalar @gods] . $offset;
-
 	my @worlds = keys( %{ $fun_names->{worlds} } );
 	my @groups = keys( %{ $fun_names->{groups} } );
 
-	my $world = $worlds[$i % scalar @worlds];
-	my $group = $groups[$i % scalar @groups];
+
+	my $hostname = _get_from_array($i, \@gods, 1);
+	my $world = _get_from_array($i, \@worlds, 0);
+	my $group = _get_from_array($i, \@groups, 0);
 
 
 	return "$hostname.$world.$group";
@@ -264,25 +273,40 @@ sub get_category
 sub get_service
 {
 	my ($plugin_number) = @_;
-	return "debug_plugin_$plugin_number";
+
+	my @giants = keys( %{ $fun_names->{giants} } );
+	my $giant = _get_from_array($plugin_number, \@giants, 1);
+
+	return $giant;
 }
 
 sub get_service_title
 {
-	my ($plugin_number )= @_;
-	return "Debug plugin $plugin_number";
+	my ($plugin_number)= @_;
+
+	my @giants = keys( %{ $fun_names->{giants} } );
+	my $giant = _get_from_array($plugin_number, \@giants, 0);
+
+	return $fun_names->{giants}->{$giant};
 }
 
 sub get_ds
 {
 	my ($plugin_number, $i) = @_;
-	return "field_". $plugin_number . "_$i";
+
+	my @weapons = keys( %{ $fun_names->{weapons} } );
+	my $weapon = _get_from_array($i, \@weapons, 1);
+
+	return $weapon;
 }
 
 sub get_ds_info
 {
 	my ($plugin_name, $i) = @_;
-	return "field $i of plugin $plugin_name";
+	my @weapons = keys( %{ $fun_names->{weapons} } );
+	my $weapon = _get_from_array($i, \@weapons, 0);
+
+	return $fun_names->{weapons}->{$weapon};
 }
 
 sub init_fun_names
