@@ -25,14 +25,14 @@ $(document).ready(function() {
 			var pluginId = src.substr(src.lastIndexOf('/')+1, src.lastIndexOf('-')-src.lastIndexOf('/')-1);
 
 			if (pluginName.indexOf(val) != -1 || pluginId.indexOf(val) != -1) {
-				$(this).show();
+				$(this).parent().show();
 				// Show plugin name
 				$('h4').filter(function() {
 					return $(this).text() == pluginName;
 				}).show();
 			}
 			else {
-				$(this).hide();
+				$(this).parent().hide();
 				// Hidde plugin name
 				$('h4').filter(function() {
 					return $(this).text() == pluginName;
