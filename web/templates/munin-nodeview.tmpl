@@ -26,10 +26,10 @@
 		</div>
 		<h2>Node view</h2>
 		<TMPL_LOOP NAME="CATEGORIES">
-		<h3 id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3>
-			<div>
+			<h3 id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3>
+			<div data-category="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">
 				<TMPL_LOOP NAME="SERVICES">
-					<span><TMPL_VAR ESCAPE="HTML" NAME="NAME"></span><br />
+					<h4><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h4>
 					<a href="<TMPL_VAR NAME="URLX">" class="graphLink">
 					<TMPL_UNLESS NAME="DYN_IMAGES">
 						<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
