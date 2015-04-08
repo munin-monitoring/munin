@@ -30,6 +30,10 @@ $(document).ready(function() {
 				$('h4').filter(function() {
 					return $(this).text() == pluginName;
 				}).show();
+
+				// Show next <br>
+				if ($(this).parent().next()[0].tagName.toLowerCase() == 'br')
+					$(this).parent().next().show();
 			}
 			else {
 				$(this).parent().hide();
@@ -37,6 +41,10 @@ $(document).ready(function() {
 				$('h4').filter(function() {
 					return $(this).text() == pluginName;
 				}).hide();
+
+				// Hide next <br>
+				if ($(this).parent().next()[0].tagName.toLowerCase() == 'br')
+					$(this).parent().next().hide();
 			}
 		});
 
