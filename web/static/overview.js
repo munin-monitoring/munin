@@ -16,13 +16,10 @@ $(document).ready(function() {
 		if (expr == '')
 			return;
 
-		expr = expr.toLowerCase();
-
 		// Simple filter from name
 		hosts.each(function() {
-			if ($(this).text().toLowerCase().indexOf(expr) < 0) {
+			if (!filterMatches(expr, $(this).text()))
 				$(this).parent().hide();
-			}
 		});
 
 		// Hide groups if there isn't any remaining children shown

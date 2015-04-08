@@ -24,7 +24,7 @@ $(document).ready(function() {
 			var src = $(this).attr('src');
 			var pluginId = src.substr(src.lastIndexOf('/')+1, src.lastIndexOf('-')-src.lastIndexOf('/')-1);
 
-			if (pluginName.indexOf(val) != -1 || pluginId.indexOf(val) != -1) {
+			if (filterMatches(val, pluginName) || filterMatches(val, pluginId)) {
 				$(this).parent().show();
 				// Show plugin name
 				$('h4').filter(function() {
