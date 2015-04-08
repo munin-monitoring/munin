@@ -3,53 +3,36 @@
  */
 
 $(document).ready(function() {
-    var searchField = $('#overview-search');
+	prepareFilter('Filter nodes', function(expr) {
+		var groupView = $('.groupview');
 
-    searchField.on('keyup', function() {
-        var val = $(this).val();
+		var groups = groupView.children();
+		groups.show();
+		var hosts = $('.host');
+		hosts.parent().show();
+		var noResult = $('#overview-search-noresult');
+		noResult.hide();
 
-        if (val != '')
-            $('#cancelSearch').show();
-        else
-            $('#cancelSearch').hide();
+		if (expr == '')
+			return;
 
-        doFilter(val);
-    });
+		expr = expr.toLowerCase();
 
-    $('#cancelSearch').click(function() {
-        searchField.val('');
-        $(this).hide();
-        doFilter('');
-    });
+		// Simple filter from name
+		hosts.each(function() {
+			if ($(this).text().toLowerCase().indexOf(expr) < 0) {
+				$(this).parent().hide();
+			}
+		});
+
+		// Hide groups if there isn't any remaining children shown
+		groups.each(function() { // each li
+			if ($(this).find('ul > li:visible').length == 0)
+				$(this).hide();
+		});
+
+		// Check if there is still something shown
+		if (groupView.find('>:visible').length == 0)
+			noResult.show();
+	});
 });
-
-function doFilter(expr) {
-    var groups = $('.groupview').children();
-    groups.show();
-    var hosts = $('.host');
-    hosts.parent().show();
-    var noResult = $('#overview-search-noresult');
-    noResult.hide();
-
-    if (expr == '')
-        return;
-
-    expr = expr.toLowerCase();
-
-    // Simple filter from name
-    hosts.each(function() {
-        if ($(this).text().toLowerCase().indexOf(expr) < 0) {
-            $(this).parent().hide();
-        }
-    });
-
-    // Hide groups if there isn't any remaining children shown
-    groups.each(function() { // each li
-        if ($(this).find('ul > li:visible').length == 0)
-            $(this).hide();
-    });
-
-    // Check if there is still something shown
-    if ($('.groupview').find('>:visible').length == 0)
-        noResult.show();
-}
