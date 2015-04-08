@@ -208,9 +208,6 @@ a.graphLink:hover {
 	text-decoration: none;
 }
 
-span.problems a,
-span.problems { color: #fff; }
-
 .header .comparison, .header .categories {
 	display: inline-block;
 	color: rgba(255, 255, 255, 0.7);
@@ -637,4 +634,11 @@ div.categories a:hover {
 	color: rgba(0,0,0,0.54);
 	cursor: not-allowed;
 	display: inline-block;
+}
+
+.neutralMessage {
+	font-size: 17px;
+	text-align: center;
+	margin-top: 100px;
+	color: #999;
 }
