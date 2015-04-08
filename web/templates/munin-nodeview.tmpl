@@ -14,7 +14,7 @@
 					<li class="last">year</li>
 				</ul>
 			</div>
-			<div class="timeRangeSwitch">
+			<div class="timeRangeSwitch hide-mobile">
 				<ul>
 					<li>hour</li>
 					<li class="disabled">day</li>
@@ -53,7 +53,7 @@
 						  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF> />
 					</TMPL_UNLESS>
 					</a>
-					<a href="<TMPL_VAR NAME="URLX">" class="graphLink">
+					<a href="<TMPL_VAR NAME="URLX">" class="graphLink hide-mobile">
 					<TMPL_UNLESS NAME="DYN_IMAGES">
 						<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
 						  src="<TMPL_VAR NAME="IMGWEEK">"

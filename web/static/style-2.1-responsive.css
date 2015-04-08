@@ -4,6 +4,8 @@
 
 /* Small devices (tablets, smartphones) */
 @media (max-width: 768px) {
+	.hide-mobile { display: none!important; }
+
 	.header {
 		border-left: 0;
 		border-right: 0;
