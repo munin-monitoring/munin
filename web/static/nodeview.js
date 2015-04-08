@@ -16,6 +16,38 @@ $(document).ready(function() {
 
 	// Auto-refresh
 	setInterval(refreshGraphs, 5*60*1000);
+
+	// Prepare filter
+	prepareFilter('Filter graphs', function(val) {
+		$('.graph').each(function() {
+			var pluginName = $(this).attr('alt');
+			var src = $(this).attr('src');
+			var pluginId = src.substr(src.lastIndexOf('/')+1, src.lastIndexOf('-')-src.lastIndexOf('/')-1);
+
+			if (pluginName.indexOf(val) != -1 || pluginId.indexOf(val) != -1) {
+				$(this).show();
+				// Show plugin name
+				$('h4').filter(function() {
+					return $(this).text() == pluginName;
+				}).show();
+			}
+			else {
+				$(this).hide();
+				// Hidde plugin name
+				$('h4').filter(function() {
+					return $(this).text() == pluginName;
+				}).hide();
+			}
+		});
+
+		// Hide unneccary categories names
+		$('div[data-category]').each(function() {
+			if ($(this).children(':visible').length == 0)
+				$(this).prev().hide();
+			else
+				$(this).prev().show();
+		});
+	});
 });
 
 /**

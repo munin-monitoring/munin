@@ -546,12 +546,15 @@ div.categories a:hover {
 	width: 300px;
 	float: right;
 	margin-top: 7px;
+	position: relative;
 }
-.filter > #cancelSearch {
+.filter > #cancelFilter {
 	opacity: 0.5;
 	width: 10px;
-	margin-left: -26px;
 	cursor: pointer;
+	position: absolute;
+	top: 11px;
+	right: 10px;
 }
 .filter > input[type=text] {
 	width: 100%;

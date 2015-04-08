@@ -1,5 +1,5 @@
 /**
- * Overview search, used to filter nodes on overview page
+ * Overview specific code
  */
 
 $(document).ready(function() {

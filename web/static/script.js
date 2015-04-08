@@ -33,20 +33,21 @@ function prepareFilter(placeholder, onFilterChange) {
 	// Show the filter input
 	input.parent().show();
 
+	// Set placeholder
 	input.attr('placeholder', placeholder);
 
 	input.on('keyup', function() {
 		var val = $(this).val();
 
 		if (val != '')
-			$('#cancelSearch').show();
+			$('#cancelFilter').show();
 		else
-			$('#cancelSearch').hide();
+			$('#cancelFilter').hide();
 
 		onFilterChange(val);
 	});
 
-	$('#cancelSearch').click(function() {
+	$('#cancelFilter').click(function() {
 		input.val('');
 		$(this).hide();
 		onFilterChange('');
