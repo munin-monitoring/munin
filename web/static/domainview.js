@@ -3,6 +3,12 @@
  */
 $(document).ready(function() {
 	prepareFilter('Filter plugins', function(val) {
+		if (val == '') {
+			// Empty filter: display everything
+			$('#content').find('> ul').find('*').show();
+			return;
+		}
+
 		// Loop on each plugin ("service")
 		$('.service').find('a').each(function() {
 			var pluginName = $(this).text();

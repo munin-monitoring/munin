@@ -559,7 +559,7 @@ div.categories a:hover {
 .filter > input[type=text] {
 	width: 100%;
 	padding: 8px 28px 8px 31px;
-	border-radius: 2px;
+	border-radius: 3px;
 	border: 1px solid #2C712F;
 	color: #383838;
 	font-family: inherit;
