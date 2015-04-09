@@ -369,8 +369,8 @@ sub _dump_groups_into_sql {
 sub _dump_into_sql {
 	my ($self) = @_;
 
-	my $datafilename = $config->{dbdir}."/datafile.sqlite";
-	my $datafilename_tmp = $config->{dbdir}."/.datafile.$$.sqlite";
+	my $datafilename = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile.sqlite";
+	my $datafilename_tmp = $datafilename . ".$$";
 	DEBUG "[DEBUG] Writing sql to $datafilename_tmp";
 
 	use DBI;
