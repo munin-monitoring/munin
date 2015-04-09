@@ -7,8 +7,8 @@
 		<h2>Graph zoom</h2>
 
 		<div style="position:relative;">
-			<img id="image" class="graph i" />
-			<div id="overlayDiv" />
+			<img id="image" class="dynazoomGraph graph i" />
+			<div id="overlayDiv" class="overlayDiv"></div>
 		</div>
 
 		<div class="dzForm card">
@@ -21,47 +21,55 @@
 
 			<hr />
 
-			<form name="myNewForm" id="dynaForm">
+			<form id="dynaForm">
 				<div>
 					<!-- Plugin Name : "domain/hostname" -->
-					<label>Plugin Name <em>(domain/hostname/plugin_name)</em></label>
-					<div><input type="text" name="plugin_name" size="64" /></div>
+					<label for="plugin_name">Plugin Name <em>(domain/hostname/plugin_name)</em></label>
+					<div><input type="text" id="plugin_name" name="plugin_name" size="64" /></div>
 				</div>
 
 				<div class="half">
 					<!-- Start and stop -->
-					<label>Graph Start / Stop <em>(format:2005-08-15T15:52:01+0000)</em></label>
+					<label for="start_iso8601">Graph Start / Stop <em>(format: <span id="formatExample"></span>)</em></label>
 					<div>
-						<input type="text" name="start_iso8601" size="24" /> / <input type="text" name="stop_iso8601" size="24" /> <input type="button" name="btnMaj" value="Update" />
+						<input type="text" id="start_iso8601" name="start_iso8601" size="24" /> /
+						<input type="text" id="stop_iso8601" name="stop_iso8601" size="24" />
+						<input type="button" id="btnMaj" value="Update" />
 					</div>
 				</div>
 
 				<div class="half">
-					<label>Epoch</label>
-					<input type="text" name="start_epoch" size="10" /> / <input type="text" name="stop_epoch" size="10" />
+					<label for="start_epoch">Epoch</label>
+					<input type="text" id="start_epoch" name="start_epoch" size="10" /> /
+					<input type="text" id="stop_epoch" name="stop_epoch" size="10" />
 				</div>
 
 				<div class="half">
 					<!-- Limit high & low -->
-					<label>Low / high limit</label>
-					<div><input type="text" name="lower_limit" size="10" /> /  <input type="text" name="upper_limit" size="10" /></div>
+					<label for="lower_limit">Low / high limit</label>
+					<div>
+						<input type="text" id="lower_limit" name="lower_limit" size="10" /> /
+						<input type="text" id="upper_limit" name="upper_limit" size="10" />
+					</div>
 				</div>
 
 				<div class="half">
 					<!-- Image size -->
-					<label>Graph size <em>(w/o legend)</em></label>
+					<label for="size_x">Graph size <em>(w/o legend)</em></label>
 					<div>
-						<input type="number" name="size_x" size="5" /><div class="inputUnit">px</div> /
-						<input type="number" name="size_y" size="5" /><div class="inputUnit">px</div>
+						<input type="number" id="size_x" name="size_x" /><div class="inputUnit">px</div> /
+						<input type="number" id="size_y" name="size_y" /><div class="inputUnit">px</div>
 					</div>
 				</div>
 
-				<input type="submit" />
-				<input type="button" name="btnZoomOut" value="Zoom Out x2" />
+				<input type="submit" value="Submit" />
+				<input type="button" id="btnZoomOut" value="Zoom Out x2" />
+				<input type="button" id="reset" value="Reset" />
 			</form>
 		</div>
 	</div>
-	<script src="<TMPL_VAR NAME="R_PATH">/static/zoom.js" type="text/javascript"></script>
-	<TMPL_INCLUDE NAME="partial/footer.tmpl">
+</div>
+<script src="<TMPL_VAR NAME="R_PATH">/static/dynazoom.js" type="text/javascript"></script>
+<TMPL_INCLUDE NAME="partial/footer.tmpl">
 </body>
 </html>

@@ -708,8 +708,40 @@ label em {
 	color: #555;
 	vertical-align: top;
 }
+.dynazoomGraph { max-width: none; }
 #dynaForm .half {
 	display: inline-block;
 	width: 49%;
+	min-width: 270px;
 	vertical-align: top;
+}
+
+.overlayDiv {
+	zoom: 1;
+	opacity: .55;
+	filter: alpha(opacity=55);
+	background-color: #eee;
+	position: absolute;
+	z-index: 2;
+	border-radius: 3px;
+}
+.overlayDiv_dragging {
+	visibility: visible;
+	background-color: #555;
+}
+.overlayDiv_dragged {
+	background-color: #000;
+	cursor: pointer;
+	-webkit-transition-duration: 100ms;
+	-moz-transition-duration: 100ms;
+	-o-transition-duration: 100ms;
+	transition-duration: 100ms;
+}
+.overlayDiv_dragged:hover {
+	opacity: .6;
+	filter: alpha(opacity=60);
+}
+.overlayDiv_dragged:active {
+	opacity: .65;
+	filter: alpha(opacity=65);
 }
