@@ -160,6 +160,7 @@ sub service
 			my $plugin_number = get_plugin_number($1);
 			my $plugin_name = get_service($plugin_number);
 			print $client "graph_title " . get_service_title($plugin_number) . "\n";
+			print $client "graph_category " . get_service_category($plugin_number) . "\n";
 			print $client "update_rate $update_rate\n";
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				my $ds = get_ds($plugin_number, $i);
@@ -288,6 +289,16 @@ sub get_service_title
 	my $giant = _get_from_array($plugin_number, \@giants, 0);
 
 	return $fun_names->{giants}->{$giant};
+}
+
+sub get_service_category
+{
+	my ($plugin_number)= @_;
+
+	my @locations = keys( %{ $fun_names->{locations} } );
+	my $location = _get_from_array($plugin_number, \@locations, 0);
+
+	return $location;
 }
 
 sub get_ds
