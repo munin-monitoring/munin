@@ -53,3 +53,21 @@ function prepareFilter(placeholder, onFilterChange) {
 		onFilterChange('');
 	});
 }
+
+/**
+ * Returns true whenever a result matches the filter expression
+ * @param filterExpr User-typed expression
+ * @param result Candidate
+ */
+function filterMatches(filterExpr, result) {
+	return sanitizeFilter(result).indexOf(sanitizeFilter(filterExpr)) != -1;
+}
+
+/**
+ * Transforms a string to weaken filter
+ * 	(= get more filter results)
+ * @param filterExpr
+ */
+function sanitizeFilter(filterExpr) {
+	return filterExpr.toLowerCase().trim();
+}

@@ -6,7 +6,7 @@
     <div id="content">
         <h2>Service graphs</h2>
         <TMPL_LOOP NAME="SERVICES">
-            <a href="<TMPL_VAR NAME="ZOOMDAY">" class="graphLink">
+            <a href="<TMPL_VAR NAME="ZOOMDAY">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"">
                 <TMPL_UNLESS NAME="DYN_IMAGES">
                 <img src="<TMPL_VAR NAME="IMGDAY">"
                     alt="daily graph"
@@ -29,7 +29,7 @@
                         <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
                 </TMPL_UNLESS>
             </a>
-            <a href="<TMPL_VAR NAME="ZOOMWEEK">" class="graphLink">
+            <a href="<TMPL_VAR NAME="ZOOMWEEK">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
                 <TMPL_UNLESS NAME="DYN_IMAGES">
                 <img src="<TMPL_VAR NAME="IMGWEEK">"
                     alt="weekly graph"
@@ -54,7 +54,7 @@
                 </TMPL_UNLESS>
             </a>
             <br />
-            <a href="<TMPL_VAR NAME="ZOOMMONTH">" class="graphLink">
+            <a href="<TMPL_VAR NAME="ZOOMMONTH">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
                 <TMPL_UNLESS NAME="DYN_IMAGES">
                 <img src="<TMPL_VAR NAME="IMGMONTH">"
                     alt="monthly graph"
@@ -77,7 +77,7 @@
                         <TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF>/>
                 </TMPL_UNLESS>
             </a>
-            <a href="<TMPL_VAR NAME="ZOOMYEAR">" class="graphLink">
+            <a href="<TMPL_VAR NAME="ZOOMYEAR">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
                 <TMPL_UNLESS NAME="DYN_IMAGES">
                 <img src="<TMPL_VAR NAME="IMGYEAR">"
                     alt="yearly graph"

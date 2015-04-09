@@ -23,7 +23,7 @@ $(document).ready(function() {
 				pluginId = href.substr(href.lastIndexOf('/')+1, href.lastIndexOf('.')-href.lastIndexOf('/')-1);
 			}
 
-			if (pluginName.indexOf(val) != -1 || pluginId.indexOf(val) != -1)
+			if (filterMatches(val, pluginName) || filterMatches(val, pluginId))
 				$(this).parent().parent().show();
 			else
 				$(this).parent().parent().hide();
