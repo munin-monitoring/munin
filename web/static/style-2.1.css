@@ -78,6 +78,7 @@ a.graphLink:hover {
 }
 .graph {
 	max-width: 100%;
+	height: auto;
 	margin: 4px 4px 4px 0;
 	/* Colors are overridden by "color" property */
 	border: 1px solid;
@@ -639,6 +640,6 @@ div.categories a:hover {
 .neutralMessage {
 	font-size: 17px;
 	text-align: center;
-	margin-top: 100px;
+	margin: 0 75px;
 	color: #999;
 }
