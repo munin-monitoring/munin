@@ -11,6 +11,11 @@ select {
 	border: 1px solid #d1d1d1;
 }
 
+/* Hide IE's cross on text field */
+input[type=text]::-ms-clear {
+	display: none;
+}
+
 body, h1, h2, h3, p, span, div {
 	font-family: "vera sans","dejavu sans",helvetica,verdana,arial,sans-serif;
 	color: #666666;
@@ -86,7 +91,7 @@ a.graphLink:hover {
 	-webkit-box-shadow: 0 0 2px 0;
 	-o-box-shadow: 0 0 2px 0;
 	box-shadow: 0 0 2px 0;
-	filter: progid:DXImageTransform.Microsoft.Shadow(Direction=NaN, Strength=5);
+	filter: progid:DXImageTransform.Microsoft.Shadow(Direction=0, Strength=2);
 }
 .graph.i      {
 	color: #fff;
@@ -94,7 +99,7 @@ a.graphLink:hover {
 	-webkit-box-shadow: 0 0 2px 0 #888;
 	-o-box-shadow: 0 0 2px 0 #888;
 	box-shadow: 0 0 2px 0 #888;
-	filter: progid:DXImageTransform.Microsoft.Shadow(color=#888, Direction=NaN, Strength=5);
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#888, Direction=0, Strength=5);
 }
 .graph.iwarn  {
 	color: #ffd300;
@@ -104,6 +109,9 @@ a.graphLink:hover {
 }
 .graph.iunkn  {
 	color: #ffaa00;
+}
+.graph.iremoved {
+	opacity: 0.6;
 }
 .graph_loading {
 	position: absolute;
@@ -548,11 +556,12 @@ div.categories a:hover {
 }
 .filter > #cancelFilter {
 	opacity: 0.5;
-	width: 10px;
+	width: 8px;
 	cursor: pointer;
 	position: absolute;
-	top: 11px;
-	right: 10px;
+	top: 1px;
+	right: 1px;
+	padding: 12px;
 }
 .filter > input[type=text] {
 	width: 100%;
