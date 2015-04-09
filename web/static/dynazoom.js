@@ -94,7 +94,7 @@ function getParam(paramName) {
 }
 
 function refreshImg() {
-	var urlPrefix = cgiurl_graph + cgiurl_graph != '/' ? '/' : '';
+	var urlPrefix = cgiurl_graph + (cgiurl_graph != '/' ? '/' : '');
 
 	image.attr('src', urlPrefix + f_plugin_name.val()
 			+ "-pinpoint=" + parseInt(f_start_epoch.val()) + "," + parseInt(f_stop_epoch.val())
