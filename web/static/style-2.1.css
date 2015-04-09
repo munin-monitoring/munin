@@ -77,14 +77,15 @@ a.graphLink {
 	max-width: 500px;
 	vertical-align: top;
 	position: relative;
+	margin: 4px 4px 4px 0;
+	font-size: 0;
 }
-a.graphLink:hover {
-	text-decoration: none
-}
+a.graphLink:hover { text-decoration: none }
+a.graphLink.iwarn { background-color: #ffd300; }
+a.graphLink.icrit { background-color: #ff0000; }
 .graph {
 	max-width: 100%;
 	height: auto;
-	margin: 4px 4px 4px 0;
 	/* Colors are overridden by "color" property */
 	border: 1px solid;
 	-moz-box-shadow: 0 0 2px 0;
@@ -93,7 +94,7 @@ a.graphLink:hover {
 	box-shadow: 0 0 2px 0;
 	filter: progid:DXImageTransform.Microsoft.Shadow(Direction=0, Strength=2);
 }
-.graph.i      {
+.graph.i {
 	color: #fff;
 	-moz-box-shadow: 0 0 2px 0 #888;
 	-webkit-box-shadow: 0 0 2px 0 #888;
@@ -101,18 +102,11 @@ a.graphLink:hover {
 	box-shadow: 0 0 2px 0 #888;
 	filter: progid:DXImageTransform.Microsoft.Shadow(color=#888, Direction=0, Strength=5);
 }
-.graph.iwarn  {
-	color: #ffd300;
-}
-.graph.icrit  {
-	color: #ff0000;
-}
-.graph.iunkn  {
-	color: #ffaa00;
-}
-.graph.iremoved {
-	opacity: 0.6;
-}
+.graph.iwarn, .graph.icrit { opacity: 0.95; }
+.graph.iwarn { color: #ffd300; }
+.graph.icrit { color: #ff0000; }
+.graph.iunkn { color: #ffaa00; }
+.graph.iremoved { opacity: 0.6; }
 .graph_loading {
 	position: absolute;
 	top: 50%;

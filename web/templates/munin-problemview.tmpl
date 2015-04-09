@@ -19,7 +19,7 @@
 						</span>
 						<br />
 
-						<a href="<TMPL_VAR NAME="URL">" class="graphLink">
+						<a href="<TMPL_VAR NAME="URL">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
 							<TMPL_UNLESS NAME="DYN_IMAGES">
 								<img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="graph i"
 								  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
@@ -49,7 +49,7 @@
 						</span>
 						<br />
 
-						<a href="<TMPL_VAR NAME="URL">" class="graphLink">
+						<a href="<TMPL_VAR NAME="URL">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
 							<TMPL_UNLESS NAME="DYN_IMAGES">
 								<img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="graph i"
 								  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>

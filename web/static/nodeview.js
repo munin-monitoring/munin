@@ -64,10 +64,10 @@ $(document).ready(function() {
  */
 function setImageLoading(imgDomElement, isLoading) {
 	if (isLoading) {
-		imgDomElement.css('opacity', '0.7');
+		imgDomElement.parent().css('opacity', '0.7');
 		imgDomElement.next().show();
 	} else {
-		imgDomElement.css('opacity', '1');
+		imgDomElement.parent().css('opacity', '1');
 		imgDomElement.next().hide();
 	}
 }

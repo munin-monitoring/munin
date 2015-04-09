@@ -18,7 +18,7 @@
 				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
 				<TMPL_IF NAME="URLX"></a></TMPL_IF>
 		</span><br />
-        <a href="<TMPL_VAR NAME="URLX">">
+        <a href="<TMPL_VAR NAME="URLX">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
             <TMPL_IF NAME="TIMEDAY">
             <TMPL_UNLESS NAME="DYN_IMAGES">
               <img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">"
