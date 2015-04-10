@@ -30,6 +30,8 @@ my $update_rate = 10;
 my $spoolfetch_rate = 5;
 my $listen = "localhost";
 
+my %services;
+
 my $arg_ret = GetOptions(
 	"nb-plugins|n=i" => \$nb_plugins,
 	"nb-fields|f=i" => \$fields_per_plugin,
@@ -149,7 +151,12 @@ sub service
 		debug("[$$] client of $hostname asked : $line");
 		if ($line =~ m/^list$/ || $line =~ m/^list /) {
 			for (my $i = 0; $i < $nb_plugins; $i ++) {
+				my $service = get_service($i);
 				print $client get_service($i) . " ";
+
+				# Save the number to retrieve it later, since
+				# it's no longer encoded in the plugin name
+				$services{$service} = $i;
 			}
 			print $client "\n";
 		} elsif ($line =~ m/^cap (\w+)/) {
@@ -230,8 +237,7 @@ sub service
 sub get_plugin_number 
 {
 	my $plugin_name = shift;
-	my $plugin_number = $1 if ($plugin_name =~ m/(\d+)/);
-	return $plugin_number;
+	return $services{$plugin_name};
 }
 
 sub debug 
@@ -288,7 +294,7 @@ sub get_service_title
 	my @giants = keys( %{ $fun_names->{giants} } );
 	my $giant = _get_from_array($plugin_number, \@giants, 0);
 
-	return $fun_names->{giants}->{$giant};
+	return $giant . " : " . $fun_names->{giants}->{$giant};
 }
 
 sub get_service_category
