@@ -21,7 +21,7 @@ $(document).ready(function() {
 		var typeName = $(this).text();
 		if (typeName in DEFINITIONS) {
 			$(this).html(typeName + '<sup>?</sup>');
-			$(this).append('<div class="typeTooltip">' + DEFINITIONS[typeName] + '</div>');
+			$(this).append('<div class="typeTooltip"><b>' + typeName + '</b>: ' + DEFINITIONS[typeName] + '</div>');
 		}
 	});
 	typeTds.mouseenter(function() {

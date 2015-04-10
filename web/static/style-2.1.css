@@ -3,8 +3,12 @@ html, body {
 	margin: 0;
 	padding: 0;
 	height: 100%;
+}
+body {
 	background: #fdfdfd;
 	font-size: 90%;
+	font-family: "vera sans","dejavu sans",helvetica,verdana,arial,sans-serif;
+	color: #666666;
 }
 
 select {
@@ -16,10 +20,6 @@ input[type=text]::-ms-clear {
 	display: none;
 }
 
-body, h1, h2, h3, p, span, div {
-	font-family: "vera sans","dejavu sans",helvetica,verdana,arial,sans-serif;
-	color: #666666;
-}
 h1 {
 	font-weight: inherit;
 	font-size: inherit;
@@ -379,52 +379,47 @@ td {
 
 /* Content: service view */
 #legend {
-	margin: 2px;
 	border-collapse: collapse;
+	border-radius: 2px;
+	-moz-border-radius: 2px;
+	-webkit-border-radius: 2px;
+	margin: 20px 0;
+	background-color: #fff;
+	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+	border: 1px solid rgba(0, 0, 0, 0.25);
 }
-
-#legend tr, #legend td {
-	padding: 3px 2px 3px 2px;
-	margin: 1px;
+.legendHead {
+	font-family: Helvetica, sans-serif;
+	font-size: 15px;
+	text-align: left;
+	font-weight: bold;
+	color: #fff;
+	text-shadow: 1px 1px 0 #37474F;
+	margin: -1px;
+	border-radius: 2px 2px 0 0;
+	border: 1px solid #37474F;
+	background-color: #546E7A;
+	box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
 }
-
-#legend th {
-	border-bottom: 1px solid #999999;
+.legendHead th {
+	padding: 6px 10px;
+	white-space: nowrap;
 }
-
-#legend .oddrow {
-	background-color: #f8f8f8;
+#legend td {
+	padding: 6px 10px;
 }
-
-#legend .oddrow td {
-	border-bottom: 1px solid #d8d8d8;
-}
-
-#legend .evenrow {
-	background-color: #fdfdfd;
-}
-
+#legend .oddrow td,
 #legend .evenrow td {
 	border-bottom: 1px solid #d8d8d8;
 }
-
+#legend .oddrow {
+	background-color: #f8f8f8;
+}
+#legend .evenrow {
+	background-color: #fdfdfd;
+}
 #legend .lastrow td {
 	border-bottom: 0 solid transparent !important;
-}
-
-#legend .field, #legend .internal {
-	width: 20em;
-	text-align: left;
-}
-
-#legend .type {
-	width: 7em;
-	text-align: center;
-}
-
-#legend .warn, #legend .crit {
-	width: 5em;
-	text-align: center;
 }
 
 /* Footer */
