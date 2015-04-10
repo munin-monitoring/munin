@@ -465,6 +465,9 @@ sub handle_request
 		my $upper_limit  = $cgi->url_param("upper_limit");
 		push @rrd_header, "--lower" , $lower_limit if defined $lower_limit;
 		push @rrd_header, "--upper" , $upper_limit if defined $upper_limit;
+
+		# Adding --rigid, otherwise the limits are not taken into account.
+		push @rrd_header, "--rigid" if defined $lower_limit || defined $upper_limit;
 	}
 
 	# Now it gets *REALLY* dirty: FastCGI doesn't handle correctly stdout
