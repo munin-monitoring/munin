@@ -36,7 +36,25 @@ h3 {
 	text-decoration: underline;
 }
 
-a:link, a:visited, a:link:active, a:link:hover    { color: #486aaf; text-decoration: none; }
+hr {
+	margin: 20px 0;
+	border: 0;
+	border-top: 1px solid #888;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+input[type="text"],
+input[type="number"]{
+	padding: 0 5px;
+	height: 23px;
+	border-radius: 2px;
+	border: 1px solid #aaa;
+	-webkit-box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+	box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+	color: #555;
+}
+
+a:link, a:visited, a:link:active, a:link:hover { color: #486aaf; text-decoration: none; }
 a:link:hover { text-decoration: underline;}
 
 .warntext {
@@ -559,6 +577,7 @@ div.categories a:hover {
 }
 .filter > input[type=text] {
 	width: 100%;
+	height: auto;
 	padding: 8px 28px 8px 31px;
 	border-radius: 3px;
 	border: 1px solid #2C712F;
@@ -645,4 +664,84 @@ div.categories a:hover {
 	text-align: center;
 	margin: 0 75px;
 	color: #999;
+}
+
+.card {
+	box-shadow: 0 2px 1px rgba(0, 0, 0, 0.12);
+	background: #fff;
+}
+
+/* Dynazoom */
+.dzForm {
+	width: 100%;
+	max-width: 800px;
+	padding: 5px 20px 15px 20px;
+	margin: 20px 0;
+	box-sizing: border-box;
+}
+#dynaForm > div {
+	margin-bottom: 15px;
+}
+#dynaForm label {
+	margin-bottom: 5px;
+	display: block;
+}
+#dynaForm input[type="number"] {
+	width: 100px;
+}
+label em {
+	color: #aaa;
+	font-size: 0.9em;
+}
+.inputUnit {
+	display: inline-block;
+	padding: 0 5px;
+	line-height: 21px;
+	margin-left: -2px;
+	height: 23px;
+	border-radius: 0 4px 4px 0;
+	cursor: default;
+	background-color: #eee;
+	border: 1px solid #aaa;
+	-webkit-box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+	box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+	color: #555;
+	vertical-align: top;
+}
+.dynazoomGraph { max-width: none; }
+#dynaForm .half {
+	display: inline-block;
+	width: 49%;
+	min-width: 270px;
+	vertical-align: top;
+}
+
+.overlayDiv {
+	zoom: 1;
+	opacity: .55;
+	filter: alpha(opacity=55);
+	background-color: #eee;
+	position: absolute;
+	z-index: 2;
+	border-radius: 3px;
+}
+.overlayDiv_dragging {
+	visibility: visible;
+	background-color: #555;
+}
+.overlayDiv_dragged {
+	background-color: #000;
+	cursor: pointer;
+	-webkit-transition-duration: 100ms;
+	-moz-transition-duration: 100ms;
+	-o-transition-duration: 100ms;
+	transition-duration: 100ms;
+}
+.overlayDiv_dragged:hover {
+	opacity: .6;
+	filter: alpha(opacity=60);
+}
+.overlayDiv_dragged:active {
+	opacity: .65;
+	filter: alpha(opacity=65);
 }

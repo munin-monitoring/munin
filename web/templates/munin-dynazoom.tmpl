@@ -2,77 +2,74 @@
 <body>
 <TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
 <div id="main">
-<TMPL_INCLUDE NAME="partial/navigation.tmpl">
-<div id="content">
-<h2>Graph zoom</h2>
+	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+	<div id="content">
+		<h2>Graph zoom</h2>
 
-<div style="position:relative;">
-	<img id="image" />
-<div id="overlayDiv" />
+		<div style="position:relative;">
+			<img id="image" class="dynazoomGraph graph i" />
+			<div id="overlayDiv" class="overlayDiv"></div>
+		</div>
 
+		<div class="dzForm card">
+			<p>Zooming is easy, it's done in 3 clicks (regular clicks, no drag&amp;drop):</p>
+			<ol>
+				<li> First click to define the start of zoom.
+				<li> Second click to define the ending of zoom.
+				<li> Third click inside the defined zone to zoom, outside to cancel the zone.
+			</ol>
+
+			<hr />
+
+			<form id="dynaForm">
+				<div>
+					<!-- Plugin Name : "domain/hostname" -->
+					<label for="plugin_name">Plugin Name <em>(domain/hostname/plugin_name)</em></label>
+					<div><input type="text" id="plugin_name" name="plugin_name" size="64" /></div>
+				</div>
+
+				<div class="half">
+					<!-- Start and stop -->
+					<label for="start_iso8601">Graph Start / Stop <em>(format: <span id="formatExample"></span>)</em></label>
+					<div>
+						<input type="text" id="start_iso8601" name="start_iso8601" size="24" /> /
+						<input type="text" id="stop_iso8601" name="stop_iso8601" size="24" />
+						<input type="button" id="btnMaj" value="Update" />
+					</div>
+				</div>
+
+				<div class="half">
+					<label for="start_epoch">Epoch</label>
+					<input type="text" id="start_epoch" name="start_epoch" size="10" /> /
+					<input type="text" id="stop_epoch" name="stop_epoch" size="10" />
+				</div>
+
+				<div class="half">
+					<!-- Limit high & low -->
+					<label for="lower_limit">Low / high limit</label>
+					<div>
+						<input type="text" id="lower_limit" name="lower_limit" size="10" /> /
+						<input type="text" id="upper_limit" name="upper_limit" size="10" />
+					</div>
+				</div>
+
+				<div class="half">
+					<!-- Image size -->
+					<label for="size_x">Graph size <em>(w/o legend)</em></label>
+					<div>
+						<input type="number" id="size_x" name="size_x" /><div class="inputUnit">px</div> /
+						<input type="number" id="size_y" name="size_y" /><div class="inputUnit">px</div>
+					</div>
+				</div>
+
+				<input type="submit" value="Submit" />
+				<input type="button" id="btnZoomOut" value="Zoom Out x2" />
+				<input type="button" id="reset" value="Reset" />
+			</form>
+		</div>
+	</div>
 </div>
-<table>
-<tr>
-<td>
-
-</td>
-<td>
-	Zooming is easy, it's done in 3 clicks (regular clicks, no drag&amp;drop):
-	<ol>
-		<li> First click to define the start of zoom.
-		<li> Second click to define the ending of zoom.
-		<li> Third click inside the defined zone to zoom, outside to cancel the zone.
-	</ol>
-<td>
-</tr>
-</table>
-
-<form name="myNewForm" id="myNewForm">
-<table>
-	<!-- Plugin Name : "domain/hostname" -->
-	<tr>
-		<td>Plugin Name <em>(domain/hostname/plugin_name)</em> :</td>
-		<td><input type="text" name="plugin_name" size="64" ></td>
-	</tr>
-
-	<!-- Start and stop -->
-	<tr>
-		<td>Start/Stop of the graph <br/>(format:2005-08-15T15:52:01+0000) <br /><em>(epoch)</em> :</td>
-		<td>
-			<input type="text" name="start_iso8601" size='24'> / <input type="text" name="stop_iso8601" size="24"> <input name="btnMaj" type=button value="update" /> <br />
-
-			(<input type="text" name="start_epoch" size="10"> / <input type="text" name="stop_epoch" size="10">)
-		</td>
-	</tr>
-
-	<!-- Limit high & low -->
-	<tr>
-		<td>Limit low/high :</td>
-		<td>
-
-			<input type="text" name="lower_limit" size="10"> /  <input type="text" name="upper_limit" size="10">
-		</td>
-	</tr>
-
-
-	<!-- Image size -->
-	<tr>
-		<td>Graph size (w/o legend) <em>(pixels)</em>:</td>
-
-		<td>
-			<input type="text" name="size_x" size="5"> / <input type="text" name="size_y" size="5" >
-		</td>
-	</tr>
-</table>
-	<input type="submit" />
-	<input type="button" name="btnZoomOut" value="Zoom Out x2" />
-</form>
-
-</body>
-
-<script src="<TMPL_VAR NAME="R_PATH">/static/zoom.js" type="text/javascript" language="javascript" ></script>
-
-</div>
+<script src="<TMPL_VAR NAME="R_PATH">/static/dynazoom.js" type="text/javascript"></script>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
 </body>
 </html>
