@@ -501,6 +501,7 @@ sub _dump_into_sql {
 			my $service_id = _get_last_insert_id($dbh);
 			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$_service"));
 
+			my $is_category_set;
 			my $graph_order;
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
 				my ($attr_key, $attr_value) = @$attr;
@@ -508,6 +509,7 @@ sub _dump_into_sql {
 				if ($attr_key eq 'graph_category') {
 					$attr_value = lc($attr_value);
 					$sth_service_category->execute($service_id, $attr_value);
+					$is_category_set = 1;
 				} else {
 					$sth_service_attr->execute($service_id, $attr_key, $attr_value);
 				}
@@ -516,6 +518,12 @@ sub _dump_into_sql {
 				if ($attr_key eq 'graph_order') {
 					$graph_order = $attr_value;
 				}
+			}
+
+			# Set the default category : "other"
+			if ( ! $is_category_set ) {
+				INFO "Setting $service with category 'other'";
+				$sth_service_category->execute($service_id, "other") unless $is_category_set;
 			}
 
 			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
