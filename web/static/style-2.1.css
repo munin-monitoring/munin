@@ -745,3 +745,18 @@ label em {
 	opacity: .65;
 	filter: alpha(opacity=65);
 }
+
+.lazy {
+	display: none;
+}
+
+.typeTooltip {
+	display: none;
+	position: absolute;
+	background-color: #fff;
+	max-width: 450px;
+	text-align: left;
+	border: 1px solid #777;
+	box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
+	padding: 5px 10px;
+}

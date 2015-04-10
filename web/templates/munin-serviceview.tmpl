@@ -118,44 +118,56 @@
                 <!-- Do we actually allow mutiple graph_info, or is this just to access the nested data? -->
                 <p class="graph_info"><TMPL_VAR NAME="info"></p>
             </TMPL_LOOP>
-            <TMPL_IF NAME="STATE_WARNING"><p class="warning"><p><strong>Note:</strong>
-            This service is in WARNING state because one of the values reported is outside the allowed range.  Please see further down for information about the ranges and the graph for the values.
-            </p></TMPL_IF>
-            <TMPL_IF NAME="STATE_CRITICAL"><p class="critical"><p><strong>Note:</strong>
-            This service is in CRITICAL state because one of the values reported is outside the allowed range.  Please see further down for information about the ranges and the graph for the values.
-            <p></TMPL_IF>
-            <TMPL_IF NAME="STATE_UNKNOWN"><p class='unknown'><strong>Note:</strong> This service is in UNKNOWN state, because something bad happened.  Please check your network, the munin-node, and the plugin.
-            </p></TMPL_IF>
+            <TMPL_IF NAME="STATE_WARNING">
+            	<p class="warning">
+            		<p><strong>Note:</strong>
+            		This service is in WARNING state because one of the values reported is outside the allowed range.
+            		Please see further down for information about the ranges and the graph for the values.
+            	</p>
+            </TMPL_IF>
+            <TMPL_IF NAME="STATE_CRITICAL">
+            	<p class="critical">
+            		<p><strong>Note:</strong>
+            		This service is in CRITICAL state because one of the values reported is outside the allowed range.
+            		Please see further down for information about the ranges and the graph for the values.
+            	<p>
+            </TMPL_IF>
+            <TMPL_IF NAME="STATE_UNKNOWN">
+            	<p class="unknown">
+            		<strong>Note:</strong> This service is in UNKNOWN state, because something bad happened.
+            		Please check your network, the munin-node, and the plugin.
+            	</p>
+            </TMPL_IF>
 
             <table id="legend">
-            <tr>
-                <th class="field">Field</th>
-                <th class="internal"><span title="For use in munin.conf">Internal name</span></th>
-                <th class="type"><a href="<TMPL_VAR ESCAPE="URL" NAME="R_PATH">/static/definitions.html#data_types">Type</a></th>
-                <th class="warn">Warn</th>
-                <th class="crit">Crit</th>
-                <th class="info">Info</th>
-            </tr>
-            <TMPL_LOOP NAME="FIELDINFO">
-                <tr class="<TMPL_IF NAME="__odd__">oddrow<TMPL_ELSE>evenrow</TMPL_IF><TMPL_IF NAME="__last__"> lastrow</TMPL_IF>">
-                    <td class="field"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></td>
-                    <td class="internal"><span title="For use in munin.conf"><TMPL_VAR ESCAPE="HTML" NAME="FIELD"></span></td>
-                    <td class="type"><TMPL_VAR NAME="TYPE"></td>
-                    <td class="warn"><TMPL_IF NAME="STATE_WARNING"><div class='warntext'></TMPL_IF><TMPL_VAR NAME="WARN"><TMPL_IF NAME="STATE_WARNING"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
-                    <td class="crit"><TMPL_IF NAME="STATE_CRITICAL"><div class='crittext'></TMPL_IF><TMPL_VAR NAME="CRIT"><TMPL_IF NAME="STATE_CRITICAL"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
-                    <td class="info"><TMPL_IF NAME="INFO"><TMPL_VAR ESCAPE="HTML" NAME="INFO"><TMPL_ELSE>&nbsp;</TMPL_IF></td>
-                </tr>
-                <TMPL_IF NAME="EXTINFO">
-                <tr class="<TMPL_IF NAME="__odd__">oddrow<TMPL_ELSE>evenrow</TMPL_IF>">
-                  <td class='wrap' colspan="6" align='left' valign='top'>
-                    This field has the following extra information: <TMPL_VAR ESCAPE="HTML" NAME="EXTINFO">
-                </td></tr>
-                </TMPL_IF>
-            </TMPL_LOOP>
+				<tr>
+					<th class="field">Field</th>
+					<th class="internal"><span title="For use in munin.conf">Internal name</span></th>
+					<th class="type">Type</th>
+					<th class="warn">Warn</th>
+					<th class="crit">Crit</th>
+					<th class="info">Info</th>
+				</tr>
+				<TMPL_LOOP NAME="FIELDINFO">
+					<tr class="<TMPL_IF NAME="__odd__">oddrow<TMPL_ELSE>evenrow</TMPL_IF><TMPL_IF NAME="__last__"> lastrow</TMPL_IF>">
+						<td class="field"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></td>
+						<td class="internal"><span title="For use in munin.conf"><TMPL_VAR ESCAPE="HTML" NAME="FIELD"></span></td>
+						<td class="type"><TMPL_VAR NAME="TYPE"></td>
+						<td class="warn"><TMPL_IF NAME="STATE_WARNING"><div class="warntext"></TMPL_IF><TMPL_VAR NAME="WARN"><TMPL_IF NAME="STATE_WARNING"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+						<td class="crit"><TMPL_IF NAME="STATE_CRITICAL"><div class="crittext"></TMPL_IF><TMPL_VAR NAME="CRIT"><TMPL_IF NAME="STATE_CRITICAL"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+						<td class="info"><TMPL_IF NAME="INFO"><TMPL_VAR ESCAPE="HTML" NAME="INFO"><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+					</tr>
+					<TMPL_IF NAME="EXTINFO">
+						<tr class="<TMPL_IF NAME="__odd__">oddrow<TMPL_ELSE>evenrow</TMPL_IF>">
+							<td class="wrap" colspan="6" align='left' valign='top'>This field has the following extra information: <TMPL_VAR ESCAPE="HTML" NAME="EXTINFO"></td>
+						</tr>
+					</TMPL_IF>
+				</TMPL_LOOP>
             </table>
         </TMPL_LOOP> <!-- services -->
     </div>
 </div>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
+<script src="<TMPL_VAR NAME="R_PATH">/static/munin-serviceview.js" type="text/javascript"></script>
 </body>
 </html>
