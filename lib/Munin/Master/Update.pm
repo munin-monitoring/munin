@@ -369,8 +369,8 @@ sub _dump_groups_into_sql {
 sub _dump_into_sql {
 	my ($self) = @_;
 
-	my $datafilename = $config->{dbdir}."/datafile.sqlite";
-	my $datafilename_tmp = $config->{dbdir}."/.datafile.$$.sqlite";
+	my $datafilename = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile.sqlite";
+	my $datafilename_tmp = $datafilename . ".$$";
 	DEBUG "[DEBUG] Writing sql to $datafilename_tmp";
 
 	use DBI;
@@ -493,14 +493,15 @@ sub _dump_into_sql {
 			# to make it easier for CGI html to work with.
 			(my $_service = $service) =~ tr!.!/!;
 
-			my $graph_title = delete $self->{service_configs}{$host}{global}{graph_title};
-			my $graph_info = delete $self->{service_configs}{$host}{global}{graph_info};
+			my $graph_title = _get_from_arrayref($self->{service_configs}{$host}{global}{$service}, "graph_title");
+			my $graph_info = _get_from_arrayref($self->{service_configs}{$host}{global}{$service}, "graph_info");
 			# Check for multigraphs
 			my $subgraphs = scalar grep /^$service\..+/, keys %{$self->{service_configs}{$host}{data_source}};
 			$sth_service->execute($node_id, $service, "$host:$service", $graph_title, $graph_info, $subgraphs);
 			my $service_id = _get_last_insert_id($dbh);
 			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$_service"));
 
+			my $is_category_set;
 			my $graph_order;
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
 				my ($attr_key, $attr_value) = @$attr;
@@ -508,6 +509,7 @@ sub _dump_into_sql {
 				if ($attr_key eq 'graph_category') {
 					$attr_value = lc($attr_value);
 					$sth_service_category->execute($service_id, $attr_value);
+					$is_category_set = 1;
 				} else {
 					$sth_service_attr->execute($service_id, $attr_key, $attr_value);
 				}
@@ -516,6 +518,12 @@ sub _dump_into_sql {
 				if ($attr_key eq 'graph_order') {
 					$graph_order = $attr_value;
 				}
+			}
+
+			# Set the default category : "other"
+			if ( ! $is_category_set ) {
+				INFO "Setting $service with category 'other'";
+				$sth_service_category->execute($service_id, "other") unless $is_category_set;
 			}
 
 			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
@@ -653,6 +661,20 @@ sub _print_old_service_configs_for_failed_workers {
 	}
 	
     }
+}
+
+sub _get_from_arrayref
+{
+	my ($aref, $key, $default) = @_;
+
+	for my $item (@$aref) {
+		my ($_key, $_value) = @$item;
+
+		return $_value if ($_key eq $key);
+	}
+
+	# Not found
+	return $default;
 }
 
 

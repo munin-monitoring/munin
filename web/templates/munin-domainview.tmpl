@@ -18,7 +18,15 @@
 										<!-- And in each categroy there are M services -->
 										<TMPL_LOOP NAME="SERVICES">
 											<li>
-												<span class="service"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+												<span class="service">
+													<a
+														<TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
+														<TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF>
+														href="<TMPL_VAR NAME="URLX">"
+													>
+														<TMPL_VAR ESCAPE="HTML" NAME="NAME">
+													</a>
+												</span>
 											</li>
 										</TMPL_LOOP><!-- SERVICES -->
 									</ul>

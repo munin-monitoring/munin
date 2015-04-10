@@ -150,7 +150,7 @@ sub handle_request
 
 	# Ok, now SQL is needed to go further
 	use DBI;
-	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
+	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 	# Note that we reconnect for _each_ request. This is to avoid old data when the DB "rotates"
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
