@@ -493,8 +493,8 @@ sub _dump_into_sql {
 			# to make it easier for CGI html to work with.
 			(my $_service = $service) =~ tr!.!/!;
 
-			my $graph_title = delete $self->{service_configs}{$host}{global}{graph_title};
-			my $graph_info = delete $self->{service_configs}{$host}{global}{graph_info};
+			my $graph_title = _get_from_arrayref($self->{service_configs}{$host}{global}{$service}, "graph_title");
+			my $graph_info = _get_from_arrayref($self->{service_configs}{$host}{global}{$service}, "graph_info");
 			# Check for multigraphs
 			my $subgraphs = scalar grep /^$service\..+/, keys %{$self->{service_configs}{$host}{data_source}};
 			$sth_service->execute($node_id, $service, "$host:$service", $graph_title, $graph_info, $subgraphs);
@@ -653,6 +653,20 @@ sub _print_old_service_configs_for_failed_workers {
 	}
 	
     }
+}
+
+sub _get_from_arrayref
+{
+	my ($aref, $key, $default) = @_;
+
+	for my $item (@$aref) {
+		my ($_key, $_value) = @$item;
+
+		return $_value if ($_key eq $key);
+	}
+
+	# Not found
+	return $default;
 }
 
 
