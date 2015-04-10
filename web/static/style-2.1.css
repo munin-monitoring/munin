@@ -647,12 +647,6 @@ div.categories a:hover {
 	color: rgba(255,255,255,0.87);
 	background-color: rgb(63,81,181);
 }
-.timeRangeSwitch ul li.disabled {
-	background-color: rgba(0,0,0,0.12);
-	color: rgba(0,0,0,0.54);
-	cursor: not-allowed;
-	display: inline-block;
-}
 
 .neutralMessage {
 	font-size: 17px;
