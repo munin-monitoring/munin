@@ -5,7 +5,7 @@
 
 $(document).ready(function() {
 	$('.timeRangeSwitch').find('ul > li').click(function() {
-		if ($(this).hasClass('disabled') || $(this).hasClass('selected'))
+		if ($(this).hasClass('selected'))
 			return;
 
 		var currentRange = $(this).parent().find('.selected').first().text();
@@ -17,26 +17,13 @@ $(document).ready(function() {
 		// Add "selected" class to this
 		$(this).addClass('selected');
 
-		// Add "disabled" class to the other time range switch
 		var thisRSIndex = $(this).parent().parent().index();
-		var otherRS = $($('.timeRangeSwitch')[thisRSIndex == 1 ? 0 : 1]);
-		var otherLi = otherRS.find('li');
-		otherLi.removeClass('disabled');
-		otherLi.each(function() {
-			if ($(this).text() == newRange)
-				$(this).addClass('disabled');
-		});
 
-
-		// Replace src attribute of current column (all images that matches current range)
-		// => contains "-day." for day (don't force extension since there can be pngs/svgs)
-		var srcSelector = '-' + currentRange + '.';
-		var newSrcSelector = '-' + newRange + '.';
-
-		var images = $("img[src*='" + srcSelector + "']");
+		// Replace src attribute of current column
+		var images = $("img[data-col='" + thisRSIndex + "']");
 		images.each(function() {
-			var currentImg = $(this).attr('src');
-			$(this).attr('src', currentImg.replace(srcSelector, newSrcSelector));
+			var src = $(this).attr('src');
+			$(this).attr('src', src.replace('-' + currentRange + '.', '-' + newRange + '.'));
 		});
 
 		// Tell that the image is loading

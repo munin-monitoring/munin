@@ -16,6 +16,7 @@ var DEFINITIONS = {
 };
 
 $(document).ready(function() {
+	// Legend type definitions tooltips
 	var typeTds = $('td.type');
 	typeTds.each(function() {
 		var typeName = $(this).text();
@@ -33,4 +34,7 @@ $(document).ready(function() {
 	typeTds.mouseleave(function() {
 		$(this).find('.typeTooltip').fadeOut(100);
 	});
+
+	// Graphs auto-refresh
+	setInterval(refreshGraphs, 5*60*1000);
 });
