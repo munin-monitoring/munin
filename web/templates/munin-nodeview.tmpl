@@ -4,6 +4,7 @@
 <div id="main">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<div id="content">
+		<!-- Node view -->
 		<div class="timeRangeSwitchContainer">
 			<div class="timeRangeSwitch">
 				<ul>
@@ -24,7 +25,6 @@
 				</ul>
 			</div>
 		</div>
-		<h2>Node view</h2>
 		<TMPL_LOOP NAME="CATEGORIES">
 			<h3 id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3>
 			<div data-category="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">

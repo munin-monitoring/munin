@@ -25,15 +25,11 @@ h1 {
 	font-size: inherit;
 }
 h3 {
-	margin-top: 1em;
-	margin-bottom: 0;
-	font-size: 110%;
-	letter-spacing: 0.05em;
-	margin-left: 0;
-	padding-left: 10px;
-	padding-bottom: 0;
-	padding-top: 0;
-	text-decoration: underline;
+	color: #555;
+	font-weight: normal;
+	letter-spacing: -1px;
+	margin: 20px 0 15px 0;
+	font-size: 17px;
 }
 
 hr {
@@ -288,10 +284,10 @@ a.graphLink.icrit { background-color: #ff0000; }
 	list-style-type: none;
 	margin: 0;
 	padding: 0;
-	-webkit-transition-duration: 200ms;
-	-moz-transition-duration: 200ms;
-	-o-transition-duration: 200ms;
-	transition-duration: 200ms;
+	-webkit-transition-duration: 100ms;
+	-moz-transition-duration: 100ms;
+	-o-transition-duration: 100ms;
+	transition-duration: 100ms;
 	letter-spacing: -0.5px;
 }
 #nav ul li a {
@@ -339,18 +335,10 @@ a.graphLink.icrit { background-color: #ff0000; }
 /* Content */
 #content {
 	display: table-cell;
-	padding: 15px;
+	padding: 5px 0 30px 30px;
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
-}
-
-/*#content li {
-	margin-left: -20px;
-}*/
-
-#content > ul:first-of-type {
-	margin-left: 2em;
 }
 
 .comparison #content {
@@ -358,15 +346,11 @@ a.graphLink.icrit { background-color: #ff0000; }
 }
 
 #content h2 {
-	display: none;
-}
-
-#content h3 {
-	font-size: 1.2em;
-	margin-top: 20px;
-	margin-bottom: 10px;
-	text-decoration: none;
-	letter-spacing: -0.3px;
+	color: #444;
+	font-weight: normal;
+	letter-spacing: -1px;
+	margin: 25px 0;
+	font-size: 23px;
 }
 
 /* Content: comparison */
@@ -536,6 +520,7 @@ div.compare a {
 	display: inline-block;
 	padding: 6px 8px;
 	opacity: 0.8;
+	font-size: 11px;
 }
 div.categories {
 	font-size: 11px;
