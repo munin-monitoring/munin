@@ -267,40 +267,57 @@ a.graphLink.icrit { background-color: #ff0000; }
 #nav {
 	border-right: 1px solid rgba(0, 0, 0, 0.20);
 	border-bottom-right-radius: 2px;
-	padding: 10px 0;
+	padding-bottom: 10px;
+	padding-top: 1px;
 	-moz-box-shadow: inset -4px 0 10px -8px #656565;
 	-webkit-box-shadow: inset -4px 0 10px -8px #656565;
 	-o-box-shadow: inset -4px 0 10px -8px #656565;
 	box-shadow: inset -4px 0 10px -8px #656565;
 	filter: progid:DXImageTransform.Microsoft.Shadow(color=#656565, Direction=180, Strength=10);
 }
+#nav > hr {
+	background-color: rgba(0, 0, 0, 0.1);
+	height: 1px;
+	margin: 0;
+	box-shadow: none;
+	border: 0;
+}
 #nav > h2 {
-	padding: 6px 0 3px 3px;
-	margin: 0 0 10px 10px;
-	text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
-	border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+	padding: 10px 0 5px 15px;
+	margin: 5px 0 5px 0;
 	font-weight: normal;
 	text-transform: uppercase;
-	font-size: 12px;
+	font-size: 13px;
+	color: #777;
 }
 #nav ul li {
 	list-style-type: none;
 	margin: 0;
 	padding: 0;
-	-webkit-transition-duration: 100ms;
-	-moz-transition-duration: 100ms;
-	-o-transition-duration: 100ms;
-	transition-duration: 100ms;
-	letter-spacing: -0.5px;
+	font-size: 13px;
+	font-family: Helvetica, sans-serif;
 }
-#nav ul li a {
+#nav ul li > a {
 	display: block;
-	padding: 3px 0 3px 13px;
+	padding: 3px 6px;
+	margin: 2px 8px;
+	color: #666;
+	border-bottom: 1px solid transparent;
+	border-top: 1px solid transparent;
+	border-radius: 2px;
+}
+#nav ul li > a:hover {
+	text-decoration: none;
+	background-color: rgba(0, 0, 0, 0.1);
+	border-top: 1px solid rgba(0, 0, 0, 0.1);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	color: #444;
 }
 #nav ul li .timerangesList {
 	float: right;
 	font-size: 0;
-	margin-right: 4px;
+	margin-right: 9px;
+	margin-top: 3px;
 	opacity: 0.2;
 	transition-duration: 100ms;
 }
@@ -314,8 +331,8 @@ a.graphLink.icrit { background-color: #ff0000; }
 #nav ul li .badge {
 	float: right;
 	display: inline-block;
-	margin-right: 9px;
-	margin-top: 2px;
+	margin-right: 12px;
+	margin-top: 3px;
 	min-width: 7px;
 	padding: 3px 7px;
 	font-size: 11px;
@@ -324,9 +341,6 @@ a.graphLink.icrit { background-color: #ff0000; }
 	text-align: center;
 	background-color: #999;
 	border-radius: 10px;
-}
-#nav ul li:hover {
-	background-color: rgba(0, 0, 0, 0.1);
 }
 #nav ul {
 	margin: 0.2em 0 0.8em 0;
@@ -636,6 +650,7 @@ div.categories a:hover {
 	font-size: 17px;
 	text-align: center;
 	margin: 0 75px;
+	padding: 10px 0 35px 0;
 	color: #999;
 }
 
