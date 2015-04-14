@@ -406,10 +406,9 @@ td {
 	white-space: nowrap;
 }
 #legend td {
-	padding: 6px 10px;
-}
-#legend .oddrow td,
-#legend .evenrow td {
+	font-size: 12px;
+	color: rgba(0, 0, 0, 0.75);
+	padding: 8px 15px;
 	border-bottom: 1px solid #d8d8d8;
 }
 #legend .oddrow {
@@ -742,10 +741,13 @@ label em {
 .typeTooltip {
 	display: none;
 	position: absolute;
-	background-color: #fff;
 	max-width: 450px;
-	text-align: left;
-	border: 1px solid #777;
 	box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
 	padding: 5px 10px;
+	background-color: rgba(0, 0, 0, 0.6);
+	border: 0;
+	color: #fff;
+	border-radius: 2px;
+	font-size: 12px;
+	text-align: justify;
 }
