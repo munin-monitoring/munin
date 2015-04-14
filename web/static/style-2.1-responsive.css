@@ -26,6 +26,7 @@
 	/* Different nav */
 	#main {
 		display: block;
+		min-height: 0;
 	}
 	.navContainer {
 		display: block;
@@ -94,10 +95,8 @@
 
 /* Medium devices */
 @media (max-width: 992px) {
-
 }
 
 /* Large devices (large desktops) */
 @media (max-width: 1200px) {
-
 }

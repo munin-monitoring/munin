@@ -5,7 +5,7 @@ html, body {
 	height: 100%;
 }
 body {
-	background: #fdfdfd;
+	background: #ECEFF1;
 	font-size: 90%;
 	font-family: "vera sans","dejavu sans",helvetica,verdana,arial,sans-serif;
 	color: #666666;
@@ -249,6 +249,9 @@ a.graphLink.icrit { background-color: #ff0000; }
 	width: 100%;
 	margin-left: auto;
 	display: table;
+	background-color: #fdfdfd;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+	min-height: 600px;
 }
 
 .clear {
@@ -409,7 +412,7 @@ td {
 #footer {
 	width: 100%;
 	margin-top: 15px;
-	padding: 5px 5%;
+	padding: 5px 35px;
 	clear: both;
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
@@ -429,12 +432,9 @@ td {
 #footer p.tagline {
 	color: #aaa;
 	font-size: 11px;
-	border-top: 1px solid #dedede;
-	padding: 5px 10px;
 	letter-spacing: -0.5px;
 	transition-duration: 200ms;
 	margin: 10px 0;
-	text-align: right;
 }
 #footer p.tagline:hover {
 	color: #888;
