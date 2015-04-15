@@ -403,7 +403,7 @@ td {
 	box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
 }
 .legendHead th {
-	padding: 6px 10px;
+	padding: 6px 10px 6px 15px;
 	white-space: nowrap;
 }
 #legend td {
@@ -580,7 +580,7 @@ div.categories a:hover {
 	box-shadow: inset 0 1px 1px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1);
 	transition-duration: 150ms;
 	box-sizing: border-box;
-	background: rgba(255, 255, 255, 0.85) url('icons/glyphicons-28-search.png') no-repeat 7px 8px;
+	background: rgba(255, 255, 255, 0.85) url('icons/glyphicons-28-search.png') no-repeat 7px 7px;
 	background-size: 16px;
 }
 .filter > input[type=text]:focus {
