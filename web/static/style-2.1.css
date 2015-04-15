@@ -621,11 +621,12 @@ div.categories a:hover {
 .timeRangeSwitch {
 	display: inline-block;
 	width: 100%;
-	max-width: 500px;
+	max-width: 499px;
 	text-align: center;
 	padding: 10px;
 	box-sizing: border-box;
 	transition-duration: 150ms;
+	margin-right: 4px;
 }
 .timeRangeFixed .timeRangeSwitch {
 	background-color: #fff;

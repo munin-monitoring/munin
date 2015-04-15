@@ -44,6 +44,16 @@ $(document).ready(function() {
 			timeRangeSwitchContainer.removeClass('timeRangeFixed');
 	});
 
+	// There's a problem with CSS where time range switches do not wrap
+	// on special resolutions. Let's fix it here
+	$(window).resize(function() {
+		var availableWidth = $('#content').width();
+		if ($('.timeRangeSwitch').first().outerWidth(true)*2 > availableWidth)
+			$('.timeRangeSwitch').css('display', 'block');
+		else
+			$('.timeRangeSwitch').css('display', 'inline-block');
+	});
+
 	// Check if URL contains stuff like ?1=day&2=month
 	var urlParams = getURLParams();
 	if ('1' in urlParams)
