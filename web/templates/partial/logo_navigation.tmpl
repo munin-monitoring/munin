@@ -16,25 +16,25 @@
 		</h1>
 		<div class="subtitle">
 			<TMPL_IF NAME="NCATEGORIES">
-        		<span class="categories">
-        			<TMPL_VAR NAME="NAME"> [
-        			<TMPL_LOOP NAME="CATEGORIES">
-        				<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
-        				<TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF>
-        				href="#<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
-        			</TMPL_LOOP>
-        			]
-        		</span>
-        	</TMPL_IF>
-        	<TMPL_IF NAME="COMPARE">
-        		<span class="comparison">
-        			<TMPL_VAR ESCAPE="HTML" NAME="NAME">
-        			<a href="comparison-day.html">day</a>
-        			<a href="comparison-week.html">week</a>
-        			<a href="comparison-month.html">month</a>
-        			<a href="comparison-year.html">year</a>
-        		</span>
-        	</TMPL_IF>
+				<span class="categories">
+					<TMPL_VAR NAME="NAME"> [
+					<TMPL_LOOP NAME="CATEGORIES">
+						<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
+						<TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF>
+						href="#<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+					</TMPL_LOOP>
+					]
+				</span>
+			</TMPL_IF>
+			<TMPL_IF NAME="COMPARE">
+				<span class="comparison">
+					<TMPL_VAR ESCAPE="HTML" NAME="NAME">
+					<a href="comparison-day.html">day</a>
+					<a href="comparison-week.html">week</a>
+					<a href="comparison-month.html">month</a>
+					<a href="comparison-year.html">year</a>
+				</span>
+			</TMPL_IF>
 		</div>
 	</div>
 	<div class="clear"></div>
