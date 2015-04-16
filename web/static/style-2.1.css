@@ -136,6 +136,7 @@ a.graphLink.icrit { background-color: #ff0000; }
 	color: #fff;
 	min-height: 50px;
 	margin: 0 auto;
+	padding: 1px 12px 1px 37px;
 	text-align: center;
 	background-color: #388E3C;
 	position: relative;
@@ -152,7 +153,6 @@ a.graphLink.icrit { background-color: #ff0000; }
 	-o-box-shadow: 0 0 5px 0 #777777;
 	box-shadow: 0 0 5px 0 #777777;
 	filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=5);
-	padding: 1px 37px;
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
@@ -558,57 +558,57 @@ div.categories a:hover {
 	float: right;
 	margin-top: 7px;
 	position: relative;
+	text-align: right;
 }
 .filter > #cancelFilter {
-	opacity: 0.5;
+	opacity: 0.8;
 	width: 8px;
 	cursor: pointer;
 	position: absolute;
-	top: 1px;
-	right: 1px;
+	top: 0;
+	right: 0;
 	padding: 12px;
 }
 .filter > input[type=text] {
-	width: 100%;
+	width: 250px;
 	height: auto;
-	padding: 8px 28px 8px 31px;
-	border-radius: 3px;
-	border: 1px solid #2C712F;
-	color: #383838;
+	padding: 9px 28px 9px 31px;
+	border: 0;
+	color: rgba(255, 255, 255, 0.9);
+	font-size: 12px;
 	font-family: inherit;
-	-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1);
-	box-shadow: inset 0 1px 1px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1);
+	-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.20);
+	box-shadow: inset 0 1px 1px rgba(0,0,0,0.20);
 	transition-duration: 150ms;
 	box-sizing: border-box;
-	background: rgba(255, 255, 255, 0.85) url('icons/glyphicons-28-search.png') no-repeat 7px 7px;
+	background: rgba(0, 0, 0, 0.2) url('icons/glyphicons-28-search-white.png') no-repeat 8px 7px;
 	background-size: 16px;
 }
 .filter > input[type=text]:focus {
 	outline: none;
-	background-color: rgba(255, 255, 255, 0.95);
-	border-color: rgb(43, 95, 45);
-	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05), 0 0 5px rgba(135, 186, 137, 1);
+	background-color: rgba(0, 0, 0, 0.3);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
+	width: 300px;
 }
 /* Placeholder text color */
 .filter > input[type=text]::-webkit-input-placeholder {
-	color: #000;
-	opacity: 0.6;
+	color: #ffffff;
+	opacity: 0.8;
 }
 .filter > input[type=text]:-moz-placeholder { /* Firefox 18- */
-	color: #000;
-	opacity: 0.6;
+	color: #ffffff;
+	opacity: 0.8;
 }
 .filter > input[type=text]::-moz-placeholder {  /* Firefox 19+ */
-	color: #000;
-	opacity: 0.6;
+	color: #ffffff;
+	opacity: 0.8;
 }
 .filter > input[type=text]:-ms-input-placeholder {
-	color: #000;
-	opacity: 0.6;
+	color: #ffffff;
+	opacity: 0.8;
 }
 .filter > #overview-search-noresult {
 	margin: 30px 15px;
-	text-decoration: blink;
 }
 .timeRangeSwitchContainer {
 	width: 100%;
