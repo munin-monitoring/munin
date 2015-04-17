@@ -12,6 +12,7 @@
 		border-radius: 0;
 		padding: 5px;
 	}
+	.header .singleLine { margin-top: 0; }
 	.filter {
 		float: none;
 		display: inline-block;
@@ -26,6 +27,7 @@
 	/* Different nav */
 	#main {
 		display: block;
+		min-height: 0;
 	}
 	.navContainer {
 		display: block;
@@ -35,10 +37,14 @@
 	}
 	#nav {
 		display: none;
-		border-top: 1px solid #fff;
+		border-right: 0;
 		padding: 0;
+		margin-top: -4px;
 	}
-	#nav h2 { text-align: center; }
+	#nav h2 {
+		text-align: center;
+		padding-left: 0;
+	}
 	#nav ul li {
 		text-align: center;
 		padding-right: 0;
@@ -46,9 +52,11 @@
 	#nav ul li .timerangesList { opacity: 1; }
 	#content {
 		display: block;
-		padding: 1em 0 0 0;
+		padding: 1em 0 1em 0;
 		width: 100%;
 	}
+	#content h2,
+	#content h3 { margin-left: 20px; }
 	.navContainer > div#navToggle,
 	.navContainer > div#nav {
 		-moz-box-shadow: 0 0 2px 0 #777777;
@@ -94,10 +102,8 @@
 
 /* Medium devices */
 @media (max-width: 992px) {
-
 }
 
 /* Large devices (large desktops) */
 @media (max-width: 1200px) {
-
 }

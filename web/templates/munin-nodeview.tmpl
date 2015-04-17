@@ -4,6 +4,7 @@
 <div id="main">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<div id="content">
+		<!-- Node view -->
 		<div class="timeRangeSwitchContainer">
 			<div class="timeRangeSwitch">
 				<ul>
@@ -24,7 +25,6 @@
 				</ul>
 			</div>
 		</div>
-		<h2>Node view</h2>
 		<TMPL_LOOP NAME="CATEGORIES">
 			<h3 id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3>
 			<div data-category="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">
@@ -47,7 +47,7 @@
 							  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>
 							  data-col="0" />
 							</noscript>
-							<img class="lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
+							<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
 							  data-original="<TMPL_VAR NAME="IMGDAY">"
 							  src="<TMPL_VAR NAME="R_PATH">/static/placeholder.gif"
 							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
@@ -73,7 +73,7 @@
 							  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>
 							  data-col="1" />
 							</noscript>
-							<img class="lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
+							<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
 							  data-original="<TMPL_VAR NAME="IMGWEEK">"
 							  src="<TMPL_VAR NAME="R_PATH">/static/placeholder.gif"
 							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
@@ -89,9 +89,9 @@
 	</div>
 </div>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
-<script src="<TMPL_VAR NAME="R_PATH">/static/autorefresh.js" type="application/javascript"></script>
-<script src="<TMPL_VAR NAME="R_PATH">/static/munin-nodeview.js" type="application/javascript"></script>
-<script src="<TMPL_VAR NAME="R_PATH">/static/munin-nodeview-timerangeswitch.js" type="application/javascript"></script>
+<script src="<TMPL_VAR NAME="R_PATH">/static/autorefresh.js"></script>
+<script src="<TMPL_VAR NAME="R_PATH">/static/munin-nodeview.js"></script>
+<script src="<TMPL_VAR NAME="R_PATH">/static/munin-nodeview-timerangeswitch.js"></script>
 <input id="r_path" type="hidden" value="<TMPL_VAR NAME="R_PATH">" />
 </body>
 </html>

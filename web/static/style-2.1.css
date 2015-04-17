@@ -5,7 +5,7 @@ html, body {
 	height: 100%;
 }
 body {
-	background: #fdfdfd;
+	background: #ECEFF1;
 	font-size: 90%;
 	font-family: "vera sans","dejavu sans",helvetica,verdana,arial,sans-serif;
 	color: #666666;
@@ -25,15 +25,11 @@ h1 {
 	font-size: inherit;
 }
 h3 {
-	margin-top: 1em;
-	margin-bottom: 0;
-	font-size: 110%;
-	letter-spacing: 0.05em;
-	margin-left: 0;
-	padding-left: 10px;
-	padding-bottom: 0;
-	padding-top: 0;
-	text-decoration: underline;
+	color: #555;
+	font-weight: normal;
+	letter-spacing: -1px;
+	margin: 20px 0 15px 0;
+	font-size: 17px;
 }
 
 hr {
@@ -140,23 +136,17 @@ a.graphLink.icrit { background-color: #ff0000; }
 	color: #fff;
 	min-height: 50px;
 	margin: 0 auto;
+	padding: 1px 12px 1px 37px;
 	text-align: center;
 	background-color: #388E3C;
 	position: relative;
 	z-index: 5;
 	border-bottom: 1px solid #3A713C;
-	border-bottom-left-radius: 2px;
-	-moz-border-radius-bottomleft: 2px;
-	-webkit-border-bottom-left-radius: 2px;
-	border-bottom-right-radius: 2px;
-	-moz-border-radius-bottomright: 2px;
-	-webkit-border-bottom-right-radius: 2px;
 	-moz-box-shadow: 0 0 5px 0 #777777;
 	-webkit-box-shadow: 0 0 5px 0 #777777;
 	-o-box-shadow: 0 0 5px 0 #777777;
 	box-shadow: 0 0 5px 0 #777777;
 	filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=5);
-	padding: 1px 37px;
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
@@ -253,6 +243,9 @@ a.graphLink.icrit { background-color: #ff0000; }
 	width: 100%;
 	margin-left: auto;
 	display: table;
+	background-color: #fdfdfd;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+	min-height: 600px;
 }
 
 .clear {
@@ -268,40 +261,57 @@ a.graphLink.icrit { background-color: #ff0000; }
 #nav {
 	border-right: 1px solid rgba(0, 0, 0, 0.20);
 	border-bottom-right-radius: 2px;
-	padding: 10px 0;
+	padding-bottom: 10px;
+	padding-top: 1px;
 	-moz-box-shadow: inset -4px 0 10px -8px #656565;
 	-webkit-box-shadow: inset -4px 0 10px -8px #656565;
 	-o-box-shadow: inset -4px 0 10px -8px #656565;
 	box-shadow: inset -4px 0 10px -8px #656565;
 	filter: progid:DXImageTransform.Microsoft.Shadow(color=#656565, Direction=180, Strength=10);
 }
+#nav > hr {
+	background-color: rgba(0, 0, 0, 0.1);
+	height: 1px;
+	margin: 0;
+	box-shadow: none;
+	border: 0;
+}
 #nav > h2 {
-	padding: 6px 0 3px 3px;
-	margin: 0 0 10px 10px;
-	text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
-	border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+	padding: 10px 0 5px 15px;
+	margin: 5px 0 5px 0;
 	font-weight: normal;
 	text-transform: uppercase;
-	font-size: 12px;
+	font-size: 13px;
+	color: #777;
 }
 #nav ul li {
 	list-style-type: none;
 	margin: 0;
 	padding: 0;
-	-webkit-transition-duration: 200ms;
-	-moz-transition-duration: 200ms;
-	-o-transition-duration: 200ms;
-	transition-duration: 200ms;
-	letter-spacing: -0.5px;
+	font-size: 13px;
+	font-family: Helvetica, sans-serif;
 }
-#nav ul li a {
+#nav ul li > a {
 	display: block;
-	padding: 3px 0 3px 13px;
+	padding: 3px 6px;
+	margin: 2px 5px;
+	color: #666;
+	border-bottom: 1px solid transparent;
+	border-top: 1px solid transparent;
+	border-radius: 2px;
+}
+#nav ul li > a:hover {
+	text-decoration: none;
+	background-color: rgba(0, 0, 0, 0.05);
+	border-top: 1px solid rgba(0, 0, 0, 0.1);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	color: #444;
 }
 #nav ul li .timerangesList {
 	float: right;
 	font-size: 0;
-	margin-right: 4px;
+	margin-right: 9px;
+	margin-top: 3px;
 	opacity: 0.2;
 	transition-duration: 100ms;
 }
@@ -315,8 +325,8 @@ a.graphLink.icrit { background-color: #ff0000; }
 #nav ul li .badge {
 	float: right;
 	display: inline-block;
-	margin-right: 9px;
-	margin-top: 2px;
+	margin-right: 12px;
+	margin-top: 3px;
 	min-width: 7px;
 	padding: 3px 7px;
 	font-size: 11px;
@@ -325,9 +335,6 @@ a.graphLink.icrit { background-color: #ff0000; }
 	text-align: center;
 	background-color: #999;
 	border-radius: 10px;
-}
-#nav ul li:hover {
-	background-color: rgba(0, 0, 0, 0.1);
 }
 #nav ul {
 	margin: 0.2em 0 0.8em 0;
@@ -339,18 +346,10 @@ a.graphLink.icrit { background-color: #ff0000; }
 /* Content */
 #content {
 	display: table-cell;
-	padding: 15px;
+	padding: 5px 0 30px 30px;
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
-}
-
-/*#content li {
-	margin-left: -20px;
-}*/
-
-#content > ul:first-of-type {
-	margin-left: 2em;
 }
 
 .comparison #content {
@@ -358,15 +357,11 @@ a.graphLink.icrit { background-color: #ff0000; }
 }
 
 #content h2 {
-	display: none;
-}
-
-#content h3 {
-	font-size: 1.2em;
-	margin-top: 20px;
-	margin-bottom: 10px;
-	text-decoration: none;
-	letter-spacing: -0.3px;
+	color: #444;
+	font-weight: normal;
+	letter-spacing: -1px;
+	margin: 25px 0;
+	font-size: 23px;
 }
 
 /* Content: comparison */
@@ -402,14 +397,13 @@ td {
 	box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
 }
 .legendHead th {
-	padding: 6px 10px;
+	padding: 6px 10px 6px 15px;
 	white-space: nowrap;
 }
 #legend td {
-	padding: 6px 10px;
-}
-#legend .oddrow td,
-#legend .evenrow td {
+	font-size: 12px;
+	color: rgba(0, 0, 0, 0.75);
+	padding: 8px 15px;
 	border-bottom: 1px solid #d8d8d8;
 }
 #legend .oddrow {
@@ -426,7 +420,7 @@ td {
 #footer {
 	width: 100%;
 	margin-top: 15px;
-	padding: 5px 5%;
+	padding: 5px 35px;
 	clear: both;
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
@@ -446,12 +440,9 @@ td {
 #footer p.tagline {
 	color: #aaa;
 	font-size: 11px;
-	border-top: 1px solid #dedede;
-	padding: 5px 10px;
 	letter-spacing: -0.5px;
 	transition-duration: 200ms;
 	margin: 10px 0;
-	text-align: right;
 }
 #footer p.tagline:hover {
 	color: #888;
@@ -522,8 +513,8 @@ td {
 	font-size: 14px;
 }
 div.compare {
-	border-bottom: 1px solid #aaa;
-	background-color: rgba(0, 0, 0, 0.07);
+	border-bottom: 1px solid #ccc;
+	background-color: rgba(0, 0, 0, 0.06);
 	padding: 0 10px;
 	box-shadow: inset 0 -2px 2px 0 rgba(0, 0, 0, 0.05);
 }
@@ -537,6 +528,7 @@ div.compare a {
 	display: inline-block;
 	padding: 6px 8px;
 	opacity: 0.8;
+	font-size: 11px;
 }
 div.categories {
 	font-size: 11px;
@@ -560,40 +552,57 @@ div.categories a:hover {
 	float: right;
 	margin-top: 7px;
 	position: relative;
+	text-align: right;
 }
 .filter > #cancelFilter {
-	opacity: 0.5;
+	opacity: 0.8;
 	width: 8px;
 	cursor: pointer;
 	position: absolute;
-	top: 1px;
-	right: 1px;
+	top: 0;
+	right: 0;
 	padding: 12px;
 }
 .filter > input[type=text] {
-	width: 100%;
+	width: 250px;
 	height: auto;
-	padding: 8px 28px 8px 31px;
-	border-radius: 3px;
-	border: 1px solid #2C712F;
-	color: #383838;
+	padding: 9px 28px 9px 31px;
+	border: 0;
+	color: rgba(255, 255, 255, 0.9);
+	font-size: 12px;
 	font-family: inherit;
-	-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1);
-	box-shadow: inset 0 1px 1px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1);
+	-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.20);
+	box-shadow: inset 0 1px 1px rgba(0,0,0,0.20);
 	transition-duration: 150ms;
 	box-sizing: border-box;
-	background: rgba(255, 255, 255, 0.85) url('icons/glyphicons-28-search.png') no-repeat 7px 8px;
+	background: rgba(0, 0, 0, 0.2) url('icons/glyphicons-28-search-white.png') no-repeat 8px 7px;
 	background-size: 16px;
 }
 .filter > input[type=text]:focus {
 	outline: none;
-	background-color: rgba(255, 255, 255, 0.95);
-	border-color: rgb(43, 95, 45);
-	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05), 0 0 5px rgba(135, 186, 137, 1);
+	background-color: rgba(0, 0, 0, 0.3);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
+	width: 300px;
+}
+/* Placeholder text color */
+.filter > input[type=text]::-webkit-input-placeholder {
+	color: #ffffff;
+	opacity: 0.8;
+}
+.filter > input[type=text]:-moz-placeholder { /* Firefox 18- */
+	color: #ffffff;
+	opacity: 0.8;
+}
+.filter > input[type=text]::-moz-placeholder {  /* Firefox 19+ */
+	color: #ffffff;
+	opacity: 0.8;
+}
+.filter > input[type=text]:-ms-input-placeholder {
+	color: #ffffff;
+	opacity: 0.8;
 }
 .filter > #overview-search-noresult {
 	margin: 30px 15px;
-	text-decoration: blink;
 }
 .timeRangeSwitchContainer {
 	width: 100%;
@@ -606,11 +615,12 @@ div.categories a:hover {
 .timeRangeSwitch {
 	display: inline-block;
 	width: 100%;
-	max-width: 500px;
+	max-width: 499px;
 	text-align: center;
 	padding: 10px;
 	box-sizing: border-box;
 	transition-duration: 150ms;
+	margin-right: 4px;
 }
 .timeRangeFixed .timeRangeSwitch {
 	background-color: #fff;
@@ -652,6 +662,7 @@ div.categories a:hover {
 	font-size: 17px;
 	text-align: center;
 	margin: 0 75px;
+	padding: 10px 0 35px 0;
 	color: #999;
 }
 
@@ -742,10 +753,13 @@ label em {
 .typeTooltip {
 	display: none;
 	position: absolute;
-	background-color: #fff;
 	max-width: 450px;
-	text-align: left;
-	border: 1px solid #777;
 	box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
 	padding: 5px 10px;
+	background-color: rgba(0, 0, 0, 0.6);
+	border: 0;
+	color: #fff;
+	border-radius: 2px;
+	font-size: 12px;
+	text-align: justify;
 }

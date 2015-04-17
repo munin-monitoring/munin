@@ -52,6 +52,13 @@ function prepareFilter(placeholder, onFilterChange) {
 		$(this).hide();
 		onFilterChange('');
 	});
+
+	// Register ESC key: same action as cancel filter
+	$(document).keyup(function(e) {
+		var filterInput = $('#filter');
+		if (e.keyCode == 27 && filterInput.is(':focus') && filterInput.val().length > 0)
+			$('#cancelFilter').click();
+	});
 }
 
 /**
