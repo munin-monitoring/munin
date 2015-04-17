@@ -142,12 +142,6 @@ a.graphLink.icrit { background-color: #ff0000; }
 	position: relative;
 	z-index: 5;
 	border-bottom: 1px solid #3A713C;
-	border-bottom-left-radius: 2px;
-	-moz-border-radius-bottomleft: 2px;
-	-webkit-border-bottom-left-radius: 2px;
-	border-bottom-right-radius: 2px;
-	-moz-border-radius-bottomright: 2px;
-	-webkit-border-bottom-right-radius: 2px;
 	-moz-box-shadow: 0 0 5px 0 #777777;
 	-webkit-box-shadow: 0 0 5px 0 #777777;
 	-o-box-shadow: 0 0 5px 0 #777777;

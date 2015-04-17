@@ -26,6 +26,13 @@ $(document).ready(function() {
 			$(this).attr('src', src.replace('-' + currentRange + '.', '-' + newRange + '.'));
 		});
 
+		// Remplace data-original attribute (when using DYN_IMAGES)
+		var dynImages = $("img[data-original][data-col='" + thisRSIndex + "']");
+		dynImages.each(function() {
+			var originalSrc = $(this).attr('data-original');
+			$(this).attr('data-original', originalSrc.replace('-' + currentRange + '.', '-' + newRange + '.'));
+		});
+
 		// Tell that the image is loading
 		images.each(function() {
 			setImageLoading($(this), true);
