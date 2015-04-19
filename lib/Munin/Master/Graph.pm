@@ -124,7 +124,7 @@ sub handle_request
 		# We don't understand this URL
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			"X-Reason" => "invalid URL: $path",
+			"-X-Reason" => "invalid URL: $path",
 		);
 		return;
 	}
@@ -140,7 +140,7 @@ sub handle_request
 		# We don't understand this format
 		 print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			"X-Reason" => "invalid format $format",
+			"-X-Reason" => "invalid format $format",
 		);
 		return;
 	}
@@ -165,14 +165,14 @@ sub handle_request
 		# Not found
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			"X-Reason" => "'$graph_path' Not Found in DB",
+			"-X-Reason" => "'$graph_path' Not Found in DB",
 		);
 		return;
 	} elsif ($type ne "service") {
 		# Not supported yet
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			"X-Reason" => "'$type' graphing is not supported yet",
+			"-X-Reason" => "'$type' graphing is not supported yet",
 		);
 		return;
 	}
@@ -404,7 +404,7 @@ sub handle_request
 	# Send the HTTP Headers
 	print "HTTP/1.0 200 OK\r\n";
 	print $cgi->header(
-		"Content-type" => $CONTENT_TYPES{$format},
+		"-Content-type" => $CONTENT_TYPES{$format},
 	) unless $cgi->url_param("no_header");
 
 	# Compute the title
