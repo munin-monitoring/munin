@@ -31,6 +31,18 @@ function Querystring(qs) { // optionally pass a querystring to parse
 	}
 }
 
+Querystring.prototype.set = function(key, val) {
+	if (val == '') {
+		if (key in this.params) {
+			// Remove val from parameters list
+			delete this.params[key];
+		}
+	} else {
+		// Update val
+		this.params[key] = val;
+	}
+}
+
 Querystring.prototype.get = function(key, default_) {
 	var value = this.params[key];
 	return (value != null) && (value != '') ? value : default_;

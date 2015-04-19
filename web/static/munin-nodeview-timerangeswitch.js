@@ -90,7 +90,15 @@ function updateURL() {
 	var firstTR = $(uls[0]).find('.selected').text();
 	var secondTR = $(uls[1]).find('.selected').text();
 
-	window.history.replaceState('', 'Overview', '?1=' + firstTR + '&2=' + secondTR);
+	var qs = new Querystring();
+	// Set 1 & 2 params
+	qs.set('1', firstTR);
+	qs.set('2', secondTR);
+
+	// Get result as URL-ready string
+	var url = $.param(qs.params);
+
+	window.history.replaceState('', 'Overview', '?' + url);
 }
 
 /**

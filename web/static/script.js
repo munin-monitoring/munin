@@ -45,12 +45,14 @@ function prepareFilter(placeholder, onFilterChange) {
 			$('#cancelFilter').hide();
 
 		onFilterChange(val);
+		updateFilterInURL();
 	});
 
 	$('#cancelFilter').click(function() {
 		input.val('');
 		$(this).hide();
 		onFilterChange('');
+		updateFilterInURL();
 	});
 
 	// Register ESC key: same action as cancel filter
@@ -59,6 +61,15 @@ function prepareFilter(placeholder, onFilterChange) {
 		if (e.keyCode == 27 && filterInput.is(':focus') && filterInput.val().length > 0)
 			$('#cancelFilter').click();
 	});
+
+	// There may be a 'filter' GET parameter in URL: let's apply it
+	var qs = new Querystring();
+	if (qs.contains('filter')) {
+		var filter = $('#filter');
+		filter.val(qs.get('filter'));
+		// Manually trigger the keyUp event on filter input
+		filter.keyup();
+	}
 }
 
 /**
@@ -77,4 +88,21 @@ function filterMatches(filterExpr, result) {
  */
 function sanitizeFilter(filterExpr) {
 	return filterExpr.toLowerCase().trim();
+}
+
+/**
+ * Adds or updates current filter as GET parameter in URL
+ */
+function updateFilterInURL() {
+	// Put the filter query in the URL (to keep it when refreshing the page)
+	var query = $('#filter').val();
+
+	// Add it in current URL parameters list
+	var qs = new Querystring();
+	qs.set('filter', query);
+
+	// Replace URL
+	var url = $.param(qs.params);
+	var pageName = $(document).find("title").text();
+	window.history.replaceState('', pageName, '?' + url);
 }
