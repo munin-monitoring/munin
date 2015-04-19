@@ -45,9 +45,8 @@ function prepareFilter(placeholder, onFilterChange) {
 			$('#cancelFilter').hide();
 
 		onFilterChange(val);
+		updateFilterInURL();
 	});
-
-	input.on('focusout', updateFilterInURL);
 
 	$('#cancelFilter').click(function() {
 		input.val('');
@@ -62,6 +61,15 @@ function prepareFilter(placeholder, onFilterChange) {
 		if (e.keyCode == 27 && filterInput.is(':focus') && filterInput.val().length > 0)
 			$('#cancelFilter').click();
 	});
+
+	// There may be a 'filter' GET parameter in URL: let's apply it
+	var qs = new Querystring();
+	if (qs.contains('filter')) {
+		var filter = $('#filter');
+		filter.val(qs.get('filter'));
+		// Manually trigger the keyUp event on filter input
+		filter.keyup();
+	}
 }
 
 /**
