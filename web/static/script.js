@@ -47,10 +47,13 @@ function prepareFilter(placeholder, onFilterChange) {
 		onFilterChange(val);
 	});
 
+	input.on('focusout', updateFilterInURL);
+
 	$('#cancelFilter').click(function() {
 		input.val('');
 		$(this).hide();
 		onFilterChange('');
+		updateFilterInURL();
 	});
 
 	// Register ESC key: same action as cancel filter
@@ -77,4 +80,21 @@ function filterMatches(filterExpr, result) {
  */
 function sanitizeFilter(filterExpr) {
 	return filterExpr.toLowerCase().trim();
+}
+
+/**
+ * Adds or updates current filter as GET parameter in URL
+ */
+function updateFilterInURL() {
+	// Put the filter query in the URL (to keep it when refreshing the page)
+	var query = $('#filter').val();
+
+	// Add it in current URL parameters list
+	var qs = new Querystring();
+	qs.set('filter', query);
+
+	// Replace URL
+	var url = $.param(qs.params);
+	var pageName = $(document).find("title").text();
+	window.history.replaceState('', pageName, '?' + url);
 }
