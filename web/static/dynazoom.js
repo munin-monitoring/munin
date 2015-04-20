@@ -7,7 +7,6 @@ var scale;
 var clickCounter;
 var initial_left;
 var initial_top;
-var cgiurl_graph;
 var qs = new Querystring();
 
 // UI
@@ -15,7 +14,7 @@ var form;
 var image;
 var divOverlay;
 var f_plugin_name, f_start_epoch, f_stop_epoch, f_start_iso8601, f_stop_iso8601,
-	f_lower_limit, f_upper_limit, f_size_x, f_size_y;
+	f_lower_limit, f_upper_limit, f_size_x, f_size_y, f_cgiurl_graph;
 
 // Form params
 var start_epoch;
@@ -45,12 +44,13 @@ $(document).ready(function() {
 	f_upper_limit = $('#upper_limit');
 	f_size_x = $('#size_x');
 	f_size_y = $('#size_y');
+	f_cgiurl_graph = $('#cgiurl_graph');
 	form = $('#myNewForm');
 	image = $('#image');
 	divOverlay = $('#overlayDiv');
 
 	// Insert values in the form
-	cgiurl_graph = getParam("cgiurl_graph");
+	f_cgiurl_graph.val(getParam("cgiurl_graph"));
 	f_plugin_name.val(getParam("plugin_name"));
 	f_start_epoch.val(getParam("start_epoch"));
 	f_stop_epoch.val(getParam("stop_epoch"));
@@ -94,15 +94,21 @@ function getParam(paramName) {
 }
 
 function refreshImg() {
-	var urlPrefix = cgiurl_graph + (cgiurl_graph != '/' ? '/' : '');
+	var urlPrefix = f_cgiurl_graph.val() + (f_cgiurl_graph.val() != '/' ? '/' : '');
 
-	image.attr('src', urlPrefix + f_plugin_name.val()
-			+ "-pinpoint=" + parseInt(f_start_epoch.val()) + "," + parseInt(f_stop_epoch.val())
-			+ ".png"
-			+ "?lower_limit=" + f_lower_limit.val()
-			+ "&upper_limit=" + f_upper_limit.val()
-			+ "&size_x=" + f_size_x.val()
-			+ "&size_y=" + f_size_y.val());
+	var url = urlPrefix + f_plugin_name.val()
+		+ "-pinpoint=" + parseInt(f_start_epoch.val()) + "," + parseInt(f_stop_epoch.val())
+		+ ".png"
+		+ "?size_x=" + f_size_x.val()
+		+ "&size_y=" + f_size_y.val();
+
+	if (f_lower_limit.val())
+		url += "&lower_limit=" + f_lower_limit.val();
+
+	if (f_upper_limit.val())
+		url += "&upper_limit=" + f_upper_limit.val();
+
+	image.attr('src', url);
 
 	return ((parseInt(f_stop_epoch.val()) - parseInt(f_start_epoch.val())) / parseInt(f_size_x.val()));
 }
