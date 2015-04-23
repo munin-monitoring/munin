@@ -249,7 +249,8 @@ sub _get_from_array
 {
 	my ($i, $ary, $is_unique) = @_;
 
-	my $offset = $is_unique ? int($i / scalar @$ary) : "";
+	my $offset_id = ($is_unique) ? int($i / scalar @$ary) : 0;
+	my $offset = ($offset_id) ? "$offset_id" : "";
 	my $name = $ary->[$i % scalar @$ary] . $offset;
 
 	return $name;
