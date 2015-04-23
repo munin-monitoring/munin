@@ -534,6 +534,9 @@ sub _get_params_groups {
 			push @$categories, $category;
 		}
 
+		# No Category found, use a dummy one.
+		$categories = [ { }, ] unless scalar @$categories;
+
 		push @$groups, {
 			CATEGORIES => $categories,
 			NCATEGORIES => (scalar @$categories), # This is a node.
