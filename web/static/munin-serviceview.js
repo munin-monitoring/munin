@@ -25,15 +25,10 @@ $(document).ready(function() {
 			$(this).append('<div class="typeTooltip"><b>' + typeName + '</b>: ' + DEFINITIONS[typeName] + '</div>');
 		}
 	});
-	typeTds.mouseenter(function() {
-		var tooltip = $(this).find('.typeTooltip');
-		tooltip.css('top', $(this).position().bottom);
-		tooltip.css('left', $(this).position().left);
-		tooltip.fadeIn(100);
-	});
-	typeTds.mouseleave(function() {
-		$(this).find('.typeTooltip').fadeOut(100);
-	});
+
+    prepareTooltips(typeTds, function(td) {
+        return td.find('.typeTooltip');
+    });
 
     // Append a loading <img> on each graph img
     $('.graph').after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');

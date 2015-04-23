@@ -512,6 +512,12 @@ td {
 	font-family: Helvetica, sans-serif;
 	font-size: 14px;
 }
+.groupview .overview-sparkline {
+    float: left;
+    display: block;
+    margin-top: 3px;
+    margin-right: 5px;
+}
 div.compare {
 	border-bottom: 1px solid #ccc;
 	background-color: rgba(0, 0, 0, 0.06);

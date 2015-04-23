@@ -18,6 +18,7 @@
 				<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
 					<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
 					<TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+					<TMPL_IF NAME="NCATEGORIES"><img src="<TMPL_VAR NAME="URL">load-hour.png?&only_graph=1&size_x=100&size_y=32" class="overview-sparkline" alt="Load average by hour for <TMPL_VAR ESCAPE="HTML" NAME="NAME">" /></TMPL_IF>
 					<TMPL_IF NAME="COMPARE">
 						<div class="compare">
 							<img src="/static/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />
@@ -38,6 +39,7 @@
 						<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
 							<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
 							<TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+							<TMPL_IF NAME="NCATEGORIES"><img src="<TMPL_VAR NAME="URL">load-hour.png?&only_graph=1&size_x=100&size_y=32" class="overview-sparkline" alt="Load average by hour for <TMPL_VAR ESCAPE="HTML" NAME="NAME">" /></TMPL_IF>
 							<TMPL_IF NAME="COMPARE">
 								<div class="compare">
 									<img src="/static/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />
@@ -58,6 +60,7 @@
 								<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
 									<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
 									<TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+									<TMPL_IF NAME="NCATEGORIES"><img src="<TMPL_VAR NAME="URL">load-hour.png?&only_graph=1&size_x=100&size_y=32" class="overview-sparkline" alt="Load average by hour for <TMPL_VAR ESCAPE="HTML" NAME="NAME">" /></TMPL_IF>
 									<TMPL_IF NAME="COMPARE">
 										<div class="compare">
 											<img src="/static/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />
@@ -78,6 +81,7 @@
 										<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
 											<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
 											<TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+											<TMPL_IF NAME="NCATEGORIES"><img src="<TMPL_VAR NAME="URL">load-hour.png?&only_graph=1&size_x=100&size_y=32" class="overview-sparkline" alt="Load average by hour for <TMPL_VAR ESCAPE="HTML" NAME="NAME">" /></TMPL_IF>
 											<TMPL_IF NAME="COMPARE">
 												<div class="compare">
 													<img src="/static/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />

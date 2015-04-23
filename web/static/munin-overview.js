@@ -32,4 +32,13 @@ $(document).ready(function() {
 		if (groupView.find('>:visible').length == 0)
 			noResult.show();
 	});
+
+    // Sparklines tooltips
+    var sparklines = $('.overview-sparkline');
+    sparklines.each(function() {
+        $(this).after('<div class="typeTooltip">' + $(this).attr('alt') + '</div>');
+    });
+    prepareTooltips(sparklines, function(sparkline) {
+        return sparkline.next();
+    });
 });
