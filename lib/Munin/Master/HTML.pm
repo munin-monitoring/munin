@@ -424,7 +424,7 @@ sub handle_request
 
 		for my $t (@times) {
 			my $epoch = "start_epoch=$epoch_start{$t}&stop_epoch=$epoch_now";
-			$service_template_params{"ZOOM$t"} = '/' . "/dynazoom.html?cgiurl_graph=$cgi_graph_url" .
+			$service_template_params{"ZOOM$t"} = "/dynazoom.html?cgiurl_graph=$cgi_graph_url" .
 				"&plugin_name=$path&size_x=800&size_y=400&$epoch";
 			$service_template_params{"IMG$t"} = $cgi_graph_url . "$path-$t.$graph_ext";
 		}
