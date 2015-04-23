@@ -24,6 +24,8 @@ esac
 
 MUNIN_NODE_PORT=4947
 MUNIN_HTTPD_PORT=4948
+MUNIN_DBURL=${SANDBOX}/var/lib/datafile.sqlite
+export MUNIN_DBURL
 
 PATH="${SANDBOX}/bin":$PATH
 export PATH
