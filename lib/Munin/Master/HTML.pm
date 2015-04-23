@@ -743,7 +743,7 @@ sub url_to_path
 sub url_absolutize
 {
 	my ($url, $omit_first_slash) = @_;
-	my $url_a = '/' . "/" . $url;
+	my $url_a = '/' . $url;
 	$url_a = substr($url_a, 1) if $omit_first_slash;
 	return $url_a;
 }
