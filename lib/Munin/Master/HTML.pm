@@ -713,7 +713,7 @@ sub get_param
 
 	# Ok, now SQL is needed to go further
         use DBI;
-	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
+	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
         my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
 	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
