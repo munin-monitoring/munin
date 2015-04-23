@@ -35,6 +35,9 @@ $(document).ready(function() {
 		$(this).find('.typeTooltip').fadeOut(100);
 	});
 
+    // Append a loading <img> on each graph img
+    $('.graph').after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');
+
 	// Graphs auto-refresh
-	setInterval(refreshGraphs, 5*60*1000);
+	startAutoRefresh();
 });

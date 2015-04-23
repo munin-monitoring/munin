@@ -3,15 +3,15 @@
 	<div id="nav">
 		<h2>Problems</h2>
 		<ul>
-			<li><div class="badge"><TMPL_VAR NAME="NCRITICAL"></div><a href="<TMPL_VAR NAME="R_PATH">/problems.html#critical">Critical</a></li>
-			<li><div class="badge"><TMPL_VAR NAME="NWARNING"></div><a href="<TMPL_VAR NAME="R_PATH">/problems.html#warnings">Warning</a></li>
-			<li><div class="badge"><TMPL_VAR NAME="NUNKNOWN"></div><a href="<TMPL_VAR NAME="R_PATH">/problems.html#unknowns">Unknown</a></li>
+			<li><div class="badge"><TMPL_VAR NAME="NCRITICAL"></div><a href="/problems.html#critical">Critical</a></li>
+			<li><div class="badge"><TMPL_VAR NAME="NWARNING"></div><a href="/problems.html#warnings">Warning</a></li>
+			<li><div class="badge"><TMPL_VAR NAME="NUNKNOWN"></div><a href="/problems.html#unknowns">Unknown</a></li>
 		</ul>
 		<hr />
 		<h2>Groups</h2>
 		<ul>
 		<TMPL_LOOP NAME="ROOTGROUPS">
-			<li><a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URL">"><TMPL_VAR NAME="NAME"></a></li>
+			<li><a href="/<TMPL_VAR NAME="URL">"><TMPL_VAR NAME="NAME"></a></li>
 		</TMPL_LOOP>
 		</ul>
 		<hr />
@@ -20,12 +20,12 @@
 		<TMPL_LOOP NAME="GLOBALCATS">
 			<li>
 				<div class="timerangesList">
-					<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLDAY">">d</a>
-					<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLWEEK">">w</a>
-					<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLMONTH">">m</a>
-					<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLYEAR">">y</a>
+					<a href="/<TMPL_VAR NAME="URLDAY">">d</a>
+					<a href="/<TMPL_VAR NAME="URLWEEK">">w</a>
+					<a href="/<TMPL_VAR NAME="URLMONTH">">m</a>
+					<a href="/<TMPL_VAR NAME="URLYEAR">">y</a>
 				</div>
-				<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLDAY">"><TMPL_VAR NAME="NAME"></a>
+				<a href="/<TMPL_VAR NAME="URLDAY">"><TMPL_VAR NAME="NAME"></a>
 			</li>
 		</TMPL_LOOP>
 		</ul>

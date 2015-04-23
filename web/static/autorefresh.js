@@ -3,8 +3,8 @@
  */
 
 function startAutoRefresh() {
-	// Register on image load event to hide loading styles
-	$('.graph').on('load', function() {
+	// Register on image load + error events to hide loading styles
+	$('.graph').on('load error', function() {
 		setImageLoading($(this), false);
 	});
 
@@ -40,6 +40,12 @@ function refreshGraphs() {
 		src += '?' + new Date().getTime();
 
 		setImageLoading($(this), true);
+
+        // Since we change the src attr, we have to reattach
+        // the error event
+        $(this).on('error', function() {
+            setImageLoading($(this), false);
+        });
 
 		$(this).attr('src', src);
 	});
