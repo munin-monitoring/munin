@@ -516,6 +516,7 @@ td {
     float: left;
     display: block;
     margin-top: 3px;
+    margin-right: 5px;
 }
 div.compare {
 	border-bottom: 1px solid #ccc;
