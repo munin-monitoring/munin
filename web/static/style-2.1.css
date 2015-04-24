@@ -616,7 +616,7 @@ div.categories a:hover {
 .timeRangeFixed {
 	position: fixed;
 	top: 0;
-	z-index: 1;
+	z-index: 2;
 }
 .timeRangeSwitch {
 	display: inline-block;
@@ -768,4 +768,45 @@ label em {
 	border-radius: 2px;
 	font-size: 12px;
 	text-align: justify;
+}
+
+/* Event ruler */
+#eventRulerMouseTrigger {
+    position: fixed;
+    padding: 0 10px;
+    height: 100%;
+    top: 0;
+    left: 364px;
+    z-index: 1;
+    cursor: col-resize;
+}
+#eventRuler {
+    border-left: 1px solid #000;
+    border-right: 1px solid #fff;
+    opacity: 0.5;
+    height: 100%;
+    width: 0;
+}
+#eventRulerToggle {
+    width: 30px;
+    height: 30px;
+    overflow: hidden;
+    cursor: pointer;
+    float: right;
+    margin: 7px 0 0 10px;
+    transition-duration: 200ms;
+    border: 1px solid transparent;
+}
+#eventRulerToggle > img {
+    margin-top: -2px;
+    margin-left: -2px;
+}
+#eventRulerToggle:hover,
+#eventRulerToggle[data-shown=true] {
+    border-color: rgba(0, 0, 0, 0.15);
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 2px;
+}
+#eventRulerToggle[data-shown=true] {
+    box-shadow: inset 1px 1px 0 rgba(0,0,0,0.05);
 }
