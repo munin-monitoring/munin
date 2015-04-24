@@ -45,7 +45,7 @@ my $screen_format = sub {
 
     chomp $message;
 
-    return sprintf( "%s [%s]: %s\n", _timestamp, $level, $message );
+    return sprintf( "%s [%s][%06d]: %s\n", _timestamp, $level, $$, $message );
 };
 
 my $syslog_format = sub {
