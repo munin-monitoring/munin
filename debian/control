@@ -51,7 +51,13 @@ Testsuite: autopkgtest
 
 Package: munin-node
 Architecture: all
-Depends: ${perl:Depends}, ${misc:Depends}, libnet-server-perl, procps, adduser, lsb-base, gawk, munin-common (>= ${binary:Version}), munin-plugins-core
+Depends: ${perl:Depends}, ${misc:Depends},
+ adduser,
+ libnet-server-perl,
+ lsb-base,
+ munin-common (>= ${binary:Version}),
+ munin-plugins-core,
+ procps,
 Recommends: libnet-snmp-perl, munin-plugins-extra
 Suggests:
  acpi | lm-sensors,
@@ -92,7 +98,9 @@ Replaces: munin-plugins (<<1.999.4548-3~), munin-node (<<1.999.4548-3~), munin-p
 Breaks: munin-plugins (<<1.999.4548-3~), munin-node (<<1.999.4548-3~), munin-plugins-extra (<<2.0.13-1)
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, munin-common (>= ${binary:Version})
-Recommends: libnet-snmp-perl
+Recommends:
+ gawk,
+ libnet-snmp-perl,
 Suggests:
  conntrack,
  libnet-netmask-perl,
