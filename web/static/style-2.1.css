@@ -787,15 +787,6 @@ label em {
     height: 100%;
     width: 0;
 }
-#eventRulerMask {
-    position: fixed;
-    background-color: rgba(0, 0, 0, 0.2);
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0.9;
-}
 #eventRulerToggle {
     width: 30px;
     height: 30px;

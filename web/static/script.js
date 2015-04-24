@@ -118,9 +118,12 @@ function prepareTooltips(hoverableElements, getTooltip) {
     hoverableElements.mouseenter(function() {
         var tooltip = getTooltip($(this));
         var bottom = $(this).position().top + $(this).outerHeight(true);
-        var left = $(this).position().left + $(this).outerWidth()/2;
         tooltip.css('top', bottom);
-        tooltip.css('left', left);
+
+        if (!tooltip.is('[data-dontsetleft]')) {
+            var left = $(this).position().left + $(this).outerWidth() / 2;
+            tooltip.css('left', left);
+        }
         tooltip.fadeIn(100);
     });
     hoverableElements.mouseleave(function() {

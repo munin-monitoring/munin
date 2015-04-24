@@ -8,7 +8,6 @@ $(document).ready(function() {
     var body = $('body');
     // Append ruler and mask to document
     body.append('<div id="eventRulerMouseTrigger" style="display:none;"><div id="eventRuler"></div></div>');
-    body.append('<div id="eventRulerMask" style="display:none;"></div>');
 
     // Register for <- and -> keys events
     var eventRulerMT = $('#eventRulerMouseTrigger');
@@ -32,11 +31,17 @@ $(document).ready(function() {
         $('.header').find('.logo')
             .after('<div id="eventRulerToggle" class="eventRulerToggle" data-shown="false">' +
                         '<img src="/static/icons/eventrulerhandle.png" /></div>');
-        $('#eventRulerToggle').click(function(e) {
+        var eventRulerToggle = $('#eventRulerToggle');
+        eventRulerToggle.click(function(e) {
             e.stopPropagation();
             $(this).attr('data-shown', $(this).attr('data-shown') == 'false' ? 'true' : 'false');
             toggleRuler();
         });
+
+        eventRulerToggle.after('<div class="typeTooltip" style="right: 10px; left: auto;" data-dontsetleft="true">' +
+        '<b>Toggle event ruler</b><br />Tip: use <b>&#8592;, &#8594;</b> or drag-n-drop to move once set,<br /><b>Maj</b> to move quicker</div>');
+        prepareTooltips(eventRulerToggle, function(e) { return e
+            .next(); });
     }
 });
 
@@ -44,19 +49,16 @@ function toggleRuler() {
     // Listen for mouse move, display ruler and ruler mask
     var eventRulerMT = $('#eventRulerMouseTrigger');
     var eventRulerMTPadding = 10;
-    var eventRulerMask = $('#eventRulerMask');
     var body = $('body');
     var content = $('#content');
 
     if (eventRulerMT.is(':visible')) {
         eventRulerMT.fadeOut();
-        eventRulerMask.fadeOut();
 
         body.off('mousemove');
         body.off('click');
     } else {
         eventRulerMT.fadeIn();
-        eventRulerMask.fadeIn();
 
         body.on('mousemove', function (e) {
             eventRulerMT.css('left', (e.pageX-eventRulerMTPadding)+'px');
@@ -65,10 +67,9 @@ function toggleRuler() {
         body.on('click', function (e) {
             e.preventDefault();
 
-            // Hide mask, remove body events
+            // Remove body events
             body.off('mousemove');
             body.off('click');
-            eventRulerMask.fadeOut();
 
             var dragging = false;
             eventRulerMT.on('mousedown', function() {
