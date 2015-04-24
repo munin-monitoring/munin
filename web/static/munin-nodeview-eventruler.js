@@ -16,14 +16,28 @@ $(document).ready(function() {
         if ((e.keyCode == 37 || e.keyCode == 39) && eventRulerMT.is(':visible') && !$('#filter').is(':focus')) {
             var left = parseInt(eventRulerMT.css('left').replace('px', ''));
 
+            var absVal = e.shiftKey ? 15 : 1;
+
             if (e.keyCode == 37)
-                left--;
+                left -= absVal;
             else if (e.keyCode == 39)
-                left++;
+                left += absVal;
 
             eventRulerMT.css('left', left + 'px');
         }
     });
+
+    // Add toggle in header (not on mobiles)
+    if (body.width() > 768) {
+        $('.header').find('.logo')
+            .after('<div id="eventRulerToggle" class="eventRulerToggle" data-shown="false">' +
+                        '<img src="/static/icons/eventrulerhandle.png" /></div>');
+        $('#eventRulerToggle').click(function(e) {
+            e.stopPropagation();
+            $(this).attr('data-shown', $(this).attr('data-shown') == 'false' ? 'true' : 'false');
+            toggleRuler();
+        });
+    }
 });
 
 function toggleRuler() {
@@ -51,10 +65,9 @@ function toggleRuler() {
         body.on('click', function (e) {
             e.preventDefault();
 
-            // Remove body events
+            // Hide mask, remove body events
             body.off('mousemove');
             body.off('click');
-
             eventRulerMask.fadeOut();
 
             var dragging = false;
@@ -64,8 +77,7 @@ function toggleRuler() {
             body.on('mousemove', function(e) {
                 if (dragging) {
                     e.preventDefault(); // Prevent selection
-                    // Update ruler and handle positions
-                    eventRulerMT.css('left', e.pageX+'px');
+                    // Update ruler position
                     eventRulerMT.css('left', e.pageX-eventRulerMTPadding);
                 }
             });

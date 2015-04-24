@@ -796,3 +796,26 @@ label em {
     height: 100%;
     z-index: 0.9;
 }
+#eventRulerToggle {
+    width: 30px;
+    height: 30px;
+    overflow: hidden;
+    cursor: pointer;
+    float: right;
+    margin: 7px 0 0 10px;
+    transition-duration: 200ms;
+    border: 1px solid transparent;
+}
+#eventRulerToggle > img {
+    margin-top: -2px;
+    margin-left: -2px;
+}
+#eventRulerToggle:hover,
+#eventRulerToggle[data-shown=true] {
+    border-color: rgba(0, 0, 0, 0.15);
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 2px;
+}
+#eventRulerToggle[data-shown=true] {
+    box-shadow: inset 1px 1px 0 rgba(0,0,0,0.05);
+}
