@@ -1,8 +1,7 @@
 #! /bin/sh
 
 set -e
-
-prevver="$2"
+set -x
 
 add_munin_system_user() {
 	if ! getent passwd munin >/dev/null; then
@@ -58,8 +57,14 @@ init_plugins() {
 	invoke-rc.d munin-node restart
 }
 
+remove_broken_plugin_links() {
+    # Removes broken symlinks after plugins have been removed
+    find /etc/munin/plugins -type l -xtype l -delete
+}
+
 case "$1" in
 	configure)
+                prevver="$2"
 		if [ -z "$2" ] ; then
 			add_munin_system_user
 		fi
@@ -73,6 +78,7 @@ case "$1" in
                 case "$2" in
                         "munin-plugins")
                                 init_plugins
+                                remove_broken_plugin_links
                                 ;;
                         "perl-major-upgrade")
                                 invoke-rc.d munin-node restart
