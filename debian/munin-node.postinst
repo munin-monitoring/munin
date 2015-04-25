@@ -18,43 +18,43 @@ add_munin_system_user() {
 initperms() {
 	chown munin:adm /var/log/munin
 	chmod 755 /var/log/munin
-	
+
 	chown root:munin /etc/munin/plugin-conf.d
 	chmod 750 /etc/munin/plugin-conf.d
 }
 
 init_plugins() {
-	TMPFILE=`mktemp /tmp/munin-node.configure.XXXXXXXXXX`
-	TMPFILE_STDERR=`mktemp /tmp/munin-node.configure.err.XXXXXXXXXX`
+	TMPFILE=$(mktemp /tmp/munin-node.configure.XXXXXXXXXX)
+	TMPFILE_STDERR=$(mktemp /tmp/munin-node.configure.err.XXXXXXXXXX)
 	MUNIN_NODE_CONF_LOG="/var/log/munin/munin-node-configure.log"
 	if [ "$prevver" ]; then
-		MUNIN_NODE_CMD="munin-node-configure --shell --newer "${prevver%-*}""    
-		echo -n "Initializing new plugins.."
+		MUNIN_NODE_CMD="munin-node-configure --shell --newer \"${prevver%-*}\""
+		printf "Initializing new plugins.."
 	else
 		MUNIN_NODE_CMD="munin-node-configure --shell"
-		echo -n "Initializing plugins.."
+		printf "Initializing plugins.."
     fi
 
 	# munin-node-conf returns 1 if case of partial plugin autoconf
 	# errors. We need to ignore these errors as even one plugin
 	# can fail the entire process. See Debian bug #539886 for details.
-	$MUNIN_NODE_CMD 2>$TMPFILE_STDERR >$TMPFILE || true
-	if [ -f $TMPFILE ]; then
-		DATE=`date '+%b %d %T'`
-		echo "$DATE - Starting $MUNIN_NODE_CMD" >> $MUNIN_NODE_CONF_LOG
-		cat $TMPFILE >> $MUNIN_NODE_CONF_LOG
-        if [ -s $TMPFILE_STDERR ]; then
+	$MUNIN_NODE_CMD 2>"$TMPFILE_STDERR" >"$TMPFILE" || true
+	if [ -f "$TMPFILE" ]; then
+		DATE=$(date '+%b %d %T')
+		echo "$DATE - Starting $MUNIN_NODE_CMD" >> "$MUNIN_NODE_CONF_LOG"
+		cat "$TMPFILE" >> "$MUNIN_NODE_CONF_LOG"
+        if [ -s "$TMPFILE_STDERR" ]; then
 			echo "The following errors were reported by $MUNIN_NODE_CMD" \
-			>> $MUNIN_NODE_CONF_LOG 
-			cat $TMPFILE_STDERR >> $MUNIN_NODE_CONF_LOG
+			>> "$MUNIN_NODE_CONF_LOG"
+			cat "$TMPFILE_STDERR" >> "$MUNIN_NODE_CONF_LOG"
         fi
-		sh < $TMPFILE
-	else 
+		sh < "$TMPFILE"
+	else
 		echo "failed."
 	fi
 	echo "done."
-	rm -f $TMPFILE $TMPFILE_STDERR
-	echo -n "Restarting munin-node.."
+	rm -f "$TMPFILE" "$TMPFILE_STDERR"
+	printf "Restarting munin-node.."
 	invoke-rc.d munin-node restart
 }
 
