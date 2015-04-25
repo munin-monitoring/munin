@@ -1,7 +1,6 @@
 #! /bin/sh
 
 set -e
-set -x
 
 add_munin_system_user() {
 	if ! getent passwd munin >/dev/null; then
