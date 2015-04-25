@@ -90,9 +90,14 @@ case "$1" in
 		init_plugins
 		;;
         triggered)
-		if [ "$2" = "perl-major-upgrade" ]; then
-			invoke-rc.d munin-node restart
-		fi
+                case "$2" in
+                        "munin-plugins")
+                                init_plugins
+                                ;;
+                        "perl-major-upgrade")
+                                invoke-rc.d munin-node restart
+                                ;;
+                esac
 		;;
 	abort-upgrade|abort-deconfigure|abort-remove)
 		:
