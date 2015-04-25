@@ -22,12 +22,12 @@ $(document).ready(function() {
 		var typeName = $(this).text();
 		if (typeName in DEFINITIONS) {
 			$(this).html(typeName + '<sup>?</sup>');
-			$(this).append('<div class="typeTooltip"><b>' + typeName + '</b>: ' + DEFINITIONS[typeName] + '</div>');
+			$(this).append('<div class="tooltip"><b>' + typeName + '</b>: ' + DEFINITIONS[typeName] + '</div>');
 		}
 	});
 
     prepareTooltips(typeTds, function(td) {
-        return td.find('.typeTooltip');
+        return td.find('.tooltip');
     });
 
     // Append a loading <img> on each graph img

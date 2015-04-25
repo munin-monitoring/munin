@@ -34,11 +34,16 @@ $(document).ready(function() {
 	});
 
     // Sparklines tooltips
-    var sparklines = $('.overview-sparkline');
-    sparklines.each(function() {
-        $(this).after('<div class="typeTooltip">' + $(this).attr('alt') + '</div>');
+    var spkCnters = $('.overview-sparkline');
+    spkCnters.each(function() {
+        $(this).after('<div class="tooltip">' + $(this).find('img.sparkline').attr('alt') + '</div>');
     });
-    prepareTooltips(sparklines, function(sparkline) {
+    prepareTooltips(spkCnters, function(sparkline) {
         return sparkline.next();
     });
+
+    // Sparklines auto-refresh
+    var sparklines = $('.sparkline');
+    sparklines.after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');
+    startAutoRefresh('.sparkline');
 });

@@ -648,6 +648,7 @@ td {
   display: block;
   margin-top: 3px;
   margin-right: 5px;
+  position: relative;
 }
 .groupview .compare {
   border-bottom: 1px solid #ccc;
@@ -948,9 +949,10 @@ td {
   display: none;
 }
 
-.typeTooltip {
+.tooltip {
   display: none;
   position: absolute;
+  z-index: 10;
   max-width: 450px;
   -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
   -moz-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);

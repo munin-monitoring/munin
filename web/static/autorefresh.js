@@ -2,11 +2,21 @@
  * Graphs auto-refresh
  */
 
-function startAutoRefresh() {
+var graphsSelector = '.graph';
+
+function startAutoRefresh(pGraphsSelector) {
+    if (pGraphsSelector !== 'undefined')
+        graphsSelector = pGraphsSelector;
+
 	// Register on image load + error events to hide loading styles
-	$('.graph').on('load error', function() {
+	$(graphsSelector).on('load error', function() {
 		setImageLoading($(this), false);
 	});
+
+    // Copy current src attribute as backup in an attribute
+    $(graphsSelector).each(function() {
+        $(this).attr('data-autorefresh-src', $(this).attr('src'));
+    });
 
 	setInterval(refreshGraphs, 5*60*1000);
 }
@@ -29,15 +39,12 @@ function setImageLoading(imgDomElement, isLoading) {
  * Refresh every graph in this page
  */
 function refreshGraphs() {
-	$('.graph').each(function() {
-		var src = $(this).attr('src');
-
-		// Remove current timestamp if there is one
-		if (src.indexOf('?') != -1)
-			src = src.substring(0, src.indexOf('?'));
+	$(graphsSelector).each(function() {
+		var src = $(this).attr('data-autorefresh-src');
 
 		// Add new timestamp
-		src += '?' + new Date().getTime();
+        var prefix = src.indexOf('?') != -1 ? '&' : '?';
+		src += prefix + new Date().getTime();
 
 		setImageLoading($(this), true);
 
