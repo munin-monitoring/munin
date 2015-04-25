@@ -27,3 +27,6 @@ script/munin-cron
 # IDE files
 .idea/
 
+# CSS SASS files
+*.sass-cache*
+*.css.map
