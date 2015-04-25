@@ -87,6 +87,7 @@ Package: munin-plugins-core
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-perl,
+ munin-common,
  procps,
  gawk,
 Suggests:
@@ -113,6 +114,7 @@ Description: network-wide graphing framework (plugins for node)
 Package: munin-plugins-extra
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
+ munin-common,
 Recommends:
  python,
  ruby | ruby-interpreter,
@@ -126,6 +128,7 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-http-perl,
  libwww-perl,
+ munin-common,
 Description: munin plugins using http to monitor
  This package contains munin plugins using http to monitor local and
  remote services.
@@ -135,6 +138,7 @@ Package: munin-plugins-mysql
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libdbd-mysql-perl,
+ munin-common,
  mysql-client,
 Description: munin plugins for monitoring MySQL
  This package contains munin plugins for monitoring MySQL servers.
@@ -154,6 +158,7 @@ Package: munin-plugins-snmp
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-snmp-perl,
+ munin-common,
 Description: munin plugins for monitoring remote devices with SNMP
  This package contains munin plugins for monitoring remote devices
  with SNMP.
@@ -184,6 +189,7 @@ Description: munin plugins for monitoring DNS servers
 Package: munin-plugins-mail
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
+ munin-common,
 Description: munin plugins for monitoring mail servers
  This package contains munin plugins for monitoring mail servers.
 
@@ -199,6 +205,7 @@ Description: munin plugins for monitoring NTP servers and synchronization
 Package: munin-plugins-network
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
+ munin-common,
 Description: munin plugins for monitoring network traffic
  This package contains munin plugins for monitoring network traffic
  and usage.  Common tools used is netfilter/iptables, snort.
@@ -207,6 +214,7 @@ Description: munin plugins for monitoring network traffic
 Package: munin-plugins-jenkins
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
+ munin-common,
 Description: munin plugins for monitoring the Jenkins CI server
  This package contains munin plugins for monitoring a local Jenkins CI
  server.
