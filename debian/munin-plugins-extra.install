@@ -26,7 +26,6 @@ usr/share/munin/plugins/iostat_ios
 usr/share/munin/plugins/ipac-ng
 usr/share/munin/plugins/ipmi_
 usr/share/munin/plugins/ipmi_sensor_
-usr/share/munin/plugins/ircu
 usr/share/munin/plugins/lpstat
 usr/share/munin/plugins/mbmon_
 usr/share/munin/plugins/memcached_

@@ -89,7 +89,6 @@ Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-perl,
  procps,
  gawk,
- libnet-irc-perl,
 Suggests:
  acpi | lm-sensors,
  ethtool,
@@ -165,6 +164,14 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
 Description: munin plugins for monitoring LDAP servers
  This package contains munin plugins for monitoring LDAP servers.
+
+
+Package: munin-plugins-irc
+Architecture: all
+Depends: ${perl:Depends}, ${misc:Depends},
+ libnet-irc-perl,
+Description: munin plugins for monitoring IRC servers
+ This package contains munin plugin for monitoring IRC servers.
 
 
 Package: munin-plugins-dns
