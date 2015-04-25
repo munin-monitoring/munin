@@ -206,6 +206,7 @@ Description: munin plugins for monitoring the Jenkins CI server
 
 
 Package: libmunin-perl
+Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
 Description: The Munin perl module
@@ -214,6 +215,7 @@ Description: The Munin perl module
 
 
 Package: libmunin-master-perl
+Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, libmunin-perl
 Description: perl module Munin::Common
@@ -221,6 +223,7 @@ Description: perl module Munin::Common
 
 
 Package: libmunin-node-perl
+Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, libmunin-perl
 Description: perl module Munin::Node
@@ -228,6 +231,7 @@ Description: perl module Munin::Node
 
 
 Package: libmunin-plugin-perl
+Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
 Description: perl bindings for munin plugins
@@ -236,6 +240,7 @@ Description: perl bindings for munin plugins
 
 
 Package: libmunin-plugin-http-perl
+Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-perl,
@@ -245,6 +250,7 @@ Description: perl bindings for HTTP munin plugins
 
 
 Package: libmunin-plugin-snmp-perl
+Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-perl,
@@ -255,6 +261,7 @@ Description: perl bindings for SNMP munin plugins
 
 
 Package: libmunin-plugin-pgsql-perl
+Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-perl,
