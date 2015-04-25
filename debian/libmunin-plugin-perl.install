@@ -1,2 +1,4 @@
+usr/share/man/man3/Munin::Plugin.3pm
+usr/share/man/man3/Munin::Plugin::Framework.3pm
 usr/share/perl5/Munin/Plugin.pm
 usr/share/perl5/Munin/Plugin/Framework.pm

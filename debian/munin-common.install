@@ -1,3 +1,2 @@
 contrib/munin-support-info /usr/share/munin
 usr/bin/munin-doc
-usr/share/man/man3

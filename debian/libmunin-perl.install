@@ -1,2 +1,4 @@
+usr/share/man/man3/Munin.3pm
+usr/share/man/man3/Munin::Common*
 usr/share/perl5/Munin.pm
 usr/share/perl5/Munin/Common
