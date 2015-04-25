@@ -8,7 +8,7 @@ After=munin-node.service
 Type=simple
 Restart=always
 User=munin-async
-ExecStart=/usr/share/munin/munin-asyncd
+ExecStart=/usr/bin/munin-asyncd
 
 [Install]
 WantedBy=multi-user.target
