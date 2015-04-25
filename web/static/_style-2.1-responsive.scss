@@ -103,8 +103,15 @@
 	}
 
 	/* Overview */
-	ul.groupview { margin: 20px 15px!important; }
-	div.categories { padding-top: 0; }
+	ul.groupview {
+		margin: 20px 15px!important;
+
+		.categories {
+			padding-top: 0;
+			clear: both;
+			margin-left: 10px;
+		}
+	}
 
 	.timeRangeSwitchContainer { top: 0; }
 }

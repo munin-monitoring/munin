@@ -1130,9 +1130,10 @@ td {
   ul.groupview {
     margin: 20px 15px !important;
   }
-
-  div.categories {
+  ul.groupview .categories {
     padding-top: 0;
+    clear: both;
+    margin-left: 10px;
   }
 
   .timeRangeSwitchContainer {
