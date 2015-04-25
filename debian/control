@@ -209,7 +209,7 @@ Package: libmunin-perl
 Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
-Description: The Munin perl module
+Description: common perl modules for munin
  The Munin and Munin::Common perl modules, used by munin master and
  node.
 
@@ -218,7 +218,7 @@ Package: libmunin-master-perl
 Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, libmunin-perl
-Description: perl module Munin::Common
+Description: perl modules for munin master
  The Munin::Master perl module, used by munin master.
 
 
