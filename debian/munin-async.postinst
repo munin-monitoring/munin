@@ -2,30 +2,25 @@
 
 set -e
 
-prevver="$2"
-
 add_munin_async_user() {
 	if ! getent passwd munin-async >/dev/null; then
-		adduser --group --system --home /var/lib/munin-async --shell /bin/bash munin-async
-	fi
-	# workaround bug (#531021) in xen-tools
-	if ! getent group munin-async >/dev/null; then
-		addgroup --system munin-async
-		adduser --shell /bin/bash munin-async
+		adduser --group --system --home /var/spool/munin --shell /bin/bash munin-async
 	fi
 }
 
-initperms() {
-	chown munin-async:munin-async /var/lib/munin-async
+move_user_homedir() {
+    homedir=$(getent passwd munin-aync | cut -d : -f 6)
+    if [ "$homedir" != "/var/spool/munin" ]; then
+        usermod --home /var/spool/munin --move-home munin-async
+    fi
 }
 
 case "$1" in
 	configure)
 		add_munin_async_user
-		# after wheezy / squeeze-sloppy-backports just test for [ "$2" = 0 ]
-		if dpkg --compare-versions "$2" le "2.0.6-1~" ; then
-			initperms
-		fi
+                if dpkg --compare-versions "$2" le "2.0.11-1~"; then
+                    move_user_homedir
+                fi
 		;;
 	abort-upgrade|abort-deconfigure|abort-remove)
 		:
