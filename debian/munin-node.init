@@ -11,7 +11,7 @@
 ### END INIT INFO
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/sbin/munin-node
+DAEMON=/usr/bin/munin-node
 PIDFILE=/var/run/munin/munin-node.pid
 CONFFILE=/etc/munin/munin-node.conf
 DAEMON_ARGS=
