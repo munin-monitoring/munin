@@ -567,6 +567,7 @@ td {
   margin: 20px 30px;
   padding: 0;
   max-width: 900px;
+  /* Nested groups */
 }
 .groupview > li {
   -webkit-border-radius: 2px;
@@ -612,6 +613,9 @@ td {
   -o-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.5);
   box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.5);
   text-decoration: none;
+}
+.groupview li ul li span.domain a {
+  margin: 0;
 }
 .groupview li ul {
   list-style: none;

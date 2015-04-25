@@ -503,6 +503,11 @@ td {
 		text-decoration: none;
 	}
 
+	/* Nested groups */
+	li ul li span.domain a {
+		margin: 0;
+	}
+
 	li ul {
 		list-style: none;
 		margin: 0;
