@@ -129,9 +129,9 @@ Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-http-perl,
  libwww-perl,
  munin-common,
-Description: munin plugins using http to monitor
- This package contains munin plugins using http to monitor local and
- remote services.
+Description: munin plugins for monitoring web servers
+ This package contains munin plugins for monitoring web servers using
+ http.
 
 
 Package: munin-plugins-mysql
