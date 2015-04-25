@@ -7,6 +7,38 @@
  *  Sass compiler arguments:  --style expanded
  */
 
+/* SASS mixins */
+@mixin border-radius($radius) {
+	-webkit-border-radius: $radius;
+	-moz-border-radius: $radius;
+	-ms-border-radius: $radius;
+	border-radius: $radius;
+}
+@mixin box-shadow($shadow1, $shadow2:false) {
+	$params: $shadow1;
+	@if $shadow2 { $params: $shadow1, $shadow2; }
+	-webkit-box-shadow: $params;
+	-moz-box-shadow: $params;
+	-o-box-shadow: $params;
+	box-shadow: $params;
+}
+@mixin opacity($opacity) {
+	opacity: $opacity;
+	$opacity-ie: $opacity * 100;
+	filter: alpha(opacity=$opacity-ie); //IE8
+}
+@mixin box-sizing($param) {
+	box-sizing: $param;
+	-moz-box-sizing: $param;
+	-webkit-box-sizing: $param;
+}
+@mixin transition-duration($duration) {
+	-webkit-transition-duration: $duration;
+	-moz-transition-duration: $duration;
+	-o-transition-duration: $duration;
+	transition-duration: $duration;
+}
+
 /* Overall layout */
 html, body {
 	margin: 0;
@@ -37,8 +69,7 @@ input[type="number"]{
 	height: 23px;
 	border-radius: 2px;
 	border: 1px solid #aaa;
-	-webkit-box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
-	box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+	@include box-shadow(inset 0 1px 2px rgba(0, 0, 0, 0.1));
 	color: #555;
 }
 
@@ -59,7 +90,7 @@ hr {
 	margin: 20px 0;
 	border: 0;
 	border-top: 1px solid #888;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+	@include box-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
 }
 
 a:link, a:visited, a:link:active, a:link:hover { color: #486aaf; text-decoration: none; }
@@ -114,19 +145,11 @@ a.graphLink.icrit { background-color: #ff0000; }
 	height: auto;
 	/* Colors are overridden by "color" property */
 	border: 1px solid;
-	-moz-box-shadow: 0 0 2px 0;
-	-webkit-box-shadow: 0 0 2px 0;
-	-o-box-shadow: 0 0 2px 0;
-	box-shadow: 0 0 2px 0;
-	filter: progid:DXImageTransform.Microsoft.Shadow(Direction=0, Strength=2);
+	@include box-shadow(0 0 2px 0);
 }
 .graph.i {
 	color: #fff;
-	-moz-box-shadow: 0 0 2px 0 #888;
-	-webkit-box-shadow: 0 0 2px 0 #888;
-	-o-box-shadow: 0 0 2px 0 #888;
-	box-shadow: 0 0 2px 0 #888;
-	filter: progid:DXImageTransform.Microsoft.Shadow(color=#888, Direction=0, Strength=5);
+	@include box-shadow(0 0 2px 0 #888);
 }
 .graph.iwarn, .graph.icrit { opacity: 0.95; }
 .graph.iwarn { color: #ffd300; }
@@ -155,14 +178,8 @@ a.graphLink.icrit { background-color: #ff0000; }
 	position: relative;
 	z-index: 5;
 	border-bottom: 1px solid #3A713C;
-	-moz-box-shadow: 0 0 5px 0 #777777;
-	-webkit-box-shadow: 0 0 5px 0 #777777;
-	-o-box-shadow: 0 0 5px 0 #777777;
-	box-shadow: 0 0 5px 0 #777777;
-	filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=5);
-	box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;
+	@include box-shadow(0 0 5px 0 #777777);
+	@include box-sizing(border-box);
 
 	h1 {
 		color: #fff;
@@ -176,10 +193,7 @@ a.graphLink.icrit { background-color: #ff0000; }
 		height: 30px;
 		padding: 2px 5px;
 		margin-top: 6px;
-		-webkit-transition-duration: 200ms;
-		-moz-transition-duration: 200ms;
-		-o-transition-duration: 200ms;
-		transition-duration: 200ms;
+		@include transition-duration(200ms);
 		border: 1px solid transparent;
 		border-radius: 3px;
 		background-repeat: no-repeat;
@@ -205,20 +219,13 @@ a.graphLink.icrit { background-color: #ff0000; }
 		text-align: center;
 		display: block;
 		width: 100%;
-		box-sizing: border-box;
-		-moz-box-sizing: border-box;
-		-webkit-box-sizing: border-box;
+		@include box-sizing(border-box);
 
 		a {
 			color: #fff;
-			-webkit-transition-duration: 200ms;
-			-moz-transition-duration: 200ms;
-			-o-transition-duration: 200ms;
-			transition-duration: 200ms;
+			@include transition-duration(200ms);
 			padding: 2px 6px;
-			border-radius: 2px;
-			-moz-border-radius: 2px;
-			-webkit-border-radius: 2px;
+			@include border-radius(2px);
 			border: 1px solid transparent;
 		}
 		a:hover {
@@ -235,10 +242,7 @@ a.graphLink.icrit { background-color: #ff0000; }
 		color: rgba(255, 255, 255, 0.7);
 		font-size: 12px;
 		text-align: center;
-		-webkit-transition-duration: 200ms;
-		-moz-transition-duration: 200ms;
-		-o-transition-duration: 200ms;
-		transition-duration: 200ms;
+		@include transition-duration(200ms);
 
 		> a {
 			color: #fff;
@@ -256,7 +260,7 @@ a.graphLink.icrit { background-color: #ff0000; }
 	margin-left: auto;
 	display: table;
 	background-color: #fdfdfd;
-	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+	@include box-shadow(0 1px 2px 0 rgba(0, 0, 0, 0.2));
 	min-height: 600px;
 }
 .clear { clear: both; }
@@ -275,17 +279,13 @@ a.graphLink.icrit { background-color: #ff0000; }
 	border-bottom-right-radius: 2px;
 	padding-bottom: 10px;
 	padding-top: 1px;
-	-moz-box-shadow: inset -4px 0 10px -8px #656565;
-	-webkit-box-shadow: inset -4px 0 10px -8px #656565;
-	-o-box-shadow: inset -4px 0 10px -8px #656565;
-	box-shadow: inset -4px 0 10px -8px #656565;
-	filter: progid:DXImageTransform.Microsoft.Shadow(color=#656565, Direction=180, Strength=10);
+	@include box-shadow(inset -4px 0 10px -8px #656565);
 
 	> hr {
 		background-color: rgba(0, 0, 0, 0.1);
 		height: 1px;
 		margin: 0;
-		box-shadow: none;
+		@include box-shadow(none);
 		border: 0;
 	}
 	> h2 {
@@ -330,7 +330,7 @@ a.graphLink.icrit { background-color: #ff0000; }
 			margin-right: 9px;
 			margin-top: 3px;
 			opacity: 0.2;
-			transition-duration: 100ms;
+			@include transition-duration(100ms);
 
 			a {
 				display: inline-block;
@@ -339,8 +339,8 @@ a.graphLink.icrit { background-color: #ff0000; }
 			}
 		}
 	}
-	ul.categories:hover .timerangesList { opacity: 0.5; }
-	ul.categories li:hover .timerangesList { opacity: 1; }
+	ul.categories:hover .timerangesList { @include opacity(0.5); }
+	ul.categories li:hover .timerangesList { @include opacity(1); }
 
 	.badge {
 		float: right;
@@ -354,7 +354,7 @@ a.graphLink.icrit { background-color: #ff0000; }
 		color: #fff;
 		text-align: center;
 		background-color: #999;
-		border-radius: 10px;
+		@include border-radius(10px);
 	}
 }
 
@@ -362,9 +362,7 @@ a.graphLink.icrit { background-color: #ff0000; }
 #content {
 	display: table-cell;
 	padding: 5px 0 30px 30px;
-	box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;
+	@include box-sizing(border-box);
 
 	h2 {
 		color: #444;
@@ -390,12 +388,10 @@ td {
 /* Content: service view */
 #legend {
 	border-collapse: collapse;
-	border-radius: 2px;
-	-moz-border-radius: 2px;
-	-webkit-border-radius: 2px;
+	@include border-radius(2px);
 	margin: 20px 0;
 	background-color: #fff;
-	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+	@include box-shadow(0 1px 3px 0 rgba(0, 0, 0, 0.2));
 	border: 1px solid rgba(0, 0, 0, 0.25);
 
 	.legendHead {
@@ -406,10 +402,10 @@ td {
 		color: #fff;
 		text-shadow: 1px 1px 0 #37474F;
 		margin: -1px;
-		border-radius: 2px 2px 0 0;
+		@include border-radius(2px 2px 0 0);
 		border: 1px solid #37474F;
 		background-color: #546E7A;
-		box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
+		@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
 
 		th {
 			padding: 6px 10px 6px 15px;
@@ -440,9 +436,7 @@ td {
 	margin-top: 15px;
 	padding: 5px 35px;
 	clear: both;
-	box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;
+	@include box-sizing(border-box);
 	text-align: right;
 
 	> * {
@@ -460,7 +454,7 @@ td {
 		color: #aaa;
 		font-size: 11px;
 		letter-spacing: -0.5px;
-		transition-duration: 200ms;
+		@include transition-duration(200ms);
 		margin: 10px 0;
 	}
 	p.tagline:hover {
@@ -480,12 +474,10 @@ td {
 	max-width: 900px;
 
 	> li {
-		border-radius: 2px;
-		-moz-border-radius: 2px;
-		-webkit-border-radius: 2px;
+		@include border-radius(2px);
 		margin-bottom: 20px;
 		background-color: #fff;
-		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+		@include box-shadow(0 1px 3px 0 rgba(0, 0, 0, 0.2));
 		border: 1px solid rgba(0, 0, 0, 0.25);
 	}
 
@@ -498,16 +490,16 @@ td {
 		display: block;
 		padding: 10px 22px;
 		margin: -1px;
-		border-radius: 2px 2px 0 0;
+		@include border-radius(2px 2px 0 0);
 		border: 1px solid #37474F;
 		background-color: #546E7A;
-		box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
-		transition-duration: 100ms;
+		@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
+		@include transition-duration(100ms);
 	}
 
 	span.domain a:hover {
 		background-color: #4E656F;
-		box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.5);
+		@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.5));
 		text-decoration: none;
 	}
 
@@ -551,7 +543,7 @@ td {
 		border-bottom: 1px solid #ccc;
 		background-color: rgba(0, 0, 0, 0.06);
 		padding: 0 10px;
-		box-shadow: inset 0 -2px 2px 0 rgba(0, 0, 0, 0.05);
+		@include box-shadow(inset 0 -2px 2px 0 rgba(0, 0, 0, 0.05));
 
 		img.glyphicon-compare {
 			width: 12px;
@@ -577,11 +569,11 @@ td {
 			display: inline-block;
 			padding: 5px 10px;
 			color: #666;
-			transition-duration: 150ms;
+			@include transition-duration(150ms);
 		}
 		a:hover {
 			background-color: #dedede;
-			border-radius: 3px;
+			@include border-radius(3px);
 		}
 	}
 }
@@ -602,40 +594,39 @@ td {
 		color: rgba(255, 255, 255, 0.9);
 		font-size: 12px;
 		font-family: inherit;
-		-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.20);
-		box-shadow: inset 0 1px 1px rgba(0,0,0,0.20);
-		transition-duration: 150ms;
-		box-sizing: border-box;
+		@include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.20));
+		@include transition-duration(150ms);
+		@include box-sizing(border-box);
 		background: rgba(0, 0, 0, 0.2) url('icons/glyphicons-28-search-white.png') no-repeat 8px 7px;
 		background-size: 16px;
 	}
 	input[type=text]:focus {
 		outline: none;
 		background-color: rgba(0, 0, 0, 0.3);
-		box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
+		@include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.1));
 		width: 300px;
 	}
 
 	/* Placeholder text color */
 	input[type=text]::-webkit-input-placeholder {
 		color: #ffffff;
-		opacity: 0.8;
+		@include opacity(0.8);
 	}
 	input[type=text]:-moz-placeholder { /* Firefox 18- */
 		color: #ffffff;
-		opacity: 0.8;
+		@include opacity(0.8);
 	}
 	input[type=text]::-moz-placeholder {  /* Firefox 19+ */
 		color: #ffffff;
-		opacity: 0.8;
+		@include opacity(0.8);
 	}
 	input[type=text]:-ms-input-placeholder {
 		color: #ffffff;
-		opacity: 0.8;
+		@include opacity(0.8);
 	}
 
 	#cancelFilter {
-		opacity: 0.8;
+		@include opacity(0.8);
 		width: 8px;
 		cursor: pointer;
 		position: absolute;
@@ -659,8 +650,8 @@ td {
 		max-width: 499px;
 		text-align: center;
 		padding: 10px;
-		box-sizing: border-box;
-		transition-duration: 150ms;
+		@include box-sizing(border-box);
+		@include transition-duration(150ms);
 		margin-right: 4px;
 
 		ul {
@@ -669,7 +660,7 @@ td {
 			padding: 0;
 			margin: 0;
 			font-size: 0;
-			border-radius: 3px;
+			@include border-radius(3px);
 			border: 1px solid #B2B2B2;
 
 			li {
@@ -678,7 +669,7 @@ td {
 				padding: 5px 10px;
 				text-transform: uppercase;
 				cursor: pointer;
-				transition-duration: 150ms;
+				@include transition-duration(150ms);
 				border-right: 1px solid #dedede;
 			}
 			li.last {
@@ -689,7 +680,7 @@ td {
 				background-color: rgb(63,81,181);
 			}
 			li:hover {
-				opacity: 0.9;
+				@include opacity(0.9);
 			}
 		}
 	}
@@ -701,10 +692,7 @@ td {
 
 	.timeRangeSwitch {
 		background-color: #fff;
-		-moz-box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.26);
-		-webkit-box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.26);
-		-o-box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.26);
-		box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.26);
+		@include box-shadow(0 1px 4px 0 rgba(0, 0, 0, 0.26));
 	}
 }
 
@@ -717,7 +705,7 @@ td {
 }
 
 .card {
-	box-shadow: 0 2px 1px rgba(0, 0, 0, 0.12);
+	@include box-shadow(0 2px 1px rgba(0, 0, 0, 0.12));
 	background: #fff;
 }
 
@@ -725,12 +713,11 @@ td {
 .dynazoomGraph { max-width: none; }
 .overlayDiv {
 	zoom: 1;
-	opacity: .55;
-	filter: alpha(opacity=55);
+	@include opacity(.55);
 	background-color: #eee;
 	position: absolute;
 	z-index: 2;
-	border-radius: 3px;
+	@include border-radius(3px);
 }
 .overlayDiv_dragging {
 	visibility: visible;
@@ -739,25 +726,20 @@ td {
 .overlayDiv_dragged {
 	background-color: #000;
 	cursor: pointer;
-	-webkit-transition-duration: 100ms;
-	-moz-transition-duration: 100ms;
-	-o-transition-duration: 100ms;
-	transition-duration: 100ms;
+	@include transition-duration(100ms);
 }
 .overlayDiv_dragged:hover {
-	opacity: .6;
-	filter: alpha(opacity=60);
+	@include opacity(.6);
 }
 .overlayDiv_dragged:active {
-	opacity: .65;
-	filter: alpha(opacity=65);
+	@include opacity(.65);
 }
 .dzForm {
 	width: 100%;
 	max-width: 800px;
 	padding: 5px 20px 15px 20px;
 	margin: 20px 0;
-	box-sizing: border-box;
+	@include box-sizing(border-box);
 
 	#dynaForm {
 		div {
@@ -782,12 +764,11 @@ td {
 			line-height: 21px;
 			margin-left: -2px;
 			height: 23px;
-			border-radius: 0 4px 4px 0;
+			@include border-radius(0 4px 4px 0);
 			cursor: default;
 			background-color: #eee;
 			border: 1px solid #aaa;
-			-webkit-box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
-			box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+			@include box-shadow(inset 0 1px 2px rgba(0,0,0,0.1));
 			color: #555;
 			vertical-align: top;
 		}
@@ -806,12 +787,12 @@ td {
 	display: none;
 	position: absolute;
 	max-width: 450px;
-	box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
+	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.3));
 	padding: 5px 10px;
 	background-color: rgba(0, 0, 0, 0.6);
 	border: 0;
 	color: #fff;
-	border-radius: 2px;
+	@include border-radius(2px);
 	font-size: 12px;
 	text-align: justify;
 }
@@ -829,7 +810,7 @@ td {
 #eventRuler {
 	border-left: 1px solid #000;
 	border-right: 1px solid #fff;
-	opacity: 0.5;
+	@include opacity(0.5);
 	height: 100%;
 	width: 0;
 }
@@ -840,7 +821,7 @@ td {
 	cursor: pointer;
 	float: right;
 	margin: 7px 0 0 10px;
-	transition-duration: 200ms;
+	@include transition-duration(200ms);
 	border: 1px solid transparent;
 }
 #eventRulerToggle > img {
@@ -851,8 +832,8 @@ td {
 #eventRulerToggle[data-shown=true] {
 	border-color: rgba(0, 0, 0, 0.15);
 	background-color: rgba(0, 0, 0, 0.15);
-	border-radius: 2px;
+	@include border-radius(2px);
 }
 #eventRulerToggle[data-shown=true] {
-	box-shadow: inset 1px 1px 0 rgba(0,0,0,0.05);
+	@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
 }
