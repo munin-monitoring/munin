@@ -2,3 +2,4 @@ etc/munin/munin-node.conf
 usr/bin/munin-node
 usr/bin/munin-node-configure
 usr/bin/munin-run
+usr/bin/munin-doc
