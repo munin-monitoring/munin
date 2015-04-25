@@ -1,1 +1,52 @@
-usr/share/munin/plugins
+# System hardware
+usr/share/munin/plugins/cpuspeed
+usr/share/munin/plugins/diskstats
+usr/share/munin/plugins/hddtemp_smartctl
+usr/share/munin/plugins/hwmon
+usr/share/munin/plugins/irqstats
+usr/share/munin/plugins/lpar_cpu
+usr/share/munin/plugins/memory
+usr/share/munin/plugins/numa_
+
+# Running processes
+usr/share/munin/plugins/multips
+usr/share/munin/plugins/multips_memory
+usr/share/munin/plugins/proc
+usr/share/munin/plugins/proc_*
+usr/share/munin/plugins/procfs
+usr/share/munin/plugins/procsys
+usr/share/munin/plugins/processes
+usr/share/munin/plugins/ps_
+usr/share/munin/plugins/psu_
+usr/share/munin/plugins/threads
+
+# Virtual Memory stats
+usr/share/munin/plugins/vmstat
+
+# Sessions
+usr/share/munin/plugins/users
+
+# Filesystem
+usr/share/munin/plugins/df
+usr/share/munin/plugins/df_inode
+
+# Network filesystems
+usr/share/munin/plugins/nfs4_*
+usr/share/munin/plugins/nfs_*
+usr/share/munin/plugins/nfsd
+usr/share/munin/plugins/nfsd4
+
+# SELinux
+usr/share/munin/plugins/selinux_avcstat
+
+# Meta
+usr/share/munin/plugins/external_
+usr/share/munin/plugins/munin*
+
+# Security monitoring
+usr/share/munin/plugins/fail2ban
+usr/share/munin/plugins/loggrep
+
+# Packages
+usr/share/munin/plugins/apt_all
+usr/share/munin/plugins/apt

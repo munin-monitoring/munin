@@ -1,0 +1,10 @@
+usr/share/munin/plugins/amavis
+usr/share/munin/plugins/courier_*
+usr/share/munin/plugins/exim_*
+usr/share/munin/plugins/mailman
+usr/share/munin/plugins/mailscanner
+usr/share/munin/plugins/perdition
+usr/share/munin/plugins/postfix_*
+usr/share/munin/plugins/qmail*
+usr/share/munin/plugins/sendmail_*
+usr/share/munin/plugins/zimbra_

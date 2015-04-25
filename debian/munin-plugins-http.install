@@ -1,0 +1,8 @@
+usr/share/munin/plugins/tomcat*
+usr/share/munin/plugins/nginx*
+usr/share/munin/plugins/apache*
+usr/share/munin/plugins/http*
+usr/share/munin/plugins/squid*
+usr/share/munin/plugins/varnish*
+usr/share/munin/plugins/proxy*
+usr/share/munin/plugins/mhttping

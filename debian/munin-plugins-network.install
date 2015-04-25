@@ -1,0 +1,11 @@
+usr/share/munin/plugins/bonding_*
+usr/share/munin/plugins/fw_*
+usr/share/munin/plugins/if_*
+usr/share/munin/plugins/ip_
+usr/share/munin/plugins/multiping
+usr/share/munin/plugins/netstat
+usr/share/munin/plugins/ping_
+usr/share/munin/plugins/port_
+usr/share/munin/plugins/snort_*
+usr/share/munin/plugins/tcp
+usr/share/munin/plugins/vlan_*

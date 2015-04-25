@@ -1,0 +1,3 @@
+usr/share/munin/plugins/postgres*
+usr/share/munin/plugins/pgbouncer_*
+usr/share/munin/plugins/slony_*
