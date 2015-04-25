@@ -275,7 +275,7 @@ Package: munin
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  adduser,
- cron-daemon,
+ cron | cron-daemon,
  fonts-dejavu,
  libdbd-sqlite3-perl,
  libfile-copy-recursive-perl,
