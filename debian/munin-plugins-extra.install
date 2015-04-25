@@ -48,5 +48,6 @@ usr/share/munin/plugins/spamstats
 usr/share/munin/plugins/squeezebox_
 usr/share/munin/plugins/squeezebox_
 usr/share/munin/plugins/surfboard
+usr/share/munin/plugins/tomcat_
 usr/share/munin/plugins/vserver_*
 usr/share/munin/plugins/yum
