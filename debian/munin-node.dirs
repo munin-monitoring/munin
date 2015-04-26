@@ -1,4 +1,4 @@
 etc/munin/plugin-conf.d
 etc/munin/plugins
-var/lib/munin
-var/log/munin
+var/log/munin-node
+var/lib/munin-node

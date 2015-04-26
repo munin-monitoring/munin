@@ -2,95 +2,98 @@
 
 set -e
 
-add_munin_system_user() {
-	if ! getent passwd munin >/dev/null; then
-		adduser --group --system --no-create-home --home /var/lib/munin munin
-	fi
-	# workaround bug (#531021) in xen-tools
-	if ! getent group munin >/dev/null; then
-		addgroup --system munin
-		adduser munin munin
-	fi
+USER=munin-node
+GROUP=munin-node
+HOME_DIR=/var/lib/munin-node
+LOG_DIR=/var/log/munin-node
+PLUGIN_CONF_DIR=/etc/munin/plugin-conf.d
+MUNIN_NODE_CONF_LOG="${LOG_DIR}/munin-node-configure.log"
+
+log() {
+    timestamp=$(date --rfc-3339=seconds)
+    printf "%s %s" "$timestamp" "$@"
 }
 
-initperms() {
-	chown munin:adm /var/log/munin
-	chmod 755 /var/log/munin
+ensure_system_user() {
+    if ! getent passwd $USER >/dev/null; then
+	adduser --group --system --no-create-home --home $HOME_DIR $USER
+    fi
+}
 
-	chown root:munin /etc/munin/plugin-conf.d
-	chmod 750 /etc/munin/plugin-conf.d
+ensure_dir_permissions() {
+    install -d -m 0750 -o $USER -g adm $LOG_DIR
+    install -d -m 0750 -o root -g $GROUP $PLUGIN_CONF_DIR
 }
 
 init_plugins() {
-	TMPFILE=$(mktemp /tmp/munin-node.configure.XXXXXXXXXX)
-	TMPFILE_STDERR=$(mktemp /tmp/munin-node.configure.err.XXXXXXXXXX)
-	MUNIN_NODE_CONF_LOG="/var/log/munin/munin-node-configure.log"
-	if [ "$prevver" ]; then
-		MUNIN_NODE_CMD="munin-node-configure --shell --newer \"${prevver%-*}\""
-		printf "Initializing new plugins.."
-	else
-		MUNIN_NODE_CMD="munin-node-configure --shell"
-		printf "Initializing plugins.."
+    prevver=${1:-}
+
+    TMPFILE=$(mktemp /tmp/munin-node.configure.XXXXXXXXXX)
+    TMPFILE_STDERR=$(mktemp /tmp/munin-node.configure.err.XXXXXXXXXX)
+    trap 'rm -f "$TMPFILE" "$TMPFILE_STDERR"' EXIT
+
+    if [ -n "$prevver" ]; then
+	MUNIN_NODE_CMD="munin-node-configure --shell --newer \"${prevver%-*}\""
+	log "Initializing new plugins since ${prevver}"
+    else
+	MUNIN_NODE_CMD="munin-node-configure --shell"
+	log "Initializing plugins"
     fi
 
-	# munin-node-conf returns 1 if case of partial plugin autoconf
-	# errors. We need to ignore these errors as even one plugin
-	# can fail the entire process. See Debian bug #539886 for details.
-	$MUNIN_NODE_CMD 2>"$TMPFILE_STDERR" >"$TMPFILE" || true
-	if [ -f "$TMPFILE" ]; then
-		DATE=$(date '+%b %d %T')
-		echo "$DATE - Starting $MUNIN_NODE_CMD" >> "$MUNIN_NODE_CONF_LOG"
-		cat "$TMPFILE" >> "$MUNIN_NODE_CONF_LOG"
+    $MUNIN_NODE_CMD 2>"$TMPFILE_STDERR" >"$TMPFILE" || true
+
+    if [ -f "$TMPFILE" ]; then
+        timestamp=$(date --rfc-3339=seconds)
+	log "Starting $MUNIN_NODE_CMD"
+	sed -e "s/^/$timestamp /g" "$TMPFILE" >> "$MUNIN_NODE_CONF_LOG"
+
         if [ -s "$TMPFILE_STDERR" ]; then
-			echo "The following errors were reported by $MUNIN_NODE_CMD" \
-			>> "$MUNIN_NODE_CONF_LOG"
-			cat "$TMPFILE_STDERR" >> "$MUNIN_NODE_CONF_LOG"
+	    log "The following errors were reported by $MUNIN_NODE_CMD"
+	    sed -e "s/^/$timestamp /g" "$TMPFILE_STDERR" >> "$MUNIN_NODE_CONF_LOG"
         fi
-		sh < "$TMPFILE"
-	else
-		echo "failed."
-	fi
-	echo "done."
-	rm -f "$TMPFILE" "$TMPFILE_STDERR"
-	printf "Restarting munin-node.."
-	invoke-rc.d munin-node restart
+	sh < "$TMPFILE"
+    else
+	log "failed"
+    fi
+    log "done"
+}
+
+restart_munin_node() {
+    invoke-rc.d munin-node restart
 }
 
 remove_broken_plugin_links() {
-    # Removes broken symlinks after plugins have been removed
+    # Removes broken symlinks left in /etc/munin/plugins after plugins
+    # have been uninstalled
     find /etc/munin/plugins -type l -xtype l -delete
 }
 
 case "$1" in
-	configure)
-                prevver="$2"
-		if [ -z "$2" ] ; then
-			add_munin_system_user
-		fi
-		# after wheezy / squeeze-sloppy-backports just test for [ "$2" = 0 ]
-		if dpkg --compare-versions "$2" le "2.0.0-1" ; then
-			initperms
-		fi
-		init_plugins
-		;;
-        triggered)
-                case "$2" in
-                        "munin-plugins")
-                                init_plugins
-                                remove_broken_plugin_links
-                                ;;
-                        "perl-major-upgrade")
-                                invoke-rc.d munin-node restart
-                                ;;
-                esac
-		;;
-	abort-upgrade|abort-deconfigure|abort-remove)
-		:
-		;;
-	*)
-		echo "Called with unknown argument $1, bailing out."
-		exit 1
-		;;
+    configure)
+        ensure_system_user
+        ensure_dir_permissions
+	init_plugins "$2"
+        restart_munin_node
+	;;
+    triggered)
+        case "$2" in
+            "munin-plugins")
+                init_plugins
+                remove_broken_plugin_links
+                restart_munin_node
+                ;;
+            "perl-major-upgrade")
+                restart_munin_node
+                ;;
+        esac
+	;;
+    abort-upgrade|abort-deconfigure|abort-remove)
+	:
+	;;
+    *)
+	echo "Called with unknown argument $1, bailing out."
+	exit 1
+	;;
 esac
 
 #DEBHELPER#
