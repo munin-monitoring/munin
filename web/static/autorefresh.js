@@ -5,7 +5,7 @@
 var graphsSelector = '.graph';
 
 function startAutoRefresh(pGraphsSelector) {
-    if (pGraphsSelector !== 'undefined')
+    if (pGraphsSelector !== undefined)
         graphsSelector = pGraphsSelector;
 
 	// Register on image load + error events to hide loading styles
