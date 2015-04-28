@@ -46,4 +46,9 @@ $(document).ready(function() {
     var sparklines = $('.sparkline');
     sparklines.after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');
     startAutoRefresh('.sparkline');
+
+    // Hide sparklines on error (if the load plugin isn't available for example)
+    sparklines.error(function() {
+        $(this).parent().hide(); // Hide container
+    });
 });
