@@ -391,7 +391,8 @@ a.graphLink.icrit {
   border-top: 1px solid transparent;
   border-radius: 2px;
 }
-#nav ul li > a:hover {
+#nav ul li > a:hover,
+#nav ul li .timerangesList:hover + a {
   text-decoration: none;
   background-color: rgba(0, 0, 0, 0.05);
   border-top: 1px solid rgba(0, 0, 0, 0.1);

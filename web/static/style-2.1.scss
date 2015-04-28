@@ -316,7 +316,8 @@ a.graphLink.icrit { background-color: #ff0000; }
 			border-top: 1px solid transparent;
 			border-radius: 2px;
 		}
-		> a:hover {
+		> a:hover,
+        .timerangesList:hover + a {
 			text-decoration: none;
 			background-color: rgba(0, 0, 0, 0.05);
 			border-top: 1px solid rgba(0, 0, 0, 0.1);
