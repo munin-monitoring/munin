@@ -369,9 +369,9 @@ sub handle_request
 
 		my $sth;
 
-		$sth = $dbh->prepare_cached("SELECT name,graph_info,subgraphs FROM service WHERE id = ?");
+		$sth = $dbh->prepare_cached("SELECT name,service_title,graph_info,subgraphs FROM service WHERE id = ?");
 		$sth->execute($id);
-		my ($graph_name, $graph_info, $multigraph) = $sth->fetchrow_array();
+		my ($graph_name, $graph_title, $graph_info, $multigraph) = $sth->fetchrow_array();
 
 		$sth = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
 		$sth->execute($id);
@@ -421,6 +421,10 @@ sub handle_request
 			month => $epoch_now - (3600 * 24 * 33),
 			year => $epoch_now - (3600 * 24 * 400),
 		);
+
+		# Add some more information (graph name, title)
+		$service_template_params{GRAPH_NAME} = $graph_name;
+		$service_template_params{GRAPH_TITLE} = $graph_title;
 
 		for my $t (@times) {
 			my $epoch = "start_epoch=$epoch_start{$t}&stop_epoch=$epoch_now";

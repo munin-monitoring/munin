@@ -1,5 +1,5 @@
 /**
- * IMPORTANT: please do not edit the style-2.1.css file.
+ * IMPORTANT: please do not edit neither style-2.1.css nor _style-2.1-responsive files.
  *	We're using SASS to maintain styling, so your changes would be overriden.
  *  Please edit the style-2.1.scss file instead, and use a sass compiler.
  *		Learn more about SASS: http://sass-lang.com/guide
@@ -391,7 +391,8 @@ a.graphLink.icrit {
   border-top: 1px solid transparent;
   border-radius: 2px;
 }
-#nav ul li > a:hover {
+#nav ul li > a:hover,
+#nav ul li .timerangesList:hover + a {
   text-decoration: none;
   background-color: rgba(0, 0, 0, 0.05);
   border-top: 1px solid rgba(0, 0, 0, 0.1);
@@ -567,6 +568,7 @@ td {
   margin: 20px 30px;
   padding: 0;
   max-width: 900px;
+  /* Nested groups */
 }
 .groupview > li {
   -webkit-border-radius: 2px;
@@ -613,6 +615,9 @@ td {
   box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.5);
   text-decoration: none;
 }
+.groupview li ul li span.domain a {
+  margin: 0;
+}
 .groupview li ul {
   list-style: none;
   margin: 0;
@@ -644,6 +649,7 @@ td {
   display: block;
   margin-top: 3px;
   margin-right: 5px;
+  position: relative;
 }
 .groupview .compare {
   border-bottom: 1px solid #ccc;
@@ -944,9 +950,10 @@ td {
   display: none;
 }
 
-.typeTooltip {
+.tooltip {
   display: none;
   position: absolute;
+  z-index: 10;
   max-width: 450px;
   -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
   -moz-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
@@ -1019,5 +1026,128 @@ td {
   -o-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
   box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
 }
+
+/* Include _style-2.1-responsive file */
+/*
+ * This file contains everything that makes munin responsive, and is included in style-2.1
+ */
+/* Small devices (tablets, smartphones) */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .header {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    padding: 5px;
+  }
+  .header .singleLine {
+    margin-top: 0;
+  }
+  .header .filter {
+    float: none;
+    display: inline-block;
+    margin-top: 0;
+  }
+  .header .logo {
+    width: 19px;
+    margin-top: 0;
+  }
+  .header h1 {
+    margin: 10px 0;
+  }
+
+  /* Different nav */
+  #main {
+    display: block;
+    min-height: 0;
+  }
+
+  .navContainer {
+    display: block;
+    width: 100%;
+    max-width: 500px;
+    margin: auto;
+  }
+  .navContainer #nav {
+    display: none;
+    border-right: 0;
+    padding: 0;
+    margin-top: -4px;
+  }
+  .navContainer #nav h2 {
+    text-align: center;
+    padding-left: 0;
+  }
+  .navContainer #nav ul li {
+    text-align: center;
+    padding-right: 0;
+  }
+  .navContainer #nav .timerangesList {
+    opacity: 1;
+  }
+  .navContainer #navToggle,
+  .navContainer #nav {
+    -moz-box-shadow: 0 0 2px 0 #777777;
+    -webkit-box-shadow: 0 0 2px 0 #777777;
+    -o-box-shadow: 0 0 2px 0 #777777;
+    box-shadow: 0 0 2px 0 #777777;
+    filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=2);
+  }
+  .navContainer #navToggle {
+    display: block;
+    padding: 10px 15px;
+    background-color: rgba(0, 0, 0, 0.05);
+    font-weight: bold;
+    cursor: pointer;
+    font-family: sans-serif;
+  }
+  .navContainer #navToggle:after {
+    content: "+";
+    float: right;
+    font-size: 18px;
+    font-weight: normal;
+    margin-top: -2px;
+    color: #797979;
+  }
+  .navContainer #navToggle.expanded:after {
+    content: "-";
+    margin-top: -4px;
+  }
+
+  #content {
+    display: block;
+    padding: 1em 0 1em 0;
+    width: 100%;
+  }
+  #content h2, #content h3 {
+    margin-left: 20px;
+  }
+
+  /* Graphs */
+  .graph {
+    max-width: 97%;
+    display: block;
+    margin: auto;
+  }
+
+  /* Overview */
+  ul.groupview {
+    margin: 20px 15px !important;
+  }
+  ul.groupview .categories {
+    padding-top: 0;
+    clear: both;
+    margin-left: 10px;
+  }
+
+  .timeRangeSwitchContainer {
+    top: 0;
+  }
+}
+/* Medium devices */
+/* Large devices (large desktops) */
 
 /*# sourceMappingURL=style-2.1.css.map */

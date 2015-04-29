@@ -4,8 +4,8 @@
 <div id="main">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<div id="content">
-		<h2>Service graphs</h2>
 		<TMPL_LOOP NAME="SERVICES">
+		    <h2><TMPL_VAR NAME="GRAPH_TITLE"></h2>
 			<a href="<TMPL_VAR NAME="ZOOMDAY">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"">
 				<TMPL_UNLESS NAME="DYN_IMAGES">
 				<img src="<TMPL_VAR NAME="IMGDAY">"

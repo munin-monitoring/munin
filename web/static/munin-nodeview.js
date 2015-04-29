@@ -5,8 +5,7 @@
 
 $(document).ready(function() {
 	// Append a loading <img> on each graph img
-	var r_path = $('#r_path').val();
-	$('.graph').after('<img src="' + r_path + '/static/loading.gif" class="graph_loading" style="display:none" />');
+	$('.graph').after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');
 
 	// Auto-refresh
 	startAutoRefresh();
