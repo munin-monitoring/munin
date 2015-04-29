@@ -104,23 +104,25 @@ Activating the plugin
 =====================
 
 Place the plugin in the /etc/munin/plugins/ directory, and make it
-executable.
+executable.  Note that most distributions place plugins in a different directory,
+and 'activate' them by symlinking htem to /etc/munin/plugins.  New module development
+should use a similar approach so that in-process development doesn't get run 
+by mistake.
 
-Then, restart the munin-node.
+Any time a new plugin is placed or symlinked into /etc/munin/plugins, munin-node should be restarted.
 
 Debugging the plugin
 ====================
 
-To see how the plugin works, as the munin node would run it, you can
-use the command "munin-run".
+Plugins are just small programs or scripts, and just like small programs, are prone to problems
+or unexpected behaviour.  When either developing a new plugin, or debugging an already existing one,
+use the following information to help track down the problem:
 
-If the plugin is called "example", you can run "munin-run example
-config" to see the plugin configuration, and "munin-run example" to
-see the data.
+* A plugin may be tested 'by hand' by using the command 'munin-run'.  Note the plugin needs to 
+have been activated before this will work (see above).
 
-If you do not get the output you expect, check if your munin plugin
-needs more privileges. Normally, it is run as the "munin" user, but
-gathering some data may need more access.
+* If an error occurs, error messages will be written to STDERR, and 
+exit status will be non-zero.
 
-If the munin plugin emits errors, they will be visible in
-/var/log/munin/munin-node.log
+* If a plugin is already activated, any errors that may happen when the 'munin-node' cron job is
+executed will be logged, via stderr, to /var/log/munin/munin-node.log
