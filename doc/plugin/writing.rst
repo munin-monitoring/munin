@@ -118,11 +118,8 @@ Plugins are just small programs or scripts, and just like small programs, are pr
 or unexpected behaviour.  When either developing a new plugin, or debugging an already existing one,
 use the following information to help track down the problem:
 
-* A plugin may be tested 'by hand' by using the command 'munin-run'.  Note the plugin needs to 
-have been activated before this will work (see above).
+* A plugin may be tested 'by hand' by using the command 'munin-run'.  Note the plugin needs to have been activated before this will work (see above).
 
-* If an error occurs, error messages will be written to STDERR, and 
-exit status will be non-zero.
+* If an error occurs, error messages will be written to STDERR, and exit status will be non-zero.
 
-* If a plugin is already activated, any errors that may happen when the 'munin-node' cron job is
-executed will be logged, via stderr, to /var/log/munin/munin-node.log
+* If a plugin is already activated, any errors that may happen when the 'munin-node' cron job is executed will be logged, via stderr, to /var/log/munin/munin-node.log
