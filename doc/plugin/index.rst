@@ -7,13 +7,29 @@
 Role
 ====
 
-The munin plugin is a simple executable, which role is to gather one
-set of facts about the local server (or fetching data from a remote machine via SNMP)
+A Munin plugin is a simple executable, whose role is to gather one
+set of facts on a host and present them in a format Munin can use to analyze. 
 
-The plugin is called with the argument "config" to get metadata, and
-with no arguments to get the values. These are mandatory arguments for each plugin.
-We have some more standard arguments, which play a role in the process of automatic configuration. 
-Read more in the docs listed below.
+A plugin is usually called without any arguments.  When this happens, it returns 
+the data it is configured to gather, in a 'key value' format.  For 
+example, the 'load' plugin, which comes standard with Munin, will output the current
+system load:
+
+ # munin-run load
+ load.value 0.03
+
+All plugins must also support the argument 'config' to get metadata on the plugin:
+ # munin-run load config
+ graph_title Load average
+ graph_args --base 1000 -l 0
+ graph_vlabel load
+ graph_scale no
+ graph_category system
+ load.label load
+ graph_info The load average of the machine describes how many processes are in the run-queue (scheduled to run "immediately").
+ load.info 5 minute load average
+ 
+Plugins may support other arguments, but the two cases described above will work for any plugin.
 
 How to use
 ==========
