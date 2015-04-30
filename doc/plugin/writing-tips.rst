@@ -4,6 +4,19 @@
  Tips for  writing good munin plugins
 ======================================
 
+When developing plugins for Munin, there's some guidelines that should be observed.  
+
+Error Handling
+==============
+
+Munin plugins should handle error conditions in a fashion that make them easy to understand and debug.  Use these
+guidelines when developing a plugin:
+* Output may always contain comments.  Use # blocks within the output to give more information
+* If an error occurs in the plugin, two things should happen:
+** A non-zero exit code must be issued
+** A descriptive message should be written to STDERR.  On a deployed plugin, this message will appear in munin-node.log.  When 
+invoked via munin-run, it'll appear in the console.
+
 Handling temporary files
 ========================
 
