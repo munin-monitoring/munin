@@ -4,10 +4,10 @@
  The Munin plugin
 ==================
 
-Role
+Introduction
 ====
 
-A Munin plugin is a simple executable, invoked in a command line environment, whose role is to gather a
+A Munin plugin is a simple executable invoked in a command line environment whose role is to gather a
 set of facts on a host and present them in a format Munin can use. 
 
 A plugin is usually called without any arguments.  In this circumstance, the plugin returns 
