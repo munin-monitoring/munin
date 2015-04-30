@@ -7,10 +7,10 @@
 Role
 ====
 
-A Munin plugin is a simple executable, whose role is to gather one
-set of facts on a host and present them in a format Munin can use to analyze. 
+A Munin plugin is a simple executable, invoked in a command line environment, whose role is to gather a
+set of facts on a host and present them in a format Munin can use. 
 
-A plugin is usually called without any arguments.  In this case, the plugin returns 
+A plugin is usually called without any arguments.  In this circumstance, the plugin returns 
 the data in a 'key value' format.  For 
 example, the 'load' plugin, which comes standard with Munin, will output the current
 system load::
