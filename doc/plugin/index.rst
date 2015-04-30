@@ -35,6 +35,6 @@ Plugins may support other arguments, but the two cases described above will work
 See Also
 ==========
 
-:ref:`How to use Munin plugins <plugin-use>`.
-:ref:`How to write your own Munin plugins <plugin-writing>`.
-:ref:`Tips on Writing Munin Plugins <plugin-writing-tips>`.
+* :ref:`How to use Munin plugins <plugin-use>`.
+* :ref:`How to write your own Munin plugins <plugin-writing>`.
+* :ref:`Tips on Writing Munin Plugins <plugin-writing-tips>`.
