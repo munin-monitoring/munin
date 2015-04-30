@@ -32,35 +32,9 @@ All plugins must also support the argument 'config' to get metadata on the plugi
  
 Plugins may support other arguments, but the two cases described above will work for any plugin.
 
-How to use
+See Also
 ==========
 
-Learn it here :ref:`How to use Munin plugins <plugin-use>`.
-
-.. toctree::
-   :maxdepth: 2
-
-   use.rst
-
-How to write
-============
-
-Learn it here :ref:`How to write Munin plugins <plugin-writing>`.
-
-.. toctree::
-   :maxdepth: 2
-
-   writing.rst
-   writing-tips.rst
-
-Other documentation
-===================
-Tips on writing good plugins :ref:`Tips on Writing Munin Plugins <plugin-writing-tips>`.
-
-.. toctree::
-   :maxdepth: 2
-
-   env.rst
-   multigraphing.rst
-   supersampling.rst
-   snmp.rst
+:ref:`How to use Munin plugins <plugin-use>`.
+:ref:`How to write your own Munin plugins <plugin-writing>`.
+:ref:`Tips on Writing Munin Plugins <plugin-writing-tips>`.
