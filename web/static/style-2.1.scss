@@ -67,7 +67,7 @@ input[type="text"],
 input[type="number"]{
 	padding: 0 5px;
 	height: 23px;
-	border-radius: 2px;
+	@include border-radius(2px);
 	border: 1px solid #aaa;
 	@include box-shadow(inset 0 1px 2px rgba(0, 0, 0, 0.1));
 	color: #555;
@@ -195,7 +195,7 @@ a.graphLink.icrit { background-color: #ff0000; }
 		margin-top: 6px;
 		@include transition-duration(200ms);
 		border: 1px solid transparent;
-		border-radius: 3px;
+		@include border-radius(3px);
 		background-repeat: no-repeat;
 		background-position: 4px 2px;
 		/* SVG logo: fallback to png */
@@ -314,7 +314,7 @@ a.graphLink.icrit { background-color: #ff0000; }
 			color: #666;
 			border-bottom: 1px solid transparent;
 			border-top: 1px solid transparent;
-			border-radius: 2px;
+			@include border-radius(2px);
 		}
 		> a:hover,
         .timerangesList:hover + a {
@@ -482,26 +482,27 @@ td {
 		border: 1px solid rgba(0, 0, 0, 0.25);
 	}
 
-	span.domain a {
-		font-family: Helvetica, sans-serif;
-		font-size: 16px;
-		font-weight: bold;
-		color: #fff;
-		text-shadow: 1px 1px 0 #37474F;
-		display: block;
-		padding: 10px 22px;
-		margin: -1px;
-		@include border-radius(2px 2px 0 0);
-		border: 1px solid #37474F;
-		background-color: #546E7A;
-		@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
-		@include transition-duration(100ms);
-	}
-
-	span.domain a:hover {
-		background-color: #4E656F;
-		@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.5));
-		text-decoration: none;
+	span.domain {
+		a {
+			font-family: Helvetica, sans-serif;
+			font-size: 16px;
+			font-weight: bold;
+			color: #fff;
+			text-shadow: 1px 1px 0 #37474F;
+			display: block;
+			padding: 6px 20px;
+			margin: -1px;
+			@include border-radius(2px 2px 0 0);
+			border: 1px solid #37474F;
+			background-color: #546E7A;
+			@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
+			@include transition-duration(100ms);
+		}
+		a:hover {
+			background-color: #4E656F;
+			@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.5));
+			text-decoration: none;
+		}
 	}
 
 	/* Nested groups */
@@ -526,10 +527,10 @@ td {
 
 				a {
 					display: block;
-					padding: 11px 20px;
+					padding: 7px 20px;
 					font-weight: bold;
 					font-family: Helvetica, sans-serif;
-					font-size: 14px;
+					font-size: 13px;
 				}
 			}
 		}
@@ -541,8 +542,7 @@ td {
 	.overview-sparkline {
 		float: left;
 		display: block;
-		margin-top: 3px;
-		margin-right: 5px;
+		margin: 1px 5px 1px 0;
 		position: relative;
 	}
 
@@ -570,12 +570,13 @@ td {
 	.categories {
 		font-size: 11px;
 		display: block;
-		padding-top: 7px;
+		padding-top: 4px;
 
 		a {
 			display: inline-block;
 			padding: 5px 10px;
 			color: #666;
+			letter-spacing: -0.5px;
 			@include transition-duration(150ms);
 		}
 		a:hover {

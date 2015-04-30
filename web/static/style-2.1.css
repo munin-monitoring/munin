@@ -35,6 +35,9 @@ input[type="text"],
 input[type="number"] {
   padding: 0 5px;
   height: 23px;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  -ms-border-radius: 2px;
   border-radius: 2px;
   border: 1px solid #aaa;
   -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -250,6 +253,9 @@ a.graphLink.icrit {
   -o-transition-duration: 200ms;
   transition-duration: 200ms;
   border: 1px solid transparent;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
   border-radius: 3px;
   background-repeat: no-repeat;
   background-position: 4px 2px;
@@ -389,6 +395,9 @@ a.graphLink.icrit {
   color: #666;
   border-bottom: 1px solid transparent;
   border-top: 1px solid transparent;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  -ms-border-radius: 2px;
   border-radius: 2px;
 }
 #nav ul li > a:hover,
@@ -590,7 +599,7 @@ td {
   color: #fff;
   text-shadow: 1px 1px 0 #37474F;
   display: block;
-  padding: 10px 22px;
+  padding: 6px 20px;
   margin: -1px;
   -webkit-border-radius: 2px 2px 0 0;
   -moz-border-radius: 2px 2px 0 0;
@@ -636,10 +645,10 @@ td {
 }
 .groupview li ul li span.host a {
   display: block;
-  padding: 11px 20px;
+  padding: 7px 20px;
   font-weight: bold;
   font-family: Helvetica, sans-serif;
-  font-size: 14px;
+  font-size: 13px;
 }
 .groupview li ul li.last {
   border-bottom-width: 0;
@@ -647,8 +656,7 @@ td {
 .groupview .overview-sparkline {
   float: left;
   display: block;
-  margin-top: 3px;
-  margin-right: 5px;
+  margin: 1px 5px 1px 0;
   position: relative;
 }
 .groupview .compare {
@@ -675,12 +683,13 @@ td {
 .groupview .categories {
   font-size: 11px;
   display: block;
-  padding-top: 7px;
+  padding-top: 4px;
 }
 .groupview .categories a {
   display: inline-block;
   padding: 5px 10px;
   color: #666;
+  letter-spacing: -0.5px;
   -webkit-transition-duration: 150ms;
   -moz-transition-duration: 150ms;
   -o-transition-duration: 150ms;
