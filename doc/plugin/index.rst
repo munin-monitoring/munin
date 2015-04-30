@@ -55,6 +55,7 @@ Learn it here :ref:`How to write Munin plugins <plugin-writing>`.
 
 Other documentation
 ===================
+Tips on writing good plugins :ref:`Tips on Writing Munin Plugins <plugin-writing-tips>`.
 
 .. toctree::
    :maxdepth: 2
