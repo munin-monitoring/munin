@@ -16,8 +16,7 @@ guidelines when developing a plugin:
 * If an error occurs in the plugin, two things should happen:
 
  * A non-zero exit code must be issued
- * A descriptive message should be written to STDERR.  On a deployed plugin, this message will appear in munin-node.log.  When 
-invoked via munin-run, it'll appear in the console.
+ * A descriptive message should be written to STDERR.  On a deployed plugin, this message will appear in munin-node.log.  When invoked via munin-run, it'll appear in the console.
 
 Handling temporary files
 ========================
