@@ -13,12 +13,12 @@ set of facts on a host and present them in a format Munin can use to analyze.
 A plugin is usually called without any arguments.  When this happens, it returns 
 the data it is configured to gather, in a 'key value' format.  For 
 example, the 'load' plugin, which comes standard with Munin, will output the current
-system load:
+system load::
 
  # munin-run load
  load.value 0.03
 
-All plugins must also support the argument 'config' to get metadata on the plugin:
+All plugins must also support the argument 'config' to get metadata on the plugin::
  # munin-run load config
  graph_title Load average
  graph_args --base 1000 -l 0
