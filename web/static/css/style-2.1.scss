@@ -228,14 +228,14 @@ a.graphLink.icrit { background-color: #ff0000; }
 		width: 100%;
 		@include box-sizing(border-box);
 
-		a {
+		a, span {
 			color: #fff;
 			@include transition-duration(200ms);
 			padding: 2px 6px;
 			@include border-radius(2px);
 			border: 1px solid transparent;
 		}
-		a:hover {
+		a:hover, span:hover {
 			color: #fff;
 			border-color: rgba(0, 0, 0, 0.15);
 			background-color: rgba(0, 0, 0, 0.15);
@@ -924,6 +924,46 @@ td {
 /* Tabs feature is disabled */
 #content[data-tabsenabled=false] {
 	h3 { display: block; }
+}
+
+.switchable:after {
+	content: "\25BE";
+	margin-left: 8px;
+	font-size: 12px;
+	@include opacity(0.9);
+	vertical-align: 10%;
+}
+.switchable:hover {
+	cursor: pointer;
+}
+.switchable_content {
+	display: none;
+	margin: 0;
+	padding: 6px 0;
+	position: absolute;
+	background-color: #fff;
+	width: auto;
+	@include border-radius(2px);
+	@include box-shadow(0 1px 4px rgba(0, 0, 0, 0.25));
+	max-height: 350px;
+	overflow-y: auto;
+
+	a {
+		display: block;
+		padding: 0 32px 0 24px;
+		list-style: none;
+		height: 32px;
+		line-height: 32px;
+		white-space: nowrap;
+		color: #333;
+		text-align: left;
+		font-family: Helvetica, sans-serif;
+		@include transition-duration(150ms);
+	}
+	a:hover {
+		text-decoration: none;
+		background-color: rgba(0, 0, 0, 0.05);
+	}
 }
 
 /* Include _style-2.1-responsive file */

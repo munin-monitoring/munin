@@ -23,6 +23,30 @@ $(document).ready(function() {
 });
 
 /**
+ * Binds click listener on one switchable (with the data-switch="id" attribute)
+ * @param switchId Switch name
+ */
+function prepareSwitchable(switchId) {
+	$('.switchable[data-switch=' + switchId + ']').click(function() {
+		var switchableContent = $('.switchable_content[data-switch=' + switchId + ']');
+		switchableContent.css('left', $(this).position().left);
+		switchableContent.css('top', $(this).position().top + $(this).height() + 10);
+		switchableContent.show();
+
+		// When clicking outside, hide the div
+		$(document).bind('mouseup.switchable', function(e) {
+			if (!switchableContent.is(e.target) // If we're neither clicking on
+				&& switchableContent.has(e.target).length === 0) { // nor on a descendent
+				switchableContent.hide();
+
+				// Unbind this event
+				$(document).unbind('click.switchable');
+			}
+		});
+	});
+}
+
+/**
  * Called by each page to setup header filter
  * @param placeholder Input placeholder
  * @param onFilterChange Called each time the input text changes

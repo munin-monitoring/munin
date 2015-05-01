@@ -51,4 +51,7 @@ $(document).ready(function() {
 				$(this).parent().show();
 		});
 	});
+
+	// Switch node on header
+	prepareSwitchable('header');
 });

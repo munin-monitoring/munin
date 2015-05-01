@@ -8,7 +8,17 @@
 		<h1>
 			<TMPL_LOOP NAME="PATH">
 				<TMPL_IF NAME="PATHNAME"> &bull;
-					<TMPL_IF NAME="PATH"><a href="<TMPL_VAR NAME="PATH">"></TMPL_IF><TMPL_VAR NAME="PATHNAME"><TMPL_IF NAME="PATH"></a></TMPL_IF>
+					<TMPL_IF NAME="PATH">
+						<a href="<TMPL_VAR NAME="PATH">">
+					<TMPL_ELSE>
+						<span class="switchable" data-switch="header">
+					</TMPL_IF>
+					<TMPL_VAR NAME="PATHNAME">
+					<TMPL_IF NAME="PATH">
+						</a>
+					<TMPL_ELSE>
+						</span>
+					</TMPL_IF>
 				<TMPL_ELSE>
 					<a href="/">Overview</a>
 				</TMPL_IF>
@@ -27,4 +37,13 @@
 		</div>
 	</div>
 	<div class="clear"></div>
+	<TMPL_IF NAME="LARGESET">
+		<div class="switchable_content" data-switch="header">
+			<TMPL_LOOP NAME="PEERS">
+				<a <TMPL_IF NAME="LINK">href="<TMPL_VAR NAME="LINK">"</TMPL_IF>>
+					<TMPL_VAR NAME="NAME">
+				</a>
+			</TMPL_LOOP>
+		</div>
+	</TMPL_IF>
 </div>
