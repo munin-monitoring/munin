@@ -49,4 +49,23 @@ $(document).ready(function() {
 				$(this).prev().show();
 		});
 	});
+
+
+    // Back to top button
+    var backToTop = $('#backToTop');
+    var offset = 300;
+
+    $(window).scroll(function() {
+        if ($(this).scrollTop() > offset)
+            backToTop.addClass('visible');
+        else
+            backToTop.removeClass('visible');
+    });
+
+    backToTop.click(function(e) {
+        e.preventDefault();
+        $('body, html').animate({
+            scrollTop: 0
+        }, 500);
+    });
 });

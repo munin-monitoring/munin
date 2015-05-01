@@ -4,13 +4,29 @@
  *  (from an event for example)
  */
 
+// DOM elements
+var body,
+    content,
+    nav,
+    eventRuler,
+    eventRulerMT;
+
+var eventRulerMTPadding = 10;
+
 $(document).ready(function() {
-    var body = $('body');
+    body = $('body');
+    content = $('#content');
+    nav = $('#nav');
+
+    if (body.width < 768) // Not possible with too small devices
+        return;
+
     // Append ruler and mask to document
     body.append('<div id="eventRulerMouseTrigger" style="display:none;"><div id="eventRuler"></div></div>');
+    eventRuler = $('#eventRuler');
+    eventRulerMT = $('#eventRulerMouseTrigger');
 
     // Register for <- and -> keys events
-    var eventRulerMT = $('#eventRulerMouseTrigger');
     $(document).keyup(function(e) {
         if ((e.keyCode == 37 || e.keyCode == 39) && eventRulerMT.is(':visible') && !$('#filter').is(':focus')) {
             var left = parseInt(eventRulerMT.css('left').replace('px', ''));
@@ -22,36 +38,32 @@ $(document).ready(function() {
             else if (e.keyCode == 39)
                 left += absVal;
 
+            if (left+10 < nav.width())
+                left = nav.width()-10;
+
             eventRulerMT.css('left', left + 'px');
         }
     });
 
     // Add toggle in header (not on mobiles)
-    if (body.width() > 768) {
-        $('.header').find('.logo')
-            .after('<div id="eventRulerToggle" class="eventRulerToggle" data-shown="false">' +
-                        '<img src="/static/icons/eventrulerhandle.png" /></div>');
-        var eventRulerToggle = $('#eventRulerToggle');
-        eventRulerToggle.click(function(e) {
-            e.stopPropagation();
-            $(this).attr('data-shown', $(this).attr('data-shown') == 'false' ? 'true' : 'false');
-            toggleRuler();
-        });
+    $('.header').find('.logo')
+        .after('<div id="eventRulerToggle" class="eventRulerToggle" data-shown="false">' +
+                    '<img src="/static/icons/eventrulerhandle.png" /></div>');
+    var eventRulerToggle = $('#eventRulerToggle');
+    eventRulerToggle.click(function(e) {
+        e.stopPropagation();
+        $(this).attr('data-shown', $(this).attr('data-shown') == 'false' ? 'true' : 'false');
+        toggleRuler();
+    });
 
-        eventRulerToggle.after('<div class="tooltip" style="right: 10px; left: auto;" data-dontsetleft="true">' +
-        '<b>Toggle event ruler</b><br />Tip: use <b>&#8592;, &#8594;</b> or drag-n-drop to move once set,<br /><b>Maj</b> to move quicker</div>');
-        prepareTooltips(eventRulerToggle, function(e) { return e
-            .next(); });
-    }
+    eventRulerToggle.after('<div class="tooltip" style="right: 10px; left: auto;" data-dontsetleft="true">' +
+    '<b>Toggle event ruler</b><br />Tip: use <b>&#8592;, &#8594;</b> or drag-n-drop to move once set,<br /><b>Maj</b> to move quicker</div>');
+    prepareTooltips(eventRulerToggle, function(e) { return e
+        .next(); });
 });
 
 function toggleRuler() {
     // Listen for mouse move, display ruler and ruler mask
-    var eventRulerMT = $('#eventRulerMouseTrigger');
-    var eventRulerMTPadding = 10;
-    var body = $('body');
-    var content = $('#content');
-
     if (eventRulerMT.is(':visible')) {
         eventRulerMT.fadeOut();
 
@@ -61,7 +73,12 @@ function toggleRuler() {
         eventRulerMT.fadeIn();
 
         body.on('mousemove', function (e) {
-            eventRulerMT.css('left', (e.pageX-eventRulerMTPadding)+'px');
+            var left = e.pageX-eventRulerMTPadding;
+
+            if (left+10 < nav.width())
+                left = nav.width()-10;
+
+            eventRulerMT.css('left', left);
         });
 
         body.on('click', function (e) {
@@ -79,7 +96,12 @@ function toggleRuler() {
                 if (dragging) {
                     e.preventDefault(); // Prevent selection
                     // Update ruler position
-                    eventRulerMT.css('left', e.pageX-eventRulerMTPadding);
+                    var left = e.pageX-eventRulerMTPadding;
+
+                    if (left+10 < nav.width())
+                        left = nav.width()-10;
+
+                    eventRulerMT.css('left', left);
                 }
             });
             eventRulerMT.on('mouseup', function() {

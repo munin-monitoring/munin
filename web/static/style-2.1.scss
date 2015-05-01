@@ -32,6 +32,13 @@
 	-moz-box-sizing: $param;
 	-webkit-box-sizing: $param;
 }
+@mixin transition($tr1, $tr2:false) {
+	$params: $tr1;
+	@if $tr2 { $params: $tr1, $tr2 }
+	-webkit-transition: $params;
+	-moz-transition: $params;
+	transition: $params;
+}
 @mixin transition-duration($duration) {
 	-webkit-transition-duration: $duration;
 	-moz-transition-duration: $duration;
@@ -47,7 +54,7 @@ html, body {
 }
 
 body {
-	background: #ECEFF1;
+	background: #FAFAFA;
 	font-size: 90%;
 	font-family: "vera sans", "dejavu sans", helvetica, verdana, arial, sans-serif;
 	color: #666666;
@@ -67,7 +74,7 @@ input[type="text"],
 input[type="number"]{
 	padding: 0 5px;
 	height: 23px;
-	border-radius: 2px;
+	@include border-radius(2px);
 	border: 1px solid #aaa;
 	@include box-shadow(inset 0 1px 2px rgba(0, 0, 0, 0.1));
 	color: #555;
@@ -195,7 +202,7 @@ a.graphLink.icrit { background-color: #ff0000; }
 		margin-top: 6px;
 		@include transition-duration(200ms);
 		border: 1px solid transparent;
-		border-radius: 3px;
+		@include border-radius(3px);
 		background-repeat: no-repeat;
 		background-position: 4px 2px;
 		/* SVG logo: fallback to png */
@@ -259,8 +266,6 @@ a.graphLink.icrit { background-color: #ff0000; }
 	width: 100%;
 	margin-left: auto;
 	display: table;
-	background-color: #fdfdfd;
-	@include box-shadow(0 1px 2px 0 rgba(0, 0, 0, 0.2));
 	min-height: 600px;
 }
 .clear { clear: both; }
@@ -275,12 +280,6 @@ a.graphLink.icrit { background-color: #ff0000; }
 	#navToggle { display: none; }
 }
 #nav {
-	border-right: 1px solid rgba(0, 0, 0, 0.20);
-	border-bottom-right-radius: 2px;
-	padding-bottom: 10px;
-	padding-top: 1px;
-	@include box-shadow(inset -4px 0 10px -8px #656565);
-
 	> hr {
 		background-color: rgba(0, 0, 0, 0.1);
 		height: 1px;
@@ -314,7 +313,7 @@ a.graphLink.icrit { background-color: #ff0000; }
 			color: #666;
 			border-bottom: 1px solid transparent;
 			border-top: 1px solid transparent;
-			border-radius: 2px;
+			@include border-radius(2px);
 		}
 		> a:hover,
         .timerangesList:hover + a {
@@ -363,6 +362,8 @@ a.graphLink.icrit { background-color: #ff0000; }
 #content {
 	display: table-cell;
 	padding: 5px 0 30px 30px;
+	background-color: #ffffff;
+	@include box-shadow(0 1px 2px 0 rgba(0, 0, 0, 0.3));
 	@include box-sizing(border-box);
 
 	h2 {
@@ -478,30 +479,31 @@ td {
 		@include border-radius(2px);
 		margin-bottom: 20px;
 		background-color: #fff;
-		@include box-shadow(0 1px 3px 0 rgba(0, 0, 0, 0.2));
-		border: 1px solid rgba(0, 0, 0, 0.25);
+		@include box-shadow(0 1px 3px 0 rgba(0, 0, 0, 0.15));
+		border: 1px solid rgba(0, 0, 0, 0.2);
 	}
 
-	span.domain a {
-		font-family: Helvetica, sans-serif;
-		font-size: 16px;
-		font-weight: bold;
-		color: #fff;
-		text-shadow: 1px 1px 0 #37474F;
-		display: block;
-		padding: 10px 22px;
-		margin: -1px;
-		@include border-radius(2px 2px 0 0);
-		border: 1px solid #37474F;
-		background-color: #546E7A;
-		@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
-		@include transition-duration(100ms);
-	}
-
-	span.domain a:hover {
-		background-color: #4E656F;
-		@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.5));
-		text-decoration: none;
+	span.domain {
+		a {
+			font-family: Helvetica, sans-serif;
+			font-size: 16px;
+			font-weight: bold;
+			color: #fff;
+			text-shadow: 1px 1px 0 #37474F;
+			display: block;
+			padding: 6px 20px;
+			margin: -1px;
+			@include border-radius(2px 2px 0 0);
+			border: 1px solid #37474F;
+			background-color: #546E7A;
+			@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
+			@include transition-duration(100ms);
+		}
+		a:hover {
+			background-color: #4E656F;
+			@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.5));
+			text-decoration: none;
+		}
 	}
 
 	/* Nested groups */
@@ -515,7 +517,7 @@ td {
 		padding: 0;
 
 		li {
-			border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+			border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 			font-size: 0; /* Remove white spaces */
 			overflow: hidden;
 
@@ -526,10 +528,10 @@ td {
 
 				a {
 					display: block;
-					padding: 11px 20px;
+					padding: 7px 20px;
 					font-weight: bold;
 					font-family: Helvetica, sans-serif;
-					font-size: 14px;
+					font-size: 13px;
 				}
 			}
 		}
@@ -541,8 +543,7 @@ td {
 	.overview-sparkline {
 		float: left;
 		display: block;
-		margin-top: 3px;
-		margin-right: 5px;
+		margin: 1px 5px 1px 0;
 		position: relative;
 	}
 
@@ -570,12 +571,13 @@ td {
 	.categories {
 		font-size: 11px;
 		display: block;
-		padding-top: 7px;
+		padding-top: 4px;
 
 		a {
 			display: inline-block;
 			padding: 5px 10px;
 			color: #666;
+			letter-spacing: -0.5px;
 			@include transition-duration(150ms);
 		}
 		a:hover {
@@ -814,14 +816,16 @@ td {
 	left: 364px;
 	z-index: 1;
 	cursor: col-resize;
+
+	#eventRuler {
+		border-left: 1px solid #000;
+		border-right: 1px solid #fff;
+		@include opacity(0.5);
+		height: 100%;
+		width: 0;
+	}
 }
-#eventRuler {
-	border-left: 1px solid #000;
-	border-right: 1px solid #fff;
-	@include opacity(0.5);
-	height: 100%;
-	width: 0;
-}
+
 #eventRulerToggle {
 	width: 30px;
 	height: 30px;
@@ -831,10 +835,11 @@ td {
 	margin: 7px 0 0 10px;
 	@include transition-duration(200ms);
 	border: 1px solid transparent;
-}
-#eventRulerToggle > img {
-	margin-top: -2px;
-	margin-left: -2px;
+
+	img {
+		margin-top: -2px;
+		margin-left: -2px;
+	}
 }
 #eventRulerToggle:hover,
 #eventRulerToggle[data-shown=true] {
@@ -844,6 +849,35 @@ td {
 }
 #eventRulerToggle[data-shown=true] {
 	@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+}
+
+#backToTop {
+	display: block;
+	height: 0;
+	overflow: hidden;
+	position: fixed;
+	bottom: 10px;
+	right: 0;
+	background-color: #2196F3;
+	color: #fff;
+	text-transform: uppercase;
+	font-family: Helvetica, sans-serif;
+	font-size: 12px;
+	letter-spacing: -0.5px;
+	padding: 4px 5px;
+	font-weight: bold;
+	@include border-radius(1px 0 0 1px);
+	@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
+	@include opacity(0);
+	@include transition(opacity 300ms 0s);
+}
+#backToTop.visible:hover {
+	text-decoration: none;
+	@include opacity(0.8);
+}
+#backToTop.visible {
+	@include opacity(0.5);
+	height: auto;
 }
 
 /* Include _style-2.1-responsive file */
