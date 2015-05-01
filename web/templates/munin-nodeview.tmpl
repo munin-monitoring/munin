@@ -3,7 +3,8 @@
 <TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
 <div id="main">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
-	<div id="content">
+	<!-- Change the tabsenables attribute to false to disable tabs -->
+	<div id="content" data-tabsenabled="true" data-tabs="true">
 		<!-- Node view -->
 		<div class="timeRangeSwitchContainer">
 			<div class="timeRangeSwitch">
@@ -25,6 +26,12 @@
 				</ul>
 			</div>
 		</div>
+
+		<h2><TMPL_VAR NAME="NAME"></h2>
+
+		<!-- Tabs. No empty space allowed here (for styling) -->
+		<ul class="tabs"><TMPL_LOOP NAME="CATEGORIES"><li><TMPL_VAR ESCAPE="HTML" NAME="NAME"></li></TMPL_LOOP></ul>
+
 		<TMPL_LOOP NAME="CATEGORIES">
 			<h3 id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3>
 			<div data-category="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">
@@ -94,5 +101,6 @@
 <script src="/static/munin-nodeview.js"></script>
 <script src="/static/munin-nodeview-timerangeswitch.js"></script>
 <script src="/static/munin-nodeview-eventruler.js"></script>
+<script src="/static/munin-nodeview-tabs.js"></script>
 </body>
 </html>

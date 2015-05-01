@@ -1,18 +1,32 @@
 /**
  * Javascript executed on munin-nodeview page
- * Please note that there is also nodeview-timerangeswitch.js
  */
 
+var content,
+    graphs,
+    h4s,
+    tabs;
+
 $(document).ready(function() {
+    content = $('#content');
+    graphs = $('.graph');
+    h4s = $('h4');
+    tabs = $('.tabs').find('li');
+
 	// Append a loading <img> on each graph img
-	$('.graph').after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');
+	graphs.after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');
 
 	// Auto-refresh
 	startAutoRefresh();
 
 	// Prepare filter
 	prepareFilter('Filter graphs', function(val) {
-		$('.graph').each(function() {
+        if (val.length == 0)
+            showTabs();
+        else
+            hideTabs();
+
+        graphs.each(function() {
 			var pluginName = $(this).attr('alt');
 			var src = $(this).attr('src');
 			var pluginId = src.substr(src.lastIndexOf('/')+1, src.lastIndexOf('-')-src.lastIndexOf('/')-1);
@@ -20,7 +34,7 @@ $(document).ready(function() {
 			if (filterMatches(val, pluginName) || filterMatches(val, pluginId)) {
 				$(this).parent().show();
 				// Show plugin name
-				$('h4').filter(function() {
+				h4s.filter(function() {
 					return $(this).text() == pluginName;
 				}).show();
 
@@ -30,8 +44,8 @@ $(document).ready(function() {
 			}
 			else {
 				$(this).parent().hide();
-				// Hidde plugin name
-				$('h4').filter(function() {
+				// Hide plugin name
+				h4s.filter(function() {
 					return $(this).text() == pluginName;
 				}).hide();
 
@@ -40,6 +54,16 @@ $(document).ready(function() {
 					$(this).parent().next().hide();
 			}
 		});
+
+        // If tabs aren't enabled, they are used as anchors links
+        if (content.attr('data-tabsenabled') == 'false') {
+            tabs.each(function() {
+                if (filterMatches(val, $(this).text()))
+                    $(this).show();
+                else
+                    $(this).hide();
+            });
+        }
 
 		// Hide unneccary categories names
 		$('div[data-category]').each(function() {

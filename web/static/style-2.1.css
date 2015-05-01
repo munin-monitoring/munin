@@ -1066,6 +1066,62 @@ td {
   height: auto;
 }
 
+/* Nodeview tabs */
+#content[data-tabs=true] ul.tabs {
+  margin: 10px 0 0 -30px;
+  padding: 0 30px;
+  border-bottom: 1px solid #dedede;
+}
+#content[data-tabs=true] ul.tabs li {
+  list-style: none;
+  display: inline-block;
+  letter-spacing: -1px;
+  margin: 0;
+  padding: 0 14px;
+  height: 35px;
+  line-height: 37px;
+  text-align: center;
+  font-size: 14px;
+  text-transform: uppercase;
+  border-bottom: 2px solid transparent;
+  -webkit-transition-duration: 200ms;
+  -moz-transition-duration: 200ms;
+  -o-transition-duration: 200ms;
+  transition-duration: 200ms;
+}
+#content[data-tabs=true] ul.tabs li, #content[data-tabs=true] ul.tabs a {
+  color: #777;
+  cursor: default;
+}
+#content[data-tabs=true] ul.tabs li:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+#content[data-tabs=true] ul.tabs li:hover, #content[data-tabs=true] ul.tabs a:hover {
+  color: #666;
+}
+#content[data-tabs=true] ul.tabs li.active {
+  color: #546E7A;
+  border-bottom-color: #546E7A;
+}
+#content[data-tabs=true] ul.tabs:empty {
+  display: none;
+}
+#content[data-tabs=true] h3 {
+  display: none;
+}
+
+#content[data-tabs=false] ul.tabs {
+  display: none;
+}
+#content[data-tabs=false] h3 {
+  display: block;
+}
+
+/* Tabs feature is disabled */
+#content[data-tabsenabled=false] h3 {
+  display: block;
+}
+
 /* Include _style-2.1-responsive file */
 /*
  * This file contains everything that makes munin responsive, and is included in style-2.1
