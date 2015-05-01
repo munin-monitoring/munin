@@ -990,8 +990,7 @@ td {
   z-index: 1;
   cursor: col-resize;
 }
-
-#eventRuler {
+#eventRulerMouseTrigger #eventRuler {
   border-left: 1px solid #000;
   border-right: 1px solid #fff;
   opacity: 0.5;
@@ -1013,8 +1012,7 @@ td {
   transition-duration: 200ms;
   border: 1px solid transparent;
 }
-
-#eventRulerToggle > img {
+#eventRulerToggle img {
   margin-top: -2px;
   margin-left: -2px;
 }
@@ -1034,6 +1032,48 @@ td {
   -moz-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
   -o-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
   box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
+}
+
+#backToTop {
+  display: block;
+  height: 0;
+  overflow: hidden;
+  position: fixed;
+  bottom: 10px;
+  right: 0;
+  background-color: #2196F3;
+  color: #fff;
+  text-transform: uppercase;
+  font-family: Helvetica, sans-serif;
+  font-size: 12px;
+  letter-spacing: -0.5px;
+  padding: 4px 5px;
+  font-weight: bold;
+  -webkit-border-radius: 1px 0 0 1px;
+  -moz-border-radius: 1px 0 0 1px;
+  -ms-border-radius: 1px 0 0 1px;
+  border-radius: 1px 0 0 1px;
+  -webkit-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
+  -o-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  filter: alpha(opacity=0);
+  -webkit-transition: opacity 300ms 0s;
+  -moz-transition: opacity 300ms 0s;
+  transition: opacity 300ms 0s;
+}
+
+#backToTop.visible:hover {
+  text-decoration: none;
+  opacity: 0.8;
+  filter: alpha(opacity=80);
+}
+
+#backToTop.visible {
+  opacity: 0.5;
+  filter: alpha(opacity=50);
+  height: auto;
 }
 
 /* Include _style-2.1-responsive file */

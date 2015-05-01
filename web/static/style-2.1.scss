@@ -32,6 +32,13 @@
 	-moz-box-sizing: $param;
 	-webkit-box-sizing: $param;
 }
+@mixin transition($tr1, $tr2:false) {
+	$params: $tr1;
+	@if $tr2 { $params: $tr1, $tr2 }
+	-webkit-transition: $params;
+	-moz-transition: $params;
+	transition: $params;
+}
 @mixin transition-duration($duration) {
 	-webkit-transition-duration: $duration;
 	-moz-transition-duration: $duration;
@@ -815,14 +822,16 @@ td {
 	left: 364px;
 	z-index: 1;
 	cursor: col-resize;
+
+	#eventRuler {
+		border-left: 1px solid #000;
+		border-right: 1px solid #fff;
+		@include opacity(0.5);
+		height: 100%;
+		width: 0;
+	}
 }
-#eventRuler {
-	border-left: 1px solid #000;
-	border-right: 1px solid #fff;
-	@include opacity(0.5);
-	height: 100%;
-	width: 0;
-}
+
 #eventRulerToggle {
 	width: 30px;
 	height: 30px;
@@ -832,10 +841,11 @@ td {
 	margin: 7px 0 0 10px;
 	@include transition-duration(200ms);
 	border: 1px solid transparent;
-}
-#eventRulerToggle > img {
-	margin-top: -2px;
-	margin-left: -2px;
+
+	img {
+		margin-top: -2px;
+		margin-left: -2px;
+	}
 }
 #eventRulerToggle:hover,
 #eventRulerToggle[data-shown=true] {
@@ -845,6 +855,35 @@ td {
 }
 #eventRulerToggle[data-shown=true] {
 	@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+}
+
+#backToTop {
+	display: block;
+	height: 0;
+	overflow: hidden;
+	position: fixed;
+	bottom: 10px;
+	right: 0;
+	background-color: #2196F3;
+	color: #fff;
+	text-transform: uppercase;
+	font-family: Helvetica, sans-serif;
+	font-size: 12px;
+	letter-spacing: -0.5px;
+	padding: 4px 5px;
+	font-weight: bold;
+	@include border-radius(1px 0 0 1px);
+	@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
+	@include opacity(0);
+	@include transition(opacity 300ms 0s);
+}
+#backToTop.visible:hover {
+	text-decoration: none;
+	@include opacity(0.8);
+}
+#backToTop.visible {
+	@include opacity(0.5);
+	height: auto;
 }
 
 /* Include _style-2.1-responsive file */
