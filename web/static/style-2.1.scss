@@ -890,7 +890,6 @@ td {
 		li {
 			list-style: none;
 			display: inline-block;
-			color: #777;
 			letter-spacing: -1px;
 			margin: 0;
 			padding: 0 14px;
@@ -900,11 +899,14 @@ td {
 			font-size: 14px;
 			text-transform: uppercase;
 			border-bottom: 2px solid transparent;
-			cursor: default;
 			@include transition-duration(200ms);
 		}
-		li:hover {
-			background-color: rgba(0, 0, 0, 0.05);
+		li, a {
+			color: #777;
+			cursor: default;
+		}
+		li:hover { background-color: rgba(0, 0, 0, 0.05); }
+		li:hover, a:hover {
 			color: #666;
 		}
 		li.active {
@@ -917,6 +919,10 @@ td {
 }
 #content[data-tabs=false] {
 	ul.tabs { display:none; }
+	h3 { display: block; }
+}
+/* Tabs feature is disabled */
+#content[data-tabsenabled=false] {
 	h3 { display: block; }
 }
 
