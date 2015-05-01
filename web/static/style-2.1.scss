@@ -880,5 +880,45 @@ td {
 	height: auto;
 }
 
+/* Nodeview tabs */
+#content[data-tabs=true] {
+	ul.tabs {
+		margin: 10px 0 0 -30px;
+		padding: 0 30px;
+		border-bottom: 1px solid #dedede;
+
+		li {
+			list-style: none;
+			display: inline-block;
+			color: #777;
+			letter-spacing: -1px;
+			margin: 0;
+			padding: 0 14px;
+			height: 35px;
+			line-height: 37px;
+			text-align: center;
+			font-size: 14px;
+			text-transform: uppercase;
+			border-bottom: 2px solid transparent;
+			cursor: default;
+			@include transition-duration(200ms);
+		}
+		li:hover {
+			background-color: rgba(0, 0, 0, 0.05);
+			color: #666;
+		}
+		li.active {
+			color: #546E7A;
+			border-bottom-color: #546E7A;
+		}
+	}
+	ul.tabs:empty { display: none; }
+	h3 { display: none; }
+}
+#content[data-tabs=false] {
+	ul.tabs { display:none; }
+	h3 { display: block; }
+}
+
 /* Include _style-2.1-responsive file */
 @import '_style-2.1-responsive';

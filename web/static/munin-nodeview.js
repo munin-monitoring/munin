@@ -1,6 +1,5 @@
 /**
  * Javascript executed on munin-nodeview page
- * Please note that there is also nodeview-timerangeswitch.js
  */
 
 $(document).ready(function() {
@@ -12,6 +11,11 @@ $(document).ready(function() {
 
 	// Prepare filter
 	prepareFilter('Filter graphs', function(val) {
+        if (val.length == 0)
+            enableTabs();
+        else
+            disableTabs();
+
 		$('.graph').each(function() {
 			var pluginName = $(this).attr('alt');
 			var src = $(this).attr('src');
