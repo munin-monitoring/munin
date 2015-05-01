@@ -44,7 +44,7 @@ $(document).ready(function() {
 
     // Sparklines auto-refresh
     var sparklines = $('.sparkline');
-    sparklines.after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');
+    sparklines.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
     startAutoRefresh('.sparkline');
 
     // Hide sparklines on error (if the load plugin isn't available for example)

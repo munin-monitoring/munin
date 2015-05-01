@@ -31,7 +31,7 @@ $(document).ready(function() {
     });
 
     // Append a loading <img> on each graph img
-    $('.graph').after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');
+    $('.graph').after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
 
 	// Graphs auto-refresh
 	startAutoRefresh();

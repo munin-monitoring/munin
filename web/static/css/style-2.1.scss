@@ -206,10 +206,10 @@ a.graphLink.icrit { background-color: #ff0000; }
 		background-repeat: no-repeat;
 		background-position: 4px 2px;
 		/* SVG logo: fallback to png */
-		background-image: url('logo-h-neg.png');
+		background-image: url('../img/logo-h-neg.png');
 		background-image:
 		linear-gradient(transparent, transparent),
-		url('logo-h-neg.svg');
+		url('../img/logo-h-neg.svg');
 		background-size: 115px 30px;
 	}
 	.logo:hover {
@@ -606,7 +606,7 @@ td {
 		@include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.20));
 		@include transition-duration(150ms);
 		@include box-sizing(border-box);
-		background: rgba(0, 0, 0, 0.2) url('icons/glyphicons-28-search-white.png') no-repeat 8px 7px;
+		background: rgba(0, 0, 0, 0.2) url('../img/icons/glyphicons-28-search-white.png') no-repeat 8px 7px;
 		background-size: 16px;
 	}
 	input[type=text]:focus {
@@ -927,4 +927,4 @@ td {
 }
 
 /* Include _style-2.1-responsive file */
-@import '_style-2.1-responsive';
+@import 'style-2.1-responsive';

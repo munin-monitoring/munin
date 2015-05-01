@@ -57,18 +57,16 @@ function prepareFilter(placeholder, onFilterChange) {
 
 	// Register ESC key: same action as cancel filter
 	$(document).keyup(function(e) {
-		var filterInput = $('#filter');
-		if (e.keyCode == 27 && filterInput.is(':focus') && filterInput.val().length > 0)
+		if (e.keyCode == 27 && input.is(':focus') && input.val().length > 0)
 			$('#cancelFilter').click();
 	});
 
 	// There may be a 'filter' GET parameter in URL: let's apply it
 	var qs = new Querystring();
 	if (qs.contains('filter')) {
-		var filter = $('#filter');
-		filter.val(qs.get('filter'));
+		input.val(qs.get('filter'));
 		// Manually trigger the keyUp event on filter input
-		filter.keyup();
+		input.keyup();
 	}
 }
 

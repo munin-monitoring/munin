@@ -48,7 +48,7 @@ $(document).ready(function() {
     // Add toggle in header (not on mobiles)
     $('.header').find('.logo')
         .after('<div id="eventRulerToggle" class="eventRulerToggle" data-shown="false">' +
-                    '<img src="/static/icons/eventrulerhandle.png" /></div>');
+                    '<img src="/static/img/icons/eventrulerhandle.png" /></div>');
     var eventRulerToggle = $('#eventRulerToggle');
     eventRulerToggle.click(function(e) {
         e.stopPropagation();

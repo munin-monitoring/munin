@@ -260,8 +260,8 @@ a.graphLink.icrit {
   background-repeat: no-repeat;
   background-position: 4px 2px;
   /* SVG logo: fallback to png */
-  background-image: url("logo-h-neg.png");
-  background-image: linear-gradient(transparent, transparent), url("logo-h-neg.svg");
+  background-image: url("../img/logo-h-neg.png");
+  background-image: linear-gradient(transparent, transparent), url("../img/logo-h-neg.svg");
   background-size: 115px 30px;
 }
 .header .logo:hover {
@@ -721,7 +721,7 @@ td {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.2) url("icons/glyphicons-28-search-white.png") no-repeat 8px 7px;
+  background: rgba(0, 0, 0, 0.2) url("../img/icons/glyphicons-28-search-white.png") no-repeat 8px 7px;
   background-size: 16px;
 }
 .filter input[type=text]:focus {

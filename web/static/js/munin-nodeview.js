@@ -14,7 +14,7 @@ $(document).ready(function() {
     tabs = $('.tabs').find('li');
 
 	// Append a loading <img> on each graph img
-	graphs.after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');
+	graphs.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
 
 	// Auto-refresh
 	startAutoRefresh();
