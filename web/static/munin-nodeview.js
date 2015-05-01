@@ -50,19 +50,17 @@ $(document).ready(function() {
 		});
 	});
 
+
     // Back to top button
     var backToTop = $('#backToTop');
     var offset = 300;
 
-    var onScroll = function() {
+    $(window).scroll(function() {
         if ($(this).scrollTop() > offset)
             backToTop.addClass('visible');
         else
             backToTop.removeClass('visible');
-    };
-
-    $(window).scroll(onScroll);
-    onScroll();
+    });
 
     backToTop.click(function(e) {
         e.preventDefault();

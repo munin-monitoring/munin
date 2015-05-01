@@ -54,7 +54,7 @@ html, body {
 }
 
 body {
-	background: #ECEFF1;
+	background: #FAFAFA;
 	font-size: 90%;
 	font-family: "vera sans", "dejavu sans", helvetica, verdana, arial, sans-serif;
 	color: #666666;
@@ -266,8 +266,6 @@ a.graphLink.icrit { background-color: #ff0000; }
 	width: 100%;
 	margin-left: auto;
 	display: table;
-	background-color: #fdfdfd;
-	@include box-shadow(0 1px 2px 0 rgba(0, 0, 0, 0.2));
 	min-height: 600px;
 }
 .clear { clear: both; }
@@ -282,12 +280,6 @@ a.graphLink.icrit { background-color: #ff0000; }
 	#navToggle { display: none; }
 }
 #nav {
-	border-right: 1px solid rgba(0, 0, 0, 0.20);
-	border-bottom-right-radius: 2px;
-	padding-bottom: 10px;
-	padding-top: 1px;
-	@include box-shadow(inset -4px 0 10px -8px #656565);
-
 	> hr {
 		background-color: rgba(0, 0, 0, 0.1);
 		height: 1px;
@@ -370,6 +362,8 @@ a.graphLink.icrit { background-color: #ff0000; }
 #content {
 	display: table-cell;
 	padding: 5px 0 30px 30px;
+	background-color: #ffffff;
+	@include box-shadow(0 1px 2px 0 rgba(0, 0, 0, 0.3));
 	@include box-sizing(border-box);
 
 	h2 {
@@ -485,8 +479,8 @@ td {
 		@include border-radius(2px);
 		margin-bottom: 20px;
 		background-color: #fff;
-		@include box-shadow(0 1px 3px 0 rgba(0, 0, 0, 0.2));
-		border: 1px solid rgba(0, 0, 0, 0.25);
+		@include box-shadow(0 1px 3px 0 rgba(0, 0, 0, 0.15));
+		border: 1px solid rgba(0, 0, 0, 0.2);
 	}
 
 	span.domain {
@@ -523,7 +517,7 @@ td {
 		padding: 0;
 
 		li {
-			border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+			border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 			font-size: 0; /* Remove white spaces */
 			overflow: hidden;
 

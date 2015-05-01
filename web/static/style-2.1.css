@@ -15,7 +15,7 @@ html, body {
 }
 
 body {
-  background: #ECEFF1;
+  background: #FAFAFA;
   font-size: 90%;
   font-family: "vera sans", "dejavu sans", helvetica, verdana, arial, sans-serif;
   color: #666666;
@@ -326,11 +326,6 @@ a.graphLink.icrit {
   width: 100%;
   margin-left: auto;
   display: table;
-  background-color: #fdfdfd;
-  -webkit-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-  -moz-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-  -o-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
   min-height: 600px;
 }
 
@@ -349,16 +344,6 @@ a.graphLink.icrit {
   display: none;
 }
 
-#nav {
-  border-right: 1px solid rgba(0, 0, 0, 0.2);
-  border-bottom-right-radius: 2px;
-  padding-bottom: 10px;
-  padding-top: 1px;
-  -webkit-box-shadow: inset -4px 0 10px -8px #656565;
-  -moz-box-shadow: inset -4px 0 10px -8px #656565;
-  -o-box-shadow: inset -4px 0 10px -8px #656565;
-  box-shadow: inset -4px 0 10px -8px #656565;
-}
 #nav > hr {
   background-color: rgba(0, 0, 0, 0.1);
   height: 1px;
@@ -454,6 +439,11 @@ a.graphLink.icrit {
 #content {
   display: table-cell;
   padding: 5px 0 30px 30px;
+  background-color: #ffffff;
+  -webkit-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  -o-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -586,11 +576,11 @@ td {
   border-radius: 2px;
   margin-bottom: 20px;
   background-color: #fff;
-  -webkit-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-  -moz-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-  -o-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  -webkit-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.15);
+  -o-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.2);
 }
 .groupview span.domain a {
   font-family: Helvetica, sans-serif;
@@ -633,7 +623,7 @@ td {
   padding: 0;
 }
 .groupview li ul li {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   font-size: 0;
   /* Remove white spaces */
   overflow: hidden;
