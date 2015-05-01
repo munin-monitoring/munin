@@ -2,6 +2,13 @@
  * Overview specific code
  */
 
+// Hide sparklines on error (if the load plugin isn't available for example)
+// We have to register it as soon as possible or the sparklines may have loaded
+//  before we could handle the error
+$('.sparkline').on('error', function() {
+    $(this).parent().hide(); // Hide container
+});
+
 $(document).ready(function() {
 	prepareFilter('Filter nodes', function(expr) {
 		var groupView = $('.groupview');
@@ -46,9 +53,4 @@ $(document).ready(function() {
     var sparklines = $('.sparkline');
     sparklines.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
     startAutoRefresh('.sparkline');
-
-    // Hide sparklines on error (if the load plugin isn't available for example)
-    sparklines.error(function() {
-        $(this).parent().hide(); // Hide container
-    });
 });
