@@ -9,15 +9,15 @@
 			<TMPL_LOOP NAME="PATH">
 				<TMPL_IF NAME="PATHNAME"> &bull;
 					<TMPL_IF NAME="PATH">
-						<a href="<TMPL_VAR NAME="PATH">">
+						<a href="<TMPL_VAR NAME="PATH">"><!--
 					<TMPL_ELSE>
-						<span class="switchable" data-switch="header">
+						<span class="switchable" data-switch="header"><!--
 					</TMPL_IF>
-					<TMPL_VAR NAME="PATHNAME">
+					--><TMPL_VAR NAME="PATHNAME"><!--
 					<TMPL_IF NAME="PATH">
-						</a>
+						--></a>
 					<TMPL_ELSE>
-						</span>
+						--></span>
 					</TMPL_IF>
 				<TMPL_ELSE>
 					<a href="/">Overview</a>
