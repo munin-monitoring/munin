@@ -960,6 +960,11 @@ td {
 		font-family: Helvetica, sans-serif;
 		@include transition-duration(150ms);
 	}
+	a.current {
+		color: #888;
+		background-color: rgba(0, 0, 0, 0.05);
+		cursor: default;
+	}
 	a:hover {
 		text-decoration: none;
 		background-color: rgba(0, 0, 0, 0.05);

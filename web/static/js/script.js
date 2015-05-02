@@ -27,7 +27,9 @@ $(document).ready(function() {
  * @param switchId Switch name
  */
 function prepareSwitchable(switchId) {
-	$('.switchable[data-switch=' + switchId + ']').click(function() {
+	var switchable = $('.switchable[data-switch=' + switchId + ']');
+
+	switchable.click(function() {
 		var switchableContent = $('.switchable_content[data-switch=' + switchId + ']');
 		switchableContent.css('left', $(this).position().left);
 		switchableContent.css('top', $(this).position().top + $(this).height() + 10);
@@ -44,6 +46,12 @@ function prepareSwitchable(switchId) {
 			}
 		});
 	});
+
+	// Gray out current element in switchable_content
+	$('.switchable_content[data-switch=' + switchId + ']').children().filter(function() {
+		console.log('Comparing ' + switchable.text() + ' ' + $(this).text());
+		return switchable.text().trim() == $(this).text().trim();
+	}).addClass('current');
 }
 
 /**

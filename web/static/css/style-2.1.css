@@ -1168,6 +1168,11 @@ td {
   -o-transition-duration: 150ms;
   transition-duration: 150ms;
 }
+.switchable_content a.current {
+  color: #888;
+  background-color: rgba(0, 0, 0, 0.05);
+  cursor: default;
+}
 .switchable_content a:hover {
   text-decoration: none;
   background-color: rgba(0, 0, 0, 0.05);
