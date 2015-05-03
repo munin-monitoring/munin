@@ -174,6 +174,7 @@ sub handle_request
 		$template_params{PATH} = [
 			# first args should have path and r_path for backlink to overview
 			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
+			{ "pathname" => "Dynazoom", "path" => "#" }
 		];
 		# Content only: when dynazoom page is shown in a modal,
 		#   we hide the header & navigation
