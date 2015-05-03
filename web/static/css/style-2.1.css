@@ -6,6 +6,7 @@
  *
  *  Sass compiler arguments:  --style expanded
  */
+/* SASS variables */
 /* SASS mixins */
 /* Overall layout */
 html, body {
@@ -209,10 +210,10 @@ img.dynazoomModalLink:hover {
   position: relative;
   z-index: 5;
   border-bottom: 1px solid #3A713C;
-  -webkit-box-shadow: 0 0 5px 0 #777777;
-  -moz-box-shadow: 0 0 5px 0 #777777;
-  -o-box-shadow: 0 0 5px 0 #777777;
-  box-shadow: 0 0 5px 0 #777777;
+  -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
+  -o-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -470,13 +471,13 @@ td {
   text-align: left;
   font-weight: bold;
   color: #fff;
-  text-shadow: 1px 1px 0 #37474F;
+  text-shadow: 1px 1px 0 #3f535c;
   margin: -1px;
   -webkit-border-radius: 2px 2px 0 0;
   -moz-border-radius: 2px 2px 0 0;
   -ms-border-radius: 2px 2px 0 0;
   border-radius: 2px 2px 0 0;
-  border: 1px solid #37474F;
+  border: 1px solid #3f535c;
   background-color: #546E7A;
   -webkit-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
   -moz-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
@@ -567,7 +568,7 @@ td {
   font-size: 16px;
   font-weight: bold;
   color: #fff;
-  text-shadow: 1px 1px 0 #37474F;
+  text-shadow: 1px 1px 0 #3f535c;
   display: block;
   padding: 6px 20px;
   margin: -1px;
@@ -575,7 +576,7 @@ td {
   -moz-border-radius: 2px 2px 0 0;
   -ms-border-radius: 2px 2px 0 0;
   border-radius: 2px 2px 0 0;
-  border: 1px solid #37474F;
+  border: 1px solid #3f535c;
   background-color: #546E7A;
   -webkit-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
   -moz-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
@@ -1175,7 +1176,7 @@ td {
   font-family: Helvetica, sans-serif;
   font-size: 16px;
   color: #fff;
-  text-shadow: 1px 1px 0 #37474F;
+  text-shadow: 1px 1px 0 #3f535c;
   display: block;
   padding: 7px 10px 8px 20px;
   margin: -1px;
@@ -1183,7 +1184,7 @@ td {
   -moz-border-radius: 3px 3px 0 0;
   -ms-border-radius: 3px 3px 0 0;
   border-radius: 3px 3px 0 0;
-  border: 1px solid #37474F;
+  border: 1px solid #3f535c;
   background-color: #546E7A;
 }
 .modal .title a {

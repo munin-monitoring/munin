@@ -7,6 +7,11 @@
  *  Sass compiler arguments:  --style expanded
  */
 
+/* SASS variables */
+$secondary-font: 	Helvetica, sans-serif;
+$primary-color: 	#388E3C;
+$secondary-color: 	#546E7A;
+
 /* SASS mixins */
 @mixin border-radius($radius) {
 	-webkit-border-radius: $radius;
@@ -204,11 +209,11 @@ img.dynazoomModalLink {
 	margin: 0 auto;
 	padding: 1px 12px 1px 37px;
 	text-align: center;
-	background-color: #388E3C;
+	background-color: $primary-color;
 	position: relative;
 	z-index: 5;
 	border-bottom: 1px solid #3A713C;
-	@include box-shadow(0 0 5px 0 #777777);
+	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.5));
 	@include box-sizing(border-box);
 
 	h1 {
@@ -420,16 +425,16 @@ td {
 	border: 1px solid rgba(0, 0, 0, 0.25);
 
 	.legendHead {
-		font-family: Helvetica, sans-serif;
+		font-family: $secondary-font;
 		font-size: 15px;
 		text-align: left;
 		font-weight: bold;
 		color: #fff;
-		text-shadow: 1px 1px 0 #37474F;
+		text-shadow: 1px 1px 0 darken($secondary-color, 10);
 		margin: -1px;
 		@include border-radius(2px 2px 0 0);
-		border: 1px solid #37474F;
-		background-color: #546E7A;
+		border: 1px solid darken($secondary-color, 10);
+		background-color: $secondary-color;
 		@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
 
 		th {
@@ -507,17 +512,17 @@ td {
 
 	span.domain {
 		a {
-			font-family: Helvetica, sans-serif;
+			font-family: $secondary-font;
 			font-size: 16px;
 			font-weight: bold;
 			color: #fff;
-			text-shadow: 1px 1px 0 #37474F;
+			text-shadow: 1px 1px 0 darken($secondary-color, 10);
 			display: block;
 			padding: 6px 20px;
 			margin: -1px;
 			@include border-radius(2px 2px 0 0);
-			border: 1px solid #37474F;
-			background-color: #546E7A;
+			border: 1px solid darken($secondary-color, 10);
+			background-color: $secondary-color;
 			@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
 			@include transition-duration(100ms);
 
@@ -553,7 +558,7 @@ td {
 					display: block;
 					padding: 7px 20px;
 					font-weight: bold;
-					font-family: Helvetica, sans-serif;
+					font-family: $secondary-font;
 					font-size: 13px;
 				}
 			}
@@ -895,7 +900,7 @@ td {
 	background-color: #2196F3;
 	color: #fff;
 	text-transform: uppercase;
-	font-family: Helvetica, sans-serif;
+	font-family: $secondary-font;
 	font-size: 12px;
 	letter-spacing: -0.5px;
 	padding: 4px 5px;
@@ -938,8 +943,8 @@ td {
 
 			&:hover { background-color: rgba(0, 0, 0, 0.05); }
 			&.active {
-				color: #546E7A;
-				border-bottom-color: #546E7A;
+				color: $secondary-color;
+				border-bottom-color: $secondary-color;
 			}
 		}
 		li, a {
@@ -999,7 +1004,7 @@ td {
 		white-space: nowrap;
 		color: #333;
 		text-align: left;
-		font-family: Helvetica, sans-serif;
+		font-family: $secondary-font;
 		@include transition-duration(150ms);
 
 		&.current {
@@ -1029,16 +1034,16 @@ td {
 	@include border-radius(2px);
 
 	.title {
-		font-family: Helvetica, sans-serif;
+		font-family: $secondary-font;
 		font-size: 16px;
 		color: #fff;
-		text-shadow: 1px 1px 0 #37474F;
+		text-shadow: 1px 1px 0 darken($secondary-color, 10);
 		display: block;
 		padding: 7px 10px 8px 20px;
 		margin: -1px;
 		@include border-radius(3px 3px 0 0);
-		border: 1px solid #37474F;
-		background-color: #546E7A;
+		border: 1px solid darken($secondary-color, 10);
+		background-color: $secondary-color;
 
 		a {
 			float: right;
