@@ -849,18 +849,16 @@ td {
   background-color: #eee;
   position: absolute;
   z-index: 2;
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  -ms-border-radius: 3px;
-  border-radius: 3px;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  -ms-border-radius: 2px;
+  border-radius: 2px;
 }
-
-.overlayDiv_dragging {
+.overlayDiv.dragging {
   visibility: visible;
   background-color: #555;
 }
-
-.overlayDiv_dragged {
+.overlayDiv.dragged {
   background-color: #000;
   cursor: pointer;
   -webkit-transition-duration: 100ms;
@@ -868,11 +866,11 @@ td {
   -o-transition-duration: 100ms;
   transition-duration: 100ms;
 }
-.overlayDiv_dragged:hover {
+.overlayDiv.dragged:hover {
   opacity: 0.6;
   filter: alpha(opacity=60);
 }
-.overlayDiv_dragged:active {
+.overlayDiv.dragged:active {
   opacity: 0.65;
   filter: alpha(opacity=65);
 }
@@ -1177,6 +1175,10 @@ td {
   width: 100%;
   height: 100%;
   border: 0;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  -ms-border-radius: 2px;
+  border-radius: 2px;
 }
 
 .modalMask {

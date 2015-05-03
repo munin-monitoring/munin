@@ -757,22 +757,23 @@ td {
 	background-color: #eee;
 	position: absolute;
 	z-index: 2;
-	@include border-radius(3px);
-}
-.overlayDiv_dragging {
-	visibility: visible;
-	background-color: #555;
-}
-.overlayDiv_dragged {
-	background-color: #000;
-	cursor: pointer;
-	@include transition-duration(100ms);
+	@include border-radius(2px);
 
-	&:hover {
-		@include opacity(.6);
+	&.dragging {
+		visibility: visible;
+		background-color: #555;
 	}
-	&:active {
-		@include opacity(.65);
+	&.dragged {
+		background-color: #000;
+		cursor: pointer;
+		@include transition-duration(100ms);
+
+		&:hover {
+			@include opacity(.6);
+		}
+		&:active {
+			@include opacity(.65);
+		}
 	}
 }
 .dzForm {
@@ -1031,6 +1032,7 @@ td {
 		width: 100%;
 		height: 100%;
 		border: 0;
+		@include border-radius(2px);
 	}
 }
 .modalMask {
