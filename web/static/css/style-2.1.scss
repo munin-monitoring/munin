@@ -65,13 +65,8 @@ select {
 	border: 1px solid #d1d1d1;
 }
 
-/* Hide IE's cross on text field */
-input[type=text]::-ms-clear {
-	display: none;
-}
-
 input[type="text"],
-input[type="number"]{
+input[type="number"] {
 	padding: 0 5px;
 	height: 23px;
 	@include border-radius(2px);
@@ -100,8 +95,10 @@ hr {
 	@include box-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
 }
 
-a:link, a:visited, a:link:active, a:link:hover { color: #486aaf; text-decoration: none; }
-a:link:hover { text-decoration: underline;}
+a {
+	&, &:visited, &:active, &:hover { color: #486aaf; text-decoration: none; }
+	&:hover { text-decoration: underline; }
+}
 
 .warntext {
 	font-weight: bold;
@@ -119,50 +116,62 @@ a:link:hover { text-decoration: underline;}
 	border: 1px solid #f16722;
 }
 
-a.unkn:link    { color: #ffaa00; }
-a.unkn:visited { color: #ffaa00; }
-a.unkn:active  { color: #ffaa00; }
-a.unkn:hover   { color: #ffaa00; }
+a {
+	&.unkn {
+		&:link, &:visited, &:active, &:hover { color: #ffaa00; }
+	}
+	&.warn {
+		&:link, &:visited, &:active, &:hover { color: #ffd300; }
+	}
+	&.crit {
+		&:link, &:visited, &:active, &:hover { color: #ff0000; }
+	}
+}
 
-a.warn:link    { color: #ffd300; }
-a.warn:visited { color: #ffd300; }
-a.warn:active  { color: #ffd300; }
-a.warn:hover   { color: #ffd300; }
+img { border: 0; }
 
-a.crit:link    { color: #ff0000; }
-a.crit:visited { color: #ff0000; }
-a.crit:active  { color: #ff0000; }
-a.crit:hover   { color: #ff0000; }
-
-img        { border: 0; }
-
-a.graphLink {
+.graphLink {
 	display: inline-block;
 	max-width: 500px;
 	vertical-align: top;
 	position: relative;
 	margin: 4px 4px 4px 0;
 	font-size: 0;
+
+	&:hover { text-decoration: none }
+	&.iwarn { background-color: #ffd300; }
+	&.icrit { background-color: #ff0000; }
 }
-a.graphLink:hover { text-decoration: none }
-a.graphLink.iwarn { background-color: #ffd300; }
-a.graphLink.icrit { background-color: #ff0000; }
+
 .graph {
 	max-width: 100%;
 	height: auto;
 	/* Colors are overridden by "color" property */
 	border: 1px solid;
 	@include box-shadow(0 0 2px 0);
+
+	&.i {
+		color: #fff;
+		@include box-shadow(0 0 2px 0 #888);
+	}
+	&.iwarn, &.icrit { opacity: 0.95; }
+	&.iwarn { color: #ffd300; }
+	&.icrit { color: #ff0000; }
+	&.iunkn { color: #ffaa00; }
+	&.iremoved { opacity: 0.6; }
+
+	&:hover+img.dynazoomModalLink {
+		display: block;
+		@include opacity(0.5);
+
+		&:hover {
+			border-color: rgba(0, 0, 0, 0.15);
+			background-color: rgba(0, 0, 0, 0.15);
+			@include opacity(0.8);
+		}
+	}
 }
-.graph.i {
-	color: #fff;
-	@include box-shadow(0 0 2px 0 #888);
-}
-.graph.iwarn, .graph.icrit { opacity: 0.95; }
-.graph.iwarn { color: #ffd300; }
-.graph.icrit { color: #ff0000; }
-.graph.iunkn { color: #ffaa00; }
-.graph.iremoved { opacity: 0.6; }
+
 .graph_loading {
 	position: absolute;
 	top: 50%;
@@ -173,6 +182,20 @@ a.graphLink.icrit { background-color: #ff0000; }
 	margin-top: -8px;
 }
 
+/* Dynazoom modal link */
+img.dynazoomModalLink {
+	cursor: pointer;
+	position: absolute;
+	top: 3px;
+	right: 3px;
+	width: 20px;
+	height: 20px;
+	border: 1px solid transparent;
+	padding: 2px;
+	@include opacity(0);
+	@include transition-duration(150ms);
+	@include border-radius(2px);
+}
 
 /* Header */
 .header {
@@ -234,12 +257,13 @@ a.graphLink.icrit { background-color: #ff0000; }
 			padding: 2px 6px;
 			@include border-radius(2px);
 			border: 1px solid transparent;
-		}
-		a:hover, span:hover {
-			color: #fff;
-			border-color: rgba(0, 0, 0, 0.15);
-			background-color: rgba(0, 0, 0, 0.15);
-			text-decoration: none;
+
+			&:hover {
+				color: #fff;
+				border-color: rgba(0, 0, 0, 0.15);
+				background-color: rgba(0, 0, 0, 0.15);
+				text-decoration: none;
+			}
 		}
 	}
 	.pageTitle.singleLine { margin-top: 13px; }
@@ -250,14 +274,13 @@ a.graphLink.icrit { background-color: #ff0000; }
 		font-size: 12px;
 		text-align: center;
 		@include transition-duration(200ms);
+		color: #fff;
 
 		> a {
 			color: #fff;
 		}
-	}
-	.comparison, .comparison:hover,
-	.categories, .categories:hover {
-		color: #fff;
+
+		&:hover { color: #fff; }
 	}
 }
 
@@ -458,9 +481,8 @@ td {
 		letter-spacing: -0.5px;
 		@include transition-duration(200ms);
 		margin: 10px 0;
-	}
-	p.tagline:hover {
-		color: #888;
+
+		&:hover { color: #888; }
 	}
 }
 
@@ -498,11 +520,12 @@ td {
 			background-color: #546E7A;
 			@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
 			@include transition-duration(100ms);
-		}
-		a:hover {
-			background-color: #4E656F;
-			@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.5));
-			text-decoration: none;
+
+			&:hover {
+				background-color: #4E656F;
+				@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.5));
+				text-decoration: none;
+			}
 		}
 	}
 
@@ -579,10 +602,11 @@ td {
 			color: #666;
 			letter-spacing: -0.5px;
 			@include transition-duration(150ms);
-		}
-		a:hover {
-			background-color: #dedede;
-			@include border-radius(3px);
+
+			&:hover {
+				background-color: #dedede;
+				@include border-radius(3px);
+			}
 		}
 	}
 }
@@ -608,30 +632,36 @@ td {
 		@include box-sizing(border-box);
 		background: rgba(0, 0, 0, 0.2) url('../img/icons/glyphicons-28-search-white.png') no-repeat 8px 7px;
 		background-size: 16px;
-	}
-	input[type=text]:focus {
-		outline: none;
-		background-color: rgba(0, 0, 0, 0.3);
-		@include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.1));
-		width: 300px;
-	}
 
-	/* Placeholder text color */
-	input[type=text]::-webkit-input-placeholder {
-		color: #ffffff;
-		@include opacity(0.8);
-	}
-	input[type=text]:-moz-placeholder { /* Firefox 18- */
-		color: #ffffff;
-		@include opacity(0.8);
-	}
-	input[type=text]::-moz-placeholder {  /* Firefox 19+ */
-		color: #ffffff;
-		@include opacity(0.8);
-	}
-	input[type=text]:-ms-input-placeholder {
-		color: #ffffff;
-		@include opacity(0.8);
+		&:focus {
+			outline: none;
+			background-color: rgba(0, 0, 0, 0.3);
+			@include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.1));
+			width: 300px;
+		}
+
+		/* Placeholder text color */
+		&::-webkit-input-placeholder {
+			color: #ffffff;
+			@include opacity(0.8);
+		}
+		&:-moz-placeholder { /* Firefox 18- */
+			color: #ffffff;
+			@include opacity(0.8);
+		}
+		&::-moz-placeholder {  /* Firefox 19+ */
+			color: #ffffff;
+			@include opacity(0.8);
+		}
+		&:-ms-input-placeholder {
+			color: #ffffff;
+			@include opacity(0.8);
+		}
+
+		/* Hide IE's cross on text field */
+		&::-ms-clear {
+			display: none;
+		}
 	}
 
 	#cancelFilter {
@@ -680,16 +710,17 @@ td {
 				cursor: pointer;
 				@include transition-duration(150ms);
 				border-right: 1px solid #dedede;
-			}
-			li.last {
-				border-right-width: 0;
-			}
-			li.selected {
-				color: rgba(255,255,255,0.87);
-				background-color: rgb(63,81,181);
-			}
-			li:hover {
-				@include opacity(0.9);
+
+				&.last {
+					border-right-width: 0;
+				}
+				&.selected {
+					color: rgba(255,255,255,0.87);
+					background-color: rgb(63,81,181);
+				}
+				&:hover {
+					@include opacity(0.9);
+				}
 			}
 		}
 	}
@@ -736,12 +767,13 @@ td {
 	background-color: #000;
 	cursor: pointer;
 	@include transition-duration(100ms);
-}
-.overlayDiv_dragged:hover {
-	@include opacity(.6);
-}
-.overlayDiv_dragged:active {
-	@include opacity(.65);
+
+	&:hover {
+		@include opacity(.6);
+	}
+	&:active {
+		@include opacity(.65);
+	}
 }
 .dzForm {
 	width: 100%;
@@ -840,15 +872,16 @@ td {
 		margin-top: -2px;
 		margin-left: -2px;
 	}
-}
-#eventRulerToggle:hover,
-#eventRulerToggle[data-shown=true] {
-	border-color: rgba(0, 0, 0, 0.15);
-	background-color: rgba(0, 0, 0, 0.15);
-	@include border-radius(2px);
-}
-#eventRulerToggle[data-shown=true] {
-	@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+
+	&:hover,
+	&[data-shown=true] {
+		border-color: rgba(0, 0, 0, 0.15);
+		background-color: rgba(0, 0, 0, 0.15);
+		@include border-radius(2px);
+	}
+	&[data-shown=true] {
+		@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+	}
 }
 
 #backToTop {
@@ -870,14 +903,15 @@ td {
 	@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
 	@include opacity(0);
 	@include transition(opacity 300ms 0s);
-}
-#backToTop.visible:hover {
-	text-decoration: none;
-	@include opacity(0.8);
-}
-#backToTop.visible {
-	@include opacity(0.5);
-	height: auto;
+
+	&.visible {
+		@include opacity(0.5);
+		height: auto;
+	}
+	&.visible:hover {
+		text-decoration: none;
+		@include opacity(0.8);
+	}
 }
 
 /* Nodeview tabs */
@@ -900,21 +934,26 @@ td {
 			text-transform: uppercase;
 			border-bottom: 2px solid transparent;
 			@include transition-duration(200ms);
+
+			&:hover { background-color: rgba(0, 0, 0, 0.05); }
+			&.active {
+				color: #546E7A;
+				border-bottom-color: #546E7A;
+			}
 		}
 		li, a {
 			color: #777;
 			cursor: default;
+
+			&:hover {
+				color: #666;
+			}
 		}
-		li:hover { background-color: rgba(0, 0, 0, 0.05); }
-		li:hover, a:hover {
-			color: #666;
-		}
-		li.active {
-			color: #546E7A;
-			border-bottom-color: #546E7A;
+
+		&:empty {
+			display: none;
 		}
 	}
-	ul.tabs:empty { display: none; }
 	h3 { display: none; }
 }
 #content[data-tabs=false] {
@@ -926,15 +965,17 @@ td {
 	h3 { display: block; }
 }
 
-.switchable:after {
-	content: "\25BE";
-	margin-left: 8px;
-	font-size: 12px;
-	@include opacity(0.9);
-	vertical-align: 10%;
-}
-.switchable:hover {
-	cursor: pointer;
+.switchable {
+	&:after {
+		content: "\25BE";
+		margin-left: 8px;
+		font-size: 12px;
+		@include opacity(0.9);
+		vertical-align: 10%;
+	}
+	&:hover {
+		cursor: pointer;
+	}
 }
 .switchable_content {
 	display: none;
@@ -959,15 +1000,17 @@ td {
 		text-align: left;
 		font-family: Helvetica, sans-serif;
 		@include transition-duration(150ms);
-	}
-	a.current {
-		color: #888;
-		background-color: rgba(0, 0, 0, 0.05);
-		cursor: default;
-	}
-	a:hover {
-		text-decoration: none;
-		background-color: rgba(0, 0, 0, 0.05);
+
+		&.current {
+			color: #888;
+			background-color: rgba(0, 0, 0, 0.05);
+			cursor: default;
+		}
+
+		&:hover {
+			text-decoration: none;
+			background-color: rgba(0, 0, 0, 0.05);
+		}
 	}
 }
 

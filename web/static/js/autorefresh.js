@@ -5,18 +5,18 @@
 var graphsSelector = '.graph';
 
 function startAutoRefresh(pGraphsSelector) {
-    if (pGraphsSelector !== undefined)
-        graphsSelector = pGraphsSelector;
+	if (pGraphsSelector !== undefined)
+		graphsSelector = pGraphsSelector;
 
 	// Register on image load + error events to hide loading styles
 	$(graphsSelector).on('load error', function() {
 		setImageLoading($(this), false);
 	});
 
-    // Copy current src attribute as backup in an attribute
-    $(graphsSelector).each(function() {
-        $(this).attr('data-autorefresh-src', $(this).attr('src'));
-    });
+	// Copy current src attribute as backup in an attribute
+	$(graphsSelector).each(function() {
+		$(this).attr('data-autorefresh-src', $(this).attr('src'));
+	});
 
 	setInterval(refreshGraphs, 5*60*1000);
 }
@@ -28,10 +28,10 @@ function startAutoRefresh(pGraphsSelector) {
 function setImageLoading(imgDomElement, isLoading) {
 	if (isLoading) {
 		imgDomElement.parent().css('opacity', '0.7');
-		imgDomElement.next().show();
+		imgDomElement.parent().find('graph_loading').show();
 	} else {
 		imgDomElement.parent().css('opacity', '1');
-		imgDomElement.next().hide();
+		imgDomElement.parent().find('graph_loading').hide();
 	}
 }
 
@@ -43,16 +43,16 @@ function refreshGraphs() {
 		var src = $(this).attr('data-autorefresh-src');
 
 		// Add new timestamp
-        var prefix = src.indexOf('?') != -1 ? '&' : '?';
+		var prefix = src.indexOf('?') != -1 ? '&' : '?';
 		src += prefix + new Date().getTime();
 
 		setImageLoading($(this), true);
 
-        // Since we change the src attr, we have to reattach
-        // the error event
-        $(this).on('error', function() {
-            setImageLoading($(this), false);
-        });
+		// Since we change the src attr, we have to reattach
+		// the error event
+		$(this).on('error', function() {
+			setImageLoading($(this), false);
+		});
 
 		$(this).attr('src', src);
 	});
