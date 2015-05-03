@@ -49,7 +49,6 @@ function prepareSwitchable(switchId) {
 
 	// Gray out current element in switchable_content
 	$('.switchable_content[data-switch=' + switchId + ']').children().filter(function() {
-		console.log('Comparing ' + switchable.text() + ' ' + $(this).text());
 		return switchable.text().trim() == $(this).text().trim();
 	}).addClass('current');
 }
@@ -127,16 +126,26 @@ function updateFilterInURL() {
 	// Put the filter query in the URL (to keep it when refreshing the page)
 	var query = $('#filter').val();
 
-	// Add it in current URL parameters list
+	saveState('filter', query);
+}
+
+/**
+ * Saves a var in URL
+ * @param key
+ * @param val
+ */
+function saveState(key, val) {
+	// Encode key=val in URL
 	var qs = new Querystring();
-	qs.set('filter', query);
+	qs.set(key, val);
 
 	// Replace URL
 	var url = $.param(qs.params);
-	var pageName = $(document).find("title").text();
-	window.history.replaceState('', pageName, '?' + url);
+	// Add leading '?'
+	url = url.length > 0 ? '?' + url : '';
+	var pageName = $(document).find('title').text();
+	window.history.replaceState('', pageName, url);
 }
-
 
 /* Tooltips */
 /**

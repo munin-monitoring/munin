@@ -98,7 +98,8 @@ function updateURL() {
 	// Get result as URL-ready string
 	var url = $.param(qs.params);
 
-	window.history.replaceState('', 'Overview', '?' + url);
+	var pageName = $(document).find('title').text();
+	window.history.replaceState('', pageName, '?' + url);
 }
 
 /**
