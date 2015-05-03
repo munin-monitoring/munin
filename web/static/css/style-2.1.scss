@@ -182,8 +182,8 @@ img.dynazoomModalLink {
 	position: absolute;
 	top: 3px;
 	right: 3px;
-	width: 20px;
-	height: 20px;
+	width: 18px;
+	height: 18px;
 	border: 1px solid transparent;
 	padding: 2px;
 	@include opacity(0);
@@ -191,9 +191,9 @@ img.dynazoomModalLink {
 	@include border-radius(2px);
 
 	&:hover {
-		border-color: rgba(0, 0, 0, 0.15);
-		background-color: rgba(0, 0, 0, 0.15);
-		@include opacity(0.8);
+		border-color: rgba(0, 0, 0, 0.1);
+		background-color: rgba(0, 0, 0, 0.05);
+		@include opacity(1);
 	}
 }
 
@@ -1021,12 +1021,25 @@ td {
 	left: 50%;
 	z-index: 15;
 	width: 900px;
-	height: 500px;
-	margin-top: -250px;
+	height: 630px;
+	margin-top: -315px;
 	margin-left: -450px;
 	background-color: #fff;
 	@include box-shadow(0 8px 17px 0 rgba(0,0,0,.2), 0 6px 20px 0 rgba(0,0,0,.19));
 	@include border-radius(2px);
+
+	.title {
+		font-family: Helvetica, sans-serif;
+		font-size: 16px;
+		color: #fff;
+		text-shadow: 1px 1px 0 #37474F;
+		display: block;
+		padding: 8px 20px;
+		margin: -1px;
+		@include border-radius(3px 3px 0 0);
+		border: 1px solid #37474F;
+		background-color: #546E7A;
+	}
 
 	iframe {
 		width: 100%;

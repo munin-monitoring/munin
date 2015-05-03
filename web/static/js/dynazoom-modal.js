@@ -3,14 +3,17 @@
  */
 
 $(document).ready(function() {
+	var body = $('body');
+	if (body.width < 768) // Dynazoom isn't convenient on too small devices
+		return;
+
 	var graphs = $('.graph'),
-		body = $('body'),
-		MODAL_NAME = 'dynazoomModal';
+		MODAL_ID = 'dynazoomModal';
 
 	graphs.after('<img src="/static/img/icons/expand.png" class="dynazoomModalLink" />');
 
 	// Prepare a hidden modal
-	var modal = prepareModal(MODAL_NAME, '<iframe></iframe>');
+	var modal = prepareModal(MODAL_ID, '<iframe></iframe>');
 	var dynazoomIframe = modal.find('iframe');
 
 	// Bind onclick event
@@ -58,6 +61,7 @@ $(document).ready(function() {
 
 		var url = '/dynazoom.html?' + $.param(dzQS.params);
 		dynazoomIframe.attr('src', url);
-		showModal(MODAL_NAME);
+		setModalTitle(MODAL_ID, 'Dynazoom - ' + img.attr('alt'));
+		showModal(MODAL_ID);
 	});
 });

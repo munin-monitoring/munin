@@ -173,29 +173,33 @@ function prepareTooltips(hoverableElements, getTooltip) {
 /**
  * Prepares a modal to be shown later
  */
-function prepareModal(modalName, modalHTMLContent) {
+function prepareModal(modalId, modalHTMLContent) {
 	var body = $('body');
-	body.append('<div class="modal" data-modalname="' + modalName + '" style="display: none;">' + modalHTMLContent + '</div>');
-	body.append('<div class="modalMask" data-modalname="' + modalName + '" style="display: none;"></div>');
+	body.append('<div class="modal" data-modalname="' + modalId + '" style="display: none;"><div class="title"></div>' + modalHTMLContent + '</div>');
+	body.append('<div class="modalMask" data-modalname="' + modalId + '" style="display: none;"></div>');
 
 	// Register mask click event to hide the modal
-	$('.modalMask[data-modalname=' + modalName + ']').click(function() {
-		hideModal(modalName);
+	$('.modalMask[data-modalname=' + modalId + ']').click(function() {
+		hideModal(modalId);
 	});
 
-	return $('.modal[data-modalname=' + modalName + ']');
+	return $('.modal[data-modalname=' + modalId + ']');
 }
 
-function showModal(modalName) {
-	$('[data-modalname=' + modalName + ']').show();
+function setModalTitle(modalId, modalTitle) {
+	$('[data-modalname=' + modalId + ']').find('.title').text(modalTitle);
+}
+
+function showModal(modalId) {
+	$('[data-modalname=' + modalId + ']').show();
 
 	// Register ESC keypress to hide the modal
 	$(document).keyup(function(e) {
 		if (e.keyCode == 27)
-			hideModal(modalName);
+			hideModal(modalId);
 	});
 }
 
-function hideModal(modalName) {
-	$('[data-modalname=' + modalName + ']').hide();
+function hideModal(modalId) {
+	$('[data-modalname=' + modalId + ']').hide();
 }

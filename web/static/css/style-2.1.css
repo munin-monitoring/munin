@@ -176,8 +176,8 @@ img.dynazoomModalLink {
   position: absolute;
   top: 3px;
   right: 3px;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border: 1px solid transparent;
   padding: 2px;
   opacity: 0;
@@ -192,10 +192,10 @@ img.dynazoomModalLink {
   border-radius: 2px;
 }
 img.dynazoomModalLink:hover {
-  border-color: rgba(0, 0, 0, 0.15);
-  background-color: rgba(0, 0, 0, 0.15);
-  opacity: 0.8;
-  filter: alpha(opacity=80);
+  border-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
+  opacity: 1;
+  filter: alpha(opacity=100);
 }
 
 /* Header */
@@ -1158,8 +1158,8 @@ td {
   left: 50%;
   z-index: 15;
   width: 900px;
-  height: 500px;
-  margin-top: -250px;
+  height: 630px;
+  margin-top: -315px;
   margin-left: -450px;
   background-color: #fff;
   -webkit-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
@@ -1170,6 +1170,21 @@ td {
   -moz-border-radius: 2px;
   -ms-border-radius: 2px;
   border-radius: 2px;
+}
+.modal .title {
+  font-family: Helvetica, sans-serif;
+  font-size: 16px;
+  color: #fff;
+  text-shadow: 1px 1px 0 #37474F;
+  display: block;
+  padding: 8px 20px;
+  margin: -1px;
+  -webkit-border-radius: 3px 3px 0 0;
+  -moz-border-radius: 3px 3px 0 0;
+  -ms-border-radius: 3px 3px 0 0;
+  border-radius: 3px 3px 0 0;
+  border: 1px solid #37474F;
+  background-color: #546E7A;
 }
 .modal iframe {
   width: 100%;
@@ -1297,6 +1312,10 @@ td {
     margin: auto;
   }
 
+  .dynazoomModalLink {
+    display: none;
+  }
+
   /* Overview */
   ul.groupview {
     margin: 20px 15px !important;
@@ -1309,6 +1328,15 @@ td {
 
   .timeRangeSwitchContainer {
     top: 0;
+  }
+
+  .modal {
+    width: 100%;
+    left: 0;
+    top: 0;
+    margin-top: 0;
+    margin-left: 0;
+    max-height: 100%;
   }
 }
 /* Medium devices */
