@@ -175,26 +175,37 @@ function prepareTooltips(hoverableElements, getTooltip) {
  */
 function prepareModal(modalId, modalHTMLContent) {
 	var body = $('body');
-	body.append('<div class="modal" data-modalname="' + modalId + '" style="display: none;"><div class="title"></div>' + modalHTMLContent + '</div>');
+	body.append('<div class="modal" data-modalname="' + modalId + '" style="display: none;">'
+					+ '<div class="title" style="display:none"><span></span><a href="#close"></a></div>'
+					+ modalHTMLContent
+				+ '</div>');
 	body.append('<div class="modalMask" data-modalname="' + modalId + '" style="display: none;"></div>');
 
-	// Register mask click event to hide the modal
+	var modal = $('.modal[data-modalname=' + modalId + ']');
+
+	// Register mask click event to hide the modal...
 	$('.modalMask[data-modalname=' + modalId + ']').click(function() {
 		hideModal(modalId);
 	});
+	// ... and also the modal title close button
+	modal.find('.title > a').click(function() {
+		hideModal(modalId);
+	});
 
-	return $('.modal[data-modalname=' + modalId + ']');
+	return modal;
 }
 
 function setModalTitle(modalId, modalTitle) {
-	$('[data-modalname=' + modalId + ']').find('.title').text(modalTitle);
+	var titleBar = $('[data-modalname=' + modalId + ']').find('.title');
+	titleBar.find('span').text(modalTitle);
+	titleBar.show();
 }
 
 function showModal(modalId) {
 	$('[data-modalname=' + modalId + ']').show();
 
 	// Register ESC keypress to hide the modal
-	$(document).keyup(function(e) {
+	$(document).on('keyup.modal', function(e) {
 		if (e.keyCode == 27)
 			hideModal(modalId);
 	});
@@ -202,4 +213,7 @@ function showModal(modalId) {
 
 function hideModal(modalId) {
 	$('[data-modalname=' + modalId + ']').hide();
+
+	// Unregister ESC keypress event
+	$(document).off('keyup.modal');
 }

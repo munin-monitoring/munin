@@ -1162,10 +1162,10 @@ td {
   margin-top: -315px;
   margin-left: -450px;
   background-color: #fff;
-  -webkit-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  -moz-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  -o-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  -webkit-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
+  -o-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
   -webkit-border-radius: 2px;
   -moz-border-radius: 2px;
   -ms-border-radius: 2px;
@@ -1177,7 +1177,7 @@ td {
   color: #fff;
   text-shadow: 1px 1px 0 #37474F;
   display: block;
-  padding: 8px 20px;
+  padding: 7px 10px 8px 20px;
   margin: -1px;
   -webkit-border-radius: 3px 3px 0 0;
   -moz-border-radius: 3px 3px 0 0;
@@ -1185,6 +1185,15 @@ td {
   border-radius: 3px 3px 0 0;
   border: 1px solid #37474F;
   background-color: #546E7A;
+}
+.modal .title a {
+  float: right;
+  width: 20px;
+  height: 20px;
+  background-image: url("/static/img/icons/glyphicons-208-remove-2-white.png");
+  background-size: 12px 12px;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 .modal iframe {
   width: 100%;

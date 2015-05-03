@@ -1025,7 +1025,7 @@ td {
 	margin-top: -315px;
 	margin-left: -450px;
 	background-color: #fff;
-	@include box-shadow(0 8px 17px 0 rgba(0,0,0,.2), 0 6px 20px 0 rgba(0,0,0,.19));
+	@include box-shadow(0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2));
 	@include border-radius(2px);
 
 	.title {
@@ -1034,11 +1034,21 @@ td {
 		color: #fff;
 		text-shadow: 1px 1px 0 #37474F;
 		display: block;
-		padding: 8px 20px;
+		padding: 7px 10px 8px 20px;
 		margin: -1px;
 		@include border-radius(3px 3px 0 0);
 		border: 1px solid #37474F;
 		background-color: #546E7A;
+
+		a {
+			float: right;
+			width: 20px;
+			height: 20px;
+			background-image: url('/static/img/icons/glyphicons-208-remove-2-white.png');
+			background-size: 12px 12px;
+			background-position: center;
+			background-repeat: no-repeat;
+		}
 	}
 
 	iframe {
