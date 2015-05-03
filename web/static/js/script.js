@@ -23,6 +23,37 @@ $(document).ready(function() {
 });
 
 /**
+ * Binds click listener on one switchable (with the data-switch="id" attribute)
+ * @param switchId Switch name
+ */
+function prepareSwitchable(switchId) {
+	var switchable = $('.switchable[data-switch=' + switchId + ']');
+
+	switchable.click(function() {
+		var switchableContent = $('.switchable_content[data-switch=' + switchId + ']');
+		switchableContent.css('left', $(this).position().left);
+		switchableContent.css('top', $(this).position().top + $(this).height() + 10);
+		switchableContent.show();
+
+		// When clicking outside, hide the div
+		$(document).bind('mouseup.switchable', function(e) {
+			if (!switchableContent.is(e.target) // If we're neither clicking on
+				&& switchableContent.has(e.target).length === 0) { // nor on a descendent
+				switchableContent.hide();
+
+				// Unbind this event
+				$(document).unbind('click.switchable');
+			}
+		});
+	});
+
+	// Gray out current element in switchable_content
+	$('.switchable_content[data-switch=' + switchId + ']').children().filter(function() {
+		return switchable.text().trim() == $(this).text().trim();
+	}).addClass('current');
+}
+
+/**
  * Called by each page to setup header filter
  * @param placeholder Input placeholder
  * @param onFilterChange Called each time the input text changes
@@ -57,18 +88,16 @@ function prepareFilter(placeholder, onFilterChange) {
 
 	// Register ESC key: same action as cancel filter
 	$(document).keyup(function(e) {
-		var filterInput = $('#filter');
-		if (e.keyCode == 27 && filterInput.is(':focus') && filterInput.val().length > 0)
+		if (e.keyCode == 27 && input.is(':focus') && input.val().length > 0)
 			$('#cancelFilter').click();
 	});
 
 	// There may be a 'filter' GET parameter in URL: let's apply it
 	var qs = new Querystring();
 	if (qs.contains('filter')) {
-		var filter = $('#filter');
-		filter.val(qs.get('filter'));
+		input.val(qs.get('filter'));
 		// Manually trigger the keyUp event on filter input
-		filter.keyup();
+		input.keyup();
 	}
 }
 
@@ -97,16 +126,26 @@ function updateFilterInURL() {
 	// Put the filter query in the URL (to keep it when refreshing the page)
 	var query = $('#filter').val();
 
-	// Add it in current URL parameters list
+	saveState('filter', query);
+}
+
+/**
+ * Saves a var in URL
+ * @param key
+ * @param val
+ */
+function saveState(key, val) {
+	// Encode key=val in URL
 	var qs = new Querystring();
-	qs.set('filter', query);
+	qs.set(key, val);
 
 	// Replace URL
 	var url = $.param(qs.params);
-	var pageName = $(document).find("title").text();
-	window.history.replaceState('', pageName, '?' + url);
+	// Add leading '?'
+	url = url.length > 0 ? '?' + url : '';
+	var pageName = $(document).find('title').text();
+	window.history.replaceState('', pageName, url);
 }
-
 
 /* Tooltips */
 /**

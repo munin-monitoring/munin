@@ -3,30 +3,30 @@
  */
 
 var content,
-    graphs,
-    h4s,
-    tabs;
+	graphs,
+	h4s,
+	tabs;
 
 $(document).ready(function() {
-    content = $('#content');
-    graphs = $('.graph');
-    h4s = $('h4');
-    tabs = $('.tabs').find('li');
+	content = $('#content');
+	graphs = $('.graph');
+	h4s = $('h4');
+	tabs = $('.tabs').find('li');
 
 	// Append a loading <img> on each graph img
-	graphs.after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');
+	graphs.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
 
 	// Auto-refresh
 	startAutoRefresh();
 
 	// Prepare filter
 	prepareFilter('Filter graphs', function(val) {
-        if (val.length == 0)
-            showTabs();
-        else
-            hideTabs();
+		if (val.length == 0)
+			showTabs();
+		else
+			hideTabs();
 
-        graphs.each(function() {
+		graphs.each(function() {
 			var pluginName = $(this).attr('alt');
 			var src = $(this).attr('src');
 			var pluginId = src.substr(src.lastIndexOf('/')+1, src.lastIndexOf('-')-src.lastIndexOf('/')-1);
@@ -55,15 +55,15 @@ $(document).ready(function() {
 			}
 		});
 
-        // If tabs aren't enabled, they are used as anchors links
-        if (content.attr('data-tabsenabled') == 'false') {
-            tabs.each(function() {
-                if (filterMatches(val, $(this).text()))
-                    $(this).show();
-                else
-                    $(this).hide();
-            });
-        }
+		// If tabs aren't enabled, they are used as anchors links
+		if (content.attr('data-tabsenabled') == 'false') {
+			tabs.each(function() {
+				if (filterMatches(val, $(this).text()))
+					$(this).show();
+				else
+					$(this).hide();
+			});
+		}
 
 		// Hide unneccary categories names
 		$('div[data-category]').each(function() {
@@ -75,21 +75,24 @@ $(document).ready(function() {
 	});
 
 
-    // Back to top button
-    var backToTop = $('#backToTop');
-    var offset = 300;
+	// Back to top button
+	var backToTop = $('#backToTop');
+	var offset = 300;
 
-    $(window).scroll(function() {
-        if ($(this).scrollTop() > offset)
-            backToTop.addClass('visible');
-        else
-            backToTop.removeClass('visible');
-    });
+	$(window).scroll(function() {
+		if ($(this).scrollTop() > offset)
+			backToTop.addClass('visible');
+		else
+			backToTop.removeClass('visible');
+	});
 
-    backToTop.click(function(e) {
-        e.preventDefault();
-        $('body, html').animate({
-            scrollTop: 0
-        }, 500);
-    });
+	backToTop.click(function(e) {
+		e.preventDefault();
+		$('body, html').animate({
+			scrollTop: 0
+		}, 500);
+	});
+
+	// Node switch
+	prepareSwitchable('header');
 });

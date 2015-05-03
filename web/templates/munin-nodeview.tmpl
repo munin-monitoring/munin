@@ -56,7 +56,7 @@
 							</noscript>
 							<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
 							  data-original="<TMPL_VAR NAME="IMGDAY">"
-							  src="/static/placeholder.gif"
+							  src="/static/img/placeholder.gif"
 							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
 							  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
 							  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>
@@ -82,7 +82,7 @@
 							</noscript>
 							<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
 							  data-original="<TMPL_VAR NAME="IMGWEEK">"
-							  src="/static/placeholder.gif"
+							  src="/static/img/placeholder.gif"
 							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
 							  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
 							  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>
@@ -97,10 +97,10 @@
 </div>
 <a href="#" id="backToTop">Back to top</a>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
-<script src="/static/autorefresh.js"></script>
-<script src="/static/munin-nodeview.js"></script>
-<script src="/static/munin-nodeview-timerangeswitch.js"></script>
-<script src="/static/munin-nodeview-eventruler.js"></script>
-<script src="/static/munin-nodeview-tabs.js"></script>
+<script src="/static/js/autorefresh.js"></script>
+<script src="/static/js/munin-nodeview.js"></script>
+<script src="/static/js/munin-nodeview-timerangeswitch.js"></script>
+<script src="/static/js/munin-nodeview-eventruler.js"></script>
+<script src="/static/js/munin-nodeview-tabs.js"></script>
 </body>
 </html>

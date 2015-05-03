@@ -26,13 +26,16 @@ $(document).ready(function() {
 		}
 	});
 
-    prepareTooltips(typeTds, function(td) {
-        return td.find('.tooltip');
-    });
+	prepareTooltips(typeTds, function(td) {
+		return td.find('.tooltip');
+	});
 
-    // Append a loading <img> on each graph img
-    $('.graph').after('<img src="/static/loading.gif" class="graph_loading" style="display:none" />');
+	// Append a loading <img> on each graph img
+	$('.graph').after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
 
 	// Graphs auto-refresh
 	startAutoRefresh();
+
+	// Switch to another graph in the same node
+	prepareSwitchable('header');
 });
