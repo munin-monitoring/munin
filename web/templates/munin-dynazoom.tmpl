@@ -8,7 +8,9 @@
 		<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	</TMPL_UNLESS>
 	<div id="content">
-		<h2>Graph zoom</h2>
+		<TMPL_UNLESS NAME="CONTENT_ONLY">
+			<h2>Graph zoom</h2>
+		</TMPL_UNLESS>
 
 		<div style="position:relative;">
 			<img id="image" class="dynazoomGraph graph i" />

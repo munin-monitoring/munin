@@ -169,3 +169,33 @@ function prepareTooltips(hoverableElements, getTooltip) {
         getTooltip($(this)).fadeOut(100);
     });
 }
+
+/**
+ * Prepares a modal to be shown later
+ */
+function prepareModal(modalName, modalHTMLContent) {
+	var body = $('body');
+	body.append('<div class="modal" data-modalname="' + modalName + '" style="display: none;">' + modalHTMLContent + '</div>');
+	body.append('<div class="modalMask" data-modalname="' + modalName + '" style="display: none;"></div>');
+
+	// Register mask click event to hide the modal
+	$('.modalMask[data-modalname=' + modalName + ']').click(function() {
+		hideModal(modalName);
+	});
+
+	return $('.modal[data-modalname=' + modalName + ']');
+}
+
+function showModal(modalName) {
+	$('[data-modalname=' + modalName + ']').show();
+
+	// Register ESC keypress to hide the modal
+	$(document).keyup(function(e) {
+		if (e.keyCode == 27)
+			hideModal(modalName);
+	});
+}
+
+function hideModal(modalName) {
+	$('[data-modalname=' + modalName + ']').hide();
+}
