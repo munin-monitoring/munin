@@ -70,18 +70,19 @@
 			font-weight: bold;
 			cursor: pointer;
 			font-family: sans-serif;
-		}
-		#navToggle:after {
-			content: "+";
-			float: right;
-			font-size: 18px;
-			font-weight: normal;
-			margin-top: -2px;
-			color: #797979;
-		}
-		#navToggle.expanded:after {
-			content: "-";
-			margin-top: -4px;
+
+			&:after {
+				content: "+";
+				float: right;
+				font-size: 18px;
+				font-weight: normal;
+				margin-top: -2px;
+				color: #797979;
+			}
+			&.expanded:after {
+				content: "-";
+				margin-top: -4px;
+			}
 		}
 	}
 
@@ -102,6 +103,10 @@
 		margin: auto;
 	}
 
+	.dynazoomModalLink {
+		display: none;
+	}
+
 	/* Overview */
 	ul.groupview {
 		margin: 20px 15px!important;
@@ -114,6 +119,15 @@
 	}
 
 	.timeRangeSwitchContainer { top: 0; }
+
+	.modal {
+		width: 100%;
+		left: 0;
+		top: 0;
+		margin-top: 0;
+		margin-left: 0;
+		max-height: 100%;
+	}
 }
 
 /* Medium devices */

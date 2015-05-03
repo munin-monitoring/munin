@@ -174,7 +174,11 @@ sub handle_request
 		$template_params{PATH} = [
 			# first args should have path and r_path for backlink to overview
 			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
+			{ "pathname" => "Dynazoom", "path" => "#" }
 		];
+		# Content only: when dynazoom page is shown in a modal,
+		#   we hide the header & navigation
+		$template_params{CONTENT_ONLY} = $cgi->url_param("content_only") || 0;
 
 		$template_filename = "munin-dynazoom.tmpl";
 	} elsif ($path eq "problems.html") {

@@ -1,5 +1,6 @@
-var Y_AXIS_POSX = 66;
-var GRAPH_TOP = 33;
+var GRAPH_TOP = 33,
+	GRAPH_PADDING_LEFT = 66,
+	GRAPH_PADDING_RIGHT = 26;
 var DEFAULT_DATE = '2015-01-01T00:00:00+0100';
 
 // Define vars
@@ -119,19 +120,26 @@ function updateStartStop() {
 }
 
 function divMouseMove(mouseMoveEvent) {
-	var delta_x;
-	var size_x;
+	var delta_x,
+		size_x,
+		mouseX = mouseMoveEvent.pageX;
+
+	// Mouse outside of the graph
+	if (mouseX < getLeftOffset() + GRAPH_PADDING_LEFT)
+		mouseX = getLeftOffset() + GRAPH_PADDING_LEFT;
+	if (mouseX > getLeftOffset() + image.width() - GRAPH_PADDING_RIGHT)
+		mouseX = getLeftOffset() + image.width() - GRAPH_PADDING_RIGHT;
 
 	// Handling the borders (X1>X2 ou X1<X2)
-	var current_width = mouseMoveEvent.pageX - initial_left - getLeftOffset();
+	var current_width = mouseX - initial_left - getLeftOffset();
 	if (current_width < 0) {
-		divOverlay.css('left', mouseMoveEvent.pageX - getLeftOffset());
-		delta_x = mouseMoveEvent.pageX - Y_AXIS_POSX - getLeftOffset();
+		divOverlay.css('left', mouseX - getLeftOffset());
+		delta_x = mouseX - GRAPH_PADDING_LEFT - getLeftOffset();
 		size_x = -current_width;
 		divOverlay.css('width', size_x);
 	} else {
 		divOverlay.css('left', initial_left);
-		delta_x = initial_left - Y_AXIS_POSX;
+		delta_x = initial_left - GRAPH_PADDING_LEFT;
 		size_x = current_width;
 		divOverlay.css('width', size_x);
 	}
@@ -145,12 +153,15 @@ function divMouseMove(mouseMoveEvent) {
 }
 
 function startZoom(mouseMoveEvent) {
-	if (mouseMoveEvent.pageX - getLeftOffset() < Y_AXIS_POSX) {
+	var leftOffset = getLeftOffset();
+
+	if (mouseMoveEvent.pageX < leftOffset + GRAPH_PADDING_LEFT
+			|| mouseMoveEvent.pageX > leftOffset + image.width() - GRAPH_PADDING_RIGHT) {
 		clickCounter--;
 		return;
 	}
 
-	initial_left = mouseMoveEvent.pageX - getLeftOffset();
+	initial_left = mouseMoveEvent.pageX - leftOffset;
 	initial_top = mouseMoveEvent.pageY;
 
 	// Fixed, since zoom is only horizontal
@@ -160,10 +171,10 @@ function startZoom(mouseMoveEvent) {
 
 	// Show the div
 	divOverlay.css('visibility', 'visible');
-	divOverlay.addClass('overlayDiv_dragging');
+	divOverlay.addClass('dragging');
 
 	// Initial show
-	divOverlay.css('left', mouseMoveEvent.pageX - getLeftOffset());
+	divOverlay.css('left', mouseMoveEvent.pageX - leftOffset);
 	//divOverlay.style.width = (+form.size_x.value) / 4;
 	divOverlay.css('width', 0);
 
@@ -174,8 +185,8 @@ function startZoom(mouseMoveEvent) {
 }
 
 function endZoom() {
-	divOverlay.removeClass('overlayDiv_dragging');
-	divOverlay.addClass('overlayDiv_dragged');
+	divOverlay.removeClass('dragging');
+	divOverlay.addClass('dragged');
 
 	// Remove mousemove events
 	image.unbind('mousemove');
@@ -187,7 +198,7 @@ function endZoom() {
 function clearZoom() {
 	divOverlay.css('visibility', 'hidden');
 	divOverlay.css('width', '0');
-	divOverlay.removeClass('overlayDiv_dragged');
+	divOverlay.removeClass('dragged');
 	divOverlay.unbind('click');
 
 	// reset the zoom
@@ -202,7 +213,7 @@ function doZoom() {
 	clickCounter++;
 	divOverlay.css('visibility', 'hidden');
 	divOverlay.css('width', '0');
-	divOverlay.removeClass('overlayDiv_dragged');
+	divOverlay.removeClass('dragged');
 	divOverlay.unbind('click');
 }
 

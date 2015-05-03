@@ -1,10 +1,16 @@
 <TMPL_INCLUDE NAME="partial/head.tmpl">
 <body>
-<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
+<TMPL_UNLESS NAME="CONTENT_ONLY">
+	<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
+</TMPL_UNLESS>
 <div id="main">
-	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+	<TMPL_UNLESS NAME="CONTENT_ONLY">
+		<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+	</TMPL_UNLESS>
 	<div id="content">
-		<h2>Graph zoom</h2>
+		<TMPL_UNLESS NAME="CONTENT_ONLY">
+			<h2>Graph zoom</h2>
+		</TMPL_UNLESS>
 
 		<div style="position:relative;">
 			<img id="image" class="dynazoomGraph graph i" />
@@ -72,6 +78,8 @@
 	</div>
 </div>
 <script src="/static/js/dynazoom.js"></script>
-<TMPL_INCLUDE NAME="partial/footer.tmpl">
+<TMPL_UNLESS NAME="CONTENT_ONLY">
+	<TMPL_INCLUDE NAME="partial/footer.tmpl">
+</TMPL_UNLESS>
 </body>
 </html>
