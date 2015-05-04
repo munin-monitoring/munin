@@ -4,6 +4,9 @@
  Documenting Munin
 ===================
 
+.. index::
+   triple: contributing; munin; documentation
+
 This document is rather meta, it explains how to document Munin.
 
 More than one place for docs
