@@ -23,9 +23,14 @@ Poller-based monitoring infrastructure
 .. graphviz::
 
    digraph  {
-        "master" -> "node1";
-        "master" -> "node2";
-        "master" -> "node3";
+       graph [ rankdir="LR" ];
+       node [style=filled, fillcolor="white:lightgrey"];
+
+       "master" [label="munin\nmaster", fillcolor="white:lightblue"];
+
+       "master" -> "node1";
+       "master" -> "node2";
+       "master" -> "node3";
    }
 
 Using the :ref:`node-async`:
@@ -33,8 +38,22 @@ Using the :ref:`node-async`:
 .. graphviz::
 
    digraph  {
-        "master" -> async1 -> "node1";
-        "master" -> "node3";
+       graph [ rankdir="LR" ];
+       node [style=filled, fillcolor="white:lightgrey"];
+
+       subgraph cluster_munin_node {
+           label = "node1";
+           "munin-asyncd" -> "munin-node" [label="read"];
+           "munin-asyncd" -> "spool" [label="write"];
+           "munin-async"  -> "spool";
+       }
+
+       "master" [label="munin\nmaster", fillcolor="white:lightblue"];
+
+       "master" -> "munin-async" [label="ssh"];
+       "master" -> "node2";
+       "master" -> "node3";
+
    }
 
 Using :ref:`plugin-snmp`.
@@ -42,10 +61,18 @@ Using :ref:`plugin-snmp`.
 .. graphviz::
 
    digraph {
-     "master" -> "node1" [label="munin protocol"];
-     "node1"  -> "switch" [label="snmp"];
-     "node1"  -> "router" [label="snmp"];
-     "node1"  -> "access point" [label="snmp"];
+       graph [ rankdir="LR" ];
+       node [style=filled, fillcolor="white:lightgrey"];
+
+       "master" [label="munin\nmaster", fillcolor="white:lightblue"];
+
+       "master" -> "node1";
+       "node1"  -> "switch" [label="snmp"];
+       "node1"  -> "router" [label="snmp"];
+       "node1"  -> "access\npoint" [label="snmp"];
+
+       "master" -> "node2";
+       "master" -> "node3";
    }
 
 Network Protocol
