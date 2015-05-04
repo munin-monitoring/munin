@@ -1,3 +1,269 @@
+munin-2.1.12, 2015-05-04
+
+-------
+Summary
+-------
+
+That release mostly brings a _whole_ new UI. The overall still feels like
+munin, but it has been updated to more recent standards thanks to the hard work
+of Quentin Stoeckel.
+
+------------------
+Detailed Changelog
+------------------
+
+Adam Woodbeck (1):
+      Added HP-UX support to processes plugin.
+
+Bjørn Forsman (1):
+      multips: reject 'autoconf' unless $names is set
+
+Daniel Black (11):
+      mysql: add data from query response time plugin
+      mysql: graph_period in vlabel and not title
+      mysql: query response time total - useconds
+      doc: Values need to be integers for derive/counter
+      mysql: graphs are dynamic and therefore need caching
+      mysql: freeze->nfreeze
+      mysql: plugin_query_response_time - no need for plugin_map
+      mysql: Add user statistics graphs
+      mysql: change default database to information_schema
+      mysql: and grants and examples
+      mysql: user munin for unix_socket auth plugin
+
+Dave Shevett (14):
+      Update writing.rst
+      Update writing.rst
+      Update index.rst
+      Update index.rst
+      Update index.rst
+      Update index.rst
+      Update index.rst
+      Update index.rst
+      Update index.rst
+      Update index.rst
+      Update use.rst
+      Update writing-tips.rst
+      Update writing-tips.rst
+      Update writing-tips.rst
+
+Erik Sjölund (1):
+      Update alert.rst
+
+Herwin Weststrate (1):
+      Typo fix in comments of fw_conntrack
+
+Jason Woods (2):
+      Fix fofields always having the same entries as ofields. fofields now contains only entries that had a state change to OK (fo = fixed ok)
+      Fix ofields previous state detection not working correctly
+
+Kenyon Ralph (1):
+      fix typo in graph_title
+
+Quentin S (116):
+      Update .gitignore to exclude IDE files (.idea/)
+      Clean CSS, don't force graph image width
+      Clean up partial templates, introduce a more html5ish head
+      Clean up overview, remove tables from nodeview
+      Make header part responsive
+      Make pages content responsive
+      Move style-2.1-responsive to web/static/ directory
+      Make navigation menu responsive (and togglable)
+      Fix single-line header text vertical align
+      Fix wrong template closing tag, fix layout when plugin name is displayed
+      Add PNG version of the SVG logo
+      Update favicon
+      munin-httpd: Add mime type for .gif
+      Convert spaces to tabs according to code style rules
+      Enhance nodes list design on overview page
+      Create negative (white) version of horizontal SVG logo
+      Display SVG logo in header
+      Place categories names inline with node name to avoid wasting vertical space
+      Add a filter text input in overview page
+      Add a JS time range switch for each column in nodeview
+      Time range switch: avoid conflicts between both
+      Fix bugs with time range switchs
+      Enlarge layout to 100% width
+      Enhance navigation readability
+      Fix regression introduced by merge conflict resolution
+      Small CSS adjustments, fix loading gif position
+      Add high res versions of the favicon
+      Enhance overview filter text field
+      Remove the meta refresh tag: manually refresh every graph in JS
+      Really remove the refresh meta, don't wrap the JS function call in anonymous function
+      Store time range value in URL, and retrieve it on page load
+      Clean header, add filter field in it
+      Allow handling the filter field in all pages, implement it in overview
+      Implement filter in nodeview
+      Fix header layout on mobiles, fix search on nodeview, clean templates
+      Hide extra <br>s when filtering on nodeview
+      Clean domainview template, implement filter in domainview
+      Fix issue on empty filter expr on domainview page
+      Hide 2nd graphs column on mobile in nodeview
+      Weaken filter rules to get more results
+      Fix page title vertical align when displaying categories or comparison text as subtitle
+      Enhance & clean problem page (munin-problemview template)
+      Enhance & clean comparison pages (munin-comparison-* templates)
+      Enable zooming on mobiles, fix graphs ratio on mobiles
+      Hide Internet Explorer input cross
+      Make problematic graphs more distinguishable by adding an overlay color, closes #429
+      Clean munin-categoryview template
+      Clean dynazoom template
+      Refactor dynazoom code, clean template
+      Update static dynazoom page
+      Remove definitions file, show definitions as tooltips in serviceview, remove unused resources
+      Enhance serviceview legend design and readability
+      Nodeview: allow same time range on both columns
+      Enhance header on mobiles
+      Refactor auto-refresh in separate file to be used in other pages, add it to serviceview
+      Enhance legend table
+      Enhance titles
+      Enhance footer appearance
+      Enhance navigation menu & responsive design
+      Change filter placeholder text color
+      Fix graph style when lazy loading is on
+      Remove HTML4ish script type attributes (text/javascript & application/javascript)
+      Fix time range switch position on some resolutions
+      Reset filter when focused by hitting ESC keyboard key
+      Change filter input main color from white to black (more classy)
+      Fix time range switchs when using DYN_IMAGES
+      Time range switch: do not blindly overwrite URL parameters
+      querystring.js: add set function
+      Filter: add current filter expression in URL
+      Restore filter expression from URL
+      Remove unused icons
+      Fix Graph.pm headers, fixes #419
+      Dynazoom: fix low&high limit and cgiurl_graph values
+      Hide loading gif if the image fails to load
+      Remove all R_PATH usages
+      Fix graph auto-refresh on serviceview
+      Add a load-hour sparkline in front of each node
+      Refactor tooltip JS, use it to display a tooltip on each overview sparkline
+      Add event ruler to easily compare graphs with a visual time reference
+      Add event ruler toggle in header
+      Remove event ruler mask, display a tooltip on toggle hover
+      Use SASS to maintain style-2.1.css
+      Create  and use SASS mixins for CSS vendor prefixes
+      Include responsive stylesheet inside main one
+      Enhance overview categories list on mobiles
+      Fix nested groups style
+      Implement auto-refresh for overview sparklines
+      Display plugin name as h2 in service view template
+      Fix autorefresh
+      Fix categories hover on navigation menu
+      Hide host sparklines in overview page on load error, closes #453
+      Reduce list items height in overview
+      Add a Back to top button in nodeview
+      Enhance navigation vs content separation
+      Prevent eventruler from going over navigation
+      Put each category in a different tab in nodeview
+      Nodeview: hide categories names from header since we're using tabs now
+      Add ability to disable nodeview tabs
+      Clean /web/static directory: move resources into subfolders
+      Join the party and add name in authors file
+      Fix overview sparkline loading error being handled too late
+      Mimic footer <select> behavior in header (switch plugin/node/group)
+      Fix header white spaces
+      Gray out current element on switchables
+      Update theme-color <head> meta to be used on Android Lollipop
+      Make footer munin link be opened in a new tab
+      Nodeview: save current category in URL and restore it. Fix conflict with filter
+      Fix HTML errors in templates using W3C Validator
+      Add a dynazoom link over each graph in nodeview and serviceview
+      Add a content-only version of the dynazoom page to be included inside another page by passing a content_only GET parameter to it
+      Display dynazoom page in a modal when user clicks on dynazoom link on any graph
+      Prevent user from dynazooming outside the graph + refactoring
+      Change dynazoom path displayed in header and <head>
+      Enhance modals on mobiles, add a title to modals
+      Add a close button to modals title bars
+      Use SASS variables for colors and fonts
+
+Serge Smetana (1):
+      p/pgsql: Detect "lts" and "ltsX" postgresql versions     like 8.4.22lts and 8.4.22lts1 on Debian
+
+Steve Schnepp (35):
+      travis: Using the container-based infrastructure
+      travis: only use perl 5.20
+      Build: using Alien::RRDtool instead of rrd
+      travis: using travis-container
+      Revert "travis: only use perl 5.20"
+      Graph: do not dump rrd.sh
+      Graph: support sparklines
+      debug: factorize naming in node-debug
+      debug: adding some fun naming scheme
+      debug: the group is also randomized
+      debug: all fields are funized
+      Build: adding missing dep for munin-httpd
+      debug: factorize naming in node-debug
+      debug: adding some fun naming scheme
+      debug: the group is also randomized
+      debug: all fields are funized
+      debug: emit named categories
+      httpd: enable overrding of the sqlite db
+      update: enable overriding of the sqlite db
+      http: enable empty & other categories
+      update: fix graph_title/graph_info sql generation
+      commit: "other" is the default graph_category
+      web: tidy : 1 stmt per LOC
+      html: fixing limits
+      html: adding a variable (unused)
+      debug: fix the plugin resolution
+      httpd: overriding of the sqlite db (params)
+      dev_scripts: sets MUNIN_DBURL
+      html: Do not add an extra / on absolute URL
+      html: fix empty nodes
+      debug: fix multiple service with same name
+      debug: adding a new "giant": load
+      html: fix url to dynazoom
+      log: adding the PID to the logging message
+      Revert "http: enable empty & other categories"
+
+Stig Sandbeck Mathisen (44):
+      Install munin.conf and munin-node.conf as .example files
+      sandbox: set initial configuration for two nodes
+      Use .sample, instead of .example
+      Rename install file
+      Reduce INSTALL.rst to a howto, and link to doc/
+      Update the prerequisites list
+      Ensure RST header markers are not confused with merge conflict markers
+      Add manpage for munin-httpd
+      Update doc copyright year
+      Remove munin-cgi-* doc, replace with munin-httpd
+      Add 2.1 upgrade notes
+      Remove duplicate options
+      Remove CGI from the developer doc
+      Remove FastCGI from webserver examples
+      We are documenting munin 2.1 now…
+      Remove more mentions of FastCGI
+      Fix order and permissions in dev_scripts/install
+      The VERSION is not important in the plugin doc
+      Install plugins/plugin.sh, it was missed
+      Document ssh transport options
+      Rescue some old tests, skipped by default
+      Rescue old munin-run test
+      Remove munin-node-configure test with no tests
+      Remove monkeywrench tests
+      Move config files to etc/
+      Move web files to web/
+      move the "percentile" script to contrib
+      Remove old documentation
+      Test using perlcritic's first two levels
+      Add Test::Perl::Critic to test_requires
+      Move items from resources/ to doc/example/service/
+      Remove .in macros from examples, and rename
+      rename examples, fix whitespace, and add rst document
+      munin-httpd: Add mime types for .svg and .svgz
+      Use "bash" as lexer for code block
+      Add rrdcached to the dev sandbox
+      Log RRD error output from _ensure_tuning
+      Bugfix: Do not tune nonexistent RRD files
+      Update perltidyrc to proposed style
+      Add "capabilities" to network protocol doc
+      doc: update path to logo files
+      doc: fix whitespace and rst headers
+      doc: add graph to illustrate snmp plugins
+      doc: add detail to master-node illustrations
+
 
 munin-2.1.11, 2015-03-23
 
