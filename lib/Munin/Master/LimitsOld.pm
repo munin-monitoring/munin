@@ -312,6 +312,7 @@ sub process_service {
     $hash->{'group'} = get_full_group_path($hparentobj);
     $hash->{'worst'} = "ok";
     $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
+    $hash->{'recovered'} = {};
 
     my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $host);
     DEBUG "[DEBUG] state_file: $state_file";
@@ -322,14 +323,14 @@ sub process_service {
         my $fname   = munin_get_node_name($field);
         my $fpath   = munin_get_node_loc($field);
         my $onfield = munin_get_node($oldnotes, $fpath);
-	my $oldstate= '';
+        my $oldstate = 'ok';
 
 	# Test directly here as get_limits is in truth recursive and
 	# that fools us when processing multigraphs.
 	next if (!defined($field->{warning}) and !defined($field->{critical}));
 
 	# get the old state if there is one, or leave it empty.
-	if ( defined($onfield) or
+	if ( defined($onfield) and
 	     defined($onfield->{"state"}) ) {
 	    $oldstate = $onfield->{"state"};
 	}
@@ -543,6 +544,7 @@ sub process_service {
                     DEBUG("[DEBUG] ignoring transition from UNKNOWN to OK");
                 } else {
 		    $hash->{'state_changed'} = 1;
+		    $hash->{'recovered'}{$fname} = 1;
                 }
 	    }
         }
@@ -635,10 +637,11 @@ sub generate_service_message {
     if ( defined($children) ) {
 	foreach my $field (@$children) {
 	    if (defined $field->{"state"}) {
-		push @{$stats{$field->{"state"}}}, munin_get_node_name($field);
-		if ($field->{"state"} eq "ok") {
-		    push @{$stats{"foks"}}, munin_get_node_name($field);
-		}
+                my $fname = munin_get_node_name($field);
+                push @{$stats{$field->{'state'}}}, $fname;
+                if ($field->{'state'} eq 'ok' and defined $hash->{'recovered'}{$fname}) {
+                    push @{$stats{'foks'}}, $fname;
+                }
 	    }
 	}
     }
