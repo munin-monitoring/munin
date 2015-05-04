@@ -78,26 +78,28 @@ the ``config`` argument.
 sample plugin
 -------------
 
-::
+.. code-block:: bash
 
    #!/bin/sh
 
-    emit_config() {
-        echo "graph_title test with single word"
-        echo "graph_category test"
-        echo "test.label test"
-    }
+   emit_config() {
+     echo "graph_title test with single word"
+     echo "graph_category test"
+     echo "test.label test"
+   }
 
-    emit_values() {
-        echo "test.value 1"
-    }
+   emit_values() {
+     echo "test.value 1"
+   }
 
-    case "$1" in
-        config)
-            emit_config
-            if [ "$MUNIN_CAP_DIRTYCONFIG" = "1" ]; then emit_data; fi
-        ;;
-        *)
-        emit_values
-        ;;
-    esac
+   case "$1" in
+     config)
+       emit_config
+       if [ "$MUNIN_CAP_DIRTYCONFIG" = "1" ]; then
+         emit_values
+       fi
+       ;;
+     *)
+       emit_values
+       ;;
+   esac
