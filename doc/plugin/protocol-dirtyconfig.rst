@@ -1,5 +1,9 @@
 .. _plugin-protocol-dirtyconfig:
 
+.. index::
+   triple: protocol; extension; dirtyconfig
+   pair: capability; dirtyconfig
+
 =================================
  Protocol extension: dirtyconfig
 =================================
