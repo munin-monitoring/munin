@@ -10,7 +10,7 @@ Context
 We already discussed that munin-update is the fragile link in the munin
 architecture. A missed execution means that some data is lost.
 
-The problem : updates are synchronous 
+The problem : updates are synchronous
 -------------------------------------
 
 In Munin 1.x, updates are synchronous : the epoch and value in each
@@ -57,7 +57,7 @@ dramatic as it is in the 1.x series, since data isn't lost. The data
 collection is also much faster because the real computing is done ahead
 of time. This behavior is called supersampling.
 
-2.0 : Asynchronous proxy node 
+2.0 : Asynchronous proxy node
 -----------------------------
 
 But changing plugins to be self-polled is difficult and tedious. It
@@ -98,7 +98,7 @@ or real-time (think NFS).
 In the same idea, the munin-asyncd can also be hosted elsewhere for
 disk-less nodes.
 
-Specific update rates 
+Specific update rates
 +++++++++++++++++++++
 
 Having one proxy per node enables a polling of all the services there

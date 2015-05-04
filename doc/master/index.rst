@@ -11,8 +11,8 @@ Role
 ====
 
 The munin master is responsible for gathering data from munin nodes.
-It stores this data in RRD [#]_, files, and graphs them on request. 
-It also checks whether the fetched values fell below or go over specific 
+It stores this data in RRD [#]_, files, and graphs them on request.
+It also checks whether the fetched values fell below or go over specific
 thresholds (warning, critical) and will send alerts if this happens and
 the administrator configured it to do so.
 

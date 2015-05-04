@@ -1,4 +1,3 @@
-
 .. _munin.conf:
 
 .. program:: munin.conf
@@ -83,7 +82,7 @@ otherwise.
    color code.
 
    Affects: :ref:`munin-graph`
-   
+
 .. option:: graph_data_size <normal|huge>
 
    This directive sets the resolution of the RRD files that are
@@ -287,8 +286,8 @@ A virtual node definition. Disable update, and make a graph consisting of data f
   [example.com;Totals]
     update no
     load.graph_title Total load
-	load.sum_load.label load
-	load.sum_load.special_stack mail=mail.example.com web=web.example.com munin=munin.example.com
+        load.sum_load.label load
+        load.sum_load.special_stack mail=mail.example.com web=web.example.com munin=munin.example.com
 
 .. _example-alternate-transport:
 

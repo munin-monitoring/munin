@@ -17,14 +17,14 @@ Plugin Docs
   We use this POD sections also in the `Munin Gallery <http://gallery.munin-monitoring.org>`_.
   See our `Wiki page <http://munin-monitoring.org/wiki/PluginGallery>`_ for instructions
   how to contribute also example images for the gallery.
-  
+
   Have a look at the `munin-doc instruction page in our Trac wiki <http://munin-monitoring.org/wiki/munindoc>`_
-  and edit or add the pod section in the plugins code file accordingly. See the `perlpod Manual <http://perldoc.perl.org/perlpod.html>`_ 
-  for help on the syntax. Finally send a patch or a pull request on github 
+  and edit or add the pod section in the plugins code file accordingly. See the `perlpod Manual <http://perldoc.perl.org/perlpod.html>`_
+  for help on the syntax. Finally send a patch or a pull request on github
   to help us improve the plugins documentation.
 
 Unix Manual Pages
-  are also part of the distributed munin packages. Most Munin commands 
+  are also part of the distributed munin packages. Most Munin commands
   (such as munin-run, and munin-doc itself) are only documented through the usual Unix man command.
 
 Munin Guide
@@ -35,7 +35,7 @@ Munin Guide
 Munin's Wiki
   Currently it contains a mixture of all sorts of documentation listed above.
   In the future, the wiki_ shall be the place for docs concerning anything *around* Munin,
-  whilst the things to say about the *Munin software* shall be placed here in the 
+  whilst the things to say about the *Munin software* shall be placed here in the
   `Munin Guide`_.
 
 .. _instructions: http://munin-monitoring.org/wiki/munindoc
@@ -45,4 +45,3 @@ Munin's Wiki
 .. _GitHub: https://github.com/
 .. _Munin Guide: https://munin.readthedocs.org/
 .. _wiki: http://munin-monitoring.org/wiki/
-

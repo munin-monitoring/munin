@@ -9,7 +9,7 @@ Here we describe the rules for collaboration and communication between :ref:`Mun
 Introduction
 ------------
 
-Contents on this page will focus on already implemented features. For *proposals* and *ideas* 
+Contents on this page will focus on already implemented features. For *proposals* and *ideas*
 look in the `Wiki <http://www.munin-monitoring.org/wiki/development>`_.
 
 Concepts
@@ -18,7 +18,7 @@ Concepts
 Fetching Data
 =============
 
-Poller-based monitoring infrastructure 
+Poller-based monitoring infrastructure
 
 .. graphviz::
 
@@ -51,4 +51,3 @@ Multigraph Plugins
 ==================
 
 - See :ref:`Protocol for Multigraph Plugins <plugin-protocol-multigraph>`
-

@@ -4,7 +4,7 @@
  Tips for  writing good munin plugins
 ======================================
 
-When developing plugins for Munin, there's some guidelines that should be observed.  
+When developing plugins for Munin, there's some guidelines that should be observed.
 
 Error Handling
 ==============

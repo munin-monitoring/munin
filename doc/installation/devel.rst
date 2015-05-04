@@ -1,5 +1,5 @@
 ==========================
- Development Environment 
+ Development Environment
 ==========================
 
 There is a marvelous `dev_scripts/` directory in the Munin source code. As its
@@ -24,7 +24,7 @@ Download the source code
 First step is to clone the git repository. We will use `$HOME/src/munin` as the
 development directory.
 
-:: 
+::
 
         mkdir -p $HOME/src
         cd $HOME/src

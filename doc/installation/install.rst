@@ -6,7 +6,7 @@
 
 Due to :ref:`Munin's Architecture <architecture-index>` you have to
 install two different software packages depending on the role,
-that the machine will play. 
+that the machine will play.
 
 You will need to install "munin-master" on the machine that will
 collect data from all nodes, and graph the results. When starting with

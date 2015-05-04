@@ -27,7 +27,7 @@ The :ref:`Munin node <munin-node>` daemon will understand and answer to the foll
 cap
     Lists the capabilities of the node, e.g. ``multigraph dirtyconfig``
 list [node]
-    Simply lists items available for gathering for this host. 
+    Simply lists items available for gathering for this host.
     E.g. load, cpu, memory, df, et alia.
     If no *host* is given, default to host that runs the munin-node.
 nodes
@@ -83,7 +83,8 @@ Example outputs
 ===============
 
 config
-^^^^^^
+------
+
 ::
 
   > config load
@@ -107,14 +108,15 @@ config
 
 
 fetch
-^^^^^
+-----
+
 Fetches the current values.
 
 Returned data fields:
 
 ::
 
-    <field>.value 
+    <field>.value
 
 Numeric value, or 'U'.
 

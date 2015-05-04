@@ -1,7 +1,7 @@
 .. _advanced-index:
 
 ==================
-Munin Advanced 
+ Munin Advanced
 ==================
 
 .. toctree::

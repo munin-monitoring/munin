@@ -106,7 +106,7 @@ Activating the plugin
 Place the plugin in the /etc/munin/plugins/ directory, and make it
 executable.  Note that most distributions place plugins in a different directory,
 and 'activate' them by symlinking htem to /etc/munin/plugins.  New module development
-should use a similar approach so that in-process development doesn't get run 
+should use a similar approach so that in-process development doesn't get run
 by mistake.
 
 Any time a new plugin is placed or symlinked into /etc/munin/plugins, munin-node should be restarted.
