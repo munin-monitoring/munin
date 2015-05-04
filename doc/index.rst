@@ -19,6 +19,7 @@ Contents:
 
    installation/index.rst
    advanced/index.rst
+   develop/index.rst
    reference/index.rst
 
 .. toctree::

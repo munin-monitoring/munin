@@ -14,4 +14,5 @@ Guidelines for developing Munin.
 .. toctree::
    :maxdepth: 2
 
+   environment.rst
    documenting.rst
