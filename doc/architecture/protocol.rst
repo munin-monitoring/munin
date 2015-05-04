@@ -28,7 +28,7 @@ Poller-based monitoring infrastructure
         "master" -> "node3";
    }
 
-and also - where needed - per async
+Using the :ref:`node-async`:
 
 .. graphviz::
 
@@ -37,6 +37,16 @@ and also - where needed - per async
         "master" -> "node3";
    }
 
+Using :ref:`plugin-snmp`.
+
+.. graphviz::
+
+   digraph {
+     "master" -> "node1" [label="munin protocol"];
+     "node1"  -> "switch" [label="snmp"];
+     "node1"  -> "router" [label="snmp"];
+     "node1"  -> "access point" [label="snmp"];
+   }
 
 Network Protocol
 ----------------
