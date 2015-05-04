@@ -50,6 +50,12 @@ $(document).ready(function() {
 		saveState('cat', activeTab.text());
 	});
 
+	// Hide graphs that aren't in the activeTab category
+	// Hide all categories
+	$('div[data-category]').hide();
+	// Show the right one
+	$('div[data-category="' + activeTab.text() + '"]').show();
+
 	// If there's an active filter, hide tabs
 	if (qs.contains('filter'))
 		hideTabs();
