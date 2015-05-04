@@ -113,7 +113,7 @@ html_short_title = "Munin"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '../master/static/logo-h.png'
+html_logo = '../web/static/img/logo-h.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -192,7 +192,7 @@ latex_documents = [
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = '../master/static/logo-h.png'
+latex_logo = '../web/static/img/logo-h.png'
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
