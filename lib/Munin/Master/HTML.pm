@@ -301,7 +301,7 @@ sub handle_request
 			my $sth_cat = $dbh->prepare_cached(
 				"SELECT DISTINCT sa_c.category cat FROM node n
 				INNER JOIN service s ON s.node_id = n.id
-				LEFT JOIN service_categories sa_c ON sa_c.id = s.id
+				INNER JOIN service_categories sa_c ON sa_c.id = s.id
 				WHERE n.grp_id = ? ORDER BY sa_c.value ASC");
 			$sth_cat->execute($id);
 
@@ -346,7 +346,7 @@ sub handle_request
 
 		my $sth_category = $dbh->prepare(
 			"SELECT DISTINCT sc.category as graph_category FROM service s
-			LEFT JOIN service_categories sc ON sc.id = s.id
+			INNER JOIN service_categories sc ON sc.id = s.id
 			WHERE s.node_id = ?
 			ORDER BY graph_category");
 		$sth_category->execute($id);
@@ -653,8 +653,8 @@ sub _get_params_services {
 
 	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url
 		FROM service s
+		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
-		LEFT JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		WHERE s.node_id = ?
 		ORDER BY service_title ASC");
 	$sth->execute($category_name, $node_id);
