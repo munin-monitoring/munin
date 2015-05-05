@@ -29,7 +29,9 @@ hyperlinking abilities of modern documentation readers.
 
 :ref:`Preface <preface-index>`
 
-        This is the part you are currently reading. It focus on very generic
+        *This is the part you are currently reading.*
+
+        It focus on very generic
         informations about Munin, and also gives some guidelines on how to
         interact with the Munin ecosystem.
 
