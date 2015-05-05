@@ -1,8 +1,9 @@
-.. _plugin-protocol-multigraph:
 
 .. index::
    triple: protocol; extension; multigraph
    pair: capability; multigraph
+
+.. _plugin-protocol-multigraph:
 
 =====================================================
  Protocol extension: multiple graphs from one plugin

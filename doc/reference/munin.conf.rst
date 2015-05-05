@@ -1,6 +1,6 @@
-.. _munin.conf:
-
 .. program:: munin.conf
+
+.. _munin.conf:
 
 ============
  munin.conf

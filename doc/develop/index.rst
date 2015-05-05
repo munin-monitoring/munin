@@ -1,6 +1,4 @@
 
-.. _contributing:
-
 .. index::
    pair: development; munin
    pair: project; munin
