@@ -51,14 +51,14 @@ Configuring NSCA, server side
 NSCA is run through some kind of (x)inetd. 
 
 Using inetd.
-••••••••••••
+++++++++++++
 
 the line below enables NSCA listening on port 5667::
 
  5667            stream  tcp     nowait  nagios  /usr/sbin/tcpd  /usr/sbin/nsca -c /etc/nsca.cfg --inetd
 
 Using xinetd, 
-•••••••••••••
+++++++++++++
 
 the lines below enables NSCA listening on port 5667, allowing connections only from the local host::
 
@@ -82,7 +82,7 @@ the lines below enables NSCA listening on port 5667, allowing connections only f
  }
 
 Common
-••••••
++++++++
 
 The file ``/etc/nsca.cfg`` defines how NSCA behaves.
 Check in particular the ``nsca_user`` and ``command_file`` directives,
