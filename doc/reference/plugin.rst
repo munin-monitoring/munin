@@ -217,7 +217,10 @@ following fields are used.
 :Type: optional
 :Description: Sets the RRD Data Source Type for this datapoint.  The type used may introduce restrictions for the value that can be used.
 :See also: rrdcreate_
-:Default:
+:Default: GAUGE
+
+.. Note::
+   COUNTER is now considered **harmful**. The same effect can be achieved with a DERIVE type, coupled with a ``min 0``.
 
 ============
 
