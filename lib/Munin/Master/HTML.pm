@@ -659,7 +659,9 @@ sub _get_params_services_by_name {
 sub _get_params_services {
 	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id, $graph_ext) = @_;
 
-	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url
+	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url,
+									(SELECT MAX(warning) FROM ds WHERE service_id = s.id) as state_warning,
+									(SELECT MAX(critical) FROM ds WHERE service_id = s.id) as state_critical
 		FROM service s
 		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
@@ -668,24 +670,35 @@ sub _get_params_services {
 	$sth->execute($category_name, $node_id);
 
 	my $services = [];
-	while (my ($_s_id, $_s_name, $_service_title, $_subgraphs, $_url) = $sth->fetchrow_array) {
+
+	# Group-level sums
+	my $n_warnings = 0;
+	my $n_criticals = 0;
+
+	while (my ($_s_id, $_s_name, $_service_title, $_subgraphs, $_url, $_state_warning, $_state_critical, $_state_unknown) = $sth->fetchrow_array) {
 		# Skip sub-graphs if not in multigraph
 		next if not $multigraph_parent and $_s_name =~ /\./;
 		# Skip unrelated graphs if in multigraph
 		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
+		$n_warnings += $_state_warning;
+		$n_criticals += $_state_critical;
+
 		my %imgs = map { ("IMG$_" => "/$_url-$_.$graph_ext") } @times;
 		push @$services, {
 			NAME => $_service_title,
 			URLX => substr($_url, 1 + length($base_path)) . ($_subgraphs ? "/" : ".html"),
+			STATE_WARNING => $_state_warning,
+			STATE_CRITICAL => $_state_critical
 			%imgs,
 		};
 	}
 
-
 	return {
 		NAME => $category_name,
 		SERVICES => $services,
+		STATE_WARNING => $n_warnings > 0,
+		STATE_CRITICAL => $n_criticals > 0
 	};
 }
 
