@@ -375,7 +375,8 @@ sub handle_request
 
 		$sth = $dbh->prepare_cached("SELECT name,service_title,graph_info,subgraphs,
 									(SELECT MAX(warning) FROM ds WHERE service_id = service.id) as state_warning,
-									(SELECT MAX(critical) FROM ds WHERE service_id = service.id) as state_critical
+									(SELECT MAX(critical) FROM ds WHERE service_id = service.id) as state_critical,
+									(SELECT MAX(unknown) FROM ds WHERE service_id = service.id) as state_unknown
 									FROM service WHERE id = ?");
 		$sth->execute($id);
 		my ($graph_name, $graph_title, $graph_info, $multigraph, $state_warning, $state_critical) = $sth->fetchrow_array();
