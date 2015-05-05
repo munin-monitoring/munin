@@ -48,13 +48,13 @@ The ``nagios.cmd`` is a named pipe on which Nagios accepts external input.
 Configuring NSCA, server side
 -----------------------------
 
-NSCA is run through (x)inetd. Using inetd, the below line enables NSCA listening on port 5667:
+NSCA is run through (x)inetd. Using inetd, the line below enables NSCA listening on port 5667:
 
 ::
 
  5667            stream  tcp     nowait  nagios  /usr/sbin/tcpd  /usr/sbin/nsca -c /etc/nsca.cfg --inetd
 
-Using xinetd, the blow line enables NSCA listening on port 5667, allowing connections only from the local host:
+Using xinetd, the lines below enables NSCA listening on port 5667, allowing connections only from the local host:
 
 ::
 
