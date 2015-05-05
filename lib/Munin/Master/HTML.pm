@@ -689,8 +689,8 @@ sub _get_params_services {
 			NAME => $_service_title,
 			URLX => substr($_url, 1 + length($base_path)) . ($_subgraphs ? "/" : ".html"),
 			STATE_WARNING => $_state_warning,
-			STATE_CRITICAL => $_state_critical
-			%imgs,
+			STATE_CRITICAL => $_state_critical,
+			%imgs
 		};
 	}
 

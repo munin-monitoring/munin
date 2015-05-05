@@ -607,11 +607,14 @@ td {
 			color: #666;
 			letter-spacing: -0.5px;
 			@include transition-duration(150ms);
+			@include border-radius(2px);
 
 			&:hover {
 				background-color: #dedede;
-				@include border-radius(3px);
 			}
+
+			&.warn { color: #ED793F; }
+			&.crit { color: #F14122; }
 		}
 	}
 }
@@ -946,6 +949,9 @@ td {
 				color: $secondary-color;
 				border-bottom-color: $secondary-color;
 			}
+
+			&.warn { color: #ED793F; }
+			&.crit { color: #F14122; }
 		}
 		li, a {
 			color: #777;
