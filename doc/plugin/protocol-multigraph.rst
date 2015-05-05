@@ -1,4 +1,4 @@
-.. plugin-protocol-multigraph_:
+.. _plugin-protocol-multigraph:
 
 .. index::
    triple: protocol; extension; multigraph
