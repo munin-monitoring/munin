@@ -26,8 +26,8 @@ Configuration
 Magic Markers
 =============
 
-Munin can only autoconfigure plugins that have the right (optional) magic markers.
-Magic markers are prefixed with "#%#", and consists of a keyword, an equal sign, and one or more values.
+Munin can only autoconfigure plugins that have the corresponding (optional) magic markers.
+Magic markers are prefixed with ``#%#`` and consists of a keyword, an equal sign, and one or more whitespace-separated values.
 
 For a plugin that is part of munin, you should expect to see:
 
@@ -42,19 +42,19 @@ For a plugin that is part of munin, you should expect to see:
 family
 ^^^^^^
 
-For the magic marker "family", the following values may be used.
+For the magic marker ``family``, the following values may be used.
 
 .. index::
    triple: magic marker; family; auto
 
 auto
-    This is a plugin that can be automatically installed and configured by munin-node-configure
+    This is a plugin that can be automatically installed and configured by ``munin-node-configure``
 
 .. index::
    triple: magic marker; family; snmpauto
 
 snmpauto
-    This is a plugin that can be automatically installed and configured by munin-node-configure if called with --snmp (and related arguments)
+    This is a plugin that can be automatically installed and configured by ``munin-node-configure`` if called with ``--snmp`` (and related arguments)
 
 .. index::
    triple: magic marker; family; manual
