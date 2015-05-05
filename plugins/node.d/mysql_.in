@@ -9,7 +9,11 @@ mysql_ - Munin plugin to display misc MySQL server status
 
 =head1 APPLICABLE SYSTEMS
 
-Any MySQL platform, tested by the author on MySQL 5.1.29 and 5.0.51
+Any MySQL platform, tested by the authors on:
+* MySQL 5.0.51
+* MariaDB 5.5.39
+* MariaDB-5.5.39(galera).
+* MariaDB 10.0.18
 
 Plugins:
 * MariaDB-10 Query Response Time: https://mariadb.com/kb/en/mariadb/query_response_time-plugin/
@@ -258,6 +262,26 @@ $graphs{bin_relay_log} = {
 	{name => 'Binlog_cache_use',      label => 'Binlog Cache Use'},
 	{name => 'ma_binlog_size',        label => 'Binary Log Space'},
 	{name => 'relay_log_space',       label => 'Relay Log Space'},
+    ],
+};
+
+#-------------------------
+$graphs{binlog_groupcommit} = {
+    config => {
+       global_attrs => {
+           title  => 'Binary Log Group Commits',
+           vlabel => 'Commits/Groups',
+       },
+       data_source_attrs => {
+           draw  => 'LINE1',
+       },
+    },
+    data_sources => [
+       {name => 'Binlog_commits', label => 'Binlog commits'},
+       {name => 'Binlog_group_commits',      label => 'Binlog Group Commits'},
+       {name => 'Binlog_group_commit_trigger_count', label => 'Binlog Groups because of binlog_commit_wait_count'},
+       {name => 'Binlog_group_commit_trigger_timeout', label => 'Binlog Groups because of binlog_commit_wait_usec'},
+       {name => 'Binlog_group_commit_trigger_lock_wait', label => 'Binlog Groups because of transactions'},
     ],
 };
 
