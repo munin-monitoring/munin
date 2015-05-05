@@ -14,6 +14,11 @@ Nomenclature
 
    nomenclature.rst
 
+.. index::
+   single: man pages
+
+.. _man-pages:
+
 Man pages
 =========
 
