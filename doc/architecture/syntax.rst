@@ -85,7 +85,7 @@ example
 
 capabilities
 ^^^^^^^^^^^^
-For the magic marker "capabilities", the following values may be used.
+For the magic marker ``capabilities``, the following values may be used.
 
 .. index::
    triple: magic marker; capability; autoconf
