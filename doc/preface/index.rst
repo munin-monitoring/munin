@@ -11,7 +11,7 @@
    conventions.rst
    moreinfo.rst
    bugreport.rst
-   ../documentation/index.rst
+   ../develop/documenting.rst
 
 This guide is **the** official documentation of Munin. It has been written by the
 Munin developers and other volunteers in parallel to the development of the
