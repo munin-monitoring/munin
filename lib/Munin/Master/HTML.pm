@@ -373,9 +373,12 @@ sub handle_request
 
 		my $sth;
 
-		$sth = $dbh->prepare_cached("SELECT name,service_title,graph_info,subgraphs FROM service WHERE id = ?");
+		$sth = $dbh->prepare_cached("SELECT name,service_title,graph_info,subgraphs,
+									(SELECT MAX(warning) FROM ds WHERE service_id = service.id) as state_warning,
+									(SELECT MAX(critical) FROM ds WHERE service_id = service.id) as state_critical
+									FROM service WHERE id = ?");
 		$sth->execute($id);
-		my ($graph_name, $graph_title, $graph_info, $multigraph) = $sth->fetchrow_array();
+		my ($graph_name, $graph_title, $graph_info, $multigraph, $state_warning, $state_critical) = $sth->fetchrow_array();
 
 		$sth = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
 		$sth->execute($id);
@@ -429,6 +432,10 @@ sub handle_request
 		# Add some more information (graph name, title)
 		$service_template_params{GRAPH_NAME} = $graph_name;
 		$service_template_params{GRAPH_TITLE} = $graph_title;
+
+		# Problems
+		$service_template_params{STATE_WARNING} = $state_warning;
+		$service_template_params{STATE_CRITICAL} = $state_critical;
 
 		for my $t (@times) {
 			my $epoch = "start_epoch=$epoch_start{$t}&stop_epoch=$epoch_now";
