@@ -436,6 +436,11 @@ img.dynazoomModalLink:hover {
   margin: 25px 0;
   font-size: 23px;
 }
+#content .subtitle {
+  color: #888;
+  letter-spacing: -1px;
+  margin: -20px 0 20px 0;
+}
 
 .comparison #content {
   margin-left: 0;
