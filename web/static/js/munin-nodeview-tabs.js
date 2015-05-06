@@ -19,7 +19,15 @@ $(document).ready(function() {
 	var qs = new Querystring();
 	if (qs.contains('cat'))
 		activeTab = tabs.filter(function() { return $(this).text().trim() == qs.get('cat'); });
+	else if (window.location.hash.length > 0) { // URL contains anchor to category: overview->nodeview
+		var anchorName = window.location.hash.substr(1); // Remove leading #
+		activeTab = tabs.filter(function() { return $(this).text().trim() == anchorName; });
+	}
 	else
+		activeTab = tabs.first();
+
+	// If category in URL doesn't exist
+	if (activeTab[0] === undefined)
 		activeTab = tabs.first();
 
 
