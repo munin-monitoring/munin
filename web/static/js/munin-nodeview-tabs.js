@@ -19,12 +19,23 @@ $(document).ready(function() {
 	var qs = new Querystring();
 	if (qs.contains('cat'))
 		activeTab = tabs.filter(function() { return $(this).text().trim() == qs.get('cat'); });
+	else if (window.location.hash.length > 0) { // URL contains anchor to category: overview->nodeview
+		var anchorName = window.location.hash.substr(1); // Remove leading #
+		activeTab = tabs.filter(function() { return $(this).text().trim() == anchorName; });
+	}
 	else
+		activeTab = tabs.first();
+
+	// If category in URL doesn't exist
+	if (activeTab[0] === undefined)
 		activeTab = tabs.first();
 
 
 	// If tabs are disabled, they will serve as links to jump to categories
 	if (!tabsEnabled) {
+		// Remove "ALL" tab
+		tabs.first().remove();
+
 		tabs.each(function() {
 			var text = $(this).text();
 			$(this).html('<a href="#' + text + '">' + text + '</a>');
@@ -36,25 +47,34 @@ $(document).ready(function() {
 	activeTab.addClass('active');
 
 	tabs.click(function() {
+		activeTab.removeClass('active');
 		activeTab = $(this);
-
-		tabs.removeClass('active');
 		activeTab.addClass('active');
 
 		// Hide all categories
-		$('div[data-category]').hide();
-		// Show the right one
-		$('div[data-category="' + activeTab.text() + '"]').show();
+		if ($(this).index() != 0) {
+			$('div[data-category]').hide();
+			// Show the right one
+			$('div[data-category="' + activeTab.text() + '"]').show();
+		}
+		else { // ALL
+			$('div[data-category]').show();
+		}
 
 		// Save state in URL
 		saveState('cat', activeTab.text());
 	});
 
 	// Hide graphs that aren't in the activeTab category
-	// Hide all categories
-	$('div[data-category]').hide();
-	// Show the right one
-	$('div[data-category="' + activeTab.text() + '"]').show();
+	if (activeTab.index() != 0) {
+		// Hide all categories
+		$('div[data-category]').hide();
+		// Show the right one
+		$('div[data-category="' + activeTab.text() + '"]').show();
+	}
+	else { // All
+		$('div[data-category]').show();
+	}
 
 	// If there's an active filter, hide tabs
 	if (qs.contains('filter'))
