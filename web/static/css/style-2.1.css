@@ -117,10 +117,10 @@ img {
   text-decoration: none;
 }
 .graphLink.iwarn {
-  background-color: #ffd300;
+  background-color: #ED793F;
 }
 .graphLink.icrit {
-  background-color: #ff0000;
+  background-color: #F14122;
 }
 
 .graph {
@@ -144,10 +144,10 @@ img {
   opacity: 0.95;
 }
 .graph.iwarn {
-  color: #ffd300;
+  color: #ED793F;
 }
 .graph.icrit {
-  color: #ff0000;
+  color: #F14122;
 }
 .graph.iunkn {
   color: #ffaa00;

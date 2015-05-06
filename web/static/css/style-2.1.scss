@@ -11,6 +11,8 @@
 $secondary-font: 	Helvetica, sans-serif;
 $primary-color: 	#388E3C;
 $secondary-color: 	#546E7A;
+$problems-warning-color:  #ED793F;
+$problems-critical-color: #F14122;
 
 /* SASS mixins */
 @mixin border-radius($radius) {
@@ -144,8 +146,8 @@ img { border: 0; }
 	font-size: 0;
 
 	&:hover { text-decoration: none }
-	&.iwarn { background-color: #ffd300; }
-	&.icrit { background-color: #ff0000; }
+	&.iwarn { background-color: $problems-warning-color; }
+	&.icrit { background-color: $problems-critical-color; }
 }
 
 .graph {
@@ -160,8 +162,8 @@ img { border: 0; }
 		@include box-shadow(0 0 2px 0 #888);
 	}
 	&.iwarn, &.icrit { opacity: 0.95; }
-	&.iwarn { color: #ffd300; }
-	&.icrit { color: #ff0000; }
+	&.iwarn { color: $problems-warning-color; }
+	&.icrit { color: $problems-critical-color; }
 	&.iunkn { color: #ffaa00; }
 	&.iremoved { opacity: 0.6; }
 
@@ -613,8 +615,8 @@ td {
 				background-color: #dedede;
 			}
 
-			&.warn { color: #ED793F; }
-			&.crit { color: #F14122; }
+			&.warn { color: $problems-warning-color; }
+			&.crit { color: $problems-critical-color; }
 		}
 	}
 }
@@ -950,8 +952,8 @@ td {
 				border-bottom-color: $secondary-color;
 			}
 
-			&.warn { color: #ED793F; }
-			&.crit { color: #F14122; }
+			&.warn { color: $problems-warning-color; }
+			&.crit { color: $problems-critical-color; }
 		}
 		li, a {
 			color: #777;
