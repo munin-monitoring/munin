@@ -262,7 +262,7 @@ img.dynazoomModalLink:hover {
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
 }
-.header .pageTitle a, .header .pageTitle span {
+.header .pageTitle a, .header .pageTitle div.switchable {
   color: #fff;
   -webkit-transition-duration: 200ms;
   -moz-transition-duration: 200ms;
@@ -275,7 +275,7 @@ img.dynazoomModalLink:hover {
   border-radius: 2px;
   border: 1px solid transparent;
 }
-.header .pageTitle a:hover, .header .pageTitle span:hover {
+.header .pageTitle a:hover, .header .pageTitle div.switchable:hover {
   color: #fff;
   border-color: rgba(0, 0, 0, 0.15);
   background-color: rgba(0, 0, 0, 0.15);
@@ -1110,6 +1110,9 @@ td {
   display: block;
 }
 
+.switchable {
+  display: inline-block;
+}
 .switchable:after {
   content: "\25BE";
   margin-left: 8px;
