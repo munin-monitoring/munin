@@ -431,10 +431,11 @@ sub handle_request
 			year => $epoch_now - (3600 * 24 * 400),
 		);
 
-		# Add some more information (graph name, title, category)
+		# Add some more information (graph name, title, category, nodeview path)
 		$service_template_params{GRAPH_NAME} = $graph_name;
 		$service_template_params{GRAPH_TITLE} = $graph_title;
 		$service_template_params{CATEGORY} = $category;
+		$service_template_params{NODEVIEW_PATH} = "/" . dirname($path);
 
 		# Problems
 		$service_template_params{STATE_WARNING} = $state_warning;
