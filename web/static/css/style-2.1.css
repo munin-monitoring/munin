@@ -117,10 +117,10 @@ img {
   text-decoration: none;
 }
 .graphLink.iwarn {
-  background-color: #ffd300;
+  background-color: #ED793F;
 }
 .graphLink.icrit {
-  background-color: #ff0000;
+  background-color: #F14122;
 }
 
 .graph {
@@ -144,10 +144,10 @@ img {
   opacity: 0.95;
 }
 .graph.iwarn {
-  color: #ffd300;
+  color: #ED793F;
 }
 .graph.icrit {
-  color: #ff0000;
+  color: #F14122;
 }
 .graph.iunkn {
   color: #ffaa00;
@@ -665,13 +665,19 @@ td {
   -moz-transition-duration: 150ms;
   -o-transition-duration: 150ms;
   transition-duration: 150ms;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  -ms-border-radius: 2px;
+  border-radius: 2px;
 }
 .groupview .categories a:hover {
   background-color: #dedede;
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  -ms-border-radius: 3px;
-  border-radius: 3px;
+}
+.groupview .categories a.warn {
+  color: #ED793F;
+}
+.groupview .categories a.crit {
+  color: #F14122;
 }
 
 /* Filer input */
@@ -1071,6 +1077,12 @@ td {
 #content[data-tabs=true] ul.tabs li.active {
   color: #546E7A;
   border-bottom-color: #546E7A;
+}
+#content[data-tabs=true] ul.tabs li.warn {
+  color: #ED793F;
+}
+#content[data-tabs=true] ul.tabs li.crit {
+  color: #F14122;
 }
 #content[data-tabs=true] ul.tabs li, #content[data-tabs=true] ul.tabs a {
   color: #777;

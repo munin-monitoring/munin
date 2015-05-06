@@ -30,7 +30,8 @@
 		<h2><TMPL_VAR NAME="NAME"></h2>
 
 		<!-- Tabs. No empty space allowed here (for styling) -->
-		<ul class="tabs"><TMPL_LOOP NAME="CATEGORIES"><li><TMPL_VAR ESCAPE="HTML" NAME="NAME"></li></TMPL_LOOP></ul>
+		<ul class="tabs"><TMPL_LOOP NAME="CATEGORIES"><li
+			<TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF>><TMPL_VAR ESCAPE="HTML" NAME="NAME"></li></TMPL_LOOP></ul>
 
 		<TMPL_LOOP NAME="CATEGORIES">
 			<h3 id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3>

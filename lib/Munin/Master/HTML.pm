@@ -373,9 +373,13 @@ sub handle_request
 
 		my $sth;
 
-		$sth = $dbh->prepare_cached("SELECT name,service_title,graph_info,subgraphs FROM service WHERE id = ?");
+		$sth = $dbh->prepare_cached("SELECT name,service_title,graph_info,subgraphs,
+									(SELECT MAX(warning) FROM ds WHERE service_id = service.id) as state_warning,
+									(SELECT MAX(critical) FROM ds WHERE service_id = service.id) as state_critical,
+									(SELECT MAX(unknown) FROM ds WHERE service_id = service.id) as state_unknown
+									FROM service WHERE id = ?");
 		$sth->execute($id);
-		my ($graph_name, $graph_title, $graph_info, $multigraph) = $sth->fetchrow_array();
+		my ($graph_name, $graph_title, $graph_info, $multigraph, $state_warning, $state_critical) = $sth->fetchrow_array();
 
 		$sth = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
 		$sth->execute($id);
@@ -429,6 +433,10 @@ sub handle_request
 		# Add some more information (graph name, title)
 		$service_template_params{GRAPH_NAME} = $graph_name;
 		$service_template_params{GRAPH_TITLE} = $graph_title;
+
+		# Problems
+		$service_template_params{STATE_WARNING} = $state_warning;
+		$service_template_params{STATE_CRITICAL} = $state_critical;
 
 		for my $t (@times) {
 			my $epoch = "start_epoch=$epoch_start{$t}&stop_epoch=$epoch_now";
@@ -651,7 +659,9 @@ sub _get_params_services_by_name {
 sub _get_params_services {
 	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id, $graph_ext) = @_;
 
-	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url
+	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url,
+									(SELECT MAX(warning) FROM ds WHERE service_id = s.id) as state_warning,
+									(SELECT MAX(critical) FROM ds WHERE service_id = s.id) as state_critical
 		FROM service s
 		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
@@ -660,24 +670,35 @@ sub _get_params_services {
 	$sth->execute($category_name, $node_id);
 
 	my $services = [];
-	while (my ($_s_id, $_s_name, $_service_title, $_subgraphs, $_url) = $sth->fetchrow_array) {
+
+	# Group-level sums
+	my $n_warnings = 0;
+	my $n_criticals = 0;
+
+	while (my ($_s_id, $_s_name, $_service_title, $_subgraphs, $_url, $_state_warning, $_state_critical, $_state_unknown) = $sth->fetchrow_array) {
 		# Skip sub-graphs if not in multigraph
 		next if not $multigraph_parent and $_s_name =~ /\./;
 		# Skip unrelated graphs if in multigraph
 		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
+		$n_warnings += $_state_warning;
+		$n_criticals += $_state_critical;
+
 		my %imgs = map { ("IMG$_" => "/$_url-$_.$graph_ext") } @times;
 		push @$services, {
 			NAME => $_service_title,
 			URLX => substr($_url, 1 + length($base_path)) . ($_subgraphs ? "/" : ".html"),
-			%imgs,
+			STATE_WARNING => $_state_warning,
+			STATE_CRITICAL => $_state_critical,
+			%imgs
 		};
 	}
-
 
 	return {
 		NAME => $category_name,
 		SERVICES => $services,
+		STATE_WARNING => $n_warnings > 0,
+		STATE_CRITICAL => $n_criticals > 0
 	};
 }
 
