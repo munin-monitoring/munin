@@ -96,8 +96,10 @@ function showTabs() {
 
 	content.attr('data-tabs', 'true');
 
-	// Only show activeTab category
-	$('div[data-category]').not('[data-category="' + activeTab.text() + '"]').hide();
+	if (activeTab.text() == 'all') // Show all categories
+		$('div[data-category]').show();
+	else // Only show activeTab category
+		$('div[data-category]').not('[data-category="' + activeTab.text() + '"]').hide();
 }
 
 /**
