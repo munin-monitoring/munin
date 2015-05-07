@@ -149,10 +149,8 @@ function saveState(key, val) {
 
 	// Replace URL
 	var url = $.param(qs.params);
-	// Add leading '?'
-	url = url.length > 0 ? '?' + url : '';
 	var pageName = $(document).find('title').text();
-	window.history.replaceState('', pageName, url);
+	window.history.replaceState('', pageName, '?' + url);
 }
 
 /* Tooltips */
