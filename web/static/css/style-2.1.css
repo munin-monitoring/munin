@@ -1117,6 +1117,12 @@ td {
 
 .switchable {
   display: inline-block;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 .switchable:after {
   content: "\25BE";
@@ -1133,7 +1139,7 @@ td {
 .switchable_content {
   display: none;
   margin: 0;
-  padding: 6px 0;
+  padding-bottom: 6px;
   position: absolute;
   background-color: #fff;
   width: auto;
@@ -1148,16 +1154,18 @@ td {
   max-height: 350px;
   overflow-y: auto;
 }
-.switchable_content a {
-  display: block;
-  padding: 0 32px 0 24px;
-  list-style: none;
+.switchable_content a, .switchable_content .title {
   height: 32px;
   line-height: 32px;
   white-space: nowrap;
   color: #333;
-  text-align: left;
   font-family: Helvetica, sans-serif;
+}
+.switchable_content a {
+  display: block;
+  list-style: none;
+  padding: 0 32px 0 24px;
+  text-align: left;
   -webkit-transition-duration: 150ms;
   -moz-transition-duration: 150ms;
   -o-transition-duration: 150ms;
@@ -1171,6 +1179,14 @@ td {
 .switchable_content a:hover {
   text-decoration: none;
   background-color: rgba(0, 0, 0, 0.05);
+}
+.switchable_content .title {
+  line-height: 28px;
+  height: 28px;
+  border-bottom: 1px solid #dedede;
+  padding: 5px 32px 5px 32px;
+  text-align: center;
+  color: #777;
 }
 
 .modal {

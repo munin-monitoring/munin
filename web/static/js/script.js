@@ -31,13 +31,21 @@ function prepareSwitchable(switchId) {
 
 	switchable.click(function() {
 		var switchableContent = $('.switchable_content[data-switch=' + switchId + ']');
+
+		if (switchableContent.is(':visible')) {
+			switchableContent.hide();
+			return;
+		}
+
 		switchableContent.css('left', $(this).position().left);
 		switchableContent.css('top', $(this).position().top + $(this).height() + 10);
 		switchableContent.show();
 
 		// When clicking outside, hide the div
 		$(document).bind('mouseup.switchable', function(e) {
-			if (!switchableContent.is(e.target) // If we're neither clicking on
+			if (!switchableContent.is(e.target) // If we're neither clicking on switchableContent
+				&& switchableContent.has(e.target).length === 0
+				&& !switchable.is(e.target) // Same for switchable
 				&& switchableContent.has(e.target).length === 0) { // nor on a descendent
 				switchableContent.hide();
 

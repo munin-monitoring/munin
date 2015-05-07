@@ -39,6 +39,7 @@
 	<div class="clear"></div>
 	<TMPL_IF NAME="LARGESET">
 		<div class="switchable_content" data-switch="header">
+			<div class="title"><TMPL_VAR NAME="INFO_OPTION"></div>
 			<TMPL_LOOP NAME="PEERS">
 				<a <TMPL_IF NAME="LINK">href="<TMPL_VAR NAME="LINK">"</TMPL_IF>>
 					<TMPL_VAR NAME="NAME">
