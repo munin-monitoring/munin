@@ -5,7 +5,9 @@
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<div id="content">
 		<TMPL_LOOP NAME="SERVICES">
-		    <h2><TMPL_VAR NAME="GRAPH_TITLE"></h2>
+			<h2><TMPL_VAR NAME="GRAPH_TITLE"></h2>
+			<div class="subtitle"><TMPL_VAR NAME="GRAPH_NAME"> &bullet;
+				<a href="<TMPL_VAR NAME="NODEVIEW_PATH">/#<TMPL_VAR NAME="CATEGORY">"><TMPL_VAR NAME="CATEGORY"></a></div>
 			<a href="<TMPL_VAR NAME="ZOOMDAY">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
 				<TMPL_UNLESS NAME="DYN_IMAGES">
 				<img src="<TMPL_VAR NAME="IMGDAY">"

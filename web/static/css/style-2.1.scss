@@ -52,6 +52,14 @@ $problems-critical-color: #F14122;
 	-o-transition-duration: $duration;
 	transition-duration: $duration;
 }
+@mixin user-select($value) {
+	-webkit-touch-callout: $value;
+	-webkit-user-select: $value;
+	-khtml-user-select: $value;
+	-moz-user-select: $value;
+	-ms-user-select: $value;
+	user-select: $value;
+}
 
 /* Overall layout */
 html, body {
@@ -258,7 +266,7 @@ img.dynazoomModalLink {
 		width: 100%;
 		@include box-sizing(border-box);
 
-		a, span {
+		a, div.switchable {
 			color: #fff;
 			@include transition-duration(200ms);
 			padding: 2px 6px;
@@ -402,6 +410,11 @@ img.dynazoomModalLink {
 		letter-spacing: -1px;
 		margin: 25px 0;
 		font-size: 23px;
+	}
+	.subtitle {
+		color: #888;
+		letter-spacing: -1px;
+		margin: -20px 0 20px 0;
 	}
 }
 
@@ -980,6 +993,9 @@ td {
 }
 
 .switchable {
+	display: inline-block;
+	@include user-select(none);
+
 	&:after {
 		content: "\25BE";
 		margin-left: 8px;
@@ -994,7 +1010,7 @@ td {
 .switchable_content {
 	display: none;
 	margin: 0;
-	padding: 6px 0;
+	padding-bottom: 6px;
 	position: absolute;
 	background-color: #fff;
 	width: auto;
@@ -1003,16 +1019,19 @@ td {
 	max-height: 350px;
 	overflow-y: auto;
 
-	a {
-		display: block;
-		padding: 0 32px 0 24px;
-		list-style: none;
+	a, .title {
 		height: 32px;
 		line-height: 32px;
 		white-space: nowrap;
 		color: #333;
-		text-align: left;
 		font-family: $secondary-font;
+	}
+
+	a {
+		display: block;
+		list-style: none;
+		padding: 0 32px 0 24px;
+		text-align: left;
 		@include transition-duration(150ms);
 
 		&.current {
@@ -1025,6 +1044,14 @@ td {
 			text-decoration: none;
 			background-color: rgba(0, 0, 0, 0.05);
 		}
+	}
+	.title {
+		line-height: 28px;
+		height: 28px;
+		border-bottom: 1px solid #dedede;
+		padding: 5px 32px 5px 32px;
+		text-align: center;
+		color: #777;
 	}
 }
 
