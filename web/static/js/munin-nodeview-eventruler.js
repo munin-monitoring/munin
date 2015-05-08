@@ -18,7 +18,7 @@ $(document).ready(function() {
 	content = $('#content');
 	nav = $('#nav');
 
-	if (body.width < 768) // Not possible with too small devices
+	if (body.width() < 768) // Not possible with too small devices
 		return;
 
 	// Append ruler and mask to document
@@ -45,7 +45,7 @@ $(document).ready(function() {
 		}
 	});
 
-	// Add toggle in header (not on mobiles)
+	// Add toggle in header
 	$('.header').find('.logo')
 		.after('<div id="eventRulerToggle" class="eventRulerToggle" data-shown="false">' +
 					'<img src="/static/img/icons/eventrulerhandle.png" /></div>');
