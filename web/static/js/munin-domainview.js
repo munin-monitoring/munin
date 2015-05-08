@@ -9,6 +9,9 @@ $(document).ready(function() {
 			return;
 		}
 
+		// Treeview
+		expandAll();
+
 		// Loop on each plugin ("service")
 		$('.service').find('a').each(function() {
 			var pluginName = $(this).text();
