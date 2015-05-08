@@ -14,20 +14,27 @@
 			</div>
 		</TMPL_IF>
 		<!-- Domain view -->
-		<ul>
+		<ul class="domainview treeview-root">
 			<TMPL_LOOP NAME="GROUPS">
 				<li>
-					<span class="domain"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+					<div class="domain">
+						<span class="toggle"></span>
+						<a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+					</div>
 					<ul>
 						<!-- In each group there are N categories -->
 						<TMPL_IF NAME="NCATEGORIES">
 							<TMPL_LOOP NAME="CATEGORIES">
-								<li><span class="host"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+								<li>
+									<div class="host">
+										<span class="toggle"></span>
+										<a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+									</div>
 									<ul>
 										<!-- And in each categroy there are M services -->
 										<TMPL_LOOP NAME="SERVICES">
 											<li>
-												<span class="service">
+												<div class="service">
 													<a
 														<TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
 														<TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF>
@@ -35,7 +42,7 @@
 													>
 														<TMPL_VAR ESCAPE="HTML" NAME="NAME">
 													</a>
-												</span>
+												</div>
 											</li>
 										</TMPL_LOOP><!-- SERVICES -->
 									</ul>
@@ -46,16 +53,24 @@
 							<!-- GROUPS Listing level 2 -->
 							<TMPL_LOOP NAME="GROUPS">
 								<li>
-									<span class="domain"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+									<div class="domain">
+										<span class="toggle"></span>
+										<a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+									</div>
 									<ul>
 										<TMPL_IF NAME="NCATEGORIES">
 											<TMPL_LOOP NAME="CATEGORIES">
 												<li>
-													<span class="host"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+													<div class="host">
+														<span class="toggle"></span>
+														<a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+													</div>
 													<ul>
 														<TMPL_LOOP NAME="SERVICES">
 															<li>
-																<span class="service"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+																<div class="service">
+																	<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+																</div>
 															</li>
 														</TMPL_LOOP>
 													</ul>
@@ -65,18 +80,26 @@
 										<TMPL_IF NAME="NGROUPS"><!-- NGROUPS level 3 -->
 											<TMPL_LOOP NAME="GROUPS"><!-- GROUPS Listing level 3 -->
 												<li>
-													<span class="domain"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+													<div class="domain">
+														<span class="toggle"></span>
+														<a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+													</div>
 													<ul>
 														<!-- In each group N categories and so on -->
 														<TMPL_IF NAME="NCATEGORIES">
 															<TMPL_LOOP NAME="CATEGORIES">
 																<li>
-																	<span class="host"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+																	<div class="host">
+																		<span class="toggle"></span>
+																		<a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+																	</div>
 																	<ul>
 																		<!-- And in each catrgory there are services -->
 																		<TMPL_LOOP NAME="SERVICES">
 																			<li>
-																				<span class="service"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+																				<div class="service">
+																					<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+																				</div>
 																			</li>
 																		</TMPL_LOOP><!-- END SERVICES -->
 																	</ul>
@@ -102,5 +125,6 @@
 </div>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
 <script src="/static/js/munin-domainview.js"></script>
+<script src="/static/js/munin-domainview-treeview.js"></script>
 </body>
 </html>
