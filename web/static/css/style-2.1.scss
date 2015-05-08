@@ -1108,5 +1108,38 @@ td {
 	z-index: 14;
 }
 
+/* Domainview treeview */
+.domainview {
+	li {
+		list-style: none;
+	}
+
+	.toggle {
+		width: 16px;
+		height: 16px;
+		display: inline-block;
+		background: url('../img/icons/expand-reduce.png') no-repeat 0 0;
+		@include opacity(0.5);
+		vertical-align: middle;
+		cursor: pointer;
+		@include user-select(none);
+
+		&[data-expanded=true] {
+			background-position: 0 -16px;
+		}
+
+		&:hover {
+			@include opacity(0.8);
+		}
+	}
+
+	a {
+		display: inline-block;
+		color: #444;
+		padding: 3px;
+		font-family: $secondary-font;
+	}
+}
+
 /* Include _style-2.1-responsive file */
 @import 'style-2.1-responsive';

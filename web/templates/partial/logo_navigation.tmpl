@@ -4,7 +4,7 @@
 		<input type="text" id="filter" />
 		<img id="cancelFilter" src="/static/img/icons/glyphicons-208-remove-2-white.png" style="display:none;" alt="Clear" />
 	</div>
-	<div class="pageTitle <TMPL_IF NAME="COMPARE"><TMPL_ELSE>singleLine</TMPL_IF>">
+	<div class="pageTitle singleLine">
 		<h1>
 			<TMPL_LOOP NAME="PATH">
 				<TMPL_IF NAME="PATHNAME"> &bull;
@@ -24,17 +24,6 @@
 				</TMPL_IF>
 			</TMPL_LOOP>
 		</h1>
-		<div class="subtitle">
-			<TMPL_IF NAME="COMPARE">
-				<span class="comparison">
-					<TMPL_VAR ESCAPE="HTML" NAME="NAME">
-					<a href="comparison-day.html">day</a>
-					<a href="comparison-week.html">week</a>
-					<a href="comparison-month.html">month</a>
-					<a href="comparison-year.html">year</a>
-				</span>
-			</TMPL_IF>
-		</div>
 	</div>
 	<div class="clear"></div>
 	<TMPL_IF NAME="LARGESET">
