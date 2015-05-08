@@ -57,7 +57,7 @@ $(document).ready(function() {
     });
 
     eventRulerToggle.after('<div class="tooltip" style="right: 10px; left: auto;" data-dontsetleft="true">' +
-    '<b>Toggle event ruler</b><br />Tip: use <b>&#8592;, &#8594;</b> or drag-n-drop to move once set,<br /><b>Maj</b> to move quicker</div>');
+    '<b>Toggle event ruler</b><br />Tip: use <b>&#8592;, &#8594;</b> or drag-n-drop to move once set,<br /><b>Shift</b> to move quicker</div>');
     prepareTooltips(eventRulerToggle, function(e) { return e
         .next(); });
 });
