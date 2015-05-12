@@ -14,7 +14,14 @@ graphs.
 
 =head1 CONFIGURATION
 
-No configuration needed
+You can add some extra options to the apt call, in order to override
+your /etc/apt.conf defaults.
+
+[apt_all]
+env.options -o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false
+
+Note that apt is called with no extra options by default, so it fully honors
+your /etc/apt.conf defaults.
 
 =head1 USAGE
 
@@ -79,7 +86,8 @@ sub update_state() {
 	open(STATE, ">$statefile")
 		or die("Couldn't open state file $statefile for writing.");
 	foreach my $release (@releases) {
-	    my $apt="apt-get -u dist-upgrade --print-uris --yes -t $release |";
+	    my $options = $ENV{options} || "";
+	    my $apt="apt-get $options -u dist-upgrade --print-uris --yes -t $release |";
 	    open (APT, "$apt") or exit 22;
 
 	    my @pending = ();
