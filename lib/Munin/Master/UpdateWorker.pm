@@ -12,6 +12,7 @@ use Munin::Common::Logger;
 use File::Basename;
 use File::Path;
 use File::Spec;
+use IO::Socket::INET;
 use Munin::Master::Config;
 use Munin::Master::Node;
 use Munin::Master::Utils;
@@ -19,15 +20,15 @@ use RRDs;
 use Time::HiRes;
 use Data::Dumper;
 use Scalar::Util qw(weaken);
-    
+
 use List::Util qw(max shuffle);
 
 my $config = Munin::Master::Config->instance()->{config};
 
 # Flags that have RRD autotuning enabled.
 my $rrd_tune_flags = {
-	type => '--data-source-type', 
-	max => '--maximum', 
+	type => '--data-source-type',
+	max => '--maximum',
 	min => '--minimum',
 };
 
@@ -76,7 +77,7 @@ sub do_work {
 
     # Reading the state file, no need to lock it, since it's per node and we
     # already have a lock on this.
-    my $state_file = sprintf ('%s/state-%s.storable', $config->{dbdir}, $path); 
+    my $state_file = sprintf ('%s/state-%s.storable', $config->{dbdir}, $path);
     DEBUG "[DEBUG] Reading state for $path in $state_file";
     $self->{state} = munin_read_storable($state_file) || {};
 
@@ -84,6 +85,17 @@ sub do_work {
 	data_source => {},
 	global => {},
 	);
+
+	# Try Connecting to the Carbon Server
+	if ($config->{carbon_server} ne "") {
+		DEBUG "[DEBUG] Connecting to Carbon server $config->{carbon_server}:$config->{carbon_port}...";
+		$self->{carbon_socket} = IO::Socket::INET->new (
+				PeerAddr => $config->{carbon_server},
+				PeerPort => $config->{carbon_port},
+				Proto    => 'tcp',
+		) or WARN "[WARN] Couldn't connect to Carbon Server: $!";
+	}
+
 
     INFO "[INFO] starting work in $$ for $nodedesignation.\n";
     my $done = $self->{node}->do_in_session(sub {
@@ -108,7 +120,7 @@ sub do_work {
 		    # spoolfetching reported no data, skipping it.
 		    if (! $whole_config{global}{multigraph}[1]) {
 			    INFO "[INFO] $nodedesignation didn't send any data for spoolfetch. Ignoring it.";
-			    # adding ourself to failed_workers, so we use 
+			    # adding ourself to failed_workers, so we use
 			    push @{ $self->{worker}->{failed_workers} },  $self->{ID};
 			   die "NO_SPOOLFETCH_DATA";
 		    }
@@ -150,24 +162,24 @@ sub do_work {
 		# Check if this plugin has already sent its data via a dirtyconfig
 		# Note that spoolfetch also uses dirtyconfig
 		my %service_data = $self->handle_dirty_config(\%service_config);
-			
+
 		# default is 0 sec : always update when asked
-		my $update_rate = get_global_service_value(\%service_config, $plugin, "update_rate", 0); 
+		my $update_rate = get_global_service_value(\%service_config, $plugin, "update_rate", 0);
 		my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
 		DEBUG "[DEBUG] update_rate $update_rate_in_seconds for $plugin on $nodedesignation";
 
 		if (! %service_data) {
 			# Check if this plugin has to be updated
-			if ($update_rate_in_seconds 
+			if ($update_rate_in_seconds
 				&& $self->is_fresh_enough($nodedesignation, $plugin, $update_rate_in_seconds)) {
 			    # It's fresh enough, skip this $service
 			    DEBUG "[DEBUG] $plugin is fresh enough, not updating it";
 			    next;
 			}
 
-			# __root__ is only a placeholder plugin for 
-			# an empty spoolfetch so we should ignore it 
-			# if asked to fetch it. 
+			# __root__ is only a placeholder plugin for
+			# an empty spoolfetch so we should ignore it
+			# if asked to fetch it.
 			# But we should still do everything after than.
 			if ($plugin ne "__root__") {
 				DEBUG "[DEBUG] No service data for $plugin, fetching it";
@@ -234,12 +246,13 @@ sub do_work {
 		    %{$service_config{global}});
 
 		my $last_updated_timestamp = $self->_update_rrd_files(\%service_config, \%service_data);
-          	$self->set_spoolfetch_timestamp($last_updated_timestamp);
+		$self->_update_carbon_server(\%service_config, \%service_data);
+		$self->set_spoolfetch_timestamp($last_updated_timestamp);
 	    } # for @plugins
 
 	    # Send "quit" to node
 	    $self->{node}->quit();
-	   
+
 	}; # eval
 
 	# kill the remaining process if needed
@@ -257,6 +270,9 @@ sub do_work {
 	    return;
 	}
 
+	DEBUG "[DEBUG] Closing Carbon socket";
+	$self->{carbon_socket}->close if exists $self->{carbon_socket};
+
 	# Everything went smoothly.
 	DEBUG "[DEBUG] Everything went smoothly.";
 	return 1;
@@ -265,7 +281,7 @@ sub do_work {
 
     munin_removelock($lock_file);
 
-    # Update the state file 
+    # Update the state file
     DEBUG "[DEBUG] Writing state for $path in $state_file";
     munin_write_storable($state_file, $self->{state});
 
@@ -298,11 +314,11 @@ sub is_fresh_enough {
 	my $last_updated = $self->{state}{last_updated}{$service} || "0 0";
 	DEBUG "last_updated{$service}: " . $last_updated;
 	my @last = split(/ /, $last_updated);
-   
-	use Time::HiRes qw(gettimeofday tv_interval);	
+
+	use Time::HiRes qw(gettimeofday tv_interval);
 	my $now = [ gettimeofday ];
 
-	my $age = tv_interval(\@last, $now); 	
+	my $age = tv_interval(\@last, $now);
 	DEBUG "last: [" . join(",", @last) . "], now: [" . join(", ", @$now) . "], age: $age";
 	my $is_fresh_enough = ($age < $update_rate_in_seconds) ? 1 : 0;
 	DEBUG "is_fresh_enough  $is_fresh_enough";
@@ -355,7 +371,7 @@ sub round_to_granularity {
 
 sub handle_dirty_config {
 	my ($self, $service_config) = @_;
-	
+
 	my %service_data;
 
 	my $services = $service_config->{global}{multigraph};
@@ -410,7 +426,7 @@ sub uw_fetch_service_config {
 sub uw_override_with_conf {
     my ($self, $plugin, $service_config) = @_;
 
-    if ($self->{host}{service_config} && 
+    if ($self->{host}{service_config} &&
 	$self->{host}{service_config}{$plugin}) {
 
         my %merged_config = (%$service_config, %{$self->{host}{service_config}{$plugin}});
@@ -594,6 +610,68 @@ sub _ensure_tuning {
     return $success;
 }
 
+sub _update_carbon_server {
+	my ($self, $nested_service_config, $nested_service_data) = @_;
+
+	my $metric_path;
+
+	return unless exists $self->{carbon_socket};
+
+	if ($config->{carbon_prefix} ne "") {
+		$metric_path .= $config->{carbon_prefix};
+		if ($config->{carbon_prefix} !~ /\.$/) {
+			$metric_path .= '.';
+		}
+	}
+
+	$metric_path .= (join ".", reverse split /\./, $self->{host}{host_name}) . ".";
+
+	for my $service (keys %{$nested_service_config->{data_source}}) {
+		my $service_config = $nested_service_config->{data_source}{$service};
+		my $service_data   = $nested_service_data->{$service};
+
+		for my $ds_name (keys %{$service_config}) {
+			my $ds_config = $service_config->{$ds_name};
+
+			unless (defined($ds_config->{label})) {
+				# _update_rrd_files will already have warned about this so silently move on
+				next;
+			}
+			
+			if (defined($service_data) and defined($service_data->{$ds_name})) {
+				my $values = $service_data->{$ds_name}{value};
+				next unless defined ($values);
+				for (my $i = 0; $i < scalar @$values; $i++) {
+					my $value = $values->[$i];
+					my $when  = $service_data->{$ds_name}{when}[$i];
+
+					if ($value =~ /\d[Ee]([+-]?\d+)$/) {
+						# Looks like scientific format. I don't know how Carbon
+						# handles that, but convert it anyway so it gets the same
+						# data as RRDtool
+						my $magnitude = $1;
+						if ($magnitude < 0) {
+							# Preserve at least 4 significant digits
+							$magnitude = abs($magnitude) + 4;
+							$value = sprintf("%.*f", $magnitude, $value);
+						} else {
+							$value = sprintf("%.4f", $value);
+						}
+					}
+
+					DEBUG "[DEBUG] Sending ${metric_path}$service.$ds_name to Carbon";
+					$self->{carbon_socket}->print("${metric_path}$service.$ds_name $value $when\n");
+
+				}
+
+			} else {
+				# Again, _update_rrd_files will have warned
+			}
+		}
+	}
+}
+
+
 
 sub _update_rrd_files {
     my ($self, $nested_service_config, $nested_service_data) = @_;
@@ -615,15 +693,15 @@ sub _update_rrd_files {
 		ERROR "[ERROR] Unable to update $service on $nodedesignation -> $ds_name: Missing data source configuration attribute: label";
 		next;
 	    }
-	    
-	    # Sets the DS resolution, searching in that order : 
-	    # - per field 
+
+	    # Sets the DS resolution, searching in that order :
+	    # - per field
 	    # - per plugin
 	    # - globally
             my $configref = $self->{node}{configref};
 	    $ds_config->{graph_data_size} ||= get_config_for_service($nested_service_config->{global}{$service}, "graph_data_size");
 	    $ds_config->{graph_data_size} ||= $config->{graph_data_size};
-            
+
 	    $ds_config->{update_rate} ||= get_config_for_service($nested_service_config->{global}{$service}, "update_rate");
 	    $ds_config->{update_rate} ||= $config->{update_rate};
 	    $ds_config->{update_rate} ||= 300; # default is 5 min
@@ -635,7 +713,7 @@ sub _update_rrd_files {
 	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config, $first_epoch);
 
 	    if (defined($service_data) and defined($service_data->{$ds_name})) {
-		$last_timestamp = max($last_timestamp, $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
+			$last_timestamp = max($last_timestamp, $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
 	    }
            elsif (defined $ds_config->{cdef} && $ds_config->{cdef} !~ /\b${ds_name}\b/) {
                DEBUG "[DEBUG] Service $service on $nodedesignation label $ds_name is synthetic";
@@ -651,7 +729,7 @@ sub _update_rrd_files {
 
 sub get_config_for_service {
 	my ($array, $key) = @_;
-	
+
 	for my $elem (@$array) {
 		next unless $elem->[0] && $elem->[0] eq $key;
 		return $elem->[1];
@@ -697,7 +775,7 @@ sub _create_rrd_file_if_needed {
 
 sub _get_rrd_file_name {
     my ($self, $service, $ds_name, $ds_config) = @_;
-    
+
     $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
     my $type_id = lc(substr(($ds_config->{type}), 0, 1));
 
@@ -718,9 +796,9 @@ sub _get_rrd_file_name {
                        $ds_name,
                        $type_id);
 
-    $file = File::Spec->catfile($config->{dbdir}, 
+    $file = File::Spec->catfile($config->{dbdir},
 				$file);
-	
+
     DEBUG "[DEBUG] rrd filename: $file\n";
 
     return $file;
@@ -754,37 +832,37 @@ sub _create_rrd_file {
               "RRA:AVERAGE:0.5:288:450", # 450 days, resolution 1 day
               "RRA:MIN:0.5:288:450",
               "RRA:MAX:0.5:288:450");
-    } 
+    }
     elsif ($resolution eq 'huge') {
 	$update_rate = 300; # 'huge' means hard coded RRD $update_rate
-        push (@args, 
+        push (@args,
               "RRA:AVERAGE:0.5:1:115200",  # resolution 5 minutes, for 400 days
               "RRA:MIN:0.5:1:115200",
-              "RRA:MAX:0.5:1:115200"); 
+              "RRA:MAX:0.5:1:115200");
     } elsif ($resolution =~ /^custom (.+)/) {
         # Parsing resolution to achieve computer format as defined on the RFC :
-        # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB 
+        # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB
         my @resolutions_computer = parse_custom_resolution($1, $update_rate);
         foreach my $resolution_computer(@resolutions_computer) {
             my ($multiplier, $multiplier_nb) = @{$resolution_computer};
-	    # Always add 10% to the RRA size, as specified in 
+	    # Always add 10% to the RRA size, as specified in
 	    # http://munin-monitoring.org/wiki/format-graph_data_size
 	    $multiplier_nb += int ($multiplier_nb / 10) || 1;
-            push (@args, 
+            push (@args,
                 "RRA:AVERAGE:0.5:$multiplier:$multiplier_nb",
                 "RRA:MIN:0.5:$multiplier:$multiplier_nb",
                 "RRA:MAX:0.5:$multiplier:$multiplier_nb"
-            ); 
+            );
         }
     }
 
-    # Add the RRD::create prefix (filename & RRD params) 
+    # Add the RRD::create prefix (filename & RRD params)
     my $heartbeat = $update_rate * 2;
     unshift (@args,
         $rrd_file,
         "--start", ($first_epoch - $update_rate),
 	"-s", $update_rate,
-        sprintf('DS:42:%s:%s:%s:%s', 
+        sprintf('DS:42:%s:%s:%s:%s',
                 $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
     );
 
@@ -820,7 +898,7 @@ sub parse_custom_resolution {
                 } elsif ($elem =~ m/(\w+) for (\w+)/) {
                         my $nb_sec = to_sec($1);
                         my $for_sec = to_sec($2);
-                        
+
 			my $multiplier = int ($nb_sec / $update_rate);
                         my $multiplier_nb = int ($for_sec / $nb_sec);
 
@@ -835,7 +913,7 @@ sub parse_custom_resolution {
         return @computer_format;
 }
 
-# return the number of seconds 
+# return the number of seconds
 # for the human readable format
 # s : second,  m : minute, h : hour
 # d : day, w : week, t : month, y : year
@@ -847,12 +925,12 @@ sub to_sec {
 		"d" => 60 * 60 * 24,
 		"w" => 60 * 60 * 24 * 7,
 		"t" => 60 * 60 * 24 * 31, # a month always has 31 days
-		"y" => 60 * 60 * 24 * 365, # a year always has 365 days 
+		"y" => 60 * 60 * 24 * 365, # a year always has 365 days
 	};
 
 	my ($target) = @_;
 	if ($target =~ m/(\d+)([smhdwty])/i) {
-		return $1 * $secs_table->{$2};	
+		return $1 * $secs_table->{$2};
 	} else {
 		# no recognised unit, return the int value as seconds
 		return int $target;
@@ -866,7 +944,7 @@ sub to_mul {
 		return 0;
 	}
 
-	return round($target / $base); 
+	return round($target / $base);
 }
 
 sub to_mul_nb {
@@ -883,7 +961,7 @@ sub _update_rrd_file {
     my $values = $ds_values->{value};
 
     # Some kind of mismatch between fetch and config can cause this.
-    return if !defined($values);  
+    return if !defined($values);
 
     my ($previous_updated_timestamp, $previous_updated_value) = @{ $self->{state}{value}{"$rrd_file:42"}{current} || [ ] };
     my @update_rrd_data;
@@ -897,10 +975,10 @@ sub _update_rrd_file {
 			# it is way less intrusive than the command line args.
 			$ENV{RRDCACHED_ADDRESS} = $config->{"rrdcached_socket"};
 		}
-	} 
-    
+	}
+
     my ($current_updated_timestamp, $current_updated_value) = ($previous_updated_timestamp, $previous_updated_value);
-    for (my $i = 0; $i < scalar @$values; $i++) { 
+    for (my $i = 0; $i < scalar @$values; $i++) {
         my $value = $values->[$i];
         my $when = $ds_values->{when}[$i];
 
@@ -920,7 +998,7 @@ sub _update_rrd_file {
                 $value = sprintf("%.4f", $value);
             }
         }
-        
+
         # Schedule for addition
         push @update_rrd_data, "$when:$value";
 
@@ -953,8 +1031,8 @@ sub _update_rrd_file {
     }
 
     # Stores the previous and the current value in the state db to avoid having to do an RRD lookup if needed
-    $self->{state}{value}{"$rrd_file:42"}{current} = [ $current_updated_timestamp, $current_updated_value ]; 
-    $self->{state}{value}{"$rrd_file:42"}{previous} = [ $previous_updated_timestamp, $previous_updated_value ]; 
+    $self->{state}{value}{"$rrd_file:42"}{current} = [ $current_updated_timestamp, $current_updated_value ];
+    $self->{state}{value}{"$rrd_file:42"}{previous} = [ $previous_updated_timestamp, $previous_updated_value ];
 
     return $current_updated_timestamp;
 }
