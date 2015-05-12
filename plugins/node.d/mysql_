@@ -1850,8 +1850,7 @@ sub update_data {
     update_master($dbh);
     delete $graphs{replication} if update_slave($dbh)==1;
 
-    delete $graphs{bin_relay_log} if not defined $data->{relay_log_space}
-        && not defined $data->{ma_binlog_size};
+    delete $graphs{bin_relay_log} if not defined $data->{relay_log_space};
 
     delete $graphs{execution} if not defined $data->{Executed_events}
         && not defined $data->{Executed_triggers};
