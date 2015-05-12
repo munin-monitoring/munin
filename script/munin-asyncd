@@ -30,6 +30,7 @@ use List::Util qw(min max);
 
 use Munin::Node::SpoolWriter;
 use Munin::Common::Defaults;
+use Munin::Common::Logger;
 
 my $host = "localhost:4949";
 my $metahostname;
@@ -42,6 +43,7 @@ my $nocleanup;
 my $do_fork;
 my $verbose;
 my $debug;
+my $screen;
 my $help;
 my $update_rate = 300;
 my @nodes;
@@ -62,9 +64,18 @@ GetOptions(
 	"verbose|v" => \$verbose,
 	"nocleanup|n" => \$nocleanup,
 	"debug" => \$debug,
+        "screen" => \$screen,
 ) or pod2usage(1);
 if ($help) {
 	pod2usage(1);
+}
+
+if ( $verbose || $debug || $screen ) {
+    my %log;
+    $log{output} = 'screen' if $screen;
+    $log{level}  = 'info'   if $verbose;
+    $log{level}  = 'debug'  if $debug;
+    Munin::Common::Logger::configure(%log);
 }
 
 # $minrate defaults to $update_rate.
@@ -73,10 +84,15 @@ $minrate = $update_rate if ! defined $minrate;
 # Debug implies Verbose
 $verbose = 1 if $debug;
 
+unless (-d $SPOOLDIR) {
+	mkpath($SPOOLDIR, { verbose => $verbose, } ) 
+		or LOGCROAK("Cannot create '$SPOOLDIR': $!");
+}
+
 my $sock = new IO::Socket::INET(
 	PeerAddr        => "$host",
 	Proto   => 'tcp'
-) || die "Error creating socket: $!";
+) || LOGCROAK("Error creating socket: $!");
 my $nodeheader = <$sock>;
 print STDERR "[sock][>] nodes\n" if $debug;
 print $sock "nodes\n";
@@ -113,14 +129,14 @@ my $process_name = "main";
 
 my $plugins = {};
 {
-	print STDERR "[$$][$process_name] Reading config from $host\n" if $verbose;
+	INFO("[$$][$process_name] Reading config from $host");
 	my $sock = new IO::Socket::INET( 
 		PeerAddr	=> "$host", 
 		Proto	=> 'tcp'
 	) || die "Error creating socket: $!"; 
 
 	local $0 = "munin-asyncd [$metahostname] [list]";
-	print STDERR "[sock][>] cap multigraph\n" if $debug;
+	DEBUG("[sock][>] cap multigraph");
 	print $sock "cap multigraph\n";
 	<$sock>; # Read the first header comment line
 	<$sock>; # Read the multigraph response line
@@ -236,10 +252,10 @@ MAIN: while($keepgoing) {
 	my $sleep_sec = $when_next - time;
 
 	if ($sleep_sec > 0) {
-		print STDERR "[$$][$process_name] Sleeping $sleep_sec sec\n" if $verbose;
+		INFO("[$$][$process_name] Sleeping $sleep_sec sec");
 		sleep $sleep_sec;
 	} else {
-		print STDERR "[$$][$process_name] Already late : should sleep $sleep_sec sec\n" if $verbose;
+		INFO("[$$][$process_name] Already late : should sleep $sleep_sec sec\n");
 	}
 }
 
@@ -284,13 +300,13 @@ sub fetch_data
 			push @$output_rows, "update_rate $update_rate";
 		}
 
-		print STDERR "[$$][$process_name][>][$plugin] asking for data\n" if $verbose;
-		print STDERR "[$$][$process_name][>][$plugin][sock] fetch $plugin\n" if $debug;
+		INFO("[$$][$process_name][>][$plugin] asking for data\n");
+                DEBUG("[sock][>][$plugin] fetch $plugin\n");
 		print $sock "fetch $plugin\n";
 
 		while(my $line = <$sock>) {
 			chomp($line);
-			print STDERR "[$$][$process_name][<][$plugin][sock] $line\n" if $debug;
+			DEBUG("[sock][<][$plugin] $line");
 
 			if ($line =~ m/^\./) {
 				# Starting with . => end
@@ -327,5 +343,7 @@ munin-asyncd [options]
      -n --nocleanup             Disable automated spool dir cleanup
 
         --fork                  Do fork
+        --screen                Log to screen instead of syslog
+        --debug                 Log debug messages
      -v --verbose               Be verbose
      -h --help                  View this message	

@@ -13,25 +13,34 @@ use Munin::Common::Defaults;
 use Munin::Common::SyncDictFile;
 use Munin::Common::Logger;
 
+use Params::Validate qw(:all);
+
 use Munin::Node::Config;
 my $config = Munin::Node::Config->instance;
 
 
-sub new
-{
-    my ($class, %args) = @_;
+sub new {
+    my $class = shift;
+    my $validated = validate (
+        @_, {
+            spooldir => {
+                type    => SCALAR,
+                default => $Munin::Common::Defaults::MUNIN_SPOOLDIR
+            },
+        }
+    );
+    my $self = bless {}, $class;
 
-    $args{spooldir} or croak "no spooldir provided";
+    $self->{spooldir} = $validated->{'spooldir'};
 
-    opendir $args{spooldirhandle}, $args{spooldir}
-        or croak "Could not open spooldir '$args{spooldir}': $!";
+    my $spooldirhandle;
+    opendir $spooldirhandle, $self->{spooldir}
+      or croak "Could not open spooldir '$self->{spooldir}': $!";
+    $self->{spooldirhandle} = $spooldirhandle;
 
-    $args{metadata} = _init_metadata($args{spooldir});
+    $self->{metadata} = _init_metadata($self->{spooldir});
 
-    # TODO: paranoia check?  except dir doesn't (currently) have to be
-    # root-owned.
-
-    return bless \%args, $class;
+    return $self;
 }
 
 
