@@ -191,7 +191,7 @@ sub handle_request
 				LEFT OUTER JOIN url su ON su.id = s.id and su.type = 'service'
 				LEFT OUTER JOIN node n ON n.id = s.node_id
 				LEFT OUTER JOIN url nu ON nu.id = n.id and nu.type = 'node'
-				WHERE d.critical = 1
+				WHERE d.critical = 1 OR d.warning = 1 OR d.unknown = 1
 			");
 		$sth->execute();
 
