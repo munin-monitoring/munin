@@ -62,8 +62,8 @@ sub handle_request
 	my $output_format = "html";
 	if ($path =~ /.(json|xml)$/) {
 		$output_format = $1;
-		# Replace that part with a /, in order to simplify the next handling
-		$path =~ s/.(json|xml)$/\//;
+		# Replace that part with a ".html" in order to simplify the next handling
+		$path =~ s/.(json|xml)$/.html/;
 	}
 
 
