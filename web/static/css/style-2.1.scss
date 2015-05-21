@@ -1080,14 +1080,22 @@ td {
 		border: 1px solid darken($secondary-color, 10);
 		background-color: $secondary-color;
 
-		a {
+		.action {
 			float: right;
-			width: 20px;
-			height: 20px;
-			background-image: url('/static/img/icons/glyphicons-208-remove-2-white.png');
 			background-size: 12px 12px;
 			background-position: center;
 			background-repeat: no-repeat;
+			width: 20px;
+			height: 20px;
+			margin-left: 5px;
+
+			&.open {
+				background-image: url('/static/img/icons/glyphicons-390-new-window-alt-white.png');
+			}
+
+			&.close {
+				background-image: url('/static/img/icons/glyphicons-208-remove-2-white.png');
+			}
 		}
 	}
 

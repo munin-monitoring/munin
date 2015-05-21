@@ -62,6 +62,12 @@ $(document).ready(function() {
 		var url = '/dynazoom.html?' + $.param(dzQS.params);
 		dynazoomIframe.attr('src', url);
 		setModalTitle(MODAL_ID, 'Dynazoom - ' + img.attr('alt'));
+
+		// Add "open" button to modal
+		// We have to set back content_only to 0 (false)
+		dzQS.set('content_only', 0);
+		var openUrl = '/dynazoom.html?' + $.param(dzQS.params);
+		setModalOpenTarget(MODAL_ID, openUrl);
 		showModal(MODAL_ID);
 	});
 });
