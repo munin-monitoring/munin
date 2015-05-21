@@ -182,7 +182,11 @@ function prepareTooltips(hoverableElements, getTooltip) {
 function prepareModal(modalId, modalHTMLContent) {
 	var body = $('body');
 	body.append('<div class="modal" data-modalname="' + modalId + '" style="display: none;">'
-					+ '<div class="title" style="display:none"><span></span><a href="#close"></a></div>'
+					+ '<div class="title" style="display:none">'
+					+ '    <span></span>'
+					+ '    <a href="#close" class="action close"></a>'
+					+ '    <a href="#" class="action open" id="modal' + modalId + '-open" style="display: none;"></a>'
+					+ '</div>'
 					+ modalHTMLContent
 				+ '</div>');
 	body.append('<div class="modalMask" data-modalname="' + modalId + '" style="display: none;"></div>');
@@ -194,7 +198,7 @@ function prepareModal(modalId, modalHTMLContent) {
 		hideModal(modalId);
 	});
 	// ... and also the modal title close button
-	modal.find('.title > a').click(function() {
+	modal.find('.title > a.close').click(function() {
 		hideModal(modalId);
 	});
 
@@ -205,6 +209,12 @@ function setModalTitle(modalId, modalTitle) {
 	var titleBar = $('[data-modalname=' + modalId + ']').find('.title');
 	titleBar.find('span').text(modalTitle);
 	titleBar.show();
+}
+
+function setModalOpenTarget(modalId, modalTitleOpenTarget) {
+	var openLink = $('[data-modalname=' + modalId + ']').find('.open');
+	openLink.attr('href', modalTitleOpenTarget);
+	openLink.show();
 }
 
 function showModal(modalId) {
