@@ -137,8 +137,8 @@ my %booleans = map {$_ => 1} qw(
 	    root_instance => 1,
 
 	    config      => bless ( {
-		carbon_server    => "localhost",
-		carbon_port      => "2003",
+		carbon_server    => "",
+		carbon_port      => "",
 		carbon_prefix    => "",
 		config_file      => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf",
 		dbdir            => $Munin::Common::Defaults::MUNIN_DBDIR,
