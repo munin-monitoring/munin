@@ -1233,10 +1233,10 @@ td {
   margin-left: 5px;
 }
 .modal .title .action.open {
-  background-image: url("/static/img/icons/glyphicons-390-new-window-alt-white.png");
+  background-image: url("../img/icons/glyphicons-390-new-window-alt-white.png");
 }
 .modal .title .action.close {
-  background-image: url("/static/img/icons/glyphicons-208-remove-2-white.png");
+  background-image: url("../img/icons/glyphicons-208-remove-2-white.png");
 }
 .modal iframe {
   width: 100%;
