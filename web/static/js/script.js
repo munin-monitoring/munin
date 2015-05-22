@@ -198,7 +198,8 @@ function prepareModal(modalId, modalHTMLContent) {
 		hideModal(modalId);
 	});
 	// ... and also the modal title close button
-	modal.find('.title > a.close').click(function() {
+	modal.find('.title > a.close').click(function(e) {
+		e.preventDefault();
 		hideModal(modalId);
 	});
 
