@@ -446,13 +446,9 @@ img.dynazoomModalLink:hover {
   margin-left: 0;
 }
 
-/* Content: comparison */
-td {
-  vertical-align: top;
-}
-
-.node {
-  width: 500px;
+/* Content: comparison / categoryview */
+.categoryview .node, .comparison .node {
+  display: inline-block;
 }
 
 /* Content: service view */
@@ -541,10 +537,6 @@ td {
 }
 #footer p.tagline:hover {
   color: #888;
-}
-
-.categoryview .node {
-  display: inline-block;
 }
 
 /* Overview */
