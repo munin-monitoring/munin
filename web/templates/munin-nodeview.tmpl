@@ -27,66 +27,66 @@
 			</div>
 		</div>
 
-		<h2><TMPL_VAR NAME="NAME"></h2>
+		<h2><TMPL_VAR NAME></h2>
 
 		<!-- Tabs. No empty space allowed here (for styling) -->
-		<ul class="tabs"><li>all</li><TMPL_LOOP NAME="CATEGORIES"><li
-			<TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF>><TMPL_VAR ESCAPE="HTML" NAME="NAME"></li></TMPL_LOOP></ul>
+		<ul class="tabs"><li>all</li><TMPL_LOOP CATEGORIES><li
+			<TMPL_IF STATE_WARNING>class="warn"</TMPL_IF> <TMPL_IF STATE_CRITICAL>class="crit"</TMPL_IF>><TMPL_VAR ESCAPE="HTML" NAME></li></TMPL_LOOP></ul>
 
-		<TMPL_LOOP NAME="CATEGORIES">
-			<h3 id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3>
-			<div data-category="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">
-				<TMPL_LOOP NAME="SERVICES">
-					<h4><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h4>
-					<a href="<TMPL_VAR NAME="URLX">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
-						<TMPL_UNLESS NAME="DYN_IMAGES">
-							<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-							  src="<TMPL_VAR NAME="IMGDAY">"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-							  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
-							  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>
+		<TMPL_LOOP CATEGORIES>
+			<h3 id="<TMPL_VAR ESCAPE="HTML" NAME>"><TMPL_VAR ESCAPE="HTML" NAME></h3>
+			<div data-category="<TMPL_VAR ESCAPE="HTML" NAME>">
+				<TMPL_LOOP SERVICES>
+					<h4><TMPL_VAR ESCAPE="HTML" NAME></h4>
+					<a href="<TMPL_VAR URLX>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+						<TMPL_UNLESS DYN_IMAGES>
+							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+							  src="<TMPL_VAR IMGDAY>"
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
 							  data-col="0" />
 						<TMPL_ELSE>
 							<noscript>
-							<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-							  src="<TMPL_VAR NAME="IMGDAY">"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-							  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
-							  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>
+							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+							  src="<TMPL_VAR IMGDAY>"
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
 							  data-col="0" />
 							</noscript>
-							<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-							  data-original="<TMPL_VAR NAME="IMGDAY">"
+							<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+							  data-original="<TMPL_VAR IMGDAY>"
 							  src="/static/img/placeholder.gif"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-							  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
-							  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
 							  data-col="0" />
 						</TMPL_UNLESS>
 					</a>
-					<a href="<TMPL_VAR NAME="URLX">" class="graphLink hide-mobile i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
-						<TMPL_UNLESS NAME="DYN_IMAGES">
-							<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-							  src="<TMPL_VAR NAME="IMGWEEK">"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-							  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
-							  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>
+					<a href="<TMPL_VAR URLX>" class="graphLink hide-mobile i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+						<TMPL_UNLESS DYN_IMAGES>
+							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+							  src="<TMPL_VAR IMGWEEK>"
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
 							  data-col="1" />
 						<TMPL_ELSE>
 							<noscript>
-							<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-							  src="<TMPL_VAR NAME="IMGWEEK">"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-							  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
-							  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>
+							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+							  src="<TMPL_VAR IMGWEEK>"
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
 							  data-col="1" />
 							</noscript>
-							<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-							  data-original="<TMPL_VAR NAME="IMGWEEK">"
+							<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+							  data-original="<TMPL_VAR IMGWEEK>"
 							  src="/static/img/placeholder.gif"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-							  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
-							  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
 							  data-col="1" />
 						</TMPL_UNLESS>
 					</a>

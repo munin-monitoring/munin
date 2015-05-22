@@ -4,46 +4,46 @@
 <div id="main" class="comparison">
 	<div id="content">
 		<h2>Comparison: year</h2>
-		<TMPL_LOOP NAME="CATEGORIES">
-		<h3 id="<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">"><TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME"></h3>
+		<TMPL_LOOP CATEGORIES>
+		<h3 id="<TMPL_VAR ESCAPE="HTML" GROUPNAME>"><TMPL_VAR ESCAPE="HTML" GROUPNAME></h3>
 		<table>
-			<TMPL_LOOP NAME="SERVICES">
+			<TMPL_LOOP SERVICES>
 				<tr>
-					<TMPL_LOOP NAME="NODES">
+					<TMPL_LOOP NODES>
 						<td>
 							<div class="node">
 								<span class="nodetitle">
-									<a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html"><TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> &bull;
-									<TMPL_IF NAME="URL1">
-										<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
-										  <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF>
-										  href="/<TMPL_VAR NAME="URL">">
+									<a href="<TMPL_VAR ESCAPE="URL" NODENAME>/index.html"><TMPL_VAR ESCAPE="HTML" NODENAME></a> &bull;
+									<TMPL_IF URL1>
+										<a <TMPL_IF STATE_WARNING>class="warn"</TMPL_IF>
+										  <TMPL_IF STATE_CRITICAL>class="crit"</TMPL_IF>
+										  href="/<TMPL_VAR URL>">
 									</TMPL_IF>
-										<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
-									<TMPL_IF NAME="URL1"></a></TMPL_IF>
+										<TMPL_VAR ESCAPE="HTML" LABEL>
+									<TMPL_IF URL1></a></TMPL_IF>
 								</span>
 								<br />
-								<TMPL_IF NAME="CIMGYEAR">
-									<a href="/<TMPL_VAR NAME="URL">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
-										<TMPL_UNLESS NAME="DYN_IMAGES">
-											<img src="<TMPL_VAR NAME="CIMGYEAR">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">"
-											  class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-											  <TMPL_IF NAME="IMGYEARWIDTH">width="<TMPL_VAR NAME="IMGYEARWIDTH">" </TMPL_IF>
-											  <TMPL_IF NAME="IMGYEARHEIGHT">height="<TMPL_VAR NAME="IMGYEARHEIGHT">"</TMPL_IF>/>
+								<TMPL_IF CIMGYEAR>
+									<a href="/<TMPL_VAR URL>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+										<TMPL_UNLESS DYN_IMAGES>
+											<img src="<TMPL_VAR CIMGYEAR>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
+											  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+											  <TMPL_IF IMGYEARWIDTH>width="<TMPL_VAR IMGYEARWIDTH>" </TMPL_IF>
+											  <TMPL_IF IMGYEARHEIGHT>height="<TMPL_VAR IMGYEARHEIGHT>"</TMPL_IF>/>
 										<TMPL_ELSE>
 											<noscript>
-												<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-												  src="<TMPL_VAR NAME="CIMGYEAR">"
-												  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-												  <TMPL_IF NAME="IMGYEARWIDTH">width="<TMPL_VAR NAME="IMGYEARWIDTH">" </TMPL_IF>
-												  <TMPL_IF NAME="IMGYEARHEIGHT">height="<TMPL_VAR NAME="IMGYEARHEIGHT">"</TMPL_IF>/>
+												<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+												  src="<TMPL_VAR CIMGYEAR>"
+												  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+												  <TMPL_IF IMGYEARWIDTH>width="<TMPL_VAR IMGYEARWIDTH>" </TMPL_IF>
+												  <TMPL_IF IMGYEARHEIGHT>height="<TMPL_VAR IMGYEARHEIGHT>"</TMPL_IF>/>
 											</noscript>
-											<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-											  data-original="<TMPL_VAR NAME="CIMGYEAR">"
+											<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+											  data-original="<TMPL_VAR CIMGYEAR>"
 											  src="/static/img/placeholder.gif"
-											  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-											  <TMPL_IF NAME="IMGYEARWIDTH">width="<TMPL_VAR NAME="IMGYEARWIDTH">" </TMPL_IF>
-											  <TMPL_IF NAME="IMGYEARHEIGHT">height="<TMPL_VAR NAME="IMGYEARHEIGHT">"</TMPL_IF>/>
+											  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+											  <TMPL_IF IMGYEARWIDTH>width="<TMPL_VAR IMGYEARWIDTH>" </TMPL_IF>
+											  <TMPL_IF IMGYEARHEIGHT>height="<TMPL_VAR IMGYEARHEIGHT>"</TMPL_IF>/>
 										</TMPL_UNLESS>
 									</a>
 								</TMPL_IF>
