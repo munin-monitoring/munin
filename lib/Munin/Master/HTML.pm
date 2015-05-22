@@ -808,6 +808,7 @@ sub url_to_path
 		{
 			'pathname' => $name,
 			'path' => url_absolutize(join '/', @paths[0..$_]) . '/',
+			'switchable' => 1
 		}
 	} 0..$#paths;
 
