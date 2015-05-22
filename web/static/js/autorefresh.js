@@ -28,10 +28,10 @@ function startAutoRefresh(pGraphsSelector) {
 function setImageLoading(imgDomElement, isLoading) {
 	if (isLoading) {
 		imgDomElement.parent().css('opacity', '0.7');
-		imgDomElement.parent().find('graph_loading').show();
+		imgDomElement.parent().find('.graph_loading').show();
 	} else {
 		imgDomElement.parent().css('opacity', '1');
-		imgDomElement.parent().find('graph_loading').hide();
+		imgDomElement.parent().find('.graph_loading').hide();
 	}
 }
 
