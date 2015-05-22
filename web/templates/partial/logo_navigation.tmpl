@@ -11,13 +11,21 @@
 					<TMPL_IF NAME="PATH">
 						<a href="<TMPL_VAR NAME="PATH">"><!--
 					<TMPL_ELSE>
-						<div class="switchable" data-switch="header"><!--
+						<TMPL_IF NAME="SWITCHABLE">
+							<div class="switchable" data-switch="header"><!--
+						<TMPL_ELSE>
+							<!--
+						</TMPL_IF>
 					</TMPL_IF>
 					--><TMPL_VAR NAME="PATHNAME"><!--
 					<TMPL_IF NAME="PATH">
 						--></a>
 					<TMPL_ELSE>
-						--></div>
+						<TMPL_IF NAME="SWITCHABLE">
+							--></div>
+						<TMPL_ELSE>
+							-->
+						</TMPL_IF>
 					</TMPL_IF>
 				<TMPL_ELSE>
 					<a href="/">Overview</a>

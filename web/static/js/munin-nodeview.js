@@ -65,7 +65,7 @@ $(document).ready(function() {
 			});
 		}
 
-		// Hide unneccary categories names
+		// Hide unnecessary categories names
 		$('div[data-category]').each(function() {
 			if ($(this).children(':visible').length == 0)
 				$(this).prev().hide();
