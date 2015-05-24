@@ -219,7 +219,11 @@ function setModalOpenTarget(modalId, modalTitleOpenTarget) {
 }
 
 function showModal(modalId) {
+	// Show modal and mask
 	$('[data-modalname=' + modalId + ']').show();
+
+	// Reduce modal size if necessary
+	adjustModalSize(modalId);
 
 	// Register ESC keypress to hide the modal
 	$(document).on('keyup.modal', function(e) {
@@ -228,7 +232,21 @@ function showModal(modalId) {
 	});
 }
 
+/**
+ * Reduce modal size if its width/height is wider than available space
+ * @param modalId
+ */
+function adjustModalSize(modalId) {
+	var modalMaxWidth = 900;
+	var modalMaxHeight = 630;
+
+	var modal = $('.modal[data-modalname=' + modalId + ']');
+	modal.css('width', Math.min(modalMaxWidth, $(window).width()));
+	modal.css('height', Math.min(modalMaxHeight), $(window).height());
+}
+
 function hideModal(modalId) {
+	// Hide modal and mask
 	$('[data-modalname=' + modalId + ']').hide();
 
 	// Unregister ESC keypress event
