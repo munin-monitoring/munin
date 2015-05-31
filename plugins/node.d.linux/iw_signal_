@@ -1,0 +1,74 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+iw_signal_ - Wildcard-plugin to monitor signal level on wifi interfaces.
+
+=head1 CONFIGURATION
+
+This plugin does not normally require configuration.
+
+This is a wildcard plugin. To monitor an interface, link
+iw_signal_<interface> to this file. For example,
+
+  ln -s /usr/share/munin/plugins/iw_signal_ \
+        /etc/munin/plugins/iw_signal_wlan0
+
+will monitor wlan0.
+
+=head1 AUTHOR
+
+Adapted from if_
+
+Copyright (C) 2011 Diego Elio Pettenò <flameeyes@flameeyes.eu>
+Copyright (C) 2015 Ross Vandegrift <ross@kallisti.us>
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+INTERFACE=${0##*iw_signal_}
+
+case $1 in
+    autoconf)
+        if [ -r /proc/net/wireless ]; then
+            echo yes
+            exit 0
+        else
+            echo "no (/proc/net/wireless not found)"
+            exit 0
+        fi
+        ;;
+    suggest)
+        if [ -r /proc/net/wireless ]; then
+            sed -rne '/^[[:space:]]*(lo|sit[[:digit:]]+):/d;s,^[[:space:]]*([^:]+):.*,\1,p' /proc/net/wireless
+        fi
+        exit 0
+        ;;
+    config)
+	echo "graph_title $INTERFACE signal level"
+	echo "graph_vlabel signal level (dBm)"
+	echo "graph_category network"
+	echo "graph_info This graph shows the signal level over time for the interface $INTERFACE."
+	echo "signal.label signal level"
+
+	exit 0
+        ;;
+esac
+
+awk -v interface="wlan0" -F'[: \t.]+' \
+	'{ sub(/^ */,"");
+       if ($1 == interface) print "signal.value "$4;
+    }' /proc/net/wireless
