@@ -4,137 +4,137 @@
 <div id="main">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<div id="content">
-		<TMPL_LOOP NAME="SERVICES">
-			<h2><TMPL_VAR NAME="GRAPH_TITLE"></h2>
-			<div class="subtitle"><TMPL_VAR NAME="GRAPH_NAME"> &bullet;
-				<a href="<TMPL_VAR NAME="NODEVIEW_PATH">/#<TMPL_VAR NAME="CATEGORY">"><TMPL_VAR NAME="CATEGORY"></a></div>
-			<a href="<TMPL_VAR NAME="ZOOMDAY">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
-				<TMPL_UNLESS NAME="DYN_IMAGES">
-				<img src="<TMPL_VAR NAME="IMGDAY">"
+		<TMPL_LOOP SERVICES>
+			<h2><TMPL_VAR GRAPH_TITLE></h2>
+			<div class="subtitle"><TMPL_VAR GRAPH_NAME> &bullet;
+				<a href="<TMPL_VAR NODEVIEW_PATH>/#<TMPL_VAR CATEGORY>"><TMPL_VAR CATEGORY></a></div>
+			<a href="<TMPL_VAR ZOOMDAY>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+				<TMPL_UNLESS DYN_IMAGES>
+				<img src="<TMPL_VAR IMGDAY>"
 					alt="daily graph"
-					class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-					<TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
-					<TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF> />
+					class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+					<TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+					<TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF> />
 				<TMPL_ELSE>
 					<noscript>
-						<img src="<TMPL_VAR NAME="IMGDAY">"
+						<img src="<TMPL_VAR IMGDAY>"
 							alt="daily graph"
-							class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-							<TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
-							<TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF> />
+							class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+							<TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+							<TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF> />
 					</noscript>
-					<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-						data-original="<TMPL_VAR NAME="IMGDAY">"
+					<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+						data-original="<TMPL_VAR IMGDAY>"
 						src="/static/placeholder.gif"
 						alt="daily graph"
-						<TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
-						<TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
+						<TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+						<TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>/>
 				</TMPL_UNLESS>
 			</a>
-			<a href="<TMPL_VAR NAME="ZOOMWEEK">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
-				<TMPL_UNLESS NAME="DYN_IMAGES">
-				<img src="<TMPL_VAR NAME="IMGWEEK">"
+			<a href="<TMPL_VAR ZOOMWEEK>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+				<TMPL_UNLESS DYN_IMAGES>
+				<img src="<TMPL_VAR IMGWEEK>"
 					alt="weekly graph"
-					class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-					<TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
-					<TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF> />
+					class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+					<TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+					<TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF> />
 				<TMPL_ELSE>
 					<noscript>
-						<img src="<TMPL_VAR NAME="IMGWEEK">"
+						<img src="<TMPL_VAR IMGWEEK>"
 							alt="weekly graph"
-							class="i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-							<TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
-							<TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>
+							class="i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+							<TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+							<TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
 							class="graph"/>
 					</noscript>
-					<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-						data-original="<TMPL_VAR NAME="IMGWEEK">"
+					<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+						data-original="<TMPL_VAR IMGWEEK>"
 						src="/static/placeholder.gif"
 						alt="weekly graph"
-						<TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
-						<TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/>
+						<TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+						<TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>/>
 				</TMPL_UNLESS>
 			</a>
 			<br />
-			<a href="<TMPL_VAR NAME="ZOOMMONTH">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
-				<TMPL_UNLESS NAME="DYN_IMAGES">
-				<img src="<TMPL_VAR NAME="IMGMONTH">"
+			<a href="<TMPL_VAR ZOOMMONTH>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+				<TMPL_UNLESS DYN_IMAGES>
+				<img src="<TMPL_VAR IMGMONTH>"
 					alt="monthly graph"
-					class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-					<TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF>
-					<TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF> />
+					class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+					<TMPL_IF IMGMONTHWIDTH>width="<TMPL_VAR IMGMONTHWIDTH>" </TMPL_IF>
+					<TMPL_IF IMGMONTHHEIGHT>height="<TMPL_VAR IMGMONTHHEIGHT>"</TMPL_IF> />
 				<TMPL_ELSE>
 					<noscript>
-						<img src="<TMPL_VAR NAME="IMGMONTH">"
+						<img src="<TMPL_VAR IMGMONTH>"
 							alt="monthly graph"
-							class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-							<TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF>
-							<TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF> />
+							class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+							<TMPL_IF IMGMONTHWIDTH>width="<TMPL_VAR IMGMONTHWIDTH>" </TMPL_IF>
+							<TMPL_IF IMGMONTHHEIGHT>height="<TMPL_VAR IMGMONTHHEIGHT>"</TMPL_IF> />
 					</noscript>
-					<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-						data-original="<TMPL_VAR NAME="IMGMONTH">"
+					<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+						data-original="<TMPL_VAR IMGMONTH>"
 						src="/static/placeholder.gif"
 						alt="monthly graph"
-						<TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF>
-						<TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF>/>
+						<TMPL_IF IMGMONTHWIDTH>width="<TMPL_VAR IMGMONTHWIDTH>" </TMPL_IF>
+						<TMPL_IF IMGMONTHHEIGHT>height="<TMPL_VAR IMGMONTHHEIGHT>"</TMPL_IF>/>
 				</TMPL_UNLESS>
 			</a>
-			<a href="<TMPL_VAR NAME="ZOOMYEAR">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
-				<TMPL_UNLESS NAME="DYN_IMAGES">
-				<img src="<TMPL_VAR NAME="IMGYEAR">"
+			<a href="<TMPL_VAR ZOOMYEAR>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+				<TMPL_UNLESS DYN_IMAGES>
+				<img src="<TMPL_VAR IMGYEAR>"
 					alt="yearly graph"
-					class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-					<TMPL_IF NAME="IMGYEARWIDTH">width="<TMPL_VAR NAME="IMGYEARWIDTH">" </TMPL_IF>
-					<TMPL_IF NAME="IMGYEARHEIGHT">height="<TMPL_VAR NAME="IMGYEARHEIGHT">"</TMPL_IF> />
+					class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+					<TMPL_IF IMGYEARWIDTH>width="<TMPL_VAR IMGYEARWIDTH>" </TMPL_IF>
+					<TMPL_IF IMGYEARHEIGHT>height="<TMPL_VAR IMGYEARHEIGHT>"</TMPL_IF> />
 				<TMPL_ELSE>
 					<noscript>
-						<img src="<TMPL_VAR NAME="IMGYEAR">"
+						<img src="<TMPL_VAR IMGYEAR>"
 							alt="yearly graph"
-							class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-							<TMPL_IF NAME="IMGYEARWIDTH">width="<TMPL_VAR NAME="IMGYEARWIDTH">" </TMPL_IF>
-							<TMPL_IF NAME="IMGYEARHEIGHT">height="<TMPL_VAR NAME="IMGYEARHEIGHT">"</TMPL_IF> />
+							class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+							<TMPL_IF IMGYEARWIDTH>width="<TMPL_VAR IMGYEARWIDTH>" </TMPL_IF>
+							<TMPL_IF IMGYEARHEIGHT>height="<TMPL_VAR IMGYEARHEIGHT>"</TMPL_IF> />
 					</noscript>
-					<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-						data-original="<TMPL_VAR NAME="IMGYEAR">"
+					<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+						data-original="<TMPL_VAR IMGYEAR>"
 						src="/static/placeholder.gif"
 						alt="yearly graph"
-						<TMPL_IF NAME="IMGYEARWIDTH">width="<TMPL_VAR NAME="IMGYEARWIDTH">" </TMPL_IF>
-						<TMPL_IF NAME="IMGYEARHEIGHT">height="<TMPL_VAR NAME="IMGYEARHEIGHT">"</TMPL_IF>/>
+						<TMPL_IF IMGYEARWIDTH>width="<TMPL_VAR IMGYEARWIDTH>" </TMPL_IF>
+						<TMPL_IF IMGYEARHEIGHT>height="<TMPL_VAR IMGYEARHEIGHT>"</TMPL_IF>/>
 				</TMPL_UNLESS>
 			</a>
 
 			<!-- .sum graphs.  One of the least used features of munin? -->
-			<TMPL_IF NAME="IMGWEEKSUM">
-				<img src="<TMPL_VAR NAME="IMGWEEKSUM">"
+			<TMPL_IF IMGWEEKSUM>
+				<img src="<TMPL_VAR IMGWEEKSUM>"
 					alt="summed weekly graph"
-					<TMPL_IF NAME="IMGWEEKSUMWIDTH">width="<TMPL_VAR NAME="IMGWEEKSUMWIDTH">" </TMPL_IF>
-					<TMPL_IF NAME="IMGWEEKSUMHEIGHT">height="<TMPL_VAR NAME="IMGWEEKSUMHEIGHT">"</TMPL_IF>/>
-				<img src="<TMPL_VAR NAME="IMGWEEKSUM">"
+					<TMPL_IF IMGWEEKSUMWIDTH>width="<TMPL_VAR IMGWEEKSUMWIDTH>" </TMPL_IF>
+					<TMPL_IF IMGWEEKSUMHEIGHT>height="<TMPL_VAR IMGWEEKSUMHEIGHT>"</TMPL_IF>/>
+				<img src="<TMPL_VAR IMGWEEKSUM>"
 					alt="summed weekly graph"
-					<TMPL_IF NAME="IMGWEEKSUMWIDTH">width="<TMPL_VAR NAME="IMGWEEKSUMWIDTH">" </TMPL_IF>
-					<TMPL_IF NAME="IMGWEEKSUMHEIGHT">height="<TMPL_VAR NAME="IMGWEEKSUMHEIGHT">"</TMPL_IF>/>
+					<TMPL_IF IMGWEEKSUMWIDTH>width="<TMPL_VAR IMGWEEKSUMWIDTH>" </TMPL_IF>
+					<TMPL_IF IMGWEEKSUMHEIGHT>height="<TMPL_VAR IMGWEEKSUMHEIGHT>"</TMPL_IF>/>
 			</TMPL_IF>
 
 			<h2>Graph Information</h2>
-			<TMPL_LOOP NAME="GRAPHINFO">
+			<TMPL_LOOP GRAPHINFO>
 				<!-- Do we actually allow mutiple graph_info, or is this just to access the nested data? -->
-				<p class="graph_info"><TMPL_VAR NAME="info"></p>
+				<p class="graph_info"><TMPL_VAR info></p>
 			</TMPL_LOOP>
-			<TMPL_IF NAME="STATE_WARNING">
+			<TMPL_IF STATE_WARNING>
 				<p class="warning">
 					<p><strong>Note:</strong>
 					This service is in WARNING state because one of the values reported is outside the allowed range.
 					Please see further down for information about the ranges and the graph for the values.
 				</p>
 			</TMPL_IF>
-			<TMPL_IF NAME="STATE_CRITICAL">
+			<TMPL_IF STATE_CRITICAL>
 				<p class="critical">
 					<p><strong>Note:</strong>
 					This service is in CRITICAL state because one of the values reported is outside the allowed range.
 					Please see further down for information about the ranges and the graph for the values.
 				<p>
 			</TMPL_IF>
-			<TMPL_IF NAME="STATE_UNKNOWN">
+			<TMPL_IF STATE_UNKNOWN>
 				<p class="unknown">
 					<strong>Note:</strong> This service is in UNKNOWN state, because something bad happened.
 					Please check your network, the munin-node, and the plugin.
@@ -150,18 +150,18 @@
 					<th class="crit">Crit</th>
 					<th class="info">Info</th>
 				</tr>
-				<TMPL_LOOP NAME="FIELDINFO">
-					<tr class="<TMPL_IF NAME="__odd__">oddrow<TMPL_ELSE>evenrow</TMPL_IF><TMPL_IF NAME="__last__"> lastrow</TMPL_IF>">
-						<td class="field"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></td>
-						<td class="internal"><span title="For use in munin.conf"><TMPL_VAR ESCAPE="HTML" NAME="FIELD"></span></td>
-						<td class="type"><TMPL_VAR NAME="TYPE"></td>
-						<td class="warn"><TMPL_IF NAME="STATE_WARNING"><div class="warntext"></TMPL_IF><TMPL_VAR NAME="WARN"><TMPL_IF NAME="STATE_WARNING"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
-						<td class="crit"><TMPL_IF NAME="STATE_CRITICAL"><div class="crittext"></TMPL_IF><TMPL_VAR NAME="CRIT"><TMPL_IF NAME="STATE_CRITICAL"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
-						<td class="info"><TMPL_IF NAME="INFO"><TMPL_VAR ESCAPE="HTML" NAME="INFO"><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+				<TMPL_LOOP FIELDINFO>
+					<tr class="<TMPL_IF __odd__>oddrow<TMPL_ELSE>evenrow</TMPL_IF><TMPL_IF __last__> lastrow</TMPL_IF>">
+						<td class="field"><TMPL_VAR ESCAPE="HTML" LABEL></td>
+						<td class="internal"><span title="For use in munin.conf"><TMPL_VAR ESCAPE="HTML" FIELD></span></td>
+						<td class="type"><TMPL_VAR TYPE></td>
+						<td class="warn"><TMPL_IF STATE_WARNING><div class="warntext"></TMPL_IF><TMPL_VAR WARN><TMPL_IF STATE_WARNING></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+						<td class="crit"><TMPL_IF STATE_CRITICAL><div class="crittext"></TMPL_IF><TMPL_VAR CRIT><TMPL_IF STATE_CRITICAL></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+						<td class="info"><TMPL_IF INFO><TMPL_VAR ESCAPE="HTML" INFO><TMPL_ELSE>&nbsp;</TMPL_IF></td>
 					</tr>
-					<TMPL_IF NAME="EXTINFO">
-						<tr class="<TMPL_IF NAME="__odd__">oddrow<TMPL_ELSE>evenrow</TMPL_IF>">
-							<td class="wrap" colspan="6" align='left' valign='top'>This field has the following extra information: <TMPL_VAR ESCAPE="HTML" NAME="EXTINFO"></td>
+					<TMPL_IF EXTINFO>
+						<tr class="<TMPL_IF __odd__>oddrow<TMPL_ELSE>evenrow</TMPL_IF>">
+							<td class="wrap" colspan="6" align='left' valign='top'>This field has the following extra information: <TMPL_VAR ESCAPE="HTML" EXTINFO></td>
 						</tr>
 					</TMPL_IF>
 				</TMPL_LOOP>

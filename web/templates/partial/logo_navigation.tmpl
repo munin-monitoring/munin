@@ -6,22 +6,22 @@
 	</div>
 	<div class="pageTitle singleLine">
 		<h1>
-			<TMPL_LOOP NAME="PATH">
-				<TMPL_IF NAME="PATHNAME"> &bull;
-					<TMPL_IF NAME="PATH">
-						<a href="<TMPL_VAR NAME="PATH">"><!--
+			<TMPL_LOOP PATH>
+				<TMPL_IF PATHNAME> &bull;
+					<TMPL_IF PATH>
+						<a href="<TMPL_VAR PATH>"><!--
 					<TMPL_ELSE>
-						<TMPL_IF NAME="SWITCHABLE">
+						<TMPL_IF SWITCHABLE>
 							<div class="switchable" data-switch="header"><!--
 						<TMPL_ELSE>
 							<!--
 						</TMPL_IF>
 					</TMPL_IF>
-					--><TMPL_VAR NAME="PATHNAME"><!--
-					<TMPL_IF NAME="PATH">
+					--><TMPL_VAR PATHNAME><!--
+					<TMPL_IF PATH>
 						--></a>
 					<TMPL_ELSE>
-						<TMPL_IF NAME="SWITCHABLE">
+						<TMPL_IF SWITCHABLE>
 							--></div>
 						<TMPL_ELSE>
 							-->
@@ -34,12 +34,12 @@
 		</h1>
 	</div>
 	<div class="clear"></div>
-	<TMPL_IF NAME="LARGESET">
+	<TMPL_IF LARGESET>
 		<div class="switchable_content" data-switch="header">
-			<div class="title"><TMPL_VAR NAME="INFO_OPTION"></div>
-			<TMPL_LOOP NAME="PEERS">
-				<a <TMPL_IF NAME="LINK">href="<TMPL_VAR NAME="LINK">"</TMPL_IF>>
-					<TMPL_VAR NAME="NAME">
+			<div class="title"><TMPL_VAR INFO_OPTION></div>
+			<TMPL_LOOP PEERS>
+				<a <TMPL_IF LINK>href="<TMPL_VAR LINK>"</TMPL_IF>>
+					<TMPL_VAR NAME>
 				</a>
 			</TMPL_LOOP>
 		</div>
