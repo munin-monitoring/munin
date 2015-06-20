@@ -351,19 +351,13 @@ img.dynazoomModalLink {
 
 		> a {
 			display: block;
-			padding: 3px 6px;
-			margin: 2px 5px;
+			padding: 5px 11px;
 			color: #666;
-			border-bottom: 1px solid transparent;
-			border-top: 1px solid transparent;
-			@include border-radius(2px);
 		}
 		> a:hover,
         .timerangesList:hover + a {
 			text-decoration: none;
 			background-color: rgba(0, 0, 0, 0.05);
-			border-top: 1px solid rgba(0, 0, 0, 0.1);
-			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 			color: #444;
 		}
 
@@ -388,9 +382,9 @@ img.dynazoomModalLink {
 	.badge {
 		float: right;
 		display: inline-block;
-		margin-right: 12px;
-		margin-top: 3px;
-		min-width: 7px;
+		margin-right: 6px;
+		margin-top: 4px;
+		min-width: 6px;
 		padding: 3px 7px;
 		font-size: 11px;
 		line-height: 1;
