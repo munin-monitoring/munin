@@ -18,9 +18,15 @@
 			float: none;
 			display: inline-block;
 			margin-top: 0;
+			width: 250px;
+
+			/* Don't expand on focus */
+			input[type=text]:focus {
+				width: 250px;
+			}
 		}
 		.logo {
-			width: 19px;
+			width: 30px;
 			margin-top: 0;
 		}
 		h1 { margin: 10px 0; }

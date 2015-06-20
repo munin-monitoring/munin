@@ -220,6 +220,7 @@ img.dynazoomModalLink:hover {
 .header h1 {
   color: #fff;
   margin: 0;
+  cursor: default;
 }
 .header h1 .sep {
   width: 16px;
@@ -1319,9 +1320,14 @@ img.dynazoomModalLink:hover {
     float: none;
     display: inline-block;
     margin-top: 0;
+    width: 250px;
+    /* Don't expand on focus */
+  }
+  .header .filter input[type=text]:focus {
+    width: 250px;
   }
   .header .logo {
-    width: 19px;
+    width: 30px;
     margin-top: 0;
   }
   .header h1 {
