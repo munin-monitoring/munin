@@ -3,7 +3,7 @@
 	<div class="pageTitle">
 		<h1>
 			<TMPL_LOOP PATH>
-				<TMPL_IF PATHNAME> &bull;
+				<TMPL_IF PATHNAME> <span class="sep"></span>
 					<TMPL_IF PATH><a href="<TMPL_VAR PATH>"></TMPL_IF><TMPL_VAR PATHNAME><TMPL_IF PATH></a></TMPL_IF>
 				<TMPL_ELSE>
 					<TMPL_IF PATH><a href="<TMPL_VAR PATH>"></TMPL_IF>Overview<TMPL_IF PATH></a></TMPL_IF>

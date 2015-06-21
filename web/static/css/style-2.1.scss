@@ -228,18 +228,25 @@ img.dynazoomModalLink {
 	h1 {
 		color: #fff;
 		margin: 0;
+		cursor: default;
+
+		.sep {
+			width: 16px;
+			height: 16px;
+			margin-bottom: 3px;
+			background-image: url("../img/icons/breadcrumb-separator.png");
+			display: inline-block;
+			vertical-align: middle;
+		}
 	}
 
 	.logo {
 		display: inline-block;
 		float: left;
-		width: 108px;
-		height: 30px;
-		padding: 2px 5px;
+		width: 118px;
+		height: 34px;
 		margin-top: 6px;
 		@include transition-duration(200ms);
-		border: 1px solid transparent;
-		@include border-radius(3px);
 		background-repeat: no-repeat;
 		background-position: 4px 2px;
 		/* SVG logo: fallback to png */
@@ -248,10 +255,11 @@ img.dynazoomModalLink {
 		linear-gradient(transparent, transparent),
 		url('../img/logo-h-neg.svg');
 		background-size: 115px 30px;
-	}
-	.logo:hover {
-		border-color: rgba(0, 0, 0, 0.15);
-		background-color: rgba(0, 0, 0, 0.15);
+		@include opacity(0.8);
+
+		&:hover {
+			@include opacity(1);
+		}
 	}
 
 	.pageTitle {
@@ -259,7 +267,6 @@ img.dynazoomModalLink {
 		font-weight: 100;
 		font-size: 16px;
 		color: #eee;
-		text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
 		text-align: center;
 		display: block;
 		width: 100%;
@@ -274,7 +281,6 @@ img.dynazoomModalLink {
 
 			&:hover {
 				color: #fff;
-				border-color: rgba(0, 0, 0, 0.15);
 				background-color: rgba(0, 0, 0, 0.15);
 				text-decoration: none;
 			}
@@ -345,19 +351,13 @@ img.dynazoomModalLink {
 
 		> a {
 			display: block;
-			padding: 3px 6px;
-			margin: 2px 5px;
+			padding: 5px 11px;
 			color: #666;
-			border-bottom: 1px solid transparent;
-			border-top: 1px solid transparent;
-			@include border-radius(2px);
 		}
 		> a:hover,
         .timerangesList:hover + a {
 			text-decoration: none;
 			background-color: rgba(0, 0, 0, 0.05);
-			border-top: 1px solid rgba(0, 0, 0, 0.1);
-			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 			color: #444;
 		}
 
@@ -382,9 +382,9 @@ img.dynazoomModalLink {
 	.badge {
 		float: right;
 		display: inline-block;
-		margin-right: 12px;
-		margin-top: 3px;
-		min-width: 7px;
+		margin-right: 6px;
+		margin-top: 4px;
+		min-width: 6px;
 		padding: 3px 7px;
 		font-size: 11px;
 		line-height: 1;
@@ -644,16 +644,19 @@ img.dynazoomModalLink {
 		color: rgba(255, 255, 255, 0.9);
 		font-size: 12px;
 		font-family: inherit;
-		@include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.20));
 		@include transition-duration(150ms);
+		@include box-shadow(none);
 		@include box-sizing(border-box);
 		background: rgba(0, 0, 0, 0.2) url('../img/icons/glyphicons-28-search-white.png') no-repeat 8px 7px;
 		background-size: 16px;
 
+		&:hover {
+			background-color: rgba(0, 0, 0, 0.22);
+		}
+
 		&:focus {
 			outline: none;
 			background-color: rgba(0, 0, 0, 0.3);
-			@include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.1));
 			width: 300px;
 		}
 
@@ -878,28 +881,23 @@ img.dynazoomModalLink {
 }
 
 #eventRulerToggle {
-	width: 30px;
-	height: 30px;
+	width: 31px;
+	height: 31px;
 	overflow: hidden;
 	cursor: pointer;
 	float: right;
 	margin: 7px 0 0 10px;
 	@include transition-duration(200ms);
-	border: 1px solid transparent;
+	@include border-radius(2px);
 
 	img {
 		margin-top: -2px;
 		margin-left: -2px;
 	}
 
-	&:hover,
-	&[data-shown=true] {
-		border-color: rgba(0, 0, 0, 0.15);
-		background-color: rgba(0, 0, 0, 0.15);
-		@include border-radius(2px);
-	}
 	&[data-shown=true] {
 		@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+		background-color: rgba(0, 0, 0, 0.15);
 	}
 }
 
