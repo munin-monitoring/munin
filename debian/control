@@ -34,6 +34,7 @@ Build-Depends-Indep:
  libtest-longstring-perl,
  libtest-mockmodule-perl,
  libtest-mockobject-perl,
+ libtest-perl-critic-perl,
  liburi-perl,
  libwww-perl,
  libxml-dumper-perl,
