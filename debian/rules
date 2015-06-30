@@ -15,8 +15,13 @@ override_dh_auto_build:
 	dh_auto_build -- $(MAKEOPTS)
 	make -C doc html man SPHINXOPTS="-D today=\"$(BUILD_DATE)\""
 
-override_dh_install:
+override_dh_auto_install:
+	dh_auto_install
 	rm -rfv debian/tmp/usr/share/man/man1
+	mv debian/tmp/etc/munin/munin-node.conf.sample debian/tmp/etc/munin/munin-node.conf
+	mv debian/tmp/etc/munin/munin.conf.sample debian/tmp/etc/munin/munin.conf
+
+override_dh_install:
 	dh_install --fail-missing
 
 override_dh_installdocs:
