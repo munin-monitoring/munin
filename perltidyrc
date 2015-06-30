@@ -1,42 +1,36 @@
 # This perltidy run control file contains what is to be considered an
-# approximation of the code formatting conventions used by the Munin
-# project.
+# approximation of the code formatting conventions used by the Munin project.
 #
-# The munin source code is a mix of several different coding
-# styles. So an important use of this file is to tidy up old cruft.
+# The munin source code is a mix of several different coding styles. So an
+# important use of this file is to tidy up old cruft.
 #
-# It is not mandated that code must be run through perltidy with these
-# settings before every commit, as I believe the best formatting is
-# done by humans, but the formatting should be close to what a
-# perltidy run would yield.
+# It is not mandated that code must be run through perltidy with these settings
+# before every commit, as I believe the best formatting is done by humans, but
+# the formatting should be close to what a perltidy run would yield.
 #
 # The content is negotiable.
 #
 # Use: perltidy --profile=./perltidyrc [FILE]...
+#
+# See http://perltidy.sourceforge.net/perltidy.html for option documentation
 
+# I/O Control
 --backup-and-modify-in-place
+
+# Basic Options
+--maximum-line-length=100
 --output-line-ending=unix
---continuation-indentation=4   # Don't really like these, but setting
-                               # it to 0 is not good either ...
+
+# Code Indentation Control
 --nooutdent-long-lines
---paren-tightness=2
---square-bracket-tightness=1
---brace-tightness=2
---block-brace-tightness=0
---nospace-for-semicolon
+
+# Line Break Control
+--break-before-all-operators
 --nooutdent-long-comments
-# Default: --nocuddled-else
-# Default: --noopeningbrace-on-new-line
 --opening-brace-always-on-right
 --opening-token-right
---stack-opening-tokens
 --stack-closing-tokens
---break-before-all-operators
---maximum-consecutive-blank-lines=2
---opening-hash-brace-right
---maximum-line-length=0
---indent-columns=4
---opening-sub-brace-on-new-line
---keep-old-blank-lines=1
---minimum-space-to-comment=2
+--stack-opening-tokens
 
+# Blank Line Control
+--maximum-consecutive-blank-lines=2

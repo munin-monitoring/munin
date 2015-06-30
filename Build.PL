@@ -110,6 +110,7 @@ my $build = Module::Build->new(
         'File::Copy::Recursive'  => '0.38',
         'HTML::Template'         => '2.95',
         'HTML::Template::Pro'    => '0',
+        'HTTP::Server::Simple::CGI'    => '0',
         'IO::Socket::INET6'      => '2.69',
         'LWP::UserAgent'         => '6.06',
         'List::MoreUtils'        => '0.33',
@@ -119,20 +120,20 @@ my $build = Module::Build->new(
         'Net::Server::Daemonize' => '0.06',
         'Net::Server::Fork'      => '0',
         'Params::Validate'       => '1.13',
-        'RRDs'                   => '1.4008',
+        'Alien::RRDtool'         => '0',
         'URI'                    => '1.64',
         'XML::Dumper'            => '0',
     },
     PL_files => {
+        'etc/munin-node.conf.PL'          => 'etc/munin-node.conf.sample',
+        'etc/munin.conf.PL'               => 'etc/munin.conf.sample',
         'lib/Munin.pm.PL'                 => 'lib/Munin.pm',
         'lib/Munin/Common/Defaults.pm.PL' => 'lib/Munin/Common/Defaults.pm',
-        'master/munin.conf.PL'            => 'master/munin.conf',
-        'node/munin-node.conf.PL'         => 'node/munin-node.conf',
         'script/munin-cron.PL'            => 'script/munin-cron',
     },
     etc_files => {
-        'master/munin.conf'    => 'etc/munin.conf',
-        'node/munin-node.conf' => 'etc/munin-node.conf',
+        'etc/munin.conf.sample'      => 'etc/munin.conf.sample',
+        'etc/munin-node.conf.sample' => 'etc/munin-node.conf.sample',
     },
     plugins_files => $plugins_files,
     web_files     => $web_files,
@@ -159,6 +160,7 @@ my $build = Module::Build->new(
         'Test::MockObject'    => '0',
         'Test::Deep'          => '0',
         'Test::LongString'    => '0',
+        'Test::Perl::Critic'  => '0',
         'File::Slurp'         => '9999.19',
         'File::ReadBackwards' => '0',
         'XML::Parser'         => '0',
@@ -230,6 +232,8 @@ if ( not $build->install_path('plugins') ) {
         'plugins' => $build->install_path('share') . '/plugins' );
 }
 
+$plugins_files->{'plugins/plugin.sh'} = 'plugins/plugin.sh';
+
 File::Find::find( { wanted => \&_find_plugins_wanted },
     'plugins/node.d', "plugins/node.d.$^O" );
 
@@ -258,28 +262,12 @@ if ( not $build->install_path('web') ) {
     $build->install_path( 'web' => $build->install_path('etc') );
 }
 
-File::Find::find( { wanted => \&_find_web_templates_wanted }, 'master/www' );
-File::Find::find( { wanted => \&_find_web_static_wanted }, 'master/static' );
+File::Find::find( { wanted => \&_find_web_wanted }, 'web' );
 
-sub _find_web_templates_wanted {
-	my ($src, $dst);
-    if ( lstat && -f _ && /\.tmpl$/ ) {
-		if ($File::Find::dir =~ m{/partial$}smx) {
-			$dst = join( '/', 'web/templates/partial/', $_ );
-		}
-		else {
-			$dst = join( '/', 'web/templates', $_ );
-		}
-		$src = $File::Find::name;
-        $web_files->{$src} = $dst;
-    }
-}
-
-sub _find_web_static_wanted {
+sub _find_web_wanted {
     if ( lstat && -f _ ) {
-        my $src = $File::Find::name;
-        my $dst = join( '/', 'web/static', $_ );
-        $web_files->{$src} = $dst;
+        my $file = $File::Find::name;
+        $web_files->{$file} = $file;
     }
 }
 

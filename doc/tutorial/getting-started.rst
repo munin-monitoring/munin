@@ -13,7 +13,7 @@ installed it. If that is the case, you should obtain information from the
 operating system documentation or your system administrator about how to access
 Munin.
 
-If you are installing Munin yourself, then refer to :ref:`Install Chapter <installation>` 
+If you are installing Munin yourself, then refer to :ref:`Install Chapter <installation>`
 for instructions on installation, and return to this guide when the installation is
 complete. Be sure to follow closely the section about setting up the
 appropriate configuration files.
@@ -34,7 +34,7 @@ copy/paste the samples, advise you to stick to these guidelines.
 
 Architectural Fundamentals
 --------------------------
-Munin has a master-nodes architecture. See :ref:`Munin's Architecture <architecture-index>` 
+Munin has a master-nodes architecture. See :ref:`Munin's Architecture <architecture-index>`
 for the details.
 
 .. image:: Munin-Architecture.png
@@ -57,5 +57,5 @@ it now only listens on localhost as a security measure. You have to edit
 munin-node.conf in order to listen to the network, and add the master's IP on
 the authorized list.
 
-And don't forget to install munin-node also on the "Munin master" machine 
+And don't forget to install munin-node also on the "Munin master" machine
 to monitor Munin's activities :-)

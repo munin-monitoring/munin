@@ -103,16 +103,6 @@ These are the most common Net::Server options used in
 
    Default: undef
 
-.. option:: ignore_file
-
-   Files to ignore when locating installed plugins. May be repeated.
-
-.. option:: host_name
-
-   The hostname used by munin-node to present itself to the munin
-   master. Use this if the local node name differs from the name
-   configured in the munin master.
-
 .. option:: allow
 
    A regular expression defining which hosts may connect to the munin

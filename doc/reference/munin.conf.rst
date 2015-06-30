@@ -1,4 +1,3 @@
-
 .. _munin.conf:
 
 .. program:: munin.conf
@@ -12,7 +11,7 @@ DESCRIPTION
 
 This is the configuration file for the munin master. It is used by
 :ref:`munin-update`, :ref:`munin-graph`, :ref:`munin-limits`.
-:ref:`munin-html`, :ref:`munin-cgi-graph` and :ref:`munin-cgi-html`.
+:ref:`munin-html`.
 
 .. _master-conf-global-directives:
 
@@ -46,7 +45,7 @@ otherwise.
 .. option:: tmpldir <path>
 
    Directories for templates used by :ref:`munin-html` and
-   :ref:`munin-cgi-html` to generate HTML pages. Default
+   :ref:`munin-httpd` to generate HTML pages. Default
    /etc/munin/templates
 
 .. option:: fork <yes|no>
@@ -69,7 +68,7 @@ otherwise.
 
 .. option:: palette <default|old>
 
-   The palette used by :ref:`munin-graph` and :ref:`munin-cgi-graph`
+   The palette used by :ref:`munin-graph` and :ref:`munin-httpd`
    to color the graphs. The "default" palette has more colors and
    better contrast than the "old" palette.
 
@@ -77,16 +76,17 @@ otherwise.
 
 .. option:: custom_palette rrggbb rrggbb ...
 
-   The user defined custom palette used by :ref:`munin-graph` and :ref:`munin-cgi-graph`
-   to color the graphs. This option override existing palette.
-   The palette must be space-separated 24-bit hex color code.
+   The user defined custom palette used by :ref:`munin-graph` and
+   :ref:`munin-httpd` to color the graphs. This option override
+   existing palette.  The palette must be space-separated 24-bit hex
+   color code.
 
    Affects: :ref:`munin-graph`
-   
+
 .. option:: graph_data_size <normal|huge>
 
    This directive sets the resolution of the RRD files that are
-   created by :ref:`munin-graph` and :ref:`munin-cgi-graph`.
+   created by :ref:`munin-graph` and :ref:`munin-httpd`.
 
    Default is "normal".
 
@@ -102,9 +102,8 @@ otherwise.
    If set to "cron", :ref:`munin-graph` will graph all services on all
    nodes every run interval.
 
-   If set to "cgi", :ref:`munin-graph` will do nothing. To generate
-   graphs you must then configure a web server to run
-   :ref:`munin-cgi-graph` instead.
+   If set to "cgi", :ref:`munin-graph` will do nothing. This is the
+   proper setting when you run :ref:`munin-httpd`.
 
    Affects: :ref:`munin-graph`
 
@@ -115,9 +114,8 @@ otherwise.
    If set to "cron", :ref:`munin-html` will recreate all html pages
    every run interval.
 
-   If set to "cgi", :ref:`munin-html` will do nothing. To generate
-   html pages you must configure a web server to run
-   :ref:`munin-cgi-graph` instead.
+   If set to "cgi", :ref:`munin-html` will do nothing.  This is the
+   proper setting when you run :ref:`munin-httpd`.
 
 .. _directive-contact:
 
@@ -288,8 +286,8 @@ A virtual node definition. Disable update, and make a graph consisting of data f
   [example.com;Totals]
     update no
     load.graph_title Total load
-	load.sum_load.label load
-	load.sum_load.special_stack mail=mail.example.com web=web.example.com munin=munin.example.com
+        load.sum_load.label load
+        load.sum_load.special_stack mail=mail.example.com web=web.example.com munin=munin.example.com
 
 .. _example-alternate-transport:
 
@@ -306,8 +304,13 @@ Connect to munin-nodes on a remote site, through a bastion host, using ssh.
   [www.site2.example.org]
     address ssh://bastion.site2.example.org/bin/nc www.site2.example.org 4949
 
+Hint: When using the ssh\:// transport, you can configure how ssh
+behaves by editing `~munin/.ssh/config`.  See the :ref:`ssh transport
+configuration examples <example-transport-ssh>`.
+
 SEE ALSO
 ========
 
 See :ref:`munin` for an overview over munin.
 
+:ref:`example-transport-ssh`

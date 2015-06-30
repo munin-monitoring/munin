@@ -1,0 +1,85 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<body>
+<TMPL_UNLESS NAME="CONTENT_ONLY">
+	<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
+</TMPL_UNLESS>
+<div id="main">
+	<TMPL_UNLESS NAME="CONTENT_ONLY">
+		<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+	</TMPL_UNLESS>
+	<div id="content">
+		<TMPL_UNLESS NAME="CONTENT_ONLY">
+			<h2>Graph zoom</h2>
+		</TMPL_UNLESS>
+
+		<div style="position:relative;">
+			<img id="image" class="dynazoomGraph graph i" />
+			<div id="overlayDiv" class="overlayDiv"></div>
+		</div>
+
+		<div class="dzForm card">
+			<p>Zooming is easy, it's done in 3 clicks (regular clicks, no drag&amp;drop):</p>
+			<ol>
+				<li> First click to define the start of zoom.
+				<li> Second click to define the ending of zoom.
+				<li> Third click inside the defined zone to zoom, outside to cancel the zone.
+			</ol>
+
+			<hr />
+
+			<form id="dynaForm">
+				<div>
+					<!-- Plugin Name : "domain/hostname" -->
+					<label for="plugin_name">Plugin Name <em>(domain/hostname/plugin_name)</em></label>
+					<div><input type="text" id="plugin_name" name="plugin_name" size="64" /></div>
+				</div>
+
+				<div class="half">
+					<!-- Start and stop -->
+					<label for="start_iso8601">Graph Start / Stop <em>(format: <span id="formatExample"></span>)</em></label>
+					<div>
+						<input type="text" id="start_iso8601" name="start_iso8601" size="24" /> /
+						<input type="text" id="stop_iso8601" name="stop_iso8601" size="24" />
+						<input type="button" id="btnMaj" value="Update" />
+					</div>
+				</div>
+
+				<div class="half">
+					<label for="start_epoch">Epoch</label>
+					<input type="text" id="start_epoch" name="start_epoch" size="10" /> /
+					<input type="text" id="stop_epoch" name="stop_epoch" size="10" />
+				</div>
+
+				<div class="half">
+					<!-- Limit high & low -->
+					<label for="lower_limit">Low / high limit</label>
+					<div>
+						<input type="text" id="lower_limit" name="lower_limit" size="10" /> /
+						<input type="text" id="upper_limit" name="upper_limit" size="10" />
+					</div>
+				</div>
+
+				<div class="half">
+					<!-- Image size -->
+					<label for="size_x">Graph size <em>(w/o legend)</em></label>
+					<div>
+						<input type="number" id="size_x" name="size_x" /><div class="inputUnit">px</div> /
+						<input type="number" id="size_y" name="size_y" /><div class="inputUnit">px</div>
+					</div>
+				</div>
+
+				<input type="hidden" id="cgiurl_graph" name="cgiurl_graph" />
+
+				<input type="submit" value="Submit" />
+				<input type="button" id="btnZoomOut" value="Zoom Out x2" />
+				<input type="button" id="reset" value="Reset" />
+			</form>
+		</div>
+	</div>
+</div>
+<script src="/static/js/dynazoom.js"></script>
+<TMPL_UNLESS NAME="CONTENT_ONLY">
+	<TMPL_INCLUDE NAME="partial/footer.tmpl">
+</TMPL_UNLESS>
+</body>
+</html>

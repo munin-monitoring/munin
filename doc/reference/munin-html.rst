@@ -12,10 +12,10 @@ DESCRIPTION
 munin-html is one of the munin master components run from the
 :ref:`munin-cron` script.
 
-munin-html generates metadata used by :ref:`munin-cgi-html`.
-
-If "html_strategy" is set to "cron", munin-html creates static HTML
-pages. If "html_strategy" is set to "cgi", it will not generate pages.
+If :option:`html_strategy` is unset, or set to "cron", munin-html
+creates static HTML pages. If set to "cgi", it will not generate
+static pages, this is the proper setting when :ref:`munin-httpd` is
+used.
 
 OPTIONS
 =======
@@ -64,4 +64,4 @@ SEE ALSO
 
 See :ref:`munin` for an overview over munin.
 
-:ref:`munin-cron`, :ref:`munin-cgi-html`
+:ref:`munin-cron`, :ref:`munin-httpd`

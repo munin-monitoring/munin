@@ -54,7 +54,7 @@ my $scale = "day";
 
 my @params = @ARGV;
 
-push @params, "--no-fork"; # We do *not* want to fork. Perf -> FastCGI
+push @params, "--no-fork"; # We do *not* want to fork.
 push @params, "--log-file", $logfile;
 
 my $config = graph_startup(\@params);

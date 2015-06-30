@@ -1,7 +1,7 @@
 .. _plugin-protocol-multigraph:
 
 =====================================================
- Protocol extension: multiple graphs from one plugin 
+ Protocol extension: multiple graphs from one plugin
 =====================================================
 
 Multigraph plugins are implemented in 1.4.0 and on.
@@ -82,10 +82,9 @@ To preserve the static behavior of the present wildcard plugins the node can som
    [if]
    multigraph :eth0 :eth1 err:eth0 err:eth1
 
-The separator character may well be something different than ":".  Any character not normally allowed in a plugin name should suffice. 
+The separator character may well be something different than ":".  Any character not normally allowed in a plugin name should suffice.
 
 Sample output
 -------------
 
 See  :ref:`plugin-multigraphing` for an example.
-

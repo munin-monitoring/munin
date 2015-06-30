@@ -514,7 +514,7 @@ sub get_version {
     my $r = $self->runquery("SELECT version()");
     my $v = $r->[0]->[0];
     die "Unable to detect PostgreSQL version\n"
-        unless ($v =~ /^PostgreSQL (\d+)\.(\d+)(\.\d+|devel|beta\d+|rc\d+)\b/);
+        unless ($v =~ /^PostgreSQL (\d+)\.(\d+)(\.\d+(lts\d*)*|devel|beta\d+|rc\d+)\b/);
     $self->{detected_version} = "$1.$2";
 }
 

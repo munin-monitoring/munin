@@ -6,15 +6,14 @@
 
 Due to :ref:`Munin's Architecture <architecture-index>` you have to
 install two different software packages depending on the role,
-that the machine will play. 
+that the machine will play.
 
 You will need to install "munin-master" on the machine that will
 collect data from all nodes, and graph the results. When starting with
 Munin, it should be enough to install the Munin master on one server.
 
-On the Munin master, you will need a web server capable of running CGI
-or FastCGI. Apache HTTPD should be suitable. Also reported to be
-working is nginx and lighttpd.
+The munin master runs :ref:`munin-httpd` which is a basic webserver
+which provides the munin web interface on port 4948/tcp.
 
 Install "munin-node" on the machines that shall be monitored by Munin.
 

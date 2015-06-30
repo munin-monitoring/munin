@@ -554,23 +554,40 @@ sub _ensure_filename {
 
 
 sub _ensure_tuning {
-    my ($self, $service, $data_source, $ds_config) = @_;
+    my ( $self, $service, $data_source, $ds_config ) = @_;
+    my $fqn = sprintf( "%s:%s", $self->{ID}, $service );
+
     my $success = 1;
 
-    my $rrd_file =
-        $self->_get_rrd_file_name($service, $data_source,
-                                  $ds_config);
+    my $rrd_file
+        = $self->_get_rrd_file_name( $service, $data_source, $ds_config );
+
+    return unless -f $rrd_file;
 
     $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
-    for my $rrd_prop (keys %$rrd_tune_flags) {
-        INFO "[INFO]: Config update, ensuring $rrd_prop of"
-	    . " '$rrd_file' is '$ds_config->{$rrd_prop}'.\n";
-        RRDs::tune($rrd_file, $rrd_tune_flags->{$rrd_prop},
-                   "42:$ds_config->{$rrd_prop}");
-        if (my $tune_error = RRDs::error()) {
-            ERROR "[ERROR] Tuning $rrd_prop of '$rrd_file' to"
-		. " '$ds_config->{$rrd_prop}' failed.\n";
-            $success = '';
+
+    for my $rrd_prop ( keys %$rrd_tune_flags ) {
+        RRDs::tune( $rrd_file, $rrd_tune_flags->{$rrd_prop},
+            "42:$ds_config->{$rrd_prop}" );
+        if ( RRDs::error() ) {
+            $success = 0;
+            ERROR(
+                sprintf(
+                    "fqn=%s, ds=%s, Tuning %s to %s failed: %s\n",
+                    $fqn,      $data_source,
+                    $rrd_prop, $ds_config->{$rrd_prop},
+                    RRDs::error()
+                )
+            );
+        }
+        else {
+            INFO(
+                sprintf(
+                    "fqn=%s, ds=%s, Tuning %s to %s\n",
+                    $fqn,      $data_source,
+                    $rrd_prop, $ds_config->{$rrd_prop}
+                )
+            );
         }
     }
 

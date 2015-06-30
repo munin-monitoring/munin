@@ -1,0 +1,7 @@
+#
+# cron-jobs for munin, drop in /etc/cron.d on a Linux machine.
+#
+
+MAILTO=root
+
+*/5 * * * *     munin if [ -x /usr/bin/munin-cron ]; then /usr/bin/munin-cron; fi

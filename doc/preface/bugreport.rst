@@ -131,10 +131,10 @@ If your bug report has security implications and you'd prefer that it not
 become immediately visible in public archives, don't send it to bugs. Security
 issues can be reported privately to <security@munin-monitoring.org>.
 
-Do not send bug reports to any of the :ref:`user mailing lists <mailing-lists>`. 
-These mailing lists are for answering user questions, and their subscribers normally 
-do not wish to receive bug reports. More importantly, they are unlikely to fix them. 
-If you have some doubts about your issue being a bug, just drop by on :ref:`IRC` 
+Do not send bug reports to any of the :ref:`user mailing lists <mailing-lists>`.
+These mailing lists are for answering user questions, and their subscribers normally
+do not wish to receive bug reports. More importantly, they are unlikely to fix them.
+If you have some doubts about your issue being a bug, just drop by on :ref:`IRC`
 and ask there first.
 
 If you have a problem with the documentation, the best place to report it is on

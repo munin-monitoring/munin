@@ -4,9 +4,9 @@
  Systemd configuration for rrdcached
 =====================================
 
-This example sets up a dedicated rrdcached instance for munin. 
+This example sets up a dedicated rrdcached instance for munin.
 
-If rrdcached stops, it is restarted. 
+If rrdcached stops, it is restarted.
 
 A pre-start script ensures we have the needed directories
 
@@ -17,7 +17,7 @@ graph process is running as the user "www-data", and that the file system is mou
 
     [Unit]
     Description=Munin rrdcached
-    
+
     [Service]
     Restart=always
     User=munin
