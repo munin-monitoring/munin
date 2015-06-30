@@ -1,2 +1,2 @@
 contrib/munin-support-info /usr/share/munin
-plugins/plugin.sh /usr/share/munin/plugins
+usr/share/munin/plugins/plugin.sh
