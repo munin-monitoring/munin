@@ -12,11 +12,11 @@ DESCRIPTION
 munin-graph script is one of the munin master components run from the
 :ref:`munin-cron` script.
 
-munin-graph generates metadata used by :ref:`munin-cgi-graph`.
-
 If "graph_strategy" is set to "cron", munin-graph creates static
-graphs from all RRD files in the munin database directory. If
-graph_strategy is set to "cgi", munin-graph will not create graphs.
+graphs from all RRD files in the munin database directory.
+
+If graph_strategy is set to "cgi", munin-graph will not create graphs.
+This is the proper setting when you run :ref:`munin-httpd`.
 
 OPTIONS
 =======
@@ -156,4 +156,4 @@ SEE ALSO
 
 See :ref:`munin` for an overview over munin.
 
-:ref:`munin-cron`, :ref:`munin-cgi-graph`
+:ref:`munin-cron`, :ref:`munin-httpd`

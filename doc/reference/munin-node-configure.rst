@@ -55,19 +55,19 @@ General options
 
 .. option:: --config <file>
 
-   Override configuration file [@@CONFDIR@@/munin-node.conf]
+   Override configuration file [/etc/munin/munin-node.conf]
 
 .. option:: --servicedir <dir>
 
-   Override plugin directory [@@CONFDIR@@/plugins/]
+   Override plugin directory [/etc/munin/plugins/]
 
 .. option:: --sconfdir <dir>
 
-   Override plugin configuration directory [@@CONFDIR@@/plugin-conf.d/]
+   Override plugin configuration directory [/etc/munin/plugin-conf.d/]
 
 .. option:: --libdir <dir>
 
-   Override plugin library [@@LIBDIR@@/plugins/]
+   Override plugin library [/usr/share/munin/plugins/]
 
 .. option:: --exitnoterror
 
@@ -193,11 +193,10 @@ For further reading on SNMP v3 security models please consult RFC3414 and the do
 FILES
 =====
 
-* @@CONFDIR@@/munin-node.conf
-* @@CONFDIR@@/plugin-conf.d/*
-* @@CONFDIR@@/plugins/*
-* @@LIBDIR@@/plugins/plugins.history
-* @@LIBDIR@@/plugins/*
+* /etc/munin/munin-node.conf
+* /etc/munin/plugin-conf.d/*
+* /etc/munin/plugins/*
+* /usr/share/munin/plugins/*
 
 SEE ALSO
 ========

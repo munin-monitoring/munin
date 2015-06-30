@@ -44,14 +44,14 @@ master_doc = 'index'
 project = 'Munin'
 description = 'Munin monitoring'
 authors   = 'The Munin project and its contributors'
-copyright = '2012-2014, %s' % authors
+copyright = '2012-2015, %s' % authors
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '2.0'
+version = '2.1'
 # The full version, including alpha/beta/rc tags.
 release = os.popen('../getversion').read().strip()
 
@@ -113,7 +113,7 @@ html_short_title = "Munin"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '../master/static/logo-h.png'
+html_logo = '../web/static/img/logo-h.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -192,7 +192,7 @@ latex_documents = [
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = '../master/static/logo-h.png'
+latex_logo = '../web/static/img/logo-h.png'
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
@@ -226,16 +226,6 @@ man_pages = [
      'Munin async daemon',
      ['Steve Schnepp'],
      1),
-    ('reference/munin-cgi-graph',
-     'munin-cgi-graph',
-     'Munin CGI grapher',
-     ['Steve Schnepp'],
-     1),
-    ('reference/munin-cgi-html',
-     'munin-cgi-html',
-     'Munin CGI HTML generator',
-     ['Steve Schnepp'],
-     1),
     ('reference/munin-check',
      'munin-check',
      'A program to fix permissions of munin directories and files',
@@ -262,6 +252,11 @@ man_pages = [
       'Steve Schnepp',
       'Audun Ytterdal',
       'Jimmy Olsen'],
+     1),
+    ('reference/munin-httpd',
+     'munin-httpd',
+     'Munin web interface',
+     [authors, 'Steve Schnepp'],
      1),
     ('reference/munin-limits',
      'munin-limits',

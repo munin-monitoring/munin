@@ -27,7 +27,7 @@ The :ref:`Munin node <munin-node>` daemon will understand and answer to the foll
 cap
     Lists the capabilities of the node, e.g. ``multigraph dirtyconfig``
 list [node]
-    Simply lists items available for gathering for this host. 
+    Simply lists items available for gathering for this host.
     E.g. load, cpu, memory, df, et alia.
     If no *host* is given, default to host that runs the munin-node.
 nodes
@@ -41,11 +41,50 @@ version
 quit
     Close the connection. Also possible to use a point ".".
 
+capabilities
+------------
+
+The master can exchange capabilities with the node using the "cap"
+keyword, and a list of capabilities.  For each capability supported by
+both the master and node, the node setes an environment variable
+"MUNIN_CAP_CAPABILITY", where CAPABILITY is the capability in upper case.
+
+Capabilities used so far by munin node and master:
+
+dirtyconfig
+~~~~~~~~~~~
+
+If the node and master support the "dirtyconfig" capability, the
+MUNIN_CAP_DIRTYCONFIG environment variable is set for all plugins.
+
+This allows plugin to send config and data when the master asks for
+"config" for this plugin, reducing the round trip time.
+
+multigraph
+~~~~~~~~~~
+
+If the node and master support the "multigraph" capability, the
+MUNIN_CAP_MULTIGRAPH environment variable is set for all plugins.
+
+This allows plugins to use the "multigraph" format.
+
+See also :ref:`plugin-protocol-multigraph`
+
+spoolfetch
+~~~~~~~~~~
+
+If the node and master support the "spoolfetch" capability, the master
+can use the "spoolfetch" command to retrieve a spool of all plugin
+output since a given time.
+
+This is used by :ref:`node-async`.
+
 Example outputs
 ===============
 
 config
-^^^^^^
+------
+
 ::
 
   > config load
@@ -69,14 +108,15 @@ config
 
 
 fetch
-^^^^^
+-----
+
 Fetches the current values.
 
 Returned data fields:
 
 ::
 
-    <field>.value 
+    <field>.value
 
 Numeric value, or 'U'.
 

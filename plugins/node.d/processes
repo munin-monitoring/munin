@@ -14,7 +14,7 @@ This plugin is backwards compatible with the old processes-plugins found on
 SunOS, Linux and *BSD (i.e. the history is preserved).
 
 All fields have colours associated with them which reflect the type of process
-(sleeping/idle = blue, running = green, stopped/zombie/dead = red, etc.) 
+(sleeping/idle = blue, running = green, stopped/zombie/dead = red, etc.)
 
 =head1 CONFIGURATION
 
@@ -82,14 +82,14 @@ if [ "$1" = "autoconf" ]; then
             echo "no (awk=$awk failed)"
             exit 0
         fi
-	echo yes
-	exit 0
-	;;
-	*)
-	echo "no (unknown OS)"
-	exit 0
-	;;
-	esac
+    echo yes
+    exit 0
+    ;;
+    *)
+    echo "no (unknown OS)"
+    exit 0
+    ;;
+    esac
 fi
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
@@ -110,17 +110,18 @@ SUSPENDED='ff1493'        # Deep pink
 TOTAL='c0c0c0'            # Silver
 
 # Taken from ps(1)
-# R - Linux, SunOS, FreeBSD, OpenBSD, NetBSD, OSX      (runable)
-# S - Linux, SunOS, FreeBSD*, OpenBSD*, NetBSD*, OSX*  (sleeping)
-# T - Linux, SunOS, FreeBSD, OpenBSD, NetBSD, OSX      (stopped)
-# Z - Linux, SunOS, FreeBSD, OpenBSD, NetBSD, OSX      (zombie)
-# D - Linux, FreeBSD, OpenBSD, NetBSD                  (uninterruptible)
-# I - FreeBSD, OpenBSD, NetBSD, OSX                    (idle)
-# W - Linux*, FreeBSD*                                 (paging/interrupt)
-# L - FreeBSD                                          (lock)
-# O - SunOS                                            (running)
-# X - Linux                                            (dead)
-# U - OSX, NetBSD*                                     (uninterruptible/suspended)
+# R - Linux, SunOS, FreeBSD, OpenBSD, NetBSD, OSX, HP-UX      (runable)
+# S - Linux, SunOS, FreeBSD*, OpenBSD*, NetBSD*, OSX*, HP-UX  (sleeping)
+# T - Linux, SunOS, FreeBSD, OpenBSD, NetBSD, OSX, HP-UX      (stopped)
+# Z - Linux, SunOS, FreeBSD, OpenBSD, NetBSD, OSX, HP-UX      (zombie/terminated)
+# D - Linux, FreeBSD, OpenBSD, NetBSD                         (uninterruptible)
+# I - FreeBSD, OpenBSD, NetBSD, OSX, HP-UX                    (idle/intermediate)
+# W - Linux*, FreeBSD*, HP-UX                                 (paging/interrupt/waiting)
+# L - FreeBSD                                                 (lock)
+# O - SunOS                                                   (running)
+# X - Linux, HP-UX*                                           (dead)
+# U - OSX, NetBSD*                                            (uninterruptible/suspended)
+# 0 - HP-UX                                                   (nonexistent)
 # *) Differ meaning
 
 if [ "$1" = "config" ]; then
@@ -132,116 +133,141 @@ if [ "$1" = "config" ]; then
 
     # OS specific flags
     if [ "$OPERSYS" = "Linux" ]; then
-	echo "graph_order sleeping stopped zombie dead paging uninterruptible runnable processes"
-	echo "dead.label dead"
-	echo "dead.draw STACK"
-	echo "dead.colour $DEAD"
-	echo "dead.info The number of dead processes."
-	print_warning dead
-	print_critical dead
-	echo "paging.label paging"
-	echo "paging.draw STACK"
-	echo "paging.colour $PAGING"
-	echo "paging.info The number of paging processes (<2.6 kernels only)."
-	print_warning paging
-	print_critical paging
+        echo "graph_order sleeping stopped zombie dead paging uninterruptible runnable processes"
+        echo "dead.label dead"
+        echo "dead.draw STACK"
+        echo "dead.colour $DEAD"
+        echo "dead.info The number of dead processes."
+        print_warning dead
+        print_critical dead
+        echo "paging.label paging"
+        echo "paging.draw STACK"
+        echo "paging.colour $PAGING"
+        echo "paging.info The number of paging processes (<2.6 kernels only)."
+        print_warning paging
+        print_critical paging
 
     elif [ "$OPERSYS" = "SunOS" ]; then
-	echo "graph_order sleeping stopped zombie runnable running total"
-	echo "running.label running"
-	echo "running.draw STACK"
-	echo "running.colour $RUNNING"
-	echo "running.info The number of processes that are running on a processor."
-	print_warning running
-	print_critical running
-	# Be backwards compatible.
-	echo "total.label total"
-	echo "total.draw LINE1"
+        echo "graph_order sleeping stopped zombie runnable running total"
+        echo "running.label running"
+        echo "running.draw STACK"
+        echo "running.colour $RUNNING"
+        echo "running.info The number of processes that are running on a processor."
+        print_warning running
+        print_critical running
+        # Be backwards compatible.
+        echo "total.label total"
+        echo "total.draw LINE1"
         echo "total.colour $TOTAL"
-	echo "total.info The total number of processes."
-	print_warning total
-	print_critical total
+        echo "total.info The total number of processes."
+        print_warning total
+        print_critical total
 
     elif [ "$OPERSYS" = "FreeBSD" ]; then
-	echo "graph_order sleeping idle stopped zombie lock uninterruptible interrupt runnable processes"
-	echo "lock.label lock"
-	echo "lock.draw STACK"
-	echo "lock.colour $LOCK"
-	echo "lock.info The number of processes that are waiting to acquire a lock."
-	print_warning lock
-	print_critical lock
-	echo "interrupt.label interrupt"
-	echo "interrupt.draw STACK"
-	echo "interrupt.colour $INTERRUPT"
-	echo "interrupt.info The number of idle interrupt threads."
-	print_warning interrupt
-	print_critical interrupt
-      
+        echo "graph_order sleeping idle stopped zombie lock uninterruptible interrupt runnable processes"
+        echo "lock.label lock"
+        echo "lock.draw STACK"
+        echo "lock.colour $LOCK"
+        echo "lock.info The number of processes that are waiting to acquire a lock."
+        print_warning lock
+        print_critical lock
+        echo "interrupt.label interrupt"
+        echo "interrupt.draw STACK"
+        echo "interrupt.colour $INTERRUPT"
+        echo "interrupt.info The number of idle interrupt threads."
+        print_warning interrupt
+        print_critical interrupt
+
     elif [ "$OPERSYS" = "OpenBSD" ]; then
-	echo "graph_order sleeping idle stopped zombie uninterruptible runnable processes"
+        echo "graph_order sleeping idle stopped zombie uninterruptible runnable processes"
 
     elif [ "$OPERSYS" = "NetBSD" ]; then
-	echo "graph_order sleeping idle stopped zombie uninterruptible suspended runnable processes"
-	echo "suspended.label suspended"
-	echo "suspended.draw STACK"
-	echo "suspended.colour $SUSPENDED"
-	echo "suspended.info The number of processes that are suspended."
-	print_warning suspended
-	print_critical suspended
+        echo "graph_order sleeping idle stopped zombie uninterruptible suspended runnable processes"
+        echo "suspended.label suspended"
+        echo "suspended.draw STACK"
+        echo "suspended.colour $SUSPENDED"
+        echo "suspended.info The number of processes that are suspended."
+        print_warning suspended
+        print_critical suspended
 
     elif [ "$OPERSYS" = "Darwin" ]; then
-	echo "graph_order sleeping idle stopped zombie uninterruptible running processes"
-	echo "uninterruptible.label uninterruptible"
-	echo "uninterruptible.draw STACK"
-	echo "uninterruptible.colour $UNINTERRUPTIBLE"
-	echo "uninterruptible.info The number of uninterruptible processes (usually IO)."
-	print_warning uninterruptible
-	print_critical uninterruptible
+        echo "graph_order sleeping idle stopped zombie uninterruptible running processes"
+        echo "uninterruptible.label uninterruptible"
+        echo "uninterruptible.draw STACK"
+        echo "uninterruptible.colour $UNINTERRUPTIBLE"
+        echo "uninterruptible.info The number of uninterruptible processes (usually IO)."
+        print_warning uninterruptible
+        print_critical uninterruptible
+    elif [ "$OPERSYS" = "HP-UX" ]; then
+        echo "graph_order sleeping intermediate stopped terminated waiting growing nonexistent runnable processes"
+        echo "waiting.label waiting"
+        echo "waiting.draw STACK"
+        echo "waiting.colour $INTERRUPT"
+        echo "waiting.info The number of waiting processes."
+        print_warning waiting
+        print_critical waiting
+        echo "terminated.label terminated"
+        echo "terminated.draw STACK"
+        echo "terminated.colour $ZOMBIE"
+        echo "terminated.info The number of processes that are terminated."
+        print_warning terminated
+        print_critical terminated
+        echo "growing.label growing"
+        echo "growing.draw STACK"
+        echo "growing.colour $RUNNING"
+        echo "growing.info The number of growing processes."
+        print_warning growing
+        print_critical growing
+        echo "intermediate.label intermediate"
+        echo "intermediate.draw STACK"
+        echo "intermediate.colour $IDLE"
+        echo "intermediate.info The number of intermediate processes."
+        print_warning intermediate
+        print_critical intermediate
+        echo "nonexistent.label nonexistent"
+        echo "nonexistent.draw STACK"
+        echo "nonexistent.colour $LOCK"
+        echo "nonexistent.info The number of nonexistent processes."
+        print_warning nonexistent
+        print_critical nonexistent
     fi
 
     # Common flags for some OS
-    if [ "$OPERSYS" = "FreeBSD" ] || [ "$OPERSYS" = "OpenBSD" ] || 
-	[ "$OPERSYS" = "NetBSD" ] || [ "$OPERSYS" = "Darwin" ]; then
-	echo "idle.label idle"
-	echo "idle.draw STACK"
-	echo "idle.colour $IDLE"
-	echo "idle.info The number of processes that are idle (sleeping for longer than about 20 seconds)."
-	print_warning idle
-	print_critical idle
-	echo "sleeping.label sleeping"
-	echo "sleeping.draw AREA"
-	echo "sleeping.colour $SLEEPING"
-	echo "sleeping.info The number of processes that are sleeping for less than about 20 seconds."
-	print_warning sleeping
-	print_critical sleeping
-    elif [ "$OPERSYS" = "Linux" ] || [ "$OPERSYS" = "SunOS" ]; then
-	echo "sleeping.label sleeping"
-	echo "sleeping.draw AREA"
-	echo "sleeping.colour $SLEEPING"
-	echo "sleeping.info The number of sleeping processes."
-	print_warning sleeping
-	print_critical sleeping
+    if [ "$OPERSYS" = "FreeBSD" ] || [ "$OPERSYS" = "OpenBSD" ] ||
+    [ "$OPERSYS" = "NetBSD" ] || [ "$OPERSYS" = "Darwin" ]; then
+        echo "idle.label idle"
+        echo "idle.draw STACK"
+        echo "idle.colour $IDLE"
+        echo "idle.info The number of processes that are idle (sleeping for longer than about 20 seconds)."
+        print_warning idle
+        print_critical idle
+        echo "sleeping.label sleeping"
+        echo "sleeping.draw AREA"
+        echo "sleeping.colour $SLEEPING"
+        echo "sleeping.info The number of processes that are sleeping for less than about 20 seconds."
+        print_warning sleeping
+        print_critical sleeping
+    elif [ "$OPERSYS" = "Linux" ] || [ "$OPERSYS" = "SunOS" ] || [ "$OPERSYS" = "HP-UX" ]; then
+        echo "sleeping.label sleeping"
+        echo "sleeping.draw AREA"
+        echo "sleeping.colour $SLEEPING"
+        echo "sleeping.info The number of sleeping processes."
+        print_warning sleeping
+        print_critical sleeping
     fi
-   
-    if [ "$OPERSYS" = "Linux" ] || [ "$OPERSYS" = "FreeBSD" ] || 
-	[ "$OPERSYS" = "OpenBSD" ] || [ "$OPERSYS" = "NetBSD" ]; then
-	echo "uninterruptible.label uninterruptible"
-	echo "uninterruptible.draw STACK"
-	echo "uninterruptible.colour $UNINTERRUPTIBLE"
-	echo "uninterruptible.info The number of uninterruptible processes (usually IO)."	
-	print_warning uninterruptible
-	print_critical uninterruptible
+
+    if [ "$OPERSYS" = "Linux" ] || [ "$OPERSYS" = "FreeBSD" ] ||
+    [ "$OPERSYS" = "OpenBSD" ] || [ "$OPERSYS" = "NetBSD" ]; then
+        echo "uninterruptible.label uninterruptible"
+        echo "uninterruptible.draw STACK"
+        echo "uninterruptible.colour $UNINTERRUPTIBLE"
+        echo "uninterruptible.info The number of uninterruptible processes (usually IO)."
+        print_warning uninterruptible
+        print_critical uninterruptible
     fi
 
     # Common (non-cygwin) flags
     if [ "$OPERSYS" != "CYGWIN" ]; then
-        echo "zombie.label zombie"
-        echo "zombie.draw STACK"
-        echo "zombie.colour $ZOMBIE"
-        echo "zombie.info The number of defunct ("zombie") processes (process terminated and parent not waiting)."
-        print_warning zombie
-        print_critical zombie
-
         echo "stopped.label stopped"
         echo "stopped.draw STACK"
         echo "stopped.colour $STOPPED"
@@ -257,6 +283,15 @@ if [ "$1" = "config" ]; then
         print_critical runnable
     fi
 
+    if [ "$OPERSYS" != "CYGWIN" ] && [ "$OPERSYS" != "HP-UX" ]; then
+        echo "zombie.label zombie"
+        echo "zombie.draw STACK"
+        echo "zombie.colour $ZOMBIE"
+        echo "zombie.info The number of defunct ("zombie") processes (process terminated and parent not waiting)."
+        print_warning zombie
+        print_critical zombie
+    fi
+
     if [ "$OPERSYS" != "SunOS" ]; then
 	# Not using 'graph_total' due to backwards compatibility. SunOS uses 'total'.
         #echo 'graph_total total'
@@ -264,8 +299,8 @@ if [ "$1" = "config" ]; then
         echo "processes.draw LINE1"
         echo "processes.colour $TOTAL"
         echo "processes.info The total number of processes."
-	print_warning processes
-	print_critical processes
+    print_warning processes
+    print_critical processes
     fi
 
     exit 0
@@ -358,6 +393,22 @@ elif [ "$OPERSYS" = "CYGWIN" ]; then
 { processes++; }
 END {
 print "processes.value "        0+processes;
+}'
+
+elif [ "$OPERSYS" = "HP-UX" ]; then
+    # First line is header. Remove it.
+    $ps -el | sed '1d' | $awk '{print $2}' | $awk '
+{ processes++; stat[$1]++ }
+END {
+print "processes.value "        0+processes;
+print "nonexistent.value "      0+stat["0"];
+print "sleeping.value "         0+stat["S"];
+print "waiting.value "          0+stat["W"];
+print "runnable.value "         0+stat["R"];
+print "intermediate.value "     0+stat["I"];
+print "terminated.value "       0+stat["Z"];
+print "stopped.value "          0+stat["T"];
+print "growing.value "          0+stat["X"];
 }'
 
 fi

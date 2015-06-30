@@ -36,6 +36,9 @@ sub handle_request
 			jpg => "image/jpeg",
 			jpeg => "image/jpeg",
 			js => "application/javascript",
+			svg => "image/svg+xml",
+			svgz => "image/svg+xml",
+			gif => "image/gif",
 		);
 
 		my $filename = get_param("staticdir"). "/$page";
@@ -84,7 +87,7 @@ sub handle_request
 
 	# Ok, now SQL is needed to go further
         use DBI;
-	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
+	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
         my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
 	my $comparison;
@@ -171,7 +174,11 @@ sub handle_request
 		$template_params{PATH} = [
 			# first args should have path and r_path for backlink to overview
 			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
+			{ "pathname" => "Dynazoom", "path" => "#" }
 		];
+		# Content only: when dynazoom page is shown in a modal,
+		#   we hide the header & navigation
+		$template_params{CONTENT_ONLY} = $cgi->url_param("content_only") || 0;
 
 		$template_filename = "munin-dynazoom.tmpl";
 	} elsif ($path eq "problems.html") {
@@ -366,9 +373,9 @@ sub handle_request
 
 		my $sth;
 
-		$sth = $dbh->prepare_cached("SELECT name,graph_info,subgraphs FROM service WHERE id = ?");
+		$sth = $dbh->prepare_cached("SELECT name,service_title,graph_info,subgraphs FROM service WHERE id = ?");
 		$sth->execute($id);
-		my ($graph_name, $graph_info, $multigraph) = $sth->fetchrow_array();
+		my ($graph_name, $graph_title, $graph_info, $multigraph) = $sth->fetchrow_array();
 
 		$sth = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
 		$sth->execute($id);
@@ -419,9 +426,13 @@ sub handle_request
 			year => $epoch_now - (3600 * 24 * 400),
 		);
 
+		# Add some more information (graph name, title)
+		$service_template_params{GRAPH_NAME} = $graph_name;
+		$service_template_params{GRAPH_TITLE} = $graph_title;
+
 		for my $t (@times) {
 			my $epoch = "start_epoch=$epoch_start{$t}&stop_epoch=$epoch_now";
-			$service_template_params{"ZOOM$t"} = '/' . "/dynazoom.html?cgiurl_graph=$cgi_graph_url" .
+			$service_template_params{"ZOOM$t"} = "/dynazoom.html?cgiurl_graph=$cgi_graph_url" .
 				"&plugin_name=$path&size_x=800&size_y=400&$epoch";
 			$service_template_params{"IMG$t"} = $cgi_graph_url . "$path-$t.$graph_ext";
 		}
@@ -516,7 +527,7 @@ sub _get_params_groups {
 
 	# Add the nodes
 	$sth_node->execute($g_id);
-	while (my ($_n_id, $_name, $_path) = $sth_node->fetchrow_array) {
+	while (my ($_n_id, $_name, $_path, $_node_path) = $sth_node->fetchrow_array) {
 		my $sth = $dbh->prepare_cached("SELECT DISTINCT sc.category FROM service s INNER JOIN service_categories sc ON sc.id = s.id WHERE s.node_id = ? ORDER BY sc.category ASC");
 		$sth->execute($_n_id);
 
@@ -530,6 +541,9 @@ sub _get_params_groups {
 			$category->{URL} = $category->{URLX}; # For category in overview
 			push @$categories, $category;
 		}
+
+		# No Category found, use a dummy one.
+		$categories = [ { }, ] unless scalar @$categories;
 
 		push @$groups, {
 			CATEGORIES => $categories,
@@ -710,7 +724,7 @@ sub get_param
 
 	# Ok, now SQL is needed to go further
         use DBI;
-	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
+	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
         my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
 	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
@@ -740,7 +754,7 @@ sub url_to_path
 sub url_absolutize
 {
 	my ($url, $omit_first_slash) = @_;
-	my $url_a = '/' . "/" . $url;
+	my $url_a = '/' . $url;
 	$url_a = substr($url_a, 1) if $omit_first_slash;
 	return $url_a;
 }

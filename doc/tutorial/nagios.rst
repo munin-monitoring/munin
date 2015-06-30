@@ -66,14 +66,14 @@ Using xinetd, the blow line enables NSCA listening on port 5667, allowing connec
   port    = 5667
   socket_type     = stream
   wait            = no
- 
+
   server          = /usr/sbin/nsca
   server_args     = -c /etc/nagios/nsca.cfg --inetd
   user            = nagios
   group           = nagios
- 
+
   log_on_failure  += USERID
- 
+
   only_from       = 127.0.0.1
  }
 
@@ -247,16 +247,16 @@ To illustrate, a (familiar) sample :ref:`munin.conf <munin.conf>` configuration 
 ::
 
  contact.nagios.command /usr/local/nagios/bin/send_nsca nagioshost.example.com -c /usr/local/nagios/etc/send_nsca.cfg -to 60
- 
+
  contacts no                    # Disables warning on a system-wide basis.
- 
+
  [example.com;]
    contacts nagios              # Enables warning through the "nagios" contact for the group example.com
- 
+
  [foo.example.com]
    address localhost
    contacts no                  # Disables warning for all plugins on the host foo.example.com.
- 
+
  [example.com;bar.example.com]
    address bar.example.com
    df.contacts no               # Disables warning on the df plugin only.

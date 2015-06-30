@@ -18,9 +18,6 @@ Munin master
 
 The Munin master contains the following command line programs:
 
-Run from cron
--------------
-
 * :ref:`munin-cron` to run other munin programs every 5 minutes. It is run from cron.
 * :ref:`munin-update` to gather data from machines running munin-node. Usually run by
   :ref:`munin-cron`.
@@ -29,13 +26,7 @@ Run from cron
   :ref:`munin-cron` unless :option:`graph_strategy` is set to "cgi" in :ref:`munin.conf`.
 * :ref:`munin-html` to draw html-pages on an Munin installation. Usually run by :ref:`munin-cron`
   unless :option:`html_strategy` is set to "cgi" in :ref:`munin.conf`.
-
-Run from web server
--------------------
-   
-* :ref:`munin-cgi-html` is used to provide html pages on demand.
-* :ref:`munin-cgi-graph` is used to provide graph images on demand.
-* :ref:`munin-cgi-datafile` is used to provide metadata for nodes and plugins on json format.
+* :ref:`munin-httpd` runs the munin master web interface.
 
 Munin node
 ==========

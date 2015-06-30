@@ -150,15 +150,15 @@ The relation between directives and attributes
 Attributes
   A plugin has a given set of data sources, and the data sources present themselves
   through a defined set of field.attributes with corresponding values.
-  From a Munin administrator's point of view, these (the names of the fields and attributes) 
-  should not be changed as they are part of how the plugins work. 
+  From a Munin administrator's point of view, these (the names of the fields and attributes)
+  should not be changed as they are part of how the plugins work.
 
 Directives
   The configuration files, however, are the administrator's domain.
   Here, the administrator may -- through directives -- control the plugins' behavior
-  and even override the plugin's attributes if so desired. 
-  As such, directives (in configuration files) may override attributes (in plugins). 
+  and even override the plugin's attributes if so desired.
+  As such, directives (in configuration files) may override attributes (in plugins).
 
 The distinction between *attributes* and *directives* defines an
-easily understandable separation between how the (for many people) 
+easily understandable separation between how the (for many people)
 shrink-wrapped plugins and the editable configuration files.

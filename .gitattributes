@@ -1,0 +1,5 @@
+*.rst conflict-marker-size=100
+
+# Remove diff for style-2.1.css since we're using style-2.1.scss now
+style-2.1.css	diff=nodiff
+

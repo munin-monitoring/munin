@@ -124,7 +124,7 @@ sub handle_request
 		# We don't understand this URL
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			"X-Reason" => "invalid URL: $path",
+			"-X-Reason" => "invalid URL: $path",
 		);
 		return;
 	}
@@ -140,7 +140,7 @@ sub handle_request
 		# We don't understand this format
 		 print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			"X-Reason" => "invalid format $format",
+			"-X-Reason" => "invalid format $format",
 		);
 		return;
 	}
@@ -150,7 +150,7 @@ sub handle_request
 
 	# Ok, now SQL is needed to go further
 	use DBI;
-	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
+	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 	# Note that we reconnect for _each_ request. This is to avoid old data when the DB "rotates"
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
@@ -165,14 +165,14 @@ sub handle_request
 		# Not found
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			"X-Reason" => "'$graph_path' Not Found in DB",
+			"-X-Reason" => "'$graph_path' Not Found in DB",
 		);
 		return;
 	} elsif ($type ne "service") {
 		# Not supported yet
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			"X-Reason" => "'$type' graphing is not supported yet",
+			"-X-Reason" => "'$type' graphing is not supported yet",
 		);
 		return;
 	}
@@ -404,7 +404,7 @@ sub handle_request
 	# Send the HTTP Headers
 	print "HTTP/1.0 200 OK\r\n";
 	print $cgi->header(
-		"Content-type" => $CONTENT_TYPES{$format},
+		"-Content-type" => $CONTENT_TYPES{$format},
 	) unless $cgi->url_param("no_header");
 
 	# Compute the title
@@ -456,12 +456,18 @@ sub handle_request
 	# Optional header args
 	push @rrd_header, "--vertical-label", $graph_vlabel if $graph_vlabel;
 
+	# Sparklines
+	push @rrd_header, "--only-graph" if $cgi->url_param("only_graph");
+
 	# Handle vertical limits
 	{
 		my $lower_limit  = $cgi->url_param("lower_limit");
 		my $upper_limit  = $cgi->url_param("upper_limit");
 		push @rrd_header, "--lower" , $lower_limit if defined $lower_limit;
 		push @rrd_header, "--upper" , $upper_limit if defined $upper_limit;
+
+		# Adding --rigid, otherwise the limits are not taken into account.
+		push @rrd_header, "--rigid" if defined $lower_limit || defined $upper_limit;
 	}
 
 	# Now it gets *REALLY* dirty: FastCGI doesn't handle correctly stdout
@@ -553,8 +559,6 @@ sub RRDs_graph_or_dump {
 
 	my $fileext = shift;
 	if ($fileext =~ m/PNG|SVG|EPS|PDF/) {
-		open (my $dump_sh, ">rrd.sh");
-		print $dump_sh "rrdtool graph '" . join("' \\\n\t'", @_) . "'\n";
 		return RRDs::graph(@_);
 	}
 

@@ -13,7 +13,7 @@ This will spool RRD changes in a queue, and flush changes on demand,
 and periodically. This will replace lots of random writes with a much
 smaller amount of sequential writes.
 
-The effects on disk IO can be quite dramatic. 
+The effects on disk IO can be quite dramatic.
 
 This example is a graph of a munin master with 400 nodes. Even with
 storage on mirrored SSDs, the effect of adding rrdcached is an immediate

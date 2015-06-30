@@ -24,10 +24,13 @@ my $spoolfetch;
 my $starting_epoch = -3600; # 1 hour from now
 my $dump_config;
 my $is_debug;
+my $is_fun;
 my $help;
 my $update_rate = 10;
 my $spoolfetch_rate = 5;
 my $listen = "localhost";
+
+my %services;
 
 my $arg_ret = GetOptions(
 	"nb-plugins|n=i" => \$nb_plugins,
@@ -47,6 +50,8 @@ my $arg_ret = GetOptions(
 	"dump|d" => \$dump_config,
 	"help|h" => \$help,
 	"debug" => \$is_debug,
+
+	"fun" => \$is_fun,
 );
 
 if ($help) {
@@ -76,13 +81,17 @@ Options:
 	exit 0;
 }
 
+my $fun_names = {};
+init_fun_names();
+
 # Convert relatives starting_epoch to absolute
 $starting_epoch = time + $starting_epoch if ($starting_epoch < 0);
 
 if ($dump_config) {
 	for (my $i = 0; $i < $nb_servers; $i++) {
 		my $port = $starting_port + $i;
-		print "[host$port.debug.lan]\n";
+		my $hostname = get_hostname($i);
+		print "[$hostname]\n";
 		print "     address 127.0.0.1\n";
 		print "     port $port\n";
 		print "\n";
@@ -131,7 +140,9 @@ while (my @ready = $select->can_read()) {
 sub service
 {
 	my $client = shift;
-	my $hostname = "host".$client->sockport().".debug.lan";
+	my $sockport = $client->sockport();
+
+	my $hostname = get_hostname($sockport);
 
 	print $client "# munin node at $hostname\n";
 
@@ -140,7 +151,12 @@ sub service
 		debug("[$$] client of $hostname asked : $line");
 		if ($line =~ m/^list$/ || $line =~ m/^list /) {
 			for (my $i = 0; $i < $nb_plugins; $i ++) {
-				print $client "debug_plugin_$i ";
+				my $service = get_service($i);
+				print $client get_service($i) . " ";
+
+				# Save the number to retrieve it later, since
+				# it's no longer encoded in the plugin name
+				$services{$service} = $i;
 			}
 			print $client "\n";
 		} elsif ($line =~ m/^cap (\w+)/) {
@@ -149,11 +165,14 @@ sub service
 			print $client "cap @caps\n";
 		} elsif ($line =~ m/^config (\w+)/) {
 			my $plugin_number = get_plugin_number($1);
-			my $plugin_name = "debug_plugin_$plugin_number";
-			print $client "graph_title Debug plugin $plugin_number\n";
+			my $plugin_name = get_service($plugin_number);
+			print $client "graph_title " . get_service_title($plugin_number) . "\n";
+			print $client "graph_category " . get_service_category($plugin_number) . "\n";
 			print $client "update_rate $update_rate\n";
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
-				print $client "field_". $plugin_number . "_$i.label field $i of plugin $plugin_name on $hostname\n";
+				my $ds = get_ds($plugin_number, $i);
+				my $ds_info = get_ds_info($plugin_number, $i);
+				print $client "$ds.label $ds_info\n";
 				my @PLUGIN_TYPES = qw/
 					GAUGE
 					DERIVE
@@ -161,7 +180,7 @@ sub service
 				/;
 				my $plugin_type = $PLUGIN_TYPES[($i + $plugin_number) % 3];
 
-				print $client "field_". $plugin_number . "_$i.type $plugin_type\n";
+				print $client "$ds.type $plugin_type\n";
 			}
 			print $client ".\n";
 		} elsif ($line =~ m/^fetch (\w+)/) {
@@ -170,7 +189,7 @@ sub service
 				my $value = sin( (time / 3600) * $plugin_number + $i);
 
 				$value = int($value * 1024) if ($plugin_number + $i) % 3;
-				print $client "field_". $plugin_number . "_$i.value $value\n";
+				print $client get_ds($plugin_number, $i) . ".value $value\n";
 			}
 			print $client ".\n";
 		} elsif ($line =~ m/^spoolfetch (\d+)/) {
@@ -191,16 +210,18 @@ sub service
 			for (my $epoch = ($timestamp - $timestamp % $update_rate + $update_rate);
 				$epoch < time; $epoch += $update_rate) { 
 			for (my $plugin_number = 0; $plugin_number < $nb_plugins; $plugin_number ++) {
-				my $plugin_name = "debug_plugin_$plugin_number";
+				my $plugin_name = get_service($plugin_number);
 				print $client "multigraph $plugin_name\n";
-				print $client "graph_title Debug plugin $plugin_number\n";
+				print $client "graph_title " . get_service_title($plugin_number) . "\n";
 				print $client "update_rate $update_rate\n";
 				for (my $i = 0; $i < $fields_per_plugin; $i ++) {
-					print $client "field_". $plugin_number . "_$i.label field $i of plugin $plugin_name on $hostname\n";
-					print $client "field_".$plugin_number."_$i.type GAUGE\n";
+					my $ds = get_ds($plugin_number, $i);
+					my $ds_info = get_ds_info($plugin_name, $i);
+					print $client "$ds.label field $ds_info\n";
+					print $client "$ds.type GAUGE\n";
 
 					my $value = sin( ($epoch / 3600) * $plugin_number + $i);
-					print $client "field_".$plugin_number."_$i.value $epoch:$value\n";
+					print $client "$ds.value $epoch:$value\n";
 				}
 			}
 		}
@@ -216,8 +237,7 @@ sub service
 sub get_plugin_number 
 {
 	my $plugin_name = shift;
-	my $plugin_number = $1 if ($plugin_name =~ m/(\d+)/);
-	return $plugin_number;
+	return $services{$plugin_name};
 }
 
 sub debug 
@@ -225,5 +245,188 @@ sub debug
 	print join(" ", @_) . "\n" if $is_debug; 
 }
 
+sub _get_from_array
+{
+	my ($i, $ary, $is_unique) = @_;
+
+	my $offset_id = ($is_unique) ? int($i / scalar @$ary) : 0;
+	my $offset = ($offset_id) ? "$offset_id" : "";
+	my $name = $ary->[$i % scalar @$ary] . $offset;
+
+	return $name;
+}
+
+sub get_hostname
+{
+	my ($i) = @_;
+
+	my @gods = keys( %{ $fun_names->{gods} } );
+	my @worlds = keys( %{ $fun_names->{worlds} } );
+	my @groups = keys( %{ $fun_names->{groups} } );
+
+
+	my $hostname = _get_from_array($i, \@gods, 1);
+	my $world = _get_from_array($i, \@worlds, 0);
+	my $group = _get_from_array($i, \@groups, 0);
+
+
+	return "$hostname.$world.$group";
+}
+
+sub get_category
+{
+	return "other";
+}
+
+sub get_service
+{
+	my ($plugin_number) = @_;
+
+	my @giants = keys( %{ $fun_names->{giants} } );
+	my $giant = _get_from_array($plugin_number, \@giants, 1);
+
+	return $giant;
+}
+
+sub get_service_title
+{
+	my ($plugin_number)= @_;
+
+	my @giants = keys( %{ $fun_names->{giants} } );
+	my $giant = _get_from_array($plugin_number, \@giants, 0);
+
+	return $giant . " : " . $fun_names->{giants}->{$giant};
+}
+
+sub get_service_category
+{
+	my ($plugin_number)= @_;
+
+	my @locations = keys( %{ $fun_names->{locations} } );
+	my $location = _get_from_array($plugin_number, \@locations, 0);
+
+	return $location;
+}
+
+sub get_ds
+{
+	my ($plugin_number, $i) = @_;
+
+	my @weapons = keys( %{ $fun_names->{weapons} } );
+	my $weapon = _get_from_array($i, \@weapons, 1);
+
+	return $weapon;
+}
+
+sub get_ds_info
+{
+	my ($plugin_name, $i) = @_;
+	my @weapons = keys( %{ $fun_names->{weapons} } );
+	my $weapon = _get_from_array($i, \@weapons, 0);
+
+	return $fun_names->{weapons}->{$weapon};
+}
+
+sub init_fun_names
+{
+	my $fun_key = "";
+	while (<DATA>) {
+		next unless m/\S/; # Empty line
+
+		# Header contains the key
+		if ( m/# *(.*)/ ) {
+			$fun_key = lc($1);
+			next;
+		}
+
+		my ($key, $value) = split(/\s+/, $_, 2);
+		$key = lc($key);
+		$fun_names->{$fun_key}->{$key} = $value;
+	}
+}
+
 __END__
 
+# Worlds
+Alfheim		World of the Light Elves
+Asgard		World of the Aesir, the warrior gods. The gods built their halls here.
+Jotunheim	World of the Giants.
+Midgard		Middle World, land of men.
+Muspellheim	World of fire, the first world.
+Nifleim		World of the dead.
+Nidavellir	World of the Dwarfs
+Svartalfheim	World of the Dark Elves
+Vanaheim	World of Vanir
+
+# Locations
+Gladsheim	the hall of the gods in asgard
+Godheim		another name for asgard
+Utgard		Hall of the giants
+Valhalla	Hall of the slain
+Vanaheim	Home of the vanir, located in asgard
+Bifrost		The Bridge between Asgard and Midgard
+
+# Groups
+Aesir		The primary race of the norse gods. They lived in Asgard.
+Asynjur		The group of Norse goddesses belonging to the Aesir
+Svartalfar	The black elves
+Valkyries	Choosers of the Slain, beautiful females upon winged horses.
+Vanir		A group of gods and goddesses.
+
+# Gods
+Aegir		god of the sea
+Alaisiagae	Noric War Goddess
+Astrild		goddess of love
+Atla		Water goddess
+Balder		god of beauty
+Bragi		god of eloquence
+Eastre		saxon goddess resurrection of nature
+Eir		goddess of healing
+Elli		goddess of old age
+Forseti		god of meditation
+Freya		a goddess of fertility and love
+Freyr		god of sun and rain
+Frigg		a goddess of love and fertility
+Gefion		a fertility goddess
+Heimdall	god of light, guards bifrost
+Hodur		god of darkness
+Holler		god of death and destruction
+Idun		goddess of eternal youth
+Laga		goddess of wells and springs
+Lofn		goddess of illicit love
+Loki		god of fire (trickster)
+Niord		god of Summer
+Njord		god of winds, sea and fire
+Odin		All other gods are descendants of Odin
+Ran		goddess of storms
+Saga		goddess of poetry and history
+Skadi		goddess of winter and hunting
+Snotra		goddess of virtue and master of all knowedge
+Syn		goddess that guarded the door of frigg's palace
+Thor		god (ruler) of the sky and thunder
+Tyr		god of war
+Ull		god of justice and dueling
+Uller		god of winter
+Vali		sole purpose is to vengeance upon Loki for Balder's death
+Var		a goddess of marriage
+Vidar		god of silence and revenge
+Vili		hall of vidar located in asgard
+Vidar		only god to survive Ragnarok. Avenges Odin's death
+
+# Giants
+Geirrod		frost giant
+Gerd		beautiful giant, an earth goddess
+Hymir		Sea giant
+Jormungand	serpent giant
+Mjollnir	norse giant father of Sol and Mani (sun and moon)
+Surt		fire giant, destroys the world during ragnarok
+Thiazi		giant
+Ymir		primordial giant, creator of the frost giants
+Load		Will be used for sparklines
+
+# Weapons
+Balmung		Odin's sword
+Mjollnir	the hammer of Thor
+Gungnir		Spear of Odin
+
+# Credits for the names to http://namingschemes.com/Norse_Mythology

@@ -1,0 +1,61 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<body>
+<TMPL_INCLUDE NAME="partial/logo_navigation_comparison.tmpl">
+<div id="main" class="comparison">
+	<div id="content">
+		<h2>Comparison: month</h2>
+		<TMPL_LOOP NAME="CATEGORIES">
+		<h3 id="<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">"><TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME"></h3>
+		<table>
+			<TMPL_LOOP NAME="SERVICES">
+				<tr>
+					<TMPL_LOOP NAME="NODES">
+						<td>
+							<div class="node">
+								<span class="nodetitle">
+									<a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html"><TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> &bull;
+									<TMPL_IF NAME="URL1">
+										<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
+										  <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF>
+										  href="/<TMPL_VAR NAME="URL">">
+									</TMPL_IF>
+										<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
+									<TMPL_IF NAME="URL1"></a></TMPL_IF>
+								</span>
+								<br />
+								<TMPL_IF NAME="CIMGMONTH">
+									<a href="/<TMPL_VAR NAME="URL">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
+										<TMPL_UNLESS NAME="DYN_IMAGES">
+											<img src="<TMPL_VAR NAME="CIMGMONTH">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">"
+											  class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
+											  <TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF>
+											  <TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF>/>
+										<TMPL_ELSE>
+											<noscript>
+												<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
+												  src="<TMPL_VAR NAME="CIMGMONTH">"
+												  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
+												  <TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF>
+												  <TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF>/>
+											</noscript>
+											<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
+											  data-original="<TMPL_VAR NAME="CIMGMONTH">"
+											  src="/static/img/placeholder.gif"
+											  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
+											  <TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF>
+											  <TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF>/>
+										</TMPL_UNLESS>
+									</a>
+								</TMPL_IF>
+							</div>
+						</td>
+					</TMPL_LOOP>
+				</tr>
+			</TMPL_LOOP>
+		</table>
+		</TMPL_LOOP>
+	</div>
+</div>
+<TMPL_INCLUDE NAME="partial/footer.tmpl">
+</body>
+</html>

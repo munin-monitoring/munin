@@ -16,6 +16,12 @@ Any MySQL platform, tested by the authors on:
 * MariaDB 5.5.39
 * MariaDB-5.5.39(galera).
 
+Plugins:
+* MariaDB-10 Query Response Time: https://mariadb.com/kb/en/mariadb/query_response_time-plugin/
+
+Information Schema tables:
+* User statistics - MariaDB-5.2+, OurDelta, Percona Server - https://mariadb.com/kb/en/mariadb/user-statistics
+
 =head1 CONFIGURATION
 
 This script is used to generate data for several graphs. To generate
@@ -35,21 +41,43 @@ In addition you might need to specify connection parameters in the
 plugin configuration to override the defaults. These are the defaults:
 
   [mysql_*]
-    env.mysqlconnection DBI:mysql:mysql
+    env.mysqlconnection DBI:mysql:information_schema
     env.mysqluser root
 
 Non-default example:
 
   [mysql_*]
-    env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=3306
-    env.mysqluser root
+    env.mysqlconnection DBI:mysql:information_schema;host=127.0.0.1;port=3306
+    env.mysqluser munin
     env.mysqlpassword geheim
     env.cachenamespace munin_mysql_pri
   [mysql2_*]
-    env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=13306
-    env.mysqluser root
+    env.mysqlconnection DBI:mysql:information_schema;host=127.0.0.1;port=13306
+    env.mysqluser munin;
     env.mysqlpassword ryuWyawEv
     env.cachenamespace munin_mysql_alt
+  [mysql10_*]
+    user munin
+    env.mysqluser munin
+    env.mysqlconnection DBI:mysql:information_schema;mysql_read_default_file=/etc/munin/.my-10.cnf
+    env.cachenamespace munin_mysql_10
+    # here the [client] section of /etc/munin/.my-10.cnf is read. socket= can
+    # be specified here.
+
+Creating a munin user:
+
+  CREATE USER 'munin'@'localhost' IDENTIFIED BY 'ryuWyawEv';
+
+or with a unix_socket plugin (INSTALL PLUGIN unix_socket SONAME 'auth_socket')
+
+  CREATE USER 'munin'@'localhost' IDENTIFIED WITH unix_socket;
+
+Note: requires 'user munin' in the configuration.
+
+The minimum required priviledges of the munin database user is:
+
+  GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'munin'@'localhost';
+
 
 Warning and critical values can be set via the environment in the usual way.
 For example:
@@ -59,7 +87,6 @@ For example:
     env.slave_sql_running_warning 0.5
     env.seconds_behind_master_warning 300
     env.seconds_behind_master_critical 600
-
 
 =head1 DEPENDENCIES
 
@@ -148,6 +175,7 @@ use Math::BigInt; # Used to append "=> lib 'GMP'" here, but GMP caused
 		  # segfault on some occasions. Removed as I don't
 		  # think the tiny performance boost is worth the
 		  # debugging effort.
+use Storable qw(nfreeze thaw);
 
 use Munin::Plugin;
 
@@ -164,7 +192,7 @@ BEGIN {
 #---------------------------------------------------------------------
 
 my %config = (
-    'dsn'        => $ENV{'mysqlconnection'} || 'DBI:mysql:mysql',
+    'dsn'        => $ENV{'mysqlconnection'} || 'DBI:mysql:information_schema',
     'user'       => $ENV{'mysqluser'}       || 'root',
     'password'   => $ENV{'mysqlpassword'}   || '',
     'cache_namespace' => $ENV{'cachenamespace'} || 'munin_mysql',
@@ -1454,6 +1482,126 @@ $graphs{mrr} = {
 };
 
 #---------------------------------------------------------------------
+#  Plugin Graphs
+#  These are mysql plugins of type INFORMATION SCHEMA
+#
+#  These will be added to $graphs if available
+#---------------------------------------------------------------------
+
+my %graph_plugins = ();
+
+$graph_plugins{query_response_time} = {
+    count => {
+        config => {
+            global_attrs => {
+                title  => 'Query Response Time Count',
+                vlabel  => 'queries per ${graph_period}',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        # data_sources are populated by sub plugin_query_response_time
+        data_sources => [
+        ],
+   },
+   total => {
+        config => {
+            global_attrs => {
+                title  => 'Query Response Time Total',
+                vlabel  => 'query time (microseconds) per ${graph_period}',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        # data_sources are populated by sub plugin_query_response_time
+        data_sources => [
+        ],
+   }
+};
+
+$graph_plugins{user_statistics} = {
+    connections => {
+        config => {
+            global_attrs => {
+                title  => 'User Connections',
+                vlabel  => 'connections per ${graph_period}',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        cols => { 'total_connections' => {}, 'concurrent_connections' => {}, 'denied_connections' => {}, 'lost_connections'  => {}},
+        data_sources => [
+        ],
+   },
+   usertime => {
+        config => {
+            global_attrs => {
+                title  => 'User Time',
+                vlabel  => 'seconds',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        cols => { 'connected_time' => {}, 'busy_time' => {}, 'cpu_time' => {} },
+        data_sources => [
+        ],
+   },
+   bytes => {
+        config => {
+            global_attrs => {
+                title  => 'User Bytes',
+                vlabel  => 'bytes',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        cols => { 'bytes_received' => {}, 'bytes_sent' => {}, 'binlog_bytes_written' => {} },
+        data_sources => [
+        ],
+   },
+   rows => {
+        config => {
+            global_attrs => {
+                title  => 'User Rows',
+                vlabel  => 'rows',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        cols => { 'rows_read' => {}, 'rows_sent' => {}, 'rows_deleted' => {}, 'rows_inserted' => {}, 'rows_updated' => {} },
+        data_sources => [
+        ],
+   },
+   commands => {
+        config => {
+            global_attrs => {
+                title  => 'Command breakdown by user',
+                vlabel  => 'commands',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        cols => { 'select_commands' => {}, 'update_commands' => {}, 'other_commands' => {}, 'commit_transactions' => {}, 'rollback_transactions' => {} },
+        data_sources => [
+        ],
+   }
+
+};
+#---------------------------------------------------------------------
 #  M A I N
 #---------------------------------------------------------------------
 
@@ -1576,6 +1724,8 @@ sub config {
     #
     # Not a problem since we don't graph these
 
+    update_data();
+
     die 'Unknown graph ' . ($graph_name ? $graph_name : '')
 	unless $graphs{$graph_name};
 
@@ -1623,12 +1773,12 @@ sub config {
 sub show {
     my $graph_name = shift;
 
+    update_data();
+
     die 'Unknown graph ' . ($graph_name ? $graph_name : '')
 	unless $graphs{$graph_name};
 
     my $graph = $graphs{$graph_name};
-
-    update_data();
 
     die "Can't show data for '$graph_name' because InnoDB is disabled."
 	if $graph_name =~ /innodb_/ && $data->{_innodb_disabled};
@@ -1665,6 +1815,8 @@ sub db_connect {
 
 sub update_data {
     $data = $shared_memory_cache->get('data');
+    my $graphs_stored = $shared_memory_cache->get('graphs');
+    %graphs = %{thaw($graphs_stored)} if $graphs_stored;
     return if $data;
 
     $data = {};
@@ -1672,6 +1824,7 @@ sub update_data {
     my $dbh = db_connect();
 
     update_variables($dbh);
+    update_plugins($dbh);
     update_innodb($dbh);
     update_master($dbh);
     delete $graphs{replication} if update_slave($dbh)==1;
@@ -1702,8 +1855,49 @@ sub update_data {
     delete $graphs{handler_temp} if not defined $data->{Handler_tmp_write};
 
     $shared_memory_cache->set('data', $data);
+    $shared_memory_cache->set('graphs', nfreeze(\%graphs));
 }
 
+
+sub update_plugins {
+    my ($dbh) = @_;
+
+    my %plugin_map = (
+	'query_response_time'         => \&plugin_query_response_time,
+    );
+
+    sub add_graphs {
+      my ($f, $sec, $dbh, %g) = @_;
+      if ($f->($dbh) == 0) {
+        while (my ($k, $v) = each %g) {
+          $graphs{$sec . '_' . $k} = $v;
+        }
+      }
+    }
+
+    my $sth = $dbh->prepare("SHOW PLUGINS");
+    $sth->execute();
+    while (my $row = $sth->fetchrow_hashref()) {
+        next if $row->{'type'} ne 'INFORMATION SCHEMA';
+        my $sec = lc $row->{'name'};
+        next if not exists $plugin_map{$sec};
+        add_graphs($plugin_map{$sec}, $sec, $dbh, %{$graph_plugins{$sec}});
+    }
+    $sth->finish();
+
+    my %is_map = (
+	'user_statistics'         => \&is_user_statistics,
+    );
+
+    $sth = $dbh->prepare("SHOW TABLES IN INFORMATION_SCHEMA");
+    $sth->execute();
+    while (my $row = $sth->fetchrow_hashref()) {
+        my $sec = lc $row->{'tables_in_information_schema'};
+        next if not exists $is_map{$sec};
+        add_graphs($is_map{$sec}, $sec, $dbh, %{$graph_plugins{$sec}});
+    }
+    $sth->finish();
+}
 
 sub update_variables {
     my ($dbh) = @_;
@@ -1838,6 +2032,58 @@ sub update_slave {
     return 0;
 }
 
+
+#---------------------------------------------------------------------
+#  Information SCHEMA tables represent data to be processed
+#---------------------------------------------------------------------
+
+
+sub plugin_query_response_time {
+    my ($dbh) = @_;
+
+    return 1 if not defined $data->{query_response_time_stats};
+    return 1 if $data->{query_response_time_stats} eq 'OFF';
+
+    my $sth = $dbh->prepare("SELECT * FROM INFORMATION_SCHEMA.QUERY_RESPONSE_TIME");
+    $sth->execute();
+    while (my $row = $sth->fetchrow_hashref()) {
+        my $time = $row->{'time'};
+        $data->{'query_response_time_count_' . $time} = $row->{'count'};
+        push @{$graph_plugins{query_response_time}->{count}->{data_sources}}, {name => 'query_response_time_count_' . $time, label => $time };
+        next if $row->{'total'} eq 'TOO LONG';
+        $data->{'query_response_time_total_' . $time} = $row->{'total'} * 1e6;
+        push @{$graph_plugins{query_response_time}->{total}->{data_sources}}, {name => 'query_response_time_total_' . $time, label => $time };
+    }
+    $sth->finish();
+
+    return 0;
+}
+
+sub is_user_statistics {
+    my ($dbh) = @_;
+
+    return 1 if not defined $data->{userstat};
+    return 1 if $data->{userstat} eq 'OFF';
+
+    my $sth = $dbh->prepare("SELECT * FROM INFORMATION_SCHEMA.USER_STATISTICS");
+    $sth->execute();
+    while (my $row = $sth->fetchrow_hashref()) {
+        my $user = $row->{'user'};
+        my $var;
+        while (my ($g, $v) = each %{$graph_plugins{user_statistics}}) {
+          while (my ($userstat,$conf) = each %{$v->{cols}}) {
+            $var = 'user_stats_' . $user . '_' . $userstat;
+            $data->{$var} = int $row->{$userstat};
+            my $ds = { %$conf };
+            $ds->{name} = $var;
+            $ds->{label} = $user . ' ' . $userstat;
+            push @{$graph_plugins{user_statistics}->{$g}->{data_sources}}, $ds;
+          }
+        }
+    }
+    $sth->finish();
+    return 0;
+}
 
 #
 # In 'SHOW ENGINE INNODB STATUS' 64 bit integers are not formated as

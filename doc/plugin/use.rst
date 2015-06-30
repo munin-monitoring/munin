@@ -7,34 +7,37 @@
 .. index::
    pair: plugin; installing
 
-Installing
-==========
+Default Installation
+====================
 
 The default directory for plugin scripts is /usr/share/munin/plugins/.
-A plugin is activated when you create a symbolic link in the ``servicedir`` 
+A plugin is activated when a symbolic link is created in the ``servicedir``
 (usually /etc/munin/plugins/ for a package installation of Munin)
-and restart the munin-node daemon.
+and munin-node is restarted.
 
-The utility :ref:`munin-node-configure` is used by Munin installation 
-procedure to check which plugins are suitable for your node and 
-create the links automatically. You may call it everytime when you
-changed something (services, hardware  or configuration) on your
-node and want to adjust the collection of plugins accordingly. 
-If you removed software start it with option '--remove-also'.
+The utility :ref:`munin-node-configure` is used by the Munin installation
+procedure to check which plugins are suitable for your node and
+create the links automatically. It can be called everytime when a system
+configuration changes (services, hardware, etc) on the node and it will adjust
+the collection of plugins accordingly.
+
+To have :ref:`munin-node-configure` remove plugins for software that may no longer
+be installed, use the option '--remove-also'.
+
+Installing Third Party Plugins
+==============================
 
 To use a Munin plugin being delivered from a `3rd-Party <http://gallery.munin-monitoring.org/contrib/>`_,
-place it in directory ``/usr/local/munin/lib/plugins`` (or in another 
-directory of your choice) make it executable and create the service link. 
-It may work also, if you put the plugin in the ``servicedir`` directly, 
-but this is not recommended to support use of utility 
-``munin-node-configure`` and because it is not appropriate for
-:ref:`wildcard plugins <tutorial-plugins-wildcard>` and also
-to avoid struggle with SELinux.
+place it in directory ``/usr/local/munin/lib/plugins`` (or any other
+directory), make it executable, and create the service link.
+It it also possible to place the plugin directly into the ``servicedir``, but this is not recommended for the following reasons:
+* it undermines the utility ``munin-node-configure``
+* it is not appropriate for :ref:`wildcard plugins <tutorial-plugins-wildcard>`
+* it interferes with SELinux
 
-You may put 3rd-Party plugins in the *official* plugin directory
-(usually ``/usr/share/munin/plugins``), but be prepared (Backup!)
-against overwriting existing plugin scripts with newer versions
-from the distribution.
+It is also possible to put 3rd-Party plugins in the *official* plugin directory
+(usually ``/usr/share/munin/plugins``), but this runs the risk of having said
+plugins overitten by distribution updates.
 
 .. index::
    pair: plugin; configuration
@@ -44,33 +47,32 @@ from the distribution.
 Configuring
 ===========
 
-plugin-conf.d is the directory with the plugin configuration files. 
-When pre-packaged, it's usually located in /etc/munin/, while if 
-compiled from source it is often found in /etc/opt/munin/. 
+/etc/munin/plugin-conf.d (sometimes /etc/opt/munin/plugin-conf.d) is where plugin configuration files
+are stored.
 
-To make sure that you get all new plugin configurations with software updates 
-you should not change the file munin-node which is delivered with the munin package.
-Instead put your customized configuration in a file called zzz-myconf.
-As the config files are read in alphabetical order your file is read 
-at last and will override configuration found in the other files.
+To make sure that plugin configurations are updated with software updates
+admins should not change the file munin-node which is delivered with the munin package.
+Instead place customized configuration in a file called zzz-myconf.
+As the config files are read in alphabetical order, this file is read
+last and will override configuration data found in the other files.
 
-The file should consist of one or more sections, one section for each 
-(group of) plugin(s) that should run with different privileges 
+The file should consist of one or more sections, one section for each
+(group of) plugin(s) that should run with different privileges
 and/or environment variables.
 
 Start a plugins configuration section with the plugins name in square brackets:
 
-[<plugin-name>] 
+[<plugin-name>]
   The following lines are for <plugin-name>. May include one wildcard ('*') at the start or end of the plugin-name, but not both, and not in the middle.
 
-After that each section can set attributes in the following format, where all attributes are optional. 
+After that each section can set attributes in the following format, where all attributes are optional.
 
 user <username|userid>
   Run plugin as this user
 
   Default: munin
 
-group <groupname|groupid>[, <groupname|groupid>] [...]  
+group <groupname|groupid>[, <groupname|groupid>] [...]
   Run plugin as this group. If group is inside parentheses, the plugin will continue if the group doesn't exist.
 
   **What does comma separated groups do?** See $EFFECTIVE_GROUP_ID in the `manual page for perlvar <http://perldoc.perl.org/perlvar.html>`_
@@ -78,19 +80,19 @@ group <groupname|groupid>[, <groupname|groupid>] [...]
   Default: munin
 
 env.var <variable content>
-  Will cause the environment variable <var> to be set to <contents> when running the plugin. 
+  Will cause the environment variable <var> to be set to <contents> when running the plugin.
   More than one env line may exist. See the individual plugins to find out which variables they care about.
 
   There is no need to quote the variable content.
 
-host_name <host-name> 
-  Forces the plugin to be associated with the given host, overriding anything that "plugin config" may say. 
+host_name <host-name>
+  Forces the plugin to be associated with the given host, overriding anything that "plugin config" may say.
 
-timeout <seconds> 
-  Maximum number of seconds before the plugin script should be killed when fetching values. 
-  The default is 10 seconds, but some plugins may require more time. 
+timeout <seconds>
+  Maximum number of seconds before the plugin script should be killed when fetching values.
+  The default is 10 seconds, but some plugins may require more time.
 
-command <command> 
+command <command>
   Run <command> instead of plugin. %c will be expanded to what would otherwise have been run. E.g. command sudo -u root %c.
 
 .. note::
@@ -124,7 +126,7 @@ Examples:
   [snmp_*]
   env.community SecretSNMPCommunityString
 
-  [smart_*]               # The following configuration affects 
+  [smart_*]               # The following configuration affects
                           # every plugin called by a service-link starting with smart_
                           # Examples: smart_hda, smart_hdb, smart_sda, smart_sdb
   user root
@@ -188,4 +190,3 @@ Examples:
   _dev_vda1__boot.value 160647
   _dev_mapper_vg_demo_lv_tmp__tmp.value 34100
   _dev_mapper_vg_demo_lv_var__var.value 897644
-

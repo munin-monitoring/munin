@@ -1,0 +1,134 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<body>
+<div class="header">
+	<a href="/" class="logo"></a>
+	<div class="filter">
+		<input type="text" id="filter" />
+		<img id="cancelFilter" src="/static/img/icons/glyphicons-208-remove-2-white.png" style="display:none;" alt="Clear" />
+	</div>
+	<div class="pageTitle singleLine"><h1>Overview</h1></div>
+	<div class="clear"></div>
+</div>
+<div id="main">
+	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+		<div id="content">
+			<h2>Overview</h2>
+
+			<ul class="groupview">
+				<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
+					<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
+					<TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+					<TMPL_IF NAME="NCATEGORIES">
+						<div class="overview-sparkline">
+							<img src="<TMPL_VAR NAME="URL">load-hour.png?&only_graph=1&size_x=90&size_y=28" class="sparkline" alt="Load average by hour for <TMPL_VAR ESCAPE="HTML" NAME="NAME">" />
+						</div>
+					</TMPL_IF>
+					<TMPL_IF NAME="COMPARE">
+						<div class="compare">
+							<img src="/static/img/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />
+							<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-day.html">day</a>
+							<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-week.html">week</a>
+							<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-month.html">month</a>
+							<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-year.html">year</a>
+						</div>
+					</TMPL_IF>
+					<TMPL_IF NAME="NCATEGORIES">
+						<div class="categories">
+							<TMPL_LOOP NAME="CATEGORIES">
+								<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+							</TMPL_LOOP>
+						</div>
+					</TMPL_IF>
+					<ul>
+						<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
+							<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
+							<TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+							<TMPL_IF NAME="NCATEGORIES">
+								<div class="overview-sparkline">
+									<img src="<TMPL_VAR NAME="URL">load-hour.png?&only_graph=1&size_x=90&size_y=28" class="sparkline" alt="Load average by hour for <TMPL_VAR ESCAPE="HTML" NAME="NAME">" />
+								</div>
+							</TMPL_IF>
+							<TMPL_IF NAME="COMPARE">
+								<div class="compare">
+									<img src="/static/img/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />
+									<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-day.html">day</a>
+									<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-week.html">week</a>
+									<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-month.html">month</a>
+									<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-year.html">year</a>
+								</div>
+							</TMPL_IF>
+							<TMPL_IF NAME="NCATEGORIES">
+								<div class="categories">
+									<TMPL_LOOP NAME="CATEGORIES">
+										<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+									</TMPL_LOOP>
+								</div>
+							</TMPL_IF>
+							<ul>
+								<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
+									<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
+									<TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+									<TMPL_IF NAME="NCATEGORIES">
+										<div class="overview-sparkline">
+											<img src="<TMPL_VAR NAME="URL">load-hour.png?&only_graph=1&size_x=90&size_y=28" class="sparkline" alt="Load average by hour for <TMPL_VAR ESCAPE="HTML" NAME="NAME">" />
+										</div>
+									</TMPL_IF>
+									<TMPL_IF NAME="COMPARE">
+										<div class="compare">
+											<img src="/static/img/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />
+											<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-day.html">day</a>
+											<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-week.html">week</a>
+											<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-month.html">month</a>
+											<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-year.html">year</a>
+										</div>
+									</TMPL_IF>
+									<TMPL_IF NAME="NCATEGORIES">
+										<div class="categories">
+											<TMPL_LOOP NAME="CATEGORIES">
+												<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+											</TMPL_LOOP>
+										</div>
+									</TMPL_IF>
+									<ul>
+										<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
+											<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
+											<TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+											<TMPL_IF NAME="NCATEGORIES">
+												<div class="overview-sparkline">
+													<img src="<TMPL_VAR NAME="URL">load-hour.png?&only_graph=1&size_x=90&size_y=28" class="sparkline" alt="Load average by hour for <TMPL_VAR ESCAPE="HTML" NAME="NAME">" />
+												</div>
+											</TMPL_IF>
+											<TMPL_IF NAME="COMPARE">
+												<div class="compare">
+													<img src="/static/img/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />
+													<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-day.html">day</a>
+													<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-week.html">week</a>
+													<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-month.html">month</a>
+													<a href="/<TMPL_LOOP NAME="PATH"><TMPL_IF NAME="pathname"><TMPL_VAR ESCAPE="URL" NAME="PATHNAME">/</TMPL_IF></TMPL_LOOP>comparison-year.html">year</a>
+												</div>
+											</TMPL_IF>
+											<TMPL_IF NAME="NCATEGORIES">
+												<div class="categories">
+													<TMPL_LOOP NAME="CATEGORIES">
+														<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>
+													</TMPL_LOOP>
+												</div>
+											</TMPL_IF>
+										</TMPL_UNLESS></TMPL_LOOP>
+									</ul>
+								</TMPL_UNLESS></TMPL_LOOP>
+							</ul>
+							</li>
+						</TMPL_UNLESS></TMPL_LOOP>
+					</ul>
+					</li>
+				</TMPL_UNLESS></TMPL_LOOP>
+			</ul>
+			<div class="clear"></div>
+		</div>
+</div>
+<TMPL_INCLUDE NAME="partial/footer.tmpl">
+<script src="/static/js/autorefresh.js"></script>
+<script src="/static/js/munin-overview.js"></script>
+</body>
+</html>

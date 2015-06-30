@@ -1,0 +1,107 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<body>
+<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
+<div id="main">
+	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+	<!-- Change the tabsenables attribute to false to disable tabs -->
+	<div id="content" data-tabsenabled="true" data-tabs="true">
+		<!-- Node view -->
+		<div class="timeRangeSwitchContainer">
+			<div class="timeRangeSwitch">
+				<ul>
+					<li>hour</li>
+					<li class="selected">day</li>
+					<li>week</li>
+					<li>month</li>
+					<li class="last">year</li>
+				</ul>
+			</div>
+			<div class="timeRangeSwitch hide-mobile">
+				<ul>
+					<li>hour</li>
+					<li>day</li>
+					<li class="selected">week</li>
+					<li>month</li>
+					<li class="last">year</li>
+				</ul>
+			</div>
+		</div>
+
+		<h2><TMPL_VAR NAME="NAME"></h2>
+
+		<!-- Tabs. No empty space allowed here (for styling) -->
+		<ul class="tabs"><TMPL_LOOP NAME="CATEGORIES"><li><TMPL_VAR ESCAPE="HTML" NAME="NAME"></li></TMPL_LOOP></ul>
+
+		<TMPL_LOOP NAME="CATEGORIES">
+			<h3 id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3>
+			<div data-category="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">
+				<TMPL_LOOP NAME="SERVICES">
+					<h4><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h4>
+					<a href="<TMPL_VAR NAME="URLX">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
+						<TMPL_UNLESS NAME="DYN_IMAGES">
+							<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
+							  src="<TMPL_VAR NAME="IMGDAY">"
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
+							  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
+							  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>
+							  data-col="0" />
+						<TMPL_ELSE>
+							<noscript>
+							<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
+							  src="<TMPL_VAR NAME="IMGDAY">"
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
+							  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
+							  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>
+							  data-col="0" />
+							</noscript>
+							<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
+							  data-original="<TMPL_VAR NAME="IMGDAY">"
+							  src="/static/img/placeholder.gif"
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
+							  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
+							  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>
+							  data-col="0" />
+						</TMPL_UNLESS>
+					</a>
+					<a href="<TMPL_VAR NAME="URLX">" class="graphLink hide-mobile i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
+						<TMPL_UNLESS NAME="DYN_IMAGES">
+							<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
+							  src="<TMPL_VAR NAME="IMGWEEK">"
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
+							  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
+							  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>
+							  data-col="1" />
+						<TMPL_ELSE>
+							<noscript>
+							<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
+							  src="<TMPL_VAR NAME="IMGWEEK">"
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
+							  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
+							  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>
+							  data-col="1" />
+							</noscript>
+							<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
+							  data-original="<TMPL_VAR NAME="IMGWEEK">"
+							  src="/static/img/placeholder.gif"
+							  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
+							  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
+							  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>
+							  data-col="1" />
+						</TMPL_UNLESS>
+					</a>
+					<br />
+				</TMPL_LOOP>
+			</div>
+		</TMPL_LOOP>
+	</div>
+</div>
+<a href="#" id="backToTop">Back to top</a>
+<TMPL_INCLUDE NAME="partial/footer.tmpl">
+<script src="/static/js/autorefresh.js"></script>
+<script src="/static/js/munin-nodeview.js"></script>
+<script src="/static/js/munin-nodeview-timerangeswitch.js"></script>
+<script src="/static/js/munin-nodeview-eventruler.js"></script>
+<script src="/static/js/munin-nodeview-tabs.js"></script>
+<script src="/static/js/dynazoom-modal.js"></script>
+</body>
+</html>

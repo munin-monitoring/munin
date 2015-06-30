@@ -8,7 +8,7 @@ As of Munin 1.2 there is a generic interface for sending warnings
 and errors from Munin. If a Munin plugin discovers that a plugin has
 a data source breaching its defined limits, Munin is able to alert
 the administrator either through simple command line invocations
-or through a monitoring system like Nagios or Iginga.
+or through a monitoring system like Nagios or Icinga.
 
 Note that if the receiving system can cope with only
 a limited number of messages at the time, the configuration directive

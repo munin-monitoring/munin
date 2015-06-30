@@ -4,9 +4,9 @@
  Upstart configuration for rrdcached
 =====================================
 
-This example sets up a dedicated rrdcached instance for munin. 
+This example sets up a dedicated rrdcached instance for munin.
 
-If rrdcached stops, it is restarted. 
+If rrdcached stops, it is restarted.
 
 A pre-start script ensures we have the needed directories
 
@@ -17,18 +17,18 @@ graph process is running as the user "www-data", and that the file system is mou
 
     description "munin instance of rrdcached"
     author "Stig Sandbeck Mathisen <ssm@fnord.no>"
-     
+
     start on filesystem
     stop on runlevel [!2345]
-     
-    # respawn 
+
+    # respawn
     umask 022
-     
+
     pre-start script
       install -d -o munin -g munin -m 0755 /var/lib/munin/rrdcached-journal
       install -d -o munin -g munin -m 0755 /run/munin
     end script
-     
+
     script
       start-stop-daemon \
             --start \
@@ -43,7 +43,7 @@ graph process is running as the user "www-data", and that the file system is mou
             -m 0660 -l unix:/run/munin/rrdcached.sock \
             -w 1800 -z 1800 -f 3600
     end script
-     
+
     post-start script
       sleep 1
       setfacl -m u:www-data:rw /run/munin/rrdcached.sock

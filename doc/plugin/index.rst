@@ -4,45 +4,37 @@
  The Munin plugin
 ==================
 
-Role
-====
-
-The munin plugin is a simple executable, which role is to gather one
-set of facts about the local server (or fetching data from a remote machine via SNMP)
-
-The plugin is called with the argument "config" to get metadata, and
-with no arguments to get the values. These are mandatory arguments for each plugin.
-We have some more standard arguments, which play a role in the process of automatic configuration. 
-Read more in the docs listed below.
-
-How to use
-==========
-
-Learn it here :ref:`How to use Munin plugins <plugin-use>`.
-
-.. toctree::
-   :maxdepth: 2
-
-   use.rst
-
-How to write
+Introduction
 ============
 
-Learn it here :ref:`How to write Munin plugins <plugin-writing>`.
+A Munin plugin is a simple executable invoked in a command line environment whose role is to gather a
+set of facts on a host and present them in a format Munin can use.
 
-.. toctree::
-   :maxdepth: 2
+A plugin is usually called without any arguments.  In this circumstance, the plugin returns
+the data in a 'key value' format.  For
+example, the 'load' plugin, which comes standard with Munin, will output the current
+system load::
 
-   writing.rst
-   writing-tips.rst
+ # munin-run load
+ load.value 0.03
 
-Other documentation
-===================
+All plugins must also support the argument 'config' to get metadata on the plugin::
 
-.. toctree::
-   :maxdepth: 2
+ # munin-run load config
+ graph_title Load average
+ graph_args --base 1000 -l 0
+ graph_vlabel load
+ graph_scale no
+ graph_category system
+ load.label load
+ graph_info The load average of the machine describes how many processes are in the run-queue (scheduled to run "immediately").
+ load.info 5 minute load average
 
-   env.rst
-   multigraphing.rst
-   supersampling.rst
-   snmp.rst
+Plugins may support other arguments, but the two cases described above will work for any plugin.
+
+See Also
+========
+
+* :ref:`How to use Munin plugins <plugin-use>`.
+* :ref:`How to write your own Munin plugins <plugin-writing>`.
+* :ref:`Tips on Writing Munin Plugins <plugin-writing-tips>`.
