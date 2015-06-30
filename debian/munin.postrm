@@ -24,8 +24,6 @@ if [ "$1" = "purge" ]; then
 	rm -f /var/log/munin/munin-graph.log*
 	rm -f /var/log/munin/munin-html.log*
 	rm -f /var/log/munin/munin-limits.log*
-	rm -f /var/log/munin/munin-cgi-graph.log*
-	rm -f /var/log/munin/munin-cgi-html.log*
 
 	delete_dir_if_empty /var/cache/munin/www
 	delete_dir_if_empty /var/lib/munin/cgi-tmp
