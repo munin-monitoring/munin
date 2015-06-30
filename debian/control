@@ -30,6 +30,7 @@ Build-Depends-Indep:
  librrds-perl,
  libtest-deep-perl,
  libtest-differences-perl,
+ libtest-exception-perl,
  libtest-longstring-perl,
  libtest-mockmodule-perl,
  libtest-mockobject-perl,
