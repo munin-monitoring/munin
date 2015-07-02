@@ -226,6 +226,7 @@ Package: libmunin-perl
 Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
+ liblog-dispatch-perl,
 Description: common perl modules for munin
  The Munin and Munin::Common perl modules, used by munin master and
  node.
@@ -251,6 +252,7 @@ Package: libmunin-plugin-perl
 Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
+ libmunin-perl,
 Description: perl bindings for munin plugins
  The Munin::Plugin and Munin::Plugin::Framework perl modules used by
  various munin plugins.
@@ -335,7 +337,6 @@ Description: network-wide graphing framework (grapher/gatherer)
 Package: munin-common
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
- liblog-dispatch-perl,
 Description: network-wide graphing framework (common)
  This package contains the common perl modules that are used by both
  munin and munin-node.
