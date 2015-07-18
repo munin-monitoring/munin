@@ -7,30 +7,17 @@
 .. index::
    pair: plugin; fields
 
-Global attributes
-=================
-
 .. _plugin_attributes_global:
 
 On a configuration run, the plugin is called with the argument "config". The
-following fields are used.
+following attributes are used.
 
-.. _graph_title:
-
-============
-
-:Field: **graph_title**
-:Value: string
-:Type: required
-:Description: Sets the title of the graph
-:See also:
-:Default:
+Global attributes
+=================
 
 .. _graph_args:
 
-============
-
-:Field: **graph_args**
+:Attribute: **graph_args**
 :Value: string
 :Type: optional
 :Description: Arguments for the rrd grapher. This is used to control how the generated graph looks, and how values are interpreted or presented.
@@ -39,20 +26,9 @@ following fields are used.
 
 ============
 
-.. _graph_vlabel:
-
-:Field: **graph_vlabel**
-:Value: string
-:Type: optional
-:Description: Label for the vertical axis of the graph
-:See also:
-:Default:
-
-============
-
 .. _graph_category:
 
-:Field: **graph_category**
+:Attribute: **graph_category**
 :Value: lower case string, no whitespace
 :Type: optional
 :Description: Category used to sort the graph on the generated index web page.
@@ -61,61 +37,144 @@ following fields are used.
 
 ============
 
+.. _graph_height:
+
+:Attribute: **graph_height**
+:Value: integer (pixel)
+:Type: optional
+:Description: The height of the graph. Note that this is only the graph's height and not the height of the whole PNG image.
+:See also:
+:Default: 200
+
+============
+
 .. _graph_info:
 
-:Field: **graph_info**
+:Attribute: **graph_info**
 :Value: html text
 :Type: optional
-:Description: Additional text for the generated graph web page
+:Description: Provides general information on what the graph shows.
 :See also:
 :Default:
 
 ============
 
-.. _graph_scale:
-
-:Field: **graph_scale**
-:Value: yes|no
-:Type: optional
-:Description: If "yes", the generated graph will be scaled to the uppper and lower values of the datapoints within the graph.
-:See also:
-:Default: 'no'
-
-============
-
 .. _graph_order:
 
-:Field: **graph_order**
-:Value: space separated list of graph.datapoints
+:Attribute: **graph_order**
+:Value: space separated list of data sources (fieldnames)
 :Type: optional
 :Description:
-  | Ensures that the listed datapoints are displayed in order. Any additional datapoints are added in the order of appearance after datapoints appearing on this list.
+  | Ensures that the listed fields are displayed in specified order. Any additional fields are added in the order of appearance after fields appearing on this list.
   |
-  | This field is also used for "borrowing", which is the practice of taking datapoints from other graphs.
-:See also:
+  | This attribute is also used for "loaning", which is the practice of taking data sources from other graphs.
+:See also: `Loaning Data <http://munin-monitoring.org/wiki/LoaningData>`_
 :Default:
 
 ============
 
 .. _graph_period:
 
-:Field: **graph_period**
+:Attribute: **graph_period**
 :Value: second|minute|hour
 :Type: optional
 :Description:
-  | Control the unit of the data that will be displayed in the graphs. The default is "second". Changing it to "minute" or "hour" is useful in cases of a low frequency of whatever the plugin is measuring.
+  | Controls the time unit munin (actually rrd) uses to calculate the average rates of change. Changing the default "second" to "minute" or "hour" is useful in cases of a low frequency of whatever the plugin is measuring.
   |
   | Changing the graph_period makes sense only when the data type is COUNTER or DERIVE.
   |
-  | This does not change the sampling frequency of the data
+  | This does not change the sample interval - this remains per default at 5 minutes.
+:See also:
+:Default: second
+
+============
+
+.. _graph_scale:
+
+:Attribute: **graph_scale**
+:Value: yes|no
+:Type: optional
+:Description: Per default the unit written on the graph will be scaled. So instead of 1000 you will see 1k or 1M for 1000000. You may disable autoscale by setting this to 'no'.
+:See also:
+:Default: 'yes'
+
+============
+
+.. _graph_title:
+
+:Attribute: **graph_title**
+:Value: string
+:Type: required
+:Description: Sets the title of the graph
 :See also:
 :Default:
 
 ============
 
+.. _graph_total:
+
+:Attribute: **graph_total**
+:Value: string
+:Type: optional
+:Description:
+  | If set, summarizes all the data sources' values and reports the results in an extra row in the legend beneath the graph. The value you set here is used as label for that line.
+  | 
+  | Note that, since Munin version 2.1, using the special ``undef`` keyword disables it (to override in munin.conf).
+:See also:
+:Default:
+
+============
+
+.. _graph_vlabel:
+
+:Attribute: **graph_vlabel**
+:Value: string
+:Type: optional
+:Description: Label for the vertical axis of the graph. Don't forget to also mention the unit ;)
+:See also:
+:Default:
+
+============
+
+.. _graph_width:
+
+:Attribute: **graph_width**
+:Value: integer (pixel)
+:Type: optional
+:Description: The width of the graph. Note that this is only the graph's width and not the height of the whole PNG image.
+:See also: 
+:Default: 400
+
+============
+
+.. _host_name:
+
+:Attribute: **graph_width**
+:Value: string
+:Type: optional
+:Description: Override the host name for which the plugin is run.
+:See also:
+:Default: Host name as declared in munin.conf.
+
+============
+
+.. _update:
+
+:Attribute: **update**
+:Value: yes | no
+:Type: optional
+:Description: 
+  | Decides whether munin-update should fetch data for the graph.
+  |
+  | Note that the graph will be shown even if updates are disabled and then be blank.
+:See also:
+:Default: 'yes'
+
 .. _update_rate:
 
-:Field: **update_rate**
+============
+
+:Attribute: **update_rate**
 :Value: integer (seconds)
 :Type: optional
 :Description:
@@ -127,14 +186,14 @@ following fields are used.
 :See also:
 :Default:
 
+.. _plugin_attributes_data:
+
 Data source attributes
 ======================
 
-.. _plugin_attributes_data:
-
 .. _datapoint.label:
 
-:Field: **datapoint.label**
+:Attribute: **datapoint.label**
 :Value: lower case string, no whitespace
 :Type: required
 :Description: The label used in the graph for this field
@@ -145,7 +204,7 @@ Data source attributes
 
 .. _datapoint.info:
 
-:Field: **datapoint.info**
+:Attribute: **datapoint.info**
 :Value: html text
 :Type: optional
 :Description: Additional html text for the generated graph web page, used in the field description table
@@ -156,7 +215,7 @@ Data source attributes
 
 .. _datapoint.warning:
 
-:Field: **datapoint.warning**
+:Attribute: **datapoint.warning**
 :Value: integer, or integer:integer (signed)
 :Type: optional
 :Description: This field defines a threshold value or range. If the field value above the defined warning value, or outside the range, the service is considered to be in a "warning" state.
@@ -167,7 +226,7 @@ Data source attributes
 
 .. _datapoint.critical:
 
-:Field: **datapoint.critical**
+:Attribute: **datapoint.critical**
 :Value: integer, or integer:integer (signed)
 :Type: optional
 :Description:  This field defines a threshold value or range. If the field value is above the defined critical value, or outside the range, the service is considered to be in  a "critical" state.
@@ -178,7 +237,7 @@ Data source attributes
 
 .. _datapoint.graph:
 
-:Field: **datapoint.graph**
+:Attribute: **datapoint.graph**
 :Value: yes|no
 :Type: optional
 :Description: Determines if this datapoint should be visible in the generated graph.
@@ -189,7 +248,7 @@ Data source attributes
 
 .. _datapoint.cdef:
 
-:Field: **datapoint.cdef**
+:Attribute: **datapoint.cdef**
 :Value: CDEF statement
 :Type: optional
 :Description:
@@ -203,7 +262,7 @@ Data source attributes
 
 .. _datapoint.draw:
 
-:Field: **datapoint.draw**
+:Attribute: **datapoint.draw**
 :Value: AREA, LINE, LINE[n], STACK, AREASTACK, LINESTACK, LINE[n]STACK
 :Type: optional
 :Description:
@@ -217,7 +276,7 @@ Data source attributes
 
 .. _datapoint.type:
 
-:Field: **datapoint.type**
+:Attribute: **datapoint.type**
 :Value: GAUGE, COUNTER, DERIVE, ABSOLUTE
 :Type: optional
 :Description: Sets the RRD Data Source Type for this datapoint.  The type used may introduce restrictions for the value that can be used.
@@ -236,7 +295,7 @@ fields are used.
 
 .. _datapoint.value:
 
-:Field: **datapoint.value**
+:Attribute: **datapoint.value**
 :Value: integer, decimal numbers, or "U" (may be signed). For DERIVE and COUNTER values this must be an integer. See rrdcreate_ for restrictions.
 :Type: required
 :Description: The value to be graphed.

@@ -15,7 +15,7 @@ a limited number of messages at the time, the configuration directive
 :ref:`contact.contact.max_messages <directive-contact>` may be useful.
 
 When sending alerts, you might find good use in the
-`variables available from Munin <http://munin-monitoring.org/wiki/MuninAlertVariables>`_.
+:ref:`Munin alert variables <alert_variables>`.
 
 .. note:: Alerts not working? For some versions 1.4 and less, note that having `more than one contact defined <http://munin-monitoring.org/ticket/732>`_ can cause munin-limits to hang.
 
