@@ -7,8 +7,10 @@
 .. index::
    pair: plugin; fields
 
-Fields
-======
+Global attributes
+=================
+
+.. _plugin_attributes_global:
 
 On a configuration run, the plugin is called with the argument "config". The
 following fields are used.
@@ -125,7 +127,10 @@ following fields are used.
 :See also:
 :Default:
 
-============
+Data source attributes
+======================
+
+.. _plugin_attributes_data:
 
 .. _datapoint.label:
 
