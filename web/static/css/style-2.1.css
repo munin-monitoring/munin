@@ -67,9 +67,11 @@ hr {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
+a {
+  text-decoration: none;
+}
 a, a:visited, a:active, a:hover {
   color: #486aaf;
-  text-decoration: none;
 }
 a:hover {
   text-decoration: underline;
@@ -328,7 +330,7 @@ img.dynazoomModalLink:hover {
 }
 
 #nav > hr {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: #ddd;
   height: 1px;
   margin: 0;
   -webkit-box-shadow: none;
@@ -414,10 +416,12 @@ img.dynazoomModalLink:hover {
   display: table-cell;
   padding: 5px 0 30px 30px;
   background-color: #ffffff;
-  -webkit-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  -moz-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  -o-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  border-left: 1px solid #ccc;
+  border-left: 1px solid rgba(0, 0, 0, 0.01);
+  -webkit-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  -moz-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  -o-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -457,7 +461,7 @@ img.dynazoomModalLink:hover {
   -moz-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
   -o-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  border: 1px solid #bbb;
 }
 #legend .legendHead {
   font-family: Helvetica, sans-serif;
@@ -551,7 +555,7 @@ img.dynazoomModalLink:hover {
   -moz-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   -o-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid #ccc;
 }
 .groupview span.domain a {
   font-family: Helvetica, sans-serif;
@@ -594,6 +598,7 @@ img.dynazoomModalLink:hover {
   padding: 0;
 }
 .groupview li ul li {
+  border-bottom: 1px solid #dedede;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   font-size: 0;
   /* Remove white spaces */
@@ -683,6 +688,7 @@ img.dynazoomModalLink:hover {
   height: auto;
   padding: 9px 28px 9px 31px;
   border: 0;
+  color: #fff;
   color: rgba(255, 255, 255, 0.9);
   font-size: 12px;
   font-family: inherit;
@@ -697,7 +703,11 @@ img.dynazoomModalLink:hover {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.2) url("../img/icons/glyphicons-28-search-white.png") no-repeat 8px 7px;
+  background-color: #2c712f;
+  background-color: rgba(0, 0, 0, 0.2);
+  background-image: url("../img/icons/glyphicons-28-search-white.png");
+  background-repeat: no-repeat;
+  background-position: 8px 7px;
   background-size: 16px;
   /* Placeholder text color */
   /* Hide IE's cross on text field */
@@ -707,6 +717,7 @@ img.dynazoomModalLink:hover {
 }
 .filter input[type=text]:focus {
   outline: none;
+  background-color: #276329;
   background-color: rgba(0, 0, 0, 0.3);
   width: 300px;
 }
@@ -796,6 +807,7 @@ img.dynazoomModalLink:hover {
   border-right-width: 0;
 }
 .timeRangeSwitchContainer .timeRangeSwitch ul li.selected {
+  color: #fff;
   color: rgba(255, 255, 255, 0.87);
   background-color: #3f51b5;
 }
@@ -936,6 +948,7 @@ img.dynazoomModalLink:hover {
   -o-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
   padding: 5px 10px;
+  background-color: #777;
   background-color: rgba(0, 0, 0, 0.6);
   border: 0;
   color: #fff;
@@ -991,6 +1004,7 @@ img.dynazoomModalLink:hover {
   -moz-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
   -o-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
   box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
+  background-color: #2f7833;
   background-color: rgba(0, 0, 0, 0.15);
 }
 
@@ -1100,7 +1114,6 @@ img.dynazoomModalLink:hover {
   display: inline-block;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
-  -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
@@ -1180,6 +1193,7 @@ img.dynazoomModalLink:hover {
   width: 900px;
   height: 630px;
   background-color: #fff;
+  border: 1px solid #666;
   -webkit-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
   -moz-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
   -o-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
@@ -1269,7 +1283,6 @@ img.dynazoomModalLink:hover {
   cursor: pointer;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
-  -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;

@@ -13,7 +13,7 @@ $(document).ready(function() {
 	graphs.after('<img src="/static/img/icons/expand.png" class="dynazoomModalLink" />');
 
 	// Prepare a hidden modal
-	var modal = prepareModal(MODAL_ID, '<iframe></iframe>');
+	var modal = prepareModal(MODAL_ID, '<iframe frameBorder="0" seamless="seamless"></iframe>');
 	var dynazoomIframe = modal.find('iframe');
 
 	// Bind onclick event
