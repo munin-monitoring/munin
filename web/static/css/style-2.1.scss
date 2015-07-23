@@ -1167,5 +1167,19 @@ img.dynazoomModalLink {
 	}
 }
 
+.ie8Warning {
+	padding: 5px 10px;
+	margin-top: 5px;
+	display: inline-block;
+	border: 2px solid #ff5722;
+	font-size: 0.8em;
+
+	h3 {
+		display: inline-block;
+		font-weight: 600;
+		margin: 0 10px 0 0;
+	}
+}
+
 /* Include _style-2.1-responsive file */
 @import 'style-2.1-responsive';

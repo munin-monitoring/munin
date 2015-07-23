@@ -1301,6 +1301,19 @@ img.dynazoomModalLink:hover {
   font-family: Helvetica, sans-serif;
 }
 
+.ie8Warning {
+  padding: 5px 10px;
+  margin-top: 5px;
+  display: inline-block;
+  border: 2px solid #ff5722;
+  font-size: 0.8em;
+}
+.ie8Warning h3 {
+  display: inline-block;
+  font-weight: 600;
+  margin: 0 10px 0 0;
+}
+
 /* Include _style-2.1-responsive file */
 /*
  * This file contains everything that makes munin responsive, and is included in style-2.1
