@@ -1168,17 +1168,22 @@ img.dynazoomModalLink {
 }
 
 .ie8Warning {
+	display: none;
 	padding: 5px 10px;
 	margin-top: 5px;
-	display: inline-block;
 	border: 2px solid #ff5722;
 	font-size: 0.8em;
+	position: absolute;
+	top: 0;
+	z-index: 10;
+	background-color: #fff;
 
 	h3 {
 		display: inline-block;
 		font-weight: 600;
 		margin: 0 10px 0 0;
 	}
+	a { margin-left: 10px; }
 }
 
 /* Include _style-2.1-responsive file */
