@@ -1,5 +1,11 @@
 <TMPL_INCLUDE NAME="partial/head.tmpl">
 <body>
+<!--[if lt IE 9]>
+	<div class="ie8Warning">
+		<p><h3>Warning!</h3> It seems that you are using an outdated version of Internet Explorer. For the best munin experience, please upgrade your web browser.
+			<a href="#">Dismiss</a></p>
+	</div>
+<![endif]-->
 <div class="header">
 	<a href="/" class="logo"></a>
 	<div class="filter">
@@ -130,5 +136,32 @@
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
 <script src="/static/js/autorefresh.js"></script>
 <script src="/static/js/munin-overview.js"></script>
+<!--[if lt IE 9]>
+	<script>
+		$(document).ready(function() {
+			var ie8Warning = $('.ie8Warning');
+
+			// Bind dismiss event
+			ie8Warning.find('a').click(function(e) {
+				e.preventDefault();
+				ie8Warning.fadeOut();
+
+				// Set cookie
+				var expiry = new Date();
+				expiry.setTime(expiry.getTime()+(1000*60*60*24*365));
+				document.cookie = 'IE8WarningDismissed=true; expires=' + expiry.toGMTString() + ' UTC; path=/';
+			});
+
+			// Show warning if not dismissed
+			if (document.cookie.match(/^(.*;)?IE8WarningDismissed=[^;]+(.*)?$/) == null) {
+				ie8Warning.show();
+
+				setTimeout(function() {
+					ie8Warning.fadeOut();
+				}, 30000);
+			}
+		});
+	</script>
+<![endif]-->
 </body>
 </html>

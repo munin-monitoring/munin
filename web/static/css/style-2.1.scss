@@ -55,7 +55,6 @@ $problems-critical-color: #F14122;
 @mixin user-select($value) {
 	-webkit-touch-callout: $value;
 	-webkit-user-select: $value;
-	-khtml-user-select: $value;
 	-moz-user-select: $value;
 	-ms-user-select: $value;
 	user-select: $value;
@@ -111,7 +110,8 @@ hr {
 }
 
 a {
-	&, &:visited, &:active, &:hover { color: #486aaf; text-decoration: none; }
+	text-decoration: none;
+	&, &:visited, &:active, &:hover { color: #486aaf; }
 	&:hover { text-decoration: underline; }
 }
 
@@ -324,7 +324,7 @@ img.dynazoomModalLink {
 }
 #nav {
 	> hr {
-		background-color: rgba(0, 0, 0, 0.1);
+		background-color: #ddd;
 		height: 1px;
 		margin: 0;
 		@include box-shadow(none);
@@ -400,7 +400,9 @@ img.dynazoomModalLink {
 	display: table-cell;
 	padding: 5px 0 30px 30px;
 	background-color: #ffffff;
-	@include box-shadow(0 1px 2px 0 rgba(0, 0, 0, 0.3));
+	border-left: 1px solid #ccc;
+	border-left: 1px solid rgba(0, 0, 0, 0.01);
+	@include box-shadow(0 1px 2px 0 rgba(0, 0, 0, 0.35));
 	@include box-sizing(border-box);
 
 	h2 {
@@ -435,7 +437,7 @@ img.dynazoomModalLink {
 	margin: 20px 0;
 	background-color: #fff;
 	@include box-shadow(0 1px 3px 0 rgba(0, 0, 0, 0.2));
-	border: 1px solid rgba(0, 0, 0, 0.25);
+	border: 1px solid #bbb;
 
 	.legendHead {
 		font-family: $secondary-font;
@@ -516,7 +518,7 @@ img.dynazoomModalLink {
 		margin-bottom: 20px;
 		background-color: #fff;
 		@include box-shadow(0 1px 3px 0 rgba(0, 0, 0, 0.1));
-		border: 1px solid rgba(0, 0, 0, 0.2);
+		border: 1px solid #ccc;
 	}
 
 	span.domain {
@@ -554,6 +556,7 @@ img.dynazoomModalLink {
 		padding: 0;
 
 		li {
+			border-bottom: 1px solid #dedede;
 			border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 			font-size: 0; /* Remove white spaces */
 			overflow: hidden;
@@ -641,13 +644,18 @@ img.dynazoomModalLink {
 		height: auto;
 		padding: 9px 28px 9px 31px;
 		border: 0;
+		color: #fff;
 		color: rgba(255, 255, 255, 0.9);
 		font-size: 12px;
 		font-family: inherit;
 		@include transition-duration(150ms);
 		@include box-shadow(none);
 		@include box-sizing(border-box);
-		background: rgba(0, 0, 0, 0.2) url('../img/icons/glyphicons-28-search-white.png') no-repeat 8px 7px;
+		background-color: rgb(44, 113, 47);
+		background-color: rgba(0, 0, 0, 0.2);
+		background-image: url('../img/icons/glyphicons-28-search-white.png');
+		background-repeat: no-repeat;
+		background-position: 8px 7px;
 		background-size: 16px;
 
 		&:hover {
@@ -656,6 +664,7 @@ img.dynazoomModalLink {
 
 		&:focus {
 			outline: none;
+			background-color: rgb(39, 99, 41);
 			background-color: rgba(0, 0, 0, 0.3);
 			width: 300px;
 		}
@@ -735,7 +744,8 @@ img.dynazoomModalLink {
 					border-right-width: 0;
 				}
 				&.selected {
-					color: rgba(255,255,255,0.87);
+					color: #fff;
+					color: rgba(255, 255, 255, 0.87);
 					background-color: rgb(63,81,181);
 				}
 				&:hover {
@@ -853,6 +863,7 @@ img.dynazoomModalLink {
 	max-width: 450px;
 	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.3));
 	padding: 5px 10px;
+	background-color: #777;
 	background-color: rgba(0, 0, 0, 0.6);
 	border: 0;
 	color: #fff;
@@ -897,6 +908,7 @@ img.dynazoomModalLink {
 
 	&[data-shown=true] {
 		@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+		background-color: rgb(47, 120, 51);
 		background-color: rgba(0, 0, 0, 0.15);
 	}
 }
@@ -1058,6 +1070,7 @@ img.dynazoomModalLink {
 	width: 900px;
 	height: 630px;
 	background-color: #fff;
+	border: 1px solid #666;
 	@include box-shadow(0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2));
 	@include border-radius(2px);
 
@@ -1152,6 +1165,25 @@ img.dynazoomModalLink {
 		padding: 3px;
 		font-family: $secondary-font;
 	}
+}
+
+.ie8Warning {
+	display: none;
+	padding: 5px 10px;
+	margin-top: 5px;
+	border: 2px solid #ff5722;
+	font-size: 0.8em;
+	position: absolute;
+	top: 0;
+	z-index: 10;
+	background-color: #fff;
+
+	h3 {
+		display: inline-block;
+		font-weight: 600;
+		margin: 0 10px 0 0;
+	}
+	a { margin-left: 10px; }
 }
 
 /* Include _style-2.1-responsive file */
