@@ -109,6 +109,10 @@ sub process_file {
                 filename    => $plugin
             }
         );
+
+        # Clean up after python
+        my $compiled_file = $plugin . "c";
+        unlink $compiled_file;
     }
     elsif ( $interpreter =~ m{php} ) {
         run_check(
