@@ -4,19 +4,24 @@ use English '-no_match_vars';
 
 use Scalar::Util "weaken";
 
-use Test::More tests => 11;
+use Test::More tests => 9;
 
 use_ok('Munin::Master::Utils');
 
 # munin_mkdir_p
-{
-	ok(munin_mkdir_p("./mkdirt", oct(444)), "Creating valid dir");
-	ok(!munin_mkdir_p("./mkdirt/bad", oct(444)), "Creating invalid dir");
-	eval {
-		rmdir("./mkdirt")
-	};
-	ok(!$EVAL_ERROR, "Removing dir (please do manual cleanup on failure)");
-}
+subtest 'mkdir' => sub {
+    if ($ENV{TEST_MEDIUM}) {
+        ok(munin_mkdir_p("./mkdirt", oct(444)), "Creating valid dir");
+        ok(!munin_mkdir_p("./mkdirt/bad", oct(444)), "Creating invalid dir");
+        eval {
+            rmdir("./mkdirt")
+        };
+        ok(!$EVAL_ERROR, "Removing dir (please do manual cleanup on failure)");
+    }
+    else {
+        plan skip_all => 'set TEST_MEDIUM to enable this test';
+    }
+};
 
 # munin_get
 {

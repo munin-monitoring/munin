@@ -1,7 +1,14 @@
 use warnings;
 use strict;
 
-use Test::More tests => 4;
+use Test::More;
+
+if ($ENV{TEST_MEDIUM}) {
+    plan tests => 4
+}
+else {
+    plan skip_all => 'set TEST_MEDIUM to enable these tests';
+}
 
 use_ok('Munin::Common::TLS');
 use_ok('Munin::Common::TLSClient');
