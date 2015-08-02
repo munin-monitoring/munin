@@ -6,6 +6,8 @@ use Test::More;
 use File::Find ();
 use Capture::Tiny ':all';
 
+use v5.10.1;
+
 use vars qw/*name *dir *prune/;
 *name  = *File::Find::name;
 *dir   = *File::Find::dir;
@@ -52,19 +54,18 @@ sub hashbang {
 }
 
 sub process_file {
-    my ( $file, $filename, $interpreter, $arguments ) = @_;
-    use v5.10.1;
+    my ( $plugin, $interpreter, $arguments ) = @_;
 
     if ( $interpreter =~ m{/bin/sh} ) {
-        subtest $filename => sub {
+        subtest $plugin => sub {
             plan tests => 2;
             run_check(
-                {   command     => [ 'sh', '-n', $file ],
+                {   command     => [ 'sh', '-n', $plugin ],
                     description => 'sh syntax check'
                 }
             );
             run_check(
-                {   command     => [ 'checkbashisms', $file ],
+                {   command     => [ 'checkbashisms', $plugin ],
                     description => 'checkbashisms'
                 }
             );
@@ -72,56 +73,56 @@ sub process_file {
     }
     elsif ( $interpreter =~ m{/bin/ksh} ) {
         run_check(
-            {   command     => [ 'ksh', '-n', $file ],
+            {   command     => [ 'ksh', '-n', $plugin ],
                 description => 'ksh syntax check',
-                filename    => $filename
+                filename    => $plugin
             }
         );
     }
     elsif ( $interpreter =~ m{bash} ) {
         run_check(
-            {   command     => [ 'bash', '-n', $file ],
+            {   command     => [ 'bash', '-n', $plugin ],
                 description => 'bash syntax check',
-                filename    => $filename
+                filename    => $plugin
             }
         );
     }
     elsif ( $interpreter =~ m{perl} ) {
         my $command;
         if ( $arguments =~ m{-.*T}mx ) {
-            $command = [ 'perl', '-cwT', $file ];
+            $command = [ 'perl', '-cwT', $plugin ];
         }
         else {
-            $command = [ 'perl', '-cw', $file ];
+            $command = [ 'perl', '-cw', $plugin ];
         }
         run_check(
             {   command     => $command,
                 description => 'perl syntax check',
-                filename    => $filename
+                filename    => $plugin
             }
         );
     }
     elsif ( $interpreter =~ m{python} ) {
         run_check(
-            {   command     => [ 'python', '-m', 'py_compile', $file ],
+            {   command     => [ 'python', '-m', 'py_compile', $plugin ],
                 description => 'python compile',
-                filename    => $filename
+                filename    => $plugin
             }
         );
     }
     elsif ( $interpreter =~ m{php} ) {
         run_check(
-            {   command     => [ 'php', '-l', $file ],
+            {   command     => [ 'php', '-l', $plugin ],
                 description => 'php syntax check',
-                filename    => $filename
+                filename    => $plugin
             }
         );
     }
     elsif ( $interpreter =~ m{j?ruby} ) {
         run_check(
-            {   command     => [ 'ruby', '-cw', $file ],
+            {   command     => [ 'ruby', '-cw', $plugin ],
                 description => 'ruby syntax check',
-                filename    => $filename
+                filename    => $plugin
             }
         );
     }
@@ -129,10 +130,10 @@ sub process_file {
         run_check(
             {   command => [
                     'gawk', '--source', 'BEGIN { exit(0) } END { exit(0) }',
-                    '--file', $file
+                    '--file', $plugin
                 ],
                 description => 'gawk syntax check',
-                filename    => $filename
+                filename    => $plugin
             }
         );
     }
@@ -143,7 +144,7 @@ sub process_file {
         }
     }
     else {
-        fail( $filename . " unknown interpreter " . $interpreter );
+        fail( $plugin . " unknown interpreter " . $interpreter );
     }
 }
 
