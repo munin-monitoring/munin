@@ -1,7 +1,13 @@
 use warnings;
 use strict;
 
-use Test::More tests => 5;
+use Test::More;
+if ($ENV{TEST_MEDIUM}) {
+    plan tests => 5;
+}
+else {
+    plan skip_all => 'set TEST_MEDIUM to enable these tests';
+}
 
 use_ok('Munin::Master::Config');
 

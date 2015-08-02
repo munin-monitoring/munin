@@ -1,7 +1,8 @@
 use warnings;
 use strict;
 
-use Test::More tests => 25;
+use Test::More tests => 6;
+
 use Test::LongString;
 
 use POSIX ();
@@ -17,7 +18,7 @@ sub touch { open my $fh, '>>', (shift) or die $!; close $fh }
 
 
 ### new
-{
+subtest 'new' => sub {
     my $dir = POSIX::getcwd();
 
     my $writer = new_ok('Munin::Node::SpoolWriter' => [
@@ -26,15 +27,24 @@ sub touch { open my $fh, '>>', (shift) or die $!; close $fh }
 
     is($writer->{spooldir}, $dir, 'spooldir key is set');
     isa_ok($writer->{spooldirhandle}, 'GLOB', 'spooldirhandle is a glob');
-}
-{
+};
+
+subtest 'new without spooldir' => sub {
     eval { Munin::Node::SpoolWriter->new(fnord => 'blort') };
     like($@, qr/./, 'Dies if no spooldir provided');
-}
+};
 
 
 ### write
-{
+subtest 'write' => sub {
+
+    if ($ENV{TEST_MEDIUM}) {
+        plan tests => 3;
+    }
+    else {
+        plan skip_all => 'set TEST_MEDIUM to run these tests';
+    }
+
     my $dir = tempdir( CLEANUP => 1 );
     my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
 
@@ -93,11 +103,19 @@ system.label system
 system.value 999998
 EOC
 
-}
+};
 
 # writing different types of value.
 # values can also include a timestamp: http://munin-monitoring.org/wiki/protocol-multifetch
-{
+subtest 'write different value types' => sub {
+
+    if ($ENV{TEST_MEDIUM}) {
+        plan tests => 10;
+    }
+    else {
+        plan skip_all => 'set TEST_MEDIUM to run these tests';
+    }
+
     my @tests = (
         #  timestamp,               value,              expected
         [ 1234567890,            '999999',              '999999', 'Integer without timestamp'  ],
@@ -135,11 +153,19 @@ EOC
         my $data = read_file($data_file);
         like($data, qr(^system\.value $expected\n$)m, $msg);
     }
-}
+};
 
 
 # writing multigraph results
-{
+subtest 'multigraph results' => sub {
+
+    if ($ENV{TEST_MEDIUM}) {
+        plan tests => 2;
+    }
+    else {
+        plan skip_all => 'set TEST_MEDIUM to run these tests';
+    }
+
     my $dir = tempdir( CLEANUP => 1 );
     my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
 
@@ -170,17 +196,25 @@ subsystem.label subsystem
 subsystem.value 123
 EOC
 
-}
+};
 
 
 ### cleanup
-{
+subtest 'cleanup' => sub {
+
+    if ($ENV{TEST_MEDIUM}) {
+        plan tests => 6;
+    }
+    else {
+        plan skip_all => 'set TEST_MEDIUM to run these tests';
+    }
+
     my $dir = tempdir( CLEANUP => 1 );
     my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
 
     # one timestamp before the cutoff, one after.
     my $stale  = time - (Munin::Node::SpoolWriter::MAXIMUM_AGE * Munin::Node::SpoolWriter::DEFAULT_TIME) - 100;
-    my $fresh = time - (Munin::Node::SpoolWriter::MAXIMUM_AGE * Munin::Node::SpoolWriter::DEFAULT_TIME) + 100; 
+    my $fresh = time - (Munin::Node::SpoolWriter::MAXIMUM_AGE * Munin::Node::SpoolWriter::DEFAULT_TIME) + 100;
     my $interval = Munin::Node::SpoolWriter::DEFAULT_TIME;
 
     touch("$dir/munin-daemon.stale.$stale.$interval");
@@ -198,5 +232,4 @@ EOC
     ok(! -r "$dir/munin-daemon.stale.$stale.$interval", 'stale file is gone');
     ok(  -r "$dir/munin-daemon.fresh.$fresh.$interval", 'fresh file is still there');
     ok(  -r "$dir/cruft",                               'cruft file is still there');
-}
-
+};

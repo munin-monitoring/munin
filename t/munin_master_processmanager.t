@@ -1,7 +1,15 @@
 use warnings;
 use strict;
 
-use Test::More tests => 17;
+use Test::More;
+
+if ($ENV{TEST_MEDIUM}) {
+    plan tests => 17;
+}
+else {
+    plan skip_all => 'set TEST_MEDIUM to enable these tests'
+}
+
 use Time::HiRes qw(sleep);
 use File::Temp qw( tempdir );
 use Munin::Common::Logger;
