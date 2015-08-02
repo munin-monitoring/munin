@@ -11,6 +11,7 @@ use vars qw/*name *dir *prune/;
 *dir   = *File::Find::dir;
 *prune = *File::Find::prune;
 my $num_plugins = 0;
+my @plugins;
 
 sub wanted {
     my ( $dev, $ino, $mode, $nlink, $uid, $gid, $interpreter, $arguments );
@@ -20,10 +21,17 @@ sub wanted {
         && ( ( $interpreter, $arguments ) = hashbang("$_") )
         && ($interpreter)
         && ++$num_plugins
-        && process_file( $_, $name, $interpreter, $arguments );
+        && push @plugins, [ $name, $interpreter, $arguments ];
 }
 
 File::Find::find( { wanted => \&wanted }, 'plugins' );
+
+plan tests => scalar(@plugins);
+
+
+foreach my $plugin (@plugins) {
+    process_file(@{$plugin});
+}
 
 sub hashbang {
     my ($filename) = @_;
@@ -170,5 +178,3 @@ sub run_check {
         );
     }
 }
-
-done_testing($num_plugins);
