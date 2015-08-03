@@ -144,7 +144,7 @@ function divMouseMove(mouseMoveEvent) {
 		divOverlay.css('width', size_x);
 	}
 
-	// Compute the epochs UNIX (only for horizontal)
+	// Compute the UNIX epochs (only for horizontal)
 	f_start_epoch.val((start_epoch + scale * delta_x).toFixed());
 	f_stop_epoch.val((start_epoch + scale * (delta_x + size_x)).toFixed());
 
@@ -209,7 +209,9 @@ function clearZoom() {
 }
 
 function doZoom() {
-	refreshImg();
+	scale = refreshImg();
+	start_epoch = parseInt(f_start_epoch.val());
+	stop_epoch = parseInt(f_stop_epoch.val());
 	clickCounter++;
 	divOverlay.css('visibility', 'hidden');
 	divOverlay.css('width', '0');
