@@ -92,7 +92,7 @@ sub function__get_all_hosts : Test(5) {
     );
 }
 
-sub function__give_attributes_to_hosts : Test(5) {
+sub function__give_attributes_to_hosts : Test(6) {
     my $self = shift;
     my $group = $self->{group};
     my @hosts = ($self->{host1}, $self->{host2});
@@ -100,16 +100,23 @@ sub function__give_attributes_to_hosts : Test(5) {
     can_ok($group, 'give_attributes_to_hosts');
 
     foreach my $host (@hosts) {
-        ok($group->add_host($host), "setup, add hosts");
+        ok($group->add_host($host), "setup, add host " . $host->{host_name});
     }
 
-    ok($group->give_attributes_to_hosts({
-        contacts => 'nobody@example.com'
-    }));
+    ok($group->add_attributes({contacts => 'test'}), 'setup, add "contacts" attributes');
+    ok($group->give_attributes_to_hosts(), 'give attributes to hosts');
+
+    @hosts = $group->get_all_hosts;
 
     cmp_deeply(
-        $group->{hosts},
-        hash_each(isa('Munin::Master::Host'))
-    );
+        \@hosts,
+        array_each(
+            isa('Munin::Master::Host'),
+            superhashof({ contacts => 'test'}),
+        ),
+        'All hosts have "contacts" attribute'
+    )
+
 }
+
 1;
