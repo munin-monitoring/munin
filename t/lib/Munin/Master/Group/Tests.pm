@@ -24,22 +24,22 @@ sub setup : Test(setup) {
 
 }
 
-sub object : Test(1) {
+sub class : Test(1) {
     my $group = shift->{group};
     isa_ok($group, 'Munin::Master::Group');
 }
 
-sub object_parameters : Test {
+sub class_parameters : Test {
     my $group = shift->{group};
     is($group->{group_name}, 'example.com', 'group name');
 }
 
-sub object_defaults : Test {
+sub class_defaults : Test {
     my $group = shift->{group};
     is(ref $group->{hosts}, 'HASH', 'default host list is a hash');
 }
 
-sub function__add_attributes : Test(3) {
+sub method__add_attributes : Test(3) {
     my $group = shift->{group};
 
     can_ok($group, 'add_attributes');
@@ -57,7 +57,7 @@ sub function__add_attributes : Test(3) {
     };
 }
 
-sub function__add_host : Test(3) {
+sub method__add_host : Test(3) {
     my $self = shift;
     my $group = $self->{group};
     my $host = $self->{host1};
@@ -72,7 +72,7 @@ sub function__add_host : Test(3) {
     );
 }
 
-sub function__get_all_hosts : Test(5) {
+sub method__get_all_hosts : Test(5) {
     my $self = shift;
     my $group = $self->{group};
     my @hosts = ($self->{host1}, $self->{host2});
@@ -92,7 +92,7 @@ sub function__get_all_hosts : Test(5) {
     );
 }
 
-sub function__give_attributes_to_hosts : Test(6) {
+sub method__give_attributes_to_hosts : Test(6) {
     my $self = shift;
     my $group = $self->{group};
     my @hosts = ($self->{host1}, $self->{host2});
