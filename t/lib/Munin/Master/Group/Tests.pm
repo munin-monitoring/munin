@@ -67,5 +67,21 @@ sub function__add_host : Test(3) {
        'host is added to group');
 }
 
+sub function__get_all_hosts : Test(5) {
+    my $self = shift;
+    my $group = $self->{group};
+    my @hosts = ($self->{host1}, $self->{host2});
+
+    can_ok($group, 'get_all_hosts');
+
+    foreach my $host (@hosts) {
+        ok($group->add_host($host), "setup, add hosts");
+    }
+
+    ok($group->get_all_hosts);
+
+    is(scalar $group->get_all_hosts, scalar @hosts,
+       'number of hosts');
+}
 
 1;
