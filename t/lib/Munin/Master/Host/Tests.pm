@@ -18,12 +18,12 @@ sub setup : Test(setup) {
 
 }
 
-sub object : Test(1) {
+sub class : Test(1) {
     my $host = shift->{host};
     isa_ok($host, 'Munin::Master::Host');
 }
 
-sub object_parameters : Test(2) {
+sub class_parameters : Test(2) {
     my $self = shift;
 
     my $host = $self->{host};
@@ -33,14 +33,14 @@ sub object_parameters : Test(2) {
     is($host->{group}, $self->{group}, 'group');
 }
 
-sub object_defaults : Test(3) {
+sub class_defaults : Test(3) {
     my $host = shift->{host};
     is($host->{update}, 1, 'default update');
     is($host->{port}, 4949, 'default port');
     is($host->{use_node_name}, 0, 'default use_node_name');
 }
 
-sub function__get_full_path : Test(2) {
+sub method__get_full_path : Test(2) {
     my $host = shift->{host};
 
     can_ok($host, 'get_full_path');
@@ -48,7 +48,7 @@ sub function__get_full_path : Test(2) {
        'should return "example.com;test.example.com"');
 }
 
-sub function__add_attributes_if_not_exists : Test(3) {
+sub method__add_attributes_if_not_exists : Test(3) {
     my $host = shift->{host};
     can_ok($host, 'add_attributes_if_not_exists');
 
@@ -59,11 +59,13 @@ sub function__add_attributes_if_not_exists : Test(3) {
        'read attribute foo should return "bar"');
 }
 
-sub function__get_canned_ds_config : Test(1) {
+sub method__get_canned_ds_config : Test(2) {
     my $host = shift->{host};
     can_ok($host, 'get_canned_ds_config');
 
-    # FIXME: Figure out what this does.
+  TODO: {
+      local $TODO = 'Figure out what this method really does';
+    }
 }
 
 1;
