@@ -1,6 +1,7 @@
 package Munin::Master::Group::Tests;
 use base qw(Test::Class);
 use Test::More;
+use Test::Deep;
 
 use Munin::Master::Group;
 
@@ -63,8 +64,15 @@ sub function__add_host : Test(3) {
 
     can_ok($group, 'add_host');
     ok($group->add_host($host), 'add host to group');
-    ok($group->{hosts}{'host1.example.com'},
-       'host is added to group');
+
+    cmp_deeply(
+        $group->{hosts},
+        hash_each(all(
+            isa('Munin::Master::Host'),
+            subhashof($host)
+            )),
+        'host is added to group'
+    );
 }
 
 sub function__get_all_hosts : Test(5) {
@@ -78,10 +86,35 @@ sub function__get_all_hosts : Test(5) {
         ok($group->add_host($host), "setup, add hosts");
     }
 
-    ok($group->get_all_hosts);
+    ok(my @result = $group->get_all_hosts);
 
-    is(scalar $group->get_all_hosts, scalar @hosts,
-       'number of hosts');
+    cmp_deeply(
+        \@result,
+        array_each(
+            isa('Munin::Master::Host'),
+        ),
+        'returns an array of Munin::Master::Host objects'
+    );
 }
 
+sub function__give_attributes_to_hosts : Test(5) {
+    my $self = shift;
+    my $group = $self->{group};
+    my @hosts = ($self->{host1}, $self->{host2});
+
+    can_ok($group, 'give_attributes_to_hosts');
+
+    foreach my $host (@hosts) {
+        ok($group->add_host($host), "setup, add hosts");
+    }
+
+    ok($group->give_attributes_to_hosts({
+        contacts => 'nobody@example.com'
+    }));
+
+    cmp_deeply(
+        $group->{hosts},
+        hash_each(isa('Munin::Master::Host'))
+    );
+}
 1;
