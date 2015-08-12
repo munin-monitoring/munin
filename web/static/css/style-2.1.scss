@@ -83,6 +83,7 @@ input[type="text"],
 input[type="number"] {
 	padding: 0 5px;
 	height: 23px;
+	max-width: 100%;
 	@include border-radius(2px);
 	border: 1px solid #aaa;
 	@include box-shadow(inset 0 1px 2px rgba(0, 0, 0, 0.1));
@@ -733,7 +734,7 @@ img.dynazoomModalLink {
 
 			li {
 				display: inline-block;
-				padding: 6px 10px;
+				padding: 7px 10px;
 				text-transform: uppercase;
 				cursor: pointer;
 				@include transition-duration(150ms);
