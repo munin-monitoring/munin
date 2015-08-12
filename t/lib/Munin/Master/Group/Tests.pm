@@ -100,11 +100,14 @@ sub method__give_attributes_to_hosts : Test(6) {
     can_ok($group, 'give_attributes_to_hosts');
 
     foreach my $host (@hosts) {
-        ok($group->add_host($host), "setup, add host " . $host->{host_name});
+        ok($group->add_host($host),
+           'setup, add host ' . $host->{host_name});
     }
 
-    ok($group->add_attributes({contacts => 'test'}), 'setup, add "contacts" attributes');
-    ok($group->give_attributes_to_hosts(), 'give attributes to hosts');
+    ok($group->add_attributes({contacts => 'test'}),
+       'setup, add "contacts" attributes');
+
+    ok($group->give_attributes_to_hosts());
 
     @hosts = $group->get_all_hosts;
 
