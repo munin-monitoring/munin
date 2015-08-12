@@ -87,9 +87,7 @@ sub function__get_all_hosts : Test(5) {
 
     cmp_deeply(
         \@result,
-        array_each(
-            isa('Munin::Master::Host'),
-        ),
+        array_each(isa('Munin::Master::Host')),
         'returns an array of Munin::Master::Host objects'
     );
 }
