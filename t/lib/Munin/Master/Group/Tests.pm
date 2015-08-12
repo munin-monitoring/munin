@@ -67,10 +67,7 @@ sub function__add_host : Test(3) {
 
     cmp_deeply(
         $group->{hosts},
-        hash_each(all(
-            isa('Munin::Master::Host'),
-            subhashof($host)
-            )),
+        hash_each(isa('Munin::Master::Host')),
         'host is added to group'
     );
 }
