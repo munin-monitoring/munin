@@ -75,16 +75,27 @@ function prepareFilter(placeholder, onFilterChange) {
 	// Set placeholder
 	input.attr('placeholder', placeholder);
 
+	// Create a delay function to avoid triggering filter on each keypress
+	var delay = (function(){
+		var timer = 0;
+		return function(callback, ms){
+			clearTimeout(timer);
+			timer = setTimeout(callback, ms);
+		};
+	})();
+
 	input.on('keyup', function() {
 		var val = $(this).val();
 
-		if (val != '')
-			$('#cancelFilter').show();
-		else
-			$('#cancelFilter').hide();
+		delay(function() {
+			if (val != '')
+				$('#cancelFilter').show();
+			else
+				$('#cancelFilter').hide();
 
-		onFilterChange(val);
-		updateFilterInURL();
+			onFilterChange(val);
+			updateFilterInURL();
+		}, 200);
 	});
 
 	$('#cancelFilter').click(function() {
@@ -146,7 +157,7 @@ function saveState(key, val) {
 	// Check if history.pushState is supported by user's browser
 	if (!history.pushState)
 		return;
-	
+
 	// Encode key=val in URL
 	var qs = new Querystring();
 	qs.set(key, val);
