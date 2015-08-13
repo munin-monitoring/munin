@@ -12,8 +12,6 @@ sub setup : Test(setup) {
         sub{ ok(1, 'async complete')}
     );
 
-    $self->{worker} = Munin::Master::Worker->new();
-
 }
 
 sub class : Test(1) {
