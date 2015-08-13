@@ -23,6 +23,7 @@ apt-get install <<EOF
   libnet-ssleay-perl
   libparams-validate-perl
   librrds-perl
+  libtest-class-perl
   libtest-deep-perl
   libtest-differences-perl
   libtest-longstring-perl
