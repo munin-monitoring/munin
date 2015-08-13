@@ -11,12 +11,12 @@ sub setup : Test(setup) {
 
 sub class : Test {
     my $group = shift->{group};
-    isa_ok($group, 'Munin::Master::GroupRepository');
+    isa_ok( $group, 'Munin::Master::GroupRepository' );
 }
 
 sub class_parameter : Test {
     my $group = shift->{group};
-    is($group->{groups}, 'testing;testing');
+    is( $group->{groups}, 'testing;testing' );
 }
 
 1;
