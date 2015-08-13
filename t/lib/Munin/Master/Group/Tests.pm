@@ -104,10 +104,10 @@ sub method__give_attributes_to_hosts : Test(6) {
 
     ok( $group->give_attributes_to_hosts() );
 
-    @hosts = $group->get_all_hosts;
+    my @group_hosts = $group->get_all_hosts;
 
     cmp_deeply(
-        \@hosts,
+        \@group_hosts,
         array_each(
             isa('Munin::Master::Host'),
             superhashof( { contacts => 'test' } ),
