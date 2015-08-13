@@ -49,12 +49,8 @@ sub method__add_attributes : Test(3) {
         node_order    => 1,
     }));
 
-  TODO: {
-        local $TODO = "add_attribute croaks on invalid attributes";
-        # ok(! $group->add_attributes( {
-        #     invalid_attribute => 1
-        # }));
-    };
+    ok(!eval{ $group->add_attributes({invalid_attribute => 1})},
+       'should fail on invalid attribute');
 }
 
 sub method__add_host : Test(3) {
