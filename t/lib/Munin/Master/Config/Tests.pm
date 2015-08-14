@@ -16,6 +16,21 @@ sub class : Test {
     isa_ok( $config, 'Munin::Master::Config' );
 }
 
+sub function__get_all_hosts : Test(3) {
+    my $config = shift->{config};
+    can_ok( $config, 'get_all_hosts' );
+
+    $config->parse_config( \*DATA );
+
+    return 'FIXME: Running get_all_hosts makes the parse_config nodes test fail';
+    ok($config->get_all_hosts);
+
+    cmp_deeply(
+        $result,
+        hash_each( isa('Munin::Master::Host'))
+    );
+}
+
 sub function__look_up : Test(8) {
     my $config = shift->{config};
     can_ok( $config, 'look_up' );
