@@ -16,6 +16,38 @@ sub class : Test {
     isa_ok( $config, 'Munin::Master::Config' );
 }
 
+sub function__look_up : Test(8) {
+    my $config = shift->{config};
+    can_ok( $config, 'look_up' );
+
+    $config->parse_config( \*DATA );
+
+    is( $config->look_up('example.com'),
+        undef, 'look up first level group should fail' );
+    is( $config->look_up('example.com'),
+        undef, 'look up non existing host in first level group should fail' );
+    is( $config->look_up('example.com;extra'),
+        undef, 'look up second level group should fail' );
+
+    ok( $result1 = $config->look_up('example.com;test1.example.com'),
+        'look up host in first level group' );
+
+    cmp_deeply(
+        $result1,
+        noclass( superhashof( { host_name => 'test1.example.com' } ) ),
+        'host name matches test1.example.com'
+    );
+
+    ok( $result2 = $config->look_up('example.com;extra;test2.example.com'),
+        'look up host in second level group' );
+
+    cmp_deeply(
+        $result2,
+        noclass( superhashof( { host_name => 'test2.example.com' } ) ),
+        'host name matches test2.example.com'
+    );
+}
+
 sub function__parse_config : Test(2) {
     my $config = shift->{config};
 
