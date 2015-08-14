@@ -16,6 +16,21 @@ sub class : Test {
     isa_ok( $config, 'Munin::Master::Config' );
 }
 
+sub function__get_groups_and_hosts : Test(3) {
+    my $config = shift->{config};
+    can_ok( $config, 'get_groups_and_hosts' );
+
+    $config->parse_config( \*DATA );
+
+    ok($config->get_groups_and_hosts);
+
+    cmp_deeply(
+        $result,
+        hash_each( isa('Munin::Master::Group')),
+        'returns a hash with Munin::Master::Group values'
+    );
+}
+
 sub function__get_all_hosts : Test(3) {
     my $config = shift->{config};
     can_ok( $config, 'get_all_hosts' );
