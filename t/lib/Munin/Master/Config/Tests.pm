@@ -157,7 +157,8 @@ __DATA__
 dbdir   /test/dbdir
 htmldir /test/htmldir
 logdir  /test/logdir
-rundir  /test/rundir
+rundir  \
+    /test/rundir
 
 tmpldir /test/tmpldir
 staticdir /test/staticdir
