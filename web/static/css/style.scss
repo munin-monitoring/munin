@@ -1,10 +1,10 @@
 /**
- * IMPORTANT: please do not edit neither style-2.1.css nor _style-2.1-responsive files.
+ * IMPORTANT: please do not edit neither style.css nor _responsive files.
  *	We're using SASS to maintain styling, so your changes would be overriden.
- *  Please edit the style-2.1.scss file instead, and use a sass compiler.
+ *	Please edit the style.scss file instead, and use a sass compiler.
  *		Learn more about SASS: http://sass-lang.com/guide
  *
- *  Sass compiler arguments:  --style expanded
+ *	Sass compiler arguments:  --style expanded
  */
 
 /* SASS variables */
@@ -88,6 +88,15 @@ input[type="number"] {
 	border: 1px solid #aaa;
 	@include box-shadow(inset 0 1px 2px rgba(0, 0, 0, 0.1));
 	color: #555;
+}
+input[type="submit"],
+input[type="button"],
+button {
+	background-color: #F5F6F6;
+	border: 1px solid #D3D4DA;
+	padding: 5px 10px;
+	border-radius: 2px;
+	color: #333;
 }
 
 /* Titles */
@@ -213,9 +222,9 @@ img.dynazoomModalLink {
 }
 
 /* Header */
-.header {
+header {
 	color: #fff;
-	min-height: 50px;
+	min-height: 45px;
 	margin: 0 auto;
 	padding: 1px 12px 1px 37px;
 	text-align: center;
@@ -230,6 +239,7 @@ img.dynazoomModalLink {
 		color: #fff;
 		margin: 0;
 		cursor: default;
+		font-size: 15px;
 
 		.sep {
 			width: 16px;
@@ -246,7 +256,7 @@ img.dynazoomModalLink {
 		float: left;
 		width: 118px;
 		height: 34px;
-		margin-top: 6px;
+		margin-top: 5px;
 		@include transition-duration(200ms);
 		background-repeat: no-repeat;
 		background-position: 4px 2px;
@@ -264,14 +274,20 @@ img.dynazoomModalLink {
 	}
 
 	.pageTitle {
-		margin-top: 5px;
 		font-weight: 100;
+		margin-top: 9px;
+		min-height: 24px;
 		font-size: 16px;
 		color: #eee;
 		text-align: center;
 		display: block;
 		width: 100%;
 		@include box-sizing(border-box);
+
+		h1 {
+			vertical-align: middle;
+			display: inline-block;
+		}
 
 		a, div.switchable {
 			color: #fff;
@@ -287,7 +303,6 @@ img.dynazoomModalLink {
 			}
 		}
 	}
-	.pageTitle.singleLine { margin-top: 13px; }
 
 	.comparison, .categories {
 		display: inline-block;
@@ -315,7 +330,7 @@ img.dynazoomModalLink {
 .clear { clear: both; }
 
 /* Navigation */
-.navContainer {
+nav {
 	display: table-cell;
 	vertical-align: top;
 	width: 200px;
@@ -432,6 +447,11 @@ img.dynazoomModalLink {
 }
 
 /* Content: service view */
+p.graph_info {
+	text-align: justify;
+	max-width: 1000px;
+}
+
 #legend {
 	border-collapse: collapse;
 	@include border-radius(2px);
@@ -477,7 +497,7 @@ img.dynazoomModalLink {
 }
 
 /* Footer */
-#footer {
+footer {
 	width: 100%;
 	margin-top: 15px;
 	padding: 5px 35px;
@@ -532,7 +552,7 @@ img.dynazoomModalLink {
 			display: block;
 			padding: 6px 20px;
 			margin: -1px;
-			@include border-radius(1px 1px 0 0);
+			@include border-radius(2px 2px 0 0);
 			border: 1px solid darken($secondary-color, 10);
 			background-color: $secondary-color;
 			@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.15));
@@ -636,7 +656,7 @@ img.dynazoomModalLink {
 .filter {
 	width: 300px;
 	float: right;
-	margin-top: 7px;
+	margin-top: 5px;
 	position: relative;
 	text-align: right;
 
@@ -735,7 +755,6 @@ img.dynazoomModalLink {
 			li {
 				display: inline-block;
 				padding: 7px 10px;
-				text-transform: uppercase;
 				cursor: pointer;
 				@include transition-duration(150ms);
 				@include border-radius(1px);
@@ -902,7 +921,7 @@ img.dynazoomModalLink {
 	overflow: hidden;
 	cursor: pointer;
 	float: right;
-	margin: 7px 0 0 10px;
+	margin: 5px 0 0 10px;
 	@include transition-duration(200ms);
 	@include border-radius(2px);
 
@@ -968,6 +987,7 @@ img.dynazoomModalLink {
 			text-transform: uppercase;
 			border-bottom: 2px solid transparent;
 			@include transition-duration(200ms);
+			@include border-radius(2px 2px 0 0);
 
 			&:hover { background-color: rgba(0, 0, 0, 0.05); }
 			&.active {
@@ -1191,5 +1211,5 @@ img.dynazoomModalLink {
 	a { margin-left: 10px; }
 }
 
-/* Include _style-2.1-responsive file */
-@import 'style-2.1-responsive';
+/* Include _responsive file */
+@import 'responsive';

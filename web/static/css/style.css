@@ -1,10 +1,10 @@
 /**
- * IMPORTANT: please do not edit neither style-2.1.css nor _style-2.1-responsive files.
+ * IMPORTANT: please do not edit neither style.css nor _responsive files.
  *	We're using SASS to maintain styling, so your changes would be overriden.
- *  Please edit the style-2.1.scss file instead, and use a sass compiler.
+ *	Please edit the style.scss file instead, and use a sass compiler.
  *		Learn more about SASS: http://sass-lang.com/guide
  *
- *  Sass compiler arguments:  --style expanded
+ *	Sass compiler arguments:  --style expanded
  */
 /* SASS variables */
 /* SASS mixins */
@@ -42,6 +42,16 @@ input[type="number"] {
   -o-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
   color: #555;
+}
+
+input[type="submit"],
+input[type="button"],
+button {
+  background-color: #F5F6F6;
+  border: 1px solid #D3D4DA;
+  padding: 5px 10px;
+  border-radius: 2px;
+  color: #333;
 }
 
 /* Titles */
@@ -202,9 +212,9 @@ img.dynazoomModalLink:hover {
 }
 
 /* Header */
-.header {
+header {
   color: #fff;
-  min-height: 50px;
+  min-height: 45px;
   margin: 0 auto;
   padding: 1px 12px 1px 37px;
   text-align: center;
@@ -220,12 +230,13 @@ img.dynazoomModalLink:hover {
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
 }
-.header h1 {
+header h1 {
   color: #fff;
   margin: 0;
   cursor: default;
+  font-size: 15px;
 }
-.header h1 .sep {
+header h1 .sep {
   width: 16px;
   height: 16px;
   margin-bottom: 3px;
@@ -233,12 +244,12 @@ img.dynazoomModalLink:hover {
   display: inline-block;
   vertical-align: middle;
 }
-.header .logo {
+header .logo {
   display: inline-block;
   float: left;
   width: 118px;
   height: 34px;
-  margin-top: 6px;
+  margin-top: 5px;
   -webkit-transition-duration: 200ms;
   -moz-transition-duration: 200ms;
   -o-transition-duration: 200ms;
@@ -252,13 +263,14 @@ img.dynazoomModalLink:hover {
   opacity: 0.8;
   filter: alpha(opacity=80);
 }
-.header .logo:hover {
+header .logo:hover {
   opacity: 1;
   filter: alpha(opacity=100);
 }
-.header .pageTitle {
-  margin-top: 5px;
+header .pageTitle {
   font-weight: 100;
+  margin-top: 9px;
+  min-height: 24px;
   font-size: 16px;
   color: #eee;
   text-align: center;
@@ -268,7 +280,11 @@ img.dynazoomModalLink:hover {
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
 }
-.header .pageTitle a, .header .pageTitle div.switchable {
+header .pageTitle h1 {
+  vertical-align: middle;
+  display: inline-block;
+}
+header .pageTitle a, header .pageTitle div.switchable {
   color: #fff;
   -webkit-transition-duration: 200ms;
   -moz-transition-duration: 200ms;
@@ -281,15 +297,12 @@ img.dynazoomModalLink:hover {
   border-radius: 2px;
   border: 1px solid transparent;
 }
-.header .pageTitle a:hover, .header .pageTitle div.switchable:hover {
+header .pageTitle a:hover, header .pageTitle div.switchable:hover {
   color: #fff;
   background-color: rgba(0, 0, 0, 0.15);
   text-decoration: none;
 }
-.header .pageTitle.singleLine {
-  margin-top: 13px;
-}
-.header .comparison, .header .categories {
+header .comparison, header .categories {
   display: inline-block;
   color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
@@ -300,10 +313,10 @@ img.dynazoomModalLink:hover {
   transition-duration: 200ms;
   color: #fff;
 }
-.header .comparison > a, .header .categories > a {
+header .comparison > a, header .categories > a {
   color: #fff;
 }
-.header .comparison:hover, .header .categories:hover {
+header .comparison:hover, header .categories:hover {
   color: #fff;
 }
 
@@ -320,13 +333,13 @@ img.dynazoomModalLink:hover {
 }
 
 /* Navigation */
-.navContainer {
+nav {
   display: table-cell;
   vertical-align: top;
   width: 200px;
   /* Shown on tablets */
 }
-.navContainer #navToggle {
+nav #navToggle {
   display: none;
 }
 
@@ -450,6 +463,11 @@ img.dynazoomModalLink:hover {
 }
 
 /* Content: service view */
+p.graph_info {
+  text-align: justify;
+  max-width: 1000px;
+}
+
 #legend {
   border-collapse: collapse;
   -webkit-border-radius: 2px;
@@ -504,7 +522,7 @@ img.dynazoomModalLink:hover {
 }
 
 /* Footer */
-#footer {
+footer {
   width: 100%;
   margin-top: 15px;
   padding: 5px 35px;
@@ -514,16 +532,16 @@ img.dynazoomModalLink:hover {
   -webkit-box-sizing: border-box;
   text-align: right;
 }
-#footer > * {
+footer > * {
   margin: 0;
   display: inline-block;
 }
-#footer .navigation {
+footer .navigation {
   display: block;
   margin: 0;
   text-align: right;
 }
-#footer p.tagline {
+footer p.tagline {
   color: #aaa;
   font-size: 11px;
   letter-spacing: -0.5px;
@@ -533,7 +551,7 @@ img.dynazoomModalLink:hover {
   transition-duration: 200ms;
   margin: 10px 0;
 }
-#footer p.tagline:hover {
+footer p.tagline:hover {
   color: #888;
 }
 
@@ -567,10 +585,10 @@ img.dynazoomModalLink:hover {
   display: block;
   padding: 6px 20px;
   margin: -1px;
-  -webkit-border-radius: 1px 1px 0 0;
-  -moz-border-radius: 1px 1px 0 0;
-  -ms-border-radius: 1px 1px 0 0;
-  border-radius: 1px 1px 0 0;
+  -webkit-border-radius: 2px 2px 0 0;
+  -moz-border-radius: 2px 2px 0 0;
+  -ms-border-radius: 2px 2px 0 0;
+  border-radius: 2px 2px 0 0;
   border: 1px solid #3f535c;
   background-color: #546E7A;
   -webkit-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.15);
@@ -680,7 +698,7 @@ img.dynazoomModalLink:hover {
 .filter {
   width: 300px;
   float: right;
-  margin-top: 7px;
+  margin-top: 5px;
   position: relative;
   text-align: right;
 }
@@ -795,7 +813,6 @@ img.dynazoomModalLink:hover {
 .timeRangeSwitchContainer .timeRangeSwitch ul li {
   display: inline-block;
   padding: 7px 10px;
-  text-transform: uppercase;
   cursor: pointer;
   -webkit-transition-duration: 150ms;
   -moz-transition-duration: 150ms;
@@ -993,7 +1010,7 @@ img.dynazoomModalLink:hover {
   overflow: hidden;
   cursor: pointer;
   float: right;
-  margin: 7px 0 0 10px;
+  margin: 5px 0 0 10px;
   -webkit-transition-duration: 200ms;
   -moz-transition-duration: 200ms;
   -o-transition-duration: 200ms;
@@ -1078,6 +1095,10 @@ img.dynazoomModalLink:hover {
   -moz-transition-duration: 200ms;
   -o-transition-duration: 200ms;
   transition-duration: 200ms;
+  -webkit-border-radius: 2px 2px 0 0;
+  -moz-border-radius: 2px 2px 0 0;
+  -ms-border-radius: 2px 2px 0 0;
+  border-radius: 2px 2px 0 0;
 }
 #content[data-tabs=true] ul.tabs li:hover {
   background-color: rgba(0, 0, 0, 0.05);
@@ -1329,9 +1350,9 @@ img.dynazoomModalLink:hover {
   margin-left: 10px;
 }
 
-/* Include _style-2.1-responsive file */
+/* Include _responsive file */
 /*
- * This file contains everything that makes munin responsive, and is included in style-2.1
+ * This file contains everything that makes munin responsive, and is included in style.scss
  */
 /* Small devices (tablets, smartphones) */
 @media (max-width: 768px) {
@@ -1339,30 +1360,30 @@ img.dynazoomModalLink:hover {
     display: none !important;
   }
 
-  .header {
+  header {
     border-left: 0;
     border-right: 0;
     border-radius: 0;
     padding: 5px;
   }
-  .header .singleLine {
+  header .singleLine {
     margin-top: 0;
   }
-  .header .filter {
+  header .filter {
     float: none;
     display: inline-block;
     margin-top: 0;
     width: 250px;
     /* Don't expand on focus */
   }
-  .header .filter input[type=text]:focus {
+  header .filter input[type=text]:focus {
     width: 250px;
   }
-  .header .logo {
+  header .logo {
     width: 30px;
     margin-top: 0;
   }
-  .header h1 {
+  header h1 {
     margin: 10px 0;
   }
 
@@ -1372,38 +1393,38 @@ img.dynazoomModalLink:hover {
     min-height: 0;
   }
 
-  .navContainer {
+  nav {
     display: block;
     width: 100%;
     max-width: 500px;
     margin: auto;
   }
-  .navContainer #nav {
+  nav #nav {
     display: none;
     border-right: 0;
     padding: 0;
     margin-top: -4px;
   }
-  .navContainer #nav h2 {
+  nav #nav h2 {
     text-align: center;
     padding-left: 0;
   }
-  .navContainer #nav ul li {
+  nav #nav ul li {
     text-align: center;
     padding-right: 0;
   }
-  .navContainer #nav .timerangesList {
+  nav #nav .timerangesList {
     opacity: 1;
   }
-  .navContainer #navToggle,
-  .navContainer #nav {
+  nav #navToggle,
+  nav #nav {
     -moz-box-shadow: 0 0 2px 0 #777777;
     -webkit-box-shadow: 0 0 2px 0 #777777;
     -o-box-shadow: 0 0 2px 0 #777777;
     box-shadow: 0 0 2px 0 #777777;
     filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=2);
   }
-  .navContainer #navToggle {
+  nav #navToggle {
     display: block;
     padding: 10px 15px;
     background-color: rgba(0, 0, 0, 0.05);
@@ -1411,7 +1432,7 @@ img.dynazoomModalLink:hover {
     cursor: pointer;
     font-family: sans-serif;
   }
-  .navContainer #navToggle:after {
+  nav #navToggle:after {
     content: "+";
     float: right;
     font-size: 18px;
@@ -1419,7 +1440,7 @@ img.dynazoomModalLink:hover {
     margin-top: -2px;
     color: #797979;
   }
-  .navContainer #navToggle.expanded:after {
+  nav #navToggle.expanded:after {
     content: "-";
     margin-top: -4px;
   }
@@ -1475,4 +1496,4 @@ img.dynazoomModalLink:hover {
 /* Medium devices */
 /* Large devices (large desktops) */
 
-/*# sourceMappingURL=style-2.1.css.map */
+/*# sourceMappingURL=style.css.map */
