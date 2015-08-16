@@ -1,3 +1,159 @@
+munin-2.99.1, 2015-05-04
+
+-------
+Summary
+-------
+
+That release is the first alpha of the 3.0 series. It is versionned 2.99.x so
+numeric only sorting works.
+
+It mostly features a whole new UI, that should be much more "responsive",
+both in term of mobile & response time.
+
+It also removes the whole CGI stuff, and remplace it with a integrated httpd
+daemon, that is way easier to setup, so transition might be a little bit
+painful (that's part of the "why the bump to 3.0")
+
+It is currently alpha quality, that means that bugs *are* expected, but they
+should all have some workaround.
+
+------------------
+Detailed Changelog
+------------------
+
+Daniel Black (2):
+      mysql: ma_binlog_size defined was bad check for graph bin_relay_log.
+      mysql: add graph binlog_groupcommit
+
+Darac Marjal (4):
+      Add the ability for Munin to write data to Carbon
+      Clean up most of the perlcritic errors
+      Update, and pass, tests
+      Add proper Line Ending for carbon
+
+Dmitry Marakasov (3):
+      Fix buffer memory accounting
+      Calculate diskspace/inode usage percent accurately
+      Sort df output
+
+Ed Szynaka (1):
+      Added autoconf to spamstats
+
+Gabriele (4):
+      Fixed setting of warning limit and some minor issues
+      Doc: Content from wiki page MuninAlertVariables to Munin-Guide
+      Doc: Wiki page protocol-config to Munin-Guide     1st portion, will be continued
+      Doc: Wiki page protocol-config to Munin-Guide
+
+Kenyon Ralph (3):
+      add Transport Domain environment variable for Munin::Plugin::SNMP
+      add snmpdomain option
+      explain how to do SNMP over IPv6
+
+Kjetil Torgrim Homme (1):
+      reduce number of forked processes
+
+Quentin S (39):
+      Tabs: fix issue where graphs weren't properly hidden on first page load with default active tab
+      Serviceview: send STATE_WARNING & STATE_CRITICAL information to template
+      Serviceview: send STATE_UNKNOWN information to template
+      Send STATE_CRITICAL & STATE_WARNING information to overview & nodeview templates
+      Add some styling to overview & nodeview warnings & criticals
+      Extract critical & warning colors as SASS variables
+      Nodeview: add "ALL" category
+      Allow auto-switching to category tab using URL anchor
+      Fix weird hover in header when using switchable
+      Display plugin name (apache_accesses) and category in serviceview
+      Add link to category in serviceview subtitle
+      Add a title to switchables content
+      Fix issue where clearing filter field doesn't update the url
+      Fix conflicts between nodeview tabs and filter
+      Fix favicon 404 error
+      Move "Compare" links in domainview from header to subtitle to enhance readability
+      Implement simple treeview in domainview
+      Domainview: solve treeview vs filter conflict
+      Fix wrong nodeview eventruler toolip, closes #478
+      Replace spaces with tabs in nodeview-eventruler.js
+      Fix issue where eventruler wasn't disabled on mobiles
+      Add an 'open' button to dynazoom modal
+      CSS: use relative paths
+      Fix autorefresh loading image
+      Enhance categoryview
+      Enhance categoryview
+      Fix header links
+      Enhance modal design
+      Use HTML::Template tags short version
+      Enhance modal on smaller resolutions
+      Slightly lighten overview list
+      Enhance overall header bar feeling
+      Fix header on mobiles
+      Enhance navbar hover effect
+      Enhance cross-browser compatibility
+      Fix dynazoom form submit inside modal
+      Display a warning for users using IE<=8
+      Make the IE8 warning message dismissable
+      Fix wrong dynazoom epoch values
+
+Quentin Stoeckel (3):
+      Avoid triggering filter change event on every keyPress
+      Enhance time range switch styling
+      Enhance dynazoom form responsiveness
+
+Steve Schnepp (18):
+      doc: little rewordings
+      doc: little formating
+      doc: little formating
+      doc: little formating
+      doc: little formating
+      doc: little formating
+      doc: fix typo in reference
+      Revert "doc: fix typo in reference"
+      doc: fix some references
+      doc: adding a link to new plugin content
+      doc: update reference for dev
+      doc: improve formatting
+      doc: add the official warning about COUNTER
+      build: Adding the MANIFEST.SKIP
+      httpd: avoid routing category page to Graph.pm
+      httpd: adding the problem model
+      httpd: fix XML for special pages
+      http: also emit warning and unknowns
+
+Stig Sandbeck Mathisen (23):
+      Use Munin::Common::Logger in the async programs
+      fix: declare $screen
+      Log level is "info", not "verbose"
+      Remove redundant logging code
+      Add a Munin::Common::Utils, with is_valid_hostname
+      Make async class constructors more robust
+      Validate hostname on input
+      This function was moved to Munin::Common::Utils
+      doc: add dirtyconfig protocol extension
+      doc: highlight with bash, and fix typo
+      doc: add protocol index entries
+      doc: make a directory for development
+      doc: new "development environment" guide
+      doc: add index entries for plugin magic markers
+      doc: update meta-documentation
+      Workaround: Unset the carbon_ config defaults
+      Update tests for the carbon_ variables
+      Update autoconf for jenkins plugins
+      Document test categories
+      Require TEST_MEDIUM environment variable for complex tests
+      count plugins before testing
+      remove redundant set of variables
+      Remove python compiled plugins after syntax check
+
+dipohl (1):
+      Doc: Wiki page fieldname.type to Munin-Guide
+
+mcarton (1):
+      Fix spelling mistake
+
+nusenu (1):
+      OpenBSD: add swap usage to memory plugin
+
+
 munin-2.1.12, 2015-05-04
 
 -------
