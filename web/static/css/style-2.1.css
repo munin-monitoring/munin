@@ -44,6 +44,16 @@ input[type="number"] {
   color: #555;
 }
 
+input[type="submit"],
+input[type="button"],
+button {
+  background-color: #F5F6F6;
+  border: 1px solid #D3D4DA;
+  padding: 5px 10px;
+  border-radius: 2px;
+  color: #333;
+}
+
 /* Titles */
 h1 {
   font-weight: inherit;
@@ -450,6 +460,11 @@ img.dynazoomModalLink:hover {
 }
 
 /* Content: service view */
+p.graph_info {
+  text-align: justify;
+  max-width: 1000px;
+}
+
 #legend {
   border-collapse: collapse;
   -webkit-border-radius: 2px;
