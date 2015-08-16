@@ -6,7 +6,7 @@
 @media (max-width: 768px) {
 	.hide-mobile { display: none!important; }
 
-	.header {
+	header {
 		border-left: 0;
 		border-right: 0;
 		border-radius: 0;
@@ -37,7 +37,7 @@
 		display: block;
 		min-height: 0;
 	}
-	.navContainer {
+	nav {
 		display: block;
 		width: 100%;
 		max-width: 500px;
