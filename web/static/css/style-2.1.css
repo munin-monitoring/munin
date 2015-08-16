@@ -214,7 +214,7 @@ img.dynazoomModalLink:hover {
 /* Header */
 .header {
   color: #fff;
-  min-height: 50px;
+  min-height: 45px;
   margin: 0 auto;
   padding: 1px 12px 1px 37px;
   text-align: center;
@@ -234,6 +234,7 @@ img.dynazoomModalLink:hover {
   color: #fff;
   margin: 0;
   cursor: default;
+  font-size: 15px;
 }
 .header h1 .sep {
   width: 16px;
@@ -248,7 +249,7 @@ img.dynazoomModalLink:hover {
   float: left;
   width: 118px;
   height: 34px;
-  margin-top: 6px;
+  margin-top: 5px;
   -webkit-transition-duration: 200ms;
   -moz-transition-duration: 200ms;
   -o-transition-duration: 200ms;
@@ -267,8 +268,9 @@ img.dynazoomModalLink:hover {
   filter: alpha(opacity=100);
 }
 .header .pageTitle {
-  margin-top: 5px;
   font-weight: 100;
+  margin-top: 9px;
+  min-height: 24px;
   font-size: 16px;
   color: #eee;
   text-align: center;
@@ -277,6 +279,10 @@ img.dynazoomModalLink:hover {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
+}
+.header .pageTitle h1 {
+  vertical-align: middle;
+  display: inline-block;
 }
 .header .pageTitle a, .header .pageTitle div.switchable {
   color: #fff;
@@ -295,9 +301,6 @@ img.dynazoomModalLink:hover {
   color: #fff;
   background-color: rgba(0, 0, 0, 0.15);
   text-decoration: none;
-}
-.header .pageTitle.singleLine {
-  margin-top: 13px;
 }
 .header .comparison, .header .categories {
   display: inline-block;
@@ -582,10 +585,10 @@ p.graph_info {
   display: block;
   padding: 6px 20px;
   margin: -1px;
-  -webkit-border-radius: 1px 1px 0 0;
-  -moz-border-radius: 1px 1px 0 0;
-  -ms-border-radius: 1px 1px 0 0;
-  border-radius: 1px 1px 0 0;
+  -webkit-border-radius: 2px 2px 0 0;
+  -moz-border-radius: 2px 2px 0 0;
+  -ms-border-radius: 2px 2px 0 0;
+  border-radius: 2px 2px 0 0;
   border: 1px solid #3f535c;
   background-color: #546E7A;
   -webkit-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.15);
@@ -695,7 +698,7 @@ p.graph_info {
 .filter {
   width: 300px;
   float: right;
-  margin-top: 7px;
+  margin-top: 5px;
   position: relative;
   text-align: right;
 }
@@ -810,7 +813,6 @@ p.graph_info {
 .timeRangeSwitchContainer .timeRangeSwitch ul li {
   display: inline-block;
   padding: 7px 10px;
-  text-transform: uppercase;
   cursor: pointer;
   -webkit-transition-duration: 150ms;
   -moz-transition-duration: 150ms;
@@ -1008,7 +1010,7 @@ p.graph_info {
   overflow: hidden;
   cursor: pointer;
   float: right;
-  margin: 7px 0 0 10px;
+  margin: 5px 0 0 10px;
   -webkit-transition-duration: 200ms;
   -moz-transition-duration: 200ms;
   -o-transition-duration: 200ms;
@@ -1093,6 +1095,10 @@ p.graph_info {
   -moz-transition-duration: 200ms;
   -o-transition-duration: 200ms;
   transition-duration: 200ms;
+  -webkit-border-radius: 2px 2px 0 0;
+  -moz-border-radius: 2px 2px 0 0;
+  -ms-border-radius: 2px 2px 0 0;
+  border-radius: 2px 2px 0 0;
 }
 #content[data-tabs=true] ul.tabs li:hover {
   background-color: rgba(0, 0, 0, 0.05);

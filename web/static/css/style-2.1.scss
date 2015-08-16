@@ -224,7 +224,7 @@ img.dynazoomModalLink {
 /* Header */
 .header {
 	color: #fff;
-	min-height: 50px;
+	min-height: 45px;
 	margin: 0 auto;
 	padding: 1px 12px 1px 37px;
 	text-align: center;
@@ -239,6 +239,7 @@ img.dynazoomModalLink {
 		color: #fff;
 		margin: 0;
 		cursor: default;
+		font-size: 15px;
 
 		.sep {
 			width: 16px;
@@ -255,7 +256,7 @@ img.dynazoomModalLink {
 		float: left;
 		width: 118px;
 		height: 34px;
-		margin-top: 6px;
+		margin-top: 5px;
 		@include transition-duration(200ms);
 		background-repeat: no-repeat;
 		background-position: 4px 2px;
@@ -273,14 +274,20 @@ img.dynazoomModalLink {
 	}
 
 	.pageTitle {
-		margin-top: 5px;
 		font-weight: 100;
+		margin-top: 9px;
+		min-height: 24px;
 		font-size: 16px;
 		color: #eee;
 		text-align: center;
 		display: block;
 		width: 100%;
 		@include box-sizing(border-box);
+
+		h1 {
+			vertical-align: middle;
+			display: inline-block;
+		}
 
 		a, div.switchable {
 			color: #fff;
@@ -296,7 +303,6 @@ img.dynazoomModalLink {
 			}
 		}
 	}
-	.pageTitle.singleLine { margin-top: 13px; }
 
 	.comparison, .categories {
 		display: inline-block;
@@ -546,7 +552,7 @@ p.graph_info {
 			display: block;
 			padding: 6px 20px;
 			margin: -1px;
-			@include border-radius(1px 1px 0 0);
+			@include border-radius(2px 2px 0 0);
 			border: 1px solid darken($secondary-color, 10);
 			background-color: $secondary-color;
 			@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.15));
@@ -650,7 +656,7 @@ p.graph_info {
 .filter {
 	width: 300px;
 	float: right;
-	margin-top: 7px;
+	margin-top: 5px;
 	position: relative;
 	text-align: right;
 
@@ -749,7 +755,6 @@ p.graph_info {
 			li {
 				display: inline-block;
 				padding: 7px 10px;
-				text-transform: uppercase;
 				cursor: pointer;
 				@include transition-duration(150ms);
 				@include border-radius(1px);
@@ -916,7 +921,7 @@ p.graph_info {
 	overflow: hidden;
 	cursor: pointer;
 	float: right;
-	margin: 7px 0 0 10px;
+	margin: 5px 0 0 10px;
 	@include transition-duration(200ms);
 	@include border-radius(2px);
 
@@ -982,6 +987,7 @@ p.graph_info {
 			text-transform: uppercase;
 			border-bottom: 2px solid transparent;
 			@include transition-duration(200ms);
+			@include border-radius(2px 2px 0 0);
 
 			&:hover { background-color: rgba(0, 0, 0, 0.05); }
 			&.active {
