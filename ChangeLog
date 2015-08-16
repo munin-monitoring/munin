@@ -1,3 +1,101 @@
+munin-2.99.2, 2015-08-18
+
+-------
+Summary
+-------
+
+That release is the 2nd alpha of the 3.0 series. It is versionned 2.99.x so
+numeric only sorting works.
+
+It mostly consists of fixes, code removal and adding a meaningful test suite.
+
+It is currently alpha quality, that means that bugs *are* expected, but they
+should all have some workaround.
+
+------------------
+Detailed Changelog
+------------------
+
+Quentin Stoeckel (14):
+      Enhance plugins description in service view
+      Reduce header bar height
+      Rename style-2.1.css to style.css
+      Change pages encoding from iso-8859-1 to UTF-8
+      Use HTML5's new tags
+      Implement filter in comparison page
+      Implement switchable component in comparison header
+      Replace munin-comparison-*.tmpl with munin-comparison.tmpl
+      Implement tabs in comparison page
+      Fix comparison filte according to tabs changes
+      Rename Javascript resources (prepend "component-" for commonly used items)
+      Add event ruler to comparison page
+      Use nodeview's time range switch in comparison page
+      Add dynazoom modal icon on each comparison graph
+
+Steve Schnepp (8):
+      dev_scripts: adding some tools as well
+      doc: remove useless use of ./
+      ttf: remove the TTF fonts
+      master: remove munin-update_old
+      master: remove MasterBuilder.pm
+      master/doc: remove old POD
+      contrib: remove old DB_File related stuff
+      html: fix comparison page
+
+Stig Sandbeck Mathisen (51):
+      Update list of development environment debs
+      Move author tests to xt/
+      Add a cpanfile
+      ignore local/ used by carton
+      Add tests for Munin::Master::Host
+      Add tests for Munin::Master::Group
+      Test get_all_hosts in Munin::Master::Group
+      Use Test::Deep to verify data structure
+      Test add_host, just verify type of array members
+      Test get_all_hosts, just verify type of array members
+      Test give_attributes_to_hosts correctly
+      rename subroutines for order and clarity
+      lint and polish
+      Munin::Master::Host::Test - rename subroutines for order and clarity
+      Update tests for Munin::Node::Session
+      Add small code tests for Munin::Master::ProcessManager
+      remove, not needed for now
+      add Test::Class as dependency
+      Update tests for Munin::Master::GroupRepository
+      Add tests for Munin::Master::Worker
+      Improve test coverage of Munin::Master::ProcessManager
+      Improve test coverage of Munin::Master::Group
+      Tidy and lint tests
+      avoid overwriting @hosts again
+      Improve test coverage for Munin::Master::Config
+      Improve test coverage for Munin::Common::Defaults
+      Check for $ENV{TEST_MEDIUM} for networked tests
+      Test function look_up in Munin::Master::Config
+      add incomplete test for get_all_hosts in Munin::Master::Config
+      test function get_groups_and_hosts in Munin::Master::Config
+      Test continuation lines
+      Update tests for Munin::Master::UpdateWorker
+      Improve test coverage of Munin::Master::Utils
+      Fix bug in Munin::Master::Utils->munin_get_host_path_from_string
+      Add minimal testing for Munin::Master::Graph
+      Test remove_dups
+      Rewrite tests for Munin::Master::Update
+      Return early if argument is empty
+      Run the SMALL and MEDIUM test suite
+      Set both variables, instead of doubling the builds
+      Add Alien::RRDTool to cpanfile
+      Move timing tests to TEST_HEAVY class
+      Try using coveralls.io
+      Add minimal test for Munin::Master::HTML
+      Remove Munin::Common::DictFile
+      Do not run test coverage in parallel
+      Add coverage.io badge to README.rst
+      RST syntax fix
+      RST is picky
+      Add Test::Deep to cpanfile test section
+      Test Munin.pm
+
+
 munin-2.99.1, 2015-05-04
 
 -------
