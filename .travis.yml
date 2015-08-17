@@ -31,8 +31,7 @@ matrix:
   fast_finish: true
 
 env:
-  - TEST_MEDIUM=1
-  - HARNESS_OPTIONS=j2
+  - TEST_MEDIUM=1 HARNESS_OPTIONS=j2
 
 # Using the container-based infrastructure
 sudo: false
