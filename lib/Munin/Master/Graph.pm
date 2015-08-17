@@ -524,6 +524,8 @@ sub handle_request
 sub remove_dups {
 	my ($str) = @_;
 
+	return unless $str;
+
 	my @a = split(/ +/, $str);
 	my %seen;
 	@a = grep { ! ($seen{$_}++) } @a;
