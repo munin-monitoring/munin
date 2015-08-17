@@ -38,8 +38,7 @@ Building status
 
 stable-2.0 : |build-stable2.0|
 
-devel : |build-devel|
-        |coverage-devel|
+devel : |build-devel|  |coverage-devel|
 
 docs : |docs-latest|
 
