@@ -1,3 +1,4 @@
+requires 'Alien::RRDtool';
 requires 'DBD::Pg';
 requires 'DBI';
 requires 'Date::Parse';
