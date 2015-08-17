@@ -34,4 +34,7 @@ apt-get install <<EOF
   libxml-dumper-perl
   libxml-libxml-perl
   libxml-parser-perl
+
+  rrdtool
+  sqlite3
 EOF
