@@ -87,8 +87,8 @@ enable it to run outside the normal perl installation.
 
 .. code-block:: bash
 
-   ./dev_scripts/install node
-   ./dev_scripts/disable_taint
+   dev_scripts/install node
+   dev_scripts/disable_taint
 
 Run munin in a sandbox
 ======================
@@ -102,7 +102,7 @@ node will still run in the background.
 
 .. code-block:: bash
 
-   ./dev_scripts/start_munin-node
+   dev_scripts/start_munin-node
 
 The ``contrib`` directory contains a daemon used for simulating a lot
 of munin nodes.  This step is optional.  First output a number of node
@@ -111,21 +111,21 @@ background.
 
 .. code-block:: bash
 
-   ./contrib/munin-node-debug -d  > sandbox/etc/munin-conf.d/nodes.debug
-   ./contrib/munin-node-debug &
+   contrib/munin-node-debug -d  > sandbox/etc/munin-conf.d/nodes.debug
+   contrib/munin-node-debug &
 
 Start a munin-update loop.  Normally, munin-update runs from cron
 every 5 minutes.
 
 .. code-block:: bash
 
-   while :; do ./dev_scripts/run munin-update; sleep 60; done &
+   while :; do dev_scripts/run munin-update; sleep 60; done &
 
 The munin httpd listens on http://localhost:4948/ by default.
 
 .. code-block:: bash
 
-   ./dev_scripts/run munin-httpd
+   dev_scripts/run munin-httpd
 
 Start hacking
 =============
