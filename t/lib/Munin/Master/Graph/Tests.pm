@@ -17,4 +17,19 @@ sub function__is_ext_handled : Test(3) {
         'Should return a false value when argument is an unsupported extension'
     );
 }
+
+sub function__remove_dups : Test(2) {
+
+    my $test     = 'a a b c d  d   a e';
+    my $expected = 'a b c d e';
+
+    ok( !Munin::Master::Graph::remove_dups(),
+        'Should return a false value when run without parameters' );
+
+    is( Munin::Master::Graph::remove_dups($test),
+        $expected,
+        'Should return a white space separated list of unique tokens' );
+
+}
+
 1;
