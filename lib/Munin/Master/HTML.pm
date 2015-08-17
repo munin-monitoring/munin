@@ -343,7 +343,7 @@ sub handle_request
 				"SELECT DISTINCT sa_c.category cat FROM node n
 				INNER JOIN service s ON s.node_id = n.id
 				INNER JOIN service_categories sa_c ON sa_c.id = s.id
-				WHERE n.grp_id = ? ORDER BY sa_c.value ASC");
+				WHERE n.grp_id = ? ORDER BY sa_c.category ASC");
 			$sth_cat->execute($id);
 
 			$template_params{CATEGORIES} = [];
