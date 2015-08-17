@@ -3,11 +3,11 @@ use strict;
 
 use Test::More;
 
-if ($ENV{TEST_MEDIUM}) {
+if ($ENV{TEST_HEAVY}) {
     plan tests => 17;
 }
 else {
-    plan skip_all => 'set TEST_MEDIUM to enable these tests'
+    plan skip_all => 'set TEST_HEAVY to enable these tests'
 }
 
 use Time::HiRes qw(sleep);
