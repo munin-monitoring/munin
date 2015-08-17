@@ -101,3 +101,4 @@ and that will usually not work. Just note that any prefix or trailing
 white space is stripped out, so you **cannot** currently configure a
 community name with a prefix or trailing white space.
 
+To probe SNMP hosts over IPv6, use ``--snmpdomain udp6`` with ``munin-node-configure``. To have the SNMP plugins poll devices over IPv6, set the ``domain`` environment variable to ``udp6`` in the plugin configuration file. Other transports are available; see the Net::SNMP perldoc for more options.
