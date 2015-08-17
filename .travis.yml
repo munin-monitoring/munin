@@ -30,5 +30,8 @@ matrix:
   # we don't need to continue any build when 1 test is failing.
   fast_finish: true
 
+env:
+  - TEST_MEDIUM=1 HARNESS_OPTIONS=j2
+
 # Using the container-based infrastructure
 sudo: false

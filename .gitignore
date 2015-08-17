@@ -23,6 +23,7 @@ script/munin-cron
 
 # Dev Sandbox
 /sandbox/
+local/
 
 # IDE files
 .idea/

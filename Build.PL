@@ -155,6 +155,7 @@ my $build = Module::Build->new(
     ],
     test_requires => {
         'IO::Scalar'          => '0',
+        'Test::Class'         => '0',
         'Test::Differences'   => '0.62',
         'Test::MockModule'    => '0',
         'Test::MockObject'    => '0',
