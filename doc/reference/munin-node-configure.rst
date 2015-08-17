@@ -131,6 +131,12 @@ SNMP options
 
    The SNMP port to use [161]
 
+.. option:: --snmpdomain <domain>
+
+   The Transport Domain to use for exchanging SNMP messages. The default
+   is UDP/IPv4. Possible values: 'udp', 'udp4', 'udp/ipv4'; 'udp6',
+   'udp/ipv6'; 'tcp', 'tcp4', 'tcp/ipv4'; 'tcp6', 'tcp/ipv6'.
+
 SNMP 1/2c authentication
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
