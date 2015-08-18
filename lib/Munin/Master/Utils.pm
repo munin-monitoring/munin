@@ -26,7 +26,6 @@ our (@ISA, @EXPORT);
 
 @ISA = ('Exporter');
 @EXPORT = (
-	   'munin_nscasend',
 	   'munin_removelock',
 	   'munin_runlock',
 	   'munin_getlock',
@@ -88,7 +87,6 @@ our (@ISA, @EXPORT);
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
 
-my $nsca = new IO::Handle;
 my $config = undef;
 my $config_parts = {
 	# config parts that might be loaded and reloaded at times
@@ -127,26 +125,6 @@ sub munin_draw_field {
     return 0 if munin_get_bool ($hash, "skipdraw", 0);
     return 0 if !munin_get_bool ($hash, "graph", 1);
     return defined $hash->{"label"};
-}
-
-
-sub munin_nscasend {
-    my ($name,$service,$label,$level,$comment) = @_;
-
-    if (!$nsca->opened)
-    {
-	open ($nsca ,'|-', "$config->{nsca} $config->{nsca_server} -c $config->{nsca_config} -to 60");
-    }
-    if ($label)
-    {
-	print $nsca "$name\t$service: $label\t$level\t$comment\n";
-	DEBUG "To $nsca: $name;$service: $label;$level;$comment\n";
-    }
-    else
-    {
-	print $nsca "$name\t$service\t$level\t$comment\n";
-	DEBUG "[DEBUG] To $nsca: $name;$service;$level;$comment\n";
-    }
 }
 
 
@@ -2047,10 +2025,6 @@ to it.
 
 
 =item B<munin_node_status>
-
-
-
-=item B<munin_nscasend>
 
 
 
