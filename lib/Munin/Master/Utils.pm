@@ -35,7 +35,6 @@ our (@ISA, @EXPORT);
 	   'munin_writeconfig_storable',
 	   'munin_read_storable',
 	   'munin_write_storable',
-	   'munin_delete',
 	   'munin_overwrite',
 	   'munin_dumpconfig',
 	   'munin_dumpconfig_as_str',
@@ -185,25 +184,6 @@ sub munin_getlock {
     }
     close LOCK;
     return 1;
-}
-
-
-sub munin_delete {
-    my ($config,$data) = @_;
-    for my $domain (keys %{$data->{domain}}) {
-	unless ($config->{domain}->{$domain}) {
-	    DEBUG "[DEBUG] Removing domain: $domain";
-	    delete ($data->{domain}->{$domain});
-	    next;
-	}
-	for my $node (keys %{$data->{domain}->{$domain}->{node}}) {
-	    unless ($config->{domain}->{$domain}->{node}->{$node}) {
-		DEBUG "[DEBUG] Removing node from $domain: $node";
-		delete ($data->{domain}->{$domain}->{node}->{$node});
-	    }
-	}
-    }
-    return ($data);
 }
 
 
