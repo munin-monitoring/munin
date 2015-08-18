@@ -60,7 +60,6 @@ our (@ISA, @EXPORT);
 	   'munin_set_var_path',
 	   'munin_set',
 	   'munin_copy_node_toloc',
-	   'munin_get_separated_node',
 	   'munin_mkdir_p',
 	   'munin_find_field',
 	   'munin_find_field_for_limits',
@@ -428,28 +427,6 @@ sub munin_get_children {
     }
 
     return $res;
-}
-
-
-sub munin_get_separated_node
-{
-    my $hash = shift;
-    my $ret  = {};
-
-    if (ref ($hash) eq "HASH") {
-	foreach my $key (keys %$hash) {
-	    next if substr($key,0,3) eq '#%#';
-	    if (ref ($hash->{$key}) eq "HASH") {
-		$ret->{$key} = munin_get_separated_node ($hash->{$key});
-	    } else {
-		$ret->{$key} = $hash->{$key};
-	    }
-	}
-    } else {
-	return;
-    }
-
-    return $ret;
 }
 
 
@@ -1642,19 +1619,6 @@ Parameters:
 
 Returns:
  - Success: A string with the filename of the rrd file
- - Failure: undef
-
-
-=item B<munin_get_separated_node>
-
-
-Copy a node to a separate node without "specials".
-
-Parameters:
- - $hash: The node to copy
-
-Returns:
- - Success: A ref to a new node without "#%#"-fields
  - Failure: undef
 
 
