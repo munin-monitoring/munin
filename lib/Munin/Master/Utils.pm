@@ -46,7 +46,6 @@ our (@ISA, @EXPORT);
 	   'munin_get_picture_loc',
 	   'munin_get_filename',
 	   'munin_get_keypath',
-	   'munin_get_field_order',
 	   'munin_get_rrd_filename',
 	   'munin_get_node_name',
 	   'munin_get_orig_node_name',
@@ -1091,55 +1090,6 @@ sub munin_copy_node
 }
 
 
-sub munin_get_field_order
-{
-    my $hash = shift;
-    my $result  = [];
-
-    return if !defined $hash or ref($hash) ne "HASH";
-
-    my $order = munin_get ($hash, "graph_order");
-
-    if (defined $hash->{graph_sources}) {
-	foreach my $gs (split /\s+/, $hash->{'graph_sources'}) {
-	    push (@$result, "-".$gs);
-	}
-    } 
-    if (defined $order) {
-	push (@$result, split /\s+/, $order);
-    } 
-
-    for my $fieldnode (@{munin_find_field ($hash, "label")}) {
-        my $fieldname = munin_get_node_name ($fieldnode);
-	push @$result,$fieldname
-	    if !grep m[^\Q$fieldname\E(?:=|$)], @$result;
-    }
-
-    for my $fieldnode (@{munin_find_field ($hash, "stack")}) {
-        my $fieldname = munin_get_node_name ($fieldnode);
-	push @$result,$fieldname 
-	    if !grep m[^\Q$fieldname\E(?:=|$)], @$result;;
-    }
-
-    # We have seen some occurrences of redundance in the graph_order
-    # due to plugin bugs and so on.  This make process_service
-    # generate rrd commands with multiple definitions of the same
-    # data.  SO: Make sure there is no redundance in the order.
-
-    my %seen = ();
-    my $nresult = [];
-
-    for my $field (@$result) {
-	next if exists($seen{$field});
-
-	push @$nresult, $field;
-	$seen{$field}=1;
-    }
-    
-    return $nresult;
-}
-
-
 sub munin_get_rrd_filename {
     my $field   = shift;
     my $path    = shift;
@@ -1347,18 +1297,6 @@ Parameters:
 
 Returns:
  - Success: A ref to an array of the child nodes
- - Failure: undef
-
-
-=item B<munin_get_field_order>
-
-Get the field order in a graph.
-
-Parameters:
- - $hash: A hash ref to the service
-
-Returns:
- - Success: A ref to an array of the field names
  - Failure: undef
 
 
