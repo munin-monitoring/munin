@@ -30,8 +30,6 @@ Man pages
    munin-asyncd.rst
    munin-check.rst
    munin-cron.rst
-   munin-graph.rst
-   munin-html.rst
    munin-httpd.rst
    munin-limits.rst
    munin-node-configure.rst

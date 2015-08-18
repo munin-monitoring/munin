@@ -12,7 +12,7 @@ use base qw(Munin::Common::Config);
 # behaviour when we itterate over the objects in the tree.
 #
 # The Class Munin::Common::Config is the base of Munin::Master::Config.
-# The master programs (munin-update, munin-graph, munin-html) instantiate
+# The master programs (munin-update, munin-limits) instantiate
 # a Munin::Master::Config object.
 #
 # Please note that the munin-node configuration is also based on
