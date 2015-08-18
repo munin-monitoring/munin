@@ -45,7 +45,6 @@ our (@ISA, @EXPORT);
 	   'munin_get',
 	   'munin_field_status',
 	   'munin_service_status',
-	   'munin_node_status',
 	   'munin_category_status',
 	   'munin_get_picture_filename',
 	   'munin_get_picture_loc',
@@ -1213,35 +1212,6 @@ sub munin_copy_node
 }
 
 
-sub munin_node_status
-{
-    my ($config, $limits, $domain, $node, $check_draw) = @_;
-    my $state = "ok";
-
-    return unless defined $config->{domain}->{$domain}->{node}->{$node};
-    my $snode = $config->{domain}->{$domain}->{node}->{$node};
-
-    foreach my $service (keys %{$snode})
-    {
-	my $fres  = munin_service_status ($config, $limits, $domain, $node, $service, $check_draw);
-	if (defined $fres)
-	{
-	    if ($fres eq "critical")
-	    {
-		$state = $fres;
-		last;
-	    }
-	    elsif ($fres eq "warning")
-	    {
-		$state = $fres;
-	    }
-	}
-    }
-
-    return $state;
-}
-
-
 sub munin_category_status {
     my $hash       = shift || return;
     my $limits     = shift || return;
@@ -1938,10 +1908,6 @@ Returns:
 
 Make a directory and recursively any nonexistent directory in the path
 to it.
-
-
-=item B<munin_node_status>
-
 
 
 =item B<munin_overwrite>
