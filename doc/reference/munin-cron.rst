@@ -20,10 +20,6 @@ off-limit values.
 
 #. :ref:`munin-update`
 #. :ref:`munin-limits`
-#. :ref:`munin-graph`
-   (unless configured to run from CGI)
-#. :ref:`munin-html`
-   (unless configured to run from CGI)
 
 Unless the munin master is configured otherwise, "munin-cron" should
 run every 5 minutes.
@@ -50,5 +46,4 @@ SEE ALSO
 
 See :ref:`munin` for an overview over munin.
 
-:ref:`munin-update`, :ref:`munin-graph`, :ref:`munin-limits`,
-:ref:`munin-html`, :ref:`munin.conf`,
+:ref:`munin-update`, :ref:`munin-limits`, :ref:`munin.conf`,

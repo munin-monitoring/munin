@@ -785,11 +785,6 @@ sub _get_rrd_file_name {
     # Multigraph/nested services will have . in the service name in this function.
     $service =~ s{\.}{-}g;
 
-    # The following is rigged to match the corresponding function in
-    # munin-graph/munin-html where it's less clear what are groups and
-    # what are hosts and what are services, and they simply pop
-    # elements off the end and so on.
-
     my $file = sprintf("%s-%s-%s-%s.rrd",
                        $path,
                        $service,

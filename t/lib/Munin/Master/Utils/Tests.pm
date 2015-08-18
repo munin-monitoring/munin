@@ -81,45 +81,4 @@ sub function__munin_get : Test(6) {
 
 }
 
-sub function__munin_get_host_path_from_string : Test(12) {
-    my $tests = [
-        {
-            fqn             => 'one;two;three.example.com',
-            expected_groups => [ 'one', 'two' ],
-            expected_name   => 'three.example.com',
-        },
-        {
-            fqn             => 'one.example.com',
-            expected_groups => ['example.com'],
-            expected_name   => 'one.example.com',
-        },
-        {
-            fqn             => 'test.local',
-            expected_groups => ['local'],
-            expected_name   => 'test.local',
-        },
-        {
-            fqn             => 'test',
-            expected_groups => [],
-            expected_name   => 'test',
-        }
-    ];
-
-    foreach my $test ( @${tests} ) {
-
-        ok(
-            my ( $groups, $name ) =
-              munin_get_host_path_from_string( $test->{fqn} ),
-            'should return a true value'
-        );
-
-        cmp_deeply(
-            $groups,
-            $test->{expected_groups},
-            'group list should match'
-        );
-        is( $name, $test->{expected_name}, 'host name should match' );
-    }
-}
-
 1;

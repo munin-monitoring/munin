@@ -107,8 +107,6 @@ my $build = Module::Build->new(
         'perl'                   => '5.10.0',
         'DBD::SQLite'            => '1.42',
         'DBI'                    => '1.631',
-        'File::Copy::Recursive'  => '0.38',
-        'HTML::Template'         => '2.95',
         'HTML::Template::Pro'    => '0',
         'HTTP::Server::Simple::CGI'    => '0',
         'IO::Socket::INET6'      => '2.69',
@@ -143,8 +141,6 @@ my $build = Module::Build->new(
             script/munin-asyncd
             script/munin-cron
             script/munin-doc
-            script/munin-graph
-            script/munin-html
             script/munin-httpd
             script/munin-limits
             script/munin-node
