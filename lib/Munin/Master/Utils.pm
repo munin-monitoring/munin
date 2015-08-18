@@ -70,7 +70,6 @@ our (@ISA, @EXPORT);
 	   'print_version_and_exit',
 	   'exit_if_run_by_super_user',
 	   'look_for_child',
-	   'wait_for_remaining_children',
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -1291,15 +1290,6 @@ sub look_for_child {
     return 1;
 }
 
-
-sub wait_for_remaining_children {
-    my ($running) = @_;
-    while ($running > 0) {
-	look_for_child("block");
-	--$running;
-    }
-    return $running;
-}
 
 sub munin_has_subservices {
     my ($hash) = @_;
