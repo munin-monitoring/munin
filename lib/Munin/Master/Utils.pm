@@ -40,7 +40,6 @@ our (@ISA, @EXPORT);
 	   'munin_dumpconfig_as_str',
 	   'munin_readconfig_base',
 	   'munin_readconfig_part',
-	   'munin_configpart_revision',
 	   'munin_draw_field',
 	   'munin_get_bool',
 	   'munin_get_bool_val',
@@ -875,18 +874,6 @@ sub munin_dumpconfig {
 
     $Data::Dumper::Sortkeys = $sorter;
     $Data::Dumper::Indent = $indent;
-}
-
-sub munin_configpart_revision {
-    my $what = shift;
-    if (defined $what and defined $config_parts->{$what}) {
-	return $config_parts->{$what}{revision};
-    }
-    my $rev = 0;
-    foreach $what (keys %$config_parts) {
-	$rev += $config_parts->{$what}{revision};
-    }
-    return $rev;
 }
 
 sub munin_readconfig_part {
