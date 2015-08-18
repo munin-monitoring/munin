@@ -44,7 +44,6 @@ our (@ISA, @EXPORT);
 	   'munin_get_bool',
 	   'munin_get',
 	   'munin_get_picture_loc',
-	   'munin_get_html_filename',
 	   'munin_get_filename',
 	   'munin_get_keypath',
 	   'munin_graph_column_headers',
@@ -957,38 +956,6 @@ sub munin_readconfig_base {
 }
 
 
-sub munin_get_html_filename {
-    # Actually only used in M::M::HTMLOld
-
-    my $hash    = shift;
-
-    my $loc     = munin_get_node_loc ($hash);
-    my $ret     = munin_get ($hash, 'htmldir');
-    my $plugin  = "index";
-
-    # Sanitise
-    $ret =~ s/[^\w_\/"'\[\]\(\)+=-]\./_/g;
-    $hash =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-    @$loc = map { 
-        my $l = $_;
-        $l =~ s/\//_/g; 
-        $l =~ s/^\./_/g;
-        $l;
-    } @$loc;
-	
-    if (defined $hash->{'graph_title'} and !munin_has_subservices ($hash)) {
-        $plugin = pop @$loc or return;
-    }
-    
-    if (@$loc) { # The rest is used as directory names...
-        $ret .= "/" . join ('/', @$loc);
-    }
-    
-    return "$ret/$plugin.html";
-}
-
-
-
 sub munin_path_to_loc
 {
     my $path = shift;
@@ -1571,18 +1538,6 @@ Parameters:
 
 Returns:
  - Success: An array with an array of groups, and a hostname.
- - Failure: undef
-
-
-=item B<munin_get_html_filename>
-
-Get the full path-name of an html file.
-
-Parameters:
- - $hash: A ref to the service hash node
-
-Returns:
- - Success: The file name with full path
  - Failure: undef
 
 
