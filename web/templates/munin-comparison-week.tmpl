@@ -8,7 +8,7 @@
 		<h3 id="<TMPL_VAR ESCAPE="HTML" GROUPNAME>"><TMPL_VAR ESCAPE="HTML" GROUPNAME></h3>
 		<table>
 			<TMPL_LOOP SERVICES>
-				<tr>
+				<tr data-servicename="<TMPL_VAR ESCAPE="HTML" SERVICENAME>" data-servicetitle="<TMPL_VAR ESCAPE="HTML" SERVICETITLE>">
 					<TMPL_LOOP NODES>
 						<td>
 							<div class="node">
@@ -57,5 +57,7 @@
 	</div>
 </div>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
+<script src="/static/js/autorefresh.js"></script>
+<script src="/static/js/munin-comparison.js"></script>
 </body>
 </html>

@@ -615,7 +615,7 @@ sub _get_params_services_for_comparison {
 
 	# Get all possible services with the specified category under the specified group
 	my $sth_srv = $dbh->prepare_cached(
-		"SELECT DISTINCT s.name FROM service s
+		"SELECT DISTINCT s.name, s.service_title FROM service s
 		INNER JOIN node n ON s.node_id = n.id
 		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		WHERE n.grp_id = ? ORDER BY s.name ASC");
@@ -637,7 +637,7 @@ sub _get_params_services_for_comparison {
 	);
 
 	$sth_srv->execute($category_name, $grp_id);
-	while (my ($service_name) = $sth_srv->fetchrow_array) {
+	while (my ($service_name, $service_title) = $sth_srv->fetchrow_array) {
 		# Skip multigraph sub-graphs
 		next if $service_name =~ /\./;
 
@@ -656,7 +656,7 @@ sub _get_params_services_for_comparison {
 			};
 		}
 
-		push @{$category{SERVICES}}, { NODES => \@nodes };
+		push @{$category{SERVICES}}, { NODES => \@nodes, SERVICENAME => $service_name, SERVICETITLE => $service_title };
 	}
 
 	return \%category;

@@ -437,6 +437,12 @@ nav {
 
 .comparison #content {
 	margin-left: 0;
+
+	table {
+		td {
+			vertical-align: top;
+		}
+	}
 }
 
 /* Content: comparison / categoryview */

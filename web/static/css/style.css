@@ -456,6 +456,9 @@ nav #navToggle {
 .comparison #content {
   margin-left: 0;
 }
+.comparison #content table td {
+  vertical-align: top;
+}
 
 /* Content: comparison / categoryview */
 .categoryview .node, .comparison .node {
