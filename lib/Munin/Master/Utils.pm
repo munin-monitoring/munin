@@ -40,7 +40,6 @@ our (@ISA, @EXPORT);
 	   'munin_dumpconfig_as_str',
 	   'munin_readconfig_base',
 	   'munin_readconfig_part',
-	   'munin_draw_field',
 	   'munin_get_bool',
 	   'munin_get',
 	   'munin_get_picture_loc',
@@ -100,15 +99,6 @@ my @COPY_FIELDS    = ("label", "draw", "type", "rrdfile", "fieldname", "info");
 
 my @dircomponents = split('/',$0);
 my $me = pop(@dircomponents);
-
-
-sub munin_draw_field {
-    my $hash   = shift;
-
-    return 0 if munin_get_bool ($hash, "skipdraw", 0);
-    return 0 if !munin_get_bool ($hash, "graph", 1);
-    return defined $hash->{"label"};
-}
 
 
 sub munin_removelock {
@@ -1232,18 +1222,6 @@ Returns:
 
 =item B<munin_delete>
 
-
-
-=item B<munin_draw_field>
-
-Check whether a field will be visible in the graph or not.
-
-Parameters:
- - $hash: A ref to the hash node for the field
-
-Returns:
- - Success: Boolean; true if field will be graphed, false if not
- - Failure: undef
 
 
 =item B<munin_find_field>
