@@ -49,6 +49,7 @@ on test => sub {
     requires 'Directory::Scratch';
     requires 'File::Slurp';
     requires 'Test::Class';
+    requires 'Test::Deep';
     requires 'Test::Differences';
     requires 'Test::Exception';
     requires 'Test::LongString';
