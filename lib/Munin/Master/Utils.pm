@@ -44,7 +44,6 @@ our (@ISA, @EXPORT);
 	   'munin_get_bool',
 	   'munin_get',
 	   'munin_field_status',
-	   'munin_service_status',
 	   'munin_get_picture_filename',
 	   'munin_get_picture_loc',
 	   'munin_get_html_filename',
@@ -1211,28 +1210,6 @@ sub munin_copy_node
 }
 
 
-sub munin_service_status {
-    my ($config, $limits, $check_draw) = @_;
-    my $state = "ok";
-
-    return unless defined $config;
-    for my $fieldnode (@{munin_find_field ($config, "label")}) {
-	my $field = munin_get_node_name ($fieldnode);
-	my $fres  = munin_field_status ($fieldnode, $limits, $check_draw);
-	if (defined $fres) {
-	    if ($fres eq "critical") {
-		$state = $fres;
-		last;
-	    } elsif ($fres eq "warning") {
-		$state = $fres;
-	    }
-	}
-    }
-
-    return $state;
-}
-
-
 sub munin_field_status {
     my ($hash, $limits, $check_draw) = @_;
     my $state = "ok";
@@ -1900,20 +1877,6 @@ Returns:
 
 =item B<munin_runlock>
 
-
-
-=item B<munin_service_status>
-
-Gets current status of a service.
-
-Parameters: 
- - $hash: A ref to the field hash node
- - $limits: A ref to the root node of the limits tree
- - $check_draw: [optional] Ignore undrawn fields
-
-Returns:
- - Success: The status of the field
- - Failure: undef
 
 
 =item B<munin_set>
