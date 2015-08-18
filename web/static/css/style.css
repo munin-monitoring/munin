@@ -302,23 +302,6 @@ header .pageTitle a:hover, header .pageTitle div.switchable:hover {
   background-color: rgba(0, 0, 0, 0.15);
   text-decoration: none;
 }
-header .comparison, header .categories {
-  display: inline-block;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 12px;
-  text-align: center;
-  -webkit-transition-duration: 200ms;
-  -moz-transition-duration: 200ms;
-  -o-transition-duration: 200ms;
-  transition-duration: 200ms;
-  color: #fff;
-}
-header .comparison > a, header .categories > a {
-  color: #fff;
-}
-header .comparison:hover, header .categories:hover {
-  color: #fff;
-}
 
 /* Main */
 #main {
@@ -455,6 +438,14 @@ nav #navToggle {
 
 .comparison #content {
   margin-left: 0;
+}
+.comparison #content .comparison-head > div {
+  display: inline-block;
+  vertical-align: middle;
+}
+.comparison #content table td {
+  vertical-align: top;
+  padding-top: 15px;
 }
 
 /* Content: comparison / categoryview */
@@ -783,7 +774,8 @@ footer p.tagline:hover {
 .timeRangeSwitchContainer {
   width: 100%;
 }
-.timeRangeSwitchContainer .timeRangeSwitch {
+
+.timeRangeSwitch {
   display: inline-block;
   width: 100%;
   max-width: 499px;
@@ -798,7 +790,7 @@ footer p.tagline:hover {
   transition-duration: 150ms;
   margin-right: 4px;
 }
-.timeRangeSwitchContainer .timeRangeSwitch ul {
+.timeRangeSwitch ul {
   list-style: none;
   display: inline-block;
   padding: 0;
@@ -810,7 +802,7 @@ footer p.tagline:hover {
   border-radius: 2px;
   border: 1px solid #c8c8c8;
 }
-.timeRangeSwitchContainer .timeRangeSwitch ul li {
+.timeRangeSwitch ul li {
   display: inline-block;
   padding: 7px 10px;
   cursor: pointer;
@@ -828,15 +820,15 @@ footer p.tagline:hover {
   font-size: 11px;
   font-weight: bold;
 }
-.timeRangeSwitchContainer .timeRangeSwitch ul li.last {
+.timeRangeSwitch ul li.last {
   border-right-width: 0;
 }
-.timeRangeSwitchContainer .timeRangeSwitch ul li.selected {
+.timeRangeSwitch ul li.selected {
   color: #fff;
   color: rgba(255, 255, 255, 0.87);
   background-color: #3f51b5;
 }
-.timeRangeSwitchContainer .timeRangeSwitch ul li:hover {
+.timeRangeSwitch ul li:hover {
   opacity: 0.9;
   filter: alpha(opacity=90);
 }
@@ -1121,9 +1113,6 @@ footer p.tagline:hover {
   color: #666;
 }
 #content[data-tabs=true] ul.tabs:empty {
-  display: none;
-}
-#content[data-tabs=true] h3 {
   display: none;
 }
 

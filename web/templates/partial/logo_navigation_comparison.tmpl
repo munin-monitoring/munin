@@ -1,31 +1,48 @@
 <header>
 	<a href="/" class="logo"></a>
+	<div class="filter">
+		<input type="text" id="filter" />
+		<img id="cancelFilter" src="/static/img/icons/glyphicons-208-remove-2-white.png" style="display:none;" alt="Clear" />
+	</div>
 	<div class="pageTitle">
 		<h1>
 			<TMPL_LOOP PATH>
 				<TMPL_IF PATHNAME> <span class="sep"></span>
-					<TMPL_IF PATH><a href="<TMPL_VAR PATH>"></TMPL_IF><TMPL_VAR PATHNAME><TMPL_IF PATH></a></TMPL_IF>
+					<TMPL_IF PATH>
+						<a href="<TMPL_VAR PATH>"><!--
+					<TMPL_ELSE>
+						<TMPL_IF SWITCHABLE>
+							<div class="switchable" data-switch="header"><!--
+						<TMPL_ELSE>
+							<!--
+						</TMPL_IF>
+					</TMPL_IF>
+					--><TMPL_VAR PATHNAME><!--
+					<TMPL_IF PATH>
+						--></a>
+					<TMPL_ELSE>
+						<TMPL_IF SWITCHABLE>
+							--></div>
+						<TMPL_ELSE>
+							-->
+						</TMPL_IF>
+					</TMPL_IF>
 				<TMPL_ELSE>
-					<TMPL_IF PATH><a href="<TMPL_VAR PATH>"></TMPL_IF>Overview<TMPL_IF PATH></a></TMPL_IF>
+					<a href="/">Overview</a>
 				</TMPL_IF>
 			</TMPL_LOOP>
-			[
-			<a href="comparison-day.html">day</a>
-			<a href="comparison-week.html">week</a>
-			<a href="comparison-month.html">month</a>
-			<a href="comparison-year.html">year</a> ]
+			<span class="sep"></span> Comparison
 		</h1>
-		<div class="subtitle">
-			<span class="categories">
-				<TMPL_VAR NAME> [
-				<TMPL_LOOP CATEGORIES>
-					<a <TMPL_IF STATE_WARNING>class="warn"</TMPL_IF>
-					  <TMPL_IF STATE_CRITICAL>class="crit"</TMPL_IF>
-					  href="#<TMPL_VAR ESCAPE="HTML" GROUPNAME>"><TMPL_VAR ESCAPE="HTML" GROUPNAME></a>
-				</TMPL_LOOP>
-				]
-			</span>
-		</div>
 	</div>
 	<div class="clear"></div>
+	<TMPL_IF LARGESET>
+		<div class="switchable_content" data-switch="header">
+			<div class="title"><TMPL_VAR INFO_OPTION></div>
+			<TMPL_LOOP PEERS>
+				<a <TMPL_IF LINK>href="<TMPL_VAR LINK>"</TMPL_IF>>
+					<TMPL_VAR NAME>
+				</a>
+			</TMPL_LOOP>
+		</div>
+	</TMPL_IF>
 </header>

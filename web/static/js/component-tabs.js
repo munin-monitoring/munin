@@ -1,5 +1,5 @@
 /**
- * Nodeview tabs
+ * Nodeview/comparison tabs
  *  Tabs can be disabled by setting the <div id="content"> tabsenabled attribute to false
  */
 
@@ -7,13 +7,15 @@ var tabsEnabled,
 	content,
 	tabsContainer,
 	tabs,
-	activeTab;
+	activeTab,
+	categoryTitles;
 
 $(document).ready(function() {
 	content = $('#content');
 	tabsEnabled = content.attr('data-tabsenabled') == 'true';
 	tabsContainer = $('.tabs');
 	tabs = tabsContainer.find('li');
+	categoryTitles = $('h3');
 
 	// Get active tab
 	var qs = new Querystring();
@@ -41,6 +43,7 @@ $(document).ready(function() {
 			$(this).html('<a href="#' + text + '">' + text + '</a>');
 		});
 
+		// Stop here
 		return;
 	}
 
@@ -53,12 +56,15 @@ $(document).ready(function() {
 
 		// Hide all categories
 		if ($(this).index() != 0) {
-			$('div[data-category]').hide();
+			$('[data-category]').hide();
 			// Show the right one
-			$('div[data-category="' + activeTab.text() + '"]').show();
+			$('[data-category="' + activeTab.text() + '"]').show();
+
+			categoryTitles.hide();
 		}
 		else { // ALL
-			$('div[data-category]').show();
+			$('[data-category]').show();
+			categoryTitles.show();
 		}
 
 		// Save state in URL
@@ -68,12 +74,16 @@ $(document).ready(function() {
 	// Hide graphs that aren't in the activeTab category
 	if (activeTab.index() != 0) {
 		// Hide all categories
-		$('div[data-category]').hide();
+		$('[data-category]').hide();
 		// Show the right one
-		$('div[data-category="' + activeTab.text() + '"]').show();
+		$('[data-category="' + activeTab.text() + '"]').show();
+
+		categoryTitles.hide();
 	}
 	else { // All
-		$('div[data-category]').show();
+		$('[data-category]').show();
+
+		categoryTitles.show();
 	}
 
 	// If there's an active filter, hide tabs
@@ -97,9 +107,9 @@ function showTabs() {
 	content.attr('data-tabs', 'true');
 
 	if (activeTab.text() == 'all') // Show all categories
-		$('div[data-category]').show();
+		$('[data-category]').show();
 	else // Only show activeTab category
-		$('div[data-category]').not('[data-category="' + activeTab.text() + '"]').hide();
+		$('[data-category]').not('[data-category="' + activeTab.text() + '"]').hide();
 }
 
 /**
@@ -116,5 +126,5 @@ function hideTabs() {
 	content.attr('data-tabs', 'false');
 
 	// Show back every hidden category
-	$('div[data-category]').show();
+	$('[data-category]').show();
 }
