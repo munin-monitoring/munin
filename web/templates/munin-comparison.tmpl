@@ -3,8 +3,20 @@
 <TMPL_INCLUDE NAME="partial/logo_navigation_comparison.tmpl">
 <div id="main" class="comparison">
 	<div id="content" data-tabsenabled="true" data-tabs="true">
-		<h2>Comparison</h2>
-		<div class="subtitle"><TMPL_VAR NAME> - <TMPL_VAR TIMERANGE></div>
+		<div class="comparison-head">
+			<div>
+				<h2>Comparison</h2>
+				<div class="subtitle"><TMPL_VAR NAME> - <TMPL_VAR TIMERANGE></div>
+			</div>
+			<div class="timeRangeSwitch">
+				<ul>
+					<li>day</li>
+					<li>week</li>
+					<li>month</li>
+					<li class="last">year</li>
+				</ul>
+			</div>
+		</div>
 
 		<!-- Tabs. No empty space allowed here (for styling) -->
 		<ul class="tabs"><li>all</li><TMPL_LOOP CATEGORIES><li

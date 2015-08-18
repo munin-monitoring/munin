@@ -63,4 +63,28 @@ $(document).ready(function() {
 
 	// Groups switch
 	prepareSwitchable('header');
+
+	// Time range switch
+	var timeRangeSwitch = $('.timeRangeSwitch');
+	timeRangeSwitch.find('ul > li').click(function() {
+		if ($(this).hasClass('selected'))
+			return;
+
+		var currentRange = $(this).parent().find('.selected').first().text();
+		var newRange = $(this).text();
+
+		// Remove "selected" attribute
+		$(this).parent().find('li').removeClass('selected');
+
+		// Add "selected" class to this
+		$(this).addClass('selected');
+
+		window.location.href = './comparison-' + $(this).text() + '.html?cat=' + $('ul.tabs').find('.active').text();
+	});
+
+	// Set current time range
+	var url = window.location.href;
+	var regex = 'comparison-(.*).html';
+	var timeRange = url.match(regex)[1];
+	timeRangeSwitch.find('ul > li:contains(' + timeRange + ')').addClass('selected');
 });

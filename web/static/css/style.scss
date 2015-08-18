@@ -423,6 +423,13 @@ nav {
 .comparison #content {
 	margin-left: 0;
 
+	.comparison-head {
+		> div {
+			display: inline-block;
+			vertical-align: middle;
+		}
+	}
+
 	table td {
 		vertical-align: top;
 		padding-top: 15px;
@@ -722,49 +729,48 @@ footer {
 /* Time range switch */
 .timeRangeSwitchContainer {
 	width: 100%;
+}
+.timeRangeSwitch {
+	display: inline-block;
+	width: 100%;
+	max-width: 499px;
+	text-align: center;
+	padding: 10px;
+	@include box-sizing(border-box);
+	@include transition-duration(150ms);
+	margin-right: 4px;
 
-	.timeRangeSwitch {
+	ul {
+		list-style: none;
 		display: inline-block;
-		width: 100%;
-		max-width: 499px;
-		text-align: center;
-		padding: 10px;
-		@include box-sizing(border-box);
-		@include transition-duration(150ms);
-		margin-right: 4px;
+		padding: 0;
+		margin: 0;
+		font-size: 0;
+		@include border-radius(2px);
+		border: 1px solid #c8c8c8;
 
-		ul {
-			list-style: none;
+		li {
 			display: inline-block;
-			padding: 0;
-			margin: 0;
-			font-size: 0;
-			@include border-radius(2px);
-			border: 1px solid #c8c8c8;
+			padding: 7px 10px;
+			cursor: pointer;
+			@include transition-duration(150ms);
+			@include border-radius(1px);
+			border-right: 1px solid #dedede;
+			background-color: #EFEFF2;
+			color: #7B7A84;
+			font-size: 11px;
+			font-weight: bold;
 
-			li {
-				display: inline-block;
-				padding: 7px 10px;
-				cursor: pointer;
-				@include transition-duration(150ms);
-				@include border-radius(1px);
-				border-right: 1px solid #dedede;
-				background-color: #EFEFF2;
-				color: #7B7A84;
-				font-size: 11px;
-				font-weight: bold;
-
-				&.last {
-					border-right-width: 0;
-				}
-				&.selected {
-					color: #fff;
-					color: rgba(255, 255, 255, 0.87);
-					background-color: rgb(63,81,181);
-				}
-				&:hover {
-					@include opacity(0.9);
-				}
+			&.last {
+				border-right-width: 0;
+			}
+			&.selected {
+				color: #fff;
+				color: rgba(255, 255, 255, 0.87);
+				background-color: rgb(63,81,181);
+			}
+			&:hover {
+				@include opacity(0.9);
 			}
 		}
 	}
