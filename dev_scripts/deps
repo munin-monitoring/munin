@@ -1,7 +1,9 @@
+#! /bin/sh
 # debian
 
 # Running munin
-apt-get install <<EOF
+apt-get install $(
+cat <<EOF
   libdbd-pg-perl
   libdbd-sqlite3-perl
   libdbi-perl
@@ -39,3 +41,4 @@ apt-get install <<EOF
   rrdtool
   sqlite3
 EOF
+)
