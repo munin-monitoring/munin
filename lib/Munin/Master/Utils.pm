@@ -45,7 +45,6 @@ our (@ISA, @EXPORT);
 	   'munin_get',
 	   'munin_field_status',
 	   'munin_service_status',
-	   'munin_category_status',
 	   'munin_get_picture_filename',
 	   'munin_get_picture_loc',
 	   'munin_get_html_filename',
@@ -1212,37 +1211,6 @@ sub munin_copy_node
 }
 
 
-sub munin_category_status {
-    my $hash       = shift || return;
-    my $limits     = shift || return;
-    my $category   = shift || return;
-    my $check_draw = 1;
-    my $state      = "ok";
-
-    return unless (defined $hash and ref ($hash) eq "HASH");
-
-    foreach my $service (@{munin_get_children ($hash)}) {
-	next if (!defined $service or ref ($service) ne "HASH");
-	next if (!defined $service->{'graph_title'});
-	next if ($category ne munin_get ($service, "graph_category", "other"));
-	next if ($check_draw and not munin_get_bool ($service, "graph", 1));
-
-	my $fres  = munin_service_status ($service, $limits, $check_draw);
-	if (defined $fres) {
-	    if ($fres eq "critical") {
-		$state = $fres;
-		last;
-	    } elsif ($fres eq "warning") {
-		$state = $fres;
-	    } elsif ($fres eq "unknown" and $state eq "ok") {
-		$state = $fres;
-	    }
-	}
-    }
-
-    return $state;
-}
-
 sub munin_service_status {
     my ($config, $limits, $check_draw) = @_;
     my $state = "ok";
@@ -1533,21 +1501,6 @@ Munin::Master::Utils - Exports a lot of utility functions.
 =head1 SUBROUTINES
 
 =over
-
-=item B<munin_category_status>
-
-Gets current status of a category.
-
-Parameters: 
- - $hash: A ref to the hash node whose children to check
- - $limits: A ref to the root node of the limits tree
- - $category: The category to review
- - $check_draw: [optional] Ignore undrawn fields
-
-Returns:
- - Success: The status of the field
- - Failure: undef
-
 
 =item B<munin_readconfig_base>
 
