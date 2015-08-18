@@ -69,7 +69,6 @@ our (@ISA, @EXPORT);
 	   'munin_has_subservices',
 	   'print_version_and_exit',
 	   'exit_if_run_by_super_user',
-	   'look_for_child',
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -1260,34 +1259,6 @@ COPYING that is included with this software or refer to
 http://www.fsf.org/licensing/licenses/gpl.txt
 };
     exit 0;
-}
-
-
-sub look_for_child {
-    # wait for child process in blocking or non-blocking mode.
-    my ($block) = @_;
-
-    my $pid;
-
-    if ($block) {
-    	$pid = waitpid(-1, 0);
-    } else {
-        $pid = waitpid(-1, WNOHANG);
-        if ($pid == 0) {
-            return 0;
-        }
-    }
-
-    if ($pid < 0) {
-        ERROR "[ERROR] Unexpectedly ran out of children: $!";
-	croak "[ERROR] Ran out of children: $!\n";
-    }
-
-    if ($? != 0) {
-        WARN "[WARNING] Child $pid failed: " . ($? << 8) . 
-	    "(signal " . ($? & 0xff) . ")";
-    }
-    return 1;
 }
 
 
