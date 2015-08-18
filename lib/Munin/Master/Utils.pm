@@ -43,7 +43,6 @@ our (@ISA, @EXPORT);
 	   'munin_draw_field',
 	   'munin_get_bool',
 	   'munin_get',
-	   'munin_field_status',
 	   'munin_get_picture_filename',
 	   'munin_get_picture_loc',
 	   'munin_get_html_filename',
@@ -1210,23 +1209,6 @@ sub munin_copy_node
 }
 
 
-sub munin_field_status {
-    my ($hash, $limits, $check_draw) = @_;
-    my $state = "ok";
-
-    # Return undef if nagios is turned off, or the field doesn't have any limits
-    if ((!defined munin_get ($hash, "warning", undef)) and (!defined munin_get ($hash, "critical"))) {
-	return;
-    }
-
-    if (!defined $check_draw or !$check_draw or munin_draw_field ($hash)) {
-	my $loc  = munin_get_node_loc ($hash);
-	my $node = munin_get_node ($limits, $loc);
-	return $node->{"state"} || "ok";
-    }
-    return $state;
-}
-
 sub munin_graph_column_headers
 {
     my ($config, $domain, $node, $serv) = @_;
@@ -1534,20 +1516,6 @@ Parameters:
 
 Returns:
  - Success: Boolean; true if field will be graphed, false if not
- - Failure: undef
-
-
-=item B<munin_field_status>
-
-Gets current status of a field.
-
-Parameters: 
- - $hash: A ref to the field hash node
- - $limits: A ref to the root node of the limits tree
- - $check_draw: [optional] Ignore undrawn fields
-
-Returns:
- - Success: The status of the field
  - Failure: undef
 
 
