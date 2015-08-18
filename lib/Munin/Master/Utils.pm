@@ -67,7 +67,6 @@ our (@ISA, @EXPORT);
 	   'munin_get_children',
 	   'munin_get_node_partialpath',
 	   'munin_has_subservices',
-	   'munin_get_host_path_from_string',
 	   'print_version_and_exit',
 	   'exit_if_run_by_super_user',
 	   'look_for_child',
@@ -1315,23 +1314,6 @@ sub munin_has_subservices {
     return $hash->{'#%#has_subservices'};
 }
 
-sub munin_get_host_path_from_string {
-
-    my $fqn    = shift;
-    my @groups = split( ';', $fqn );
-    my $host   = pop(@groups);
-
-    if ( !@groups ) {
-        my @labels = split( '\.', $host );
-        shift @labels;
-        if (@labels) {
-            @groups = ( join( '.', @labels ) );
-        }
-    }
-
-    return ( \@groups, $host );
-}
-
 1;
 
 __END__
@@ -1482,18 +1464,6 @@ Parameters:
 
 Returns:
  - Success: Full path to rrd file
- - Failure: undef
-
-
-=item B<munin_get_host_path_from_string>
-
-Get a list of groups, and a host name, from the FQN of a node.
-
-Parameters:
- - $fqn: A FQN to a defined munin node.
-
-Returns:
- - Success: An array with an array of groups, and a hostname.
  - Failure: undef
 
 
