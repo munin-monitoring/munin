@@ -54,7 +54,6 @@ our (@ISA, @EXPORT);
 	   'munin_get_orig_node_name',
 	   'munin_get_parent_name',
 	   'munin_get_node_fqn',
-	   'munin_find_node_by_fqn',
 	   'munin_get_node_loc',
 	   'munin_get_node',
 	   'munin_set_var_loc',
@@ -504,26 +503,6 @@ sub munin_get_node_fqn
     } else {
 	return;
     }
-}
-
-
-sub munin_find_node_by_fqn {
-    # The FQN should be relative to the point in the hash we're handed.
-    my($hash,$fqn) = @_;
-
-    my $here = $hash;
-
-    my @path = split('/',$fqn);
-
-    foreach my $pc (@path) {
-	next if $pc eq 'root';
-	if (exists $here->{$pc}) {
-	    $here = $here->{$pc};
-	} else {
-	    confess "Could not find FQN $fqn!";
-	}
-    }
-    return $here ;
 }
 
 
