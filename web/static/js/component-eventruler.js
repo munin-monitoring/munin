@@ -1,5 +1,5 @@
 /**
- * Nodeview - Event ruler
+ * Nodeview/comparison - Event ruler
  * Draw a vertical line in page to easily compare graphs
  *  (from an event for example)
  */
@@ -7,7 +7,7 @@
 // DOM elements
 var body,
 	content,
-	nav,
+	navWidth,
 	eventRuler,
 	eventRulerMT;
 
@@ -16,7 +16,8 @@ var eventRulerMTPadding = 10;
 $(document).ready(function() {
 	body = $('body');
 	content = $('#content');
-	nav = $('#nav');
+	var nav = $('#nav');
+	navWidth = nav.length ? nav.width() : 0;
 
 	if (body.width() < 768) // Not possible with too small devices
 		return;
@@ -38,15 +39,15 @@ $(document).ready(function() {
 			else if (e.keyCode == 39)
 				left += absVal;
 
-			if (left+10 < nav.width())
-				left = nav.width()-10;
+			if (left+10 < navWidth)
+				left = navWidth-10;
 
 			eventRulerMT.css('left', left + 'px');
 		}
 	});
 
 	// Add toggle in header
-	$('.header').find('.logo')
+	$('header').find('.logo')
 		.after('<div id="eventRulerToggle" class="eventRulerToggle" data-shown="false">' +
 					'<img src="/static/img/icons/eventrulerhandle.png" /></div>');
 	var eventRulerToggle = $('#eventRulerToggle');
@@ -75,8 +76,8 @@ function toggleRuler() {
 		body.on('mousemove', function (e) {
 			var left = e.pageX-eventRulerMTPadding;
 
-			if (left+10 < nav.width())
-				left = nav.width()-10;
+			if (left+10 < navWidth)
+				left = navWidth-10;
 
 			eventRulerMT.css('left', left);
 		});
@@ -98,8 +99,8 @@ function toggleRuler() {
 					// Update ruler position
 					var left = e.pageX-eventRulerMTPadding;
 
-					if (left+10 < nav.width())
-						left = nav.width()-10;
+					if (left+10 < navWidth)
+						left = navWidth-10;
 
 					eventRulerMT.css('left', left);
 				}
