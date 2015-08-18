@@ -42,7 +42,6 @@ our (@ISA, @EXPORT);
 	   'munin_readconfig_part',
 	   'munin_draw_field',
 	   'munin_get_bool',
-	   'munin_get_bool_val',
 	   'munin_get',
 	   'munin_field_status',
 	   'munin_service_status',
@@ -1150,52 +1149,6 @@ sub munin_get_bool
     }
 }
 
-sub munin_get_bool_val
-{
-    my $field    = shift;
-    my $default  = shift;
-
-    if (!defined $field)
-    {
-    if (!defined $default)
-    {
-        return 0;
-    }
-    else
-    {
-        return $default;
-    }
-    }
-
-    if ($field =~ /^yes$/i or
-        $field =~ /^true$/i or
-        $field =~ /^on$/i or
-        $field =~ /^enable$/i or
-        $field =~ /^enabled$/i
-       )
-    {
-    return 1;
-    }
-    elsif ($field =~ /^no$/i or
-        $field =~ /^false$/i or
-        $field =~ /^off$/i or
-        $field =~ /^disable$/i or
-        $field =~ /^disabled$/i
-      )
-    {
-    return 0;
-    }
-    elsif ($field !~ /\D/)
-    {
-    return $field;
-    }
-    else
-    {
-    return;
-    }
-}
-
-
 sub munin_get
 {
     my ($hash, $field, $default) = @_;
@@ -1738,10 +1691,6 @@ Parameters:
 Returns:
  - Success: 1 or 0 (true or false)
  - Failure: $default if defined, else undef
-
-
-=item B<munin_get_bool_val>
-
 
 
 =item B<munin_get_children>
