@@ -46,7 +46,6 @@ our (@ISA, @EXPORT);
 	   'munin_get_picture_loc',
 	   'munin_get_filename',
 	   'munin_get_keypath',
-	   'munin_get_max_label_length',
 	   'munin_get_field_order',
 	   'munin_get_rrd_filename',
 	   'munin_get_node_name',
@@ -1092,33 +1091,6 @@ sub munin_copy_node
 }
 
 
-sub munin_get_max_label_length
-{
-    my $service = shift;
-    my $order   = shift;
-    my $result  = 0;
-    my $tot     = munin_get ($service, "graph_total");
-
-    for my $field (@$order) {
-	my $path = undef;
-	(my $f = $field) =~ s/=.+//;
-	next if (!munin_get_bool ($service->{$f}, "process", 1));
-	next if (munin_get_bool ($service->{$f}, "skipdraw", 0));
-	next if (!munin_get_bool ($service->{$f}, "graph", 1));
-
-	my $len = length (munin_get ($service->{$f}, "label") || $f);
-
-	if ($result < $len) {
-	    $result = $len;
-	}
-    }
-    if (defined $tot and length $tot > $result) {
-	$result = length $tot;
-    }
-    return $result;
-}
-
-
 sub munin_get_field_order
 {
     my $hash = shift;
@@ -1400,19 +1372,6 @@ Parameters:
 
 Returns:
  - Success: Full path to rrd file
- - Failure: undef
-
-
-=item B<munin_get_max_label_length>
-
-Get the length of the longest label in a graph.
-
-Parameters:
- - $hash: the graph in question
- - $order: A ref to an array of fields (graph_order)
-
-Returns:
- - Success: The length of the longest label in the graph
  - Failure: undef
 
 
