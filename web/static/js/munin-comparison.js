@@ -19,6 +19,11 @@ $(document).ready(function() {
 
 	// Prepare filter
 	prepareFilter('Filter graphs', function(val) {
+		if (val.length == 0)
+			showTabs();
+		else
+			hideTabs();
+
 		trs.each(function() {
 			var serviceName = $(this).data('servicename');
 			var serviceTitle = $(this).data('servicetitle');
@@ -31,14 +36,29 @@ $(document).ready(function() {
 			}
 		});
 
+		// If tabs aren't enabled, they are used as anchors links
+		if (content.attr('data-tabsenabled') == 'false') {
+			tabs.each(function() {
+				if (filterMatches(val, $(this).text()))
+					$(this).show();
+				else
+					$(this).hide();
+			});
+		}
+
 		// Hide unnecessary categories names
-		$('h3').each(function() {
-			var table = $(this).next();
-			if (table.find('tr:visible').length == 0)
-				$(this).hide();
+		$('table[data-category]').each(function() {
+			if ($(this).find('tr:visible').length == 0)
+				$(this).prev().hide();
 			else
-				$(this).show();
+				$(this).prev().show();
 		});
+
+		if (val.length == 0) {
+			// Remove display CSS property to category names (h3)
+			// to let tabs decide if they should be shown or not
+			$('h3').css('display', '');
+		}
 	});
 
 	// Groups switch

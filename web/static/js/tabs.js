@@ -7,13 +7,15 @@ var tabsEnabled,
 	content,
 	tabsContainer,
 	tabs,
-	activeTab;
+	activeTab,
+	categoryTitles;
 
 $(document).ready(function() {
 	content = $('#content');
 	tabsEnabled = content.attr('data-tabsenabled') == 'true';
 	tabsContainer = $('.tabs');
 	tabs = tabsContainer.find('li');
+	categoryTitles = $('h3');
 
 	// Get active tab
 	var qs = new Querystring();
@@ -41,6 +43,7 @@ $(document).ready(function() {
 			$(this).html('<a href="#' + text + '">' + text + '</a>');
 		});
 
+		// Stop here
 		return;
 	}
 
@@ -56,9 +59,12 @@ $(document).ready(function() {
 			$('[data-category]').hide();
 			// Show the right one
 			$('[data-category="' + activeTab.text() + '"]').show();
+
+			categoryTitles.hide();
 		}
 		else { // ALL
 			$('[data-category]').show();
+			categoryTitles.show();
 		}
 
 		// Save state in URL
@@ -71,9 +77,13 @@ $(document).ready(function() {
 		$('[data-category]').hide();
 		// Show the right one
 		$('[data-category="' + activeTab.text() + '"]').show();
+
+		categoryTitles.hide();
 	}
 	else { // All
 		$('[data-category]').show();
+
+		categoryTitles.show();
 	}
 
 	// If there's an active filter, hide tabs
