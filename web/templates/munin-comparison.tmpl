@@ -3,7 +3,7 @@
 <TMPL_INCLUDE NAME="partial/logo_navigation_comparison.tmpl">
 <div id="main" class="comparison">
 	<div id="content">
-		<h2>Comparison: week</h2>
+		<h2>Comparison: <TMPL_VAR TIMERANGE></h2>
 		<TMPL_LOOP CATEGORIES>
 		<h3 id="<TMPL_VAR ESCAPE="HTML" GROUPNAME>"><TMPL_VAR ESCAPE="HTML" GROUPNAME></h3>
 		<table>
@@ -23,27 +23,27 @@
 									<TMPL_IF URL1></a></TMPL_IF>
 								</span>
 								<br />
-								<TMPL_IF CIMGWEEK>
+								<TMPL_IF CIMG>
 									<a href="/<TMPL_VAR URL>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
 										<TMPL_UNLESS DYN_IMAGES>
-											<img src="<TMPL_VAR CIMGWEEK>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
+											<img src="<TMPL_VAR CIMG>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
 											  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-											  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-											  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>/>
+											  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
+											  <TMPL_IF IMGHEIGHT>height="<TMPL_VAR IMGHEIGHT>"</TMPL_IF>/>
 										<TMPL_ELSE>
 											<noscript>
 												<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-												  src="<TMPL_VAR CIMGWEEK>"
+												  src="<TMPL_VAR CIMG>"
 												  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-												  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-												  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>/>
+												  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
+												  <TMPL_IF IMGHEIGHT>height="<TMPL_VAR IMGHEIGHT>"</TMPL_IF>/>
 											</noscript>
 											<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-											  data-original="<TMPL_VAR CIMGWEEK>"
+											  data-original="<TMPL_VAR CIMG>"
 											  src="/static/img/placeholder.gif"
 											  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-											  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-											  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>/>
+											  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
+											  <TMPL_IF IMGHEIGHT>height="<TMPL_VAR IMGHEIGHT>"</TMPL_IF>/>
 										</TMPL_UNLESS>
 									</a>
 								</TMPL_IF>

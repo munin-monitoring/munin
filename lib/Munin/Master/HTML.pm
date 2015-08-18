@@ -336,7 +336,9 @@ sub handle_request
 
 		if ($comparison) {
 			# Emit group comparison template
-			$template_filename = "munin-comparison-$comparison.tmpl";
+			$template_filename = "munin-comparison.tmpl";
+
+			$template_params{TIMERANGE} = $comparison;
 
 			# Get all categories in this group
 			my $sth_cat = $dbh->prepare_cached(
@@ -348,7 +350,7 @@ sub handle_request
 
 			$template_params{CATEGORIES} = [];
 			while (my ($cat_name) = $sth_cat->fetchrow_array) {
-				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id, $graph_ext);
+				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id, $graph_ext, $comparison);
 			}
 		} else {
 			# Emit group template
@@ -611,7 +613,7 @@ sub _get_params_groups {
 }
 
 sub _get_params_services_for_comparison {
-	my ($basepath, $dbh, $category_name, $grp_id, $graph_ext) = @_;
+	my ($basepath, $dbh, $category_name, $grp_id, $graph_ext, $comparison) = @_;
 
 	# Get all possible services with the specified category under the specified group
 	my $sth_srv = $dbh->prepare_cached(
@@ -645,14 +647,14 @@ sub _get_params_services_for_comparison {
 		$sth_node->execute($service_name, $grp_id);
 		while (my ($node_name, $node_url, $srv_url, $srv_label) = $sth_node->fetchrow_array) {
 			my $_srv_url = "$srv_url.html" if defined $srv_url;
-			my %_img_urls = map { ("CIMG$_" => "/$srv_url-$_.$graph_ext") } @times if defined $srv_url;
+			my $_img_url = "/$srv_url-$comparison.$graph_ext" if defined $srv_url;
 			push @nodes, {
 				R_PATH => '',
 				NODENAME => $node_name,
 				URL1 => substr($node_url, length($basepath) + 1),
 				LABEL => $srv_label,
 				URL => $_srv_url,
-				%_img_urls,
+				CIMG => $_img_url,
 			};
 		}
 
