@@ -40,4 +40,7 @@ $(document).ready(function() {
 				$(this).show();
 		});
 	});
+
+	// Groups switch
+	prepareSwitchable('header');
 });
