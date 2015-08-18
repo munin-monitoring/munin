@@ -43,7 +43,6 @@ our (@ISA, @EXPORT);
 	   'munin_draw_field',
 	   'munin_get_bool',
 	   'munin_get',
-	   'munin_get_picture_filename',
 	   'munin_get_picture_loc',
 	   'munin_get_html_filename',
 	   'munin_get_filename',
@@ -989,41 +988,6 @@ sub munin_get_html_filename {
 }
 
 
-sub munin_get_picture_filename {
-    my $hash    = shift;
-    my $scale   = shift;
-    my $sum     = shift;
-
-    my $loc     = munin_get_picture_loc ($hash);
-    my $ret     = munin_get ($hash, 'htmldir');
-
-    # Sanitise
-    $ret =~ s/[^\w_\/"'\[\]\(\)+=-]\./_/g;
-    $hash =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-    $scale =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-    @$loc = map { 
-        my $l = $_;
-        $l =~ s/\//_/g; 
-        $l =~ s/^\./_/g;
-        $l;
-    } @$loc;
-	
-    my $plugin = pop @$loc or return;
-    my $node   = pop @$loc or return;
-
-    if (@$loc) { # The rest is used as directory names...
-	$ret .= "/" . join ('/', @$loc);
-    }
-
-    if (defined $sum and $sum) {
-	    return "$ret/$node/$plugin-$scale-sum.png";
-    } elsif (defined $scale) {
-	    return "$ret/$node/$plugin-$scale.png";
-    } else {
-	    return "$ret/$node/$plugin.png";
-    }
-}
-
 
 sub munin_path_to_loc
 {
@@ -1705,20 +1669,6 @@ Parameters:
 Returns:
  - Success: The name of the parent node
  - Failure: If no parent node exists, "none" is returned.
-
-
-=item B<munin_get_picture_filename>
-
-Get the full path+name of a picture file.
-
-Parameters:
- - $hash: A ref to the service hash node
- - $scale: [optional] The scale (day, week, year, month)
- - $sum: [optional] Boolean value, whether it's a sum graph or not.
-
-Returns:
- - Success: The file name with full path
- - Failure: undef
 
 
 =item B<munin_get_picture_loc>
