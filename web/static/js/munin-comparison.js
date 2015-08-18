@@ -70,9 +70,6 @@ $(document).ready(function() {
 		if ($(this).hasClass('selected'))
 			return;
 
-		var currentRange = $(this).parent().find('.selected').first().text();
-		var newRange = $(this).text();
-
 		// Remove "selected" attribute
 		$(this).parent().find('li').removeClass('selected');
 
