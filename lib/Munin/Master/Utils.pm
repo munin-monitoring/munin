@@ -46,7 +46,6 @@ our (@ISA, @EXPORT);
 	   'munin_get_picture_loc',
 	   'munin_get_filename',
 	   'munin_get_keypath',
-	   'munin_graph_column_headers',
 	   'munin_get_max_label_length',
 	   'munin_get_field_order',
 	   'munin_get_rrd_filename',
@@ -1093,30 +1092,6 @@ sub munin_copy_node
 }
 
 
-sub munin_graph_column_headers
-{
-    my ($config, $domain, $node, $serv) = @_;
-    my $ret = 0;
-    my @fields = ();
-
-    foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$serv}})
-    {
-	if ($field =~ /^([^\.]+)\.negative$/ and munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1))
-	{
-	    return 1;
-	}
-	elsif ($field =~ /^([^\.]+)\.label$/ and munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1))
-	{
-	    push @fields, $1;
-	}
-    }
-
-    return 1 if (munin_get_max_label_length ($config->{'domain'}->{$domain}->{'node'}->{$node}, $config, $domain, $node, $serv, \@fields) > 20);
-
-    return $ret;
-}
-
-
 sub munin_get_max_label_length
 {
     my $service = shift;
@@ -1559,9 +1534,6 @@ Returns:
 
 =item B<munin_getlock>
 
-
-
-=item B<munin_graph_column_headers>
 
 
 =item B<munin_has_subservices>
