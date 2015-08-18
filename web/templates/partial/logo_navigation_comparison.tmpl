@@ -31,23 +31,8 @@
 					<a href="/">Overview</a>
 				</TMPL_IF>
 			</TMPL_LOOP>
-			[
-			<a href="comparison-day.html">day</a>
-			<a href="comparison-week.html">week</a>
-			<a href="comparison-month.html">month</a>
-			<a href="comparison-year.html">year</a> ]
+			<span class="sep"></span> Comparison
 		</h1>
-		<div class="subtitle">
-			<span class="categories">
-				<TMPL_VAR NAME> [
-				<TMPL_LOOP CATEGORIES>
-					<a <TMPL_IF STATE_WARNING>class="warn"</TMPL_IF>
-					  <TMPL_IF STATE_CRITICAL>class="crit"</TMPL_IF>
-					  href="#<TMPL_VAR ESCAPE="HTML" GROUPNAME>"><TMPL_VAR ESCAPE="HTML" GROUPNAME></a>
-				</TMPL_LOOP>
-				]
-			</span>
-		</div>
 	</div>
 	<div class="clear"></div>
 	<TMPL_IF LARGESET>

@@ -303,21 +303,6 @@ header {
 			}
 		}
 	}
-
-	.comparison, .categories {
-		display: inline-block;
-		color: rgba(255, 255, 255, 0.7);
-		font-size: 12px;
-		text-align: center;
-		@include transition-duration(200ms);
-		color: #fff;
-
-		> a {
-			color: #fff;
-		}
-
-		&:hover { color: #fff; }
-	}
 }
 
 /* Main */
@@ -438,10 +423,9 @@ nav {
 .comparison #content {
 	margin-left: 0;
 
-	table {
-		td {
-			vertical-align: top;
-		}
+	table td {
+		vertical-align: top;
+		padding-top: 15px;
 	}
 }
 

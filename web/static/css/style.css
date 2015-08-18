@@ -302,23 +302,6 @@ header .pageTitle a:hover, header .pageTitle div.switchable:hover {
   background-color: rgba(0, 0, 0, 0.15);
   text-decoration: none;
 }
-header .comparison, header .categories {
-  display: inline-block;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 12px;
-  text-align: center;
-  -webkit-transition-duration: 200ms;
-  -moz-transition-duration: 200ms;
-  -o-transition-duration: 200ms;
-  transition-duration: 200ms;
-  color: #fff;
-}
-header .comparison > a, header .categories > a {
-  color: #fff;
-}
-header .comparison:hover, header .categories:hover {
-  color: #fff;
-}
 
 /* Main */
 #main {
@@ -458,6 +441,7 @@ nav #navToggle {
 }
 .comparison #content table td {
   vertical-align: top;
+  padding-top: 15px;
 }
 
 /* Content: comparison / categoryview */
