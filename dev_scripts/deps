@@ -7,6 +7,7 @@ cat <<EOF
   libdbd-pg-perl
   libdbd-sqlite3-perl
   libdbi-perl
+  libdevel-cover-perl
   libfile-copy-recursive-perl
   libfile-readbackwards-perl
   libfile-slurp-perl
@@ -38,6 +39,7 @@ cat <<EOF
   libxml-libxml-perl
   libxml-parser-perl
 
+  python-sphinx
   rrdtool
   sqlite3
 EOF
