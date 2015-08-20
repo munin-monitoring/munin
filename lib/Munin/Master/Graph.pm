@@ -258,10 +258,11 @@ sub handle_request
 
 	my %negatives;
 
+	push @rrd_gfx, "COMMENT:          \\t";
 	push @rrd_gfx, "COMMENT:Cur\\t";
 	push @rrd_gfx, "COMMENT:Min\\t";
 	push @rrd_gfx, "COMMENT:Avg\\t";
-	push @rrd_gfx, "COMMENT:Max\\r";
+	push @rrd_gfx, "COMMENT:Max\\t\\r";
 
 	my $lastupdated;
 
@@ -354,6 +355,9 @@ sub handle_request
 
 		push @rrd_gfx, "COMMENT:\\u"; # Rewind the line, to have \r after the \l
 
+		my $label_as_white = "   " . " " x (length $_label);
+		push @rrd_gfx, "COMMENT:$label_as_white"; # Rewind the line, to have \r after the \l
+
 		# Handle negatives
 		if ($_negative) {
 			# We'll have a negative counterpart
@@ -366,24 +370,25 @@ sub handle_request
 			push @rrd_def, "VDEF:vmax_n_$_rrdname=max_n_$_rrdname,MAXIMUM";
 
 			push @rrd_def, "VDEF:vlst_n_$_rrdname=avg_n_$_rrdname,LAST";
-
-			# We just handled $_negative, so we can ignore it later
-			$negatives{$_negative} ++;
 		}
 
 		# Displaying the values as POSITIVE/NEGATIVE if $_negative
-		push @rrd_gfx, "GPRINT:vlst_$_rrdname:$_printf";
-		push @rrd_gfx, "COMMENT:/", "GPRINT:vlst_n_$_rrdname:$_printf" if $_negative;
 		push @rrd_gfx, "COMMENT:\\t";
-		push @rrd_gfx, "GPRINT:vmin_$_rrdname:$_printf";
-		push @rrd_gfx, "COMMENT:/", "GPRINT:vmin_n_$_rrdname:$_printf" if $_negative;
-		push @rrd_gfx, "COMMENT:\\t";
-		push @rrd_gfx, "GPRINT:vavg_$_rrdname:$_printf";
-		push @rrd_gfx, "COMMENT:/", "GPRINT:vavg_n_$_rrdname:$_printf" if $_negative;
-		push @rrd_gfx, "COMMENT:\\t";
-		push @rrd_gfx, "GPRINT:vmax_$_rrdname:$_printf";
-		push @rrd_gfx, "COMMENT:/", "GPRINT:vmax_n_$_rrdname:$_printf" if $_negative;
-		push @rrd_gfx, "COMMENT:\\r";
+
+		for my $t (qw(lst min avg max)) {
+			if (! $_negative) {
+				push @rrd_gfx, "GPRINT:v$t"."_$_rrdname:$_printf\\t";
+				#push @rrd_gfx, "COMMENT:\\s";
+			} else {
+				# Here we want a different printf, as it
+
+				push @rrd_gfx, "GPRINT:v$t"."_$_rrdname:$_printf\\g";
+				push @rrd_gfx, "COMMENT:/\\g";
+				push @rrd_gfx, "GPRINT:v$t"."_n_$_rrdname:$_printf\\g";
+			}
+		}
+
+		push @rrd_gfx, "COMMENT: \\r";
 
 		# Push to another array, to have these at the end
 		push @rrd_gfx_negatives, "$_drawtype:avg_n_$_rrdname#$_color" if $_negative;
