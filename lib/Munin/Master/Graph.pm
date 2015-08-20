@@ -225,6 +225,12 @@ sub handle_request
 			gd.value,
 			pf.value,
 			ne.value,
+                        (
+                                select hn.id
+                                from ds hn
+                                JOIN ds_attr hn_attr ON hn.service_id = ds.service_id AND hn_attr.value = ds.name
+                                where hn.service_id = ds.service_id
+                        ) as negative_id,
 			s.last_epoch,
 			'dummy' as dummy
 		FROM ds
@@ -266,6 +272,7 @@ sub handle_request
 			$_color, $_drawtype,
 			$_printf,
 			$_negative,
+			$_has_negative,
 			$_lastupdated,
 		) = $sth->fetchrow_array()) {
 		# Note that we do *NOT* provide any defaults for those
@@ -275,9 +282,6 @@ sub handle_request
 		# 	- have only 1 reference on default values
 		# 	- reduce the size of the CGI part, which is good for
 		# 	  security (& sometimes performances)
-
-		# If this field is the negative of another field, we don't draw it anymore
-		next if $negatives{$_rrdname};
 
 		# Fields inherit this field from their plugin, if not overrided
 		$_printf = $graph_printf unless defined $_printf;
@@ -334,6 +338,10 @@ sub handle_request
 
 		# Override a STACK to LINE if it's the first field
 		$_drawtype = "LINE" if $_drawtype eq "STACK" && ! $field_number;
+
+		# If this field is the negative of another field, we don't draw it anymore
+		# ... But we did still want to compute the related DEF & CDEF
+		next if $_has_negative;
 
 		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label\\l";
 
