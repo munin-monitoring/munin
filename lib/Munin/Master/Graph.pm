@@ -569,6 +569,31 @@ sub expand_cdef {
 	return $_rrdcdef;
 }
 
+sub RRDs_graph {
+	use IPC::Open3;
+	use IO::String;
+
+	# RRDs::graph() is *STATEFUL*. It doesn't emit the same PNG
+	# when called the second time.
+	#
+	# return RRDs::graph(@_);
+
+	# We just revert to spawning a full featured rrdtool cmd for now.
+	my $chld_out = new IO::String();
+	my $chld_in = new IO::String();
+	my $chld_err = new IO::String();
+	my $chld_pid = open3($chld_out, $chld_in, $chld_err, "rrdtool", "graphv", @_);
+
+	DEBUG "[DEBUG] RRDs_graph(chld_out=$chld_out)";
+	DEBUG "[DEBUG] RRDs_graph(chld_err=$chld_err)";
+
+	waitpid( $chld_pid, 0 );
+
+	my $child_exit_status = $? >> 8;
+
+	return $child_exit_status;
+}
+
 sub RRDs_graph_or_dump {
 	use RRDs;
 
