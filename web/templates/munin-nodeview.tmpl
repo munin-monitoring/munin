@@ -16,7 +16,7 @@
 					<li class="last">year</li>
 				</ul>
 			</div>
-			<div class="timeRangeSwitch hide-mobile">
+			<div class="timeRangeSwitch hide-if-overflows">
 				<ul>
 					<li>hour</li>
 					<li>day</li>
@@ -64,7 +64,7 @@
 							  data-col="0" />
 						</TMPL_UNLESS>
 					</a>
-					<a href="<TMPL_VAR URLX>" class="graphLink hide-mobile i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+					<a href="<TMPL_VAR URLX>" class="graphLink hide-if-overflows i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
 						<TMPL_UNLESS DYN_IMAGES>
 							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
 							  src="<TMPL_VAR IMGWEEK>"
