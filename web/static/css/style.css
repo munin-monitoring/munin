@@ -1355,9 +1355,6 @@ footer p.tagline:hover {
     border-radius: 0;
     padding: 5px;
   }
-  header .singleLine {
-    margin-top: 0;
-  }
   header .filter {
     float: none;
     display: inline-block;
@@ -1480,6 +1477,12 @@ footer p.tagline:hover {
   .dzForm #dynaForm .half {
     display: block;
     width: 100%;
+  }
+}
+/* Hide second graph in nodeview when there's not enough horizontal space to show both */
+@media (max-width: 1260px) {
+  .hide-if-overflows {
+    display: none !important;
   }
 }
 /* Medium devices */
