@@ -258,7 +258,7 @@ sub handle_request
 
 	my %negatives;
 
-	push @rrd_gfx, "COMMENT:          \\t";
+	push @rrd_gfx, "COMMENT:\\t";
 	push @rrd_gfx, "COMMENT:Cur\\t";
 	push @rrd_gfx, "COMMENT:Min\\t";
 	push @rrd_gfx, "COMMENT:Avg\\t";
@@ -388,7 +388,7 @@ sub handle_request
 			}
 		}
 
-		push @rrd_gfx, "COMMENT: \\r";
+		push @rrd_gfx, "COMMENT:\\r";
 
 		# Push to another array, to have these at the end
 		push @rrd_gfx_negatives, "$_drawtype:avg_n_$_rrdname#$_color" if $_negative;
