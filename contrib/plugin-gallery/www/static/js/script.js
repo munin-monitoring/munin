@@ -22,9 +22,11 @@ $(document).ready(function() {
 		var modal = prepareModal(MODAL_ID, '<iframe frameBorder="0" seamless="seamless"></iframe>');
 		var iframe = modal.find('iframe');
 
-		// Register load event on iframe to inject CSS
-		iframe.load(function () {
-			iframe.contents().find('head').append('<link rel="stylesheet" href="/static/css/style-doc.css" />');
+		// Plugins without perldoc don't have the style-doc.css:
+		// 		register load event on iframe to inject it
+		iframe.load(function() {
+			if ($('iframe').contents().find('link[href="/static/css/style-doc.css"]').length == 0)
+				iframe.contents().find('head').append('<link rel="stylesheet" href="/static/css/style-doc.css" />');
 		});
 
 		$('span.host').find('a[title="Info"]').click(function (e) {

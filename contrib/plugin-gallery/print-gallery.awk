@@ -19,7 +19,7 @@ BEGIN {
   header = "\t<h2>Category :: %s (Core Collection)</h2>\n\t<ul class=\"groupview\">\n"
   nodeheader = "\t\t<li ><span class=\"domain\">%s</span>\n\t\t<ul>\n"
   nodefooter = "\t\t</ul>\n\t\t</li>\n"
-  tmplplugin = "\t\t\t<li ><span class=\"host\">[<a href=\"https://raw.githubusercontent.com/munin-monitoring/munin/devel/plugins/%s\" title=\"Download\"><img src=\"./static/download.gif\" alt=\"Download\"></a>]&nbsp;<span class=\"host\"><a href=\"distro/plugins/%s/%s.html\" title=\"Info\">%s</a></span></li>\n"
+  tmplplugin = "\t\t\t<li ><span class=\"host\"><a href=\"https://raw.githubusercontent.com/munin-monitoring/munin/devel/plugins/%s\" title=\"Download\" class=\"download\"><img src=\"./static/download.gif\" alt=\"Download\"></a>&nbsp;<span class=\"host\"><a href=\"distro/plugins/%s/%s.html\" title=\"Info\">%s</a></span></li>\n"
 }
 
 {
@@ -70,10 +70,15 @@ BEGIN {
   if (rc!=0) {
     cmd = "perldoc -o html -d " docfilename " " workdir "/" pluginpath " 2>&1"
     result = system(cmd)
+
     # On error put "Oops" page in place
     if (result > 0) {
       cmd = "cp " scriptdir "/static/leer.html " workdir "/" nodedir "/" plugin ".html 2>&1"
       system(cmd)
+    } else {
+      # Add stylesheet to head
+      cmd2 = "sed -i 's#</head>#<link rel=\"stylesheet\" href=\"\/static\/css\/style-doc.css\" /></head>#g' " docfilename
+      system(cmd2)
     }
   }
 }
