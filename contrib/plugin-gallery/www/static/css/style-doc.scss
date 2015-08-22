@@ -1,0 +1,62 @@
+/**
+ * CSS file included in each generated HTML doc file
+ *
+ * IMPORTANT: please do not edit neither style.css nor _responsive files.
+ *	We're using SASS to maintain styling, so your changes would be overriden.
+ *	Please edit the style.scss file instead, and use a sass compiler.
+ *		Learn more about SASS: http://sass-lang.com/guide
+ *
+ *	Sass compiler arguments:  --style expanded
+ */
+
+/* SASS mixins */
+@mixin border-radius($radius) {
+	-webkit-border-radius: $radius;
+	-moz-border-radius: $radius;
+	-ms-border-radius: $radius;
+	border-radius: $radius;
+}
+
+/* Overall layout */
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+}
+
+body {
+	background-color: #fff;
+	font-size: 90%;
+	font-family: Helvetica, Verdana, Arial, sans-serif;
+	color: #666666;
+	padding: 15px 20px;
+}
+
+/* Titles */
+h1 {
+	font-size: 30px;
+}
+h2 {
+	font-weight: normal;
+	letter-spacing: -1px;
+	margin: 20px 0 15px 0;
+	font-size: 25px;
+}
+h1, h2 {
+	border-bottom: 1px solid #dddddd;
+
+	&:hover { text-decoration: none; }
+}
+
+a {
+	text-decoration: none;
+	&, &:visited, &:active, &:hover { color: #486aaf; }
+	&:hover { text-decoration: underline; }
+}
+
+pre {
+	padding: 10px;
+	background-color: #f5f5f5;
+	@include border-radius(3px);
+	overflow: auto;
+}
