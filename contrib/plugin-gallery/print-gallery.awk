@@ -70,10 +70,15 @@ BEGIN {
   if (rc!=0) {
     cmd = "perldoc -o html -d " docfilename " " workdir "/" pluginpath " 2>&1"
     result = system(cmd)
+
     # On error put "Oops" page in place
     if (result > 0) {
       cmd = "cp " scriptdir "/static/leer.html " workdir "/" nodedir "/" plugin ".html 2>&1"
       system(cmd)
+    } else {
+      # Add stylesheet to head
+      cmd2 = "sed -i 's#</head>#<link rel=\"stylesheet\" href=\"\/static\/css\/style-doc.css\" /></head>#g' " docfilename
+      system(cmd2)
     }
   }
 }
