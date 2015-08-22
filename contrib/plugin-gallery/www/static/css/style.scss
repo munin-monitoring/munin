@@ -478,5 +478,36 @@ footer {
 	z-index: 14;
 }
 
+ul.groupview {
+	padding: 0;
+
+	> li {
+		list-style:none;
+
+		.domain {
+			display: block;
+			color: #555;
+			letter-spacing: -1px;
+			margin: 20px 0 5px 0;
+			font-size: 17px;
+		}
+
+		ul li {
+			list-style: none;
+
+			.host {
+				.download {
+					@include opacity(0.3);
+					@include transition-duration(200ms);
+					margin-right: 6px;
+				}
+				&:hover .download {
+					@include opacity(1);
+				}
+			}
+		}
+	}
+}
+
 /* Include _responsive file */
 @import 'responsive';

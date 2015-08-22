@@ -484,6 +484,36 @@ footer p.tagline:hover {
   z-index: 14;
 }
 
+ul.groupview {
+  padding: 0;
+}
+ul.groupview > li {
+  list-style: none;
+}
+ul.groupview > li .domain {
+  display: block;
+  color: #555;
+  letter-spacing: -1px;
+  margin: 20px 0 5px 0;
+  font-size: 17px;
+}
+ul.groupview > li ul li {
+  list-style: none;
+}
+ul.groupview > li ul li .host .download {
+  opacity: 0.3;
+  filter: alpha(opacity=30);
+  -webkit-transition-duration: 200ms;
+  -moz-transition-duration: 200ms;
+  -o-transition-duration: 200ms;
+  transition-duration: 200ms;
+  margin-right: 6px;
+}
+ul.groupview > li ul li .host:hover .download {
+  opacity: 1;
+  filter: alpha(opacity=100);
+}
+
 /* Include _responsive file */
 /*
  * This file contains everything that makes munin responsive, and is included in style.scss

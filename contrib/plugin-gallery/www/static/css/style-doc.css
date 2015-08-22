@@ -39,7 +39,7 @@ h2 {
 h1, h2 {
   border-bottom: 1px solid #dddddd;
 }
-h1:hover, h2:hover {
+h1 a:hover, h2 a:hover {
   text-decoration: none;
 }
 
