@@ -32,8 +32,6 @@ BEGIN {
   if (match(pluginpath,"\/")) {
     nodedir = substr(pluginpath,1,RSTART-1)
     plugin = substr(pluginpath,RSTART+1)
-    # cut off extension ".in" 
-    plugin = substr(plugin,1,length(plugin)-3)   
   }
 
   # Next category
