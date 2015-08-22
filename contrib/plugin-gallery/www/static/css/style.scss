@@ -121,6 +121,11 @@ a {
 
 img { border: 0; }
 
+.intro p {
+	max-width: 800px;
+	text-align: justify;
+}
+
 .graphLink {
 	display: inline-block;
 	max-width: 500px;
@@ -176,10 +181,10 @@ header {
 		background-repeat: no-repeat;
 		background-position: 4px 2px;
 		/* SVG logo: fallback to png */
-		background-image: url('/static/logo-h-neg.png');
+		background-image: url('../img/logo-h-neg.png');
 		background-image:
 		linear-gradient(transparent, transparent),
-		url('/static/logo-h-neg.svg');
+		url('../img/logo-h-neg.svg');
 		background-size: 115px 30px;
 		@include opacity(0.8);
 
@@ -472,3 +477,6 @@ footer {
 	background-color: rgba(0, 0, 0, 0.3);
 	z-index: 14;
 }
+
+/* Include _responsive file */
+@import 'responsive';

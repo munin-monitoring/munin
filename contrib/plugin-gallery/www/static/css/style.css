@@ -60,6 +60,11 @@ img {
   border: 0;
 }
 
+.intro p {
+  max-width: 800px;
+  text-align: justify;
+}
+
 .graphLink {
   display: inline-block;
   max-width: 500px;
@@ -128,8 +133,8 @@ header .logo {
   background-repeat: no-repeat;
   background-position: 4px 2px;
   /* SVG logo: fallback to png */
-  background-image: url("/static/logo-h-neg.png");
-  background-image: linear-gradient(transparent, transparent), url("/static/logo-h-neg.svg");
+  background-image: url("../img/logo-h-neg.png");
+  background-image: linear-gradient(transparent, transparent), url("../img/logo-h-neg.svg");
   background-size: 115px 30px;
   opacity: 0.8;
   filter: alpha(opacity=80);
@@ -477,6 +482,94 @@ footer p.tagline:hover {
   left: 0;
   background-color: rgba(0, 0, 0, 0.3);
   z-index: 14;
+}
+
+/* Include _responsive file */
+/*
+ * This file contains everything that makes munin responsive, and is included in style.scss
+ */
+/* Small devices (tablets, smartphones) */
+@media (max-width: 768px) {
+  header {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    padding: 5px;
+  }
+  header .logo {
+    width: 30px;
+    margin-top: 0;
+  }
+  header .pageTitle {
+    margin-top: 5px;
+  }
+
+  /* Different nav */
+  #main {
+    display: block;
+    min-height: 0;
+  }
+
+  nav {
+    display: block;
+    width: 100%;
+    max-width: 500px;
+    margin: auto;
+  }
+  nav #nav {
+    display: none;
+    border-right: 0;
+    padding: 0;
+    margin-top: -4px;
+  }
+  nav #nav h2 {
+    text-align: center;
+    padding-left: 0;
+  }
+  nav #nav ul li {
+    text-align: center;
+    padding-right: 0;
+  }
+  nav #nav .timerangesList {
+    opacity: 1;
+  }
+  nav #navToggle,
+  nav #nav {
+    -moz-box-shadow: 0 0 2px 0 #777777;
+    -webkit-box-shadow: 0 0 2px 0 #777777;
+    -o-box-shadow: 0 0 2px 0 #777777;
+    box-shadow: 0 0 2px 0 #777777;
+    filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=2);
+  }
+  nav #navToggle {
+    display: block;
+    padding: 10px 15px;
+    background-color: rgba(0, 0, 0, 0.05);
+    font-weight: bold;
+    cursor: pointer;
+    font-family: sans-serif;
+  }
+  nav #navToggle:after {
+    content: "+";
+    float: right;
+    font-size: 18px;
+    font-weight: normal;
+    margin-top: -2px;
+    color: #797979;
+  }
+  nav #navToggle.expanded:after {
+    content: "-";
+    margin-top: -4px;
+  }
+
+  #content {
+    display: block;
+    padding: 1em 0 1em 0;
+    width: 100%;
+  }
+  #content h2, #content h3 {
+    margin-left: 20px;
+  }
 }
 
 /*# sourceMappingURL=style.css.map */

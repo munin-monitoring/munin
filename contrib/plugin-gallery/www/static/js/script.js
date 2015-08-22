@@ -3,29 +3,44 @@
  */
 
 $(document).ready(function() {
-	// Intercept documentation docs links click
-	var MODAL_ID = 'doc_modal';
-	var modal = prepareModal(MODAL_ID, '<iframe frameBorder="0" seamless="seamless"></iframe>');
-	var iframe = modal.find('iframe');
+	// Navigation toggle on tablets
+	$('#navToggle').click(function() {
+		var nav = $('#nav');
 
-	// Register load event on iframe to inject CSS
-	iframe.load(function() {
-		iframe.contents().find('head').append('<link rel="stylesheet" href="/static/css/style-doc.css" />');
+		if ($(this).hasClass('expanded')) {
+			$(this).removeClass('expanded');
+			nav.hide();
+		} else {
+			$(this).addClass('expanded');
+			nav.show();
+		}
 	});
 
-	$('span.host').find('a[title="Info"]').click(function(e) {
-		// Don't open the link
-		e.preventDefault();
+	// Intercept documentation docs links click on desktop
+	if ($('body').width() > 768) {
+		var MODAL_ID = 'doc_modal';
+		var modal = prepareModal(MODAL_ID, '<iframe frameBorder="0" seamless="seamless"></iframe>');
+		var iframe = modal.find('iframe');
 
-		iframe.attr('src', $(this).attr('href'));
+		// Register load event on iframe to inject CSS
+		iframe.load(function () {
+			iframe.contents().find('head').append('<link rel="stylesheet" href="/static/css/style-doc.css" />');
+		});
 
-		// Show modal
-		setModalTitle(MODAL_ID, 'Documentation - ' + $(this).text());
+		$('span.host').find('a[title="Info"]').click(function (e) {
+			// Don't open the link
+			e.preventDefault();
 
-		// Add "open" button to modal
-		setModalOpenTarget(MODAL_ID, $(this).attr('href'));
-		showModal(MODAL_ID);
-	});
+			iframe.attr('src', $(this).attr('href'));
+
+			// Show modal
+			setModalTitle(MODAL_ID, 'Documentation - ' + $(this).text());
+
+			// Add "open" button to modal
+			setModalOpenTarget(MODAL_ID, $(this).attr('href'));
+			showModal(MODAL_ID);
+		});
+	}
 });
 
 /**

@@ -1,0 +1,89 @@
+/*
+ * This file contains everything that makes munin responsive, and is included in style.scss
+ */
+
+/* Small devices (tablets, smartphones) */
+@media (max-width: 768px) {
+	header {
+		border-left: 0;
+		border-right: 0;
+		border-radius: 0;
+		padding: 5px;
+
+		.logo {
+			width: 30px;
+			margin-top: 0;
+		}
+		.pageTitle { margin-top: 5px; }
+	}
+
+	/* Different nav */
+	#main {
+		display: block;
+		min-height: 0;
+	}
+	nav {
+		display: block;
+		width: 100%;
+		max-width: 500px;
+		margin: auto;
+
+		#nav {
+			display: none;
+			border-right: 0;
+			padding: 0;
+			margin-top: -4px;
+
+			h2 {
+				text-align: center;
+				padding-left: 0;
+			}
+			ul li {
+				text-align: center;
+				padding-right: 0;
+			}
+			.timerangesList { opacity: 1; }
+		}
+
+		#navToggle,
+		#nav {
+			-moz-box-shadow: 0 0 2px 0 #777777;
+			-webkit-box-shadow: 0 0 2px 0 #777777;
+			-o-box-shadow: 0 0 2px 0 #777777;
+			box-shadow: 0 0 2px 0 #777777;
+			filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=2);
+		}
+
+		#navToggle {
+			display: block;
+			padding: 10px 15px;
+			background-color: rgba(0, 0, 0, 0.05);
+			font-weight: bold;
+			cursor: pointer;
+			font-family: sans-serif;
+
+			&:after {
+				content: "+";
+				float: right;
+				font-size: 18px;
+				font-weight: normal;
+				margin-top: -2px;
+				color: #797979;
+			}
+			&.expanded:after {
+				content: "-";
+				margin-top: -4px;
+			}
+		}
+	}
+
+	#content {
+		display: block;
+		padding: 1em 0 1em 0;
+		width: 100%;
+
+		h2, h3 {
+			margin-left: 20px;
+		}
+	}
+}
