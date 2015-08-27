@@ -87,6 +87,8 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 
     print "slab " if exists $mems{'Slab'};
 
+    print "shmem " if exists $mems{'Shmem'};
+
     print "cached ",
       "buffers ",
 	"free ",
@@ -110,6 +112,11 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "free.draw STACK\n";
     print "free.info Wasted memory. Memory that is not ",
       "used for anything at all.\n";
+    if (exists $mems{'Shmem'}) {
+	print "shmem.label shmem\n";
+	print "shmem.draw STACK\n";
+	print "shmem.info Shared Memory (SYSV SHM segments, tmpfs).\n";
+    }
     if (exists $mems{'Slab'}) {
 	print "slab.label slab_cache\n";
 	print "slab.draw STACK\n";
@@ -185,7 +192,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "inact_clean.draw LINE1\n";
 	print "inact_clean.info Memory not currently used.\n";
     }
-    for my $field (qw(apps buffers swap cached free slab swap_cache page_tables vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean)) {
+    for my $field (qw(apps buffers swap cached free slab swap_cache page_tables vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean shmem)) {
     	my ($warning, $critical) = get_thresholds($field);
 	my $total = $mems{MemTotal};
 	$total = $mems{SwapTotal} if($field eq "swap");
@@ -247,8 +254,11 @@ print "apps.value ", $mems{'MemTotal'}
 
 print "free.value ", $mems{'MemFree'}, "\n";
 print "buffers.value ", $mems{'Buffers'}, "\n";
-print "cached.value ", $mems{'Cached'}, "\n";
+print "cached.value ", $mems{'Cached'} - (defined($mems{'Shmem'}) ? $mems{'Shmem'} : 0), "\n";
 print "swap.value ", $mems{'SwapTotal'} - $mems{'SwapFree'}, "\n";
+
+print "shmem.value ", $mems{'Shmem'}, "\n"
+  if exists $mems{'Shmem'};
 
 print "committed.value ", $mems{'Committed_AS'}, "\n"
   if exists $mems{'Committed_AS'};
