@@ -1,1 +1,2 @@
 etc/munin/plugins
+etc/munin/plugin-conf.d

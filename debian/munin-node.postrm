@@ -2,14 +2,6 @@
 
 set -e
 
-# workaround for bug #198522
-delete_dir_if_empty() {
-	if [ ! -d "$1" ]; then
-		return 0;
-	fi
-	rmdir --ignore-fail-on-non-empty $1;
-}
-
 if [ "$1" = "purge" ]; then
 	# delete dangling symlinks
 	test -d /etc/munin/plugins/ && for plugin in $(find /etc/munin/plugins/ -type l); do
@@ -18,20 +10,8 @@ if [ "$1" = "purge" ]; then
 		fi
 	done
 
-	# since 2.0.6 /var/lib/munin-node/plugin-state is used and /var/lib/munin/plugin-state not, 
-	# so this should be cleaned up post wheezy.
-	#
-	# just like #198522 (see above..) is fixed since 2006 ;)
-
-	rm -rf /var/lib/munin/plugin-state
 	rm -f /var/log/munin/munin-node.log*
 	rm -f /var/log/munin/munin-node-configure.log*
-
-	delete_dir_if_empty /var/lib/munin
-	delete_dir_if_empty /var/log/munin
-	delete_dir_if_empty /etc/munin/plugin-conf.d
-	delete_dir_if_empty /etc/munin/plugins
-	delete_dir_if_empty /etc/munin
 fi
 
 #DEBHELPER#
