@@ -157,7 +157,6 @@ Depends: ${misc:Depends}, ${perl:Depends},
  libtime-hires-perl,
  liburi-perl,
  munin-common (>= ${binary:Version}),
- perl-modules | libparse-recdescent-perl,
  rrdtool,
 Recommends: munin-node, munin-doc, libcgi-fast-perl
 Suggests: www-browser, httpd, libnet-ssleay-perl, libapache2-mod-fcgid
@@ -184,7 +183,6 @@ Package: munin-common
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  adduser,
- perl-modules | libparse-recdescent-perl,
  liblist-moreutils-perl,
 Description: network-wide graphing framework (common)
  Munin is a highly flexible and powerful solution used to create graphs of
@@ -204,7 +202,6 @@ Depends: ${misc:Depends}, ${perl:Depends},
  adduser,
  munin-common (>= ${binary:Version}),
  munin-node,
- perl-modules,
 Description: network-wide graphing framework (async master/client)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
