@@ -17,9 +17,9 @@ When to use them?
 Ordinarily one does not want to use multigraph plugins. This is because they quickly become much more like "ordinary software", e.g. that the number of lines of code passes around 50-100 lines, and that the data structures become more complex than a very simple hash or array. Most Munin plugins are simple and quick (and fun) to write, and that is by many considered one of the killer features of Munin. A multigraph plugin quickly becomes more unwieldy to write and takes away the quickness and fun from plugin writing.
 
 But, if in your plugins you notice
--  duplication of code
--  duplication of work
--  you have more data than you know how to present in one or a few graphs
+  -  duplication of code
+  -  duplication of work
+  -  you have more data than you know how to present in one or a few graphs
 
 and this bothers you or makes things unnecessarily slow you may want to write a multigraph plugin
 
