@@ -122,12 +122,12 @@ munin-update - A program to gather data from machines running munin-node
 munin-update [options]
 
  Options:
-     --config_file=<file>    Use <file> as configuration file. 
+     --config_file=<file>    Use <file> as configuration file.
      --debug                 Enable debug messages.
      --screen                Send log messages the screen (STDERR).
-     --[no]fork              Query hosts in parallell (--fork), or 
+     --[no]fork              Query hosts in parallel (--fork), or
                              sequentially (--nofork). [--fork]
-     --host <host>	     Limit graphed hosts to <host>. Multiple --host 
+     --host <host>	     Limit graphed hosts to <host>. Multiple --host
                              options may be supplied.
      --service <service>     Limit graphed services to <service>. Multiple
  			     --service options may be supplied.
