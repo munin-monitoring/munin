@@ -1,9 +1,20 @@
-munin (2.0.25-2) UNRELEASED; urgency=medium
+munin (2.0.25-2) unstable; urgency=medium
 
+  [ Holger Levsen ]
   * munin-async.README.Debian: Fix two typos, thanks to Francois Gouget.
     (Closes: #767861)
 
- -- Holger Levsen <holger@debian.org>  Fri, 28 Nov 2014 14:49:40 +0100
+  [ gregor herrmann ]
+  * [be02507] Fix "FTBFS with perl 5.22 (Module::Build)":
+
+  [ Stig Sandbeck Mathisen ]
+  * [bd20b96] Import RELEASE from upstream tarball (fix bad merge)
+  * [a14bbe5] Remove obsolete depedency perl-modules | libparse-recdescent-perl.
+    Thanks to gregor herrmann (Closes: #797081)
+  * [d947b2f] Do not purge directories potentially owned by other packages.
+    Thanks to Andreas Beckmann (Closes: #793864)
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Sun, 30 Aug 2015 10:07:21 +0200
 
 munin (2.0.25-1) unstable; urgency=medium
 
