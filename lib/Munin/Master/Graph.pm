@@ -599,7 +599,7 @@ sub RRDs_graph_or_dump {
 
 	my $fileext = shift;
 	if ($fileext =~ m/PNG|SVG|EPS|PDF/) {
-		return RRDs::graph(@_);
+		return RRDs_graph(@_);
 	}
 
 	DEBUG "[DEBUG] RRDs_graph(fileext=$fileext)";
