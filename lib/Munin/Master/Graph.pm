@@ -344,8 +344,6 @@ sub handle_request
 		# ... But we did still want to compute the related DEF & CDEF
 		next if $_has_negative;
 
-		$_label = substr($_label, 0, 20);
-		$_label .= " " x (15 - length $_label);
 		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label\\l";
 
 		# Legend
@@ -355,10 +353,13 @@ sub handle_request
 
 		push @rrd_def, "VDEF:vlst_$_rrdname=avg_$_rrdname,LAST";
 
-		push @rrd_gfx, "COMMENT:\\u"; # Rewind the line, to have \r after the \l
+		my $is_label_small = length($_label) <= 20;
+		if ($is_label_small) {
+			push @rrd_gfx, "COMMENT:\\u"; # Rewind the line, to have \r after the \l
+			#my $label_as_white = " " x (length $_label);
+			#push @rrd_gfx, "COMMENT:$label_as_white"; # Rewind the line, to have \r after the \l
+		}
 
-		my $label_as_white =" " x (length $_label);
-		push @rrd_gfx, "COMMENT:$label_as_white"; # Rewind the line, to have \r after the \l
 
 		# Handle negatives
 		if ($_negative) {
