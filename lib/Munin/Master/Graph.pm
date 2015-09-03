@@ -353,10 +353,11 @@ sub handle_request
 
 		push @rrd_def, "VDEF:vlst_$_rrdname=avg_$_rrdname,LAST";
 
-		push @rrd_gfx, "COMMENT:\\u"; # Rewind the line, to have \r after the \l
+		my $is_label_small = length($_label) <= 20;
+		if ($is_label_small) {
+			push @rrd_gfx, "COMMENT:\\u"; # Rewind the line, to have \r after the \l
+		}
 
-		my $label_as_white = "   " . " " x (length $_label);
-		push @rrd_gfx, "COMMENT:$label_as_white"; # Rewind the line, to have \r after the \l
 
 		# Handle negatives
 		if ($_negative) {
@@ -378,10 +379,7 @@ sub handle_request
 		for my $t (qw(lst min avg max)) {
 			if (! $_negative) {
 				push @rrd_gfx, "GPRINT:v$t"."_$_rrdname:$_printf\\t";
-				#push @rrd_gfx, "COMMENT:\\s";
 			} else {
-				# Here we want a different printf, as it
-
 				push @rrd_gfx, "GPRINT:v$t"."_$_rrdname:$_printf\\g";
 				push @rrd_gfx, "COMMENT:/\\g";
 				push @rrd_gfx, "GPRINT:v$t"."_n_$_rrdname:$_printf\\g";
@@ -599,7 +597,7 @@ sub RRDs_graph_or_dump {
 
 	my $fileext = shift;
 	if ($fileext =~ m/PNG|SVG|EPS|PDF/) {
-		return RRDs::graph(@_);
+		return RRDs_graph(@_);
 	}
 
 	DEBUG "[DEBUG] RRDs_graph(fileext=$fileext)";
