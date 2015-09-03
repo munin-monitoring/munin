@@ -252,6 +252,8 @@ sub handle_request
 	# Construction of the RRD command line
 	# We don't care anymore for rrdtool less than 1.4
 	my @rrd_def;
+	my @rrd_cdef;
+	my @rrd_vdef;
 	my @rrd_gfx;
 	my @rrd_gfx_negatives;
 	my @rrd_legend;
@@ -263,6 +265,9 @@ sub handle_request
 	push @rrd_gfx, "COMMENT:Min\\t";
 	push @rrd_gfx, "COMMENT:Avg\\t";
 	push @rrd_gfx, "COMMENT:Max\\t\\r";
+
+	# CDEF dictionary
+	my %rrd_cdefs;
 
 	my $lastupdated;
 
@@ -323,10 +328,10 @@ sub handle_request
 
 		# Handle an eventual cdef
 		if ($_rrdcdef) {
-			# Sustitute the name with the real RRD
-			push @rrd_def, "CDEF:avg_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "avg_$real_rrdname");
-			push @rrd_def, "CDEF:min_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "min_$real_rrdname");
-			push @rrd_def, "CDEF:max_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "max_$real_rrdname");
+			# Populate the CDEF dictionnary, to be able to swosh it at the end.
+			# As it will enable to solve inter-field CDEFs.
+			$rrd_cdefs{$_rrdname}->{_rrdcdef} = $_rrdcdef;
+			$rrd_cdefs{$_rrdname}->{real_rrdname} = $real_rrdname;
 		}
 
 		# Graph them
@@ -347,11 +352,11 @@ sub handle_request
 		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label\\l";
 
 		# Legend
-		push @rrd_def, "VDEF:vavg_$_rrdname=avg_$_rrdname,AVERAGE";
-		push @rrd_def, "VDEF:vmin_$_rrdname=min_$_rrdname,MINIMUM";
-		push @rrd_def, "VDEF:vmax_$_rrdname=max_$_rrdname,MAXIMUM";
+		push @rrd_vdef, "VDEF:vavg_$_rrdname=avg_$_rrdname,AVERAGE";
+		push @rrd_vdef, "VDEF:vmin_$_rrdname=min_$_rrdname,MINIMUM";
+		push @rrd_vdef, "VDEF:vmax_$_rrdname=max_$_rrdname,MAXIMUM";
 
-		push @rrd_def, "VDEF:vlst_$_rrdname=avg_$_rrdname,LAST";
+		push @rrd_vdef, "VDEF:vlst_$_rrdname=avg_$_rrdname,LAST";
 
 		my $is_label_small = length($_label) <= 20;
 		if ($is_label_small) {
@@ -362,15 +367,15 @@ sub handle_request
 		# Handle negatives
 		if ($_negative) {
 			# We'll have a negative counterpart
-			push @rrd_def, "CDEF:avg_n_$_rrdname=avg_$_negative,-1,*";
-			push @rrd_def, "CDEF:min_n_$_rrdname=min_$_negative,-1,*";
-			push @rrd_def, "CDEF:max_n_$_rrdname=max_$_negative,-1,*";
+			push @rrd_vdef, "CDEF:avg_n_$_rrdname=avg_$_negative,-1,*";
+			push @rrd_vdef, "CDEF:min_n_$_rrdname=min_$_negative,-1,*";
+			push @rrd_vdef, "CDEF:max_n_$_rrdname=max_$_negative,-1,*";
 
-			push @rrd_def, "VDEF:vavg_n_$_rrdname=avg_n_$_rrdname,AVERAGE";
-			push @rrd_def, "VDEF:vmin_n_$_rrdname=min_n_$_rrdname,MINIMUM";
-			push @rrd_def, "VDEF:vmax_n_$_rrdname=max_n_$_rrdname,MAXIMUM";
+			push @rrd_vdef, "VDEF:vavg_n_$_rrdname=avg_n_$_rrdname,AVERAGE";
+			push @rrd_vdef, "VDEF:vmin_n_$_rrdname=min_n_$_rrdname,MINIMUM";
+			push @rrd_vdef, "VDEF:vmax_n_$_rrdname=max_n_$_rrdname,MAXIMUM";
 
-			push @rrd_def, "VDEF:vlst_n_$_rrdname=avg_n_$_rrdname,LAST";
+			push @rrd_vdef, "VDEF:vlst_n_$_rrdname=avg_n_$_rrdname,LAST";
 		}
 
 		# Displaying the values as POSITIVE/NEGATIVE if $_negative
@@ -397,6 +402,23 @@ sub handle_request
 		$field_number ++;
 	}
 
+	# Handle the plugin-authored CDEF
+	for my $_rrdname (keys %rrd_cdefs) {
+		my $_rrdcdef = $rrd_cdefs{$_rrdname}->{_rrdcdef};
+		my $real_rrdname = $rrd_cdefs{$_rrdname}->{real_rrdname};
+
+		for my $t (qw(min avg max)) {
+			my $expanded_cdef = expand_cdef($_rrdname, $_rrdcdef, $t . "_$real_rrdname");
+			for my $inner_rrdname (keys %rrd_cdefs) {
+				next if ($inner_rrdname eq $_rrdname); # Already handled
+
+				# expand an eventual sibling field to its realrrdname
+				my $inner_real_rrdname = $rrd_cdefs{$inner_rrdname}->{real_rrdname};
+				$expanded_cdef = expand_cdef($inner_rrdname, $expanded_cdef, $t . "_$inner_real_rrdname");
+			}
+			push @rrd_def, "CDEF:$t"."_$_rrdname=$expanded_cdef";
+		}
+	}
 
 	# $end is possibly in future
 	$end = $end ? $end : time;
@@ -498,6 +520,8 @@ sub handle_request
 		$rrd_fh->filename,
 		@rrd_header,
 		@rrd_def,
+		@rrd_cdef,
+		@rrd_vdef,
 		@rrd_gfx,
 		@rrd_gfx_negatives,
 		@rrd_legend,
