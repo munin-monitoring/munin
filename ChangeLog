@@ -1,3 +1,84 @@
+munin-2.99.3, 2015-09-15
+
+-------
+Summary
+-------
+
+That release is the 3nd alpha of the 3.0 series. It is versionned 2.99.x so
+numeric only sorting works, as we do have distro that rely on that.
+
+It mostly consists of fixes.
+
+It is currently alpha quality, that means that bugs *are* expected, but they
+should all have some workaround.
+
+------------------
+Detailed Changelog
+------------------
+
+Michael 'PoempelFox' Meier (1):
+      split cache into cache + shmem in linux memory plugin
+
+Quentin Stoeckel (10):
+      Prevent -week graph from showing if there's not enough room to display it
+      Redesign plugin gallery front page
+      Fix modal iframe height
+      Open docs in modals, add docs styling
+      Enhance plugin gallery responsiveness
+      Enhance gallery lists
+      Update INSTALL file
+      Remove brackets from download links & add class to it for styling
+      Add CSS styling directly to generated documentation HTML files
+      Add missing closing tag to navigation
+
+Steve Schnepp (16):
+      dev_scripts: make a script that actually works
+      master: avoid graphing negative ds as standalone
+      deps: add some deps for testing & CI
+      graph: fixed the graphing gliches on pos/neg values
+      graph: use a full-featured rrdtool instead of RRDs
+      graph: fix negative SQL
+      httpd: make the script executable
+      dev_scripts: create the plugin state dir
+      graph: fix comments
+      gallery: remove the .in handling for plugin
+      graph: activate out-of-process rrd graphing
+      graph: limit the legend label in graph to 20 chars
+      graph: use a line break on 20+ chars labels
+      graph: cleanup old commented code
+      graph: fix cdef inter-fields handling
+      gitignore: adding coverage dir output
+
+Stig Sandbeck Mathisen (23):
+      remove old munin graph and html code
+      remove Munin::Master::Utils::munin_nscasend
+      remove Munin::Master::Utils::munin_delete
+      remove Munin::Master::Utils::munin_configpart_revision
+      remove Munin::Master::Utils::munin_get_bool_val
+      remove Munin::Master::Utils::munin_node_status
+      remove Munin::Master::Utils::munin_category_status
+      remove Munin::Master::Utils::munin_service_status
+      remove Munin::Master::Utils::munin_field_status
+      remove Munin::Master::Utils::munin_get_picture_filename
+      remove Munin::Master::Utils::munin_get_html_filename
+      remove Munin::Master::Utils::munin_find_node_by_fqn
+      remove Munin::Master::Utils::munin_get_separated_node
+      remove Munin::Master::Utils::munin_get_host_path_from_string
+      remove Munin::Master::Utils::wait_for_remaining_children
+      remove Munin::Master::Utils::look_for_child
+      remove Munin::Master::Utils::munin_graph_column_headers
+      remove Munin::Master::Utils::munin_get_max_label_length
+      remove Munin::Master::Utils::munin_get_field_order
+      remove Munin::Master::Utils::munin_draw_field
+      Remove contrib items with with munin-graph/html focus
+      Remove documentation for munin-graph and munin-html
+      Remove dependencies for old code
+
+mcarton (2):
+      Fix spelling mistake in munin-update SYNOPSIS
+      Fix markdown formating
+
+
 munin-2.99.2, 2015-08-18
 
 -------
