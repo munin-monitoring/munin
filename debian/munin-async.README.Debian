@@ -17,7 +17,7 @@ collect munin-async data from the various servers:
 The munin-async Debian package contains both the client AND the server scripts
 for async work. This is not consistent, since previously all the data fetching
 scripts were in the munin package, and all the data serving scripts were in the
-munin-node package. It also means that you have to install munin-async
+munin-node package. It also means that you have to install munin-async
 (creating the munin-async user, with its own entry in passwd file and its
 shell set to /bin/bash) on the server, not just on the clients. I don’t like
 leaving that open.
@@ -83,7 +83,7 @@ To prevent your monitored server being compromised if someone manages to break
 into your munin collection server, you should edit the /var/lib/munin-
 async/.ssh/authorized_keys file and add
 
-no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty,no-user-rc,command="/usr/sbin/munin-async  --spooldir /var/lib/munin-async --spoolfetch"
+no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty,no-user-rc,command="/usr/share/munin/munin-async --spooldir /var/lib/munin-async --spoolfetch"
 
 to the beginning of the relevant line. Additionally consider from="(remote machine IPs)".
 
@@ -118,8 +118,8 @@ hosts.
 
 Add something like:
 Host *
-  UserKnownHostsFile=/dev/null
-  StrictHostKeyChecking=no
+  UserKnownHostsFile=/dev/null
+  StrictHostKeyChecking=no
 
 I don’t think this makes the setup less secure, but it would make the
 automation of adding new hosts to the system easier.
