@@ -168,20 +168,22 @@ sub do_work {
 		my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
 		DEBUG "[DEBUG] update_rate $update_rate_in_seconds for $plugin on $nodedesignation";
 
+		my $new_data = 1;
+
 		if (! %service_data) {
 			# Check if this plugin has to be updated
 			if ($update_rate_in_seconds
 				&& $self->is_fresh_enough($nodedesignation, $plugin, $update_rate_in_seconds)) {
 			    # It's fresh enough, skip this $service
 			    DEBUG "[DEBUG] $plugin is fresh enough, not updating it";
-			    next;
+			    $new_data = 0;
 			}
 
 			# __root__ is only a placeholder plugin for
 			# an empty spoolfetch so we should ignore it
 			# if asked to fetch it.
 			# But we should still do everything after than.
-			if ($plugin ne "__root__") {
+			if ($new_data && $plugin ne "__root__") {
 				DEBUG "[DEBUG] No service data for $plugin, fetching it";
 				local $0 = "$0 -- fetch($plugin)";
 				%service_data = $self->{node}->fetch_service_data($plugin);
@@ -244,6 +246,8 @@ sub do_work {
 		%{$all_service_configs{global}} = (
 		    %{$all_service_configs{global}},
 		    %{$service_config{global}});
+
+		next if (!$new_data);
 
 		my $last_updated_timestamp = $self->_update_rrd_files(\%service_config, \%service_data);
 		$self->_update_carbon_server(\%service_config, \%service_data);
