@@ -225,6 +225,8 @@ sub handle_request
 			gd.value,
 			pf.value,
 			ne.value,
+			sm.value as sum,
+			st.value as stack,
                         (
                                 select hn.id
                                 from ds hn
@@ -243,6 +245,8 @@ sub handle_request
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
 		LEFT OUTER JOIN ds_attr pf ON pf.id = ds.id AND pf.name = 'printf'
 		LEFT OUTER JOIN ds_attr ne ON ne.id = ds.id AND ne.name = 'negative'
+		LEFT OUTER JOIN ds_attr sm ON sm.id = ds.id AND sm.name = 'sum'
+		LEFT OUTER JOIN ds_attr st ON st.id = ds.id AND st.name = 'stack'
 		LEFT OUTER JOIN state s ON s.id = ds.id AND s.type = 'ds'
 		WHERE ds.service_id = ?
 		ORDER BY ds.ordr ASC
@@ -278,6 +282,8 @@ sub handle_request
 			$_color, $_drawtype,
 			$_printf,
 			$_negative,
+			$_sum,
+			$_stack,
 			$_has_negative,
 			$_lastupdated,
 		) = $sth->fetchrow_array()) {
