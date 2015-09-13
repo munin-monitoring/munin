@@ -111,6 +111,7 @@ my $build = Module::Build->new(
         'HTTP::Server::Simple::CGI'    => '0',
         'IO::Socket::INET6'      => '2.69',
         'LWP::UserAgent'         => '6.06',
+        'List::Util'             => '0',
         'List::MoreUtils'        => '0.33',
         'Log::Dispatch'          => '2.41',
         'Net::SNMP'              => 'v6.0.1',
