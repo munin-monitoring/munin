@@ -261,6 +261,7 @@ sub handle_request
 	my @rrd_gfx;
 	my @rrd_gfx_negatives;
 	my @rrd_legend;
+	my @rrd_sum;
 
 	my %negatives;
 
@@ -303,37 +304,39 @@ sub handle_request
 
 		# Handle .sum
 		if ($_sum) {
-			# .sum is just a alias + cdef shortcut
-			my @sums = split(/ +/, $_sum);
-			for my $sum (@sums) {
+			# .sum is just a alias + cdef shortcut, an exemple is :
+			#
+			# inputtotal.sum \
+			#            ups-5a:snmp_ups_ups-5a_current.inputcurrent \
+			#            ups-5b:snmp_ups_ups-5b_current.inputcurrent
+			# outputtotal.sum \
+			#            ups-5a:snmp_ups_ups-5a_current.outputcurrent \
+			#            ups-5b:snmp_ups_ups-5b_current.outputcurrent
+			#
+			my @sum_items = split(/ +/, $_sum);
+			my $sum_item_idx = 0;
+			for my $sum_item (@sum_items) {
+				my $sum_item_rrdname = "_s_" . $sum_item_idx . "_" . $_rrdname;
+				# Get the RRD from the $sum_item
+				my ($sum_item_rrdfile, $sum_item_rrdfield, $sum_item_lastupdated)
+					= get_alias_rrdfile($dbh, $sum_item);
 
 
+				push @rrd_sum, "DEF:avg_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":AVERAGE";
+				push @rrd_sum, "DEF:min_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":MIN";
+				push @rrd_sum, "DEF:max_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":MAX";
+
+				# The sum lastupdated is the latest of its parts.
+				if (! $_lastupdated || $_lastupdated < $sum_item_lastupdated) {
+					$_lastupdated = $sum_item_lastupdated;
+				}
 			}
 		}
 
 		# Handle virtual DS by overriding the fields that describe the RDD _file_
-		if ($_rrdalias && $_rrdalias =~ m/^(.*)\.([^.]+)$/) {
-			my ($_alias_service, $_alias_ds) = ($1, $2);
-
+		if ($_rrdalias) {
 			# This is a virtual DS, we have to fetch the original values
-			($_rrdfile, $_rrdfield, $_lastupdated) = $dbh->selectrow_array("
-				SELECT
-					rf.value,
-					rd.value,
-					st.last_epoch,
-					'dummy' as dummy
-				FROM ds
-				INNER JOIN service s ON s.id = ds.service_id AND (
-					s.name = ?
-				OR	s.path = ?
-				)
-				LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
-				LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
-				LEFT OUTER JOIN state st ON st.id = ds.id AND st.type = 'ds'
-				WHERE ds.name = ?
-				ORDER BY ds.ordr ASC
-			", undef, $_alias_service, $_alias_service, $_alias_ds);
-			DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield, $_lastupdated)";
+			($_rrdfile, $_rrdfield, $_lastupdated) = get_alias_rrdfile($dbh, $_rrdalias);
 		}
 
 		# Fetch the data from the RRDs
@@ -741,6 +744,37 @@ sub RRDs_graph_or_dump {
 
 	my $rrd_error = RRDs::error();
 	return $rrd_error;
+}
+
+sub get_alias_rrdfile
+{
+	my ($dbh, $_rrdalias) = @_;
+
+	return unless ($_rrdalias =~ m/^(.*)\.([^.]+)$/);
+
+	my ($_alias_service, $_alias_ds) = ($1, $2);
+
+	# This is a virtual DS, we have to fetch the original values
+	my ($_rrdfile, $_rrdfield, $_lastupdated) = $dbh->selectrow_array("
+		SELECT
+			rf.value,
+			rd.value,
+			st.last_epoch,
+			'dummy' as dummy
+		FROM ds
+		INNER JOIN service s ON s.id = ds.service_id AND (
+			s.name = ?
+		OR	s.path = ?
+		)
+		LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
+		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
+		LEFT OUTER JOIN state st ON st.id = ds.id AND st.type = 'ds'
+		WHERE ds.name = ?
+		ORDER BY ds.ordr ASC
+	", undef, $_alias_service, $_alias_service, $_alias_ds);
+	DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield, $_lastupdated)";
+
+	return ($_rrdfile, $_rrdfield, $_lastupdated);
 }
 
 1;
