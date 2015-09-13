@@ -104,6 +104,19 @@ Global attributes
 
 ============
 
+.. _graph_printf:
+
+:Attribute: **graph_printf**
+:Value: Default format string for data source values.
+:Type: optional
+:Description:
+   | Controls the format munin (actually rrd) uses to display data
+   | source values in the graph legend.
+:See also:
+:Default: "%7.2lf" if --base is 1024, otherwise "%6.2lf"
+
+============
+
 .. _graph_scale:
 
 :Attribute: **graph_scale**
