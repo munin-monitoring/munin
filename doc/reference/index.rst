@@ -13,6 +13,7 @@ Nomenclature
    :maxdepth: 2
 
    nomenclature.rst
+   fqn.rst
 
 .. index::
    single: man pages
