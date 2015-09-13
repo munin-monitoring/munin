@@ -314,9 +314,12 @@ sub handle_request
 			#            ups-5b:snmp_ups_ups-5b_current.outputcurrent
 			#
 			my @sum_items = split(/ +/, $_sum);
+			my @sum_items_generated;
 			my $sum_item_idx = 0;
 			for my $sum_item (@sum_items) {
-				my $sum_item_rrdname = "_s_" . $sum_item_idx . "_" . $_rrdname;
+				my $sum_item_rrdname = "s_" . $sum_item_idx . "_" . $_rrdname;
+				push @sum_items_generated, $sum_item_rrdname;
+
 				# Get the RRD from the $sum_item
 				my ($sum_item_rrdfile, $sum_item_rrdfield, $sum_item_lastupdated)
 					= get_alias_rrdfile($dbh, $sum_item);
@@ -331,6 +334,11 @@ sub handle_request
 					$_lastupdated = $sum_item_lastupdated;
 				}
 			}
+
+			# Now, the real meat. The CDEF SUMMING.
+			# The initial 0 is because you have to have an initial value when chain summing
+			my $cdef_sums = join(",+,", @sum_items_generated);
+			push @rrd_sum, "CDEF:avg_$_rrdname=0," . $cdef_sums;
 		}
 
 		# Handle virtual DS by overriding the fields that describe the RDD _file_
