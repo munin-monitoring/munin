@@ -204,7 +204,6 @@ def print_config(hard_drive) :
     print('graph_category disk')
     print('graph_info This graph shows the value of all S.M.A.R.T attributes of drive '+string.join(hard_drive,",")+' ('+smart_values_state['model']+'). smartctl_exit_status is the return value of smartctl. A non-zero return value indicates an error, a potential error, or a fault on the drive.')
     attributes=smart_values_state.keys()
-    attributes.sort()
     for key in attributes :
         if key in ['smartctl_exit_status','model'] : continue
         print(key+'.label '+key)
@@ -227,7 +226,6 @@ def print_unknown_from_statefile(hard_drive,smart_values) :
 
     verboselog('Printing unknown values for all attributes in state file')
     attributes=smart_values_state.keys()
-    attributes.sort()
     for key in attributes :
         if key=='model' : continue
         print(key+'.value U')
