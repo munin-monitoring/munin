@@ -301,6 +301,16 @@ sub handle_request
 
 		DEBUG "rrdname: $_rrdname";
 
+		# Handle .sum
+		if ($_sum) {
+			# .sum is just a alias + cdef shortcut
+			my @sums = split(/ +/, $_sum);
+			for my $sum (@sums) {
+
+
+			}
+		}
+
 		# Handle virtual DS by overriding the fields that describe the RDD _file_
 		if ($_rrdalias && $_rrdalias =~ m/^(.*)\.([^.]+)$/) {
 			my ($_alias_service, $_alias_ds) = ($1, $2);
