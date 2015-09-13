@@ -625,12 +625,12 @@ sub RRDs_graph {
 	my $chld_err = new IO::String();
 	my $chld_pid = open3($chld_out, $chld_in, $chld_err, "rrdtool", "graphv", @_);
 
-	DEBUG "[DEBUG] RRDs_graph(chld_out=$chld_out)";
-	DEBUG "[DEBUG] RRDs_graph(chld_err=$chld_err)";
+	DEBUG "[DEBUG] RRDs_graph(chld_out=".${$chld_out->string_ref}.")";
+	DEBUG "[DEBUG] RRDs_graph(chld_err=".${$chld_err->string_ref}.")";
 
 	waitpid( $chld_pid, 0 );
 
-	my $child_exit_status = $? >> 8;
+	my $child_exit_status = ($? >> 8);
 
 	return $child_exit_status;
 }
