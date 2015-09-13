@@ -488,8 +488,9 @@ sub handle_request
 		"--start", $start,
 		"--slope-mode",
 
-                '--font', 'DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans',
-                '--font', 'LEGEND:7:DejaVuSansMono,DejaVu Sans Mono,DejaVu LGC Sans Mono,Bitstream Vera Sans Mono,monospace',
+		'--font', 'TITLE:12:Sans',
+		'--font', 'DEFAULT:7',
+		'--font', 'LEGEND:7',
                 # Colors coordinated with CSS.
                 '--color', 'BACK#F0F0F0',   # Area around the graph
                 '--color', 'FRAME#F0F0F0',  # Line around legend spot
