@@ -555,8 +555,8 @@ sub get_limits {
     my $hash = shift || return;
 
     # This hash will have values that we can look up such as these:
-    my @critical = (undef, undef);
-    my @warning  = (undef, undef);
+    my $critical = undef;
+    my $warning  = undef;
     my $crit          = munin_get($hash, "critical",      undef);
     my $warn          = munin_get($hash, "warning",       undef);
     my $unknown_limit = munin_get($hash, "unknown_limit", 3);
@@ -564,37 +564,38 @@ sub get_limits {
     my $name = munin_get_node_name($hash);
 
     if (defined $crit and $crit =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/) {
-        $critical[0] = $1 if length $1;
-        $critical[1] = $2 if length $2;
+        $critical = [undef, undef];
+        ${$critical}[0] = $1 if length $1;
+        ${$critical}[1] = $2 if length $2;
     }
     elsif (defined $crit and $crit =~ /^\s*([-+\d.]+)\s*$/) {
-        $critical[1] = $1;
+        $critical = [undef, $1];
     }
     elsif (defined $crit) {
-        @critical = (0, 0);
+        $critical = [0, 0];
     }
     if(defined $crit) {
         DEBUG "[DEBUG] processing critical: $name -> "
-                . (defined $critical[0]? $critical[0] : "")
+                . (defined ${$critical}[0]? ${$critical}[0] : "")
                 .  " : "
-                . (defined $critical[1]? $critical[1] : "");
-    }   
+                . (defined ${$critical}[1]? ${$critical}[1] : "");
+    }
 
     if (defined $warn and $warn =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/) {
-        $warning[0] = $1 if length $1;
-        $warning[1] = $2 if length $2;
+        ${$warning}[0] = $1 if length $1;
+        ${$warning}[1] = $2 if length $2;
     }
     elsif (defined $warn and $warn =~ /^\s*([-+\d.]+)\s*$/) {
-        $warning[1] = $1;
+        $warning = [undef, $1];
     }
     elsif (defined $warn) {
-        @warning = (0, 0);
+        $warning = [0, 0];
     }
     if(defined $warn) {
         DEBUG "[DEBUG] processing warning: $name -> "
-                . (defined $warning[0]? $warning[0] : "")
+                . (defined ${$warning}[0]? ${$warning}[0] : "")
                 .  " : "
-                . (defined $warning[1]? $warning[1] : "");
+                . (defined ${$warning}[1]? ${$warning}[1] : "");
     }
 
     if ($unknown_limit =~ /^\s*(\d+)\s*$/) {
@@ -608,7 +609,7 @@ sub get_limits {
         DEBUG "[DEBUG] processing unknown_limit: $name -> $unknown_limit";
     }
 
-    return (\@warning, \@critical, $unknown_limit);
+    return ($warning, $critical, $unknown_limit);
 }
 
 sub generate_service_message {
