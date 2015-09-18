@@ -697,19 +697,29 @@ sub RRDs_graph_or_dump {
 		print $out_fh "</xport>\n";
 	} elsif ($fileext eq "JSON") {
 		print $out_fh "{\n";
-		print $out_fh "    meta: { \n";
-		print $out_fh "        start: $start,\n";
-		print $out_fh "        step: $step,\n";
-		print $out_fh "        end: $end,\n";
-		print $out_fh "        rows: " . (scalar @$values) . ",\n";
-		print $out_fh "        columns: " . (scalar @$columns) . ",\n";
-		print $out_fh "        legend: [\n";
-		for my $column ( @{ $columns } ) {
-			print $out_fh "            \"$column\",\n";
+		print $out_fh "    \"meta\": { \n";
+		print $out_fh "        \"start\": $start,\n";
+		print $out_fh "        \"step\": $step,\n";
+		print $out_fh "        \"end\": $end,\n";
+		print $out_fh "        \"rows\": " . (scalar @$values) . ",\n";
+		print $out_fh "        \"columns\": " . (scalar @$columns) . ",\n";
+		print $out_fh "        \"legend\": [\n";
+		my $index = 0;
+		my @json_columns = map { s/\\l$//; $_; } @{ $columns }; # Remove trailing "\l"
+		for my $column ( @json_columns ) {
+			print $out_fh "            \"$column\"";
+
+			my $is_last_column = ($index != scalar(@json_columns)-1);
+			if ($is_last_column) {
+				print $out_fh ",";
+			}
+			print $out_fh "\n";
+
+			$index++;
 		}
-		print $out_fh "        ],\n";
+		print $out_fh "        ]\n";
 		print $out_fh "    }, \n";
-		print $out_fh "    data: [ \n";
+		print $out_fh "    \"data\": [ \n";
 		my $idx_value = 0;
 		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
 			print $out_fh "        [ $epoch";
@@ -717,9 +727,14 @@ sub RRDs_graph_or_dump {
 			for my $value (@$row) {
 				print $out_fh ", " . (defined $value ? $value : '"NaN"');
 			}
-			print $out_fh " ],\n";
+			print $out_fh " ]";
+			# Don't print "," for the last item
+			if ($epoch != $end) {
+				print $out_fh ",";
+			}
+			print $out_fh "\n";
 		}
-		print $out_fh "    ], \n";
+		print $out_fh "    ] \n";
 		print $out_fh "}\n";
 	}
 
