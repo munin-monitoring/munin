@@ -1,0 +1,285 @@
+munin (2.0.6-1) unstable; urgency=medium
+
+    Welcome to munin 2.0.6! Please read the changelog and the documentation
+    to learn about new features.
+
+    If you're upgrading and using (fast)cgi graphing ("graph_strategy cgi"
+    in munin.conf) you will need to modify both your /etc/munin/munin.conf
+    as well as the webserver configuration due to changed cgi pathes to
+    enable secure setups.
+    See http://munin-monitoring.org/wiki/CgiHowto2 for more information.
+
+    The munin-node package now only provides the actual node, plugins are 
+    provided in separate munin-plugins* packages. munin-async is a new feature 
+    in 2.0
+    The documentation for munin has been moved to the new "munin-doc" package.
+
+ -- Holger Levsen <holger@debian.org>  Mon, 03 Sep 2012 12:04:02 +0200
+
+munin (1.4.0-1) unstable; urgency=low
+
+    Move htmldir to /var/cache/munin/www. Note that we currently don't
+    have a proper upgrade mechanism in place. When upgrading from a 
+    previous version of munin, you'll need to change /etc/munin/munin.conf
+    htmldir parameter, from /var/www/munin, to /var/cache/munin/www.
+
+    A new binary package: munin-java-plugins was added. This package contains
+    a java jmx (Java Management Extensions) plugin.
+
+    A new binary package: munin-common, was added. It contains code shared by
+    munin and munin-node. munin, munin-node packages now both depend on 
+    munin-common.
+
+    munin-node-configure-snmp command is no longer available, use 
+    munin-node-configure --snmp to configure snmp hosts.
+
+    If upgrading from 1.2.6, please review the 
+    /usr/share/doc/munin/UPGRADING file as there is an issue with truncated
+    field names in plugins (especially with the df plugin), resulting
+    in loss of history, which can be fixed manually.
+
+    munin.conf has a "includedir" directive now, to include config file
+    snipplets.
+
+ -- Tom Feiner <feiner.tom@gmail.com>  Fri, 04 Dec 2009 18:29:16 +0200
+
+munin (1.2.6-2) unstable; urgency=low
+
+  * Build the binary package 'munin-plugins-extra' with user contributed
+    plugins (again) by default. Though previously this package was called
+    'munin-plugins-contrib'. It was renamed to avoid confusion about the term
+    'contrib' which is used in Debian with a different meaning.
+
+ -- Matthias Schmitz <matthias@sigxcpu.org>  Tue, 01 Jul 2008 19:06:20 +0200
+
+munin (1.2.5-1) unstable; urgency=low
+
+  * Thanks to Marc Haber the Debian build scripts are now able to build a
+    custom package called "munin-plugins-contrib", which will contain some
+    user-contributed plugins that aren't included in the "munin-node" package.
+
+    To enable the build of this package, the environment variable
+    DEB_BUILD_OPTIONS must contain the string "munin:build-contrib-pkg".
+    The following commands ought to do the trick for most users:
+
+      export DEB_BUILD_OPTIONS="$DEB_BUILD_OPTIONS munin:build-contrib-pkg"
+      apt-get build-dep munin
+      apt-get --build source munin
+      dpkg --install munin-plugins-contrib_*_all.deb
+
+    It is not included in the Debian distribution.  Bugs should therefore be
+    reported to the upstream bug tracker at <http://munin.projects.linpro.no/>.
+
+ -- Tore Anderson <tore@debian.org>  Tue, 17 Oct 2006 14:39:05 +0200
+
+munin (1.2.2-1) unstable; urgency=low
+
+  * The "contrib" plugins are not supported from upstream, and have therefore
+    been removed from the package.  They have not been through a thorough QA
+    review, and could therefore contain security holes or simply not work as
+    expected.
+
+    The removed plugins are:
+
+      amavis apc_envunit_ apc_nis bind9 bind9_rndc courier_ dhcpd3
+      exim_mailqueue_alt files_ foldingathome foldingathome_rank
+      foldingathome_wu hddtemp2 hddtempd hddtemp i2c_fan i2c iostat_ios ipac-ng
+      mailman mailscanner mbmon_ mhttping named netopia nut_misc nut_volts
+      perdition pm3users_ pop_stats samba spamstats surfboard users
+
+    Most of these who turn out to be well-written and of general interest, will
+    likely make their way back into the package as auto or manual at a later
+    release.  If you have been using any of these, you should consider aborting
+    the upgrade, and copy the plugins you use from /usr/share/munin/plugins/ to
+    /etc/munin/plugins/ (overwriting the symlink).  That way, they will not be
+    touched during the upgrade.
+
+    You may also download them from <http://munin.sourceforge.net/>.
+
+ -- Tore Anderson <tore@debian.org>  Sun, 13 Mar 2005 00:28:49 +0100
+
+munin (1.2.0-1) unstable; urgency=low
+
+  * There are two major bugfixes in the 1.2.x series of Munin since 1.0.x that
+    could not be accomplished without introducing a risk of losing historical
+    data after upgrades.  Or more precisely:  no data will be lost, but the
+    exact name of the RRD file will change, so that the update process will
+    start collecting data into a new, emtpy, file, which in turn will be read
+    by munin-graph, and the final result is that the graph will appear to have
+    lost all data.  The historical data will still be present in the old graph.
+    
+    In the last two sections of this file I will attempt to detail how you can
+    minimize the data loss by carefully planning how to perform the upgrade.
+
+  * The infrastructure for sending warnings if values drop below or rise above
+    preset boundaries has been redesigned to improve flexibility, and are no
+    longer specific to NSCA/Nagios.  The old nsca_* settings are still
+    recognized, and are automatically mapped into a contact with the name
+    "old-nagios".  Hence the now deprecated munin.conf entries
+
+       nsca        /bin/nsca
+       nsca_server sloth.fud.no
+       nsca_config /etc/nsca.cf
+
+    would implicitly be converted to the entry
+
+       contact.old-nagios.command /bin/nsca sloth.fud.no -c /etc/nsca.cf -to 60
+
+    unless the latter was explicitly defined in /etc/munin/munin.conf, in which
+    case the deprecated entries would be ignored.
+
+  * Data loss issue 1
+    =================
+  
+    A number of plugins which in the 1.0.x series used the COUNTER data type
+    has now been changed to use the DERIVE type, with a minimum of 0.  The
+    reason is to hinder RRDtool from misdetecting counter wraps when a service
+    or machine is restarted, which resulted in abnormal spikes in those graphs.
+
+    The munin-update component from the 1.2.x series are able to recognize that
+    a plugin has changed thusly, and will automatically copy all the historic
+    data from the old RRD file into the new one, ensuring a smooth transition.
+    However, the munin-update component from the 1.0.x series are not aware of
+    this, and will react to this data type change by starting to collect data
+    into a new, empty, RRD file.
+
+    The method to ensure a painless upgrade is simple:
+    
+    Ensure that you upgrade the "munin" package BEFORE you upgrade the
+    ==================================================================
+    "munin-node" package on any of the hosts it collects data from.
+    ===============================================================
+
+    Should you however have already upgraded the packages in the wrong order,
+    you may salvage your graphs by manually change the data type in the old
+    RRD file, and afterwards rename it.  For instance, you may have this RRD
+    file containing the "user" field from the "cpu" plugin of munin-node 1.0.x:
+
+        /var/lib/munin/fud.no/lust.fud.no-cpu-user-c.rrd
+
+    After upgrading to version 1.2.x of munin-node, this will have changed to:
+
+        /var/lib/munin/fud.no/lust.fud.no-cpu-user-d.rrd
+
+    If the "munin" package wasn't upgraded before "munin-node" one, you will
+    have both files, and the latter one will only contain the data gathered
+    since the upgrade of the "munin-node" package.  In order to make the old
+    data reappear in the graph, you may do so using the following procedure:
+
+        cd /var/lib/munin/fud.no
+        rrdtool tune lust.fud.no-cpu-user-c.rrd -d 42:DERIVE
+        mv -f lust.fud.no-cpu-user-c.rrd lust.fud.no-cpu-user-d.rrd
+
+    You will have to repeat this process once for each field in each affected
+    plugin.  Also remember to ensure that the "munin" system user have write
+    access to the resulting RRD file when you are finished.  Be warned,
+    however, that by doing this you will lose all data collected since
+    munin-node was upgraded to version 1.2.x.
+
+  * Data loss issue 2
+    =================
+  
+    The 1.0.x series had rather nasty design flaw that caused field names
+    longer than 18 characters be truncated, removing any excessive characters
+    from the start of the field name.  This led to a nasty bug; if a plugin
+    reported values for two fields, who both had long names where the last 18
+    charaters were the same, only one RRD file would be generated, and its
+    contents would be unpredictable.  The 1.2.x series do not exhibit this
+    behaviour, and will store the entire field name as part of the RRD file
+    name.  As this leads to the fact that a new, empty, file will be created
+    with the non-truncated field name, the graphs will appear to have been
+    reset.
+
+    To solve this you need to manually figure out which RRD files are affected,
+    and rename them so that they are called what the new version of Munin
+    expects them to.  To figure out which files may be affected, you can
+    do the following:
+
+        cd /var/lib/munin
+        ls */*.rrd | awk '-F[/-]' '{if(length($4)==18) print}'
+
+    This will output one line for each file that may be affected, for instance:
+
+        fud.no/pride.fud.no-df-v_mapper_pride_usr-g.rrd
+
+    The three first strings separated by hyphens in the filename is the
+    interesting ones.  The first is the host as named in /etc/munin/munin.conf,
+    the second is the plugin name, and the third is the possibly mangled field
+    name.  I say "possibly", because any RRD files with a field name that is
+    exactly 18 characters long will also be reported, even though they are not
+    affected by the change.  To figure out if the file is indeed affected, and
+    what the new name should be, you need to ask the host's Munin-node process.
+
+    First, you need to figure out the DNS hostname or IP address of the node,
+    unless you already know it.  This information can be found in the file
+    /etc/munin/munin.conf, and will for this example look like this:
+
+        [pride.fud.no]
+          address 127.0.0.1
+
+    Next, connect to the host's Munin-node process:
+
+        telnet 127.0.0.1 munin
+
+    After receiving the welcoming "# munin node at pride.fud.no" banner, input:
+
+        fetch df
+
+    "df" is of course the plugin name as found embedded in the RRD file name
+    above.  You should now get the values reported by the plugin in return:
+    
+        _dev_hda5.value  54
+        _dev_mapper_pride_usr.value  88
+        _dev.value  54
+    
+    The field names are the strings before the periods.  At this point the
+    correct field name is obvious - the truncated field name
+    "v_mapper_pride_usr" is the last 18 characters of "_dev_mapper_pride_usr",
+    so the latter must be the correct one.  Now that you know that, you can
+    rename the RRD file so that the new version can find it:
+
+        cd /var/lib/munin/fud.no
+        mv pride.fud.no-df-v_mapper_pride_usr-g.rrd \
+           pride.fud.no-df-_dev_mapper_pride_usr-g.rrd
+
+    If you find no possible matches, it may be because the RRD file contains
+    data that are no longer collected, which could've happened in this example
+    if the filesystem in /dev/mapper/pride-usr was unmounted in the past.
+    To find out if that is the case, look at the time stamp of the file to
+    see when it was last modified.  If that's a long time ago, chances are the
+    file isn't used anyway and can be left alone.
+
+    If you're really unfortunate, you may end up with multiple possibilities,
+    which could've happened in the example used here if both a device named
+    /udev/mapper/pride-usr and also one named /dev/mapper/pride-usr was mounted
+    simultaneously.  If this is the case, you can't do anything but inspect the
+    relevant graph as created with Munin 1.0 to see if the field seems to
+    contain the correct data for at least one of the fields, and rename the RRD
+    accordingly.  However, there is a possibility that the RRD will contain
+    useless data that isn't correct for either of the fields.  In any case, you
+    won't be able to bring back correct data for both the fields, as it wasn't
+    collected properly to begin with.
+
+    You will have to repeat the process for every possibly affected RRD file,
+    after which you may safely upgrade your "munin" package.
+    
+ -- Tore Anderson <tore@debian.org>  Mon, 21 Feb 2005 00:16:25 +0100
+munin (2.0~rc2-1~1) unstable; urgency=low
+
+    Welcome to munin 2.0~rc2! Please read the changelog and the documentation
+    to learn about new features. 
+
+    If you're upgrading and have modified /etc/munin/munin.conf in the past
+    you will now need to to set "graph_strategy cgi", if you haven't done so
+    already. 
+    (In theory, you could get the old cron based graphing to work as well, 
+    but we strongly recommend not to.)
+
+    See http://munin-monitoring.org/wiki/CgiHowto2 for more information.
+
+    The munin-node package now only provides the actual node, plugins are 
+    provided in seperate munin-plugins* packages. munin-async is a new feature 
+    in 2.0
+    The documentation for munin has been moved to the new "munin-doc" package.
+
+ -- Holger Levsen <holger@debian.org>  Mon, 19 Mar 2012 14:49:24 +0100

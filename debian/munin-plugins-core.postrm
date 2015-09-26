@@ -1,0 +1,11 @@
+#! /bin/sh
+
+set -e
+
+if [ "$1" = "purge" ]; then
+	# The state files are created by plugins and must be removed for a
+	# clean purge of the plugin-state directory.
+	rm -rf /var/lib/munin-node/plugin-state/*
+fi
+
+#DEBHELPER#

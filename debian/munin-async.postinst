@@ -1,0 +1,67 @@
+#! /bin/sh
+
+set -e
+
+prevver="$2"
+
+add_munin_async_user() {
+	if ! getent passwd munin-async >/dev/null; then
+		adduser --group --system --home /var/lib/munin-async --shell /bin/bash munin-async
+	fi
+	# workaround bug (#531021) in xen-tools
+	if ! getent group munin-async >/dev/null; then
+		addgroup --system munin-async
+		adduser --shell /bin/bash munin-async
+	fi
+}
+
+initperms() {
+	chown munin-async:munin-async /var/lib/munin-async
+}
+
+# Remove a no-longer used conffile.  From
+# http://wiki.debian.org/DpkgConffileHandling
+rm_conffile() {
+    PKGNAME="$1"
+    CONFFILE="$2"
+
+    [ -e "$CONFFILE" ] || return 0
+
+    md5sum="$(md5sum $CONFFILE | sed -e 's/ .*//')"
+    old_md5sum="$(dpkg-query -W -f='${Conffiles}' $PKGNAME | \
+            sed -n -e "\' $CONFFILE ' { s/ obsolete$//; s/.* //; p }")"
+    if [ "$md5sum" != "$old_md5sum" ]; then
+        echo "Obsolete conffile $CONFFILE has been modified by you." 1>&2
+        echo "Saving as $CONFFILE.dpkg-bak ..." 1>&2
+        mv -f "$CONFFILE" "$CONFFILE".dpkg-bak
+    else
+        echo "Removing obsolete conffile $CONFFILE ..." 1>&2
+        rm -f "$CONFFILE"
+    fi
+}
+
+
+
+
+case "$1" in
+	configure)
+		add_munin_async_user
+		# after wheezy / squeeze-sloppy-backports just test for [ "$2" = 0 ]
+		if dpkg --compare-versions "$2" le "2.0.6-1~" ; then
+			initperms
+		fi
+                # cleanup to fix #717260
+                if dpkg --compare-versions "$2" le "2.0.16-4"; then
+                        rm_conffile munin-async /etc/logrotate.d/munin-async
+                fi
+		;;
+	abort-upgrade|abort-deconfigure|abort-remove)
+		:
+		;;
+	*)
+		echo "Called with unknown argument $1, bailing out."
+		exit 1
+		;;
+esac
+
+#DEBHELPER#

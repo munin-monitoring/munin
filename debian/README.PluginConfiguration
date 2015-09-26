@@ -1,0 +1,58 @@
+Munin plugin configuration
+==========================
+
+Munin plugins are configured by editing existing or placing new files in
+/etc/munin/plugin-conf.d/.  Since files in this directory may contain passwords
+or other sensitive information, the directory is not world readable.
+
+A plugin configuration file contain one or more sections.  Each section starts
+with a label (between '[' and ']'), and contains an optional "user" statement,
+an optional "grop" statement, and zero or more lines beginning with "env.":
+
+Example:
+
+ [mailthingie]
+  user        mail
+  group       adm
+  env.logfile /var/log/mail.info
+
+[Label]
+-------
+
+A label matching the plugin name starts a new configuration block.
+
+For wildcard plugins requiring similar configuration, the label within [] can
+end in a wildcard, like "[ip_*]".
+
+User
+----
+
+If munin (or munin-run) is run with root privileges, munin will change user for
+the matching plugins to the user specified.
+
+Group
+-----
+
+If munin (or munin-run) is run with root privileges, munin will run the plugin
+with an additional group specified here.
+
+env.variable
+------------
+
+A line 
+
+ "env.logfile /var/log/syslog"
+
+...will run the plugin with an extra environment variable "logfile" with the
+content "/var/log/syslog".  A plugin is expected to provide sane default values
+for such variables, but such defaults may not exist, or be "sane" on other
+platforms.
+
+Debugging
+---------
+
+To check if plugin configuration is applied, run munin-run with "-d" to enable
+debugging, as root, (like "sudo munin-run -d someplugin") and check the output.
+
+If you do not run the plugin as root, you may not be able to read the plugin
+configuration files, and debugging your plugins may be harder than necessary

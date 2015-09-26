@@ -1,0 +1,14 @@
+#! /bin/sh
+# Helper shell to give the OSTYPE
+
+UNAME=$(uname)
+
+if [ "$UNAME" = "Linux" ];
+then
+	echo linux
+fi
+
+if [ "$UNAME" =	"GNU/kFreeBSD" ];
+then
+	echo freebsd
+fi

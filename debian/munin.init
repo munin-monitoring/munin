@@ -1,0 +1,30 @@
+#! /bin/sh
+
+### BEGIN INIT INFO
+# Provides:          munin
+# Required-Start:    $network $named $local_fs $remote_fs
+# Required-Stop:     $network $named $local_fs $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Create /var/run/munin on boot
+# Description:       Create /var/run/munin on boot. Munin itself runs as CGI and has no extra startscript...
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start|restart|force-reload)
+	# Create various dirs
+	mkdir -p /var/run/munin && chown munin /var/run/munin
+	exit $?
+	;;
+  stop)
+	# Nothing to do
+	exit $?
+	;;
+  *)
+	echo "Usage: /etc/init.d/munin" \
+			"{start|stop}"
+	exit 2
+	;;
+esac

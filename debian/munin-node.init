@@ -1,0 +1,185 @@
+#! /bin/bash
+
+### BEGIN INIT INFO
+# Provides:          munin-node
+# Required-Start:    $network $named $local_fs $remote_fs
+# Required-Stop:     $network $named $local_fs $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start/stop Munin-Node
+# Description:       Start/stop Munin-Node
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/usr/sbin/munin-node
+PIDFILE=/var/run/munin/munin-node.pid
+CONFFILE=/etc/munin/munin-node.conf
+DAEMON_ARGS=
+
+. /lib/lsb/init-functions
+[ -r /etc/default/munin-node ] && . /etc/default/munin-node
+
+if [ ! -x $DAEMON ]; then
+	log_failure_msg "Munin-Node appears to be uninstalled."
+	exit 5
+elif [ ! -e $CONFFILE ]; then
+	log_failure_msg "Munin-Node appears to be unconfigured."
+	exit 6
+fi
+
+# Figure out if the pid file is in a non-standard location
+while read line; do
+	line=${line%%\#*} # get rid of comments
+	set -f
+	line=$(echo $line) # get rid of extraneous blanks
+	set +f
+	if [ "$line" != "${line#pid_file }" ]; then
+		PIDFILE=${line#pid_file }
+	fi
+done < $CONFFILE
+
+verify_superuser() {
+	action=$1
+	[ $EUID -eq 0 ] && return
+	log_failure_msg "Superuser privileges required for the" \
+			"\"$action\" action."
+	exit 4
+}
+
+start() {
+	log_daemon_msg "Starting Munin-Node"
+	mkdir -p /var/run/munin /var/log/munin
+	chown munin:root /var/run/munin
+	chown munin:www-data /var/log/munin
+	chmod 0755 /var/run/munin
+	chmod 0755 /var/log/munin
+	if pidofproc -p $PIDFILE $DAEMON >/dev/null; then
+		log_progress_msg "started beforehand"
+		log_end_msg 0
+		exit 0
+	fi
+	start_daemon -p $PIDFILE $DAEMON $DAEMON_ARGS
+	ret=$?
+	# start_daemon() isn't thorough enough, ensure the daemon has been
+	# started manually
+	attempts=0
+	until pidofproc -p $PIDFILE $DAEMON >/dev/null; do
+		attempts=$(( $attempts + 1 ))
+		sleep 0.05
+		[ $attempts -lt 20 ] && continue
+		log_end_msg 1
+		return 1
+	done
+	[ $ret -eq 0 ] && log_progress_msg "done"
+	log_end_msg $ret
+	return $ret
+}
+
+stop() {
+	log_daemon_msg "Stopping Munin-Node"
+	# killproc() doesn't try hard enough if the pid file is missing,
+	# so create it is gone and the daemon is still running
+	if [ ! -r $PIDFILE ]; then
+		pid=$(pidofproc -p $PIDFILE $DAEMON)
+		if [ -z "$pid" ]; then
+			log_progress_msg "stopped beforehand"
+			log_end_msg 0
+			return 0
+		fi
+		echo $pid 2>/dev/null > $PIDFILE
+		if [ $? -ne 0 ]; then
+			log_end_msg 1
+			return 1
+		fi
+	fi
+	killproc -p $PIDFILE /usr/bin/munin-node
+	ret=$?
+	# killproc() isn't thorough enough, ensure the daemon has been
+	# stopped manually
+	attempts=0
+	until ! pidofproc -p $PIDFILE $DAEMON >/dev/null; do
+		attempts=$(( $attempts + 1 ))
+		sleep 0.05
+		[ $attempts -lt 20 ] && continue
+		log_end_msg 1
+		return 1
+	done
+	[ $ret -eq 0 ] && log_progress_msg "done"
+	log_end_msg $ret
+	return $ret
+}
+
+if [ "$#" -ne 1 ]; then
+	log_failure_msg "Usage: /etc/init.d/munin-node" \
+			"{start|stop|restart|force-reload|try-restart}"
+	exit 2
+fi
+
+case "$1" in
+  start)
+  	verify_superuser $1
+  	start
+	exit $?
+	;;
+  stop)
+  	verify_superuser $1
+  	stop
+	exit $?
+	;;
+  restart|force-reload)
+  	verify_superuser $1
+  	stop || exit $?
+	start
+	exit $?
+	;;
+  try-restart)
+  	verify_superuser $1
+	pidofproc -p $PIDFILE $DAEMON >/dev/null
+	if [ $? -eq 0 ]; then
+		stop || exit $?
+		start
+		exit $?
+	fi
+	log_success_msg "Munin-Node was stopped beforehand and thus not" \
+			"restarted."
+	exit 0
+	;;
+  reload)
+  	log_failure_msg "The \"reload\" action is not implemented."
+	exit 3
+	;;
+  status)
+  	pid=$(pidofproc -p $PIDFILE $DAEMON)
+	ret=$?
+	pid=${pid% } # pidofproc() supplies a trailing space, strip it
+	if [ $ret -eq 0 ]; then
+		log_success_msg "Munin-Node is running (PID: $pid)"
+		exit 0
+	# the LSB specifies that I in this case (daemon dead + pid file exists)
+	# should return 1, however lsb-base returned 2 in this case up to and
+	# including version 3.1-10 (cf. #381684).  Since that bug is present
+	# in Sarge, Ubuntu Dapper, and (at the time of writing) Ubuntu Etch,
+	# and taking into account that later versions of pidofproc() do not
+	# under any circumstance return 2, I'll keep understanding invalid
+	# return code for the time being, even though the LSB specifies it is
+	# to be used for the situation where the "program is dead and /var/lock
+	# lock file exists".  
+	elif [ $ret -eq 1 ] || [ $ret -eq 2 ]; then
+		log_failure_msg "Munin-Node is dead, although $PIDFILE exists."
+		exit 1
+	elif [ $ret -eq 3 ]; then
+		log_warning_msg "Munin-Node is not running."
+		exit 3
+	fi
+	log_warning_msg "Munin-Node status unknown."
+	exit 4
+        ;;
+  *)
+	log_failure_msg "Usage: /etc/init.d/munin-node" \
+			"{start|stop|restart|force-reload|try-restart}"
+	exit 2
+	;;
+esac
+
+log_failure_msg "Unexpected failure, please file a bug."
+exit 1
