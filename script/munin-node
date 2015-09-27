@@ -37,6 +37,7 @@ my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 my $sconfdir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $DEBUG    = 0;
+my $VERBOSE  = 0;
 my $PIDEBUG  = 0;
 my $paranoia = 0;
 
@@ -75,6 +76,7 @@ sub main
         conffile => $conffile,
 
         DEBUG    => $DEBUG,
+        VERBOSE  => $VERBOSE,
 
         paranoia => $paranoia,
     });
@@ -104,6 +106,7 @@ sub parse_args
         "servicedir=s" => \$servicedir_cmdline,
         'sconfdir=s'   => \$sconfdir_cmdline,
         "debug!"       => \$DEBUG,
+        "verbose!"     => \$VERBOSE,
         "pidebug!"     => \$PIDEBUG,
         "paranoia!"    => \$paranoia,
         "version"      => \&print_version_and_exit,
@@ -191,6 +194,10 @@ View this help message.
 =item B< --[no]debug >
 
 View debug messages.  This can be very verbose.
+
+=item B< --[no]verbose >
+
+Be verbose.
 
 =item B< --[no]pidebug >
 

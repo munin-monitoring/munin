@@ -117,6 +117,7 @@ use Munin::Common::Logger;
 
 my %booleans = map {$_ => 1} qw(
     debug
+    verbose
     fork
     tls_verify_certificate
     update
@@ -142,6 +143,7 @@ my %booleans = map {$_ => 1} qw(
 		carbon_prefix    => "",
 		config_file      => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf",
 		dbdir            => $Munin::Common::Defaults::MUNIN_DBDIR,
+		verbose          => 0,
 		debug            => 0,
 		fork             => 1,
 		graph_data_size  => 'normal',
