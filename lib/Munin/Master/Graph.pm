@@ -333,12 +333,18 @@ sub handle_request
 				if (! $_lastupdated || $_lastupdated < $sum_item_lastupdated) {
 					$_lastupdated = $sum_item_lastupdated;
 				}
+			} continue {
+				$sum_item_idx ++;
 			}
 
 			# Now, the real meat. The CDEF SUMMING.
 			# The initial 0 is because you have to have an initial value when chain summing
-			my $cdef_sums = join(",+,", @sum_items_generated);
-			push @rrd_sum, "CDEF:avg_$_rrdname=0," . $cdef_sums;
+			for my $t (qw(min avg max)) {
+				# Yey... a nice little MapReduce :-)
+				my @s = map { $t . "_" . $_ } @sum_items_generated;
+				my $cdef_sums = join(",+,", @s);
+				push @rrd_sum, "CDEF:$t". "_r_" . "$_rrdname=0," . $cdef_sums . ",+";
+			}
 		}
 
 		# Handle virtual DS by overriding the fields that describe the RDD _file_
@@ -349,9 +355,11 @@ sub handle_request
 
 		# Fetch the data from the RRDs
 		my $real_rrdname = $_rrdcdef ? "r_$_rrdname" : $_rrdname;
-		push @rrd_def, "DEF:avg_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
-		push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
-		push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+		if (! $_sum) {
+			push @rrd_def, "DEF:avg_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
+			push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
+			push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+		}
 
 		# Handle an eventual cdef
 		if ($_rrdcdef) {
@@ -547,6 +555,7 @@ sub handle_request
 	my @rrd_cmd = (
 		$rrd_fh->filename,
 		@rrd_header,
+		@rrd_sum,
 		@rrd_def,
 		@rrd_cdef,
 		@rrd_vdef,
