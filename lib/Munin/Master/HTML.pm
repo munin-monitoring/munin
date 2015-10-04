@@ -250,14 +250,16 @@ sub handle_request
 			$sth_cat = $dbh->prepare_cached(
 				"SELECT DISTINCT s.name FROM service s
 				LEFT JOIN service_categories sc ON s.id = sc.id
-				WHERE sc.category = 'other' OR sc.id IS NULL
+				WHERE (sc.category = 'other' OR sc.id IS NULL)
+				AND EXISTS (select sa.id from service_attr sa where sa.id = s.id)
 				ORDER BY s.name");
 			$sth_cat->execute();
 		} else {
 			$sth_cat = $dbh->prepare_cached(
 				"SELECT DISTINCT s.name FROM service s
 				INNER JOIN service_categories sc ON s.id = sc.id
-				WHERE sc.category = ?
+				WHERE (sc.category = ?)
+				AND EXISTS (select sa.id from service_attr sa where sa.id = s.id)
 				ORDER BY s.name");
 			$sth_cat->execute($category);
 		}
@@ -712,6 +714,7 @@ sub _get_params_services {
 		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
 		WHERE s.node_id = ?
+		AND EXISTS (select sa.id from service_attr sa where sa.id = s.id)
 		ORDER BY service_title ASC");
 	$sth->execute($category_name, $node_id);
 
