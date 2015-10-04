@@ -23,6 +23,7 @@ use_ok 'Munin::Node::SNMPConfig';
 			hosts     => \@hosts,
 			port      => '161',
 			version   => '2c',
+			domain    => 'udp',
 			sec_args  => {
 				-community => 'public',
 			},
@@ -36,12 +37,13 @@ use_ok 'Munin::Node::SNMPConfig';
 			hosts      => \@hosts,
 			version    => '1',
 			port       => '162',
-
+			domain     => 'udp',
 			community  => 'fnord',
 		),
 		{
 			hosts     => \@hosts,
 			port      => '162',
+			domain    => 'udp',
 			version   => '1',
 			sec_args  => {
 				-community => 'fnord',
@@ -56,12 +58,13 @@ use_ok 'Munin::Node::SNMPConfig';
 			hosts      => \@hosts,
 			version    => '2c',
 			port       => '161',
-
+			domain     => 'udp',
 			community  => 'fnord',
 		),
 		{
 			hosts     => \@hosts,
 			port      => '161',
+			domain    => 'udp',
 			version   => '2c',
 			sec_args  => {
 				-community => 'fnord',
@@ -76,12 +79,13 @@ use_ok 'Munin::Node::SNMPConfig';
 			hosts      => \@hosts,
 			version    => '3',
 			port       => '162',
-
+			domain     => 'udp',
 			username   => 'jeff',
 		),
 		{
 			hosts     => \@hosts,
 			port      => '162',
+			domain    => 'udp',
 			version   => '3',
 			sec_args  => {
 				-username => 'jeff',
@@ -96,13 +100,14 @@ use_ok 'Munin::Node::SNMPConfig';
 			hosts      => \@hosts,
 			version    => '3',
 			port       => '162',
-
+			domain     => 'udp',
 			username   => 'jeff',
 			authpassword => 'swordfish',
 		),
 		{
 			hosts     => \@hosts,
 			port      => '162',
+			domain    => 'udp',
 			version   => '3',
 			sec_args  => {
 				-username => 'jeff',
@@ -117,7 +122,7 @@ use_ok 'Munin::Node::SNMPConfig';
 			hosts      => \@hosts,
 			version    => '3',
 			port       => '162',
-
+			domain     => 'udp',
 			username   => 'jeff',
 			authpassword => 'swordfish',
 			authprotocol => 'sha',
@@ -125,6 +130,7 @@ use_ok 'Munin::Node::SNMPConfig';
 		{
 			hosts     => \@hosts,
 			port      => '162',
+			domain    => 'udp',
 			version   => '3',
 			sec_args  => {
 				-username => 'jeff',
@@ -141,12 +147,14 @@ use_ok 'Munin::Node::SNMPConfig';
 			hosts      => \@hosts,
 			version    => '3',
 			port       => '162',
+			domain     => 'udp',
 			username   => 'jeff',
 			privpassword => 'swordfish',
 		),
 		{
 			hosts     => \@hosts,
 			port      => '162',
+			domain    => 'udp',
 			version   => '3',
 			sec_args  => {
 				-username => 'jeff',
@@ -165,6 +173,7 @@ use_ok 'Munin::Node::SNMPConfig';
 			hosts      => \@hosts,
 			version    => '3',
 			port       => '162',
+			domain     => 'udp',
 			username   => 'jeff',
 			authpassword => 'swordfish',
 			privpassword => 'hedgerows',
@@ -173,6 +182,7 @@ use_ok 'Munin::Node::SNMPConfig';
 		{
 			hosts     => \@hosts,
 			port      => '162',
+			domain    => 'udp',
 			version   => '3',
 			sec_args  => {
 				-username => 'jeff',
