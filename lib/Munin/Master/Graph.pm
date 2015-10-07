@@ -225,6 +225,8 @@ sub handle_request
 			gd.value,
 			pf.value,
 			ne.value,
+			sm.value as sum,
+			st.value as stack,
                         (
                                 select hn.id
                                 from ds hn
@@ -243,6 +245,8 @@ sub handle_request
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
 		LEFT OUTER JOIN ds_attr pf ON pf.id = ds.id AND pf.name = 'printf'
 		LEFT OUTER JOIN ds_attr ne ON ne.id = ds.id AND ne.name = 'negative'
+		LEFT OUTER JOIN ds_attr sm ON sm.id = ds.id AND sm.name = 'sum'
+		LEFT OUTER JOIN ds_attr st ON st.id = ds.id AND st.name = 'stack'
 		LEFT OUTER JOIN state s ON s.id = ds.id AND s.type = 'ds'
 		WHERE ds.service_id = ?
 		ORDER BY ds.ordr ASC
@@ -257,6 +261,7 @@ sub handle_request
 	my @rrd_gfx;
 	my @rrd_gfx_negatives;
 	my @rrd_legend;
+	my @rrd_sum;
 
 	my %negatives;
 
@@ -278,6 +283,8 @@ sub handle_request
 			$_color, $_drawtype,
 			$_printf,
 			$_negative,
+			$_sum,
+			$_stack,
 			$_has_negative,
 			$_lastupdated,
 		) = $sth->fetchrow_array()) {
@@ -295,36 +302,64 @@ sub handle_request
 
 		DEBUG "rrdname: $_rrdname";
 
-		# Handle virtual DS by overriding the fields that describe the RDD _file_
-		if ($_rrdalias && $_rrdalias =~ m/^(.*)\.([^.]+)$/) {
-			my ($_alias_service, $_alias_ds) = ($1, $2);
+		# Handle .sum
+		if ($_sum) {
+			# .sum is just a alias + cdef shortcut, an exemple is :
+			#
+			# inputtotal.sum \
+			#            ups-5a:snmp_ups_ups-5a_current.inputcurrent \
+			#            ups-5b:snmp_ups_ups-5b_current.inputcurrent
+			# outputtotal.sum \
+			#            ups-5a:snmp_ups_ups-5a_current.outputcurrent \
+			#            ups-5b:snmp_ups_ups-5b_current.outputcurrent
+			#
+			my @sum_items = split(/ +/, $_sum);
+			my @sum_items_generated;
+			my $sum_item_idx = 0;
+			for my $sum_item (@sum_items) {
+				my $sum_item_rrdname = "s_" . $sum_item_idx . "_" . $_rrdname;
+				push @sum_items_generated, $sum_item_rrdname;
 
+				# Get the RRD from the $sum_item
+				my ($sum_item_rrdfile, $sum_item_rrdfield, $sum_item_lastupdated)
+					= get_alias_rrdfile($dbh, $sum_item);
+
+
+				push @rrd_sum, "DEF:avg_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":AVERAGE";
+				push @rrd_sum, "DEF:min_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":MIN";
+				push @rrd_sum, "DEF:max_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":MAX";
+
+				# The sum lastupdated is the latest of its parts.
+				if (! $_lastupdated || $_lastupdated < $sum_item_lastupdated) {
+					$_lastupdated = $sum_item_lastupdated;
+				}
+			} continue {
+				$sum_item_idx ++;
+			}
+
+			# Now, the real meat. The CDEF SUMMING.
+			# The initial 0 is because you have to have an initial value when chain summing
+			for my $t (qw(min avg max)) {
+				# Yey... a nice little MapReduce :-)
+				my @s = map { $t . "_" . $_ } @sum_items_generated;
+				my $cdef_sums = join(",+,", @s);
+				push @rrd_sum, "CDEF:$t". "_r_" . "$_rrdname=0," . $cdef_sums . ",+";
+			}
+		}
+
+		# Handle virtual DS by overriding the fields that describe the RDD _file_
+		if ($_rrdalias) {
 			# This is a virtual DS, we have to fetch the original values
-			($_rrdfile, $_rrdfield, $_lastupdated) = $dbh->selectrow_array("
-				SELECT
-					rf.value,
-					rd.value,
-					st.last_epoch,
-					'dummy' as dummy
-				FROM ds
-				INNER JOIN service s ON s.id = ds.service_id AND (
-					s.name = ?
-				OR	s.path = ?
-				)
-				LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
-				LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
-				LEFT OUTER JOIN state st ON st.id = ds.id AND st.type = 'ds'
-				WHERE ds.name = ?
-				ORDER BY ds.ordr ASC
-			", undef, $_alias_service, $_alias_service, $_alias_ds);
-			DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield, $_lastupdated)";
+			($_rrdfile, $_rrdfield, $_lastupdated) = get_alias_rrdfile($dbh, $_rrdalias);
 		}
 
 		# Fetch the data from the RRDs
 		my $real_rrdname = $_rrdcdef ? "r_$_rrdname" : $_rrdname;
-		push @rrd_def, "DEF:avg_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
-		push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
-		push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+		if (! $_sum) {
+			push @rrd_def, "DEF:avg_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
+			push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
+			push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+		}
 
 		# Handle an eventual cdef
 		if ($_rrdcdef) {
@@ -469,8 +504,9 @@ sub handle_request
 		"--start", $start,
 		"--slope-mode",
 
-                '--font', 'DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans',
-                '--font', 'LEGEND:7:DejaVuSansMono,DejaVu Sans Mono,DejaVu LGC Sans Mono,Bitstream Vera Sans Mono,monospace',
+		'--font', 'TITLE:12:Sans',
+		'--font', 'DEFAULT:7',
+		'--font', 'LEGEND:7',
                 # Colors coordinated with CSS.
                 '--color', 'BACK#F0F0F0',   # Area around the graph
                 '--color', 'FRAME#F0F0F0',  # Line around legend spot
@@ -519,6 +555,7 @@ sub handle_request
 	my @rrd_cmd = (
 		$rrd_fh->filename,
 		@rrd_header,
+		@rrd_sum,
 		@rrd_def,
 		@rrd_cdef,
 		@rrd_vdef,
@@ -606,12 +643,12 @@ sub RRDs_graph {
 	my $chld_err = new IO::String();
 	my $chld_pid = open3($chld_out, $chld_in, $chld_err, "rrdtool", "graphv", @_);
 
-	DEBUG "[DEBUG] RRDs_graph(chld_out=$chld_out)";
-	DEBUG "[DEBUG] RRDs_graph(chld_err=$chld_err)";
+	DEBUG "[DEBUG] RRDs_graph(chld_out=".${$chld_out->string_ref}.")";
+	DEBUG "[DEBUG] RRDs_graph(chld_err=".${$chld_err->string_ref}.")";
 
 	waitpid( $chld_pid, 0 );
 
-	my $child_exit_status = $? >> 8;
+	my $child_exit_status = ($? >> 8);
 
 	return $child_exit_status;
 }
@@ -740,6 +777,37 @@ sub RRDs_graph_or_dump {
 
 	my $rrd_error = RRDs::error();
 	return $rrd_error;
+}
+
+sub get_alias_rrdfile
+{
+	my ($dbh, $_rrdalias) = @_;
+
+	return unless ($_rrdalias =~ m/^(.*)\.([^.]+)$/);
+
+	my ($_alias_service, $_alias_ds) = ($1, $2);
+
+	# This is a virtual DS, we have to fetch the original values
+	my ($_rrdfile, $_rrdfield, $_lastupdated) = $dbh->selectrow_array("
+		SELECT
+			rf.value,
+			rd.value,
+			st.last_epoch,
+			'dummy' as dummy
+		FROM ds
+		INNER JOIN service s ON s.id = ds.service_id AND (
+			s.name = ?
+		OR	s.path = ?
+		)
+		LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
+		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
+		LEFT OUTER JOIN state st ON st.id = ds.id AND st.type = 'ds'
+		WHERE ds.name = ?
+		ORDER BY ds.ordr ASC
+	", undef, $_alias_service, $_alias_service, $_alias_ds);
+	DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield, $_lastupdated)";
+
+	return ($_rrdfile, $_rrdfield, $_lastupdated);
 }
 
 1;
