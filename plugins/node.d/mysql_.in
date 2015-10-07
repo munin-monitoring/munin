@@ -52,7 +52,7 @@ Non-default example:
     env.cachenamespace munin_mysql_pri
   [mysql2_*]
     env.mysqlconnection DBI:mysql:information_schema;host=127.0.0.1;port=13306
-    env.mysqluser munin;
+    env.mysqluser munin
     env.mysqlpassword ryuWyawEv
     env.cachenamespace munin_mysql_alt
   [mysql10_*]
