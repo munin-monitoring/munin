@@ -22,6 +22,7 @@ function usage() {
     echo "Usage: munin-check [options]
 Options:
    -h|--help		Show this help.
+   -v|--verbose		Be verbose.
    -f|--fix-permissions Fix the permissions of the munin dirs and files.
    			Needs superuser rights.
 
@@ -31,7 +32,7 @@ It doesn't care about the right permissions for www-data yet...
 }
 
 # Get options from the command line
-TEMP=$(getopt -o fh --long fix-permissions,help -n 'munin-check' -- "$@")
+TEMP=$(getopt -o fhv --long fix-permissions,help,verbose -n 'munin-check' -- "$@")
 
 if [[ $? -ne 0 ]]; then
     echo "Terminating..." >&2
@@ -41,9 +42,11 @@ fi
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
 
+VERBOSE="false"
 while :; do
     case "$1" in
 	-h|--help) usage ; exit 0; shift ;;
+	-v|--verbose) VERBOSE="true"; shift;;
 	-f|--fix-permissions) PLEASE_FIXME="true" ;  shift ;;
 	--) shift ; break ;;
 	*) echo "Internal error!" ; exit 1 ;;

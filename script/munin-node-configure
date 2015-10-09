@@ -81,6 +81,7 @@ sub parse_args
 	my $libdir     = "$Munin::Common::Defaults::MUNIN_LIBDIR/plugins";
 
 	my $debug = 0;
+	my $verbose = 0;
 	my $pidebug = 0;
 	my ($suggest, $shell, $removes, $newer);
 	my $exit_not_error = 1;
@@ -100,6 +101,7 @@ sub parse_args
         'remove-also!'    => \$removes,
 
         'debug!'          => \$debug,
+        'verbose!'        => \$verbose,
         'pidebug!'        => \$pidebug,
 
         # paths
@@ -178,6 +180,7 @@ sub parse_args
         servicedir => $servicedir,  # needed for creating/removing links
         sconfdir   => $sconfdir,
 
+        VERBOSE => $verbose,
         DEBUG   => $debug,
     });
 
@@ -467,6 +470,10 @@ to install the plugins.
 =head1 GENERAL OPTIONS
 
 =over 4
+
+=item B<< --verbose >>
+
+Be verbose.
 
 =item B<< --help >>
 
