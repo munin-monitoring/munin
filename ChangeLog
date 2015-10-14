@@ -1,3 +1,62 @@
+munin-2.999.1, 2015-10-14
+
+-------
+Summary
+-------
+
+That release is the 1rst beta of the 3.0 series. It is versionned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versionning or 3.0b1
+
+It mostly consists of fixes.
+
+It is currently beta quality, that means that bugs *can* happen, but aren't
+really expected. They will have a  workaround and a proper fix soon.
+
+------------------
+Detailed Changelog
+------------------
+
+Kenyon Ralph (3):
+      munin-node-configure: allow setting SNMP domain
+      munin-node-configure: allow setting SNMP domain
+      add SNMP domain to tests
+
+Kieran Clancy (1):
+      Config when update_rate slower than cron interval
+
+Quentin Stoeckel (1):
+      Fix JSON structure syntax, closes #565
+
+Steve Schnepp (11):
+      graph: get .sum & .stack from sql
+      graph: initial add sum command
+      www: "&bull;" isn't supported in every font
+      graph: implement .sum
+      graph: fix the output of the rrdtool command
+      graph: simplify the fonts handling
+      graph: sum, continued
+      plugins: fix sum_cdef_tester plugin
+      http: do not emit empty services
+      plugins: fix sum_cdef_tester
+      http: fix .sum
+
+Stig Sandbeck Mathisen (7):
+      Document graph_printf
+      Remove bind9 plugin in favour of bind9_rndc
+      Update df_abs plugin
+      Do not sort smart_ plugin attributes
+      Remove empty "hidden knowledge" section in the doc
+      Document FQN, Fully Qualified Name
+      Add missing dependency on List::Util to Build.PL
+
+Trygve Vea (1):
+      Erronous config in example
+
+nii_kenichi (1):
+      Typo corrected
+
+
 munin-2.99.3, 2015-09-15
 
 -------
