@@ -406,7 +406,7 @@ Data source attributes
 :Default: GAUGE
 
 .. Note::
-   COUNTER is now considered **harmful**. The same effect can be achieved with a DERIVE type, coupled with a ``min 0``.
+   COUNTER is now considered **harmful** because you can't specify the wraparound value. The same effect can be achieved with a DERIVE type, coupled with a ``min 0``.
 
 ============
 
