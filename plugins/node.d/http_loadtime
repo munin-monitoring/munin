@@ -101,7 +101,7 @@ cd $TEMPO_DIR || exit 1
 
 for uri in $urls
 do
-    loadtime=`$time_bin --quiet -f "%e" wget $wget_opt --header='Accept-Encoding: gzip,deflate' $uri 2>&1`
+    loadtime=`$time_bin -f "%e" wget $wget_opt --header='Accept-Encoding: gzip,deflate' $uri 2>&1`
 
     esc_uri="$(clean_fieldname "$uri")"
     echo $esc_uri".value $loadtime"
