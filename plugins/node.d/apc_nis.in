@@ -83,6 +83,9 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "line_volt.type GAUGE\n";
     print "line_volt.max 300\n";
     print "line_volt.warning ${line_volt_min}:${line_volt_max}\n";
+    print "line_freq.label line (Hz)\n";
+    print "line_freq.type GAUGE\n";
+    print "line_freq.max 65\n";
     print "load.label ups load (%)\n";
     print "load.type GAUGE\n";
     print "time_left.label time left (min)\n";
@@ -104,6 +107,9 @@ do {
     } elsif($line =~ /\WLINEV /) {
         $line =~ s/.* (\d+.\d+).*/$1/;
         print "line_volt.value $line\n";
+    } elsif($line =~ /\WLINEFREQ /) {
+        $line =~ s/.* (\d+.\d+).*/$1/;
+        print "line_freq.value $line\n";
     } elsif($line =~ /\WLOADPCT /) {
         $line =~ s/.* (\d+.\d+).*/$1/;
         print "load.value $line\n";
