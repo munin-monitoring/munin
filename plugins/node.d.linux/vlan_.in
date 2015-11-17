@@ -19,11 +19,11 @@
 INTERFACE=$(basename $0 | sed 's/^vlan_//g' | tr '_' '.')
 
 if [ "$1" = "autoconf" ]; then
-    if [ ! -d /proc/net/vlan ] ; then 
+    if [ ! -d /proc/net/vlan ] ; then
 	echo "no (no vlan support)"
 	exit 0
     fi
-    if [ ! -d -r /proc/net/vlan ] ; then
+    if [ ! -r /proc/net/vlan ] ; then
 	echo "no (cannot not read /proc/net/vlan)"
 	exit 0
     fi
@@ -46,7 +46,7 @@ if [ "$1" = "suggest" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-	echo "graph_order received transmitted" 
+	echo "graph_order received transmitted"
 	echo "graph_title VLAN $INTERFACE Traffic"
 	echo 'graph_args --base 1024'
 	echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'
