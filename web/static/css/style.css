@@ -1063,6 +1063,10 @@ footer p.tagline:hover {
   margin: 10px 0 0 -30px;
   padding: 0 30px;
   border-bottom: 1px solid #dedede;
+  -webkit-box-shadow: 0 2px 5px -3px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 2px 5px -3px rgba(0, 0, 0, 0.2);
+  -o-box-shadow: 0 2px 5px -3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 5px -3px rgba(0, 0, 0, 0.2);
 }
 #content[data-tabs=true] ul.tabs li {
   list-style: none;
@@ -1076,6 +1080,7 @@ footer p.tagline:hover {
   font-size: 14px;
   text-transform: uppercase;
   border-bottom: 2px solid transparent;
+  cursor: pointer;
   -webkit-transition-duration: 200ms;
   -moz-transition-duration: 200ms;
   -o-transition-duration: 200ms;
@@ -1086,11 +1091,12 @@ footer p.tagline:hover {
   border-radius: 2px 2px 0 0;
 }
 #content[data-tabs=true] ul.tabs li:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.03);
 }
 #content[data-tabs=true] ul.tabs li.active {
   color: #546E7A;
   border-bottom-color: #546E7A;
+  cursor: default;
 }
 #content[data-tabs=true] ul.tabs li.warn {
   color: #ED793F;
@@ -1100,7 +1106,6 @@ footer p.tagline:hover {
 }
 #content[data-tabs=true] ul.tabs li, #content[data-tabs=true] ul.tabs a {
   color: #777;
-  cursor: default;
 }
 #content[data-tabs=true] ul.tabs li:hover, #content[data-tabs=true] ul.tabs a:hover {
   color: #666;

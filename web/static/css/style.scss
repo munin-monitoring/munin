@@ -981,6 +981,7 @@ footer {
 		margin: 10px 0 0 -30px;
 		padding: 0 30px;
 		border-bottom: 1px solid #dedede;
+		@include box-shadow(0 2px 5px -3px rgba(0, 0, 0, 0.2));
 
 		li {
 			list-style: none;
@@ -994,13 +995,15 @@ footer {
 			font-size: 14px;
 			text-transform: uppercase;
 			border-bottom: 2px solid transparent;
+			cursor: pointer;
 			@include transition-duration(200ms);
 			@include border-radius(2px 2px 0 0);
 
-			&:hover { background-color: rgba(0, 0, 0, 0.05); }
+			&:hover { background-color: rgba(0, 0, 0, 0.03); }
 			&.active {
 				color: $secondary-color;
 				border-bottom-color: $secondary-color;
+				cursor: default;
 			}
 
 			&.warn { color: $problems-warning-color; }
@@ -1008,7 +1011,6 @@ footer {
 		}
 		li, a {
 			color: #777;
-			cursor: default;
 
 			&:hover {
 				color: #666;
