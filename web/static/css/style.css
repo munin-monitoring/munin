@@ -757,6 +757,7 @@ footer p.tagline:hover {
   margin-right: -28px;
   font-size: 18px;
   vertical-align: middle;
+  position: relative;
 }
 .filter #overview-search-noresult {
   margin: 30px 15px;
