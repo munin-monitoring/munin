@@ -199,8 +199,8 @@ function prepareModal(modalId, modalHTMLContent) {
 	body.append('<div class="modal" data-modalname="' + modalId + '" style="display: none;">'
 					+ '<div class="title" style="display:none">'
 					+ '    <span></span>'
-					+ '    <a href="#close" class="action close"></a>'
-					+ '    <a href="#" class="action open" id="modal' + modalId + '-open" style="display: none;"></a>'
+					+ '    <a href="#close" class="action close"><i class="fa fa-times"></i></a>'
+					+ '    <a href="#" class="action open" id="modal' + modalId + '-open" style="display: none;"><i class="fa fa-external-link"></i></a>'
 					+ '</div>'
 					+ modalHTMLContent
 				+ '</div>');

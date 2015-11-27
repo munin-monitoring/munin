@@ -20,10 +20,12 @@ function toggle(toggleButton) {
 		toggleButton.parent().next().hide();
 
 		toggleButton.attr('data-expanded', 'false');
+		toggleButton.removeClass('fa-angle-down').addClass('fa-angle-right');
 	} else { // Expand it
 		toggleButton.parent().next().show();
 
 		toggleButton.attr('data-expanded', 'true');
+		toggleButton.removeClass('fa-angle-right').addClass('fa-angle-down');
 	}
 }
 

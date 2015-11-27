@@ -168,7 +168,7 @@ img {
 .graph.iremoved {
   opacity: 0.6;
 }
-.graph:hover + img.dynazoomModalLink {
+.graph:hover + .dynazoomModalLink {
   display: block;
   opacity: 0.5;
   filter: alpha(opacity=50);
@@ -185,15 +185,15 @@ img {
 }
 
 /* Dynazoom modal link */
-img.dynazoomModalLink {
+.dynazoomModalLink {
   cursor: pointer;
   position: absolute;
+  font-size: 18px !important;
+  color: #000;
   top: 3px;
   right: 3px;
-  width: 18px;
-  height: 18px;
   border: 1px solid transparent;
-  padding: 2px;
+  padding: 2px 2px 1px 3px;
   opacity: 0;
   filter: alpha(opacity=0);
   -webkit-transition-duration: 150ms;
@@ -205,7 +205,7 @@ img.dynazoomModalLink {
   -ms-border-radius: 2px;
   border-radius: 2px;
 }
-img.dynazoomModalLink:hover {
+.dynazoomModalLink:hover {
   background-color: rgba(0, 0, 0, 0.1);
   opacity: 1;
   filter: alpha(opacity=100);
@@ -235,14 +235,6 @@ header h1 {
   margin: 0;
   cursor: default;
   font-size: 15px;
-}
-header h1 .sep {
-  width: 16px;
-  height: 16px;
-  margin-bottom: 3px;
-  background-image: url("../img/icons/breadcrumb-separator.png");
-  display: inline-block;
-  vertical-align: middle;
 }
 header .logo {
   display: inline-block;
@@ -644,10 +636,8 @@ footer p.tagline:hover {
   -o-box-shadow: inset 0 -2px 2px 0 rgba(0, 0, 0, 0.02);
   box-shadow: inset 0 -2px 2px 0 rgba(0, 0, 0, 0.02);
 }
-.groupview .compare img.glyphicon-compare {
-  width: 12px;
+.groupview .compare .fa-th {
   vertical-align: sub;
-  opacity: 0.7;
   margin-right: 5px;
 }
 .groupview .compare a {
@@ -715,10 +705,6 @@ footer p.tagline:hover {
   -webkit-box-sizing: border-box;
   background-color: #2c712f;
   background-color: rgba(0, 0, 0, 0.2);
-  background-image: url("../img/icons/glyphicons-28-search-white.png");
-  background-repeat: no-repeat;
-  background-position: 8px 7px;
-  background-size: 16px;
   /* Placeholder text color */
   /* Hide IE's cross on text field */
 }
@@ -756,15 +742,19 @@ footer p.tagline:hover {
 .filter input[type=text]::-ms-clear {
   display: none;
 }
-.filter #cancelFilter {
+.filter .fa-times {
   opacity: 0.8;
   filter: alpha(opacity=80);
-  width: 8px;
   cursor: pointer;
   position: absolute;
   top: 0;
   right: 0;
-  padding: 12px;
+  padding: 9px;
+}
+.filter .fa-search {
+  opacity: 0.8;
+  filter: alpha(opacity=80);
+  margin-right: -28px;
 }
 .filter #overview-search-noresult {
   margin: 30px 15px;
@@ -1012,9 +1002,9 @@ footer p.tagline:hover {
   -ms-border-radius: 2px;
   border-radius: 2px;
 }
-#eventRulerToggle img {
-  margin-top: -2px;
-  margin-left: -2px;
+#eventRulerToggle .fa-arrows-h {
+  font-size: 19px;
+  padding: 6px;
 }
 #eventRulerToggle[data-shown=true] {
   -webkit-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
@@ -1253,9 +1243,6 @@ footer p.tagline:hover {
 }
 .modal .title .action {
   float: right;
-  background-size: 12px 12px;
-  background-position: center;
-  background-repeat: no-repeat;
   width: 20px;
   height: 20px;
   margin-left: 5px;
@@ -1265,15 +1252,17 @@ footer p.tagline:hover {
   -moz-transition-duration: 100ms;
   -o-transition-duration: 100ms;
   transition-duration: 100ms;
+  text-align: center;
 }
 .modal .title .action:hover {
   background-color: rgba(0, 0, 0, 0.15);
 }
 .modal .title .action.open {
-  background-image: url("../img/icons/glyphicons-390-new-window-alt-white.png");
+  padding-top: 4px;
+  padding-bottom: 0;
 }
-.modal .title .action.close {
-  background-image: url("../img/icons/glyphicons-208-remove-2-white.png");
+.modal .title .action i {
+  color: #fff;
 }
 .modal iframe {
   -webkit-box-flex: 1;
@@ -1307,24 +1296,23 @@ footer p.tagline:hover {
 .domainview .toggle {
   width: 16px;
   height: 16px;
+  padding: 1px;
   display: inline-block;
-  background: url("../img/icons/expand-reduce.png") no-repeat 0 0;
-  opacity: 0.5;
-  filter: alpha(opacity=50);
-  vertical-align: middle;
+  text-align: center;
+  color: #000;
+  font-size: 15px;
   cursor: pointer;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-}
-.domainview .toggle[data-expanded=true] {
-  background-position: 0 -16px;
+  opacity: 0.7;
+  filter: alpha(opacity=70);
 }
 .domainview .toggle:hover {
-  opacity: 0.8;
-  filter: alpha(opacity=80);
+  opacity: 0.9;
+  filter: alpha(opacity=90);
 }
 .domainview a {
   display: inline-block;
