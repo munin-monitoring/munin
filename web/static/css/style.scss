@@ -205,7 +205,7 @@ img { border: 0; }
 	&.iunkn { color: #ffaa00; }
 	&.iremoved { opacity: 0.6; }
 
-	&:hover+img.dynazoomModalLink {
+	&:hover+.dynazoomModalLink {
 		display: block;
 		@include opacity(0.5);
 	}
@@ -222,15 +222,15 @@ img { border: 0; }
 }
 
 /* Dynazoom modal link */
-img.dynazoomModalLink {
+.dynazoomModalLink {
 	cursor: pointer;
 	position: absolute;
+	font-size: 18px!important;
+	color: #000;
 	top: 3px;
 	right: 3px;
-	width: 18px;
-	height: 18px;
 	border: 1px solid transparent;
-	padding: 2px;
+	padding: 1px 2px 2px 2px;
 	@include opacity(0);
 	@include transition-duration(150ms);
 	@include border-radius(2px);
@@ -260,15 +260,6 @@ header {
 		margin: 0;
 		cursor: default;
 		font-size: 15px;
-
-		.sep {
-			width: 16px;
-			height: 16px;
-			margin-bottom: 3px;
-			background-image: url("../img/icons/breadcrumb-separator.png");
-			display: inline-block;
-			vertical-align: middle;
-		}
 	}
 
 	.logo {
@@ -631,10 +622,8 @@ footer {
 		padding: 0 10px;
 		@include box-shadow(inset 0 -2px 2px 0 rgba(0, 0, 0, 0.02));
 
-		img.glyphicon-compare {
-			width: 12px;
+		.mdi {
 			vertical-align: sub;
-			opacity: 0.7;
 			margin-right: 5px;
 		}
 
@@ -691,10 +680,6 @@ footer {
 		@include box-sizing(border-box);
 		background-color: rgb(44, 113, 47);
 		background-color: rgba(0, 0, 0, 0.2);
-		background-image: url('../img/icons/glyphicons-28-search-white.png');
-		background-repeat: no-repeat;
-		background-position: 8px 7px;
-		background-size: 16px;
 
 		&:hover {
 			background-color: rgba(0, 0, 0, 0.22);
@@ -731,14 +716,21 @@ footer {
 		}
 	}
 
-	#cancelFilter {
+	.mdi-window-close {
 		@include opacity(0.8);
-		width: 8px;
 		cursor: pointer;
 		position: absolute;
 		top: 0;
 		right: 0;
-		padding: 12px;
+		padding: 9px;
+	}
+
+	.mdi-magnify {
+		@include opacity(0.8);
+		margin-right: -28px;
+		font-size: 18px;
+		vertical-align: middle;
+		position: relative;
 	}
 
 	#overview-search-noresult {
@@ -941,9 +933,9 @@ footer {
 	@include transition-duration(200ms);
 	@include border-radius(2px);
 
-	img {
-		margin-top: -2px;
-		margin-left: -2px;
+	.mdi {
+		font-size: 19px;
+		padding: 6px;
 	}
 
 	&[data-shown=true] {
@@ -1042,11 +1034,13 @@ footer {
 	@include user-select(none);
 
 	&:after {
-		content: "\25BE";
-		margin-left: 8px;
-		font-size: 12px;
+		content: "\f415";
+		font-family: "Material Design Icons", serif;
+		font-size: 17px;
+		margin-left: 3px;
+		margin-right: -4px;
 		@include opacity(0.9);
-		vertical-align: 10%;
+		vertical-align: baseline;
 	}
 	&:hover {
 		cursor: pointer;
@@ -1135,26 +1129,21 @@ footer {
 
 		.action {
 			float: right;
-			background-size: 12px 12px;
-			background-position: center;
-			background-repeat: no-repeat;
 			width: 20px;
 			height: 20px;
 			margin-left: 5px;
 			padding: 2px;
 			border-radius: 2px;
 			@include transition-duration(100ms);
+			text-align: center;
 
 			&:hover {
 				background-color: rgba(0, 0, 0, 0.15);
 			}
 
-			&.open {
-				background-image: url('../img/icons/glyphicons-390-new-window-alt-white.png');
-			}
-
-			&.close {
-				background-image: url('../img/icons/glyphicons-208-remove-2-white.png');
+			i {
+				color: #fff;
+				vertical-align: middle;
 			}
 		}
 	}
@@ -1186,19 +1175,17 @@ footer {
 	.toggle {
 		width: 16px;
 		height: 16px;
+		padding: 1px;
 		display: inline-block;
-		background: url('../img/icons/expand-reduce.png') no-repeat 0 0;
-		@include opacity(0.5);
-		vertical-align: middle;
+		text-align: center;
+		color: #000;
+		font-size: 15px;
 		cursor: pointer;
 		@include user-select(none);
-
-		&[data-expanded=true] {
-			background-position: 0 -16px;
-		}
+		@include opacity(0.7);
 
 		&:hover {
-			@include opacity(0.8);
+			@include opacity(0.9);
 		}
 	}
 
