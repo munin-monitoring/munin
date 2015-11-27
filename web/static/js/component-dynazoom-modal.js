@@ -10,7 +10,7 @@ $(document).ready(function() {
 	var graphs = $('.graph'),
 		MODAL_ID = 'dynazoomModal';
 
-	graphs.after('<i class="fa fa-expand dynazoomModalLink"></i>');
+	graphs.after('<i class="mdi mdi-arrow-expand dynazoomModalLink"></i>');
 
 	// Prepare a hidden modal
 	var modal = prepareModal(MODAL_ID, '<iframe frameBorder="0" seamless="seamless"></iframe>');

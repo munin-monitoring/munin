@@ -193,7 +193,7 @@ img {
   top: 3px;
   right: 3px;
   border: 1px solid transparent;
-  padding: 2px 2px 1px 3px;
+  padding: 1px 2px 2px 2px;
   opacity: 0;
   filter: alpha(opacity=0);
   -webkit-transition-duration: 150ms;
@@ -636,7 +636,7 @@ footer p.tagline:hover {
   -o-box-shadow: inset 0 -2px 2px 0 rgba(0, 0, 0, 0.02);
   box-shadow: inset 0 -2px 2px 0 rgba(0, 0, 0, 0.02);
 }
-.groupview .compare .fa-th {
+.groupview .compare .mdi {
   vertical-align: sub;
   margin-right: 5px;
 }
@@ -742,7 +742,7 @@ footer p.tagline:hover {
 .filter input[type=text]::-ms-clear {
   display: none;
 }
-.filter .fa-times {
+.filter .mdi-window-close {
   opacity: 0.8;
   filter: alpha(opacity=80);
   cursor: pointer;
@@ -751,10 +751,12 @@ footer p.tagline:hover {
   right: 0;
   padding: 9px;
 }
-.filter .fa-search {
+.filter .mdi-magnify {
   opacity: 0.8;
   filter: alpha(opacity=80);
   margin-right: -28px;
+  font-size: 18px;
+  vertical-align: middle;
 }
 .filter #overview-search-noresult {
   margin: 30px 15px;
@@ -1002,7 +1004,7 @@ footer p.tagline:hover {
   -ms-border-radius: 2px;
   border-radius: 2px;
 }
-#eventRulerToggle .fa-arrows-h {
+#eventRulerToggle .mdi {
   font-size: 19px;
   padding: 6px;
 }
@@ -1127,12 +1129,14 @@ footer p.tagline:hover {
   user-select: none;
 }
 .switchable:after {
-  content: "\25BE";
-  margin-left: 8px;
-  font-size: 12px;
+  content: "\f415";
+  font-family: "Material Design Icons", serif;
+  font-size: 17px;
+  margin-left: 3px;
+  margin-right: -4px;
   opacity: 0.9;
   filter: alpha(opacity=90);
-  vertical-align: 10%;
+  vertical-align: baseline;
 }
 .switchable:hover {
   cursor: pointer;
@@ -1257,12 +1261,9 @@ footer p.tagline:hover {
 .modal .title .action:hover {
   background-color: rgba(0, 0, 0, 0.15);
 }
-.modal .title .action.open {
-  padding-top: 4px;
-  padding-bottom: 0;
-}
 .modal .title .action i {
   color: #fff;
+  vertical-align: middle;
 }
 .modal iframe {
   -webkit-box-flex: 1;

@@ -49,7 +49,7 @@ $(document).ready(function() {
 	// Add toggle in header
 	$('header').find('.logo')
 		.after('<div id="eventRulerToggle" class="eventRulerToggle" data-shown="false">' +
-					'<i class="fa fa-arrows-h"></i></div>');
+					'<i class="mdi mdi-drag-vertical"></i></div>');
 	var eventRulerToggle = $('#eventRulerToggle');
 	eventRulerToggle.click(function(e) {
 		e.stopPropagation();
