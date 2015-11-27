@@ -20,10 +20,10 @@ $(document).ready(function() {
 	// Get active tab
 	var qs = new Querystring();
 	if (qs.contains('cat'))
-		activeTab = tabs.filter(function() { return $(this).text().trim() == qs.get('cat'); });
+		activeTab = tabs.filter(function() { return $.trim($(this).text()) == qs.get('cat'); });
 	else if (window.location.hash.length > 0) { // URL contains anchor to category: overview->nodeview
 		var anchorName = window.location.hash.substr(1); // Remove leading #
-		activeTab = tabs.filter(function() { return $(this).text().trim() == anchorName; });
+		activeTab = tabs.filter(function() { return $.trim($(this).text()) == anchorName; });
 	}
 	else
 		activeTab = tabs.first();

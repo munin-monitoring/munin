@@ -57,7 +57,7 @@ function prepareSwitchable(switchId) {
 
 	// Gray out current element in switchable_content
 	$('.switchable_content[data-switch=' + switchId + ']').children().filter(function() {
-		return trim(switchable.text()) == trim($(this).text());
+		return $.trim(switchable.text()) == $.trim($(this).text());
 	}).addClass('current');
 }
 
@@ -135,7 +135,7 @@ function filterMatches(filterExpr, result) {
  * @param filterExpr
  */
 function sanitizeFilter(filterExpr) {
-	return filterExpr.toLowerCase().trim();
+	return $.trim(filterExpr.toLowerCase());
 }
 
 /**
@@ -266,8 +266,4 @@ function hideModal(modalId) {
 
 	// Unregister ESC keypress event
 	$(document).off('keyup.modal');
-}
-
-function trim(str) {
-	return str.replace(/^\s+|\s+$/gm,'');
 }
