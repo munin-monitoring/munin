@@ -261,7 +261,7 @@ Data source attributes
 .. _fieldname.critical:
 
 :Attribute: **{fieldname}.critical**
-:Value: integer, or integer:integer (signed)
+:Value: integer or decimal numbers (both may be signed)
 :Type: optional
 :Description: Can be a max value or a range separated by colon. E.g. "min:", ":max", "min:max", "max". Used by munin-limits to submit an error code indicating critical state if the value fetched is outside the given range.
 :See also: :ref:`Let Munin croak alarm <tutorial-alert>`
@@ -413,7 +413,7 @@ Data source attributes
 .. _fieldname.warning:
 
 :Attribute: **{fieldname}.warning**
-:Value: integer, or integer:integer (signed)
+:Value: integer or decimal numbers (both may be signed)
 :Type: optional
 :Description: Can be a max value or a range separated by colon. E.g. "min:", ":max", "min:max", "max". Used by munin-limits to submit an error code indicating warning state if the value fetched is outside the given range.
 :See also: :ref:`Let Munin croak alarm <tutorial-alert>`
