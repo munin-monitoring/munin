@@ -162,7 +162,7 @@ case $1 in
         ;;
     suggest)
         if [[ -r /proc/net/dev ]]; then
-            sed -rne '/^[[:space:]]*(lo|sit[[:digit:]]+):/d;s,^[[:space:]]*([^:]+):.*,\1,p' /proc/net/dev
+            sed -rne '/^[[:space:]]*(lo|gre[[:digit:]]|sit[[:digit:]]+|[a-z0-9]+\.[0-9]+):/d;s,^[[:space:]]*([^:]+):.*,\1,p' /proc/net/dev
         fi
         exit 0
         ;;
