@@ -23,13 +23,13 @@ clean_fieldname () {
 get_warning () {
     # Skip $2 if it isn't defined
     if [ -n "$2" ]; then
-        local warntmp=$(eval "echo \$$2")
+        eval "local warntmp=\$$2"
         if [ -n "$warntmp" ]; then
             echo "${warntmp}"
             return
         fi
     fi
-    local warntmp=$(eval "echo \$${1}_warning")
+    eval "local warntmp=\$${1}_warning"
     if [ -n "$warntmp" ]; then
         echo "${warntmp}"
         return
@@ -58,13 +58,13 @@ print_warning () {
 get_critical () {
     # Skip $2 if it isn't defined
     if [ -n "$2" ]; then
-        local crittmp=$(eval "echo \$$2")
+        eval "local crittmp=\$$2"
         if [ -n "$crittmp" ]; then
             echo "${crittmp}"
             return
         fi
     fi
-    local crittmp=$(eval "echo \$${1}_critical")
+    eval "local crittmp=\$${1}_critical"
     if [ -n "$crittmp" ]; then
         echo "${crittmp}"
         return
