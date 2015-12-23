@@ -470,7 +470,8 @@ sub do_collect {
     $snmpinfoX = $session->get_hash(
 	-baseoid => $ifv2OIDBase,
 	-cols    =>
-	{ 2  => 'ifInMulticastPkts',
+	{ 1  => 'ifName',
+	  2  => 'ifInMulticastPkts',
 	  3  => 'ifInBroadcastPkts',
 	  4  => 'ifOutMulticastPkts',
 	  5  => 'ifOutBroadcastPkts',
@@ -591,13 +592,12 @@ sub do_config_root {
 sub do_config_if {
     my ($host,$version,$if) = @_;
 
-    my $alias = $snmpinfoX->{$if}->{ifAlias} ||
-        $snmpinfo->{$if}->{ifDescr} ||
-        "Interface $if";
+    my $alias = $snmpinfoX->{$if}->{ifName} || "$if";
 
-    if (! ($alias =~ /\d+/) ) {
-	# If there are no numbers in the $alias add the if index
-	$alias .=" (if $if)";
+    if ($snmpinfoX->{$if}->{ifAlias}) {
+        $alias .= " ($snmpinfoX->{$if}->{ifAlias})";
+    } else {
+        $alias .= " ($snmpinfo->{$if}->{ifDescr})";
     }
 
     my $extrainfo = '';
