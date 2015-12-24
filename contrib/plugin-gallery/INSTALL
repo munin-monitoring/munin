@@ -23,11 +23,22 @@ So HTMLDIR should initially have this structure:
 .
 ./distro
 ./static
-./static/info.gif
-./static/logo-h.png
-./static/download.gif
-./static/favicon.ico
-./static/style-2.1.css
+./static/css
+./static/css/_response.scss	(optionnal, CSS source)
+./static/css/style-doc.css
+./static/css/style-doc.scss	(optionnal, CSS source)
+./static/css/style.css
+./static/css/style.scss		(optionnal, CSS source)
+./static/img
+./static/img/download.gif
+./static/img/favicon.ico
+./static/img/glyphicons-208-remove-2-white.png
+./static/img/glyphicons-390-new-window-alt-white.png
+./static/img/logo-h-neg.png
+./static/img/logo-h-neg.svg
+./static/js
+./static/js/jquery-1.8.3.js
+./static/js/script.js
 
 Setup vhost for the gallery in your webservers configuration.
 

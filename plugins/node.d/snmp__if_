@@ -192,7 +192,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 			* 1000 * 1000;
 	}
 
-	$warn = $speed/8;
+	$warn = ($speed/10)*8;
 
 	# Warn at 1/8th of actual speed?  Or just remove warning?
 	# Tempted to set warning at 80%. 80% over 5 minutes is pretty
@@ -205,7 +205,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     }
 
     if (defined ($session->get_single($ifEntryIn64Octets))
-       && $session->get_single($ifEntryIn64Octets) != '') {
+       && !($session->get_single($ifEntryIn64Octets) eq '')) {
 
 	# If we get an answer at the 64 bit OID then this switch
 	# supports the extended MIB
@@ -233,7 +233,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "recv.cdef recv,8,*\n";
     print "recv.max $speed\n";
     print "recv.min 0\n";
-    print "recv.warning ", (-$warn), "\n" if defined $warn;
+    print "recv.warning ", ($warn), "\n" if defined $warn;
     print "send.label bps\n";
     print "send.type DERIVE\n";
     print "send.negative recv\n";

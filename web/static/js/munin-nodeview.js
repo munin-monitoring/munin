@@ -65,13 +65,19 @@ $(document).ready(function() {
 			});
 		}
 
-		// Hide unneccary categories names
+		// Hide unnecessary categories names
 		$('div[data-category]').each(function() {
 			if ($(this).children(':visible').length == 0)
 				$(this).prev().hide();
 			else
 				$(this).prev().show();
 		});
+
+		if (val.length == 0) {
+			// Remove display CSS property to category names (h3)
+			// to let tabs decide if they should be shown or not
+			$('h3').css('display', '');
+		}
 	});
 
 

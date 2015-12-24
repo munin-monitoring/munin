@@ -1,9 +1,8 @@
-use warnings;
 use strict;
+use warnings;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+use lib qw(t/lib);
 
-use Test::More tests => 1;
+use Munin::Common::Defaults::Tests;
 
-use_ok('Munin::Common::Defaults');
+Test::Class->runtests;

@@ -138,7 +138,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "recv.type DERIVE\n";
     print "recv.graph no\n";
     print "recv.min 0\n";
-    print "recv.warning ", (-$warn), "\n" if defined $warn;
+    print "recv.warning ", ($warn), "\n" if defined $warn;
     print "send.label errors\n";
     print "send.type DERIVE\n";
     print "send.negative recv\n";

@@ -14,11 +14,6 @@ directories and files.
 
 .. note:: munin-check needs superuser rights.
 
-.. note::
-
-   Please don't use this script if you are using 'graph_strategy cgi'.
-   It doesn't care about the right permissions for www-data yet.
-
 
 OPTIONS
 =======

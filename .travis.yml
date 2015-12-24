@@ -30,5 +30,14 @@ matrix:
   # we don't need to continue any build when 1 test is failing.
   fast_finish: true
 
+env:
+  - TEST_MEDIUM=1
+
+before_install:
+  cpanm -n Devel::Cover::Report::Coveralls
+
+script:
+  perl Build.PL && ./Build build && cover -test -report coveralls
+
 # Using the container-based infrastructure
 sudo: false

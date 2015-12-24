@@ -65,9 +65,19 @@ with no arguments to get the values. These are mandatory arguments for each plug
 We have some more standard arguments, which play a role in the process of automatic configuration.
 
 .. toctree::
-   :maxdepth: 2
+        :maxdepth: 2
 
-   ../plugin/index.rst
+        ../plugin/index.rst
+        ../plugin/env.rst
+        ../plugin/multigraphing.rst
+        ../plugin/protocol-dirtyconfig.rst
+        ../plugin/protocol-multigraph.rst
+        ../plugin/snmp.rst
+        ../plugin/use.rst
+        ../plugin/writing-tips.rst
+        ../plugin/writing.rst
+        ../plugin/supersampling.rst
+
 
 Relations
 ^^^^^^^^^

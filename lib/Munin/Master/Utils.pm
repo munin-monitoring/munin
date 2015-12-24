@@ -26,7 +26,6 @@ our (@ISA, @EXPORT);
 
 @ISA = ('Exporter');
 @EXPORT = (
-	   'munin_nscasend',
 	   'munin_removelock',
 	   'munin_runlock',
 	   'munin_getlock',
@@ -36,42 +35,27 @@ our (@ISA, @EXPORT);
 	   'munin_writeconfig_storable',
 	   'munin_read_storable',
 	   'munin_write_storable',
-	   'munin_delete',
 	   'munin_overwrite',
 	   'munin_dumpconfig',
 	   'munin_dumpconfig_as_str',
 	   'munin_readconfig_base',
 	   'munin_readconfig_part',
-	   'munin_configpart_revision',
-	   'munin_draw_field',
 	   'munin_get_bool',
-	   'munin_get_bool_val',
 	   'munin_get',
-	   'munin_field_status',
-	   'munin_service_status',
-	   'munin_node_status',
-	   'munin_category_status',
-	   'munin_get_picture_filename',
 	   'munin_get_picture_loc',
-	   'munin_get_html_filename',
 	   'munin_get_filename',
 	   'munin_get_keypath',
-	   'munin_graph_column_headers',
-	   'munin_get_max_label_length',
-	   'munin_get_field_order',
 	   'munin_get_rrd_filename',
 	   'munin_get_node_name',
 	   'munin_get_orig_node_name',
 	   'munin_get_parent_name',
 	   'munin_get_node_fqn',
-	   'munin_find_node_by_fqn',
 	   'munin_get_node_loc',
 	   'munin_get_node',
 	   'munin_set_var_loc',
 	   'munin_set_var_path',
 	   'munin_set',
 	   'munin_copy_node_toloc',
-	   'munin_get_separated_node',
 	   'munin_mkdir_p',
 	   'munin_find_field',
 	   'munin_find_field_for_limits',
@@ -79,16 +63,12 @@ our (@ISA, @EXPORT);
 	   'munin_get_children',
 	   'munin_get_node_partialpath',
 	   'munin_has_subservices',
-	   'munin_get_host_path_from_string',
 	   'print_version_and_exit',
 	   'exit_if_run_by_super_user',
-	   'look_for_child',
-	   'wait_for_remaining_children',
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
 
-my $nsca = new IO::Handle;
 my $config = undef;
 my $config_parts = {
 	# config parts that might be loaded and reloaded at times
@@ -119,35 +99,6 @@ my @COPY_FIELDS    = ("label", "draw", "type", "rrdfile", "fieldname", "info");
 
 my @dircomponents = split('/',$0);
 my $me = pop(@dircomponents);
-
-
-sub munin_draw_field {
-    my $hash   = shift;
-
-    return 0 if munin_get_bool ($hash, "skipdraw", 0);
-    return 0 if !munin_get_bool ($hash, "graph", 1);
-    return defined $hash->{"label"};
-}
-
-
-sub munin_nscasend {
-    my ($name,$service,$label,$level,$comment) = @_;
-
-    if (!$nsca->opened)
-    {
-	open ($nsca ,'|-', "$config->{nsca} $config->{nsca_server} -c $config->{nsca_config} -to 60");
-    }
-    if ($label)
-    {
-	print $nsca "$name\t$service: $label\t$level\t$comment\n";
-	DEBUG "To $nsca: $name;$service: $label;$level;$comment\n";
-    }
-    else
-    {
-	print $nsca "$name\t$service\t$level\t$comment\n";
-	DEBUG "[DEBUG] To $nsca: $name;$service;$level;$comment\n";
-    }
-}
 
 
 sub munin_removelock {
@@ -207,25 +158,6 @@ sub munin_getlock {
     }
     close LOCK;
     return 1;
-}
-
-
-sub munin_delete {
-    my ($config,$data) = @_;
-    for my $domain (keys %{$data->{domain}}) {
-	unless ($config->{domain}->{$domain}) {
-	    DEBUG "[DEBUG] Removing domain: $domain";
-	    delete ($data->{domain}->{$domain});
-	    next;
-	}
-	for my $node (keys %{$data->{domain}->{$domain}->{node}}) {
-	    unless ($config->{domain}->{$domain}->{node}->{$node}) {
-		DEBUG "[DEBUG] Removing node from $domain: $node";
-		delete ($data->{domain}->{$domain}->{node}->{$node});
-	    }
-	}
-    }
-    return ($data);
 }
 
 
@@ -482,28 +414,6 @@ sub munin_get_children {
 }
 
 
-sub munin_get_separated_node
-{
-    my $hash = shift;
-    my $ret  = {};
-
-    if (ref ($hash) eq "HASH") {
-	foreach my $key (keys %$hash) {
-	    next if substr($key,0,3) eq '#%#';
-	    if (ref ($hash->{$key}) eq "HASH") {
-		$ret->{$key} = munin_get_separated_node ($hash->{$key});
-	    } else {
-		$ret->{$key} = $hash->{$key};
-	    }
-	}
-    } else {
-	return;
-    }
-
-    return $ret;
-}
-
-
 sub munin_get_parent_name
 {
     my $hash = shift;
@@ -554,26 +464,6 @@ sub munin_get_node_fqn
     } else {
 	return;
     }
-}
-
-
-sub munin_find_node_by_fqn {
-    # The FQN should be relative to the point in the hash we're handed.
-    my($hash,$fqn) = @_;
-
-    my $here = $hash;
-
-    my @path = split('/',$fqn);
-
-    foreach my $pc (@path) {
-	next if $pc eq 'root';
-	if (exists $here->{$pc}) {
-	    $here = $here->{$pc};
-	} else {
-	    confess "Could not find FQN $fqn!";
-	}
-    }
-    return $here ;
 }
 
 
@@ -919,18 +809,6 @@ sub munin_dumpconfig {
     $Data::Dumper::Indent = $indent;
 }
 
-sub munin_configpart_revision {
-    my $what = shift;
-    if (defined $what and defined $config_parts->{$what}) {
-	return $config_parts->{$what}{revision};
-    }
-    my $rev = 0;
-    foreach $what (keys %$config_parts) {
-	$rev += $config_parts->{$what}{revision};
-    }
-    return $rev;
-}
-
 sub munin_readconfig_part {
     my $what = shift;
     my $missingok = shift;
@@ -1015,73 +893,6 @@ sub munin_readconfig_base {
     $config->{'#%#name'}       = "root";
 
     return $config;
-}
-
-
-sub munin_get_html_filename {
-    # Actually only used in M::M::HTMLOld
-
-    my $hash    = shift;
-
-    my $loc     = munin_get_node_loc ($hash);
-    my $ret     = munin_get ($hash, 'htmldir');
-    my $plugin  = "index";
-
-    # Sanitise
-    $ret =~ s/[^\w_\/"'\[\]\(\)+=-]\./_/g;
-    $hash =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-    @$loc = map { 
-        my $l = $_;
-        $l =~ s/\//_/g; 
-        $l =~ s/^\./_/g;
-        $l;
-    } @$loc;
-	
-    if (defined $hash->{'graph_title'} and !munin_has_subservices ($hash)) {
-        $plugin = pop @$loc or return;
-    }
-    
-    if (@$loc) { # The rest is used as directory names...
-        $ret .= "/" . join ('/', @$loc);
-    }
-    
-    return "$ret/$plugin.html";
-}
-
-
-sub munin_get_picture_filename {
-    my $hash    = shift;
-    my $scale   = shift;
-    my $sum     = shift;
-
-    my $loc     = munin_get_picture_loc ($hash);
-    my $ret     = munin_get ($hash, 'htmldir');
-
-    # Sanitise
-    $ret =~ s/[^\w_\/"'\[\]\(\)+=-]\./_/g;
-    $hash =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-    $scale =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-    @$loc = map { 
-        my $l = $_;
-        $l =~ s/\//_/g; 
-        $l =~ s/^\./_/g;
-        $l;
-    } @$loc;
-	
-    my $plugin = pop @$loc or return;
-    my $node   = pop @$loc or return;
-
-    if (@$loc) { # The rest is used as directory names...
-	$ret .= "/" . join ('/', @$loc);
-    }
-
-    if (defined $sum and $sum) {
-	    return "$ret/$node/$plugin-$scale-sum.png";
-    } elsif (defined $scale) {
-	    return "$ret/$node/$plugin-$scale.png";
-    } else {
-	    return "$ret/$node/$plugin.png";
-    }
 }
 
 
@@ -1205,52 +1016,6 @@ sub munin_get_bool
     }
 }
 
-sub munin_get_bool_val
-{
-    my $field    = shift;
-    my $default  = shift;
-
-    if (!defined $field)
-    {
-    if (!defined $default)
-    {
-        return 0;
-    }
-    else
-    {
-        return $default;
-    }
-    }
-
-    if ($field =~ /^yes$/i or
-        $field =~ /^true$/i or
-        $field =~ /^on$/i or
-        $field =~ /^enable$/i or
-        $field =~ /^enabled$/i
-       )
-    {
-    return 1;
-    }
-    elsif ($field =~ /^no$/i or
-        $field =~ /^false$/i or
-        $field =~ /^off$/i or
-        $field =~ /^disable$/i or
-        $field =~ /^disabled$/i
-      )
-    {
-    return 0;
-    }
-    elsif ($field !~ /\D/)
-    {
-    return $field;
-    }
-    else
-    {
-    return;
-    }
-}
-
-
 sub munin_get
 {
     my ($hash, $field, $default) = @_;
@@ -1312,205 +1077,6 @@ sub munin_copy_node
 	$to = $from;
     }
     return $to;
-}
-
-
-sub munin_node_status
-{
-    my ($config, $limits, $domain, $node, $check_draw) = @_;
-    my $state = "ok";
-
-    return unless defined $config->{domain}->{$domain}->{node}->{$node};
-    my $snode = $config->{domain}->{$domain}->{node}->{$node};
-
-    foreach my $service (keys %{$snode})
-    {
-	my $fres  = munin_service_status ($config, $limits, $domain, $node, $service, $check_draw);
-	if (defined $fres)
-	{
-	    if ($fres eq "critical")
-	    {
-		$state = $fres;
-		last;
-	    }
-	    elsif ($fres eq "warning")
-	    {
-		$state = $fres;
-	    }
-	}
-    }
-
-    return $state;
-}
-
-
-sub munin_category_status {
-    my $hash       = shift || return;
-    my $limits     = shift || return;
-    my $category   = shift || return;
-    my $check_draw = 1;
-    my $state      = "ok";
-
-    return unless (defined $hash and ref ($hash) eq "HASH");
-
-    foreach my $service (@{munin_get_children ($hash)}) {
-	next if (!defined $service or ref ($service) ne "HASH");
-	next if (!defined $service->{'graph_title'});
-	next if ($category ne munin_get ($service, "graph_category", "other"));
-	next if ($check_draw and not munin_get_bool ($service, "graph", 1));
-
-	my $fres  = munin_service_status ($service, $limits, $check_draw);
-	if (defined $fres) {
-	    if ($fres eq "critical") {
-		$state = $fres;
-		last;
-	    } elsif ($fres eq "warning") {
-		$state = $fres;
-	    } elsif ($fres eq "unknown" and $state eq "ok") {
-		$state = $fres;
-	    }
-	}
-    }
-
-    return $state;
-}
-
-sub munin_service_status {
-    my ($config, $limits, $check_draw) = @_;
-    my $state = "ok";
-
-    return unless defined $config;
-    for my $fieldnode (@{munin_find_field ($config, "label")}) {
-	my $field = munin_get_node_name ($fieldnode);
-	my $fres  = munin_field_status ($fieldnode, $limits, $check_draw);
-	if (defined $fres) {
-	    if ($fres eq "critical") {
-		$state = $fres;
-		last;
-	    } elsif ($fres eq "warning") {
-		$state = $fres;
-	    }
-	}
-    }
-
-    return $state;
-}
-
-
-sub munin_field_status {
-    my ($hash, $limits, $check_draw) = @_;
-    my $state = "ok";
-
-    # Return undef if nagios is turned off, or the field doesn't have any limits
-    if ((!defined munin_get ($hash, "warning", undef)) and (!defined munin_get ($hash, "critical"))) {
-	return;
-    }
-
-    if (!defined $check_draw or !$check_draw or munin_draw_field ($hash)) {
-	my $loc  = munin_get_node_loc ($hash);
-	my $node = munin_get_node ($limits, $loc);
-	return $node->{"state"} || "ok";
-    }
-    return $state;
-}
-
-sub munin_graph_column_headers
-{
-    my ($config, $domain, $node, $serv) = @_;
-    my $ret = 0;
-    my @fields = ();
-
-    foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$serv}})
-    {
-	if ($field =~ /^([^\.]+)\.negative$/ and munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1))
-	{
-	    return 1;
-	}
-	elsif ($field =~ /^([^\.]+)\.label$/ and munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1))
-	{
-	    push @fields, $1;
-	}
-    }
-
-    return 1 if (munin_get_max_label_length ($config->{'domain'}->{$domain}->{'node'}->{$node}, $config, $domain, $node, $serv, \@fields) > 20);
-
-    return $ret;
-}
-
-
-sub munin_get_max_label_length
-{
-    my $service = shift;
-    my $order   = shift;
-    my $result  = 0;
-    my $tot     = munin_get ($service, "graph_total");
-
-    for my $field (@$order) {
-	my $path = undef;
-	(my $f = $field) =~ s/=.+//;
-	next if (!munin_get_bool ($service->{$f}, "process", 1));
-	next if (munin_get_bool ($service->{$f}, "skipdraw", 0));
-	next if (!munin_get_bool ($service->{$f}, "graph", 1));
-
-	my $len = length (munin_get ($service->{$f}, "label") || $f);
-
-	if ($result < $len) {
-	    $result = $len;
-	}
-    }
-    if (defined $tot and length $tot > $result) {
-	$result = length $tot;
-    }
-    return $result;
-}
-
-
-sub munin_get_field_order
-{
-    my $hash = shift;
-    my $result  = [];
-
-    return if !defined $hash or ref($hash) ne "HASH";
-
-    my $order = munin_get ($hash, "graph_order");
-
-    if (defined $hash->{graph_sources}) {
-	foreach my $gs (split /\s+/, $hash->{'graph_sources'}) {
-	    push (@$result, "-".$gs);
-	}
-    } 
-    if (defined $order) {
-	push (@$result, split /\s+/, $order);
-    } 
-
-    for my $fieldnode (@{munin_find_field ($hash, "label")}) {
-        my $fieldname = munin_get_node_name ($fieldnode);
-	push @$result,$fieldname
-	    if !grep m[^\Q$fieldname\E(?:=|$)], @$result;
-    }
-
-    for my $fieldnode (@{munin_find_field ($hash, "stack")}) {
-        my $fieldname = munin_get_node_name ($fieldnode);
-	push @$result,$fieldname 
-	    if !grep m[^\Q$fieldname\E(?:=|$)], @$result;;
-    }
-
-    # We have seen some occurrences of redundance in the graph_order
-    # due to plugin bugs and so on.  This make process_service
-    # generate rrd commands with multiple definitions of the same
-    # data.  SO: Make sure there is no redundance in the order.
-
-    my %seen = ();
-    my $nresult = [];
-
-    for my $field (@$result) {
-	next if exists($seen{$field});
-
-	push @$nresult, $field;
-	$seen{$field}=1;
-    }
-    
-    return $nresult;
 }
 
 
@@ -1583,43 +1149,6 @@ http://www.fsf.org/licensing/licenses/gpl.txt
 }
 
 
-sub look_for_child {
-    # wait for child process in blocking or non-blocking mode.
-    my ($block) = @_;
-
-    my $pid;
-
-    if ($block) {
-    	$pid = waitpid(-1, 0);
-    } else {
-        $pid = waitpid(-1, WNOHANG);
-        if ($pid == 0) {
-            return 0;
-        }
-    }
-
-    if ($pid < 0) {
-        ERROR "[ERROR] Unexpectedly ran out of children: $!";
-	croak "[ERROR] Ran out of children: $!\n";
-    }
-
-    if ($? != 0) {
-        WARN "[WARNING] Child $pid failed: " . ($? << 8) . 
-	    "(signal " . ($? & 0xff) . ")";
-    }
-    return 1;
-}
-
-
-sub wait_for_remaining_children {
-    my ($running) = @_;
-    while ($running > 0) {
-	look_for_child("block");
-	--$running;
-    }
-    return $running;
-}
-
 sub munin_has_subservices {
     my ($hash) = @_;
     return 0 unless defined $hash;
@@ -1631,21 +1160,6 @@ sub munin_has_subservices {
 	$hash->{'#%#has_subservices'} = scalar (grep $_, map { ref($hash->{$_}) eq "HASH" and $_ ne '#%#parent' and defined $hash->{$_}->{'graph_title'} ? 1 : undef } keys %$hash);
     }
     return $hash->{'#%#has_subservices'};
-}
-
-sub munin_get_host_path_from_string {
-	# splits a host definition, as used in the config, into a group array and a host name
-	my $key = shift;
-	my (@groups) = split(';', $key);
-	my $host = pop(@groups);
-	if(scalar @groups > 0){
-	} else {
-		my @groups = split('.', $key);
-		if(scalar @groups > 1){
-			@groups = ($groups[0]);
-		}
-	}
-	return (\@groups, $host);
 }
 
 1;
@@ -1663,21 +1177,6 @@ Munin::Master::Utils - Exports a lot of utility functions.
 =head1 SUBROUTINES
 
 =over
-
-=item B<munin_category_status>
-
-Gets current status of a category.
-
-Parameters: 
- - $hash: A ref to the hash node whose children to check
- - $limits: A ref to the root node of the limits tree
- - $category: The category to review
- - $check_draw: [optional] Ignore undrawn fields
-
-Returns:
- - Success: The status of the field
- - Failure: undef
-
 
 =item B<munin_readconfig_base>
 
@@ -1725,32 +1224,6 @@ Returns:
 
 
 
-=item B<munin_draw_field>
-
-Check whether a field will be visible in the graph or not.
-
-Parameters:
- - $hash: A ref to the hash node for the field
-
-Returns:
- - Success: Boolean; true if field will be graphed, false if not
- - Failure: undef
-
-
-=item B<munin_field_status>
-
-Gets current status of a field.
-
-Parameters: 
- - $hash: A ref to the field hash node
- - $limits: A ref to the root node of the limits tree
- - $check_draw: [optional] Ignore undrawn fields
-
-Returns:
- - Success: The status of the field
- - Failure: undef
-
-
 =item B<munin_find_field>
 
 Search a hash to find hash nodes with $field defined.
@@ -1793,10 +1266,6 @@ Returns:
  - Failure: $default if defined, else undef
 
 
-=item B<munin_get_bool_val>
-
-
-
 =item B<munin_get_children>
 
 Get all child hash nodes.
@@ -1806,18 +1275,6 @@ Parameters:
 
 Returns:
  - Success: A ref to an array of the child nodes
- - Failure: undef
-
-
-=item B<munin_get_field_order>
-
-Get the field order in a graph.
-
-Parameters:
- - $hash: A hash ref to the service
-
-Returns:
- - Success: A ref to an array of the field names
  - Failure: undef
 
 
@@ -1831,31 +1288,6 @@ Parameters:
 
 Returns:
  - Success: Full path to rrd file
- - Failure: undef
-
-
-=item B<munin_get_html_filename>
-
-Get the full path-name of an html file.
-
-Parameters:
- - $hash: A ref to the service hash node
-
-Returns:
- - Success: The file name with full path
- - Failure: undef
-
-
-=item B<munin_get_max_label_length>
-
-Get the length of the longest label in a graph.
-
-Parameters:
- - $hash: the graph in question
- - $order: A ref to an array of fields (graph_order)
-
-Returns:
- - Success: The length of the longest label in the graph
  - Failure: undef
 
 
@@ -1931,20 +1363,6 @@ Returns:
  - Failure: If no parent node exists, "none" is returned.
 
 
-=item B<munin_get_picture_filename>
-
-Get the full path+name of a picture file.
-
-Parameters:
- - $hash: A ref to the service hash node
- - $scale: [optional] The scale (day, week, year, month)
- - $sum: [optional] Boolean value, whether it's a sum graph or not.
-
-Returns:
- - Success: The file name with full path
- - Failure: undef
-
-
 =item B<munin_get_picture_loc>
 
 Get location array for hash node for picture purposes. Differs from
@@ -1985,28 +1403,12 @@ Returns:
  - Failure: undef
 
 
-=item B<munin_get_separated_node>
-
-
-Copy a node to a separate node without "specials".
-
-Parameters:
- - $hash: The node to copy
-
-Returns:
- - Success: A ref to a new node without "#%#"-fields
- - Failure: undef
-
-
 =item B<munin_get_var_path>
 
 
 
 =item B<munin_getlock>
 
-
-
-=item B<munin_graph_column_headers>
 
 
 =item B<munin_has_subservices>
@@ -2030,14 +1432,6 @@ Returns:
 
 Make a directory and recursively any nonexistent directory in the path
 to it.
-
-
-=item B<munin_node_status>
-
-
-
-=item B<munin_nscasend>
-
 
 
 =item B<munin_overwrite>
@@ -2077,20 +1471,6 @@ Returns:
 
 =item B<munin_runlock>
 
-
-
-=item B<munin_service_status>
-
-Gets current status of a service.
-
-Parameters: 
- - $hash: A ref to the field hash node
- - $limits: A ref to the root node of the limits tree
- - $check_draw: [optional] Ignore undrawn fields
-
-Returns:
- - Success: The status of the field
- - Failure: undef
 
 
 =item B<munin_set>

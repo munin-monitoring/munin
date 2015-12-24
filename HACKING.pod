@@ -71,8 +71,8 @@ Use this command to query the munin-node directly:
 
 =item B<run>
 
-To run Munin master programs (munin-update, munin-html, munin-cron,
-etc) use the run command.
+To run Munin master programs (munin-update, munin-cron, etc) use the run
+command.
 
  ./dev_scripts/run CMD [CMD args ...]
 
@@ -164,4 +164,3 @@ The POD should be defined all in one place. For plugins you place it at
 the top, else at the bottom.
 
 =cut
-

@@ -15,6 +15,7 @@ Any MySQL platform, tested by the authors on:
 * MySQL 5.0.51
 * MariaDB 5.5.39
 * MariaDB-5.5.39(galera).
+* MariaDB 10.0.18
 
 Plugins:
 * MariaDB-10 Query Response Time: https://mariadb.com/kb/en/mariadb/query_response_time-plugin/
@@ -53,7 +54,7 @@ Non-default example:
     env.cachenamespace munin_mysql_pri
   [mysql2_*]
     env.mysqlconnection DBI:mysql:information_schema;host=127.0.0.1;port=13306
-    env.mysqluser munin;
+    env.mysqluser munin
     env.mysqlpassword ryuWyawEv
     env.cachenamespace munin_mysql_alt
   [mysql10_*]
@@ -604,6 +605,26 @@ $graphs{bin_relay_log} = {
 	{name => 'Binlog_stmt_cache_use',      label => 'Binlog Statement Cache Use'},
 	{name => 'ma_binlog_size',        label => 'Binary Log Space'},
 	{name => 'relay_log_space',       label => 'Relay Log Space'},
+    ],
+};
+
+#-------------------------
+$graphs{binlog_groupcommit} = {
+    config => {
+       global_attrs => {
+           title  => 'Binary Log Group Commits',
+           vlabel => 'Commits/Groups',
+       },
+       data_source_attrs => {
+           draw  => 'LINE1',
+       },
+    },
+    data_sources => [
+       {name => 'Binlog_commits', label => 'Binlog commits'},
+       {name => 'Binlog_group_commits',      label => 'Binlog Group Commits'},
+       {name => 'Binlog_group_commit_trigger_count', label => 'Binlog Groups because of binlog_commit_wait_count'},
+       {name => 'Binlog_group_commit_trigger_timeout', label => 'Binlog Groups because of binlog_commit_wait_usec'},
+       {name => 'Binlog_group_commit_trigger_lock_wait', label => 'Binlog Groups because of transactions'},
     ],
 };
 
@@ -1829,8 +1850,7 @@ sub update_data {
     update_master($dbh);
     delete $graphs{replication} if update_slave($dbh)==1;
 
-    delete $graphs{bin_relay_log} if not defined $data->{relay_log_space}
-        && not defined $data->{ma_binlog_size};
+    delete $graphs{bin_relay_log} if not defined $data->{relay_log_space};
 
     delete $graphs{execution} if not defined $data->{Executed_events}
         && not defined $data->{Executed_triggers};

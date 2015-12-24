@@ -18,17 +18,8 @@ print $fh <<"EOF";
 
 $MUNIN_BINDIR/munin-update \$\@ || exit 1
 
-# The result of munin-limits is needed by munin-html but not by
-# munin-graph.  So run it in the background now, it will be done
-# before munin-graph.
+# Check limits defined for each service, and notify contacts.
+# This also writes state read by munin-httpd.
 
 $MUNIN_BINDIR/munin-limits \$\@
-
-# We always launch munin-html.
-# It is a noop if html_strategy is "cgi"
-nice $MUNIN_BINDIR/munin-html \$\@ || exit 1
-
-# The result of munin-html is needed for munin-graph.
-# It is a noop if graph_strategy is "cgi"
-nice $MUNIN_BINDIR/munin-graph --cron \$\@ || exit 1
 EOF

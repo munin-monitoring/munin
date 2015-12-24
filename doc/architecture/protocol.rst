@@ -88,3 +88,8 @@ Multigraph Plugins
 ==================
 
 - See :ref:`Protocol for Multigraph Plugins <plugin-protocol-multigraph>`
+
+Dirtyconfig plugins
+===================
+
+- See :ref:`plugin-protocol-dirtyconfig`
