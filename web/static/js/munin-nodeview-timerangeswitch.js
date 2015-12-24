@@ -86,6 +86,10 @@ function setTimeRange(columnIndex, val) {
  * 	refreshing the page / copy-pasting URL
  */
 function updateURL() {
+	// Check if history.pushState is supported by user's browser
+	if (!history.pushState)
+		return;
+
 	var uls = $('.timeRangeSwitch').find('ul');
 	var firstTR = $(uls[0]).find('.selected').text();
 	var secondTR = $(uls[1]).find('.selected').text();

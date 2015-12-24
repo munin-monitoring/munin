@@ -31,13 +31,21 @@ function prepareSwitchable(switchId) {
 
 	switchable.click(function() {
 		var switchableContent = $('.switchable_content[data-switch=' + switchId + ']');
+
+		if (switchableContent.is(':visible')) {
+			switchableContent.hide();
+			return;
+		}
+
 		switchableContent.css('left', $(this).position().left);
 		switchableContent.css('top', $(this).position().top + $(this).height() + 10);
 		switchableContent.show();
 
 		// When clicking outside, hide the div
 		$(document).bind('mouseup.switchable', function(e) {
-			if (!switchableContent.is(e.target) // If we're neither clicking on
+			if (!switchableContent.is(e.target) // If we're neither clicking on switchableContent
+				&& switchableContent.has(e.target).length === 0
+				&& !switchable.is(e.target) // Same for switchable
 				&& switchableContent.has(e.target).length === 0) { // nor on a descendent
 				switchableContent.hide();
 
@@ -49,7 +57,7 @@ function prepareSwitchable(switchId) {
 
 	// Gray out current element in switchable_content
 	$('.switchable_content[data-switch=' + switchId + ']').children().filter(function() {
-		return switchable.text().trim() == $(this).text().trim();
+		return trim(switchable.text()) == trim($(this).text());
 	}).addClass('current');
 }
 
@@ -67,16 +75,27 @@ function prepareFilter(placeholder, onFilterChange) {
 	// Set placeholder
 	input.attr('placeholder', placeholder);
 
+	// Create a delay function to avoid triggering filter on each keypress
+	var delay = (function(){
+		var timer = 0;
+		return function(callback, ms){
+			clearTimeout(timer);
+			timer = setTimeout(callback, ms);
+		};
+	})();
+
 	input.on('keyup', function() {
 		var val = $(this).val();
 
-		if (val != '')
-			$('#cancelFilter').show();
-		else
-			$('#cancelFilter').hide();
+		delay(function() {
+			if (val != '')
+				$('#cancelFilter').show();
+			else
+				$('#cancelFilter').hide();
 
-		onFilterChange(val);
-		updateFilterInURL();
+			onFilterChange(val);
+			updateFilterInURL();
+		}, 200);
 	});
 
 	$('#cancelFilter').click(function() {
@@ -135,16 +154,18 @@ function updateFilterInURL() {
  * @param val
  */
 function saveState(key, val) {
+	// Check if history.pushState is supported by user's browser
+	if (!history.pushState)
+		return;
+
 	// Encode key=val in URL
 	var qs = new Querystring();
 	qs.set(key, val);
 
 	// Replace URL
 	var url = $.param(qs.params);
-	// Add leading '?'
-	url = url.length > 0 ? '?' + url : '';
 	var pageName = $(document).find('title').text();
-	window.history.replaceState('', pageName, url);
+	window.history.replaceState('', pageName, '?' + url);
 }
 
 /* Tooltips */
@@ -176,7 +197,11 @@ function prepareTooltips(hoverableElements, getTooltip) {
 function prepareModal(modalId, modalHTMLContent) {
 	var body = $('body');
 	body.append('<div class="modal" data-modalname="' + modalId + '" style="display: none;">'
-					+ '<div class="title" style="display:none"><span></span><a href="#close"></a></div>'
+					+ '<div class="title" style="display:none">'
+					+ '    <span></span>'
+					+ '    <a href="#close" class="action close"></a>'
+					+ '    <a href="#" class="action open" id="modal' + modalId + '-open" style="display: none;"></a>'
+					+ '</div>'
 					+ modalHTMLContent
 				+ '</div>');
 	body.append('<div class="modalMask" data-modalname="' + modalId + '" style="display: none;"></div>');
@@ -188,7 +213,8 @@ function prepareModal(modalId, modalHTMLContent) {
 		hideModal(modalId);
 	});
 	// ... and also the modal title close button
-	modal.find('.title > a').click(function() {
+	modal.find('.title > a.close').click(function(e) {
+		e.preventDefault();
 		hideModal(modalId);
 	});
 
@@ -201,8 +227,18 @@ function setModalTitle(modalId, modalTitle) {
 	titleBar.show();
 }
 
+function setModalOpenTarget(modalId, modalTitleOpenTarget) {
+	var openLink = $('[data-modalname=' + modalId + ']').find('.open');
+	openLink.attr('href', modalTitleOpenTarget);
+	openLink.show();
+}
+
 function showModal(modalId) {
+	// Show modal and mask
 	$('[data-modalname=' + modalId + ']').show();
+
+	// Reduce modal size if necessary
+	adjustModalSize(modalId);
 
 	// Register ESC keypress to hide the modal
 	$(document).on('keyup.modal', function(e) {
@@ -211,9 +247,27 @@ function showModal(modalId) {
 	});
 }
 
+/**
+ * Reduce modal size if its width/height is wider than available space
+ * @param modalId
+ */
+function adjustModalSize(modalId) {
+	var modalMaxWidth = 900;
+	var modalMaxHeight = 630;
+
+	var modal = $('.modal[data-modalname=' + modalId + ']');
+	modal.css('width', Math.min(modalMaxWidth, $(window).width()));
+	modal.css('height', Math.min(modalMaxHeight), $(window).height());
+}
+
 function hideModal(modalId) {
+	// Hide modal and mask
 	$('[data-modalname=' + modalId + ']').hide();
 
 	// Unregister ESC keypress event
 	$(document).off('keyup.modal');
+}
+
+function trim(str) {
+	return str.replace(/^\s+|\s+$/gm,'');
 }

@@ -2,7 +2,15 @@ use warnings;
 use strict;
 
 use English qw(-no_match_vars);
-use Test::More tests => 6;
+use Test::More;
+
+if ($ENV{TEST_MEDIUM}) {
+    plan tests => 6;
+}
+else {
+    plan skip_all => 'set TEST_MEDIUM to enable these tests'
+}
+
 
 use_ok('Munin::Common::Timeout');
 

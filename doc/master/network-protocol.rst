@@ -24,20 +24,47 @@ Node commands
 
 The :ref:`Munin node <munin-node>` daemon will understand and answer to the following inquiries.
 
+.. index::
+   triple: protocol; command; cap
+
 cap
     Lists the capabilities of the node, e.g. ``multigraph dirtyconfig``
+
+.. index::
+   triple: protocol; command; list
+
 list [node]
     Simply lists items available for gathering for this host.
     E.g. load, cpu, memory, df, et alia.
     If no *host* is given, default to host that runs the munin-node.
+
+.. index::
+   triple: protocol; command; nodes
+
 nodes
     Lists hosts available on this node.
+
+.. index::
+   triple: protocol; command; config
+
 config *<query-item>*
     Shows the plugins configuration items. See the config protocol for a full description.
+
+.. index::
+   triple: protocol; command; fetch
+
 fetch *<query-item>*
     Fetches values
+
+.. index::
+   triple: protocol; command; version
+
 version
     Print version string
+
+.. index::
+   triple: protocol; command; quit
+
 quit
     Close the connection. Also possible to use a point ".".
 

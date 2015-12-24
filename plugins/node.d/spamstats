@@ -19,6 +19,7 @@ GPLv2
 =head1 MAGIC MARKERS
 
  #%# family=contrib
+ #%# capabilities=autoconf
 
 =cut
 
@@ -64,6 +65,22 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "spam.min 0\n";
     print "spam.draw STACK\n";
     exit 0;
+}
+elsif ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
+{
+    open(my $log, '<', $logfile) or ( print("no (Could not open $logfile)\n") and exit );
+    while(<$log>)
+    {
+        if( /clean message/ or /dentified spam/ )
+        {
+            print "yes\n";
+            close($log);
+            exit;
+        }
+    }
+    print "no (No spamassasin messages found)\n";
+    close($log);
+    exit;
 }
 
 if (! -f $logfile and ! -f $rotlogfile)

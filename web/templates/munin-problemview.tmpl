@@ -5,69 +5,69 @@
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<div id="content">
 		<h2>Problems overview</h2>
-		<TMPL_IF NAME="CRITICAL">
+		<TMPL_IF CRITICAL>
 			<div class="problem" id="critical">
 				<h3>Critical</h3>
 
-				<TMPL_LOOP NAME="CRITICAL">
+				<TMPL_LOOP CRITICAL>
 					<div class="node">
 						<span class="nodetitle">
-							<a href="<TMPL_VAR NAME="NODEURL">"><TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> ::
-							<TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URL">"></TMPL_IF>
-								<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
-							<TMPL_IF NAME="URL"></a></TMPL_IF>
+							<a href="<TMPL_VAR NODEURL>"><TMPL_VAR ESCAPE="HTML" NODENAME></a> ::
+							<TMPL_IF URL><a href="<TMPL_VAR URL>"></TMPL_IF>
+								<TMPL_VAR ESCAPE="HTML" LABEL>
+							<TMPL_IF URL></a></TMPL_IF>
 						</span>
 						<br />
 
-						<a href="<TMPL_VAR NAME="URL">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
-							<TMPL_UNLESS NAME="DYN_IMAGES">
-								<img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="graph i"
-								  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
-								  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF> />
+						<a href="<TMPL_VAR URL>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+							<TMPL_UNLESS DYN_IMAGES>
+								<img src="<TMPL_VAR CIMGDAY>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>" class="graph i"
+								  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF> />
 							<TMPL_ELSE>
 								<noscript>
-									<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-									  src="<TMPL_VAR NAME="CIMGDAY">"
-									  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-									  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
-									  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF> />
+									<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+									  src="<TMPL_VAR CIMGDAY>"
+									  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+									  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+									  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF> />
 								</noscript>
-								<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-								  data-original="<TMPL_VAR NAME="CIMGDAY">"
+								<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+								  data-original="<TMPL_VAR CIMGDAY>"
 								  src="/static/img/placeholder.gif"
-								  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-								  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
-								  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF> />
+								  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+								  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF> />
 							</TMPL_UNLESS>
 						</a>
 
 						<span class="nodetitle">
-							<a href="<TMPL_VAR NAME="NODEURL">"><TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> ::
-							<TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URLX">"></TMPL_IF>
-								<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
-							<TMPL_IF NAME="URL"></a></TMPL_IF>
+							<a href="<TMPL_VAR NODEURL>"><TMPL_VAR ESCAPE="HTML" NODENAME></a> ::
+							<TMPL_IF URL><a href="<TMPL_VAR URLX>"></TMPL_IF>
+								<TMPL_VAR ESCAPE="HTML" LABEL>
+							<TMPL_IF URL></a></TMPL_IF>
 						</span>
 						<br />
 
-						<a href="<TMPL_VAR NAME="URL">" class="graphLink i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>">
-							<TMPL_UNLESS NAME="DYN_IMAGES">
-								<img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="graph i"
-								  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
-								  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF> />
+						<a href="<TMPL_VAR URL>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+							<TMPL_UNLESS DYN_IMAGES>
+								<img src="<TMPL_VAR CIMGWEEK>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>" class="graph i"
+								  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF> />
 							<TMPL_ELSE>
 								<noscript>
-									<img class="graph i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-									  src="<TMPL_VAR NAME="CIMGWEEK">"
-									  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-									  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
-									  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF> />
+									<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+									  src="<TMPL_VAR CIMGWEEK>"
+									  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+									  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+									  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF> />
 								</noscript>
-								<img class="graph lazy i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
-								  data-original="<TMPL_VAR NAME="CIMGWEEK">"
+								<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+								  data-original="<TMPL_VAR CIMGWEEK>"
 								  src="/static/img/placeholder.gif"
-								  alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"
-								  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
-								  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF> />
+								  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+								  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF> />
 						</TMPL_UNLESS>
 						</a>
 					</div>
@@ -75,80 +75,80 @@
 				</TMPL_LOOP>
 			</div>
 		</TMPL_IF>
-		<TMPL_IF NAME="WARNING">
+		<TMPL_IF WARNING>
 			<div class="problem" id="warning">
 				<h3>Warning</h3>
 
-				<TMPL_LOOP NAME="WARNING">
+				<TMPL_LOOP WARNING>
 					<div class="node">
 						<span class="nodetitle">
-							<a href="<TMPL_VAR NAME="NODEURL">"><TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> ::
-							<TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URL">"></TMPL_IF>
-								<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
-							<TMPL_IF NAME="URL"></a></TMPL_IF>
+							<a href="<TMPL_VAR NODEURL>"><TMPL_VAR ESCAPE="HTML" NODENAME></a> ::
+							<TMPL_IF URL><a href="<TMPL_VAR URL>"></TMPL_IF>
+								<TMPL_VAR ESCAPE="HTML" LABEL>
+							<TMPL_IF URL></a></TMPL_IF>
 						</span>
 						<br />
 
-						<a href="<TMPL_VAR NAME="URL">" class="graphLink">
-							<img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="graph i"
-							  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
-							  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF> />
+						<a href="<TMPL_VAR URL>" class="graphLink">
+							<img src="<TMPL_VAR CIMGDAY>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>" class="graph i"
+							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF> />
 						</a>
 					</div>
 
 					<div class="node">
 						<span class="nodetitle">
-							<a href="<TMPL_VAR NAME="NODEURL">"><TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> ::
-							<TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URLX">"></TMPL_IF>
-								<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
-							<TMPL_IF NAME="URL"></a></TMPL_IF>
+							<a href="<TMPL_VAR NODEURL>"><TMPL_VAR ESCAPE="HTML" NODENAME></a> ::
+							<TMPL_IF URL><a href="<TMPL_VAR URLX>"></TMPL_IF>
+								<TMPL_VAR ESCAPE="HTML" LABEL>
+							<TMPL_IF URL></a></TMPL_IF>
 						</span>
 						<br />
 
-						<a href="<TMPL_VAR NAME="URL">" class="graphLink">
-							<img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="graph i"
-							  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
-							  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF> />
+						<a href="<TMPL_VAR URL>" class="graphLink">
+							<img src="<TMPL_VAR CIMGWEEK>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>" class="graph i"
+							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF> />
 						</a>
 					</div>
 					<br />
 				</TMPL_LOOP>
 			</div>
 		</TMPL_IF>
-		<TMPL_IF NAME="UNKNOWN">
+		<TMPL_IF UNKNOWN>
 			<div class="problem" id="unknown">
 				<h3>Unknown</h3>
 
-				<TMPL_LOOP NAME="UNKNOWN">
+				<TMPL_LOOP UNKNOWN>
 					<div class="node">
 						<span class="nodetitle">
-							<a href="<TMPL_VAR NAME="NODEURL">"><TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> ::
-							<TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URL">"></TMPL_IF>
-								<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
-							<TMPL_IF NAME="URL"></a></TMPL_IF>
+							<a href="<TMPL_VAR NODEURL>"><TMPL_VAR ESCAPE="HTML" NODENAME></a> ::
+							<TMPL_IF URL><a href="<TMPL_VAR URL>"></TMPL_IF>
+								<TMPL_VAR ESCAPE="HTML" LABEL>
+							<TMPL_IF URL></a></TMPL_IF>
 						</span>
 						<br />
 
-						<a href="<TMPL_VAR NAME="URL">" class="graphLink">
-							<img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="graph i"
-							  <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
-							  <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
+						<a href="<TMPL_VAR URL>" class="graphLink">
+							<img src="<TMPL_VAR CIMGDAY>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>" class="graph i"
+							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>/>
 						</a>
 					</div>
 
 					<div class="node">
 						<span class="nodetitle">
-							<a href="<TMPL_VAR NAME="NODEURL">"><TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> ::
-							<TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URLX">"></TMPL_IF>
-								<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
-							<TMPL_IF NAME="URL"></a></TMPL_IF>
+							<a href="<TMPL_VAR NODEURL>"><TMPL_VAR ESCAPE="HTML" NODENAME></a> ::
+							<TMPL_IF URL><a href="<TMPL_VAR URLX>"></TMPL_IF>
+								<TMPL_VAR ESCAPE="HTML" LABEL>
+							<TMPL_IF URL></a></TMPL_IF>
 						</span>
 						<br />
 
-						<a href="<TMPL_VAR NAME="URL">" class="graphLink">
-							<img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="graph i"
-							  <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
-							  <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF> />
+						<a href="<TMPL_VAR URL>" class="graphLink">
+							<img src="<TMPL_VAR CIMGWEEK>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>" class="graph i"
+							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF> />
 						</a>
 					</div>
 					<br />
@@ -156,11 +156,11 @@
 			</div>
 		</TMPL_IF>
 
-	<TMPL_IF NAME="CRITICAL">
+	<TMPL_IF CRITICAL>
 	<TMPL_ELSE>
-		<TMPL_IF NAME="WARNING">
+		<TMPL_IF WARNING>
 		<TMPL_ELSE>
-			<TMPL_IF NAME="UNKNOWN">
+			<TMPL_IF UNKNOWN>
 			<TMPL_ELSE>
 				<p class="neutralMessage">There are neither warnings nor errors to display.</p>
 			</TMPL_IF>

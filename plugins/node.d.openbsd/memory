@@ -75,6 +75,10 @@ if [ "$1" = "config" ]; then
 	echo 'free.label free'
 	echo 'free.info pages without data content'
 	echo 'free.draw STACK'
+	
+	echo 'swap.label swap'
+        echo 'swap.info total used swap'
+        echo 'swap.draw STACK'
 
 	exit 0
 fi
@@ -85,5 +89,6 @@ vmstat -s | awk -v bpp=$PAGESIZE '
 /pages active$/   { active = $1;   print "active.value "   $1 * bpp; }
 /pages inactive$/ { inactive = $1; print "inactive.value " $1 * bpp; }
 /pages wired$/    { wired = $1;    print "wired.value "    $1 * bpp; }
+/swap pages in use$/ { swap = $1;  print "swap.value "     $1 * bpp; }
 END { kernel = managed - wired - inactive - active - free;
     print "kernel.value " kernel * bpp; }'

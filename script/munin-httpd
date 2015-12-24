@@ -48,7 +48,7 @@ sub handle_request
 	my $path = $cgi->path_info();
 
 	# Dispatch by extension, so we can have the same URL prefix
-	my $is_graph = ($path =~ m/.*-(day|hour|week|month|year|pinpoint).*$/);
+	my $is_graph = ($path !~ m/\.html$/) && ($path =~ m/.*-(day|hour|week|month|year|pinpoint).*$/);
 	if ($is_graph) {
 		Munin::Master::Graph::handle_request($cgi);
 	} else {

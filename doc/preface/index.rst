@@ -11,7 +11,7 @@
    conventions.rst
    moreinfo.rst
    bugreport.rst
-   ../documentation/index.rst
+   ../develop/documenting.rst
 
 This guide is **the** official documentation of Munin. It has been written by the
 Munin developers and other volunteers in parallel to the development of the
@@ -29,7 +29,9 @@ hyperlinking abilities of modern documentation readers.
 
 :ref:`Preface <preface-index>`
 
-        This is the part you are currently reading. It focus on very generic
+        *This is the part you are currently reading.*
+
+        It focus on very generic
         informations about Munin, and also gives some guidelines on how to
         interact with the Munin ecosystem.
 

@@ -7,22 +7,6 @@
 This example describes how to set use lighttpd in front of
 munin-httpd.
 
-Munin configuration
-===================
-
-This example assumes the following configuration in
-/etc/munin/munin.conf
-
-.. index::
-   pair: example; munin.conf
-   pair: example; html_strategy
-   pair: example; graph_strategy
-
-::
-
-   html_strategy cgi
-   graph_strategy cgi
-
 Webserver configuration
 =======================
 

@@ -296,8 +296,7 @@ sub parse_service_config {
 		# We always appends the field names in config order to any
 		# graph_order given.
 		# Note that this results in duplicates in the internal state
-		# for @graph_order but munin_get_field_order() will eliminate
-		# them before graphing.
+		# for @graph_order.
 
 		if (@graph_order) {
 			foreach (@{$global_config->{$oldservice}}) {

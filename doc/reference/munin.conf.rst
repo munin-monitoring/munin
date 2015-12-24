@@ -1,6 +1,6 @@
-.. _munin.conf:
-
 .. program:: munin.conf
+
+.. _munin.conf:
 
 ============
  munin.conf
@@ -10,8 +10,8 @@ DESCRIPTION
 ===========
 
 This is the configuration file for the munin master. It is used by
-:ref:`munin-update`, :ref:`munin-graph`, :ref:`munin-limits`.
-:ref:`munin-html`.
+:ref:`munin-update` and :ref:`munin-limits`
+
 
 .. _master-conf-global-directives:
 
@@ -31,12 +31,6 @@ otherwise.
    The directory where munin stores its logfiles. Default:
    /var/log/munin
 
-.. option:: htmldir <path>
-
-   The directory where :ref:`munin-html` stores generated HTML pages,
-   and where :ref:`munin-graph` stores graphs. Default:
-   /var/cache/munin/www
-
 .. option:: rundir <path>
 
    Directory for files tracking munin's current running state.
@@ -44,9 +38,8 @@ otherwise.
 
 .. option:: tmpldir <path>
 
-   Directories for templates used by :ref:`munin-html` and
-   :ref:`munin-httpd` to generate HTML pages. Default
-   /etc/munin/templates
+   Directories for templates used by :ref:`munin-httpd` to generate
+   HTML pages. Default /etc/munin/templates
 
 .. option:: fork <yes|no>
 
@@ -68,25 +61,20 @@ otherwise.
 
 .. option:: palette <default|old>
 
-   The palette used by :ref:`munin-graph` and :ref:`munin-httpd`
-   to color the graphs. The "default" palette has more colors and
-   better contrast than the "old" palette.
-
-   Affects: :ref:`munin-graph`
+   The palette used by :ref:`munin-httpd` to color the graphs. The
+   "default" palette has more colors and better contrast than the
+   "old" palette.
 
 .. option:: custom_palette rrggbb rrggbb ...
 
-   The user defined custom palette used by :ref:`munin-graph` and
-   :ref:`munin-httpd` to color the graphs. This option override
-   existing palette.  The palette must be space-separated 24-bit hex
-   color code.
-
-   Affects: :ref:`munin-graph`
+   The user defined custom palette used by :ref:`munin-httpd` to color
+   the graphs. This option overrides the existing palette.  The
+   palette must be space-separated 24-bit hex color code.
 
 .. option:: graph_data_size <normal|huge>
 
    This directive sets the resolution of the RRD files that are
-   created by :ref:`munin-graph` and :ref:`munin-httpd`.
+   created by :ref:`munin-httpd`.
 
    Default is "normal".
 
@@ -94,28 +82,6 @@ otherwise.
    days.
 
    Changing this directive has no effect on existing graphs
-
-   Affects: :ref:`munin-graph`
-
-.. option:: graph_strategy <cgi|cron>
-
-   If set to "cron", :ref:`munin-graph` will graph all services on all
-   nodes every run interval.
-
-   If set to "cgi", :ref:`munin-graph` will do nothing. This is the
-   proper setting when you run :ref:`munin-httpd`.
-
-   Affects: :ref:`munin-graph`
-
-.. option:: html_strategy <strategy>
-
-   Valid strategies are "cgi" and "cron". Default is "cgi".
-
-   If set to "cron", :ref:`munin-html` will recreate all html pages
-   every run interval.
-
-   If set to "cgi", :ref:`munin-html` will do nothing.  This is the
-   proper setting when you run :ref:`munin-httpd`.
 
 .. _directive-contact:
 
@@ -239,11 +205,13 @@ warning and critical levels or graph names.
 
 .. option:: graph_height <value>
 
-   The graph height for a specific service. Default is 175. Affects: :ref:`munin-graph`.
+   The graph height for a specific service. Default is 175. Affects:
+   :ref:`munin-httpd`.
 
 .. option:: graph_width <value>
 
-   The graph width for a specific service. Default is 400. Affects: :ref:`munin-graph`.
+   The graph width for a specific service. Default is 400. Affects:
+   :ref:`munin-httpd`.
 
 .. option:: warning <value>
 

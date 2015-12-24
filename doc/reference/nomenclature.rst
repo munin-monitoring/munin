@@ -35,6 +35,10 @@ Common terms
 :Explanation: Each plugin presents data from one or more data sources.  Each found, read, calculated value corresponds to a field.attribute tuple
 :Synonym: Data source
 
+:Term: **FQN**
+:Explanation: A :ref:`reference-fqn` used to address a specific group,
+              node, service or data source.
+:Synonym: Fully Qualified Name
 
 :Term: **Attribute**
 :Explanation: Description found in output from plugins, both general (global) to the plugin and also specific to each field

@@ -25,8 +25,8 @@ The following components are part of munin-master:
 
 .. hlist::
 
-   * :ref:`munin-cron` runs :ref:`munin-graph`, :ref:`munin-html`,
-     :ref:`munin-limits` and :ref:`munin-update`.
+   * :ref:`munin-cron` runs :ref:`munin-limits` and
+     :ref:`munin-update`.
 
    * :ref:`munin-update` is run by :ref:`munin-cron`. It is the munin
      data collector, and it fetches data from :ref:`munin nodes
@@ -36,14 +36,6 @@ The following components are part of munin-master:
      configured contacts if a value moves between "ok", "warn" or
      "crit". Munin is commonly used in combination with Nagios, which
      is then configured as a contact.
-
-   * :ref:`munin-graph` is run by :ref:`munin-cron`. It generates
-     static graphs in PNG format.  It is not needed if
-     :ref:`munin-httpd` is used.
-
-   * :ref:`munin-html` is run by :ref:`munin-cron`. It generates
-     static HTML pages.  It is not needed if :ref:`munin-httpd` is
-     used.
 
 Configuration
 =============

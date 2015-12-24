@@ -1,7 +1,15 @@
 use warnings;
 use strict;
 
-use Test::More tests => 28;
+use Test::More;
+
+if ($ENV{TEST_MEDIUM}) {
+    plan tests => 28;
+}
+else {
+    plan skip_all => 'set TEST_MEDIUM to enable these tests'
+}
+
 use Test::LongString;
 use Config;  # for signal numbers and names
 
