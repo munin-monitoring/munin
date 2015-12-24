@@ -25,7 +25,7 @@ override_dh_install:
 	dh_install --fail-missing
 
 override_dh_installdocs:
-	dh_installdocs
+	dh_installdocs --link-doc=munin-common
 	@ # Use the packaged javascript libraries
 	if [ -d debian/munin-doc ]; then \
 		rm -f debian/munin-doc/usr/share/doc/munin-doc/html/_static/jquery.js; \
