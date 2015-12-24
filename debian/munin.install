@@ -2,7 +2,6 @@ etc/munin/munin.conf
 etc/munin/static
 etc/munin/templates
 usr/bin/munin-cron
-usr/bin/munin-html
 usr/bin/munin-httpd
 usr/bin/munin-limits
 usr/bin/munin-update

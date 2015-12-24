@@ -8,16 +8,6 @@
 	create 640 munin adm
 }
 
-/var/log/munin/munin-html.log {
-	daily
-	missingok
-	rotate 7
-	compress
-	delaycompress
-	notifempty
-	create 640 munin adm
-}
-
 /var/log/munin/munin-limits.log {
 	daily
 	missingok

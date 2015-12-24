@@ -12,8 +12,4 @@ test_expect_success "munin-limits" "
   setuidgid munin /usr/share/munin/munin-limits
 "
 
-test_expect_success "munin-html" "
-  setuidgid munin /usr/share/munin/munin-html
-"
-
 test_done
