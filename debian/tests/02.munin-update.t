@@ -16,8 +16,4 @@ test_expect_success "munin-html" "
   setuidgid munin /usr/share/munin/munin-html
 "
 
-test_expect_success "munin-graph" "
-  setuidgid munin /usr/share/munin/munin-graph --cron
-"
-
 test_done
