@@ -121,6 +121,8 @@ Depends: ${perl:Depends}, ${misc:Depends},
 Recommends:
  python,
  ruby | ruby-interpreter,
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: community contributed plugins for munin node
  This package contains community contributed plugins for the Munin
  node.
@@ -132,6 +134,8 @@ Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-http-perl,
  libwww-perl,
  munin-common,
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring web servers
  This package contains munin plugins for monitoring web servers using
  http.
@@ -143,6 +147,8 @@ Depends: ${perl:Depends}, ${misc:Depends},
  libdbd-mysql-perl,
  munin-common,
  mysql-client,
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring MySQL
  This package contains munin plugins for monitoring MySQL servers.
 
@@ -152,6 +158,8 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libdbd-pg-perl,
  libmunin-plugin-pgsql-perl,
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring PostgreSQL
  This package contains munin plugins for monitoring PostgreSQL
  servers.
@@ -162,6 +170,8 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-snmp-perl,
  munin-common,
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring remote devices with SNMP
  This package contains munin plugins for monitoring remote devices
  with SNMP.
@@ -170,6 +180,8 @@ Description: munin plugins for monitoring remote devices with SNMP
 Package: munin-plugins-ldap
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring LDAP servers
  This package contains munin plugins for monitoring LDAP servers.
 
@@ -178,6 +190,8 @@ Package: munin-plugins-irc
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libnet-irc-perl,
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring IRC servers
  This package contains munin plugin for monitoring IRC servers.
 
@@ -195,6 +209,8 @@ Package: munin-plugins-mail
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  munin-common,
+Replaces: munin-plugins-core (<< 2.999.1-1~), munin-plugins-extra (<< 2.99.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~), munin-plugins-extra (<< 2.99.1-1~)
 Description: munin plugins for monitoring mail servers
  This package contains munin plugins for monitoring mail servers.
 
@@ -202,6 +218,8 @@ Description: munin plugins for monitoring mail servers
 Package: munin-plugins-time
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring NTP servers and synchronization
  This package contains munin plugins for monitoring time servers and
  synchronization. Plugins can monitor local and remote NTP servers.
@@ -211,6 +229,8 @@ Package: munin-plugins-network
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  munin-common,
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring network traffic
  This package contains munin plugins for monitoring network traffic
  and usage.  Common tools used is netfilter/iptables, snort.
