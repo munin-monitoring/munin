@@ -15,11 +15,20 @@ ensure_usergroup() {
     fi
 }
 
+migration_remove_munin_2x_files() {
+    find /var/log/munin -name 'munin-cgi-graph.log*' -delete
+    find /var/log/munin -name 'munin-cgi-html.log*' -delete
+    rm -rf /var/cache/munin/www
+}
+
 case "$1" in
     configure)
         if [ -z "$2" ] ; then
             ensure_usergroup
             install -o munin -g munin -m 0755 -d /var/spool/munin/update
+        fi
+        if dpkg --compare-versions "$2" le "2.1.999-1~" ; then
+            migration_remove_munin_2x_files
         fi
         ;;
     abort-upgrade|abort-deconfigure|abort-remove)
