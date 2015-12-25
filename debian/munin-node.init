@@ -48,11 +48,7 @@ verify_superuser() {
 
 start() {
 	log_daemon_msg "Starting Munin-Node"
-	mkdir -p /var/run/munin /var/log/munin
-	chown munin:root /var/run/munin
-	chown munin:www-data /var/log/munin
-	chmod 0755 /var/run/munin
-	chmod 0755 /var/log/munin
+	install -d /run/munin-node
 	if pidofproc -p $PIDFILE $DAEMON >/dev/null; then
 		log_progress_msg "started beforehand"
 		log_end_msg 0
