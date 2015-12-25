@@ -1,8 +1,10 @@
 # systemd-tmpfiles definition for munin-common
 #
-# This temporary directory is used by munin, munin-node and munin-async
+# This temporary directory is used by munin, munin-node and
+# munin-async.  Write access to the directory is granted for group
+# "munin".
 #
 # See tmpfiles.d(5) for details
 #
 
-d /run/munin 0755 munin root
+d /run/munin 0775 root munin
