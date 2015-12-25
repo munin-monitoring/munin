@@ -1,3 +1,3 @@
 Tests: run-tests
-Depends: @
+Depends: @,procps,netcat-openbsd
 Restrictions: needs-root breaks-testbed
