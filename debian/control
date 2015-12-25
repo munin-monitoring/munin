@@ -321,9 +321,9 @@ Description: network-wide graphing framework (grapher/gatherer)
  .
  This package contains the grapher/gatherer. You will only need one
  instance of it in your network. It will periodically poll all the
- nodes in your network it's aware of for data, which it in turn will
- use to create graphs and HTML pages, suitable for viewing with your
- graphical web browser of choice.
+ nodes in your network it's aware of for data, and serves the result
+ in a built-in http server, suitable for viewing with your web browser
+ of choice.
  .
  It is also able to alert you if any value is outside of a preset
  boundary, useful if you want to be alerted if a filesystem is about
