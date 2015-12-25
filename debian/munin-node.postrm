@@ -9,7 +9,9 @@ delete_dir_if_empty() {
 }
 
 if [ "$1" = "purge" ]; then
-    find /etc/munin/plugins -type l -xtype l -delete
+    if [ -d /etc/munin/plugins ]; then
+        find /etc/munin/plugins -type l -xtype l -delete
+    fi
 
     rm -rf /var/lib/munin-node/plugin-state
     rm -f /var/log/munin-node/munin-node.log*
