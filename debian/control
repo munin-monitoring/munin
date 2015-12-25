@@ -374,7 +374,7 @@ Description: network-wide graphing framework (async master/client)
 Package: munin-doc
 Section: doc
 Architecture: all
-Depends: ${misc:Depends}, libjs-underscore, libjs-jquery
+Depends: ${misc:Depends}, munin-common, libjs-underscore, libjs-jquery
 Breaks: munin-common (<< 2)
 Replaces: munin-common (<< 2)
 Description: network-wide graphing framework (documentation)
