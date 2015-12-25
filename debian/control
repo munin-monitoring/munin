@@ -60,7 +60,6 @@ Depends: ${perl:Depends}, ${misc:Depends},
  libnet-server-perl,
  munin-common (>= ${binary:Version}),
 Recommends:
- libcrypt-ssleay-perl,
  munin-plugins-core,
 Suggests:
  munin-plugins-extra,
@@ -228,6 +227,8 @@ Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  liblog-dispatch-perl,
+Recommends:
+ libnet-ssleay-perl,
 Description: common perl modules for munin
  The Munin and Munin::Common perl modules, used by munin master and
  node.
@@ -311,7 +312,7 @@ Depends: ${perl:Depends}, ${misc:Depends},
  rrdcached,
  rrdtool,
 Recommends: munin-node, munin-doc
-Suggests: www-browser, httpd, libnet-ssleay-perl, libapache2-mod-fcgid
+Suggests: www-browser
 Description: network-wide graphing framework (grapher/gatherer)
  Munin is a highly flexible and powerful solution used to create
  graphs of virtually everything imaginable throughout your network,
