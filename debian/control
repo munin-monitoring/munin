@@ -216,7 +216,7 @@ Description: munin plugins for monitoring network traffic
 
 Package: munin-plugins-jenkins
 Architecture: all
-Depends: ${perl:Depends}, ${misc:Depends},
+Depends: ${misc:Depends},
  munin-common,
 Description: munin plugins for monitoring the Jenkins CI server
  This package contains munin plugins for monitoring a local Jenkins CI
@@ -369,7 +369,7 @@ Description: network-wide graphing framework (async master/client)
 Package: munin-doc
 Section: doc
 Architecture: all
-Depends: ${perl:Depends}, ${misc:Depends}, libjs-underscore, libjs-jquery
+Depends: ${misc:Depends}, libjs-underscore, libjs-jquery
 Breaks: munin-common (<< 2)
 Replaces: munin-common (<< 2)
 Description: network-wide graphing framework (documentation)
