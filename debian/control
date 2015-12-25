@@ -308,6 +308,7 @@ Depends: ${perl:Depends}, ${misc:Depends},
  liburi-perl,
  libxml-dumper-perl,
  munin-common (>= ${binary:Version}),
+ rrdcached,
  rrdtool,
 Recommends: munin-node, munin-doc
 Suggests: www-browser, httpd, libnet-ssleay-perl, libapache2-mod-fcgid

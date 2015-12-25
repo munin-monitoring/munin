@@ -30,6 +30,8 @@ if [ "$1" = "purge" ]; then
 	delete_dir_if_empty /etc/munin/templates
 	delete_dir_if_empty /etc/munin
 
+        find /var/spool/munin -delete
+
 	webserver=apache2
 	if [ -L /etc/$webserver/conf.d/munin ]; then
 		# delete the link

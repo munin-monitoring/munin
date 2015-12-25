@@ -29,6 +29,8 @@ initperms() {
 	mkdir -p /var/lib/munin/cgi-tmp
 	chown munin:www-data /var/lib/munin/cgi-tmp
 	chmod 775 /var/lib/munin/cgi-tmp
+
+        install -o munin -g munin -m 0755 -d /var/spool/munin/update
 }
 
 fixoverrides() {
