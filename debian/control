@@ -58,6 +58,7 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  adduser,
  libnet-server-perl,
+ libmunin-node-perl,
  munin-common (>= ${binary:Version}),
 Recommends:
  munin-plugins-core,
@@ -229,6 +230,8 @@ Depends: ${perl:Depends}, ${misc:Depends},
  liblog-dispatch-perl,
 Recommends:
  libnet-ssleay-perl,
+Replaces: munin-common (<< 2.999.1-1~)
+Breaks: munin-common (<< 2.999.1-1~)
 Description: common perl modules for munin
  The Munin and Munin::Common perl modules, used by munin master and
  node.
@@ -305,6 +308,7 @@ Depends: ${perl:Depends}, ${misc:Depends},
  libhttp-server-simple-perl,
  libio-socket-inet6-perl,
  liblist-moreutils-perl,
+ libmunin-master-perl,
  librrds-perl,
  liburi-perl,
  libxml-dumper-perl,
