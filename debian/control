@@ -184,7 +184,9 @@ Description: munin plugins for monitoring IRC servers
 
 Package: munin-plugins-dns
 Architecture: all
-Depends: ${perl:Depends}, ${misc:Depends},
+Depends: ${perl:Depends}, ${misc:Depends}, bind9utils
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring DNS servers
  This package contains munin plugins for monitoring DNS servers.
 
