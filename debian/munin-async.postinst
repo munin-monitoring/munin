@@ -18,6 +18,7 @@ move_user_homedir() {
 case "$1" in
 	configure)
 		add_munin_async_user
+                install -o munin-async -g munin-async -m 0755 -d /var/spool/munin/async
                 if dpkg --compare-versions "$2" le "2.0.11-1~"; then
                     move_user_homedir
                 fi
