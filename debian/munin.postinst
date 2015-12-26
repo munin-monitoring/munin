@@ -40,7 +40,7 @@ case "$1" in
         ;;
 esac
 
-dpkg-maintscripts-helper rm_conffile /etc/munin/apache.conf 2.999.1-1~ -- "$@"
-dpkg-maintscripts-helper rm_conffile /etc/munin/apache24.conf 2.999.1-1~ -- "$@"
+dpkg-maintscript-helper rm_conffile /etc/munin/apache.conf 2.999.1-1~ -- "$@"
+dpkg-maintscript-helper rm_conffile /etc/munin/apache24.conf 2.999.1-1~ -- "$@"
 
 #DEBHELPER#
