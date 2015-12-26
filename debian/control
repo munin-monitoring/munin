@@ -115,7 +115,9 @@ Description: network-wide graphing framework (plugins for node)
  This package contains the official plugins for the Munin node,
  capable of extracting common values such as cpu usage, network usage,
  load average, and so on.
-
+ .
+ This package suggests, but does not depend on, modules and utilities
+ needed by the various munin plugins.
 
 Package: munin-plugins-extra
 Architecture: all
