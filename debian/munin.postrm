@@ -20,7 +20,7 @@ set -e
 
 purge_dirs() {
     rm -rf /var/cache/munin
-    rm -rf /var/spool/munin
+    rm -rf /var/spool/munin/update
     rm -rf /var/lib/munin
     rm -rf /var/log/munin
 }
