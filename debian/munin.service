@@ -7,6 +7,7 @@ Type=simple
 Restart=always
 User=munin
 ExecStart=/usr/bin/rrdcached -g \
+  -p /run/munin/rrdcached.pid \
   -w 1800 -z 1800 -f 3600 \
   -B -b /var/lib/munin \
   -j /var/spool/munin/update \
