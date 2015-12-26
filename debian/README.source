@@ -67,10 +67,12 @@ verified, and added to the «pristine-tar» branch.
 Using "gbp import-orig"::
 
   # Import, tag and merge
+  git remote update
   gbp import-orig --uscan --upstream-vcs-tag=2.0.21
 
-You need to figure out the upstream release tag beforehand, and use
-that on the command line. The "upstream-vcs-tag" ties it into the
+For the upstream-vcs-tag to work, you will need to have the upstream
+repository as a remote to the packaging repository.  The upstream
+release tag must be known beforehand, and used on the command line.
 
 This does:
 * Import upstream tarball into «pristine-tar» branch
@@ -178,4 +180,4 @@ Example::
   # Commit debian/changelog, and make a signed tag
   debcommit -r --sign-tags -- debian/changelog
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>, Fri,  9 May 2014 09:10:13 +0200
+ -- Stig Sandbeck Mathisen <ssm@fnord.no>, Sat, 26 Dec 2015 12:53:29 +0100
