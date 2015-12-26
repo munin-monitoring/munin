@@ -108,6 +108,8 @@ Suggests:
  libxml-parser-perl,
  libcache-cache-perl,
  libnet-dns-perl,
+Replaces: munin-plugins-extra (<< 2.999.1-1~)
+Breaks: munin-plugins-extra (<< 2.999.1-1~)
 Description: network-wide graphing framework (plugins for node)
  This package contains the official plugins for the Munin node,
  capable of extracting common values such as cpu usage, network usage,
