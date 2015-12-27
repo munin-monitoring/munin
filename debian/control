@@ -268,6 +268,8 @@ Package: libmunin-master-perl
 Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, libmunin-perl
+Replaces: munin (<< 2.999.1-1~)
+Breaks: munin (<< 2.999.1-1~)
 Description: perl modules for munin master
  The Munin::Master perl module, used by munin master.
 
@@ -276,6 +278,8 @@ Package: libmunin-node-perl
 Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, libmunin-perl
+Replaces: munin-node (<< 2.999.1-1~)
+Breaks: munin-node (<< 2.999.1-1~)
 Description: perl module Munin::Node
  The Munin::Node perl module, used by munin-node.
 
@@ -285,6 +289,8 @@ Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-perl,
+Replaces: munin-common (<< 2.999.1-1~)
+Breaks: munin-common (<< 2.999.1-1~)
 Description: perl bindings for munin plugins
  The Munin::Plugin and Munin::Plugin::Framework perl modules used by
  various munin plugins.
@@ -296,6 +302,8 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-perl,
  libwww-perl,
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: perl bindings for HTTP munin plugins
  The Munin::Plugin::HTTP perl module for munin plugins.
 
@@ -306,6 +314,8 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-perl,
  libnet-snmp-perl,
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: perl bindings for SNMP munin plugins
  The Munin::Plugin::SNMP perl module used by various SNMP munin
  plugins.
@@ -317,6 +327,8 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-perl,
  libdbd-pg-perl,
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: perl bindings for Postgresql munin plugins
  The Munin::Plugin::Pgsql perl module used by various munin plugins
  for monitoring Postgresql database servers.
