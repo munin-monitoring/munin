@@ -1,4 +1,4 @@
-x#!/bin/sh
+#!/bin/sh
 # preinst script for munin
 #
 # see: dh_installdeb(1)
