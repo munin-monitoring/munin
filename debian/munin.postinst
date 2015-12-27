@@ -23,6 +23,7 @@ migration_remove_munin_2x_files() {
 
 case "$1" in
     configure)
+        install -o munin -g munin -m 0755 -d /var/lib/munin
         install -o munin -g munin -m 0755 -d /var/spool/munin/update
         if [ -z "$2" ] ; then
             ensure_usergroup
