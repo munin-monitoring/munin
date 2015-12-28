@@ -9,6 +9,10 @@ Type=simple
 Restart=always
 User=munin-async
 ExecStart=/usr/bin/munin-asyncd --spool /var/spool/munin/async
+PrivateDevices=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
 
 [Install]
 WantedBy=multi-user.target
