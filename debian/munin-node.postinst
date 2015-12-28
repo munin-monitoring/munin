@@ -11,7 +11,7 @@ MUNIN_NODE_CONF_LOG="${LOG_DIR}/munin-node-configure.log"
 
 log() {
     timestamp=$(date --rfc-3339=seconds)
-    printf "%s %s" "$timestamp" "$@"
+    printf "%s %s\n" "$timestamp" "$@"
 }
 
 ensure_system_user() {
