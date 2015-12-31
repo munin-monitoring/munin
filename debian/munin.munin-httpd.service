@@ -1,0 +1,17 @@
+[Unit]
+Description=Munin HTTPD
+Documentation=man:munin-httpd http://guide.munin-monitoring.org/en/latest/reference/munin-httpd.html
+
+[Service]
+Type=simple
+Restart=always
+User=munin-httpd
+Environment= "RRDCACHED_ADDRESS=/run/munin/flush.sock"
+ExecStart=/usr/bin/munin-httpd
+PrivateDevices=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

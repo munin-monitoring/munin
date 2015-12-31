@@ -13,6 +13,13 @@ ensure_usergroup() {
                 --home /var/lib/munin \
                 munin
     fi
+    if ! getent passwd munin-httpd >/dev/null; then
+        adduser --system \
+                --ingroup munin \
+                --no-create-home \
+                --home /nonexistent \
+                munin-httpd
+    fi
 }
 
 migration_remove_munin_2x_files() {
