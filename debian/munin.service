@@ -1,6 +1,6 @@
 [Unit]
 Description=Munin networked resource monitoring
-Documentation=man:munin http://munin.readthedocs.org/en/latest/reference/munin.html
+Documentation=man:munin http://guide.munin-monitoring.org/en/latest/reference/munin.html
 
 [Service]
 Type=simple

@@ -9,7 +9,7 @@ To have local documentation, install the «munin-doc» package, and open
 file:///usr/share/doc/munin-doc/html/index.html in a web browser.
 
 Documentation is also available online at
-http://munin.readthedocs.org/en/latest/index.html
+http://guide.munin-monitoring.org/en/latest/index.html
 
 Set up the munin master
 -----------------------
@@ -55,3 +55,5 @@ After changing munin-node configuration, you need to restart the munin
 node::
 
   # service munin-node restart
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>, Thu, 31 Dec 2015 01:49:06 +0100
