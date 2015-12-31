@@ -641,6 +641,9 @@ sub RRDs_graph {
 	my $chld_out = new IO::String();
 	my $chld_in = new IO::String();
 	my $chld_err = new IO::String();
+
+	local $ENV{PATH} = $1 if $ENV{PATH} =~ /(.*)/;
+
 	my $chld_pid = open3($chld_out, $chld_in, $chld_err, "rrdtool", "graphv", @_);
 
 	DEBUG "[DEBUG] RRDs_graph(chld_out=".${$chld_out->string_ref}.")";
