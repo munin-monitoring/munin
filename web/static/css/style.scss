@@ -262,25 +262,27 @@ header {
 		font-size: 15px;
 	}
 
-	.logo {
-		display: inline-block;
+	.left {
 		float: left;
-		width: 118px;
-		height: 34px;
-		margin-top: 5px;
-		@include transition-duration(200ms);
-		background-repeat: no-repeat;
-		background-position: 4px 2px;
-		/* SVG logo: fallback to png */
-		background-image: url('../img/logo-h-neg.png');
-		background-image:
-		linear-gradient(transparent, transparent),
-		url('../img/logo-h-neg.svg');
-		background-size: 115px 30px;
-		@include opacity(0.8);
 
-		&:hover {
-			@include opacity(1);
+		.logo {
+			display: inline-block;
+			width: 118px;
+			height: 34px;
+			margin-top: 5px;
+			@include transition-duration(200ms);
+			background-repeat: no-repeat;
+			background-position: 4px 2px;
+			/* SVG logo: fallback to png */
+			background-image: url('../img/logo-h-neg.png');
+			background-image: linear-gradient(transparent, transparent),
+			url('../img/logo-h-neg.svg');
+			background-size: 115px 30px;
+			@include opacity(0.8);
+
+			&:hover {
+				@include opacity(1);
+			}
 		}
 	}
 
@@ -315,6 +317,14 @@ header {
 				background-color: rgba(0, 0, 0, 0.15);
 				text-decoration: none;
 			}
+		}
+	}
+
+	.right {
+		float: right;
+
+		.actions {
+			display: inline-block;
 		}
 	}
 }
@@ -661,13 +671,14 @@ footer {
 	}
 }
 
-/* Filer input */
+/* Filter input */
 .filter {
 	width: 300px;
-	float: right;
 	margin-top: 5px;
 	position: relative;
 	text-align: right;
+	display: inline-block;
+	vertical-align: top;
 
 	input[type=text] {
 		width: 250px;
@@ -927,6 +938,7 @@ footer {
 }
 
 #eventRulerToggle {
+	display: inline-block;
 	width: 31px;
 	height: 31px;
 	overflow: hidden;
