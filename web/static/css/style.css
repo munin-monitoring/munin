@@ -261,7 +261,7 @@ header .logo:hover {
 }
 header .pageTitle {
   font-weight: 100;
-  margin-top: 9px;
+  margin-top: 7px;
   min-height: 24px;
   font-size: 16px;
   color: #eee;
@@ -274,9 +274,10 @@ header .pageTitle {
 }
 header .pageTitle h1 {
   vertical-align: middle;
-  display: inline-block;
+  padding-top: 4px;
 }
 header .pageTitle a, header .pageTitle div.switchable {
+  display: inline-block;
   color: #fff;
   -webkit-transition-duration: 200ms;
   -moz-transition-duration: 200ms;
@@ -288,6 +289,8 @@ header .pageTitle a, header .pageTitle div.switchable {
   -ms-border-radius: 2px;
   border-radius: 2px;
   border: 1px solid transparent;
+  white-space: nowrap;
+  margin: -4px 0 4px 0;
 }
 header .pageTitle a:hover, header .pageTitle div.switchable:hover {
   color: #fff;
