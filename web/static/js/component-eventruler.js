@@ -47,8 +47,8 @@ $(document).ready(function() {
 	});
 
 	// Add toggle in header
-	$('header').find('.logo')
-		.after('<div id="eventRulerToggle" class="eventRulerToggle" data-shown="false">' +
+	$('header').find('.actions')
+		.append('<div id="eventRulerToggle" class="eventRulerToggle" data-shown="false">' +
 					'<i class="mdi mdi-drag-vertical"></i></div>');
 	var eventRulerToggle = $('#eventRulerToggle');
 	eventRulerToggle.click(function(e) {
