@@ -1,3 +1,107 @@
+munin-2.999.2, 2016-01-10
+
+-------
+Summary
+-------
+
+That release is the 2nd beta of the 3.0 series. It is versionned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versionning or 3.0b2
+
+It contains an updated UI.
+
+It is currently beta quality, that means that bugs *can* happen, but aren't
+really expected. They will have a  workaround and a proper fix soon.
+
+------------------
+Detailed Changelog
+------------------
+
+Alexander (1):
+      Remove unneeded forks in plugin.sh
+
+Andreas Teuchert (2):
+      snmp__if_multi: Set warning to 75% of interface speed instead of 133%.
+      Improve graph titles.
+
+Devin Howard (1):
+      typo
+
+Kim B. Heino (3):
+      apc_nis: add line frequency monitoring
+      vlan_: fix syntax error
+      http_loadtime: not all time-binaries support --quiet (RHEL7, ...)
+
+M. Maraun (7):
+      Started to add verbose parameter.
+      verbose across the scripts added.
+      Started to add verbose parameter.
+      verbose across the scripts added.
+      Rebase the add verbose
+      Test expanded.
+      add my name to authors files
+
+Martin Sucha (1):
+      Add an explanation why COUNTER is harmful
+
+Peter Suschlik (1):
+      Use highres (SVG) badges in README
+
+Quentin Stoeckel (34):
+      Fix $verbose typo in munin-update
+      Use "::" as pages title separator instead of ">"
+      Merge pull request #595 from chteuchteu/www-title-separator
+      Add FontAwesome files to project
+      Replace PNG icons with FontAwesome equivalents
+      Use Material Design Icons (community version) instead of FontAwesome
+      Fix filter icon not appearing on IE8
+      Merge pull request #603 from chteuchteu/ui-icons
+      Delete useless JS file
+      Enhance tabs styling
+      JS: Fix .trim() usages (not defined in IE8)
+      Merge pull request #604 from chteuchteu/ui-misc
+      Prevent line breaks from header title, fix text vertical-align
+      Enhance overall toolbar appearance on lower resolution devices
+      Merge pull request #614 from chteuchteu/new-ui-css-fix
+      Create .action-icon class from eventRulerToggle
+      Rewrite eventRuler as a jQuery plugin
+      Rewrite autoRefresh as a jQuery plugin
+      Rewrite tabs as jQuery plugin
+      Fix eventRuler plugin
+      Create a toolbar component, wrapping filter code
+      Fix sanitizeFilter calls
+      Rewrite dynazoomModal as a jQuery plugin
+      Rewrite modal as a jQuery plugin
+      Rewrite tooltips as a jQuery plugin...
+      Avoid tooltips from being displayed off-screen
+      Rewrite switchable & tooltip, implement Toolbar overflow
+      Show only munin's logo (not text) on mobile devices
+      Set Roboto, sans-serif as the default font-family
+      Add refresh buttons when using auto-refresh, JS & CSS fixes
+      Nodeview: fix categories appearance when canceling filter ; various CSS & JS fixes
+      Merge pull request #615 from chteuchteu/new-ui-cleanup
+      Update UI colors
+      Merge pull request #616 from chteuchteu/new-ui-colors
+
+Steve Schnepp (5):
+      Merge pull request #569 from maxbeth/issue405_verbose
+      Merge pull request #585 from ms7s/patch-1
+      graph: handle -T upon rrdtool launch
+      httpd: Trust PERL5LIB from environment
+      Merge commit '6b47ec5f0f89750e86209ce24b641ff37c0c2dfe' into devel
+
+Stig Sandbeck Mathisen (5):
+      Merge pull request #594 from chteuchteu/fix-munin-update-typo
+      Merge pull request #596 from ssm/feature/bcg-fixes
+      Merge pull request #606 from Self-Perfection/patch-1
+      Merge pull request #608 from devvmh/patch-1
+      Merge pull request #611 from splattael/readme-svg-badge
+
+dipohl (2):
+      DOC: critical and warning level can also be decimal numbers
+      DOC: Add note on importance of order in munin.conf
+
+
 munin-2.999.1, 2015-10-14
 
 -------
