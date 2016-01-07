@@ -4,7 +4,7 @@
  *  (from an event for example)
  */
 var test=0;
-(function($) {
+(function($, window) {
 	// DOM elements
 	var body,
 		content,
@@ -44,7 +44,7 @@ var test=0;
 				.append(
 					this.eventRuler = $('<div />').attr('id', 'eventRuler')
 				)
-				.appendTo(body);
+				.appendTo(this.body);
 
 			// Register for <- and -> keys events
 			$(document).keyup(function(e) {
@@ -79,16 +79,15 @@ var test=0;
 			eventRulerToggle.click(function(e) {
 				e.stopPropagation();
 
-				var that = $(this);
-				var shown = that.data('shown');
+				var shown = $(this).data('shown');
 
-				that.data('shown', !shown);
+				$(this).data('shown', !shown);
 				if (shown)
-					that.removeClass('pressed');
+					$(this).removeClass('pressed');
 				else
-					that.addClass('pressed');
+					$(this).addClass('pressed');
 
-				this.toggleRuler();
+				that.toggleRuler();
 			});
 
 			// Tooltip
@@ -155,11 +154,11 @@ var test=0;
 
 	EventRuler.defaults = EventRuler.prototype.defaults;
 
-	$.eventRuler = function(options) {
+	$.fn.eventRuler = function(options) {
 		return this.each(function() {
 			new EventRuler(this, options).init();
 		});
 	};
 
 	window.EventRuler = EventRuler;
-}(jQuery));
+}(jQuery, window));
