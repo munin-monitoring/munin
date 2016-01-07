@@ -60,15 +60,6 @@
 				saveState('filter', query);
 			};
 
-			/**
-			 * Transforms a string to weaken filter
-			 * 	(= get more filter results)
-			 * @param filterExpr
-			 */
-			var sanitizeFilter = function(filterExpr) {
-				return $.trim(filterExpr.toLowerCase());
-			};
-
 			input.on('keyup', function() {
 				var val = $(this).val();
 
@@ -107,12 +98,21 @@
 		},
 
 		/**
+		 * Transforms a string to weaken filter
+		 * 	(= get more filter results)
+		 * @param filterExpr
+		 */
+		sanitizeFilter: function(filterExpr) {
+			return $.trim(filterExpr.toLowerCase());
+		},
+
+		/**
 		 * Returns true whenever a result matches the filter expression
 		 * @param filterExpr User-typed expression
 		 * @param result Candidate
 		 */
 		filterMatches: function(filterExpr, result) {
-			return sanitizeFilter(result).indexOf(sanitizeFilter(filterExpr)) != -1;
+			return this.sanitizeFilter(result).indexOf(this.sanitizeFilter(filterExpr)) != -1;
 		}
 	};
 
