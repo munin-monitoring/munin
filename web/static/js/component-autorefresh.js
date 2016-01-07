@@ -1,59 +1,89 @@
 /**
  * Graphs auto-refresh
  */
+(function($, window) {
+	var AutoRefresh = function(elem, options) {
+		this.elem = elem;
+		this.$elem = $(elem);
+		this.options = options;
+		this.metadata = this.$elem.data('autorefresh-options');
+	};
 
-var graphsSelector = '.graph';
+	AutoRefresh.prototype = {
+		defaults: {
+			graphsSelector: '.graph'
+		},
 
-function startAutoRefresh(pGraphsSelector) {
-	if (pGraphsSelector !== undefined)
-		graphsSelector = pGraphsSelector;
+		init: function() {
+			this.settings = $.extend({}, this.defaults, this.options, this.metadata);
 
-	// Register on image load + error events to hide loading styles
-	$(graphsSelector).on('load error', function() {
-		setImageLoading($(this), false);
-	});
+			// Cache graphs list
+			this.graphs = this.$elem.find(this.settings.graphsSelector);
 
-	// Copy current src attribute as backup in an attribute
-	$(graphsSelector).each(function() {
-		$(this).attr('data-autorefresh-src', $(this).attr('src'));
-	});
+			// Register on image load + error events to hide loading styles
+			var that = this;
+			this.graphs.on('load error', function() {
+				that.setImageLoading($(this), false);
+			});
 
-	setInterval(refreshGraphs, 5*60*1000);
-}
+			// Copy current src attribute as backup in an attribute
+			this.graphs.each(function() {
+				$(this).attr('data-autorefresh-src', $(this).attr('src'));
+			});
 
-/**
- * Tells UI that this specific image is loading (or not)
- *  (lowers opacity and shows loading spinner)
- */
-function setImageLoading(imgDomElement, isLoading) {
-	if (isLoading) {
-		imgDomElement.parent().css('opacity', '0.7');
-		imgDomElement.parent().find('.graph_loading').show();
-	} else {
-		imgDomElement.parent().css('opacity', '1');
-		imgDomElement.parent().find('.graph_loading').hide();
-	}
-}
+			setInterval(function() {
+				that.refreshGraphs.call(that);
+			}, 5*60*1000);
 
-/**
- * Refresh every graph in this page
- */
-function refreshGraphs() {
-	$(graphsSelector).each(function() {
-		var src = $(this).attr('data-autorefresh-src');
+			return this;
+		},
 
-		// Add new timestamp
-		var prefix = src.indexOf('?') != -1 ? '&' : '?';
-		src += prefix + new Date().getTime();
+		setImageLoading: function(imgDomElement, isLoading) {
+			if (isLoading) {
+				imgDomElement.parent().css('opacity', '0.7');
+				imgDomElement.parent().find('.graph_loading').show();
+			} else {
+				imgDomElement.parent().css('opacity', '1');
+				imgDomElement.parent().find('.graph_loading').hide();
+			}
+		},
 
-		setImageLoading($(this), true);
+		refreshGraphs: function() {
+			var that = this;
 
-		// Since we change the src attr, we have to reattach
-		// the error event
-		$(this).on('error', function() {
-			setImageLoading($(this), false);
+			this.graphs.each(function() {
+				var graph = $(this);
+				var src = graph.attr('data-autorefresh-src');
+
+				// Add new timestamp
+				var prefix = src.indexOf('?') != -1 ? '&' : '?';
+				src += prefix + new Date().getTime();
+
+				that.setImageLoading(graph, true);
+
+				// Since we change the src attr, we have to reattach
+				// the error event
+				graph.on('error', function() {
+					that.setImageLoading(graph, false);
+				});
+
+				graph.attr('src', src);
+			});
+		}
+	};
+
+	AutoRefresh.defaults = AutoRefresh.prototype.defaults;
+
+	$.fn.autoRefresh = function(options) {
+		return this.each(function() {
+			new AutoRefresh(this, options).init();
 		});
+	};
 
-		$(this).attr('src', src);
-	});
-}
+	// Make setImageLoading accessible without selector
+	$.autoRefresh = {
+		setImageLoading: AutoRefresh.prototype.setImageLoading
+	};
+
+	window.AutoRefresh = AutoRefresh;
+}(jQuery, window));

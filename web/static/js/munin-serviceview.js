@@ -34,7 +34,7 @@ $(document).ready(function() {
 	$('.graph').after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
 
 	// Graphs auto-refresh
-	startAutoRefresh();
+	$(this).autoRefresh();
 
 	// Switch to another graph in the same node
 	prepareSwitchable('header');

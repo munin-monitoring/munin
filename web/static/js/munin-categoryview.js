@@ -13,7 +13,7 @@ $(document).ready(function() {
 	graphs.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
 
 	// Auto-refresh
-	startAutoRefresh();
+	$(this).autoRefresh();
 
 	// Prepare filter
 	prepareFilter('Filter graphs', function(val) {

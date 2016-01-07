@@ -6,7 +6,7 @@
 // We have to register it as soon as possible or the sparklines may have loaded
 //  before we could handle the error
 $('.sparkline').on('error', function() {
-    $(this).parent().hide(); // Hide container
+	$(this).parent().hide(); // Hide container
 });
 
 $(document).ready(function() {
@@ -40,17 +40,19 @@ $(document).ready(function() {
 			noResult.show();
 	});
 
-    // Sparklines tooltips
-    var spkCnters = $('.overview-sparkline');
-    spkCnters.each(function() {
-        $(this).after('<div class="tooltip">' + $(this).find('img.sparkline').attr('alt') + '</div>');
-    });
-    prepareTooltips(spkCnters, function(sparkline) {
-        return sparkline.next();
-    });
+	// Sparklines tooltips
+	var spkCnters = $('.overview-sparkline');
+	spkCnters.each(function() {
+		$(this).after('<div class="tooltip">' + $(this).find('img.sparkline').attr('alt') + '</div>');
+	});
+	prepareTooltips(spkCnters, function(sparkline) {
+		return sparkline.next();
+	});
 
-    // Sparklines auto-refresh
-    var sparklines = $('.sparkline');
-    sparklines.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
-    startAutoRefresh('.sparkline');
+	// Sparklines auto-refresh
+	var sparklines = $('.sparkline');
+	sparklines.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
+	$(this).autoRefresh({
+		graphsSelector: '.sparkline'
+	});
 });
