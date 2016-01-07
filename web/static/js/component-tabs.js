@@ -3,128 +3,156 @@
  *  Tabs can be disabled by setting the <div id="content"> tabsenabled attribute to false
  */
 
-var tabsEnabled,
-	content,
-	tabsContainer,
-	tabs,
-	activeTab,
-	categoryTitles;
+(function($, window) {
+	var tabsEnabled,
+		content,
+		tabsContainer,
+		tabs,
+		activeTab,
+		categoryTitles;
 
-$(document).ready(function() {
-	content = $('#content');
-	tabsEnabled = content.attr('data-tabsenabled') == 'true';
-	tabsContainer = $('.tabs');
-	tabs = tabsContainer.find('li');
-	categoryTitles = $('h3');
+	var Tabs = function(elem, options) {
+		this.elem = elem;
+		this.$elem = $(elem);
+		this.options = options;
+		this.metadata = this.$elem.data('tabs-options');
+	};
 
-	// Get active tab
-	var qs = new Querystring();
-	if (qs.contains('cat'))
-		activeTab = tabs.filter(function() { return $.trim($(this).text()) == qs.get('cat'); });
-	else if (window.location.hash.length > 0) { // URL contains anchor to category: overview->nodeview
-		var anchorName = window.location.hash.substr(1); // Remove leading #
-		activeTab = tabs.filter(function() { return $.trim($(this).text()) == anchorName; });
-	}
-	else
-		activeTab = tabs.first();
+	Tabs.prototype = {
+		defaults: { },
 
-	// If category in URL doesn't exist
-	if (activeTab[0] === undefined)
-		activeTab = tabs.first();
+		init: function() {
+			var that = this;
+			this.settings = $.extend({}, this.defaults, this.options, this.metadata);
+
+			// Init component
+			this.content = $('#content');
+			this.tabsEnabled = this.content.attr('data-tabsenabled') == 'true';
+			this.tabsContainer = $('.tabs');
+			this.tabs = this.tabsContainer.find('li');
+			this.categoryTitles = $('h3');
+
+			// Get active tab
+			var qs = new Querystring();
+			if (qs.contains('cat'))
+				this.activeTab = this.tabs.filter(function() { return $.trim($(this).text()) == qs.get('cat'); });
+			else if (window.location.hash.length > 0) { // URL contains anchor to category: overview->nodeview
+				var anchorName = window.location.hash.substr(1); // Remove leading #
+				this.activeTab = this.tabs.filter(function() { return $.trim($(this).text()) == anchorName; });
+			}
+			else
+				this.activeTab = this.tabs.first();
+
+			// If category in URL doesn't exist
+			if (this.activeTab[0] === undefined)
+				this.activeTab = this.tabs.first();
 
 
-	// If tabs are disabled, they will serve as links to jump to categories
-	if (!tabsEnabled) {
-		// Remove "ALL" tab
-		tabs.first().remove();
+			// If tabs are disabled, they will serve as links to jump to categories
+			if (!this.tabsEnabled) {
+				// Remove "ALL" tab
+				this.tabs.first().remove();
 
-		tabs.each(function() {
-			var text = $(this).text();
-			$(this).html('<a href="#' + text + '">' + text + '</a>');
-		});
+				this.tabs.each(function() {
+					var text = $(this).text();
+					$(this).html('<a href="#' + text + '">' + text + '</a>');
+				});
 
-		// Stop here
-		return;
-	}
+				// Stop here
+				return this;
+			}
 
-	activeTab.addClass('active');
+			this.activeTab.addClass('active');
 
-	tabs.click(function() {
-		activeTab.removeClass('active');
-		activeTab = $(this);
-		activeTab.addClass('active');
+			// Register tab click listener
+			this.tabs.click(function() {
+				that.activeTab.removeClass('active');
+				that.activeTab = $(this);
+				that.activeTab.addClass('active');
 
-		// Hide all categories
-		if ($(this).index() != 0) {
-			$('[data-category]').hide();
-			// Show the right one
-			$('[data-category="' + activeTab.text() + '"]').show();
+				// Hide all categories
+				if ($(this).index() != 0) {
+					$('[data-category]').hide();
+					// Show the right one
+					$('[data-category="' + that.activeTab.text() + '"]').show();
 
-			categoryTitles.hide();
-		}
-		else { // ALL
+					that.categoryTitles.hide();
+				}
+				else { // ALL
+					$('[data-category]').show();
+					that.categoryTitles.show();
+				}
+
+				// Save state in URL
+				saveState('cat', that.activeTab.text());
+			});
+
+			// Hide graphs that aren't in the activeTab category
+			if (this.activeTab.index() != 0) {
+				// Hide all categories
+				$('[data-category]').hide();
+				// Show the right one
+				$('[data-category="' + this.activeTab.text() + '"]').show();
+
+				this.categoryTitles.hide();
+			}
+			else { // All
+				$('[data-category]').show();
+
+				this.categoryTitles.show();
+			}
+
+			// If there's an active filter, hide tabs
+			if (qs.contains('filter'))
+				this.hideTabs();
+			else
+				this.showTabs();
+
+			return this;
+		},
+
+		/**
+		 * Called on filter search begins
+		 */
+		showTabs: function() {
+			if (!this.tabsEnabled)
+				return;
+
+			// If tabs are already shown, don't do anything
+			if (this.content.attr('data-tabs') == 'true')
+				return;
+
+			this.content.attr('data-tabs', 'true');
+
+			if (this.activeTab.text() == 'all') // Show all categories
+				$('[data-category]').show();
+			else // Only show activeTab category
+				$('[data-category]').not('[data-category="' + this.activeTab.text() + '"]').hide();
+		},
+
+		/**
+		 * Called on filter search ends
+		 */
+		hideTabs: function() {
+			if (!this.tabsEnabled)
+				return;
+
+			// If tabs are already hidden, don't do anything
+			if (this.content.attr('data-tabs') == 'false')
+				return;
+
+			this.content.attr('data-tabs', 'false');
+
+			// Show back every hidden category
 			$('[data-category]').show();
-			categoryTitles.show();
 		}
+	};
 
-		// Save state in URL
-		saveState('cat', activeTab.text());
-	});
+	Tabs.defaults = Tabs.prototype.defaults;
 
-	// Hide graphs that aren't in the activeTab category
-	if (activeTab.index() != 0) {
-		// Hide all categories
-		$('[data-category]').hide();
-		// Show the right one
-		$('[data-category="' + activeTab.text() + '"]').show();
+	$.fn.tabs = function(options) {
+		return new Tabs(this.first(), options).init();
+	};
 
-		categoryTitles.hide();
-	}
-	else { // All
-		$('[data-category]').show();
-
-		categoryTitles.show();
-	}
-
-	// If there's an active filter, hide tabs
-	if (qs.contains('filter'))
-		hideTabs();
-	else
-		showTabs();
-});
-
-/**
- * Called on filter search begins
- */
-function showTabs() {
-	if (!tabsEnabled)
-		return;
-
-	// If tabs are already shown, don't do anything
-	if (content.attr('data-tabs') == 'true')
-		return;
-
-	content.attr('data-tabs', 'true');
-
-	if (activeTab.text() == 'all') // Show all categories
-		$('[data-category]').show();
-	else // Only show activeTab category
-		$('[data-category]').not('[data-category="' + activeTab.text() + '"]').hide();
-}
-
-/**
- * Called on filter search ends
- */
-function hideTabs() {
-	if (!tabsEnabled)
-		return;
-
-	// If tabs are already hidden, don't do anything
-	if (content.attr('data-tabs') == 'false')
-		return;
-
-	content.attr('data-tabs', 'false');
-
-	// Show back every hidden category
-	$('[data-category]').show();
-}
+	window.Tabs = Tabs;
+}(jQuery, window));

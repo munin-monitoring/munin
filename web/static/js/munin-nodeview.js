@@ -19,12 +19,14 @@ $(document).ready(function() {
 	// Auto-refresh
 	$(this).autoRefresh();
 
+	var tabsComponent = $(this).tabs();
+
 	// Prepare filter
 	prepareFilter('Filter graphs', function(val) {
 		if (val.length == 0)
-			showTabs();
+			tabsComponent.showTabs();
 		else
-			hideTabs();
+			tabsComponent.hideTabs();
 
 		graphs.each(function() {
 			var pluginName = $(this).attr('alt');
@@ -103,5 +105,5 @@ $(document).ready(function() {
 	prepareSwitchable('header');
 
 	// Init eventruler
-	$.eventRuler();
+	$(this).eventRuler();
 });

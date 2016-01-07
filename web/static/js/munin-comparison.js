@@ -17,12 +17,15 @@ $(document).ready(function() {
 	// Auto-refresh
 	$(this).autoRefresh();
 
+	// Tabs
+	var tabs = $(this).tabs();
+
 	// Prepare filter
 	prepareFilter('Filter graphs', function(val) {
 		if (val.length == 0)
-			showTabs();
+			tabs.show();
 		else
-			hideTabs();
+			tabs.hide();
 
 		trs.each(function() {
 			var serviceName = $(this).data('servicename');
@@ -86,5 +89,5 @@ $(document).ready(function() {
 	timeRangeSwitch.find('ul > li:contains(' + timeRange + ')').addClass('selected');
 
 	// Init eventruler
-	$.eventRuler();
+	$(this).eventRuler();
 });
