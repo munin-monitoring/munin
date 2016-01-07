@@ -47,20 +47,35 @@ $(document).ready(function() {
 	});
 
 	// Add toggle in header
-	$('header').find('.actions')
-		.append('<div id="eventRulerToggle" class="eventRulerToggle" data-shown="false">' +
-					'<i class="mdi mdi-drag-vertical"></i></div>');
-	var eventRulerToggle = $('#eventRulerToggle');
+	var eventRulerToggle = $('<div />')
+		.addClass('action-icon')
+		.addClass('eventRulerToggle')
+		.data('shown', false)
+		.append($('<i>').addClass('mdi').addClass('mdi-drag-vertical'))
+		.appendTo($('header').find('.actions'));
+
+	// Add listener
 	eventRulerToggle.click(function(e) {
 		e.stopPropagation();
-		$(this).attr('data-shown', $(this).attr('data-shown') == 'false' ? 'true' : 'false');
+
+		var that = $(this);
+			shown = that.data('shown');
+
+		that.data('shown', !shown);
+		if (shown)
+			that.removeClass('pressed');
+		else
+			that.addClass('pressed');
+
 		toggleRuler();
 	});
 
+	// Tooltip
 	eventRulerToggle.after('<div class="tooltip" style="right: 10px; left: auto;" data-dontsetleft="true">' +
 	'<b>Toggle event ruler</b><br />Tip: use <b>&#8592;, &#8594;</b> or drag-n-drop to move once set,<br /><b>Shift</b> to move quicker</div>');
-	prepareTooltips(eventRulerToggle, function(e) { return e
-		.next(); });
+	prepareTooltips(eventRulerToggle, function(e) {
+		return e.next();
+	});
 });
 
 function toggleRuler() {

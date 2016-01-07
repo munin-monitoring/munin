@@ -325,6 +325,31 @@ header {
 
 		.actions {
 			display: inline-block;
+
+			.action-icon {
+				display: inline-block;
+				width: 31px;
+				height: 31px;
+				overflow: hidden;
+				cursor: pointer;
+				margin: 5px 0 0 10px;
+				@include transition-duration(150ms);
+				@include border-radius(2px);
+
+				i {
+					font-size: 19px;
+					padding: 6px;
+				}
+
+				&:hover {
+					background-color: rgba(0, 0, 0, 0.15);
+				}
+
+				&.pressed {
+					@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+					background-color: rgba(0, 0, 0, 0.2);
+				}
+			}
 		}
 	}
 }
@@ -934,29 +959,6 @@ footer {
 		@include opacity(0.5);
 		height: 100%;
 		width: 0;
-	}
-}
-
-#eventRulerToggle {
-	display: inline-block;
-	width: 31px;
-	height: 31px;
-	overflow: hidden;
-	cursor: pointer;
-	float: right;
-	margin: 5px 0 0 10px;
-	@include transition-duration(200ms);
-	@include border-radius(2px);
-
-	.mdi {
-		font-size: 19px;
-		padding: 6px;
-	}
-
-	&[data-shown=true] {
-		@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
-		background-color: rgb(47, 120, 51);
-		background-color: rgba(0, 0, 0, 0.15);
 	}
 }
 

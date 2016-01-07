@@ -305,6 +305,36 @@ header .right {
 header .right .actions {
   display: inline-block;
 }
+header .right .actions .action-icon {
+  display: inline-block;
+  width: 31px;
+  height: 31px;
+  overflow: hidden;
+  cursor: pointer;
+  margin: 5px 0 0 10px;
+  -webkit-transition-duration: 150ms;
+  -moz-transition-duration: 150ms;
+  -o-transition-duration: 150ms;
+  transition-duration: 150ms;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  -ms-border-radius: 2px;
+  border-radius: 2px;
+}
+header .right .actions .action-icon i {
+  font-size: 19px;
+  padding: 6px;
+}
+header .right .actions .action-icon:hover {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+header .right .actions .action-icon.pressed {
+  -webkit-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
+  -o-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.2);
+}
 
 /* Main */
 #main {
@@ -999,36 +1029,6 @@ footer p.tagline:hover {
   filter: alpha(opacity=50);
   height: 100%;
   width: 0;
-}
-
-#eventRulerToggle {
-  display: inline-block;
-  width: 31px;
-  height: 31px;
-  overflow: hidden;
-  cursor: pointer;
-  float: right;
-  margin: 5px 0 0 10px;
-  -webkit-transition-duration: 200ms;
-  -moz-transition-duration: 200ms;
-  -o-transition-duration: 200ms;
-  transition-duration: 200ms;
-  -webkit-border-radius: 2px;
-  -moz-border-radius: 2px;
-  -ms-border-radius: 2px;
-  border-radius: 2px;
-}
-#eventRulerToggle .mdi {
-  font-size: 19px;
-  padding: 6px;
-}
-#eventRulerToggle[data-shown=true] {
-  -webkit-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
-  -moz-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
-  -o-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
-  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.05);
-  background-color: #2f7833;
-  background-color: rgba(0, 0, 0, 0.15);
 }
 
 #backToTop {
