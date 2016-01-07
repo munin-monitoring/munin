@@ -2,23 +2,17 @@
  * Graphs auto-refresh
  */
 (function($, window) {
-	var AutoRefresh = function(elem, options) {
-		this.elem = elem;
-		this.$elem = $(elem);
+	var AutoRefresh = function(elems, options) {
+		this.graphs = $(elems);
 		this.options = options;
-		this.metadata = this.$elem.data('autorefresh-options');
+		this.metadata = this.graphs.data('autorefresh-options');
 	};
 
 	AutoRefresh.prototype = {
-		defaults: {
-			graphsSelector: '.graph'
-		},
+		defaults: { },
 
 		init: function() {
 			this.settings = $.extend({}, this.defaults, this.options, this.metadata);
-
-			// Cache graphs list
-			this.graphs = this.$elem.find(this.settings.graphsSelector);
 
 			// Register on image load + error events to hide loading styles
 			var that = this;
@@ -75,9 +69,7 @@
 	AutoRefresh.defaults = AutoRefresh.prototype.defaults;
 
 	$.fn.autoRefresh = function(options) {
-		return this.each(function() {
-			new AutoRefresh(this, options).init();
-		});
+		return new AutoRefresh(this, options).init();
 	};
 
 	// Make setImageLoading accessible without selector

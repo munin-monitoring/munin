@@ -16,10 +16,8 @@ $(document).ready(function() {
 	// Append a loading <img> on each graph img
 	graphs.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
 
-	// Auto-refresh
-	$(this).autoRefresh();
-
-	// Dynazoom modal links
+	// Instantiate auto-refresh & dynazoom modal links components
+	graphs.autoRefresh();
 	graphs.dynazoomModal();
 
 	var tabsComponent = $(this).tabs();

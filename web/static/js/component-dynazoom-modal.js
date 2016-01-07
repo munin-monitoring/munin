@@ -25,8 +25,8 @@
 			this.$elems.after($('<i />').addClass('mdi mdi-arrow-expand dynazoomModalLink'));
 
 			// Prepare a hidden modal
-			var modal = prepareModal(modalId, '<iframe frameBorder="0" seamless="seamless"></iframe>');
-			var dynazoomIframe = modal.find('iframe');
+			var modal = new Modal(modalId, '<iframe frameBorder="0" seamless="seamless"></iframe>');
+			var dynazoomIframe = modal.getView().find('iframe');
 
 			// Bind onclick event
 			$('.dynazoomModalLink').click(function(e) {
@@ -73,14 +73,14 @@
 
 				var url = '/dynazoom.html?' + $.param(dzQS.params);
 				dynazoomIframe.attr('src', url);
-				setModalTitle(modalId, 'Dynazoom - ' + img.attr('alt'));
+				modal.setTitle('Dynazoom - ' + img.attr('alt'));
 
 				// Add "open" button to modal
 				// We have to set back content_only to 0 (false)
 				dzQS.set('content_only', 0);
 				var openUrl = '/dynazoom.html?' + $.param(dzQS.params);
-				setModalOpenTarget(modalId, openUrl);
-				showModal(modalId);
+				modal.setOpenTarget(openUrl);
+				modal.show();
 			});
 		}
 	};
@@ -88,7 +88,7 @@
 	DynazoomModal.defaults = DynazoomModal.prototype.defaults;
 
 	$.fn.dynazoomModal = function(options) {
-		new DynazoomModal(this, options).init();
+		return new DynazoomModal(this, options).init();
 	};
 
 	window.DynazoomModal = DynazoomModal;
