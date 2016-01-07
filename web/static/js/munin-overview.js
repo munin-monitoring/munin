@@ -10,7 +10,7 @@ $('.sparkline').on('error', function() {
 });
 
 $(document).ready(function() {
-	prepareFilter('Filter nodes', function(expr) {
+	window.toolbar.prepareFilter('Filter nodes', function(expr) {
 		var groupView = $('.groupview');
 
 		var groups = groupView.children();
@@ -25,7 +25,7 @@ $(document).ready(function() {
 
 		// Simple filter from name
 		hosts.each(function() {
-			if (!filterMatches(expr, $(this).text()))
+			if (!window.toolbar.filterMatches(expr, $(this).text()))
 				$(this).parent().hide();
 		});
 

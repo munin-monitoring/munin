@@ -21,7 +21,7 @@ $(document).ready(function() {
 	var tabs = $(this).tabs();
 
 	// Prepare filter
-	prepareFilter('Filter graphs', function(val) {
+	window.toolbar.prepareFilter('Filter graphs', function(val) {
 		if (val.length == 0)
 			tabs.show();
 		else
@@ -31,7 +31,7 @@ $(document).ready(function() {
 			var serviceName = $(this).data('servicename');
 			var serviceTitle = $(this).data('servicetitle');
 
-			if (filterMatches(val, serviceName) || filterMatches(val, serviceTitle)) {
+			if (window.toolbar.filterMatches(val, serviceName) || window.toolbar.filterMatches(val, serviceTitle)) {
 				$(this).show();
 			}
 			else {
@@ -42,7 +42,7 @@ $(document).ready(function() {
 		// If tabs aren't enabled, they are used as anchors links
 		if (content.attr('data-tabsenabled') == 'false') {
 			tabs.each(function() {
-				if (filterMatches(val, $(this).text()))
+				if (window.toolbar.filterMatches(val, $(this).text()))
 					$(this).show();
 				else
 					$(this).hide();

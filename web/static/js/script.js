@@ -17,9 +17,8 @@ $(document).ready(function() {
 		}
 	});
 
-	// Hide filter input, will be shown
-	// 	when implemented using prepareFilter
-	$('#filter').parent().hide();
+	// Init toolbar component
+	window.toolbar = $('header').toolbar();
 });
 
 /**
@@ -59,93 +58,6 @@ function prepareSwitchable(switchId) {
 	$('.switchable_content[data-switch=' + switchId + ']').children().filter(function() {
 		return $.trim(switchable.text()) == $.trim($(this).text());
 	}).addClass('current');
-}
-
-/**
- * Called by each page to setup header filter
- * @param placeholder Input placeholder
- * @param onFilterChange Called each time the input text changes
- */
-function prepareFilter(placeholder, onFilterChange) {
-	var input = $('#filter');
-
-	// Show the filter input
-	input.parent().show();
-
-	// Set placeholder
-	input.attr('placeholder', placeholder);
-
-	// Create a delay function to avoid triggering filter on each keypress
-	var delay = (function(){
-		var timer = 0;
-		return function(callback, ms){
-			clearTimeout(timer);
-			timer = setTimeout(callback, ms);
-		};
-	})();
-
-	input.on('keyup', function() {
-		var val = $(this).val();
-
-		delay(function() {
-			if (val != '')
-				$('#cancelFilter').show();
-			else
-				$('#cancelFilter').hide();
-
-			onFilterChange(val);
-			updateFilterInURL();
-		}, 200);
-	});
-
-	$('#cancelFilter').click(function() {
-		input.val('');
-		$(this).hide();
-		onFilterChange('');
-		updateFilterInURL();
-	});
-
-	// Register ESC key: same action as cancel filter
-	$(document).keyup(function(e) {
-		if (e.keyCode == 27 && input.is(':focus') && input.val().length > 0)
-			$('#cancelFilter').click();
-	});
-
-	// There may be a 'filter' GET parameter in URL: let's apply it
-	var qs = new Querystring();
-	if (qs.contains('filter')) {
-		input.val(qs.get('filter'));
-		// Manually trigger the keyUp event on filter input
-		input.keyup();
-	}
-}
-
-/**
- * Returns true whenever a result matches the filter expression
- * @param filterExpr User-typed expression
- * @param result Candidate
- */
-function filterMatches(filterExpr, result) {
-	return sanitizeFilter(result).indexOf(sanitizeFilter(filterExpr)) != -1;
-}
-
-/**
- * Transforms a string to weaken filter
- * 	(= get more filter results)
- * @param filterExpr
- */
-function sanitizeFilter(filterExpr) {
-	return $.trim(filterExpr.toLowerCase());
-}
-
-/**
- * Adds or updates current filter as GET parameter in URL
- */
-function updateFilterInURL() {
-	// Put the filter query in the URL (to keep it when refreshing the page)
-	var query = $('#filter').val();
-
-	saveState('filter', query);
 }
 
 /**

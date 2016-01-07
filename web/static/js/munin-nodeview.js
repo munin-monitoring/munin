@@ -22,7 +22,7 @@ $(document).ready(function() {
 	var tabsComponent = $(this).tabs();
 
 	// Prepare filter
-	prepareFilter('Filter graphs', function(val) {
+	window.toolbar.prepareFilter('Filter graphs', function(val) {
 		if (val.length == 0)
 			tabsComponent.showTabs();
 		else
@@ -33,7 +33,7 @@ $(document).ready(function() {
 			var src = $(this).attr('src');
 			var pluginId = src.substr(src.lastIndexOf('/')+1, src.lastIndexOf('-')-src.lastIndexOf('/')-1);
 
-			if (filterMatches(val, pluginName) || filterMatches(val, pluginId)) {
+			if (window.toolbar.filterMatches(val, pluginName) || window.toolbar.filterMatches(val, pluginId)) {
 				$(this).parent().show();
 				// Show plugin name
 				h4s.filter(function() {
@@ -60,7 +60,7 @@ $(document).ready(function() {
 		// If tabs aren't enabled, they are used as anchors links
 		if (content.attr('data-tabsenabled') == 'false') {
 			tabs.each(function() {
-				if (filterMatches(val, $(this).text()))
+				if (window.toolbar.filterMatches(val, $(this).text()))
 					$(this).show();
 				else
 					$(this).hide();

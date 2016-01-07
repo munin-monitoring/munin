@@ -16,13 +16,13 @@ $(document).ready(function() {
 	$(this).autoRefresh();
 
 	// Prepare filter
-	prepareFilter('Filter graphs', function(val) {
+	window.toolbar.prepareFilter('Filter graphs', function(val) {
 		graphs.each(function() {
 			var pluginName = $(this).attr('alt');
 			var src = $(this).attr('src');
 			var pluginId = src.substr(src.lastIndexOf('/')+1, src.lastIndexOf('-')-src.lastIndexOf('/')-1);
 
-			if (filterMatches(val, pluginName) || filterMatches(val, pluginId)) {
+			if (window.toolbar.filterMatches(val, pluginName) || window.toolbar.filterMatches(val, pluginId)) {
 				$(this).parent().parent().show();
 			}
 			else {
