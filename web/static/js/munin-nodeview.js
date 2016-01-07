@@ -101,4 +101,7 @@ $(document).ready(function() {
 
 	// Node switch
 	prepareSwitchable('header');
+
+	// Init eventruler
+	$.eventRuler();
 });

@@ -3,126 +3,163 @@
  * Draw a vertical line in page to easily compare graphs
  *  (from an event for example)
  */
+var test=0;
+(function($) {
+	// DOM elements
+	var body,
+		content,
+		navWidth,
+		eventRuler,
+		eventRulerMT;
 
-// DOM elements
-var body,
-	content,
-	navWidth,
-	eventRuler,
-	eventRulerMT;
+	var EventRuler = function(elem, options) {
+		this.elem = elem;
+		this.$elem = $(elem);
+		this.options = options;
+		this.metadata = this.$elem.data('eventruler-options');
+	};
 
-var eventRulerMTPadding = 10;
+	EventRuler.prototype = {
+		defaults: {
+			eventRulerMTPadding: 10
+		},
 
-$(document).ready(function() {
-	body = $('body');
-	content = $('#content');
-	var nav = $('#nav');
-	navWidth = nav.length ? nav.width() : 0;
+		init: function() {
+			var that = this;
+			this.settings = $.extend({}, this.defaults, this.options, this.metadata);
 
-	if (body.width() < 768) // Not possible with too small devices
-		return;
+			// Init component
+			this.body = $('body');
+			this.content = $('#content');
+			var nav = $('#nav');
+			this.navWidth = nav.length ? nav.width() : 0;
 
-	// Append ruler and mask to document
-	body.append('<div id="eventRulerMouseTrigger" style="display:none;"><div id="eventRuler"></div></div>');
-	eventRuler = $('#eventRuler');
-	eventRulerMT = $('#eventRulerMouseTrigger');
+			if (this.body.width() < 768) // Not possible with too small devices
+				return this;
 
-	// Register for <- and -> keys events
-	$(document).keyup(function(e) {
-		if ((e.keyCode == 37 || e.keyCode == 39) && eventRulerMT.is(':visible') && !$('#filter').is(':focus')) {
-			var left = parseInt(eventRulerMT.css('left').replace('px', ''));
+			// Append ruler and mask to document
+			this.eventRulerMT = $('<div />')
+				.attr('id', 'eventRulerMouseTrigger')
+				.css('display', 'none')
+				.append(
+					this.eventRuler = $('<div />').attr('id', 'eventRuler')
+				)
+				.appendTo(body);
 
-			var absVal = e.shiftKey ? 15 : 1;
+			// Register for <- and -> keys events
+			$(document).keyup(function(e) {
+				if ((e.keyCode == 37 || e.keyCode == 39) && that.eventRulerMT.is(':visible') && !$('#filter').is(':focus')) {
+					var left = parseInt(that.eventRulerMT.css('left').replace('px', ''));
 
-			if (e.keyCode == 37)
-				left -= absVal;
-			else if (e.keyCode == 39)
-				left += absVal;
+					var absVal = e.shiftKey ? 15 : 1;
 
-			if (left+10 < navWidth)
-				left = navWidth-10;
+					if (e.keyCode == 37)
+						left -= absVal;
+					else if (e.keyCode == 39)
+						left += absVal;
 
-			eventRulerMT.css('left', left + 'px');
-		}
-	});
+					if (left+10 < that.navWidth)
+						left = that.navWidth-10;
 
-	// Add toggle in header
-	var eventRulerToggle = $('<div />')
-		.addClass('action-icon')
-		.addClass('eventRulerToggle')
-		.data('shown', false)
-		.append($('<i>').addClass('mdi').addClass('mdi-drag-vertical'))
-		.appendTo($('header').find('.actions'));
-
-	// Add listener
-	eventRulerToggle.click(function(e) {
-		e.stopPropagation();
-
-		var that = $(this);
-			shown = that.data('shown');
-
-		that.data('shown', !shown);
-		if (shown)
-			that.removeClass('pressed');
-		else
-			that.addClass('pressed');
-
-		toggleRuler();
-	});
-
-	// Tooltip
-	eventRulerToggle.after('<div class="tooltip" style="right: 10px; left: auto;" data-dontsetleft="true">' +
-	'<b>Toggle event ruler</b><br />Tip: use <b>&#8592;, &#8594;</b> or drag-n-drop to move once set,<br /><b>Shift</b> to move quicker</div>');
-	prepareTooltips(eventRulerToggle, function(e) {
-		return e.next();
-	});
-});
-
-function toggleRuler() {
-	// Listen for mouse move, display ruler and ruler mask
-	if (eventRulerMT.is(':visible')) {
-		eventRulerMT.fadeOut();
-
-		body.off('mousemove');
-		body.off('click');
-	} else {
-		eventRulerMT.fadeIn();
-
-		body.on('mousemove', function (e) {
-			var left = e.pageX-eventRulerMTPadding;
-
-			if (left+10 < navWidth)
-				left = navWidth-10;
-
-			eventRulerMT.css('left', left);
-		});
-
-		body.on('click', function (e) {
-			e.preventDefault();
-
-			// Remove body events
-			body.off('mousemove');
-			body.off('click');
-
-			var dragging = false;
-			eventRulerMT.on('mousedown', function() {
-				dragging = true;
-			});
-			body.on('mousemove', function(e) {
-				if (dragging) {
-					e.preventDefault(); // Prevent selection
-					// Update ruler position
-					var left = e.pageX-eventRulerMTPadding;
-
-					if (left+10 < navWidth)
-						left = navWidth-10;
-
-					eventRulerMT.css('left', left);
+					that.eventRulerMT.css('left', left + 'px');
 				}
 			});
-			eventRulerMT.on('mouseup', function() {
-				dragging = false;
+
+			// Add toggle in header
+			var eventRulerToggle = $('<div />')
+				.addClass('action-icon')
+				.addClass('eventRulerToggle')
+				.data('shown', false)
+				.append(
+					$('<i>').addClass('mdi').addClass('mdi-drag-vertical')
+				)
+				.appendTo($('header').find('.actions'));
+
+			// Add listener
+			eventRulerToggle.click(function(e) {
+				e.stopPropagation();
+
+				var that = $(this);
+				var shown = that.data('shown');
+
+				that.data('shown', !shown);
+				if (shown)
+					that.removeClass('pressed');
+				else
+					that.addClass('pressed');
+
+				this.toggleRuler();
 			});
+
+			// Tooltip
+			eventRulerToggle.after('<div class="tooltip" style="right: 10px; left: auto;" data-dontsetleft="true">' +
+				'<b>Toggle event ruler</b><br />Tip: use <b>&#8592;, &#8594;</b> or drag-n-drop to move once set,<br /><b>Shift</b> to move quicker</div>');
+			prepareTooltips(eventRulerToggle, function(e) {
+				return e.next();
+			});
+
+			return this;
+		},
+
+		toggleRuler: function() {
+			var that = this;
+
+			// Listen for mouse move, display ruler and ruler mask
+			if (this.eventRulerMT.is(':visible')) {
+				this.eventRulerMT.fadeOut();
+
+				this.body.off('mousemove');
+				this.body.off('click');
+			} else {
+				this.eventRulerMT.fadeIn();
+
+				this.body.on('mousemove', function (e) {
+					var left = e.pageX-that.settings.eventRulerMTPadding;
+
+					if (left+10 < that.navWidth)
+						left = that.navWidth-10;
+
+					that.eventRulerMT.css('left', left);
+				});
+
+				this.body.on('click', function (e) {
+					e.preventDefault();
+
+					// Remove body events
+					that.body.off('mousemove');
+					that.body.off('click');
+
+					var dragging = false;
+					that.eventRulerMT.on('mousedown', function() {
+						dragging = true;
+					});
+					that.body.on('mousemove', function(e) {
+						if (dragging) {
+							e.preventDefault(); // Prevent selection
+							// Update ruler position
+							var left = e.pageX-that.settings.eventRulerMTPadding;
+
+							if (left+10 < that.navWidth)
+								left = that.navWidth-10;
+
+							that.eventRulerMT.css('left', left);
+						}
+					});
+					that.eventRulerMT.on('mouseup', function() {
+						dragging = false;
+					});
+				});
+			}
+		}
+	};
+
+	EventRuler.defaults = EventRuler.prototype.defaults;
+
+	$.eventRuler = function(options) {
+		return this.each(function() {
+			new EventRuler(this, options).init();
 		});
-	}
-}
+	};
+
+	window.EventRuler = EventRuler;
+}(jQuery));

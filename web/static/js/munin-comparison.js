@@ -84,4 +84,7 @@ $(document).ready(function() {
 	var regex = 'comparison-(.*).html';
 	var timeRange = url.match(regex)[1];
 	timeRangeSwitch.find('ul > li:contains(' + timeRange + ')').addClass('selected');
+
+	// Init eventruler
+	$.eventRuler();
 });
