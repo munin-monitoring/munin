@@ -19,6 +19,9 @@ $(document).ready(function() {
 	// Auto-refresh
 	$(this).autoRefresh();
 
+	// Dynazoom modal links
+	graphs.dynazoomModal();
+
 	var tabsComponent = $(this).tabs();
 
 	// Prepare filter

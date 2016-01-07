@@ -15,6 +15,9 @@ $(document).ready(function() {
 	// Auto-refresh
 	$(this).autoRefresh();
 
+	// Dynazoom modal links
+	graphs.dynazoomModal();
+
 	// Prepare filter
 	window.toolbar.prepareFilter('Filter graphs', function(val) {
 		graphs.each(function() {
