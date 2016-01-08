@@ -1390,6 +1390,7 @@ footer p.tagline:hover {
   }
   header .left .logo {
     margin-top: 0;
+    width: 30px;
     opacity: 1;
     filter: alpha(opacity=100);
   }
@@ -1404,6 +1405,9 @@ footer p.tagline:hover {
   }
   header .right .filter input[type=text]:focus {
     width: 200px;
+  }
+  header .right .actions .action-icon {
+    margin-top: 0;
   }
   header .pageTitle h1 {
     padding-top: 10px;
