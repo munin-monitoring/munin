@@ -931,7 +931,7 @@ footer {
 	display: none;
 	position: absolute;
 	z-index: 10;
-	max-width: 450px;
+	max-width: 400px;
 	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.3));
 	padding: 5px 10px;
 	background-color: #777;
@@ -941,6 +941,10 @@ footer {
 	@include border-radius(2px);
 	font-size: 12px;
 	text-align: justify;
+
+	&.singleLine {
+		white-space: nowrap;
+	}
 }
 
 /* Event ruler */

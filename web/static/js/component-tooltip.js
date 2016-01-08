@@ -13,7 +13,11 @@
 	Tooltip.prototype = {
 		defaults: {
 			/** If true, <sup>?</sup> will be added to trigger */
-			appendQuestionMark: false
+			appendQuestionMark: false,
+			/** Tooltip fixed width */
+			with: 'auto',
+			/** If true, inner text won't wrap */
+			singleLine: false
 		},
 
 		init: function() {
@@ -23,8 +27,12 @@
 			// Create tooltip & append it to body
 			this.tooltip = $('<div />')
 				.addClass('tooltip')
+				.css('width', this.settings.width)
 				.html(this.message)
 				.appendTo($('body'));
+
+			if (this.settings.singleLine)
+				this.tooltip.addClass('singleLine');
 
 			// Append <sup>?</sup> to trigger
 			if (this.settings.appendQuestionMark)
@@ -39,8 +47,14 @@
 				var left = $(this).position().left + $(this).outerHeight() / 2;
 				that.tooltip.css('left', left);
 
-				// TODO check if tooltip is out of view
+				// Check if tooltip is out of view
+				that.tooltip.show(); // So we can get its position & dimensions
+				var delta = $(window).width() - (that.tooltip.position().left + that.tooltip.outerWidth());
+				if (delta < 0)
+					that.tooltip.css('left', left - (Math.abs(delta) + 5));
+				that.tooltip.hide();
 
+				// Display tooltip
 				that.tooltip.fadeIn(100);
 			});
 

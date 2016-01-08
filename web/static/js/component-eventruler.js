@@ -45,7 +45,7 @@
 				)
 				.appendTo(this.body);
 
-			// Register for <- and -> keys events
+			// Register <- and -> keys events
 			$(document).keyup(function(e) {
 				if ((e.keyCode == 37 || e.keyCode == 39) && that.eventRulerMT.is(':visible') && !$('#filter').is(':focus')) {
 					var left = parseInt(that.eventRulerMT.css('left').replace('px', ''));
@@ -91,7 +91,10 @@
 
 			// Tooltip
 			eventRulerToggle.tooltip(
-				'<b>Toggle event ruler</b><br />Tip: use <b>&#8592;, &#8594;</b> or drag-n-drop to move once set,<br /><b>Shift</b> to move quicker</div>'
+				'<b>Toggle event ruler</b><br />Tip: use <b>&#8592;, &#8594;</b> or drag-n-drop to move once set,<br /><b>Shift</b> to move quicker</div>',
+				{
+					width: '220px'
+				}
 			);
 
 			return this;

@@ -994,7 +994,7 @@ footer p.tagline:hover {
   display: none;
   position: absolute;
   z-index: 10;
-  max-width: 450px;
+  max-width: 400px;
   -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
   -moz-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
   -o-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
@@ -1010,6 +1010,9 @@ footer p.tagline:hover {
   border-radius: 2px;
   font-size: 12px;
   text-align: justify;
+}
+.tooltip.singleLine {
+  white-space: nowrap;
 }
 
 /* Event ruler */

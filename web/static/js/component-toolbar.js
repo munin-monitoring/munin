@@ -130,7 +130,9 @@
 					.appendTo(this.$elem.find('.actions'));
 
 				// Tooltip for text
-				button.tooltip(text);
+				button.tooltip(text, {
+					singleLine: true
+				});
 			}
 		}
 	};
