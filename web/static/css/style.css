@@ -18,7 +18,7 @@ html, body {
 body {
   background: #FAFAFA;
   font-size: 90%;
-  font-family: "Dejavu Sans", Helvetica, Verdana, Arial, sans-serif;
+  font-family: Roboto, sans-serif;
   color: #666666;
 }
 
@@ -66,6 +66,11 @@ h3 {
   letter-spacing: -1px;
   margin: 20px 0 15px 0;
   font-size: 17px;
+}
+
+h4 {
+  font-weight: 400;
+  margin-bottom: 5px;
 }
 
 hr {
@@ -235,6 +240,7 @@ header h1 {
   margin: 0;
   cursor: default;
   font-size: 15px;
+  font-weight: 400;
 }
 header .left {
   float: left;
@@ -464,8 +470,8 @@ nav #navToggle {
   font-size: 23px;
 }
 #content .subtitle {
-  color: #888;
-  letter-spacing: -1px;
+  opacity: 0.8;
+  filter: alpha(opacity=80);
   margin: -20px 0 20px 0;
 }
 
@@ -507,7 +513,6 @@ p.graph_info {
   border: 1px solid #bbb;
 }
 #legend .legendHead {
-  font-family: Helvetica, sans-serif;
   font-size: 15px;
   text-align: left;
   font-weight: bold;
@@ -575,6 +580,9 @@ footer p.tagline {
   transition-duration: 200ms;
   margin: 10px 0;
 }
+footer p.tagline b {
+  font-weight: 500;
+}
 footer p.tagline:hover {
   color: #888;
 }
@@ -601,9 +609,8 @@ footer p.tagline:hover {
   border: 1px solid #ccc;
 }
 .groupview span.domain a {
-  font-family: Helvetica, sans-serif;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 500;
   color: #fff;
   text-shadow: 1px 1px 0 #4a606b;
   display: block;
@@ -655,8 +662,7 @@ footer p.tagline:hover {
 .groupview li ul li span.host a {
   display: block;
   padding: 7px 20px;
-  font-weight: bold;
-  font-family: Helvetica, sans-serif;
+  font-weight: 500;
   font-size: 13px;
 }
 .groupview li ul li.last {
@@ -683,19 +689,20 @@ footer p.tagline:hover {
 }
 .groupview .compare a {
   display: inline-block;
-  padding: 6px 8px;
+  padding: 6px 7px;
   opacity: 0.8;
   font-size: 11px;
 }
 .groupview .categories {
-  font-size: 11px;
   display: block;
   padding-top: 4px;
+  cursor: default;
 }
 .groupview .categories a {
   display: inline-block;
-  padding: 5px 10px;
+  padding: 5px 6px;
   color: #666;
+  font-size: 11px;
   letter-spacing: -0.5px;
   -webkit-transition-duration: 150ms;
   -moz-transition-duration: 150ms;
@@ -708,6 +715,7 @@ footer p.tagline:hover {
 }
 .groupview .categories a:hover {
   background-color: #dedede;
+  text-decoration: none;
 }
 .groupview .categories a.warn {
   color: #ED793F;
@@ -733,7 +741,6 @@ footer p.tagline:hover {
   color: #fff;
   color: rgba(255, 255, 255, 0.9);
   font-size: 12px;
-  font-family: inherit;
   -webkit-transition-duration: 150ms;
   -moz-transition-duration: 150ms;
   -o-transition-duration: 150ms;
@@ -887,7 +894,6 @@ footer p.tagline:hover {
   margin: 0 75px;
   padding: 10px 0 35px 0;
   color: #999;
-  font-family: Helvetica, sans-serif;
 }
 
 .card {
@@ -999,17 +1005,20 @@ footer p.tagline:hover {
   -moz-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
   -o-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  -ms-border-radius: 2px;
+  border-radius: 2px;
   padding: 5px 10px;
   background-color: #777;
   background-color: rgba(0, 0, 0, 0.6);
   border: 0;
   color: #fff;
-  -webkit-border-radius: 2px;
-  -moz-border-radius: 2px;
-  -ms-border-radius: 2px;
-  border-radius: 2px;
   font-size: 12px;
   text-align: justify;
+}
+.tooltip b {
+  font-weight: 500;
 }
 .tooltip.singleLine {
   white-space: nowrap;
@@ -1044,7 +1053,6 @@ footer p.tagline:hover {
   background-color: #2196F3;
   color: #fff;
   text-transform: uppercase;
-  font-family: Helvetica, sans-serif;
   font-size: 12px;
   letter-spacing: -0.5px;
   padding: 4px 5px;
@@ -1087,14 +1095,12 @@ footer p.tagline:hover {
 #content[data-tabs=true] ul.tabs li {
   list-style: none;
   display: inline-block;
-  letter-spacing: -1px;
   margin: 0;
-  padding: 0 14px;
+  padding: 0 12px;
   height: 35px;
   line-height: 37px;
   text-align: center;
   font-size: 14px;
-  text-transform: uppercase;
   border-bottom: 2px solid transparent;
   cursor: pointer;
   -webkit-transition-duration: 200ms;
@@ -1188,7 +1194,6 @@ footer p.tagline:hover {
   line-height: 32px;
   white-space: nowrap;
   color: #333;
-  font-family: Helvetica, sans-serif;
 }
 .switchable_content a {
   display: block;
@@ -1255,7 +1260,6 @@ footer p.tagline:hover {
   border-radius: 2px;
 }
 .modal .title {
-  font-family: Helvetica, sans-serif;
   font-size: 15px;
   color: #fff;
   display: block;
@@ -1349,7 +1353,6 @@ footer p.tagline:hover {
   display: inline-block;
   color: #444;
   padding: 3px;
-  font-family: Helvetica, sans-serif;
 }
 
 .ie8Warning {

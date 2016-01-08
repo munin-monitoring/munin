@@ -8,7 +8,6 @@
  */
 
 /* SASS variables */
-$secondary-font: 	Helvetica, sans-serif;
 $primary-color: 	#388E3C;
 $secondary-color: 	#546E7A;
 $problems-warning-color:  #ED793F;
@@ -90,7 +89,7 @@ html, body {
 body {
 	background: #FAFAFA;
 	font-size: 90%;
-	font-family: "Dejavu Sans", Helvetica, Verdana, Arial, sans-serif;
+	font-family: Roboto, sans-serif;
 	color: #666666;
 }
 
@@ -130,6 +129,10 @@ h3 {
 	letter-spacing: -1px;
 	margin: 20px 0 15px 0;
 	font-size: 17px;
+}
+h4 {
+	font-weight: 400;
+	margin-bottom: 5px;
 }
 
 hr {
@@ -260,6 +263,7 @@ header {
 		margin: 0;
 		cursor: default;
 		font-size: 15px;
+		font-weight: 400;
 	}
 
 	.left {
@@ -463,8 +467,7 @@ nav {
 		font-size: 23px;
 	}
 	.subtitle {
-		color: #888;
-		letter-spacing: -1px;
+		@include opacity(0.8);
 		margin: -20px 0 20px 0;
 	}
 }
@@ -507,7 +510,6 @@ p.graph_info {
 	border: 1px solid #bbb;
 
 	.legendHead {
-		font-family: $secondary-font;
 		font-size: 15px;
 		text-align: left;
 		font-weight: bold;
@@ -569,6 +571,10 @@ footer {
 		@include transition-duration(200ms);
 		margin: 10px 0;
 
+		b {
+			font-weight: 500;
+		}
+
 		&:hover { color: #888; }
 	}
 }
@@ -590,9 +596,8 @@ footer {
 
 	span.domain {
 		a {
-			font-family: $secondary-font;
 			font-size: 16px;
-			font-weight: bold;
+			font-weight: 500;
 			color: #fff;
 			text-shadow: 1px 1px 0 darken($secondary-color, 5);
 			display: block;
@@ -636,8 +641,7 @@ footer {
 				a {
 					display: block;
 					padding: 7px 20px;
-					font-weight: bold;
-					font-family: $secondary-font;
+					font-weight: 500;
 					font-size: 13px;
 				}
 			}
@@ -667,27 +671,29 @@ footer {
 
 		a {
 			display: inline-block;
-			padding: 6px 8px;
+			padding: 6px 7px;
 			opacity: 0.8;
 			font-size: 11px;
 		}
 	}
 
 	.categories {
-		font-size: 11px;
 		display: block;
 		padding-top: 4px;
+		cursor: default;
 
 		a {
 			display: inline-block;
-			padding: 5px 10px;
+			padding: 5px 6px;
 			color: #666;
+			font-size: 11px;
 			letter-spacing: -0.5px;
 			@include transition-duration(150ms);
 			@include border-radius(2px);
 
 			&:hover {
 				background-color: #dedede;
+				text-decoration: none;
 			}
 
 			&.warn { color: $problems-warning-color; }
@@ -713,7 +719,6 @@ footer {
 		color: #fff;
 		color: rgba(255, 255, 255, 0.9);
 		font-size: 12px;
-		font-family: inherit;
 		@include transition-duration(150ms);
 		@include box-shadow(none);
 		@include box-sizing(border-box);
@@ -843,7 +848,6 @@ footer {
 	margin: 0 75px;
 	padding: 10px 0 35px 0;
 	color: #999;
-	font-family: $secondary-font;
 }
 
 .card {
@@ -933,14 +937,16 @@ footer {
 	z-index: 10;
 	max-width: 400px;
 	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.3));
+	@include border-radius(2px);
 	padding: 5px 10px;
 	background-color: #777;
 	background-color: rgba(0, 0, 0, 0.6);
 	border: 0;
 	color: #fff;
-	@include border-radius(2px);
 	font-size: 12px;
 	text-align: justify;
+
+	b { font-weight: 500; }
 
 	&.singleLine {
 		white-space: nowrap;
@@ -976,7 +982,6 @@ footer {
 	background-color: #2196F3;
 	color: #fff;
 	text-transform: uppercase;
-	font-family: $secondary-font;
 	font-size: 12px;
 	letter-spacing: -0.5px;
 	padding: 4px 5px;
@@ -1007,14 +1012,12 @@ footer {
 		li {
 			list-style: none;
 			display: inline-block;
-			letter-spacing: -1px;
 			margin: 0;
-			padding: 0 14px;
+			padding: 0 12px;
 			height: 35px;
 			line-height: 37px;
 			text-align: center;
 			font-size: 14px;
-			text-transform: uppercase;
 			border-bottom: 2px solid transparent;
 			cursor: pointer;
 			@include transition-duration(200ms);
@@ -1087,7 +1090,6 @@ footer {
 		line-height: 32px;
 		white-space: nowrap;
 		color: #333;
-		font-family: $secondary-font;
 	}
 
 	a {
@@ -1143,7 +1145,6 @@ footer {
 	@include border-radius(2px);
 
 	.title {
-		font-family: $secondary-font;
 		font-size: 15px;
 		color: #fff;
 		display: block;
@@ -1225,7 +1226,6 @@ footer {
 		display: inline-block;
 		color: #444;
 		padding: 3px;
-		font-family: $secondary-font;
 	}
 }
 
