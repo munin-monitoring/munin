@@ -10,8 +10,13 @@ $(document).ready(function() {
 	services = $('.service');
 
 	// Instantiate auto-refresh & dynazoom modal links components
-	graphs.autoRefresh();
+	var autoRefresh = graphs.autoRefresh();
 	graphs.dynazoomModal();
+
+	// Add toolbar actions
+	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
+		autoRefresh.refresh();
+	});
 
 	// Prepare filter
 	window.toolbar.prepareFilter('Filter graphs', function(val) {

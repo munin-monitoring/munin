@@ -194,6 +194,8 @@
 	};
 
 	List.prototype.addItem = function(icon, name, callback) {
+		var that = this;
+
 		$('<a />')
 			.attr('href', '#')
 			.text(name)
@@ -201,7 +203,11 @@
 				$('<i />')
 					.addClass('mdi ' + icon)
 			)
-			.click(callback)
+			.click(function(e) { // Close list
+				e.preventDefault();
+				that.hideElement(false);
+			})
+			.click(callback) // Execute callback
 			.appendTo(this.element);
 	};
 

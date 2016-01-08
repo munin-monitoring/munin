@@ -310,6 +310,7 @@ header .right {
 }
 header .right .actions {
   display: inline-block;
+  margin-left: 5px;
 }
 header .right .actions .action-icon {
   display: inline-block;
@@ -317,7 +318,7 @@ header .right .actions .action-icon {
   height: 31px;
   overflow: hidden;
   cursor: pointer;
-  margin: 5px 0 0 10px;
+  margin: 5px 0 0 7px;
   -webkit-transition-duration: 150ms;
   -moz-transition-duration: 150ms;
   -o-transition-duration: 150ms;
@@ -490,12 +491,14 @@ nav #navToggle {
 /* Content: comparison / categoryview */
 .categoryview .node, .comparison .node {
   display: inline-block;
+  width: 500px;
 }
 
 /* Content: service view */
 p.graph_info {
   text-align: justify;
   max-width: 1000px;
+  margin-top: -20px;
 }
 
 #legend {

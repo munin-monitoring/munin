@@ -28,7 +28,12 @@ $(document).ready(function() {
 	});
 
 	// Graphs auto-refresh
-	$(this).autoRefresh();
+	var autoRefresh = $('.graph').autoRefresh();
+
+	// Add toolbar actions
+	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
+		autoRefresh.refresh();
+	});
 
 	// Switch to another graph in the same node
 	$('.switchable[data-switch="header"]').list('header', {

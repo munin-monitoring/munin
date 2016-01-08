@@ -329,6 +329,7 @@ header {
 
 		.actions {
 			display: inline-block;
+			margin-left: 5px;
 
 			.action-icon {
 				display: inline-block;
@@ -336,7 +337,7 @@ header {
 				height: 31px;
 				overflow: hidden;
 				cursor: pointer;
-				margin: 5px 0 0 10px;
+				margin: 5px 0 0 7px;
 				@include transition-duration(150ms);
 				@include border-radius(2px);
 
@@ -492,6 +493,7 @@ nav {
 .categoryview, .comparison {
 	.node {
 		display: inline-block;
+		width: 500px;
 	}
 }
 
@@ -499,6 +501,7 @@ nav {
 p.graph_info {
 	text-align: justify;
 	max-width: 1000px;
+	margin-top: -20px;
 }
 
 #legend {

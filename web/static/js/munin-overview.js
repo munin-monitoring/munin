@@ -48,9 +48,5 @@ $(document).ready(function() {
 	});
 
 	// Sparklines auto-refresh
-	var sparklines = $('.sparkline');
-	sparklines.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
-	$(this).autoRefresh({
-		graphsSelector: '.sparkline'
-	});
+	$('.sparkline').autoRefresh();
 });

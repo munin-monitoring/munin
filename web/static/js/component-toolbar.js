@@ -18,8 +18,7 @@
 			this.settings = $.extend({}, this.defaults, this.options, this.metadata);
 
 			// Init component
-			// Hide filter input, will be shown when implemented using prepareFilter
-			this.filterWrap = this.elem.find('.filter').hide();
+			this.filterWrap = this.elem.find('.filter');
 
 			return this;
 		},

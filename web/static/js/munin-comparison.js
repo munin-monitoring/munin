@@ -12,8 +12,13 @@ $(document).ready(function() {
 	trs = $('tr');
 
 	// Instantiate auto-refresh & dynazoom modal links components
-	graphs.autoRefresh();
+	var autoRefresh = graphs.autoRefresh();
 	graphs.dynazoomModal();
+
+	// Add toolbar actions
+	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
+		autoRefresh.refresh();
+	});
 
 	// Tabs
 	var tabs = $(this).tabs();
@@ -21,9 +26,9 @@ $(document).ready(function() {
 	// Prepare filter
 	window.toolbar.prepareFilter('Filter graphs', function(val) {
 		if (val.length == 0)
-			tabs.show();
+			tabs.showTabs();
 		else
-			tabs.hide();
+			tabs.hideTabs();
 
 		trs.each(function() {
 			var serviceName = $(this).data('servicename');
