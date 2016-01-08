@@ -15,7 +15,6 @@
 		},
 
 		init: function() {
-			var that = this;
 			this.settings = $.extend({}, this.defaults, this.options, this.metadata);
 
 			// Init component
@@ -49,13 +48,9 @@
 				};
 			})();
 
-			// Define some functions
-			/**
-			 * Adds or updates current filter as GET parameter in URL
-			 */
 			var updateFilterInURL = function() {
 				// Put the filter query in the URL (to keep it when refreshing the page)
-				var query = $('#filter').val();
+				var query = input.val();
 
 				saveState('filter', query);
 			};
@@ -113,6 +108,30 @@
 		 */
 		filterMatches: function(filterExpr, result) {
 			return this.sanitizeFilter(result).indexOf(this.sanitizeFilter(filterExpr)) != -1;
+		},
+
+		/**
+		 * Adds an action icon to the toolbar
+		 * @param icon Icon class (mdi-refresh)
+		 * @param text Action name
+		 * @param overflow boolean: if true, will be added to the overflow
+		 * @param callback
+		 */
+		addActionIcon: function(icon, text, overflow, callback) {
+			if (overflow) {
+				// TODO
+			} else {
+				var button = $('<div />')
+					.addClass('action-icon')
+					.click(callback)
+					.append(
+						$('<i />').addClass('mdi ' + icon)
+					)
+					.appendTo(this.$elem.find('.actions'));
+
+				// Tooltip for text
+				button.tooltip(text);
+			}
 		}
 	};
 

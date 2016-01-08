@@ -25,8 +25,12 @@
 				$(this).attr('data-autorefresh-src', $(this).attr('src'));
 			});
 
+			// Append a loading <img> on each graph img
+			this.graphs.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
+
+			// Start timer
 			setInterval(function() {
-				that.refreshGraphs.call(that);
+				that.refresh.call(that);
 			}, 5*60*1000);
 
 			return this;
@@ -42,7 +46,7 @@
 			}
 		},
 
-		refreshGraphs: function() {
+		refresh: function() {
 			var that = this;
 
 			this.graphs.each(function() {

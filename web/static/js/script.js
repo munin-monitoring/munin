@@ -79,26 +79,3 @@ function saveState(key, val) {
 	var pageName = $(document).find('title').text();
 	window.history.replaceState('', pageName, '?' + url);
 }
-
-/* Tooltips */
-/**
- * Prepares tooltips for current page
- * @param hoverableElements Each element that triggers tooltip fadeIn
- * @param getTooltip Function that returns tooltip for 1st parameter element
- */
-function prepareTooltips(hoverableElements, getTooltip) {
-    hoverableElements.mouseenter(function() {
-        var tooltip = getTooltip($(this));
-        var bottom = $(this).position().top + $(this).outerHeight(true);
-        tooltip.css('top', bottom);
-
-        if (!tooltip.is('[data-dontsetleft]')) {
-            var left = $(this).position().left + $(this).outerWidth() / 2;
-            tooltip.css('left', left);
-        }
-        tooltip.fadeIn(100);
-    });
-    hoverableElements.mouseleave(function() {
-        getTooltip($(this)).fadeOut(100);
-    });
-}

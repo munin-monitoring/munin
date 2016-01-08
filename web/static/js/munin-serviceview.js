@@ -21,17 +21,11 @@ $(document).ready(function() {
 	typeTds.each(function() {
 		var typeName = $(this).text();
 		if (typeName in DEFINITIONS) {
-			$(this).html(typeName + '<sup>?</sup>');
-			$(this).append('<div class="tooltip"><b>' + typeName + '</b>: ' + DEFINITIONS[typeName] + '</div>');
+			$(this).tooltip('<b>' + typeName + '</b>: ' + DEFINITIONS[typeName], {
+				appendQuestionMark: true
+			});
 		}
 	});
-
-	prepareTooltips(typeTds, function(td) {
-		return td.find('.tooltip');
-	});
-
-	// Append a loading <img> on each graph img
-	$('.graph').after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
 
 	// Graphs auto-refresh
 	$(this).autoRefresh();

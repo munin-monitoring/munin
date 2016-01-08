@@ -9,9 +9,6 @@ $(document).ready(function() {
 	graphs = $('.graph');
 	services = $('.service');
 
-	// Append a loading <img> on each graph img
-	graphs.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
-
 	// Instantiate auto-refresh & dynazoom modal links components
 	graphs.autoRefresh();
 	graphs.dynazoomModal();

@@ -10,6 +10,7 @@ $('.sparkline').on('error', function() {
 });
 
 $(document).ready(function() {
+	// Prepare filter
 	window.toolbar.prepareFilter('Filter nodes', function(expr) {
 		var groupView = $('.groupview');
 
@@ -43,10 +44,7 @@ $(document).ready(function() {
 	// Sparklines tooltips
 	var spkCnters = $('.overview-sparkline');
 	spkCnters.each(function() {
-		$(this).after('<div class="tooltip">' + $(this).find('img.sparkline').attr('alt') + '</div>');
-	});
-	prepareTooltips(spkCnters, function(sparkline) {
-		return sparkline.next();
+		$(this).tooltip($(this).find('img.sparkline').attr('alt'));
 	});
 
 	// Sparklines auto-refresh

@@ -13,12 +13,14 @@ $(document).ready(function() {
 	h4s = $('h4');
 	tabs = $('.tabs').find('li');
 
-	// Append a loading <img> on each graph img
-	graphs.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
-
 	// Instantiate auto-refresh & dynazoom modal links components
-	graphs.autoRefresh();
+	var autoRefresh = graphs.autoRefresh();
 	graphs.dynazoomModal();
+
+	// Add toolbar actions
+	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
+		autoRefresh.refresh();
+	});
 
 	var tabsComponent = $(this).tabs();
 
