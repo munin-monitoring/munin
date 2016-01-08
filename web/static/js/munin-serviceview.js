@@ -31,5 +31,7 @@ $(document).ready(function() {
 	$(this).autoRefresh();
 
 	// Switch to another graph in the same node
-	prepareSwitchable('header');
+	$('.switchable[data-switch="header"]').list('header', {
+		list: $('.switchable_content[data-switch="header"]')
+	});
 });

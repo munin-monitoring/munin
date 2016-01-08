@@ -118,8 +118,30 @@
 		 * @param callback
 		 */
 		addActionIcon: function(icon, text, overflow, callback) {
+			var body = $('body');
+
+			// Force overflow on mobiles
+			if (body.width() < 768)
+				overflow = true;
+
 			if (overflow) {
-				// TODO
+				// Add overflow button if it doesn't exist yet
+				if (!this.$elem.find('.overflow').length) {
+					// Create overflow button
+					var overflowButton = $('<div />')
+						.addClass('action-icon overflow')
+						.click(null)
+						.append(
+							$('<i />').addClass('mdi mdi-dots-vertical')
+						)
+						.appendTo(this.$elem.find('.actions'));
+
+					// Create list
+					var list = overflowButton.list('overflow');
+
+					// Add item to list
+					list.addItem(icon, text, callback);
+				}
 			} else {
 				var button = $('<div />')
 					.addClass('action-icon')
@@ -127,7 +149,7 @@
 					.append(
 						$('<i />').addClass('mdi ' + icon)
 					)
-					.appendTo(this.$elem.find('.actions'));
+					.prependTo(this.$elem.find('.actions'));
 
 				// Tooltip for text
 				button.tooltip(text, {

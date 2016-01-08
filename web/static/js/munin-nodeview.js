@@ -105,7 +105,9 @@ $(document).ready(function() {
 	});
 
 	// Node switch
-	prepareSwitchable('header');
+	$('.switchable[data-switch="header"]').list('header', {
+		list: $('.switchable_content[data-switch="header"]')
+	});
 
 	// Init eventruler
 	$(this).eventRuler();

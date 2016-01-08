@@ -72,7 +72,7 @@
 				.append(
 					$('<i>').addClass('mdi').addClass('mdi-drag-vertical')
 				)
-				.appendTo($('header').find('.actions'));
+				.prependTo($('header').find('.actions'));
 
 			// Add listener
 			eventRulerToggle.click(function(e) {

@@ -63,7 +63,9 @@ $(document).ready(function() {
 	});
 
 	// Groups switch
-	prepareSwitchable('header');
+	$('.switchable[data-switch="header"]').list('header', {
+		list: $('.switchable_content[data-switch="header"]')
+	});
 
 	// Time range switch
 	var timeRangeSwitch = $('.timeRangeSwitch');

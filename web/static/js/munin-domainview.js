@@ -56,5 +56,7 @@ $(document).ready(function() {
 	});
 
 	// Switch node on header
-	prepareSwitchable('header');
+	$('.switchable[data-switch="header"]').list('header', {
+		list: $('.switchable_content[data-switch="header"]')
+	});
 });
