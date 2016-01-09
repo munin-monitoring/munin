@@ -223,7 +223,7 @@ header {
   margin: 0 auto;
   padding: 1px 12px 1px 37px;
   text-align: center;
-  background-color: #388E3C;
+  background-color: #097D03;
   position: relative;
   z-index: 5;
   border-bottom: 1px solid #3A713C;
@@ -260,8 +260,8 @@ header .left .logo {
   background-image: url("../img/logo-h-neg.png");
   background-image: linear-gradient(transparent, transparent), url("../img/logo-h-neg.svg");
   background-size: 115px 30px;
-  opacity: 0.8;
-  filter: alpha(opacity=80);
+  opacity: 0.9;
+  filter: alpha(opacity=90);
 }
 header .left .logo:hover {
   opacity: 1;
