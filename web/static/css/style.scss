@@ -984,23 +984,21 @@ footer {
 	right: 0;
 	background-color: #2196F3;
 	color: #fff;
-	text-transform: uppercase;
-	font-size: 12px;
-	letter-spacing: -0.5px;
-	padding: 4px 5px;
-	font-weight: bold;
-	@include border-radius(1px 0 0 1px);
+	font-size: 17px;
+	padding: 0;
+	@include border-radius(2px 0 0 2px);
 	@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
 	@include opacity(0);
 	@include transition(opacity 300ms 0s);
 
 	&.visible {
-		@include opacity(0.5);
+		@include opacity(0.75);
 		height: auto;
+		padding: 4px 5px;
 	}
 	&.visible:hover {
 		text-decoration: none;
-		@include opacity(0.8);
+		@include opacity(1);
 	}
 }
 

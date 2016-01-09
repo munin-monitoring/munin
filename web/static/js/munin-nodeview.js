@@ -78,10 +78,13 @@ $(document).ready(function() {
 				$(this).prev().show();
 		});
 
-		if (val.length == 0) {
-			// Remove display CSS property to category names (h3)
-			// to let tabs decide if they should be shown or not
-			$('h3').css('display', '');
+		console.log(tabs.find('.active').index());
+		if (val.length == 0 // Empty filter
+			&& content.attr('data-tabsenabled') == 'true' // Tabs enabled
+			&& tabs.prevAll('.active').index() != 0 // Not "all"
+		) {
+			// Hide categories names
+			$('h3').hide();
 		}
 	});
 

@@ -112,7 +112,7 @@
 		},
 
 		/**
-		 * Called on filter search begins
+		 * Show tabs and hide categories names
 		 */
 		showTabs: function() {
 			if (!this.tabsEnabled)
@@ -131,7 +131,7 @@
 		},
 
 		/**
-		 * Called on filter search ends
+		 * Hide tabs and show categories names
 		 */
 		hideTabs: function() {
 			if (!this.tabsEnabled)

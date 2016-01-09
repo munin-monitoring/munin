@@ -83,7 +83,7 @@
 		/** If true, <sup>?</sup> will be added to trigger */
 		appendQuestionMark: false,
 		/** Tooltip fixed width */
-		with: 'auto',
+		width: 'auto',
 		/** If true, inner text won't wrap */
 		singleLine: false
 	};

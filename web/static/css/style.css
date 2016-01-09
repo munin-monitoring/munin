@@ -1055,15 +1055,12 @@ footer p.tagline:hover {
   right: 0;
   background-color: #2196F3;
   color: #fff;
-  text-transform: uppercase;
-  font-size: 12px;
-  letter-spacing: -0.5px;
-  padding: 4px 5px;
-  font-weight: bold;
-  -webkit-border-radius: 1px 0 0 1px;
-  -moz-border-radius: 1px 0 0 1px;
-  -ms-border-radius: 1px 0 0 1px;
-  border-radius: 1px 0 0 1px;
+  font-size: 17px;
+  padding: 0;
+  -webkit-border-radius: 2px 0 0 2px;
+  -moz-border-radius: 2px 0 0 2px;
+  -ms-border-radius: 2px 0 0 2px;
+  border-radius: 2px 0 0 2px;
   -webkit-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
   -moz-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
   -o-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
@@ -1075,14 +1072,15 @@ footer p.tagline:hover {
   transition: opacity 300ms 0s;
 }
 #backToTop.visible {
-  opacity: 0.5;
-  filter: alpha(opacity=50);
+  opacity: 0.75;
+  filter: alpha(opacity=75);
   height: auto;
+  padding: 4px 5px;
 }
 #backToTop.visible:hover {
   text-decoration: none;
-  opacity: 0.8;
-  filter: alpha(opacity=80);
+  opacity: 1;
+  filter: alpha(opacity=100);
 }
 
 /* Nodeview tabs */
