@@ -9,20 +9,23 @@ $(document).ready(function() {
 	graphs = $('.graph');
 	services = $('.service');
 
-	// Append a loading <img> on each graph img
-	graphs.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
+	// Instantiate auto-refresh & dynazoom modal links components
+	var autoRefresh = graphs.autoRefresh();
+	graphs.dynazoomModal();
 
-	// Auto-refresh
-	startAutoRefresh();
+	// Add toolbar actions
+	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
+		autoRefresh.refresh();
+	});
 
 	// Prepare filter
-	prepareFilter('Filter graphs', function(val) {
+	window.toolbar.prepareFilter('Filter graphs', function(val) {
 		graphs.each(function() {
 			var pluginName = $(this).attr('alt');
 			var src = $(this).attr('src');
 			var pluginId = src.substr(src.lastIndexOf('/')+1, src.lastIndexOf('-')-src.lastIndexOf('/')-1);
 
-			if (filterMatches(val, pluginName) || filterMatches(val, pluginId)) {
+			if (window.toolbar.filterMatches(val, pluginName) || window.toolbar.filterMatches(val, pluginId)) {
 				$(this).parent().parent().show();
 			}
 			else {

@@ -2,7 +2,7 @@
  * Domainview specific javascript
  */
 $(document).ready(function() {
-	prepareFilter('Filter plugins', function(val) {
+	window.toolbar.prepareFilter('Filter plugins', function(val) {
 		if (val == '') {
 			// Empty filter: display everything
 			$('#content').find('> ul').find('*').show();
@@ -26,7 +26,7 @@ $(document).ready(function() {
 				pluginId = href.substr(href.lastIndexOf('/')+1, href.lastIndexOf('.')-href.lastIndexOf('/')-1);
 			}
 
-			if (filterMatches(val, pluginName) || filterMatches(val, pluginId))
+			if (window.toolbar.filterMatches(val, pluginName) || window.toolbar.filterMatches(val, pluginId))
 				$(this).parent().parent().show();
 			else
 				$(this).parent().parent().hide();
@@ -56,5 +56,7 @@ $(document).ready(function() {
 	});
 
 	// Switch node on header
-	prepareSwitchable('header');
+	$('.switchable[data-switch="header"]').list('header', {
+		list: $('.switchable_content[data-switch="header"]')
+	});
 });

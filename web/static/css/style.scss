@@ -8,7 +8,6 @@
  */
 
 /* SASS variables */
-$secondary-font: 	Helvetica, sans-serif;
 $primary-color: 	#388E3C;
 $secondary-color: 	#546E7A;
 $problems-warning-color:  #ED793F;
@@ -90,7 +89,7 @@ html, body {
 body {
 	background: #FAFAFA;
 	font-size: 90%;
-	font-family: "Dejavu Sans", Helvetica, Verdana, Arial, sans-serif;
+	font-family: Roboto, sans-serif;
 	color: #666666;
 }
 
@@ -130,6 +129,10 @@ h3 {
 	letter-spacing: -1px;
 	margin: 20px 0 15px 0;
 	font-size: 17px;
+}
+h4 {
+	font-weight: 400;
+	margin-bottom: 5px;
 }
 
 hr {
@@ -260,6 +263,7 @@ header {
 		margin: 0;
 		cursor: default;
 		font-size: 15px;
+		font-weight: 400;
 	}
 
 	.left {
@@ -325,6 +329,32 @@ header {
 
 		.actions {
 			display: inline-block;
+			margin-left: 5px;
+
+			.action-icon {
+				display: inline-block;
+				width: 31px;
+				height: 31px;
+				overflow: hidden;
+				cursor: pointer;
+				margin: 5px 0 0 7px;
+				@include transition-duration(150ms);
+				@include border-radius(2px);
+
+				i {
+					font-size: 19px;
+					padding: 6px;
+				}
+
+				&:hover {
+					background-color: rgba(0, 0, 0, 0.15);
+				}
+
+				&.pressed {
+					@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+					background-color: rgba(0, 0, 0, 0.2);
+				}
+			}
 		}
 	}
 }
@@ -438,8 +468,7 @@ nav {
 		font-size: 23px;
 	}
 	.subtitle {
-		color: #888;
-		letter-spacing: -1px;
+		@include opacity(0.8);
 		margin: -20px 0 20px 0;
 	}
 }
@@ -464,6 +493,7 @@ nav {
 .categoryview, .comparison {
 	.node {
 		display: inline-block;
+		width: 500px;
 	}
 }
 
@@ -471,6 +501,7 @@ nav {
 p.graph_info {
 	text-align: justify;
 	max-width: 1000px;
+	margin-top: -20px;
 }
 
 #legend {
@@ -482,7 +513,6 @@ p.graph_info {
 	border: 1px solid #bbb;
 
 	.legendHead {
-		font-family: $secondary-font;
 		font-size: 15px;
 		text-align: left;
 		font-weight: bold;
@@ -544,6 +574,10 @@ footer {
 		@include transition-duration(200ms);
 		margin: 10px 0;
 
+		b {
+			font-weight: 500;
+		}
+
 		&:hover { color: #888; }
 	}
 }
@@ -565,9 +599,8 @@ footer {
 
 	span.domain {
 		a {
-			font-family: $secondary-font;
 			font-size: 16px;
-			font-weight: bold;
+			font-weight: 500;
 			color: #fff;
 			text-shadow: 1px 1px 0 darken($secondary-color, 5);
 			display: block;
@@ -611,8 +644,7 @@ footer {
 				a {
 					display: block;
 					padding: 7px 20px;
-					font-weight: bold;
-					font-family: $secondary-font;
+					font-weight: 500;
 					font-size: 13px;
 				}
 			}
@@ -642,27 +674,29 @@ footer {
 
 		a {
 			display: inline-block;
-			padding: 6px 8px;
+			padding: 6px 7px;
 			opacity: 0.8;
 			font-size: 11px;
 		}
 	}
 
 	.categories {
-		font-size: 11px;
 		display: block;
 		padding-top: 4px;
+		cursor: default;
 
 		a {
 			display: inline-block;
-			padding: 5px 10px;
+			padding: 5px 6px;
 			color: #666;
+			font-size: 11px;
 			letter-spacing: -0.5px;
 			@include transition-duration(150ms);
 			@include border-radius(2px);
 
 			&:hover {
 				background-color: #dedede;
+				text-decoration: none;
 			}
 
 			&.warn { color: $problems-warning-color; }
@@ -688,7 +722,6 @@ footer {
 		color: #fff;
 		color: rgba(255, 255, 255, 0.9);
 		font-size: 12px;
-		font-family: inherit;
 		@include transition-duration(150ms);
 		@include box-shadow(none);
 		@include box-sizing(border-box);
@@ -818,7 +851,6 @@ footer {
 	margin: 0 75px;
 	padding: 10px 0 35px 0;
 	color: #999;
-	font-family: $secondary-font;
 }
 
 .card {
@@ -906,16 +938,22 @@ footer {
 	display: none;
 	position: absolute;
 	z-index: 10;
-	max-width: 450px;
+	max-width: 400px;
 	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.3));
+	@include border-radius(2px);
 	padding: 5px 10px;
 	background-color: #777;
 	background-color: rgba(0, 0, 0, 0.6);
 	border: 0;
 	color: #fff;
-	@include border-radius(2px);
 	font-size: 12px;
 	text-align: justify;
+
+	b { font-weight: 500; }
+
+	&.singleLine {
+		white-space: nowrap;
+	}
 }
 
 /* Event ruler */
@@ -937,29 +975,6 @@ footer {
 	}
 }
 
-#eventRulerToggle {
-	display: inline-block;
-	width: 31px;
-	height: 31px;
-	overflow: hidden;
-	cursor: pointer;
-	float: right;
-	margin: 5px 0 0 10px;
-	@include transition-duration(200ms);
-	@include border-radius(2px);
-
-	.mdi {
-		font-size: 19px;
-		padding: 6px;
-	}
-
-	&[data-shown=true] {
-		@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
-		background-color: rgb(47, 120, 51);
-		background-color: rgba(0, 0, 0, 0.15);
-	}
-}
-
 #backToTop {
 	display: block;
 	height: 0;
@@ -969,24 +984,21 @@ footer {
 	right: 0;
 	background-color: #2196F3;
 	color: #fff;
-	text-transform: uppercase;
-	font-family: $secondary-font;
-	font-size: 12px;
-	letter-spacing: -0.5px;
-	padding: 4px 5px;
-	font-weight: bold;
-	@include border-radius(1px 0 0 1px);
+	font-size: 17px;
+	padding: 0;
+	@include border-radius(2px 0 0 2px);
 	@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
 	@include opacity(0);
 	@include transition(opacity 300ms 0s);
 
 	&.visible {
-		@include opacity(0.5);
+		@include opacity(0.75);
 		height: auto;
+		padding: 4px 5px;
 	}
 	&.visible:hover {
 		text-decoration: none;
-		@include opacity(0.8);
+		@include opacity(1);
 	}
 }
 
@@ -1001,14 +1013,12 @@ footer {
 		li {
 			list-style: none;
 			display: inline-block;
-			letter-spacing: -1px;
 			margin: 0;
-			padding: 0 14px;
+			padding: 0 12px;
 			height: 35px;
 			line-height: 37px;
 			text-align: center;
 			font-size: 14px;
-			text-transform: uppercase;
 			border-bottom: 2px solid transparent;
 			cursor: pointer;
 			@include transition-duration(200ms);
@@ -1066,8 +1076,9 @@ footer {
 .switchable_content {
 	display: none;
 	margin: 0;
-	padding-bottom: 6px;
+	padding: 3px 0;
 	position: absolute;
+	z-index: 10;
 	background-color: #fff;
 	width: auto;
 	@include border-radius(2px);
@@ -1080,7 +1091,6 @@ footer {
 		line-height: 32px;
 		white-space: nowrap;
 		color: #333;
-		font-family: $secondary-font;
 	}
 
 	a {
@@ -1096,6 +1106,13 @@ footer {
 			cursor: default;
 		}
 
+		i.mdi {
+			font-size: 19px;
+			color: #555;
+			vertical-align: middle;
+			margin: -2px 10px 2px -14px;
+		}
+
 		&:hover {
 			text-decoration: none;
 			background-color: rgba(0, 0, 0, 0.05);
@@ -1106,6 +1123,7 @@ footer {
 		height: 28px;
 		border-bottom: 1px solid #dedede;
 		padding: 5px 32px 5px 32px;
+		margin-top: -3px;
 		text-align: center;
 		color: #777;
 	}
@@ -1128,7 +1146,6 @@ footer {
 	@include border-radius(2px);
 
 	.title {
-		font-family: $secondary-font;
 		font-size: 15px;
 		color: #fff;
 		display: block;
@@ -1210,7 +1227,6 @@ footer {
 		display: inline-block;
 		color: #444;
 		padding: 3px;
-		font-family: $secondary-font;
 	}
 }
 
