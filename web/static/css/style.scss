@@ -8,7 +8,7 @@
  */
 
 /* SASS variables */
-$primary-color: 	#388E3C;
+$primary-color: 	#097D03;
 $secondary-color: 	#546E7A;
 $problems-warning-color:  #ED793F;
 $problems-critical-color: #F14122;
@@ -282,7 +282,7 @@ header {
 			background-image: linear-gradient(transparent, transparent),
 			url('../img/logo-h-neg.svg');
 			background-size: 115px 30px;
-			@include opacity(0.8);
+			@include opacity(0.9);
 
 			&:hover {
 				@include opacity(1);
