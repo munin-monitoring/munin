@@ -43,26 +43,10 @@
 								<br />
 								<TMPL_IF CIMG>
 									<a href="/<TMPL_VAR URL>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
-										<TMPL_UNLESS DYN_IMAGES>
-											<img src="<TMPL_VAR CIMG>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
-											  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-											  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
-											  <TMPL_IF IMGHEIGHT>height="<TMPL_VAR IMGHEIGHT>"</TMPL_IF>/>
-										<TMPL_ELSE>
-											<noscript>
-												<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-												  src="<TMPL_VAR CIMG>"
-												  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-												  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
-												  <TMPL_IF IMGHEIGHT>height="<TMPL_VAR IMGHEIGHT>"</TMPL_IF>/>
-											</noscript>
-											<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-											  data-original="<TMPL_VAR CIMG>"
-											  src="/static/img/placeholder.gif"
-											  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-											  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
-											  <TMPL_IF IMGHEIGHT>height="<TMPL_VAR IMGHEIGHT>"</TMPL_IF>/>
-										</TMPL_UNLESS>
+										<img src="<TMPL_VAR CIMG>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
+										  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+										  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
+										  <TMPL_IF IMGHEIGHT>height="<TMPL_VAR IMGHEIGHT>"</TMPL_IF>/>
 									</a>
 								</TMPL_IF>
 							</div>
