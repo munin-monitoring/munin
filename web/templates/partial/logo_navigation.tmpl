@@ -1,13 +1,19 @@
 <header>
-	<a href="/" class="logo"></a>
-	<div class="filter">
-		<input type="text" id="filter" />
-		<img id="cancelFilter" src="/static/img/icons/glyphicons-208-remove-2-white.png" style="display:none;" alt="Clear" />
+	<div class="left">
+		<a href="/" class="logo"></a>
+	</div>
+	<div class="right">
+		<div class="filter" style="display: none;">
+			<i class="mdi mdi-magnify"></i>
+			<input type="text" id="filter" />
+			<i id="cancelFilter" class="mdi mdi-window-close" style="display:none;"></i>
+		</div>
+		<div class="actions"></div>
 	</div>
 	<div class="pageTitle">
 		<h1>
 			<TMPL_LOOP PATH>
-				<TMPL_IF PATHNAME> <span class="sep"></span>
+				<TMPL_IF PATHNAME> <i class="mdi mdi-chevron-right"></i>
 					<TMPL_IF PATH>
 						<a href="<TMPL_VAR PATH>"><!--
 					<TMPL_ELSE>

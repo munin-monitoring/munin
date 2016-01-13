@@ -6,11 +6,12 @@
 // We have to register it as soon as possible or the sparklines may have loaded
 //  before we could handle the error
 $('.sparkline').on('error', function() {
-    $(this).parent().hide(); // Hide container
+	$(this).parent().hide(); // Hide container
 });
 
 $(document).ready(function() {
-	prepareFilter('Filter nodes', function(expr) {
+	// Prepare filter
+	window.toolbar.prepareFilter('Filter nodes', function(expr) {
 		var groupView = $('.groupview');
 
 		var groups = groupView.children();
@@ -25,7 +26,7 @@ $(document).ready(function() {
 
 		// Simple filter from name
 		hosts.each(function() {
-			if (!filterMatches(expr, $(this).text()))
+			if (!window.toolbar.filterMatches(expr, $(this).text()))
 				$(this).parent().hide();
 		});
 
@@ -40,17 +41,12 @@ $(document).ready(function() {
 			noResult.show();
 	});
 
-    // Sparklines tooltips
-    var spkCnters = $('.overview-sparkline');
-    spkCnters.each(function() {
-        $(this).after('<div class="tooltip">' + $(this).find('img.sparkline').attr('alt') + '</div>');
-    });
-    prepareTooltips(spkCnters, function(sparkline) {
-        return sparkline.next();
-    });
+	// Sparklines tooltips
+	var spkCnters = $('.overview-sparkline');
+	spkCnters.each(function() {
+		$(this).tooltip($(this).find('img.sparkline').attr('alt'));
+	});
 
-    // Sparklines auto-refresh
-    var sparklines = $('.sparkline');
-    sparklines.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
-    startAutoRefresh('.sparkline');
+	// Sparklines auto-refresh
+	$('.sparkline').autoRefresh();
 });

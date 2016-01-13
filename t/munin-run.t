@@ -20,6 +20,7 @@ my $config = Munin::Node::Config->instance();
         --sconfdir   service_config_directory
         --sconffile  service_config_file
         --debug
+	--verbose
         --paranoia
         --pidebug
         plugin config
@@ -33,6 +34,7 @@ my $config = Munin::Node::Config->instance();
             sconfdir  => 'service_config_directory',
             sconffile => 'service_config_file',
             paranoia  => 1,
+            VERBOSE   => 1,
             DEBUG     => 1,
         },
         'Command-line arguments set the correct configuration items'

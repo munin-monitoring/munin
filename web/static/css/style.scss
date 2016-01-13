@@ -8,8 +8,7 @@
  */
 
 /* SASS variables */
-$secondary-font: 	Helvetica, sans-serif;
-$primary-color: 	#388E3C;
+$primary-color: 	#097D03;
 $secondary-color: 	#546E7A;
 $problems-warning-color:  #ED793F;
 $problems-critical-color: #F14122;
@@ -90,7 +89,7 @@ html, body {
 body {
 	background: #FAFAFA;
 	font-size: 90%;
-	font-family: "Dejavu Sans", Helvetica, Verdana, Arial, sans-serif;
+	font-family: Roboto, sans-serif;
 	color: #666666;
 }
 
@@ -130,6 +129,10 @@ h3 {
 	letter-spacing: -1px;
 	margin: 20px 0 15px 0;
 	font-size: 17px;
+}
+h4 {
+	font-weight: 400;
+	margin-bottom: 5px;
 }
 
 hr {
@@ -205,7 +208,7 @@ img { border: 0; }
 	&.iunkn { color: #ffaa00; }
 	&.iremoved { opacity: 0.6; }
 
-	&:hover+img.dynazoomModalLink {
+	&:hover+.dynazoomModalLink {
 		display: block;
 		@include opacity(0.5);
 	}
@@ -222,15 +225,15 @@ img { border: 0; }
 }
 
 /* Dynazoom modal link */
-img.dynazoomModalLink {
+.dynazoomModalLink {
 	cursor: pointer;
 	position: absolute;
+	font-size: 18px!important;
+	color: #000;
 	top: 3px;
 	right: 3px;
-	width: 18px;
-	height: 18px;
 	border: 1px solid transparent;
-	padding: 2px;
+	padding: 1px 2px 2px 2px;
 	@include opacity(0);
 	@include transition-duration(150ms);
 	@include border-radius(2px);
@@ -260,42 +263,36 @@ header {
 		margin: 0;
 		cursor: default;
 		font-size: 15px;
-
-		.sep {
-			width: 16px;
-			height: 16px;
-			margin-bottom: 3px;
-			background-image: url("../img/icons/breadcrumb-separator.png");
-			display: inline-block;
-			vertical-align: middle;
-		}
+		font-weight: 400;
 	}
 
-	.logo {
-		display: inline-block;
+	.left {
 		float: left;
-		width: 118px;
-		height: 34px;
-		margin-top: 5px;
-		@include transition-duration(200ms);
-		background-repeat: no-repeat;
-		background-position: 4px 2px;
-		/* SVG logo: fallback to png */
-		background-image: url('../img/logo-h-neg.png');
-		background-image:
-		linear-gradient(transparent, transparent),
-		url('../img/logo-h-neg.svg');
-		background-size: 115px 30px;
-		@include opacity(0.8);
 
-		&:hover {
-			@include opacity(1);
+		.logo {
+			display: inline-block;
+			width: 118px;
+			height: 34px;
+			margin-top: 5px;
+			@include transition-duration(200ms);
+			background-repeat: no-repeat;
+			background-position: 4px 2px;
+			/* SVG logo: fallback to png */
+			background-image: url('../img/logo-h-neg.png');
+			background-image: linear-gradient(transparent, transparent),
+			url('../img/logo-h-neg.svg');
+			background-size: 115px 30px;
+			@include opacity(0.9);
+
+			&:hover {
+				@include opacity(1);
+			}
 		}
 	}
 
 	.pageTitle {
 		font-weight: 100;
-		margin-top: 9px;
+		margin-top: 7px;
 		min-height: 24px;
 		font-size: 16px;
 		color: #eee;
@@ -306,20 +303,57 @@ header {
 
 		h1 {
 			vertical-align: middle;
-			display: inline-block;
+			padding-top: 4px;
 		}
 
 		a, div.switchable {
+			display: inline-block;
 			color: #fff;
 			@include transition-duration(200ms);
 			padding: 2px 6px;
 			@include border-radius(2px);
 			border: 1px solid transparent;
+			white-space: nowrap;
+			margin: -4px 0 4px 0;
 
 			&:hover {
 				color: #fff;
 				background-color: rgba(0, 0, 0, 0.15);
 				text-decoration: none;
+			}
+		}
+	}
+
+	.right {
+		float: right;
+
+		.actions {
+			display: inline-block;
+			margin-left: 5px;
+
+			.action-icon {
+				display: inline-block;
+				width: 31px;
+				height: 31px;
+				overflow: hidden;
+				cursor: pointer;
+				margin: 5px 0 0 7px;
+				@include transition-duration(150ms);
+				@include border-radius(2px);
+
+				i {
+					font-size: 19px;
+					padding: 6px;
+				}
+
+				&:hover {
+					background-color: rgba(0, 0, 0, 0.15);
+				}
+
+				&.pressed {
+					@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+					background-color: rgba(0, 0, 0, 0.2);
+				}
 			}
 		}
 	}
@@ -434,8 +468,7 @@ nav {
 		font-size: 23px;
 	}
 	.subtitle {
-		color: #888;
-		letter-spacing: -1px;
+		@include opacity(0.8);
 		margin: -20px 0 20px 0;
 	}
 }
@@ -460,6 +493,7 @@ nav {
 .categoryview, .comparison {
 	.node {
 		display: inline-block;
+		width: 500px;
 	}
 }
 
@@ -467,6 +501,7 @@ nav {
 p.graph_info {
 	text-align: justify;
 	max-width: 1000px;
+	margin-top: -20px;
 }
 
 #legend {
@@ -478,7 +513,6 @@ p.graph_info {
 	border: 1px solid #bbb;
 
 	.legendHead {
-		font-family: $secondary-font;
 		font-size: 15px;
 		text-align: left;
 		font-weight: bold;
@@ -540,6 +574,10 @@ footer {
 		@include transition-duration(200ms);
 		margin: 10px 0;
 
+		b {
+			font-weight: 500;
+		}
+
 		&:hover { color: #888; }
 	}
 }
@@ -561,9 +599,8 @@ footer {
 
 	span.domain {
 		a {
-			font-family: $secondary-font;
 			font-size: 16px;
-			font-weight: bold;
+			font-weight: 500;
 			color: #fff;
 			text-shadow: 1px 1px 0 darken($secondary-color, 5);
 			display: block;
@@ -607,8 +644,7 @@ footer {
 				a {
 					display: block;
 					padding: 7px 20px;
-					font-weight: bold;
-					font-family: $secondary-font;
+					font-weight: 500;
 					font-size: 13px;
 				}
 			}
@@ -631,36 +667,36 @@ footer {
 		padding: 0 10px;
 		@include box-shadow(inset 0 -2px 2px 0 rgba(0, 0, 0, 0.02));
 
-		img.glyphicon-compare {
-			width: 12px;
+		.mdi {
 			vertical-align: sub;
-			opacity: 0.7;
 			margin-right: 5px;
 		}
 
 		a {
 			display: inline-block;
-			padding: 6px 8px;
+			padding: 6px 7px;
 			opacity: 0.8;
 			font-size: 11px;
 		}
 	}
 
 	.categories {
-		font-size: 11px;
 		display: block;
 		padding-top: 4px;
+		cursor: default;
 
 		a {
 			display: inline-block;
-			padding: 5px 10px;
+			padding: 5px 6px;
 			color: #666;
+			font-size: 11px;
 			letter-spacing: -0.5px;
 			@include transition-duration(150ms);
 			@include border-radius(2px);
 
 			&:hover {
 				background-color: #dedede;
+				text-decoration: none;
 			}
 
 			&.warn { color: $problems-warning-color; }
@@ -669,13 +705,14 @@ footer {
 	}
 }
 
-/* Filer input */
+/* Filter input */
 .filter {
 	width: 300px;
-	float: right;
 	margin-top: 5px;
 	position: relative;
 	text-align: right;
+	display: inline-block;
+	vertical-align: top;
 
 	input[type=text] {
 		width: 250px;
@@ -685,16 +722,11 @@ footer {
 		color: #fff;
 		color: rgba(255, 255, 255, 0.9);
 		font-size: 12px;
-		font-family: inherit;
 		@include transition-duration(150ms);
 		@include box-shadow(none);
 		@include box-sizing(border-box);
 		background-color: rgb(44, 113, 47);
 		background-color: rgba(0, 0, 0, 0.2);
-		background-image: url('../img/icons/glyphicons-28-search-white.png');
-		background-repeat: no-repeat;
-		background-position: 8px 7px;
-		background-size: 16px;
 
 		&:hover {
 			background-color: rgba(0, 0, 0, 0.22);
@@ -731,14 +763,21 @@ footer {
 		}
 	}
 
-	#cancelFilter {
+	.mdi-window-close {
 		@include opacity(0.8);
-		width: 8px;
 		cursor: pointer;
 		position: absolute;
 		top: 0;
 		right: 0;
-		padding: 12px;
+		padding: 9px;
+	}
+
+	.mdi-magnify {
+		@include opacity(0.8);
+		margin-right: -28px;
+		font-size: 18px;
+		vertical-align: middle;
+		position: relative;
 	}
 
 	#overview-search-noresult {
@@ -812,7 +851,6 @@ footer {
 	margin: 0 75px;
 	padding: 10px 0 35px 0;
 	color: #999;
-	font-family: $secondary-font;
 }
 
 .card {
@@ -900,16 +938,22 @@ footer {
 	display: none;
 	position: absolute;
 	z-index: 10;
-	max-width: 450px;
+	max-width: 400px;
 	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.3));
+	@include border-radius(2px);
 	padding: 5px 10px;
 	background-color: #777;
 	background-color: rgba(0, 0, 0, 0.6);
 	border: 0;
 	color: #fff;
-	@include border-radius(2px);
 	font-size: 12px;
 	text-align: justify;
+
+	b { font-weight: 500; }
+
+	&.singleLine {
+		white-space: nowrap;
+	}
 }
 
 /* Event ruler */
@@ -931,28 +975,6 @@ footer {
 	}
 }
 
-#eventRulerToggle {
-	width: 31px;
-	height: 31px;
-	overflow: hidden;
-	cursor: pointer;
-	float: right;
-	margin: 5px 0 0 10px;
-	@include transition-duration(200ms);
-	@include border-radius(2px);
-
-	img {
-		margin-top: -2px;
-		margin-left: -2px;
-	}
-
-	&[data-shown=true] {
-		@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
-		background-color: rgb(47, 120, 51);
-		background-color: rgba(0, 0, 0, 0.15);
-	}
-}
-
 #backToTop {
 	display: block;
 	height: 0;
@@ -962,24 +984,21 @@ footer {
 	right: 0;
 	background-color: #2196F3;
 	color: #fff;
-	text-transform: uppercase;
-	font-family: $secondary-font;
-	font-size: 12px;
-	letter-spacing: -0.5px;
-	padding: 4px 5px;
-	font-weight: bold;
-	@include border-radius(1px 0 0 1px);
+	font-size: 17px;
+	padding: 0;
+	@include border-radius(2px 0 0 2px);
 	@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
 	@include opacity(0);
 	@include transition(opacity 300ms 0s);
 
 	&.visible {
-		@include opacity(0.5);
+		@include opacity(0.75);
 		height: auto;
+		padding: 4px 5px;
 	}
 	&.visible:hover {
 		text-decoration: none;
-		@include opacity(0.8);
+		@include opacity(1);
 	}
 }
 
@@ -989,26 +1008,27 @@ footer {
 		margin: 10px 0 0 -30px;
 		padding: 0 30px;
 		border-bottom: 1px solid #dedede;
+		@include box-shadow(0 2px 5px -3px rgba(0, 0, 0, 0.2));
 
 		li {
 			list-style: none;
 			display: inline-block;
-			letter-spacing: -1px;
 			margin: 0;
-			padding: 0 14px;
+			padding: 0 12px;
 			height: 35px;
 			line-height: 37px;
 			text-align: center;
 			font-size: 14px;
-			text-transform: uppercase;
 			border-bottom: 2px solid transparent;
+			cursor: pointer;
 			@include transition-duration(200ms);
 			@include border-radius(2px 2px 0 0);
 
-			&:hover { background-color: rgba(0, 0, 0, 0.05); }
+			&:hover { background-color: rgba(0, 0, 0, 0.03); }
 			&.active {
 				color: $secondary-color;
 				border-bottom-color: $secondary-color;
+				cursor: default;
 			}
 
 			&.warn { color: $problems-warning-color; }
@@ -1016,7 +1036,6 @@ footer {
 		}
 		li, a {
 			color: #777;
-			cursor: default;
 
 			&:hover {
 				color: #666;
@@ -1042,11 +1061,13 @@ footer {
 	@include user-select(none);
 
 	&:after {
-		content: "\25BE";
-		margin-left: 8px;
-		font-size: 12px;
+		content: "\f415";
+		font-family: "Material Design Icons", serif;
+		font-size: 17px;
+		margin-left: 3px;
+		margin-right: -4px;
 		@include opacity(0.9);
-		vertical-align: 10%;
+		vertical-align: baseline;
 	}
 	&:hover {
 		cursor: pointer;
@@ -1055,8 +1076,9 @@ footer {
 .switchable_content {
 	display: none;
 	margin: 0;
-	padding-bottom: 6px;
+	padding: 3px 0;
 	position: absolute;
+	z-index: 10;
 	background-color: #fff;
 	width: auto;
 	@include border-radius(2px);
@@ -1069,7 +1091,6 @@ footer {
 		line-height: 32px;
 		white-space: nowrap;
 		color: #333;
-		font-family: $secondary-font;
 	}
 
 	a {
@@ -1085,6 +1106,13 @@ footer {
 			cursor: default;
 		}
 
+		i.mdi {
+			font-size: 19px;
+			color: #555;
+			vertical-align: middle;
+			margin: -2px 10px 2px -14px;
+		}
+
 		&:hover {
 			text-decoration: none;
 			background-color: rgba(0, 0, 0, 0.05);
@@ -1095,6 +1123,7 @@ footer {
 		height: 28px;
 		border-bottom: 1px solid #dedede;
 		padding: 5px 32px 5px 32px;
+		margin-top: -3px;
 		text-align: center;
 		color: #777;
 	}
@@ -1117,7 +1146,6 @@ footer {
 	@include border-radius(2px);
 
 	.title {
-		font-family: $secondary-font;
 		font-size: 15px;
 		color: #fff;
 		display: block;
@@ -1135,26 +1163,21 @@ footer {
 
 		.action {
 			float: right;
-			background-size: 12px 12px;
-			background-position: center;
-			background-repeat: no-repeat;
 			width: 20px;
 			height: 20px;
 			margin-left: 5px;
 			padding: 2px;
 			border-radius: 2px;
 			@include transition-duration(100ms);
+			text-align: center;
 
 			&:hover {
 				background-color: rgba(0, 0, 0, 0.15);
 			}
 
-			&.open {
-				background-image: url('../img/icons/glyphicons-390-new-window-alt-white.png');
-			}
-
-			&.close {
-				background-image: url('../img/icons/glyphicons-208-remove-2-white.png');
+			i {
+				color: #fff;
+				vertical-align: middle;
 			}
 		}
 	}
@@ -1186,19 +1209,17 @@ footer {
 	.toggle {
 		width: 16px;
 		height: 16px;
+		padding: 1px;
 		display: inline-block;
-		background: url('../img/icons/expand-reduce.png') no-repeat 0 0;
-		@include opacity(0.5);
-		vertical-align: middle;
+		text-align: center;
+		color: #000;
+		font-size: 15px;
 		cursor: pointer;
 		@include user-select(none);
-
-		&[data-expanded=true] {
-			background-position: 0 -16px;
-		}
+		@include opacity(0.7);
 
 		&:hover {
-			@include opacity(0.8);
+			@include opacity(0.9);
 		}
 	}
 
@@ -1206,7 +1227,6 @@ footer {
 		display: inline-block;
 		color: #444;
 		padding: 3px;
-		font-family: $secondary-font;
 	}
 }
 

@@ -35,7 +35,7 @@ $(document).ready(function() {
 
 		// Tell that the image is loading
 		images.each(function() {
-			setImageLoading($(this), true);
+			$.autoRefresh.setImageLoading($(this), true);
 		});
 
 		updateURL();

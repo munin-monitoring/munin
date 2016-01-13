@@ -24,6 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 =cut
 
+# Trust PERL5LIB from environment
+use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
+
 package Munin::Master::Http;
 
 use strict;
