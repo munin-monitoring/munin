@@ -23,92 +23,28 @@
 						<br />
 						<a href="<TMPL_VAR URLX>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
 							<TMPL_IF TIMEDAY>
-								<TMPL_UNLESS DYN_IMAGES>
-									<img src="<TMPL_VAR CIMGDAY>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
-									  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-									  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-									  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>/>
-								<TMPL_ELSE>
-									<noscript>
-										<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-										  src="<TMPL_VAR CIMGDAY>"
-										  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-										  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-										  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>/>
-									</noscript>
-									<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-									  data-original="<TMPL_VAR CIMGDAY>"
-									  src="/static/img/placeholder.gif"
-									  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-									  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-									  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>/>
-								</TMPL_UNLESS>
+								<img src="<TMPL_VAR CIMGDAY>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
+								  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+								  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>/>
 							</TMPL_IF>
 							<TMPL_IF TIMEWEEK>
-								<TMPL_UNLESS DYN_IMAGES>
-									<img src="<TMPL_VAR CIMGWEEK>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
-									  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-									  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-									  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>/>
-								<TMPL_ELSE>
-									<noscript>
-										<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-										  src="<TMPL_VAR CIMGWEEK>"
-										  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-										  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-										  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>/>
-									</noscript>
-									<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-									  data-original="<TMPL_VAR CIMGWEEK>"
-									  src="/static/img/placeholder.gif"
-									  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-									  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-									  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>/>
-								</TMPL_UNLESS>
+								<img src="<TMPL_VAR CIMGWEEK>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
+								  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+								  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>/>
 							</TMPL_IF>
 							<TMPL_IF TIMEMONTH>
-								<TMPL_UNLESS DYN_IMAGES>
-									<img src="<TMPL_VAR CIMGMONTH>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
-									  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-									  <TMPL_IF IMGMONTHWIDTH>width="<TMPL_VAR IMGMONTHWIDTH>" </TMPL_IF>
-									  <TMPL_IF IMGMONTHHEIGHT>height="<TMPL_VAR IMGMONTHHEIGHT>"</TMPL_IF>/>
-								<TMPL_ELSE>
-									<noscript>
-										<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-										  src="<TMPL_VAR CIMGMONTH>"
-										  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-										  <TMPL_IF IMGMONTHWIDTH>width="<TMPL_VAR IMGMONTHWIDTH>" </TMPL_IF>
-										  <TMPL_IF IMGMONTHHEIGHT>height="<TMPL_VAR IMGMONTHHEIGHT>"</TMPL_IF>/>
-									</noscript>
-									<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-									  data-original="<TMPL_VAR CIMGMONTH>"
-									  src="/static/img/placeholder.gif"
-									  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-									  <TMPL_IF IMGMONTHWIDTH>width="<TMPL_VAR IMGMONTHWIDTH>" </TMPL_IF>
-									  <TMPL_IF IMGMONTHHEIGHT>height="<TMPL_VAR IMGMONTHHEIGHT>"</TMPL_IF>/>
-								</TMPL_UNLESS>
+								<img src="<TMPL_VAR CIMGMONTH>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
+								  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+								  <TMPL_IF IMGMONTHWIDTH>width="<TMPL_VAR IMGMONTHWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGMONTHHEIGHT>height="<TMPL_VAR IMGMONTHHEIGHT>"</TMPL_IF>/>
 							</TMPL_IF>
 							<TMPL_IF TIMEYEAR>
-								<TMPL_UNLESS DYN_IMAGES>
-									<img src="<TMPL_VAR CIMGYEAR>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
-									  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-									  <TMPL_IF IMGYEARWIDTH>width="<TMPL_VAR IMGYEARWIDTH>" </TMPL_IF>
-									  <TMPL_IF IMGYEARHEIGHT>height="<TMPL_VAR IMGYEARHEIGHT>"</TMPL_IF>/>
-								<TMPL_ELSE>
-									<noscript>
-										<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-										  src="<TMPL_VAR CIMGYEAR>"
-										  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-										  <TMPL_IF IMGYEARWIDTH>width="<TMPL_VAR IMGYEARWIDTH>" </TMPL_IF>
-										  <TMPL_IF IMGYEARHEIGHT>height="<TMPL_VAR IMGYEARHEIGHT>"</TMPL_IF>/>
-									</noscript>
-									<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-									  data-original="<TMPL_VAR CIMGYEAR>"
-									  src="/static/img/placeholder.gif"
-									  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-									  <TMPL_IF IMGYEARWIDTH>width="<TMPL_VAR IMGYEARWIDTH>" </TMPL_IF>
-									  <TMPL_IF IMGYEARHEIGHT>height="<TMPL_VAR IMGYEARHEIGHT>"</TMPL_IF>/>
-								</TMPL_UNLESS>
+								<img src="<TMPL_VAR CIMGYEAR>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
+								  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+								  <TMPL_IF IMGYEARWIDTH>width="<TMPL_VAR IMGYEARWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGYEARHEIGHT>height="<TMPL_VAR IMGYEARHEIGHT>"</TMPL_IF>/>
 							</TMPL_IF>
 						</a>
 					</div>

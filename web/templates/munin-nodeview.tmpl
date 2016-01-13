@@ -39,56 +39,20 @@
 				<TMPL_LOOP SERVICES>
 					<h4><TMPL_VAR ESCAPE="HTML" NAME></h4>
 					<a href="<TMPL_VAR URLX>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
-						<TMPL_UNLESS DYN_IMAGES>
-							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  src="<TMPL_VAR IMGDAY>"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
-							  data-col="0" />
-						<TMPL_ELSE>
-							<noscript>
-							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  src="<TMPL_VAR IMGDAY>"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
-							  data-col="0" />
-							</noscript>
-							<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  data-original="<TMPL_VAR IMGDAY>"
-							  src="/static/img/placeholder.gif"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
-							  data-col="0" />
-						</TMPL_UNLESS>
+						<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+						  src="<TMPL_VAR IMGDAY>"
+						  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+						  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+						  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
+						  data-col="0" />
 					</a>
 					<a href="<TMPL_VAR URLX>" class="graphLink hide-if-overflows i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
-						<TMPL_UNLESS DYN_IMAGES>
-							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  src="<TMPL_VAR IMGWEEK>"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
-							  data-col="1" />
-						<TMPL_ELSE>
-							<noscript>
-							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  src="<TMPL_VAR IMGWEEK>"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
-							  data-col="1" />
-							</noscript>
-							<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  data-original="<TMPL_VAR IMGWEEK>"
-							  src="/static/img/placeholder.gif"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
-							  data-col="1" />
-						</TMPL_UNLESS>
+						<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+						  src="<TMPL_VAR IMGWEEK>"
+						  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+						  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+						  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
+						  data-col="1" />
 					</a>
 					<br />
 				</TMPL_LOOP>
