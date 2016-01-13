@@ -7,10 +7,15 @@
 	</div>
 <![endif]-->
 <header>
-	<a href="/" class="logo"></a>
-	<div class="filter">
-		<input type="text" id="filter" />
-		<img id="cancelFilter" src="/static/img/icons/glyphicons-208-remove-2-white.png" style="display:none;" alt="Clear" />
+	<div class="left">
+		<a href="/" class="logo"></a>
+	</div>
+	<div class="right">
+		<div class="filter" style="display: none;">
+			<i class="mdi mdi-magnify"></i>
+			<input type="text" id="filter" />
+			<i id="cancelFilter" class="mdi mdi-window-close" style="display:none;"></i>
+		</div>
 	</div>
 	<div class="pageTitle"><h1>Overview</h1></div>
 	<div class="clear"></div>
@@ -31,7 +36,7 @@
 					</TMPL_IF>
 					<TMPL_IF COMPARE>
 						<div class="compare">
-							<img src="/static/img/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />
+							<i class="mdi mdi-compare"></i>
 							<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-day.html">day</a>
 							<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-week.html">week</a>
 							<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-month.html">month</a>
@@ -56,7 +61,7 @@
 							</TMPL_IF>
 							<TMPL_IF COMPARE>
 								<div class="compare">
-									<img src="/static/img/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />
+									<i class="mdi mdi-compare"></i>
 									<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-day.html">day</a>
 									<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-week.html">week</a>
 									<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-month.html">month</a>
@@ -81,7 +86,7 @@
 									</TMPL_IF>
 									<TMPL_IF COMPARE>
 										<div class="compare">
-											<img src="/static/img/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />
+											<i class="mdi mdi-compare"></i>
 											<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-day.html">day</a>
 											<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-week.html">week</a>
 											<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-month.html">month</a>
@@ -106,7 +111,7 @@
 											</TMPL_IF>
 											<TMPL_IF COMPARE>
 												<div class="compare">
-													<img src="/static/img/icons/glyphicons-429-git-compare.png" class="glyphicon-compare" alt="Compare" />
+													<i class="mdi mdi-compare"></i>
 													<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-day.html">day</a>
 													<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-week.html">week</a>
 													<a href="/<TMPL_LOOP PATH><TMPL_IF pathname><TMPL_VAR ESCAPE="URL" PATHNAME>/</TMPL_IF></TMPL_LOOP>comparison-month.html">month</a>
@@ -134,6 +139,8 @@
 		</div>
 </div>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
+<script src="/static/js/component-absolute.js"></script>
+<script src="/static/js/component-toolbar.js"></script>
 <script src="/static/js/component-autorefresh.js"></script>
 <script src="/static/js/munin-overview.js"></script>
 <!--[if lt IE 9]>

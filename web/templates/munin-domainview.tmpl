@@ -18,7 +18,7 @@
 			<TMPL_LOOP GROUPS>
 				<li>
 					<div class="domain">
-						<span class="toggle"></span>
+						<i class="toggle mdi mdi-chevron-down"></i>
 						<a href="<TMPL_VAR URLX>"><TMPL_VAR ESCAPE="HTML" NAME></a>
 					</div>
 					<ul>
@@ -27,7 +27,7 @@
 							<TMPL_LOOP CATEGORIES>
 								<li>
 									<div class="host">
-										<span class="toggle"></span>
+										<span class="toggle mdi mdi-chevron-down"></span>
 										<a href="<TMPL_VAR URLX>"><TMPL_VAR ESCAPE="HTML" NAME></a>
 									</div>
 									<ul>
@@ -54,7 +54,7 @@
 							<TMPL_LOOP GROUPS>
 								<li>
 									<div class="domain">
-										<span class="toggle"></span>
+										<span class="toggle mdi mdi-chevron-down"></span>
 										<a href="<TMPL_VAR URLX>"><TMPL_VAR ESCAPE="HTML" NAME></a>
 									</div>
 									<ul>
@@ -62,7 +62,7 @@
 											<TMPL_LOOP CATEGORIES>
 												<li>
 													<div class="host">
-														<span class="toggle"></span>
+														<span class="toggle mdi mdi-chevron-down"></span>
 														<a href="<TMPL_VAR URLX>"><TMPL_VAR ESCAPE="HTML" NAME></a>
 													</div>
 													<ul>
@@ -81,7 +81,7 @@
 											<TMPL_LOOP GROUPS><!-- GROUPS Listing level 3 -->
 												<li>
 													<div class="domain">
-														<span class="toggle"></span>
+														<span class="toggle mdi mdi-chevron-down"></span>
 														<a href="<TMPL_VAR URLX>"><TMPL_VAR ESCAPE="HTML" NAME></a>
 													</div>
 													<ul>
@@ -90,7 +90,7 @@
 															<TMPL_LOOP CATEGORIES>
 																<li>
 																	<div class="host">
-																		<span class="toggle"></span>
+																		<span class="toggle mdi mdi-chevron-down"></span>
 																		<a href="<TMPL_VAR URLX>"><TMPL_VAR ESCAPE="HTML" NAME></a>
 																	</div>
 																	<ul>
@@ -124,6 +124,8 @@
 	</div>
 </div>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
+<script src="/static/js/component-absolute.js"></script>
+<script src="/static/js/component-toolbar.js"></script>
 <script src="/static/js/munin-domainview.js"></script>
 <script src="/static/js/munin-domainview-treeview.js"></script>
 </body>

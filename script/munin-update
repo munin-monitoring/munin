@@ -29,9 +29,10 @@ sub main {
 
     configure();
 
-    if ( $config->{debug} || $config->{screen} ) {
+    if ( $config->{debug} || $config->{screen} || $config->{verbose} ) {
         my %log;
         $log{output} = 'screen' if $config->{screen};
+        $log{level}  = 'info'   if $config->{verbose};
         $log{level}  = 'debug'  if $config->{debug};
         Munin::Common::Logger::configure(%log);
     }
@@ -84,6 +85,7 @@ sub parse_args {
         \%args, 
         "config|config_file=s",
         "debug",
+        "verbose",
         "screen",
         "fork!",
         "host=s@",
@@ -124,6 +126,7 @@ munin-update [options]
  Options:
      --config_file=<file>    Use <file> as configuration file.
      --debug                 Enable debug messages.
+     --verbose               Be verbose.
      --screen                Send log messages the screen (STDERR).
      --[no]fork              Query hosts in parallel (--fork), or
                              sequentially (--nofork). [--fork]
@@ -147,6 +150,10 @@ Use E<lt>fileE<gt> as the configuration file. [@@CONFDIR@@/munin.conf]
 =item B<< --[no]debug >>
 
 If set, log debug messages. [--nodebug]
+
+=item B<< --[no]verbose >>
+
+If set, be verbose. [--noverbose]
 
 =item B<< --[no]fork >>
 

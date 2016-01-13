@@ -12,22 +12,42 @@
 		border-radius: 0;
 		padding: 5px;
 
-		.filter {
-			float: none;
-			display: inline-block;
+		.left .logo {
 			margin-top: 0;
-			width: 250px;
+			width: 30px;
+			@include opacity(1);
+		}
 
-			/* Don't expand on focus */
-			input[type=text]:focus {
-				width: 250px;
+		.right {
+			.filter {
+				display: inline-block;
+				margin-top: 0;
+				width: 200px;
+
+				/* Don't expand on focus */
+				input[type=text] {
+					width: 200px;
+
+					&:focus {
+						width: 200px;
+					}
+				}
+			}
+			.actions .action-icon {
+				margin-top: 0;
 			}
 		}
-		.logo {
-			width: 30px;
-			margin-top: 0;
+
+		.pageTitle {
+			h1 {
+				padding-top: 10px;
+			}
 		}
-		h1 { margin: 10px 0; }
+
+		.pageTitle {
+			display: block;
+			clear: both;
+		}
 	}
 
 	/* Different nav */

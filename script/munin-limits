@@ -86,6 +86,10 @@ Alias for "--always-send ok,warning,critical,unknown"
 
 Force running as root (stupid and unnecessary). [--noforce-root]
 
+=item B<< --verbose >>
+
+Be verbose.
+
 =item B<< --help >>
 
 View help message.

@@ -44,7 +44,7 @@ available on all systems.
 Startup
 -------
 
-Start the node agent (as root) SBINDIR/munin-node. Restart it it it
+Start the node agent (as root) SBINDIR/munin-node. Restart it if it
 was already started. The node only discovers new plugins when it is
 restarted.
 

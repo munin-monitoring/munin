@@ -13,25 +13,30 @@ $(document).ready(function() {
 	h4s = $('h4');
 	tabs = $('.tabs').find('li');
 
-	// Append a loading <img> on each graph img
-	graphs.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
+	// Instantiate auto-refresh & dynazoom modal links components
+	var autoRefresh = graphs.autoRefresh();
+	graphs.dynazoomModal();
 
-	// Auto-refresh
-	startAutoRefresh();
+	// Add toolbar actions
+	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
+		autoRefresh.refresh();
+	});
+
+	var tabsComponent = $(this).tabs();
 
 	// Prepare filter
-	prepareFilter('Filter graphs', function(val) {
+	window.toolbar.prepareFilter('Filter graphs', function(val) {
 		if (val.length == 0)
-			showTabs();
+			tabsComponent.showTabs();
 		else
-			hideTabs();
+			tabsComponent.hideTabs();
 
 		graphs.each(function() {
 			var pluginName = $(this).attr('alt');
 			var src = $(this).attr('src');
 			var pluginId = src.substr(src.lastIndexOf('/')+1, src.lastIndexOf('-')-src.lastIndexOf('/')-1);
 
-			if (filterMatches(val, pluginName) || filterMatches(val, pluginId)) {
+			if (window.toolbar.filterMatches(val, pluginName) || window.toolbar.filterMatches(val, pluginId)) {
 				$(this).parent().show();
 				// Show plugin name
 				h4s.filter(function() {
@@ -58,7 +63,7 @@ $(document).ready(function() {
 		// If tabs aren't enabled, they are used as anchors links
 		if (content.attr('data-tabsenabled') == 'false') {
 			tabs.each(function() {
-				if (filterMatches(val, $(this).text()))
+				if (window.toolbar.filterMatches(val, $(this).text()))
 					$(this).show();
 				else
 					$(this).hide();
@@ -73,10 +78,13 @@ $(document).ready(function() {
 				$(this).prev().show();
 		});
 
-		if (val.length == 0) {
-			// Remove display CSS property to category names (h3)
-			// to let tabs decide if they should be shown or not
-			$('h3').css('display', '');
+		console.log(tabs.find('.active').index());
+		if (val.length == 0 // Empty filter
+			&& content.attr('data-tabsenabled') == 'true' // Tabs enabled
+			&& tabs.prevAll('.active').index() != 0 // Not "all"
+		) {
+			// Hide categories names
+			$('h3').hide();
 		}
 	});
 
@@ -100,5 +108,10 @@ $(document).ready(function() {
 	});
 
 	// Node switch
-	prepareSwitchable('header');
+	$('.switchable[data-switch="header"]').list('header', {
+		list: $('.switchable_content[data-switch="header"]')
+	});
+
+	// Init eventruler
+	$(this).eventRuler();
 });

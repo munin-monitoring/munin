@@ -12,6 +12,12 @@ DESCRIPTION
 This is the configuration file for the munin master. It is used by
 :ref:`munin-update` and :ref:`munin-limits`
 
+.. note::
+
+        All global directives have to be defined in the first section of the file!
+        It will not work if you place them in later sections of the config file.
+        We recommend to use the delivered munin.conf file and adapt it to your needs.
+
 
 .. _master-conf-global-directives:
 
