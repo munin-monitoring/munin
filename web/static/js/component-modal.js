@@ -54,7 +54,7 @@
 								)
 						)
 				)
-				.append(this.modalHTMLContent)
+				.append(this.modalHTMLContent.show())
 				.appendTo(body);
 
 			this.modalMask = $('<div />')

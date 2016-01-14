@@ -14,10 +14,11 @@ $(document).ready(function() {
 	// Instantiate auto-refresh & dynazoom modal links components
 	var autoRefresh = graphs.autoRefresh();
 	graphs.dynazoomModal();
+	graphs.graph();
 
 	// Add toolbar actions
 	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
-		autoRefresh.refresh();
+		autoRefresh.refreshAll();
 	});
 
 	// Tabs

@@ -123,6 +123,13 @@ h1 {
 	font-weight: inherit;
 	font-size: inherit;
 }
+h2 {
+	color: #444;
+	font-weight: normal;
+	letter-spacing: -1px;
+	margin: 25px 0;
+	font-size: 23px;
+}
 h3 {
 	color: #555;
 	font-weight: normal;
@@ -140,6 +147,11 @@ hr {
 	border: 0;
 	border-top: 1px solid #888;
 	@include box-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.subtitle {
+	@include opacity(0.8);
+	margin: -20px 0 20px 0;
 }
 
 a {
@@ -268,6 +280,7 @@ header {
 
 	.left {
 		float: left;
+		font-size: 0;
 
 		.logo {
 			display: inline-block;
@@ -392,6 +405,7 @@ nav {
 		text-transform: uppercase;
 		font-size: 13px;
 		color: #777;
+		letter-spacing: 0;
 	}
 	ul {
 		margin: 0.2em 0 0.8em 0;
@@ -459,18 +473,6 @@ nav {
 	border-left: 1px solid rgba(0, 0, 0, 0.01);
 	@include box-shadow(0 1px 2px 0 rgba(0, 0, 0, 0.35));
 	@include box-sizing(border-box);
-
-	h2 {
-		color: #444;
-		font-weight: normal;
-		letter-spacing: -1px;
-		margin: 25px 0;
-		font-size: 23px;
-	}
-	.subtitle {
-		@include opacity(0.8);
-		margin: -20px 0 20px 0;
-	}
 }
 
 .comparison #content {
@@ -527,6 +529,7 @@ p.graph_info {
 		th {
 			padding: 6px 10px 6px 15px;
 			white-space: nowrap;
+			font-weight: 500;
 		}
 	}
 
@@ -1188,6 +1191,14 @@ footer {
 		height: 100%;
 		border: 0;
 		@include border-radius(0 0 2px 2px);
+	}
+
+	.modalContent {
+		padding: 20px 30px;
+
+		> *:first-child {
+			margin-top: 0;
+		}
 	}
 }
 .modalMask {

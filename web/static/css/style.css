@@ -60,6 +60,14 @@ h1 {
   font-size: inherit;
 }
 
+h2 {
+  color: #444;
+  font-weight: normal;
+  letter-spacing: -1px;
+  margin: 25px 0;
+  font-size: 23px;
+}
+
 h3 {
   color: #555;
   font-weight: normal;
@@ -81,6 +89,12 @@ hr {
   -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
   -o-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.subtitle {
+  opacity: 0.8;
+  filter: alpha(opacity=80);
+  margin: -20px 0 20px 0;
 }
 
 a {
@@ -244,6 +258,7 @@ header h1 {
 }
 header .left {
   float: left;
+  font-size: 0;
 }
 header .left .logo {
   display: inline-block;
@@ -383,6 +398,7 @@ nav #navToggle {
   text-transform: uppercase;
   font-size: 13px;
   color: #777;
+  letter-spacing: 0;
 }
 #nav ul {
   margin: 0.2em 0 0.8em 0;
@@ -463,18 +479,6 @@ nav #navToggle {
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
 }
-#content h2 {
-  color: #444;
-  font-weight: normal;
-  letter-spacing: -1px;
-  margin: 25px 0;
-  font-size: 23px;
-}
-#content .subtitle {
-  opacity: 0.8;
-  filter: alpha(opacity=80);
-  margin: -20px 0 20px 0;
-}
 
 .comparison #content {
   margin-left: 0;
@@ -536,6 +540,7 @@ p.graph_info {
 #legend .legendHead th {
   padding: 6px 10px 6px 15px;
   white-space: nowrap;
+  font-weight: 500;
 }
 #legend td {
   font-size: 12px;
@@ -1313,6 +1318,12 @@ footer p.tagline:hover {
   -moz-border-radius: 0 0 2px 2px;
   -ms-border-radius: 0 0 2px 2px;
   border-radius: 0 0 2px 2px;
+}
+.modal .modalContent {
+  padding: 20px 30px;
+}
+.modal .modalContent > *:first-child {
+  margin-top: 0;
 }
 
 .modalMask {

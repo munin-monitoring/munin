@@ -48,5 +48,7 @@ $(document).ready(function() {
 	});
 
 	// Sparklines auto-refresh
-	$('.sparkline').autoRefresh();
+	var sparklines = $('.sparkline');
+	sparklines.autoRefresh();
+	sparklines.graph();
 });

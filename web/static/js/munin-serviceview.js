@@ -32,7 +32,7 @@ $(document).ready(function() {
 
 	// Add toolbar actions
 	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
-		autoRefresh.refresh();
+		autoRefresh.refreshAll();
 	});
 
 	// Switch to another graph in the same node

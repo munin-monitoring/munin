@@ -4,12 +4,11 @@
  */
 
 $(document).ready(function() {
-	$('.timeRangeSwitch').find('ul > li').click(function() {
+	var timeRangeSwitch = $('.timeRangeSwitch');
+
+	timeRangeSwitch.find('ul > li').click(function() {
 		if ($(this).hasClass('selected'))
 			return;
-
-		var currentRange = $(this).parent().find('.selected').first().text();
-		var newRange = $(this).text();
 
 		// Remove "selected" attribute
 		$(this).parent().find('li').removeClass('selected');
@@ -19,23 +18,10 @@ $(document).ready(function() {
 
 		var thisRSIndex = $(this).parent().parent().index();
 
-		// Replace src attribute of current column
-		var images = $("img[data-col='" + thisRSIndex + "']");
-		images.each(function() {
-			var src = $(this).attr('src');
-			$(this).attr('src', src.replace('-' + currentRange + '.', '-' + newRange + '.'));
-		});
-
-		// Remplace data-original attribute (when using DYN_IMAGES)
-		var dynImages = $("img[data-original][data-col='" + thisRSIndex + "']");
-		dynImages.each(function() {
-			var originalSrc = $(this).attr('data-original');
-			$(this).attr('data-original', originalSrc.replace('-' + currentRange + '.', '-' + newRange + '.'));
-		});
-
-		// Tell that the image is loading
-		images.each(function() {
-			$.autoRefresh.setImageLoading($(this), true);
+		// Refresh all graphs in current column
+		var newRange = $(this).text();
+		$("img[data-col='" + thisRSIndex + "']").each(function() {
+			$(this).data('graph').setTimeRange(newRange);
 		});
 
 		updateURL();
@@ -55,10 +41,10 @@ $(document).ready(function() {
 	// on special resolutions. Let's fix it here
 	$(window).resize(function() {
 		var availableWidth = $('#content').width();
-		if ($('.timeRangeSwitch').first().outerWidth(true)*2 > availableWidth)
-			$('.timeRangeSwitch').css('display', 'block');
+		if (timeRangeSwitch.first().outerWidth(true)*2 > availableWidth)
+			timeRangeSwitch.css('display', 'block');
 		else
-			$('.timeRangeSwitch').css('display', 'inline-block');
+			timeRangeSwitch.css('display', 'inline-block');
 	});
 
 	// Check if URL contains stuff like ?1=day&2=month

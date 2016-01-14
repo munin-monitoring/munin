@@ -19,6 +19,19 @@ $(document).ready(function() {
 
 	// Init toolbar component
 	window.toolbar = $('header').toolbar();
+
+	// Prepare settings modal
+	var settingsModalWrap = $('#settingsModalWrap');
+	settingsModalWrap.find('settings_save').click(function() {
+		setCookie('graphs_format', $('#graphsFormat').val(), 1000);
+	});
+
+	var settingsModal = new Modal('settings', settingsModalWrap);
+	settingsModal.setTitle('Settings');
+
+	window.toolbar.addActionIcon('mdi-settings', 'Settings', true, function() {
+		settingsModal.show();
+	});
 });
 
 
@@ -40,4 +53,30 @@ function saveState(key, val) {
 	var url = $.param(qs.params);
 	var pageName = $(document).find('title').text();
 	window.history.replaceState('', pageName, '?' + url);
+}
+
+/**
+ * Creates a cookie
+ * Source: http://www.w3schools.com/js/js_cookies.asp
+ */
+function setCookie(cname, cvalue, exdays) {
+	var d = new Date();
+	d.setTime(d.getTime() + (exdays*24*60*60*1000));
+	var expires = "expires="+d.toUTCString();
+	document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+
+/**
+ * Get a cookie
+ * Source: http://www.w3schools.com/js/js_cookies.asp
+ */
+function getCookie(cname) {
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0; i<ca.length; i++) {
+		var c = ca[i];
+		while (c.charAt(0)==' ') c = c.substring(1);
+		if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+	}
+	return "";
 }

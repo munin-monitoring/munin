@@ -55,7 +55,10 @@ sub handle_request
 		return;
 	}
 
-	my $graph_ext = $cgi->url_param("graph_ext");
+	# Get graph extension (jpg / png / json)
+	#my $graph_ext = $cgi->url_param("graph_ext");
+	# Get from cookie if it exists
+	$graph_ext = $cgi->param('graph_ext');
 	$graph_ext = "png" unless defined $graph_ext;
 
 	# Handle rest-like URL : .json & .xml
