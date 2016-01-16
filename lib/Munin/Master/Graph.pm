@@ -302,6 +302,9 @@ sub handle_request
 
 		DEBUG "rrdname: $_rrdname";
 
+		# rrdtool fails on unescaped colons found in its input data
+		$_label =~ s/:/\\:/g;
+
 		# Handle .sum
 		if ($_sum) {
 			# .sum is just a alias + cdef shortcut, an exemple is :
