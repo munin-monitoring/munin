@@ -302,7 +302,7 @@ sub handle_request
 
 		DEBUG "rrdname: $_rrdname";
 
-		# rrdtool fails on unescaped semicolons found in its input data
+		# rrdtool fails on unescaped colons found in its input data
 		$_label =~ s/:/\\:/g;
 
 		# Handle .sum
