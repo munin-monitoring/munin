@@ -32,7 +32,7 @@ sub main {
     if ( $config->{debug} || $config->{screen} || $config->{verbose} ) {
         my %log;
         $log{output} = 'screen' if $config->{screen};
-        $log{level}  = 'info'   if $config->{$verbose};
+        $log{level}  = 'info'   if $config->{verbose};
         $log{level}  = 'debug'  if $config->{debug};
         Munin::Common::Logger::configure(%log);
     }
