@@ -521,7 +521,7 @@ sub handle_request
 		"--start", $start,
 		"--slope-mode",
 
-		'--font', "TITLE:$font_size_title",
+		'--font', "TITLE:$font_size_title:Sans",
 		'--font', "DEFAULT:$font_size_default",
 		'--font', "LEGEND:$font_size_legend",
                 # Colors coordinated with CSS.
