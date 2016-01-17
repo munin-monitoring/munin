@@ -134,6 +134,8 @@ sub handle_request
 	$start = $times{$time} unless defined $start;
 	$end = "" unless defined $end;
 
+	$format = "png" if $hidpi; # Only PNG is supported when HiDPI mode
+
 	# Only accept known formats
 	$format = uc($format);
 	if (! $CONTENT_TYPES{$format}) {
