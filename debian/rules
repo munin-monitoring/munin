@@ -20,6 +20,7 @@ override_dh_auto_install:
 	rm -rfv debian/tmp/usr/share/man/man1
 	mv debian/tmp/etc/munin/munin-node.conf.sample debian/tmp/etc/munin/munin-node.conf
 	sed -i -e '/^log_file/clog_file Sys::Syslog' debian/tmp/etc/munin/munin-node.conf
+	sed -i -e '/^pid_file/cpid_file /run/munin-node.pid' debian/tmp/etc/munin/munin-node.conf
 	mv debian/tmp/etc/munin/munin.conf.sample debian/tmp/etc/munin/munin.conf
 
 override_dh_install:
