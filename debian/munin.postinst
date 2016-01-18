@@ -3,12 +3,9 @@
 set -e
 
 ensure_usergroup() {
-    if ! getent group munin >/dev/null; then
-        addgroup --system munin
-    fi
     if ! getent passwd munin >/dev/null; then
         adduser --system \
-                --ingroup munin \
+                --gid munin \
                 --no-create-home \
                 --home /var/lib/munin \
                 munin
@@ -30,11 +27,9 @@ migration_remove_munin_2x_files() {
 
 case "$1" in
     configure)
+        ensure_usergroup
         install -o munin -g munin -m 0755 -d /var/lib/munin
         install -o munin -g munin -m 0755 -d /var/spool/munin/update
-        if [ -z "$2" ] ; then
-            ensure_usergroup
-        fi
         if dpkg --compare-versions "$2" le "2.1.999-1~" ; then
             migration_remove_munin_2x_files
         fi
