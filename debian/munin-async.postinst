@@ -2,26 +2,44 @@
 
 set -e
 
-ensure_user() {
-	if ! getent passwd munin-async >/dev/null; then
-		adduser --group --system --home /var/spool/munin/async --shell /bin/sh munin-async
-	elif ! getent passwd munin-async | cut -d : -f 6 | grep -qx /var/spool/munin/async; then
-		usermod --home /var/spool/munin/async munin-async
-	fi
+SPOOLDIR=/var/spool/munin/async
+SHELL=/usr/bin/munin-async
+
+ensure_usergroup() {
+    if ! getent passwd munin-async >/dev/null; then
+        adduser --system \
+                --group \
+                --no-create-home \
+                --home "$SPOOLDIR" \
+                --shell "$SHELL" \
+                munin-async
+    fi
+
+    if ! getent passwd munin-async | cut -d : -f 6 | grep -qx "$SPOOLDIR"; then
+	usermod \
+            --home "$SPOOLDIR" \
+            munin-async
+    fi
+
+    if ! getent passwd munin-async | cut -d : -f 7 | grep -qx "$SHELL"; then
+        usermod \
+            --shell "$SHELL" \
+            munin-async
+    fi
 }
 
 case "$1" in
-	configure)
-		ensure_user
-                install -o munin-async -g munin-async -m 0755 -d /var/spool/munin/async
-		;;
-	abort-upgrade|abort-deconfigure|abort-remove)
-		:
-		;;
-	*)
-		echo "Called with unknown argument $1, bailing out."
-		exit 1
-		;;
+    configure)
+	ensure_usergroup
+        install -o munin-async -g munin-async -m 0755 -d "$SPOOLDIR"
+	;;
+    abort-upgrade|abort-deconfigure|abort-remove)
+	:
+	;;
+    *)
+	echo "Called with unknown argument $1, bailing out."
+	exit 1
+	;;
 esac
 
 #DEBHELPER#
