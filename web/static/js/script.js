@@ -4,19 +4,6 @@
  */
 
 $(document).ready(function() {
-	// Navigation toggle on tablets
-	$('#navToggle').click(function() {
-		var nav = $('#nav');
-
-		if ($(this).hasClass('expanded')) {
-			$(this).removeClass('expanded');
-			nav.hide();
-		} else {
-			$(this).addClass('expanded');
-			nav.show();
-		}
-	});
-
 	// Init toolbar component
 	window.toolbar = $('header').toolbar();
 });
