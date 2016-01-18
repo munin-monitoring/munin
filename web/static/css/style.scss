@@ -249,7 +249,7 @@ header {
 	color: #fff;
 	min-height: 45px;
 	margin: 0 auto;
-	padding: 1px 12px 1px 37px;
+	padding: 1px 12px 1px 0;
 	text-align: center;
 	background-color: $primary-color;
 	position: relative;
@@ -326,35 +326,44 @@ header {
 
 	.right {
 		float: right;
+	}
 
-		.actions {
-			display: inline-block;
-			margin-left: 5px;
+	.actions {
+		display: inline-block;
+		margin-left: 5px;
+		vertical-align: top;
+	}
 
-			.action-icon {
-				display: inline-block;
-				width: 31px;
-				height: 31px;
-				overflow: hidden;
-				cursor: pointer;
-				margin: 5px 0 0 7px;
-				@include transition-duration(150ms);
-				@include border-radius(2px);
+	.action-icon {
+		display: inline-block;
+		width: 31px;
+		height: 31px;
+		overflow: hidden;
+		cursor: pointer;
+		margin: 5px 0 0 7px;
+		@include transition-duration(150ms);
+		@include border-radius(2px);
+		@include user-select(none);
 
-				i {
-					font-size: 19px;
-					padding: 6px;
-				}
+		i {
+			font-size: 19px;
+			padding: 6px;
+		}
 
-				&:hover {
-					background-color: rgba(0, 0, 0, 0.15);
-				}
+		&:hover {
+			background-color: rgba(0, 0, 0, 0.15);
+		}
 
-				&.pressed {
-					@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
-					background-color: rgba(0, 0, 0, 0.2);
-				}
-			}
+		&.pressed {
+			@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+			background-color: rgba(0, 0, 0, 0.2);
+		}
+
+		// Adjustments for single items
+		&#navigation-toggle i {
+			font-size: 20px;
+			padding-top: 5px;
+			padding-bottom: 7px;
 		}
 	}
 }
@@ -364,6 +373,7 @@ header {
 	width: 100%;
 	margin-left: auto;
 	display: table;
+	table-layout: fixed;
 	min-height: 600px;
 }
 .clear { clear: both; }
@@ -373,9 +383,21 @@ nav {
 	display: table-cell;
 	vertical-align: top;
 	width: 200px;
+	overflow-x: hidden;
 
-	/* Shown on tablets */
-	#navToggle { display: none; }
+	#nav {
+		width: 200px;
+	}
+}
+.navigation-mask {
+	display: none;
+	position: fixed;
+	z-index: 9;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	background-color: rgba(0, 0, 0, 0.3);
 }
 #nav {
 	> hr {

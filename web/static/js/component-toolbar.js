@@ -1,24 +1,34 @@
 /**
- * Toolbar jQuery component
+ * Toolbar & navigation panel jQuery component
  */
 (function($) {
 	var Toolbar = function(elem, options) {
-		this.elem = elem;
-		this.$elem = $(elem);
+		this.elem = $(elem);
 		this.options = options;
-		this.metadata = this.$elem.data('toolbar-options');
+		this.metadata = this.elem.data('toolbar-options');
 	};
 
 	Toolbar.prototype = {
 		defaults: {
-
+			mobileTriggerWidth: 768
 		},
 
 		init: function() {
+			var that = this;
 			this.settings = $.extend({}, this.defaults, this.options, this.metadata);
 
 			// Init component
 			this.filterWrap = this.elem.find('.filter');
+			this.actions = this.elem.find('.right').find('.actions');
+			this.navigation = $('nav');
+			this.navigationMask = $('.navigation-mask').click(function() {
+				that.toggleNavigation(false, true);
+			});
+
+			this.elem.find('#navigation-toggle').click(function() {
+				var makeVisible = that.navigation.width() <= 0;
+				that.toggleNavigation(makeVisible, true);
+			});
 
 			return this;
 		},
@@ -125,7 +135,7 @@
 
 			if (overflow) {
 				// Add overflow button if it doesn't exist yet
-				if (!this.$elem.find('.overflow').length) {
+				if (!this.elem.find('.overflow').length) {
 					// Create overflow button
 					var overflowButton = $('<div />')
 						.addClass('action-icon overflow')
@@ -133,7 +143,7 @@
 						.append(
 							$('<i />').addClass('mdi mdi-dots-vertical')
 						)
-						.appendTo(this.$elem.find('.actions'));
+						.appendTo(this.actions);
 
 					// Create list
 					var list = overflowButton.list('overflow');
@@ -148,12 +158,32 @@
 					.append(
 						$('<i />').addClass('mdi ' + icon)
 					)
-					.prependTo(this.$elem.find('.actions'));
+					.prependTo(this.actions);
 
 				// Tooltip for text
 				button.tooltip(text, {
 					singleLine: true
 				});
+			}
+		},
+
+		toggleNavigation: function(visible, animate) {
+			var destWidth = visible ? 200 : 0;
+
+			if (animate) {
+				this.navigation.animate({
+					width: destWidth + 'px'
+				}, 200);
+			} else {
+				this.navigation.css('width', destWidth);
+			}
+
+			// Toggle navigation mask if necessary
+			if ($(document).width() < this.settings.mobileTriggerWidth) {
+				if (visible)
+					this.navigationMask.fadeIn(150);
+				else
+					this.navigationMask.fadeOut(150);
 			}
 		}
 	};
