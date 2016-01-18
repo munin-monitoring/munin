@@ -282,8 +282,11 @@ sub _service_command
             # replacement value for %c. It is probably a minor inconvenience,
             # though, since who will ever need to pass "%c" in a place
             # like that?
-            $t =~ s/%c/$dir\/$service/g;
-            push @run, ($t);
+            if ($t =~ s/%c/$dir\/$service/g) {
+                push @run, ($t, $argument);
+            } else {
+                push @run, ($t);
+            }
         }
     }
     else {
