@@ -1,0 +1,8 @@
+# systemd-tmpfiles definition for munin-async
+#
+# This temporary directory is used by munin-async
+#
+# See tmpfiles.d(5) for details
+#
+
+d /run/munin-async 0775 munin-async munin-async
