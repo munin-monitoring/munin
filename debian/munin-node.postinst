@@ -72,8 +72,6 @@ case "$1" in
     configure)
         ensure_system_user
         ensure_dir_permissions
-	init_plugins "$2"
-        restart_munin_node
 	;;
     triggered)
         case "$2" in
