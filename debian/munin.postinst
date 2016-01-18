@@ -3,9 +3,12 @@
 set -e
 
 ensure_usergroup() {
+    if ! getent group munin >/dev/null; then
+        addgroup --system munin
+    fi
     if ! getent passwd munin >/dev/null; then
         adduser --system \
-                --gid munin \
+                --ingroup munin \
                 --no-create-home \
                 --home /var/lib/munin \
                 munin
