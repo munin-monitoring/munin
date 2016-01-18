@@ -1,5 +1,5 @@
 /**
- * Toolbar jQuery component
+ * Toolbar & navigation panel jQuery component
  */
 (function($) {
 	var Toolbar = function(elem, options) {
@@ -19,6 +19,8 @@
 
 			// Init component
 			this.filterWrap = this.elem.find('.filter');
+
+			this.navigation = $('nav');
 
 			return this;
 		},
@@ -154,6 +156,18 @@
 				button.tooltip(text, {
 					singleLine: true
 				});
+			}
+		},
+
+		toggleNavigation: function(visible, animate) {
+			var destWidth = visible ? 200 : 0;
+
+			if (animate) {
+				this.navigation.animate({
+					width: destWidth + 'px'
+				}, 200);
+			} else {
+				this.navigation.css('width', destWidth);
 			}
 		}
 	};

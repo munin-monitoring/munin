@@ -348,6 +348,7 @@ header .right .actions .action-icon.pressed {
   width: 100%;
   margin-left: auto;
   display: table;
+  table-layout: fixed;
   min-height: 600px;
 }
 
@@ -360,7 +361,11 @@ nav {
   display: table-cell;
   vertical-align: top;
   width: 200px;
+  overflow: hidden;
   /* Shown on tablets */
+}
+nav #nav {
+  width: 200px;
 }
 nav #navToggle {
   display: none;

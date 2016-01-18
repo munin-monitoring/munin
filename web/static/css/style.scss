@@ -364,6 +364,7 @@ header {
 	width: 100%;
 	margin-left: auto;
 	display: table;
+	table-layout: fixed;
 	min-height: 600px;
 }
 .clear { clear: both; }
@@ -373,6 +374,12 @@ nav {
 	display: table-cell;
 	vertical-align: top;
 	width: 200px;
+	overflow: hidden;
+
+
+	#nav {
+		width: 200px;
+	}
 
 	/* Shown on tablets */
 	#navToggle { display: none; }
