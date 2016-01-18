@@ -1,18 +1,17 @@
-#! /bin/sh
+#! /bin/bash
 
 set -e
 
 ensure_usergroup() {
-    if ! getent group munin >/dev/null; then
-        addgroup --system munin
-    fi
+
     if ! getent passwd munin >/dev/null; then
         adduser --system \
-                --ingroup munin \
+                --group \
                 --no-create-home \
                 --home /var/lib/munin \
                 munin
     fi
+
     if ! getent passwd munin-httpd >/dev/null; then
         adduser --system \
                 --ingroup munin \
