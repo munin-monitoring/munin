@@ -22,12 +22,12 @@
 			this.actions = this.elem.find('.right').find('.actions');
 			this.navigation = $('nav');
 			this.navigationMask = $('.navigation-mask').click(function() {
-				that.toggleNavigation(false, true);
+				that.toggleNavigation(false);
 			});
 
 			this.elem.find('#navigation-toggle').click(function() {
 				var makeVisible = that.navigation.width() <= 0;
-				that.toggleNavigation(makeVisible, true);
+				that.toggleNavigation(makeVisible);
 			});
 
 			return this;
@@ -167,16 +167,9 @@
 			}
 		},
 
-		toggleNavigation: function(visible, animate) {
-			var destWidth = visible ? 200 : 0;
-
-			if (animate) {
-				this.navigation.animate({
-					width: destWidth + 'px'
-				}, 200);
-			} else {
-				this.navigation.css('width', destWidth);
-			}
+		toggleNavigation: function(visible) {
+			var targetWidth = visible ? 200 : 0;
+			this.navigation.css('width', targetWidth + 'px');
 
 			// Toggle navigation mask if necessary
 			if ($(document).width() < this.settings.mobileTriggerWidth) {

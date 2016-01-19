@@ -372,6 +372,10 @@ nav {
   display: table-cell;
   vertical-align: top;
   width: 200px;
+  -webkit-transition-duration: 150ms;
+  -moz-transition-duration: 150ms;
+  -o-transition-duration: 150ms;
+  transition-duration: 150ms;
 }
 nav .navigation-wrapper {
   overflow-x: hidden;
@@ -1471,6 +1475,7 @@ footer p.tagline:hover {
   }
   nav .navigation-wrapper {
     padding: 0;
+    overflow-y: auto;
   }
   nav .navigation-wrapper .timerangesList {
     opacity: 1;

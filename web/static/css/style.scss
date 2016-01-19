@@ -384,6 +384,9 @@ nav {
 	vertical-align: top;
 	width: 200px;
 
+	// Toggling animation
+	@include transition-duration(150ms);
+
 	.navigation-wrapper {
 		overflow-x: hidden;
 
