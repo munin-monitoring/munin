@@ -55,7 +55,9 @@ sub handle_request
 		return;
 	}
 
-	my $graph_ext = $cgi->url_param("graph_ext");
+	# Get graph extension (jpg / png / json)
+	# Get from cookie if it exists
+	$graph_ext = $cgi->param('graph_ext');
 	$graph_ext = "png" unless defined $graph_ext;
 
 	# Handle rest-like URL : .json & .xml
@@ -170,7 +172,6 @@ sub handle_request
 	} elsif ($path eq "dynazoom.html") {
 		# Emit dynamic zoom template
 
-		$template_params{SHOW_ZOOM_JS} = 1;
 		$template_params{PATH} = [
 			# first args should have path and r_path for backlink to overview
 			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
@@ -277,6 +278,7 @@ sub handle_request
 
 	$graph_ext = $cgi->url_param("graph_ext") || $graph_ext;
 	$graph_ext = "png" unless defined $graph_ext;
+	$template_params{GRAPH_EXT} = $graph_ext;
 
 	# Handle normal pages only if not already handled
 	goto RENDERING if $template_filename;
