@@ -44,8 +44,7 @@
 				// Set start_epoch depending on graph time range (leave stop_epoch default)
 				// Get "day/month/..." from img src
 				var src = img.attr('src');
-				var timeRange = src.substr(src.lastIndexOf('-')+1); // Remove everything before -(day/week/...)
-				timeRange = timeRange.substr(0, timeRange.indexOf('.png')); // Remove .png?...
+				var timeRange = src.match(/(.*)-(hour|day|week|month|year)\.(.*)$/)[2];
 
 				var start_epoch = Math.round(new Date().getTime()/1000);
 				switch (timeRange) {

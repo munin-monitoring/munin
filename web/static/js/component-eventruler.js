@@ -30,7 +30,7 @@
 			// Init component
 			this.body = $('body');
 			this.content = $('#content');
-			var nav = $('#nav');
+			var nav = $('nav');
 			this.navWidth = nav.length ? nav.width() : 0;
 
 			if (this.body.width() < 768) // Not possible with too small devices
@@ -72,7 +72,7 @@
 				.append(
 					$('<i>').addClass('mdi').addClass('mdi-drag-vertical')
 				)
-				.prependTo($('header').find('.actions'));
+				.prependTo($('header').find('.right').find('.actions'));
 
 			// Add listener
 			eventRulerToggle.click(function(e) {
