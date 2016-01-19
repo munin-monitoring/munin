@@ -1,0 +1,83 @@
+/**
+ * Graphs styling
+ */
+
+a {
+	&.unkn {
+		&:link, &:visited, &:active, &:hover { color: #ffaa00; }
+	}
+	&.warn {
+		&:link, &:visited, &:active, &:hover { color: #ffd300; }
+	}
+	&.crit {
+		&:link, &:visited, &:active, &:hover { color: #ff0000; }
+	}
+}
+
+img { border: 0; }
+
+.graphLink {
+	display: inline-block;
+	max-width: 500px;
+	vertical-align: top;
+	position: relative;
+	margin: 4px 4px 4px 0;
+	font-size: 0;
+
+	&:hover { text-decoration: none }
+	&.iwarn { background-color: $problems-warning-color; }
+	&.icrit { background-color: $problems-critical-color; }
+}
+
+.graph {
+	max-width: 100%;
+	height: auto;
+	/* Colors are overridden by "color" property */
+	border: 1px solid;
+	@include box-shadow(0 0 2px 0);
+
+	&.i {
+		color: #fff;
+		@include box-shadow(0 0 2px 0 #888);
+	}
+	&.iwarn, &.icrit { opacity: 0.95; }
+	&.iwarn { color: $problems-warning-color; }
+	&.icrit { color: $problems-critical-color; }
+	&.iunkn { color: #ffaa00; }
+	&.iremoved { opacity: 0.6; }
+
+	&:hover+.dynazoomModalLink {
+		display: block;
+		@include opacity(0.5);
+	}
+}
+
+.graph_loading {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 16px;
+	height: 16px;
+	margin-left: -8px;
+	margin-top: -8px;
+}
+
+/* Dynazoom modal link */
+.dynazoomModalLink {
+	cursor: pointer;
+	position: absolute;
+	font-size: 18px!important;
+	color: #000;
+	top: 3px;
+	right: 3px;
+	border: 1px solid transparent;
+	padding: 1px 2px 2px 2px;
+	@include opacity(0);
+	@include transition-duration(150ms);
+	@include border-radius(2px);
+
+	&:hover {
+		background-color: rgba(0, 0, 0, 0.1);
+		@include opacity(1);
+	}
+}

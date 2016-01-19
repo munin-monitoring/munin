@@ -1,0 +1,66 @@
+/* SASS mixins */
+@mixin border-radius($radius) {
+	-webkit-border-radius: $radius;
+	-moz-border-radius: $radius;
+	-ms-border-radius: $radius;
+	border-radius: $radius;
+}
+@mixin box-shadow($shadow1, $shadow2:false, $shadow3:false) {
+	$params: $shadow1;
+	@if $shadow2 { $params: $shadow1, $shadow2; }
+	@if $shadow3 { $params: $shadow1, $shadow2, $shadow3; }
+	-webkit-box-shadow: $params;
+	-moz-box-shadow: $params;
+	-o-box-shadow: $params;
+	box-shadow: $params;
+}
+@mixin opacity($opacity) {
+	opacity: $opacity;
+	$opacity-ie: $opacity * 100;
+	filter: alpha(opacity=$opacity-ie); //IE8
+}
+@mixin box-sizing($param) {
+	box-sizing: $param;
+	-moz-box-sizing: $param;
+	-webkit-box-sizing: $param;
+}
+@mixin transition($tr1, $tr2:false) {
+	$params: $tr1;
+	@if $tr2 { $params: $tr1, $tr2 }
+	-webkit-transition: $params;
+	-moz-transition: $params;
+	transition: $params;
+}
+@mixin transition-duration($duration) {
+	-webkit-transition-duration: $duration;
+	-moz-transition-duration: $duration;
+	-o-transition-duration: $duration;
+	transition-duration: $duration;
+}
+@mixin user-select($value) {
+	-webkit-touch-callout: $value;
+	-webkit-user-select: $value;
+	-moz-user-select: $value;
+	-ms-user-select: $value;
+	user-select: $value;
+}
+@mixin display-flex {
+	display: -webkit-box;
+	display: -moz-box;
+	display: -ms-flexbox;
+	display: -webkit-flex;
+	display: flex;
+}
+@mixin flex($value) {
+	-webkit-box-flex: 1;
+	-moz-box-flex: 1;
+	-webkit-flex: 1;
+	-ms-flex: 1;
+	flex: 1;
+}
+@mixin flex-direction($value) {
+	-webkit-flex-direction: $value;
+	-moz-flex-direction: $value;
+	-ms-flex-direction: $value;
+	flex-direction: $value;
+}
