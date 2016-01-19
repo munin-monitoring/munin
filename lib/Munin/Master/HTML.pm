@@ -277,6 +277,7 @@ sub handle_request
 
 	$graph_ext = $cgi->url_param("graph_ext") || $graph_ext;
 	$graph_ext = "png" unless defined $graph_ext;
+	$template_params{GRAPH_EXT} = $graph_ext;
 
 	# Handle normal pages only if not already handled
 	goto RENDERING if $template_filename;
