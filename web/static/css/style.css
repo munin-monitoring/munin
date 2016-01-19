@@ -125,10 +125,10 @@ img {
 
 .graphLink {
   display: inline-block;
-  max-width: 500px;
+  width: 49%;
   vertical-align: top;
   position: relative;
-  margin: 4px 4px 4px 0;
+  margin: 4px 0.5% 4px 0;
   font-size: 0;
 }
 .graphLink:hover {
@@ -142,7 +142,7 @@ img {
 }
 
 .graph {
-  max-width: 100%;
+  width: 100%;
   height: auto;
   /* Colors are overridden by "color" property */
   border: 1px solid;
@@ -519,7 +519,13 @@ nav .navigation-wrapper .navigation .badge {
 /* Content: comparison / categoryview */
 .categoryview .node, .comparison .node {
   display: inline-block;
-  width: 500px;
+  width: 48%;
+  padding: 0 1% 0 0;
+  margin: 0 0 1% 0;
+}
+
+.categoryview .node .graphLink {
+  width: 100%;
 }
 
 /* Content: service view */
