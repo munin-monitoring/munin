@@ -31,7 +31,8 @@ var defaultValues = {
 	'lower_limit': '',
 	'upper_limit': '',
 	'size_x': 800,
-	'size_y': 400
+	'size_y': 400,
+	'graph_ext': 'png'
 };
 
 $(document).ready(function() {
@@ -46,6 +47,7 @@ $(document).ready(function() {
 	f_size_x = $('#size_x');
 	f_size_y = $('#size_y');
 	f_cgiurl_graph = $('#cgiurl_graph');
+	f_graph_ext = $('#graph_ext');
 	form = $('#myNewForm');
 	image = $('#image');
 	divOverlay = $('#overlayDiv');
@@ -59,6 +61,7 @@ $(document).ready(function() {
 	f_upper_limit.val(getParam("upper_limit"));
 	f_size_x.val(getParam("size_x"));
 	f_size_y.val(getParam("size_y"));
+	f_graph_ext.val(getParam("graph_ext"));
 
 	start_epoch = parseInt(f_start_epoch.val());
 	stop_epoch = parseInt(f_stop_epoch.val());
@@ -67,6 +70,9 @@ $(document).ready(function() {
 	$('#btnMaj').click(majDates);
 	$('#btnZoomOut').click(zoomOut);
 	$('#reset').click(reset);
+
+	// Restrict image width (SVG graph expands inappropriately)
+	image.css('width', (GRAPH_PADDING_LEFT + GRAPH_PADDING_RIGHT + parseInt(f_size_x.val())) + 'px');
 
 	updateStartStop();
 
@@ -99,7 +105,7 @@ function refreshImg() {
 
 	var url = urlPrefix + f_plugin_name.val()
 		+ "-pinpoint=" + parseInt(f_start_epoch.val()) + "," + parseInt(f_stop_epoch.val())
-		+ ".png"
+		+ "." + f_graph_ext.val()
 		+ "?size_x=" + f_size_x.val()
 		+ "&size_y=" + f_size_y.val();
 
