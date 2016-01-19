@@ -72,10 +72,10 @@
 		max-width: 500px;
 		background-color: #fff;
 		@include box-shadow(1px 0px 3px -1px rgba(0, 0, 0, 0.3));
-		overflow-y: auto;
 
-		#nav {
+		.navigation-wrapper {
 			padding: 0;
+			overflow-y: auto;
 
 			.timerangesList { @include opacity(1); }
 		}

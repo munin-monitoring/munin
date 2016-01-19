@@ -383,10 +383,88 @@ nav {
 	display: table-cell;
 	vertical-align: top;
 	width: 200px;
-	overflow-x: hidden;
 
-	#nav {
-		width: 200px;
+	.navigation-wrapper {
+		overflow-x: hidden;
+
+		.navigation {
+			width: 200px;
+
+			> hr {
+				background-color: #ddd;
+				height: 1px;
+				margin: 0;
+				@include box-shadow(none);
+				border: 0;
+			}
+			> h2 {
+				padding: 10px 0 5px 15px;
+				margin: 5px 0 5px 0;
+				font-weight: normal;
+				text-transform: uppercase;
+				font-size: 13px;
+				color: #777;
+			}
+			ul {
+				margin: 0.2em 0 0.8em 0;
+				padding: 0;
+			}
+			ul li {
+				list-style-type: none;
+				margin: 0;
+				padding: 0;
+				font-size: 13px;
+				font-family: Helvetica, sans-serif;
+
+				> a {
+					display: block;
+					padding: 5px 11px;
+					color: #666;
+				}
+				> a:hover,
+				.timerangesList:hover + a {
+					text-decoration: none;
+					background-color: rgba(0, 0, 0, 0.05);
+					color: #444;
+				}
+
+				.timerangesList {
+					float: right;
+					font-size: 0;
+					margin-right: 9px;
+					margin-top: 3px;
+					opacity: 0.2;
+					@include transition-duration(100ms);
+
+					a {
+						display: inline-block;
+						font-size: 11px;
+						padding: 3px 4px;
+					}
+				}
+			}
+			ul.categories:hover .timerangesList {
+				@include opacity(0.5);
+			}
+			ul.categories li:hover .timerangesList {
+				@include opacity(1);
+			}
+
+			.badge {
+				float: right;
+				display: inline-block;
+				margin-right: 6px;
+				margin-top: 4px;
+				min-width: 6px;
+				padding: 3px 7px;
+				font-size: 11px;
+				line-height: 1;
+				color: #fff;
+				text-align: center;
+				background-color: #999;
+				@include border-radius(10px);
+			}
+		}
 	}
 }
 .navigation-mask {
@@ -398,78 +476,6 @@ nav {
 	top: 0;
 	left: 0;
 	background-color: rgba(0, 0, 0, 0.3);
-}
-#nav {
-	> hr {
-		background-color: #ddd;
-		height: 1px;
-		margin: 0;
-		@include box-shadow(none);
-		border: 0;
-	}
-	> h2 {
-		padding: 10px 0 5px 15px;
-		margin: 5px 0 5px 0;
-		font-weight: normal;
-		text-transform: uppercase;
-		font-size: 13px;
-		color: #777;
-	}
-	ul {
-		margin: 0.2em 0 0.8em 0;
-		padding: 0;
-	}
-	ul li {
-		list-style-type: none;
-		margin: 0;
-		padding: 0;
-		font-size: 13px;
-		font-family: Helvetica, sans-serif;
-
-		> a {
-			display: block;
-			padding: 5px 11px;
-			color: #666;
-		}
-		> a:hover,
-        .timerangesList:hover + a {
-			text-decoration: none;
-			background-color: rgba(0, 0, 0, 0.05);
-			color: #444;
-		}
-
-		.timerangesList {
-			float: right;
-			font-size: 0;
-			margin-right: 9px;
-			margin-top: 3px;
-			opacity: 0.2;
-			@include transition-duration(100ms);
-
-			a {
-				display: inline-block;
-				font-size: 11px;
-				padding: 3px 4px;
-			}
-		}
-	}
-	ul.categories:hover .timerangesList { @include opacity(0.5); }
-	ul.categories li:hover .timerangesList { @include opacity(1); }
-
-	.badge {
-		float: right;
-		display: inline-block;
-		margin-right: 6px;
-		margin-top: 4px;
-		min-width: 6px;
-		padding: 3px 7px;
-		font-size: 11px;
-		line-height: 1;
-		color: #fff;
-		text-align: center;
-		background-color: #999;
-		@include border-radius(10px);
-	}
 }
 
 /* Content */

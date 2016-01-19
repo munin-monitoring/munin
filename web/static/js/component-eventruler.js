@@ -30,7 +30,7 @@
 			// Init component
 			this.body = $('body');
 			this.content = $('#content');
-			var nav = $('#nav');
+			var nav = $('nav');
 			this.navWidth = nav.length ? nav.width() : 0;
 
 			if (this.body.width() < 768) // Not possible with too small devices
