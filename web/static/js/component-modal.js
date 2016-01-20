@@ -14,6 +14,7 @@
 
 	Modal.prototype = {
 		defaults: {
+			size: 'medium'
 		},
 
 		prepare: function() {
@@ -24,7 +25,7 @@
 			// Create modal & append it to the body
 			this.modal = $('<div />')
 				.data('modalname', this.modalId)
-				.addClass('modal')
+				.addClass('modal modal-' + this.settings.size)
 				.css('display', 'none')
 				.append(
 					$('<div />')

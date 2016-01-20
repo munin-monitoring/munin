@@ -8,12 +8,31 @@ $(document).ready(function() {
 	window.toolbar = $('header').toolbar();
 
 	// Prepare settings modal
+	var settingsModal = null;
 	var settingsModalWrap = $('#settingsModalWrap');
-	settingsModalWrap.find('settings_save').click(function() {
-		setCookie('graphs_format', $('#graphsFormat').val(), 1000);
+
+	// Set settings values
+	var graphExtSelect = $('#graph_ext');
+	graphExtSelect.val(getCookie('graph_ext'));
+	settingsModalWrap.find('#settings_save').click(function() {
+		// Save parameters
+		var graphExt = graphExtSelect.val();
+		setCookie('graph_ext', graphExt, 1000);
+
+		// Update UI
+		if (window.graphs != undefined) {
+			$.each(window.graphs, function (index, graph) {
+				$(graph).data('graph').setGraphExt(graphExt);
+			});
+		}
+
+		// Close modal
+		settingsModal.hide();
 	});
 
-	var settingsModal = new Modal('settings', settingsModalWrap);
+	settingsModal = new Modal('settings', settingsModalWrap, {
+		size: 'small'
+	});
 	settingsModal.setTitle('Settings');
 
 	window.toolbar.addActionIcon('mdi-settings', 'Settings', true, function() {

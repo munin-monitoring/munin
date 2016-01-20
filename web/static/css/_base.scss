@@ -192,8 +192,6 @@ a {
 	right: 0;
 	margin: 0 auto;
 	z-index: 15;
-	width: 900px;
-	height: 630px;
 	background-color: #fff;
 	border: 1px solid #666;
 	@include box-shadow(0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2));
@@ -250,6 +248,18 @@ a {
 		> *:first-child {
 			margin-top: 0;
 		}
+		h2 {
+			margin-bottom: 15px;
+		}
+	}
+
+	&, &.modal-medium {
+		width: 900px;
+		height: 630px;
+	}
+	&.modal-small {
+		max-width: 600px;
+		max-height: 300px;
 	}
 }
 .modalMask {

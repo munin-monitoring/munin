@@ -478,16 +478,31 @@ p.graph_info {
 
 .settingsModal {
 	dl {
-		max-width: 500px;
+		padding: 4px 0;
+		border-bottom: 1px solid #999;
 		// Remove white spaces preventing side-by-side
 		font-size: 0;
+
+		&:last-child {
+			border-bottom: 0;
+		}
 
 		dt, dd {
 			display: inline-block;
 			margin: 0;
 			width: 50%;
 			font-size: 14px;
+			@include box-sizing(border-box);
 		}
+		dd {
+			text-align: right;
+			padding-right: 4px;
+		}
+	}
+
+	input[type="button"] {
+		margin-top: 20px;
+		margin-bottom: 10px;
 	}
 }
 

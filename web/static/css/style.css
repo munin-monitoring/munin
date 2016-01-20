@@ -239,8 +239,6 @@ a:hover {
   right: 0;
   margin: 0 auto;
   z-index: 15;
-  width: 900px;
-  height: 630px;
   background-color: #fff;
   border: 1px solid #666;
   -webkit-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
@@ -312,6 +310,17 @@ a:hover {
 .modal .modalContent > *:first-child {
   margin-top: 0;
 }
+.modal .modalContent h2 {
+  margin-bottom: 15px;
+}
+.modal, .modal.modal-medium {
+  width: 900px;
+  height: 630px;
+}
+.modal.modal-small {
+  max-width: 600px;
+  max-height: 300px;
+}
 
 .modalMask {
   width: 100%;
@@ -353,12 +362,12 @@ select {
 input[type="text"]:focus,
 input[type="number"]:focus,
 select:focus {
-  border-color: #097D03;
+  border-color: #546E7A;
   outline: 0;
-  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 8px -3px rgba(9, 125, 3, 0.4);
-  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 8px -3px rgba(9, 125, 3, 0.4);
-  -o-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 8px -3px rgba(9, 125, 3, 0.4);
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 8px -3px rgba(9, 125, 3, 0.4);
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 8px -3px rgba(84, 110, 122, 0.4);
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 8px -3px rgba(84, 110, 122, 0.4);
+  -o-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 8px -3px rgba(84, 110, 122, 0.4);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 8px -3px rgba(84, 110, 122, 0.4);
 }
 input[type="text"].input-compact,
 input[type="number"].input-compact,
@@ -403,10 +412,6 @@ input[type="button"]:active,
 button:focus,
 button:active {
   outline: none;
-  -webkit-box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
-  -moz-box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
-  -o-box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
-  box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
   background: #4a606b;
   color: #fff;
   -webkit-box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
@@ -1494,14 +1499,29 @@ p.graph_info {
 }
 
 .settingsModal dl {
-  max-width: 500px;
+  padding: 4px 0;
+  border-bottom: 1px solid #999;
   font-size: 0;
+}
+.settingsModal dl:last-child {
+  border-bottom: 0;
 }
 .settingsModal dl dt, .settingsModal dl dd {
   display: inline-block;
   margin: 0;
   width: 50%;
   font-size: 14px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+.settingsModal dl dd {
+  text-align: right;
+  padding-right: 4px;
+}
+.settingsModal input[type="button"] {
+  margin-top: 20px;
+  margin-bottom: 10px;
 }
 
 /* Include _responsive file */

@@ -12,6 +12,7 @@
 
 	var GraphFormats = {
 		PNG: 'png',
+		PNGx2: 'pngx2',
 		SVG: 'svg'
 	};
 
@@ -30,10 +31,11 @@
 
 			// Detect graph timerange & graph format
 			var fileName = this.elem.attr('src');
-			var matches = fileName.match(/-(hour|day|week|month|year)\.(png|svg)$/);
+			var matches = fileName.match(/-(hour|day|week|month|year)\.(png|svg|pngx(?:[0-9]))(\?.*)?$/);
 
 			this.timeRange = matches[1];
-			this.fileFormat = matches[2];
+			this.graphExt = matches[2];
+			this.params = matches.length >= 4 ? matches[3] : null;
 
 			// For refresh method, copy current attribute as backup
 			this.autorefreshSrc = this.elem.attr('src');
@@ -56,15 +58,15 @@
 
 			// Replace src attribute
 			var fileName = this.elem.attr('src');
-			this.elem.attr('src', this.generateURLName(fileName, this.timeRange, this.fileFormat));
+			this.elem.attr('src', this.generateURLName(fileName, this.timeRange, this.graphExt));
 		},
 
-		setFileFormat: function(fileFormat) {
-			this.fileFormat = fileFormat;
+		setGraphExt: function(graphExt) {
+			this.graphExt = graphExt;
 
 			// Replace src attribute
 			var fileName = this.elem.attr('src');
-			this.elem.attr('src', this.generateURLName(fileName, this.timeRange, this.fileFormat));
+			this.elem.attr('src', this.generateURLName(fileName, this.timeRange, this.graphExt));
 		},
 
 		refresh: function() {
@@ -98,8 +100,11 @@
 			});
 		},
 
-		generateURLName: function(url, timeRange, fileFormat) {
-			return url.replace(/-(hour|day|week|month|year)\.(png|svg)/, '-' + timeRange + '.' + fileFormat);
+		generateURLName: function(url, timeRange, graphExt) {
+			return url.replace(/-(hour|day|week|month|year)\.(png|svg|pngx(?:[0-9]))(\?.*)?$/, function(expr, oldTimeRange, oldGraphExt, parameters, i4) {
+				var newUrl = '-' + timeRange + '.' + graphExt;
+				return newUrl + (parameters != undefined ? parameters : '');
+			});
 		}
 	};
 

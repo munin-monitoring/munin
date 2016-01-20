@@ -6,16 +6,26 @@
 		version <b><TMPL_VAR MUNIN_VERSION></b> at <b><TMPL_VAR TIMESTAMP></b>.</p>
 </footer>
 
-<div id="settingsModalWrap" class="modalContent" style="display: none;">
+<div id="settingsModalWrap" class="modalContent settingsModal" style="display: none;">
 	<h2>Graphs</h2>
-	<dl>
-		<dt>Graphs format</dt>
-		<dd>
-			<select id="graphsFormat">
-				<option value="png">PNG</option>
-				<option value="svg">SVG</option>
-			</select>
-		</dd>
-	</dl>
+	<div>
+		<dl>
+			<dt>Graphs format</dt>
+			<dd>
+				<select id="graph_ext">
+					<option value="png">PNG</option>
+					<option value="pngx2">PNGx2</option>
+					<option value="svg">SVG</option>
+				</select>
+			</dd>
+		</dl>
+	</div>
 	<input id="settings_save" type="button" value="Save" />
 </div>
+
+<script src="/static/js/component-absolute.js"></script>
+<script src="/static/js/component-toolbar.js"></script>
+<script src="/static/js/component-graph.js"></script>
+<script src="/static/js/component-autorefresh.js"></script>
+<script src="/static/js/component-modal.js"></script>
+<script src="/static/js/component-dynazoom-modal.js"></script>
