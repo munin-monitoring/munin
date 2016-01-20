@@ -28,8 +28,8 @@ override_dh_install:
 
 # Override to add several init scripts
 override_dh_installinit:
-        dh_installinit -a
-        dh_installinit --name=munin-httpd
+	dh_installinit -a
+	dh_installinit --name=munin-httpd
 
 override_dh_installdocs:
 	dh_installdocs --link-doc=munin-common
