@@ -7,7 +7,7 @@ LAST_CHANGE=$(shell dpkg-parsechangelog -S Date)
 BUILD_DATE=$(shell LC_ALL=C date -u "+%B %d, %Y" -d "$(LAST_CHANGE)")
 
 %:
-	dh $@
+	dh $@ --with systemd
 
 override_dh_auto_build:
 	# ./getversion reads RELEASE if it exists

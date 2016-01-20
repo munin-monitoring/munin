@@ -9,6 +9,7 @@ Uploaders: Holger Levsen <holger@debian.org>,
  Matthias Schmitz <matthias@sigxcpu.org>
 Build-Depends-Indep:
  devscripts,
+ dh-systemd (>= 1.5),
  libdbd-pg-perl,
  libdbd-sqlite3-perl,
  libfile-copy-recursive-perl,
