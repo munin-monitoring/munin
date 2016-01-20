@@ -26,6 +26,11 @@ override_dh_auto_install:
 override_dh_install:
 	dh_install --fail-missing
 
+# Override to add several init scripts
+override_dh_installinit:
+        dh_installinit -a
+        dh_installinit --name=munin-httpd
+
 override_dh_installdocs:
 	dh_installdocs --link-doc=munin-common
 	@ # Use the packaged javascript libraries
