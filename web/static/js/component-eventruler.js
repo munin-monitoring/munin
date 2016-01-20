@@ -7,7 +7,6 @@
 	// DOM elements
 	var body,
 		content,
-		navWidth,
 		eventRuler,
 		eventRulerMT;
 
@@ -30,8 +29,7 @@
 			// Init component
 			this.body = $('body');
 			this.content = $('#content');
-			var nav = $('nav');
-			this.navWidth = nav.length ? nav.width() : 0;
+			this.nav = $('nav');
 
 			if (this.body.width() < 768) // Not possible with too small devices
 				return this;
@@ -48,8 +46,8 @@
 			// Register <- and -> keys events
 			$(document).keyup(function(e) {
 				if ((e.keyCode == 37 || e.keyCode == 39) && that.eventRulerMT.is(':visible') && !$('#filter').is(':focus')) {
+					var navWidth = that.nav.width();
 					var left = parseInt(that.eventRulerMT.css('left').replace('px', ''));
-
 					var absVal = e.shiftKey ? 15 : 1;
 
 					if (e.keyCode == 37)
@@ -57,8 +55,8 @@
 					else if (e.keyCode == 39)
 						left += absVal;
 
-					if (left+10 < that.navWidth)
-						left = that.navWidth-10;
+					if (left+10 < navWidth)
+						left = navWidth-10;
 
 					that.eventRulerMT.css('left', left + 'px');
 				}
@@ -110,13 +108,14 @@
 				this.body.off('mousemove');
 				this.body.off('click');
 			} else {
+				var navWidth = that.nav.width();
 				this.eventRulerMT.fadeIn();
 
 				this.body.on('mousemove', function (e) {
 					var left = e.pageX-that.settings.eventRulerMTPadding;
 
-					if (left+10 < that.navWidth)
-						left = that.navWidth-10;
+					if (left+10 < navWidth)
+						left = navWidth-10;
 
 					that.eventRulerMT.css('left', left);
 				});
@@ -131,6 +130,8 @@
 					var dragging = false;
 					that.eventRulerMT.on('mousedown', function() {
 						dragging = true;
+						// Recompute navWidth since user may have toggled it in-between
+						navWidth = that.nav.width();
 					});
 					that.body.on('mousemove', function(e) {
 						if (dragging) {
@@ -138,8 +139,8 @@
 							// Update ruler position
 							var left = e.pageX-that.settings.eventRulerMTPadding;
 
-							if (left+10 < that.navWidth)
-								left = that.navWidth-10;
+							if (left+10 < navWidth)
+								left = navWidth-10;
 
 							that.eventRulerMT.css('left', left);
 						}
