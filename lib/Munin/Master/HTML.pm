@@ -280,7 +280,10 @@ sub handle_request
 
 	$graph_ext = $cgi->url_param("graph_ext") || $graph_ext;
 	$graph_ext = "png" unless defined $graph_ext;
+
+	# Send generic information to template
 	$template_params{GRAPH_EXT} = $graph_ext;
+	$template_params{NAV_PANEL_REDUCED} = $cgi->cookie('nav_panel_reduced') || 0;
 
 	# Handle normal pages only if not already handled
 	goto RENDERING if $template_filename;

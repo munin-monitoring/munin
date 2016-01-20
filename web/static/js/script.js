@@ -17,7 +17,7 @@ $(document).ready(function() {
 	settingsModalWrap.find('#settings_save').click(function() {
 		// Save parameters
 		var graphExt = graphExtSelect.val();
-		setCookie('graph_ext', graphExt, 1000);
+		setCookie('graph_ext', graphExt);
 
 		// Update UI
 		if (window.graphs != undefined) {
@@ -66,6 +66,9 @@ function saveState(key, val) {
  * Source: http://www.w3schools.com/js/js_cookies.asp
  */
 function setCookie(cname, cvalue, exdays) {
+	if (exdays === undefined)
+		exdays = 365;
+
 	var d = new Date();
 	d.setTime(d.getTime() + (exdays*24*60*60*1000));
 	var expires = "expires="+d.toUTCString();
