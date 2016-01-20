@@ -23,11 +23,15 @@
 			this.navigation = $('nav');
 			this.navigationMask = $('.navigation-mask').click(function() {
 				that.toggleNavigation(false);
+
+				setCookie('nav_panel_reduced', true); // Save state
 			});
 
 			this.elem.find('#navigation-toggle').click(function() {
 				var makeVisible = that.navigation.width() <= 0;
 				that.toggleNavigation(makeVisible);
+
+				setCookie('nav_panel_reduced', !makeVisible); // Save state
 			});
 
 			return this;
