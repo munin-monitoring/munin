@@ -3,18 +3,16 @@
  */
 (function($, window) {
 	var DynazoomModal = function(elems, options) {
-		this.elems = elems;
-		this.$elems = $(elems);
+		this.elems = $(elems);
 		this.options = options;
-		this.metadata = this.$elems.data('dynazoom-modal-options');
+		this.metadata = this.elems.data('dynazoom-modal-options');
 	};
 
 	DynazoomModal.prototype = {
 		defaults: { },
 
 		init: function() {
-			var that = this,
-				modalId = 'dynazoomModal';
+			var modalId = 'dynazoomModal';
 			this.settings = $.extend({}, this.defaults, this.options, this.metadata);
 
 			var body = $('body');
@@ -22,10 +20,13 @@
 				return this;
 
 			// Add dynazoom modal link to each graph
-			this.$elems.after($('<i />').addClass('mdi mdi-arrow-expand dynazoomModalLink'));
+			this.elems.after($('<i />').addClass('mdi mdi-arrow-expand dynazoomModalLink'));
 
 			// Prepare a hidden modal
-			var modal = new Modal(modalId, '<iframe frameBorder="0" seamless="seamless"></iframe>');
+			var iframe = $('<iframe />')
+				.attr('frameBorder', '0')
+				.attr('seamless', 'seamless');
+			var modal = new Modal(modalId, iframe);
 			var dynazoomIframe = modal.getView().find('iframe');
 
 			// Bind onclick event

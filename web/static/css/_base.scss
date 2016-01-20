@@ -1,0 +1,273 @@
+/**
+ * Generic (non-specific) styling
+ */
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+}
+
+body {
+	background: #FAFAFA;
+	font-size: 14px;
+	font-family: Roboto, sans-serif;
+	color: #666666;
+}
+
+/* Titles */
+h1 {
+	font-weight: inherit;
+	font-size: inherit;
+}
+h2 {
+	color: #444;
+	font-weight: normal;
+	letter-spacing: -1px;
+	margin: 25px 0;
+	font-size: 23px;
+}
+h3 {
+	color: #555;
+	font-weight: normal;
+	letter-spacing: -1px;
+	margin: 20px 0 15px 0;
+	font-size: 17px;
+}
+h4 {
+	font-weight: 400;
+	margin-bottom: 5px;
+}
+
+hr {
+	margin: 20px 0;
+	border: 0;
+	border-top: 1px solid #888;
+	@include box-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.subtitle {
+	@include opacity(0.8);
+	margin: -20px 0 20px 0;
+}
+
+a {
+	text-decoration: none;
+	&, &:visited, &:active, &:hover { color: #486aaf; }
+	&:hover { text-decoration: underline; }
+}
+
+.warntext {
+	font-weight: bold;
+	background-color: #cccc00;
+	padding: 0;
+	margin: -1px;
+	border: 1px solid #b9b900;
+}
+
+.crittext {
+	font-weight: bold;
+	background-color: #ff6f22;
+	padding: 0;
+	margin: -1px;
+	border: 1px solid #f16722;
+}
+
+.clear { clear: both; }
+
+
+.neutralMessage {
+	font-size: 17px;
+	text-align: center;
+	margin: 0 75px;
+	padding: 10px 0 35px 0;
+	color: #999;
+}
+
+.card {
+	@include box-shadow(0 2px 1px rgba(0, 0, 0, 0.12));
+	background: #fff;
+}
+
+.tooltip {
+	display: none;
+	position: absolute;
+	z-index: 10;
+	max-width: 400px;
+	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.3));
+	@include border-radius(2px);
+	padding: 5px 10px;
+	background-color: #777;
+	background-color: rgba(0, 0, 0, 0.6);
+	border: 0;
+	color: #fff;
+	font-size: 12px;
+	text-align: justify;
+
+	b { font-weight: 500; }
+
+	&.singleLine {
+		white-space: nowrap;
+	}
+}
+
+.switchable {
+	display: inline-block;
+	@include user-select(none);
+
+	&:after {
+		content: "\f415";
+		font-family: "Material Design Icons", serif;
+		font-size: 17px;
+		margin-left: 3px;
+		margin-right: -4px;
+		@include opacity(0.9);
+		vertical-align: baseline;
+	}
+	&:hover {
+		cursor: pointer;
+	}
+}
+.switchable_content {
+	display: none;
+	margin: 0;
+	padding: 3px 0;
+	position: absolute;
+	z-index: 10;
+	background-color: #fff;
+	width: auto;
+	@include border-radius(2px);
+	@include box-shadow(0 1px 4px rgba(0, 0, 0, 0.25));
+	max-height: 350px;
+	overflow-y: auto;
+
+	a, .title {
+		height: 32px;
+		line-height: 32px;
+		white-space: nowrap;
+		color: #333;
+	}
+
+	a {
+		display: block;
+		list-style: none;
+		padding: 0 32px 0 24px;
+		text-align: left;
+		@include transition-duration(150ms);
+
+		&.current {
+			color: #888;
+			background-color: rgba(0, 0, 0, 0.05);
+			cursor: default;
+		}
+
+		i.mdi {
+			font-size: 19px;
+			color: #555;
+			vertical-align: middle;
+			margin: -2px 10px 2px -14px;
+		}
+
+		&:hover {
+			text-decoration: none;
+			background-color: rgba(0, 0, 0, 0.05);
+		}
+	}
+	.title {
+		line-height: 28px;
+		height: 28px;
+		border-bottom: 1px solid #dedede;
+		padding: 5px 32px 5px 32px;
+		margin-top: -3px;
+		text-align: center;
+		color: #777;
+	}
+}
+
+.modal {
+	@include display-flex;
+	@include flex-direction(column);
+	position: fixed;
+	top: 10%;
+	left: 0;
+	right: 0;
+	margin: 0 auto;
+	z-index: 15;
+	background-color: #fff;
+	border: 1px solid #666;
+	@include box-shadow(0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2));
+	@include border-radius(2px);
+
+	.title {
+		font-size: 15px;
+		color: #fff;
+		display: block;
+		padding: 5px 5px 5px 20px;
+		margin: -1px -1px 0 -1px;
+		@include border-radius(3px 3px 0 0);
+		border: 1px solid darken($secondary-color, 10);
+		background-color: $secondary-color;
+		@include box-sizing(border-box);
+
+		span {
+			display: inline-block;
+			margin-top: 3px;
+		}
+
+		.action {
+			float: right;
+			width: 20px;
+			height: 20px;
+			margin-left: 5px;
+			padding: 2px;
+			border-radius: 2px;
+			@include transition-duration(100ms);
+			text-align: center;
+
+			&:hover {
+				background-color: rgba(0, 0, 0, 0.15);
+			}
+
+			i {
+				color: #fff;
+				vertical-align: middle;
+			}
+		}
+	}
+
+	iframe {
+		@include flex(1);
+		width: 100%;
+		height: 100%;
+		border: 0;
+		@include border-radius(0 0 2px 2px);
+	}
+
+	.modalContent {
+		padding: 20px 30px;
+
+		> *:first-child {
+			margin-top: 0;
+		}
+		h2 {
+			margin-bottom: 15px;
+		}
+	}
+
+	&, &.modal-medium {
+		width: 900px;
+		height: 630px;
+	}
+	&.modal-small {
+		max-width: 600px;
+		max-height: 300px;
+	}
+}
+.modalMask {
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	top: 0;
+	left: 0;
+	background-color: rgba(0, 0, 0, 0.3);
+	z-index: 14;
+}
