@@ -4,54 +4,36 @@
  */
 
 $(document).ready(function() {
-	var timeRangeSwitch = $('.timeRangeSwitch');
+	var actionIcon = window.toolbar.addActionIcon('mdi-clock', 'Change time range', false, null);
+	actionIcon.list('timeRangeSwitches', {
+		list: $('#switchable_timeRange'),
+		width: '270px'
+	});
 
-	timeRangeSwitch.find('ul > li').click(function() {
+	$('.timeRangeSwitch').find('li').click(function() {
 		if ($(this).hasClass('selected'))
 			return;
 
-		// Remove "selected" attribute
+		// Update "selected" attribute
 		$(this).parent().find('li').removeClass('selected');
-
-		// Add "selected" class to this
 		$(this).addClass('selected');
 
-		var thisRSIndex = $(this).parent().parent().index();
+		var thisRSIndex = $(this).parent().attr('data-col');
 
 		// Refresh all graphs in current column
 		var newRange = $(this).text();
 		$("img[data-col='" + thisRSIndex + "']").each(function() {
-			$(this).data('graph').setTimeRange(newRange);
+			$(this).data('graph').setLoading(true).setTimeRange(newRange);
 		});
 
 		updateURL();
 	});
 
-	// Keep it on top of window on scroll
-	var timeRangeSwitchContainer = $('.timeRangeSwitchContainer');
-	var header = $('#header');
-	$(window).scroll(function() {
-		if ($(this).scrollTop() > header.height())
-			timeRangeSwitchContainer.addClass('timeRangeFixed');
-		else
-			timeRangeSwitchContainer.removeClass('timeRangeFixed');
-	});
-
-	// There's a problem with CSS where time range switches do not wrap
-	// on special resolutions. Let's fix it here
-	$(window).resize(function() {
-		var availableWidth = $('#content').width();
-		if (timeRangeSwitch.first().outerWidth(true)*2 > availableWidth)
-			timeRangeSwitch.css('display', 'block');
-		else
-			timeRangeSwitch.css('display', 'inline-block');
-	});
-
 	// Check if URL contains stuff like ?1=day&2=month
 	var urlParams = getURLParams();
-	if ('1' in urlParams)
+	if (1 in urlParams)
 		setTimeRange(0, urlParams['1']);
-	if ('2' in urlParams)
+	if (2 in urlParams)
 		setTimeRange(1, urlParams['2']);
 });
 
@@ -61,7 +43,7 @@ $(document).ready(function() {
  * @param val hour/day/...
  */
 function setTimeRange(columnIndex, val) {
-	$($('.timeRangeSwitch').find('ul')[columnIndex]).children().each(function() {
+	$($('.timeRangeSwitch')[columnIndex]).children().each(function() {
 		if ($(this).text() == val)
 			$(this).click();
 	});
@@ -76,7 +58,7 @@ function updateURL() {
 	if (!history.pushState)
 		return;
 
-	var uls = $('.timeRangeSwitch').find('ul');
+	var uls = $('.timeRangeSwitch');
 	var firstTR = $(uls[0]).find('.selected').text();
 	var secondTR = $(uls[1]).find('.selected').text();
 
@@ -90,22 +72,4 @@ function updateURL() {
 
 	var pageName = $(document).find('title').text();
 	window.history.replaceState('', pageName, '?' + url);
-}
-
-/**
- * Returns an array of the parameters sitting in the URL
- * 	Source: http://stackoverflow.com/posts/2880929/revisions
- */
-function getURLParams() {
-	var match,
-		pl     = /\+/g,  // Regex for replacing addition symbol with a space
-		search = /([^&=]+)=?([^&]*)/g,
-		decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
-		query  = window.location.search.substring(1);
-
-	var urlParams = {};
-	while (match = search.exec(query))
-		urlParams[decode(match[1])] = decode(match[2]);
-
-	return urlParams;
 }

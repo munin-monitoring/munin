@@ -6,6 +6,7 @@
 		version <b><TMPL_VAR MUNIN_VERSION></b> at <b><TMPL_VAR TIMESTAMP></b>.</p>
 </footer>
 
+<!-- Settings modal -->
 <div id="settingsModalWrap" class="modalContent settingsModal" style="display: none;">
 	<h2>Graphs</h2>
 	<div>
@@ -21,6 +22,28 @@
 		</dl>
 	</div>
 	<input id="settings_save" type="button" value="Save" />
+</div>
+
+<!-- Time range switches Absolute -->
+<div id="switchable_timeRange" class="switchable_content switchable_timeRange">
+	<h4>Column 1</h4>
+	<ul class="timeRangeSwitch" data-col="0">
+		<li>hour</li>
+		<li class="selected">day</li>
+		<li>week</li>
+		<li>month</li>
+		<li class="last">year</li>
+	</ul>
+	<div class="hide-if-overflows">
+		<h4>Column 2</h4>
+		<ul class="timeRangeSwitch" data-col="1">
+			<li>hour</li>
+			<li>day</li>
+			<li class="selected">week</li>
+			<li>month</li>
+			<li class="last">year</li>
+		</ul>
+	</div>
 </div>
 
 <script src="/static/js/component-absolute.js"></script>

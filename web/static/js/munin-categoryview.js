@@ -2,22 +2,16 @@
  * Javascript executed on munin-categoryview page
  */
 
-var graphs,
-	services;
-
 $(document).ready(function() {
-	graphs = $('.graph');
-	services = $('.service');
+	var graphs = window.graphs = $('.graph');
+	var services = $('.service');
 
 	// Instantiate auto-refresh & dynazoom modal links components
 	var autoRefresh = graphs.autoRefresh();
 	graphs.dynazoomModal();
 	graphs.graph();
 
-	// Add toolbar actions
-	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
-		autoRefresh.refreshAll();
-	});
+	addRefreshActionIcon(autoRefresh);
 
 	// Prepare filter
 	window.toolbar.prepareFilter('Filter graphs', function(val) {

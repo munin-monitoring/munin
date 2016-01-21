@@ -150,11 +150,11 @@
 						.appendTo(this.actions);
 
 					// Create list
-					var list = overflowButton.list('overflow');
-
-					// Add item to list
-					list.addItem(icon, text, callback);
+					this.overflowList = overflowButton.list('overflow');
 				}
+
+				// Add item to list
+				return this.overflowList.addItem(icon, text, callback);
 			} else {
 				var button = $('<div />')
 					.addClass('action-icon')
@@ -168,6 +168,8 @@
 				button.tooltip(text, {
 					singleLine: true
 				});
+
+				return button;
 			}
 		},
 

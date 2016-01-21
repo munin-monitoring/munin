@@ -219,62 +219,50 @@ p.graph_info {
 }
 
 /* Time range switch */
-.timeRangeSwitchContainer {
-	width: 100%;
-}
-.timeRangeSwitch {
-	display: inline-block;
-	width: 100%;
-	max-width: 499px;
+.switchable_timeRange {
 	text-align: center;
-	padding: 10px;
-	@include box-sizing(border-box);
-	@include transition-duration(150ms);
-	margin-right: 4px;
 
-	ul {
-		list-style: none;
+	h4 {
+		text-align: left;
+		margin: 8px 10px 5px 10px;
+	}
+
+	ul.timeRangeSwitch {
 		display: inline-block;
+		margin: 10px 0;
 		padding: 0;
-		margin: 0;
+		list-style: none;
 		font-size: 0;
-		@include border-radius(2px);
 		border: 1px solid #c8c8c8;
+		@include box-sizing(border-box);
+		@include transition-duration(150ms);
+		@include border-radius(2px);
 
 		li {
 			display: inline-block;
 			padding: 7px 10px;
 			cursor: pointer;
-			@include transition-duration(150ms);
-			@include border-radius(1px);
-			border-right: 1px solid #dedede;
-			background-color: #EFEFF2;
 			color: #7B7A84;
 			font-size: 11px;
-			font-weight: bold;
+			font-weight: 400;
+			border-right: 1px solid #dedede;
+			background-color: #EFEFF2;
+			@include transition-duration(150ms);
+			@include border-radius(1px);
 
-			&.last {
+			&:last-child {
 				border-right-width: 0;
 			}
 			&.selected {
 				color: #fff;
 				color: rgba(255, 255, 255, 0.87);
-				background-color: rgb(63,81,181);
+				font-weight: 500;
+				background-color: rgb(63, 81, 181);
 			}
 			&:hover {
 				@include opacity(0.9);
 			}
 		}
-	}
-}
-.timeRangeFixed {
-	position: fixed;
-	top: 0;
-	z-index: 2;
-
-	.timeRangeSwitch {
-		background-color: #fff;
-		@include box-shadow(0 1px 4px 0 rgba(0, 0, 0, 0.26));
 	}
 }
 

@@ -146,6 +146,8 @@
 
 	// Extend Absolute's prototype
 	List.prototype.defaults = {
+		width: 'auto',
+
 		// If null, will be created
 		list: null,
 
@@ -184,6 +186,7 @@
 		}
 
 		this.element = this.settings.list;
+		this.element.css('width', this.settings.width);
 
 		// Register event
 		trigger.click(function() {
@@ -196,7 +199,7 @@
 	List.prototype.addItem = function(icon, name, callback) {
 		var that = this;
 
-		$('<a />')
+		return $('<a />')
 			.attr('href', '#')
 			.text(name)
 			.prepend(

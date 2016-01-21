@@ -9,7 +9,7 @@ var content,
 
 $(document).ready(function() {
 	content = $('#content');
-	graphs = $('.graph');
+	graphs = window.graphs = $('.graph');
 	h4s = $('h4');
 	tabs = $('.tabs').find('li');
 
@@ -18,10 +18,7 @@ $(document).ready(function() {
 	graphs.dynazoomModal();
 	graphs.graph();
 
-	// Add toolbar actions
-	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
-		autoRefresh.refreshAll();
-	});
+	addRefreshActionIcon(autoRefresh);
 
 	var tabsComponent = $(this).tabs();
 

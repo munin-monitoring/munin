@@ -306,6 +306,10 @@ a:hover {
 }
 .modal .modalContent {
   padding: 20px 30px;
+  -webkit-box-shadow: inset 0 1px 4px -1px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: inset 0 1px 4px -1px rgba(0, 0, 0, 0.4);
+  -o-box-shadow: inset 0 1px 4px -1px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 4px -1px rgba(0, 0, 0, 0.4);
 }
 .modal .modalContent > *:first-child {
   margin-top: 0;
@@ -576,7 +580,7 @@ header .action-icon#navigation-toggle i {
 /* Filter input */
 .filter {
   width: 300px;
-  margin-top: 5px;
+  margin-top: 4px;
   position: relative;
   text-align: right;
   display: inline-block;
@@ -1195,16 +1199,20 @@ p.graph_info {
 }
 
 /* Time range switch */
-.timeRangeSwitchContainer {
-  width: 100%;
-}
-
-.timeRangeSwitch {
-  display: inline-block;
-  width: 100%;
-  max-width: 499px;
+.switchable_timeRange {
   text-align: center;
-  padding: 10px;
+}
+.switchable_timeRange h4 {
+  text-align: left;
+  margin: 8px 10px 5px 10px;
+}
+.switchable_timeRange ul.timeRangeSwitch {
+  display: inline-block;
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0;
+  border: 1px solid #c8c8c8;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -1212,24 +1220,20 @@ p.graph_info {
   -moz-transition-duration: 150ms;
   -o-transition-duration: 150ms;
   transition-duration: 150ms;
-  margin-right: 4px;
-}
-.timeRangeSwitch ul {
-  list-style: none;
-  display: inline-block;
-  padding: 0;
-  margin: 0;
-  font-size: 0;
   -webkit-border-radius: 2px;
   -moz-border-radius: 2px;
   -ms-border-radius: 2px;
   border-radius: 2px;
-  border: 1px solid #c8c8c8;
 }
-.timeRangeSwitch ul li {
+.switchable_timeRange ul.timeRangeSwitch li {
   display: inline-block;
   padding: 7px 10px;
   cursor: pointer;
+  color: #7B7A84;
+  font-size: 11px;
+  font-weight: 400;
+  border-right: 1px solid #dedede;
+  background-color: #EFEFF2;
   -webkit-transition-duration: 150ms;
   -moz-transition-duration: 150ms;
   -o-transition-duration: 150ms;
@@ -1238,36 +1242,19 @@ p.graph_info {
   -moz-border-radius: 1px;
   -ms-border-radius: 1px;
   border-radius: 1px;
-  border-right: 1px solid #dedede;
-  background-color: #EFEFF2;
-  color: #7B7A84;
-  font-size: 11px;
-  font-weight: bold;
 }
-.timeRangeSwitch ul li.last {
+.switchable_timeRange ul.timeRangeSwitch li:last-child {
   border-right-width: 0;
 }
-.timeRangeSwitch ul li.selected {
+.switchable_timeRange ul.timeRangeSwitch li.selected {
   color: #fff;
   color: rgba(255, 255, 255, 0.87);
+  font-weight: 500;
   background-color: #3f51b5;
 }
-.timeRangeSwitch ul li:hover {
+.switchable_timeRange ul.timeRangeSwitch li:hover {
   opacity: 0.9;
   filter: alpha(opacity=90);
-}
-
-.timeRangeFixed {
-  position: fixed;
-  top: 0;
-  z-index: 2;
-}
-.timeRangeFixed .timeRangeSwitch {
-  background-color: #fff;
-  -webkit-box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.26);
-  -moz-box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.26);
-  -o-box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.26);
-  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.26);
 }
 
 /* Dynazoom */

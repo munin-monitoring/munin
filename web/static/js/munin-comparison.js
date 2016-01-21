@@ -2,24 +2,18 @@
  * Comparison specific code
  */
 
-var content,
-	graphs,
-	trs;
 
 $(document).ready(function() {
-	content = $('#content');
-	graphs = $('.graph');
-	trs = $('tr');
+	var content = $('#content');
+	var graphs = window.graphs = $('.graph');
+	var trs = $('tr');
 
 	// Instantiate auto-refresh & dynazoom modal links components
 	var autoRefresh = graphs.autoRefresh();
 	graphs.dynazoomModal();
 	graphs.graph();
 
-	// Add toolbar actions
-	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
-		autoRefresh.refreshAll();
-	});
+	addRefreshActionIcon(autoRefresh);
 
 	// Tabs
 	var tabs = $(this).tabs();
