@@ -27,6 +27,7 @@
 				setCookie('nav_panel_reduced', true); // Save state
 			});
 
+			// Navigation toggle
 			this.elem.find('#navigation-toggle').click(function() {
 				var makeVisible = that.navigation.width() <= 0;
 				that.toggleNavigation(makeVisible);
@@ -34,7 +35,44 @@
 				setCookie('nav_panel_reduced', !makeVisible); // Save state
 			});
 
+			// Fixed toolbar
+			this.pushBackContent();
+			$(window).resize(function() {
+				that.pushBackContent();
+			});
+
+			if ($(document).width() < 1260) {
+				// Fixed when scrolling down
+				var lastScrollPosition;
+				$(document).scroll(function () {
+					var scrollPosition = $(this).scrollTop();
+
+					// Scrolling down
+					if (scrollPosition > lastScrollPosition) {
+						// If the header is currently showing
+						if (that.elem.is(':visible'))
+							that.elem.hide();
+					}
+
+					// Scrolling up
+					else {
+						// If the header is currently hidden
+						if (!that.elem.is(':visible'))
+							that.elem.show();
+					}
+
+					lastScrollPosition = scrollPosition;
+				});
+			}
+
 			return this;
+		},
+
+		/**
+		 * Updates content's padding-top property to exactly fit toolbar height
+		 */
+		pushBackContent: function() {
+			$('#main').css('margin-top', this.elem.height() + 'px');
 		},
 
 		/**
@@ -154,7 +192,11 @@
 				}
 
 				// Add item to list
-				return this.overflowList.addItem(icon, text, callback);
+				var item = this.overflowList.addItem(icon, text, callback);
+
+				this.pushBackContent();
+
+				return item;
 			} else {
 				var button = $('<div />')
 					.addClass('action-icon')
@@ -168,6 +210,8 @@
 				button.tooltip(text, {
 					singleLine: true
 				});
+
+				this.pushBackContent();
 
 				return button;
 			}

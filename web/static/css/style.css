@@ -14,7 +14,6 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
 }
 
 body {
@@ -446,7 +445,6 @@ header {
   padding: 1px 12px 1px 0;
   text-align: center;
   background-color: #097D03;
-  position: relative;
   z-index: 5;
   border-bottom: 1px solid #3A713C;
   -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
@@ -456,6 +454,9 @@ header {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
+  position: fixed;
+  width: 100%;
+  top: 0;
 }
 header h1 {
   color: #fff;
@@ -669,6 +670,7 @@ header .action-icon#navigation-toggle i {
 #main {
   width: 100%;
   margin-left: auto;
+  margin-top: 42px;
   display: table;
   table-layout: fixed;
   min-height: 600px;
