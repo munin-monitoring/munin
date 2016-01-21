@@ -1214,27 +1214,19 @@ ul.timeRangeSwitch {
   padding: 0;
   list-style: none;
   font-size: 0;
-  border: 1px solid #c8c8c8;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
-  -webkit-transition-duration: 150ms;
-  -moz-transition-duration: 150ms;
-  -o-transition-duration: 150ms;
-  transition-duration: 150ms;
-  -webkit-border-radius: 2px;
-  -moz-border-radius: 2px;
-  -ms-border-radius: 2px;
-  border-radius: 2px;
 }
 ul.timeRangeSwitch li {
   display: inline-block;
+  margin-left: -1px;
   padding: 7px 10px;
   cursor: pointer;
-  color: #7B7A84;
+  color: #57565F;
   font-size: 11px;
   font-weight: 400;
-  border-right: 1px solid #dedede;
+  border: 1px solid rgba(0, 0, 0, 0.15);
   background-color: #EFEFF2;
   -webkit-transition-duration: 150ms;
   -moz-transition-duration: 150ms;
@@ -1245,18 +1237,36 @@ ul.timeRangeSwitch li {
   -ms-border-radius: 1px;
   border-radius: 1px;
 }
-ul.timeRangeSwitch li:last-child {
-  border-right-width: 0;
+ul.timeRangeSwitch li:first-child {
+  -webkit-border-radius: 2px 1px 1px 2px;
+  -moz-border-radius: 2px 1px 1px 2px;
+  -ms-border-radius: 2px 1px 1px 2px;
+  border-radius: 2px 1px 1px 2px;
 }
-ul.timeRangeSwitch li.selected {
-  color: #fff;
-  color: rgba(255, 255, 255, 0.87);
-  font-weight: 500;
-  background-color: #3f51b5;
+ul.timeRangeSwitch li:last-child {
+  -webkit-border-radius: 1px 2px 2px 1px;
+  -moz-border-radius: 1px 2px 2px 1px;
+  -ms-border-radius: 1px 2px 2px 1px;
+  border-radius: 1px 2px 2px 1px;
 }
 ul.timeRangeSwitch li:hover {
-  opacity: 0.9;
-  filter: alpha(opacity=90);
+  position: relative;
+  z-index: 1;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  -o-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+ul.timeRangeSwitch li.selected {
+  font-weight: 500;
+  background-color: #D8D8D8;
+}
+ul.timeRangeSwitch li.selected, ul.timeRangeSwitch li.selected:hover {
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
+  -o-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 
 /* Dynazoom */

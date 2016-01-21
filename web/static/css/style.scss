@@ -233,34 +233,36 @@ ul.timeRangeSwitch {
 	padding: 0;
 	list-style: none;
 	font-size: 0;
-	border: 1px solid #c8c8c8;
 	@include box-sizing(border-box);
-	@include transition-duration(150ms);
-	@include border-radius(2px);
 
 	li {
 		display: inline-block;
+		margin-left: -1px;
 		padding: 7px 10px;
 		cursor: pointer;
-		color: #7B7A84;
+		color: #57565F;
 		font-size: 11px;
 		font-weight: 400;
-		border-right: 1px solid #dedede;
+		border: 1px solid rgba(0, 0, 0, 0.15);
 		background-color: #EFEFF2;
 		@include transition-duration(150ms);
 		@include border-radius(1px);
 
-		&:last-child {
-			border-right-width: 0;
+		&:first-child { @include border-radius(2px 1px 1px 2px); }
+		&:last-child { @include border-radius(1px 2px 2px 1px); }
+		&:hover {
+			position: relative;
+			z-index: 1;
+			border: 1px solid rgba(0, 0, 0, 0.25);
+			@include box-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 		}
 		&.selected {
-			color: #fff;
-			color: rgba(255, 255, 255, 0.87);
 			font-weight: 500;
-			background-color: rgb(63, 81, 181);
-		}
-		&:hover {
-			@include opacity(0.9);
+			background-color: #D8D8D8;
+
+			&, &:hover {
+				@include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.1));
+			}
 		}
 	}
 }
