@@ -4,7 +4,19 @@
 <div id="main" class="categoryview">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<div id="content">
-		<h2>Category: <TMPL_VAR ESCAPE="HTML" CATEGORY></h2>
+		<div class="category-head">
+			<div>
+				<h2>Category</h2>
+				<div class="subtitle"><TMPL_VAR ESCAPE="HTML" CATEGORY> - <TMPL_VAR TIMERANGE></div>
+			</div>
+			<ul class="timeRangeSwitch">
+				<li>day</li>
+				<li>week</li>
+				<li>month</li>
+				<li>year</li>
+			</ul>
+		</div>
+
 		<TMPL_LOOP SERVICES>
 			<div class="service">
 				<h3 id="<TMPL_VAR ESCAPE="HTML" name>"><TMPL_VAR ESCAPE="HTML" NAME></h3>
@@ -55,5 +67,6 @@
 </div>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
 <script src="/static/js/munin-categoryview.js"></script>
+<script src="/static/js/component-eventruler.js"></script>
 </body>
 </html>

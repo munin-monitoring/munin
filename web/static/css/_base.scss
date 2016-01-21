@@ -4,7 +4,6 @@
 html, body {
 	margin: 0;
 	padding: 0;
-	height: 100%;
 }
 
 body {
@@ -244,6 +243,7 @@ a {
 
 	.modalContent {
 		padding: 20px 30px;
+		@include box-shadow(inset 0 1px 4px -1px rgba(0, 0, 0, 0.4));
 
 		> *:first-child {
 			margin-top: 0;

@@ -7,6 +7,23 @@ $(document).ready(function() {
 	// Init toolbar component
 	window.toolbar = $('header').toolbar();
 
+	addSettingsActionIcon();
+});
+
+/**
+ * Adds a refresh action icon in toolbar
+ */
+function addRefreshActionIcon(autoRefresh) {
+	// Add toolbar actions
+	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
+		autoRefresh.refreshAll();
+	});
+}
+
+/**
+ * Adds a settings action icon in toolbar
+ */
+function addSettingsActionIcon() {
 	// Prepare settings modal
 	var settingsModal = null;
 	var settingsModalWrap = $('#settingsModalWrap');
@@ -38,8 +55,7 @@ $(document).ready(function() {
 	window.toolbar.addActionIcon('mdi-settings', 'Settings', true, function() {
 		settingsModal.show();
 	});
-});
-
+}
 
 /**
  * Saves a var in URL
@@ -62,6 +78,24 @@ function saveState(key, val) {
 }
 
 /**
+ * Returns an array of the parameters sitting in the URL
+ * 	Source: http://stackoverflow.com/posts/2880929/revisions
+ */
+function getURLParams() {
+	var match,
+		pl     = /\+/g,  // Regex for replacing addition symbol with a space
+		search = /([^&=]+)=?([^&]*)/g,
+		decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+		query  = window.location.search.substring(1);
+
+	var urlParams = {};
+	while (match = search.exec(query))
+		urlParams[decode(match[1])] = decode(match[2]);
+
+	return urlParams;
+}
+
+/**
  * Creates a cookie
  * Source: http://www.w3schools.com/js/js_cookies.asp
  */
@@ -72,7 +106,7 @@ function setCookie(cname, cvalue, exdays) {
 	var d = new Date();
 	d.setTime(d.getTime() + (exdays*24*60*60*1000));
 	var expires = "expires="+d.toUTCString();
-	document.cookie = cname + "=" + cvalue + "; " + expires;
+	document.cookie = cname + "=" + cvalue + "; " + expires + "; path=/";
 }
 
 /**

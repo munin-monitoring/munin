@@ -10,11 +10,15 @@ header {
 	padding: 1px 12px 1px 0;
 	text-align: center;
 	background-color: $primary-color;
-	position: relative;
 	z-index: 5;
 	border-bottom: 1px solid #3A713C;
 	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.5));
 	@include box-sizing(border-box);
+
+	// Fixed position
+	position: fixed;
+	width: 100%;
+	top: 0;
 
 	h1 {
 		color: #fff;
@@ -127,11 +131,10 @@ header {
 	}
 }
 
-
 /* Filter input */
 .filter {
 	width: 300px;
-	margin-top: 5px;
+	margin-top: 4px;
 	position: relative;
 	text-align: right;
 	display: inline-block;

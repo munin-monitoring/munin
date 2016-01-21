@@ -27,13 +27,12 @@ $(document).ready(function() {
 		}
 	});
 
+	var graphs = window.graphs = $('.graph');
 	// Graphs auto-refresh
-	var autoRefresh = $('.graph').autoRefresh();
+	var autoRefresh = graphs.autoRefresh();
+	graphs.graph();
 
-	// Add toolbar actions
-	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
-		autoRefresh.refreshAll();
-	});
+	addRefreshActionIcon(autoRefresh);
 
 	// Switch to another graph in the same node
 	$('.switchable[data-switch="header"]').list('header', {

@@ -59,6 +59,8 @@
 			// Replace src attribute
 			var fileName = this.elem.attr('src');
 			this.elem.attr('src', this.generateURLName(fileName, this.timeRange, this.graphExt));
+
+			return this;
 		},
 
 		setGraphExt: function(graphExt) {
@@ -67,6 +69,8 @@
 			// Replace src attribute
 			var fileName = this.elem.attr('src');
 			this.elem.attr('src', this.generateURLName(fileName, this.timeRange, this.graphExt));
+
+			return this;
 		},
 
 		refresh: function() {
@@ -81,6 +85,8 @@
 
 			this.elem.attr('src', src);
 			this.setLoading(true);
+
+			return this;
 		},
 
 		setLoading: function(isLoading) {
@@ -91,6 +97,8 @@
 				this.elem.css('opacity', '1');
 				this.loadingSpinner.hide();
 			}
+
+			return this;
 		},
 
 		registerLoadingEvents: function(events) {
