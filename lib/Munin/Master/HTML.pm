@@ -13,6 +13,8 @@ use Munin::Common::Logger;
 use File::Basename;
 use Data::Dumper;
 
+use CGI::Cookie;
+
 my @times = qw(day week month year);
 # Current incarnation of $cgi.
 # XXX - this is NOT thread-safe!
@@ -21,7 +23,7 @@ my $cgi;
 sub handle_request
 {
 	$cgi = shift;
-
+	my %cookies = CGI::Cookie->fetch;
 	my $path = $cgi->path_info();
 
 	# Handle static page now, since there is no need to do any SQL
@@ -57,9 +59,13 @@ sub handle_request
 
 	# Get graph extension (jpg / png / svg / pngx2 /...)
 	# Get from cookie if it exists
-	my $graph_ext = $cgi->cookie("graph_ext");
-	$graph_ext = $cgi->url_param("graph_ext") unless defined $graph_ext;
-	$graph_ext = "png" unless defined $graph_ext;
+	my $graph_ext = "png";
+	if (defined $cgi->url_param("graph_ext")) {
+		$graph_ext = $cgi->url_param("graph_ext");
+	}
+	elsif (exists $cookies{"graph_ext"}) {
+		$graph_ext = $cookies{"graph_ext"}->value;
+	}
 
 	# Handle rest-like URL : .json & .xml
 	my $output_format = "html";
@@ -283,7 +289,10 @@ sub handle_request
 
 	# Send generic information to template
 	$template_params{GRAPH_EXT} = $graph_ext;
-	$template_params{NAV_PANEL_REDUCED} = $cgi->cookie('nav_panel_reduced') || 0;
+	$template_params{NAV_PANEL_REDUCED} = exists $cookies{"nav_panel_reduced"}
+		? ($cookies{"nav_panel_reduced"}->value eq "true" ? 1 : 0)
+		: 0;
+
 
 	# Handle normal pages only if not already handled
 	goto RENDERING if $template_filename;
