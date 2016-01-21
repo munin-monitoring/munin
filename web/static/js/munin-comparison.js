@@ -69,14 +69,12 @@ $(document).ready(function() {
 
 	// Time range switch
 	var timeRangeSwitch = $('.timeRangeSwitch');
-	timeRangeSwitch.find('ul > li').click(function() {
+	timeRangeSwitch.find('li').click(function() {
 		if ($(this).hasClass('selected'))
 			return;
 
-		// Remove "selected" attribute
+		// Update "selected" attribute
 		$(this).parent().find('li').removeClass('selected');
-
-		// Add "selected" class to this
 		$(this).addClass('selected');
 
 		window.location.href = './comparison-' + $(this).text() + '.html?cat=' + $('ul.tabs').find('.active').text();
@@ -84,9 +82,8 @@ $(document).ready(function() {
 
 	// Set current time range
 	var url = window.location.href;
-	var regex = 'comparison-(.*).html';
-	var timeRange = url.match(regex)[1];
-	timeRangeSwitch.find('ul > li:contains(' + timeRange + ')').addClass('selected');
+	var timeRange = url.match(/comparison-(.*)\.html/)[1];
+	timeRangeSwitch.find('li:contains(' + timeRange + ')').addClass('selected');
 
 	// Init eventruler
 	$(this).eventRuler();

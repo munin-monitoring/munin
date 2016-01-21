@@ -2,20 +2,19 @@
 <body>
 <TMPL_INCLUDE NAME="partial/logo_navigation_comparison.tmpl">
 <div id="main" class="comparison">
+	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<div id="content" data-tabsenabled="true" data-tabs="true">
 		<div class="comparison-head">
 			<div>
 				<h2>Comparison</h2>
 				<div class="subtitle"><TMPL_VAR NAME> - <TMPL_VAR TIMERANGE></div>
 			</div>
-			<div class="timeRangeSwitch">
-				<ul>
-					<li>day</li>
-					<li>week</li>
-					<li>month</li>
-					<li class="last">year</li>
-				</ul>
-			</div>
+			<ul class="timeRangeSwitch">
+				<li>day</li>
+				<li>week</li>
+				<li>month</li>
+				<li>year</li>
+			</ul>
 		</div>
 
 		<!-- Tabs. No empty space allowed here (for styling) -->
@@ -59,6 +58,7 @@
 	</div>
 </div>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
+<script src="/static/js/component-eventruler.js"></script>
 <script src="/static/js/munin-comparison.js"></script>
 <script src="/static/js/component-tabs.js"></script>
 </body>

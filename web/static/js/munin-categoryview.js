@@ -44,4 +44,28 @@ $(document).ready(function() {
 			});
 		});
 	});
+
+	// Time range switch
+	var url = window.location.href;
+	var match = url.match(/(.*)-(.*)\.html/);
+	var category = match[1],
+		timeRange = match[2];
+
+	var timeRangeSwitch = $('.timeRangeSwitch');
+	timeRangeSwitch.find('li').click(function() {
+		if ($(this).hasClass('selected'))
+			return;
+
+		// Update "selected" attribute
+		$(this).parent().find('li').removeClass('selected');
+		$(this).addClass('selected');
+
+		window.location.href = './' + category + '-' + $(this).text() + '.html';
+	});
+
+	// Set current time range
+	timeRangeSwitch.find('li:contains(' + timeRange + ')').addClass('selected');
+
+	// Init eventruler
+	$(this).eventRuler();
 });

@@ -985,22 +985,21 @@ img {
   filter: alpha(opacity=100);
 }
 
-.comparison #content {
-  margin-left: 0;
-}
-.comparison #content .comparison-head > div {
-  display: inline-block;
-  vertical-align: middle;
-}
-.comparison #content table td {
-  vertical-align: top;
-  padding-top: 15px;
-}
-
 /* Content: comparison / categoryview */
 .categoryview .node, .comparison .node {
   display: inline-block;
   width: 500px;
+}
+.categoryview .category-head > div, .categoryview .comparison-head > div, .comparison .category-head > div, .comparison .comparison-head > div {
+  display: inline-block;
+  vertical-align: middle;
+}
+.categoryview .category-head .timeRangeSwitch, .categoryview .comparison-head .timeRangeSwitch, .comparison .category-head .timeRangeSwitch, .comparison .comparison-head .timeRangeSwitch {
+  margin-left: 100px;
+}
+.categoryview table td, .comparison table td {
+  vertical-align: top;
+  padding-top: 15px;
 }
 
 /* Content: service view */
@@ -1208,7 +1207,8 @@ p.graph_info {
   text-align: left;
   margin: 8px 10px 5px 10px;
 }
-.switchable_timeRange ul.timeRangeSwitch {
+
+ul.timeRangeSwitch {
   display: inline-block;
   margin: 10px 0;
   padding: 0;
@@ -1227,7 +1227,7 @@ p.graph_info {
   -ms-border-radius: 2px;
   border-radius: 2px;
 }
-.switchable_timeRange ul.timeRangeSwitch li {
+ul.timeRangeSwitch li {
   display: inline-block;
   padding: 7px 10px;
   cursor: pointer;
@@ -1245,16 +1245,16 @@ p.graph_info {
   -ms-border-radius: 1px;
   border-radius: 1px;
 }
-.switchable_timeRange ul.timeRangeSwitch li:last-child {
+ul.timeRangeSwitch li:last-child {
   border-right-width: 0;
 }
-.switchable_timeRange ul.timeRangeSwitch li.selected {
+ul.timeRangeSwitch li.selected {
   color: #fff;
   color: rgba(255, 255, 255, 0.87);
   font-weight: 500;
   background-color: #3f51b5;
 }
-.switchable_timeRange ul.timeRangeSwitch li:hover {
+ul.timeRangeSwitch li:hover {
   opacity: 0.9;
   filter: alpha(opacity=90);
 }

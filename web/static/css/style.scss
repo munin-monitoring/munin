@@ -20,27 +20,27 @@ $problems-critical-color: #F14122;
 @import 'layout';
 @import 'graphs';
 
-.comparison #content {
-	margin-left: 0;
-
-	.comparison-head {
-		> div {
-			display: inline-block;
-			vertical-align: middle;
-		}
-	}
-
-	table td {
-		vertical-align: top;
-		padding-top: 15px;
-	}
-}
 
 /* Content: comparison / categoryview */
 .categoryview, .comparison {
 	.node {
 		display: inline-block;
 		width: 500px;
+	}
+
+	.category-head, .comparison-head {
+		> div {
+			display: inline-block;
+			vertical-align: middle;
+		}
+		.timeRangeSwitch {
+			margin-left: 100px;
+		}
+	}
+
+	table td {
+		vertical-align: top;
+		padding-top: 15px;
 	}
 }
 
@@ -226,42 +226,41 @@ p.graph_info {
 		text-align: left;
 		margin: 8px 10px 5px 10px;
 	}
+}
+ul.timeRangeSwitch {
+	display: inline-block;
+	margin: 10px 0;
+	padding: 0;
+	list-style: none;
+	font-size: 0;
+	border: 1px solid #c8c8c8;
+	@include box-sizing(border-box);
+	@include transition-duration(150ms);
+	@include border-radius(2px);
 
-	ul.timeRangeSwitch {
+	li {
 		display: inline-block;
-		margin: 10px 0;
-		padding: 0;
-		list-style: none;
-		font-size: 0;
-		border: 1px solid #c8c8c8;
-		@include box-sizing(border-box);
+		padding: 7px 10px;
+		cursor: pointer;
+		color: #7B7A84;
+		font-size: 11px;
+		font-weight: 400;
+		border-right: 1px solid #dedede;
+		background-color: #EFEFF2;
 		@include transition-duration(150ms);
-		@include border-radius(2px);
+		@include border-radius(1px);
 
-		li {
-			display: inline-block;
-			padding: 7px 10px;
-			cursor: pointer;
-			color: #7B7A84;
-			font-size: 11px;
-			font-weight: 400;
-			border-right: 1px solid #dedede;
-			background-color: #EFEFF2;
-			@include transition-duration(150ms);
-			@include border-radius(1px);
-
-			&:last-child {
-				border-right-width: 0;
-			}
-			&.selected {
-				color: #fff;
-				color: rgba(255, 255, 255, 0.87);
-				font-weight: 500;
-				background-color: rgb(63, 81, 181);
-			}
-			&:hover {
-				@include opacity(0.9);
-			}
+		&:last-child {
+			border-right-width: 0;
+		}
+		&.selected {
+			color: #fff;
+			color: rgba(255, 255, 255, 0.87);
+			font-weight: 500;
+			background-color: rgb(63, 81, 181);
+		}
+		&:hover {
+			@include opacity(0.9);
 		}
 	}
 }

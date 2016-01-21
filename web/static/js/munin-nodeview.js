@@ -76,7 +76,6 @@ $(document).ready(function() {
 				$(this).prev().show();
 		});
 
-		console.log(tabs.find('.active').index());
 		if (val.length == 0 // Empty filter
 			&& content.attr('data-tabsenabled') == 'true' // Tabs enabled
 			&& tabs.prevAll('.active').index() != 0 // Not "all"

@@ -102,10 +102,17 @@ sub handle_request
 	my $comparison;
 	my $template_filename;
 	my %template_params = (
-		MUNIN_VERSION	=> $Munin::Common::Defaults::MUNIN_VERSION,
+		MUNIN_VERSION   => $Munin::Common::Defaults::MUNIN_VERSION,
 		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
-		R_PATH		=> '',
+		R_PATH          => '',
+		GRAPH_EXT       => $graph_ext
 	);
+
+
+	# Reduced navigation panel
+	$template_params{NAV_PANEL_REDUCED} = exists $cookies{"nav_panel_reduced"}
+		? ($cookies{"nav_panel_reduced"}->value eq "true" ? 1 : 0)
+		: 0;
 
 	# Common Navigation params
 	###################
@@ -252,6 +259,7 @@ sub handle_request
 		];
 
 		$template_params{CATEGORY} = $category;
+		$template_params{TIMERANGE} = $time;
 
 		my $sth_cat;
 		if ($category eq 'other') {
@@ -278,20 +286,14 @@ sub handle_request
 			push @services, _get_params_services_by_name($dbh, $_service, $time, $graph_ext);
 		}
 		$template_params{SERVICES} = \@services;
+
+		# Force-reduce navigation panel
+		$template_params{NAV_PANEL_REDUCED} = 1;
 	} elsif ($path =~ /^(.+)\/comparison-(day|month|week|year)\.html$/) {
 		# That's a comparison URL, handle it as special case of groups
 		$path = $1;
 		$comparison = $2;
 	}
-
-	$graph_ext = $cgi->url_param("graph_ext") || $graph_ext;
-	$graph_ext = "png" unless defined $graph_ext;
-
-	# Send generic information to template
-	$template_params{GRAPH_EXT} = $graph_ext;
-	$template_params{NAV_PANEL_REDUCED} = exists $cookies{"nav_panel_reduced"}
-		? ($cookies{"nav_panel_reduced"}->value eq "true" ? 1 : 0)
-		: 0;
 
 
 	# Handle normal pages only if not already handled
@@ -370,6 +372,9 @@ sub handle_request
 			while (my ($cat_name) = $sth_cat->fetchrow_array) {
 				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id, $graph_ext, $comparison);
 			}
+
+			# Force-reduce navigation panel
+			$template_params{NAV_PANEL_REDUCED} = 1;
 		} else {
 			# Emit group template
 			$template_filename = 'munin-domainview.tmpl';

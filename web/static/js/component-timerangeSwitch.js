@@ -1,5 +1,5 @@
 /**
- * Nodeview - Time range switch
+ * Component - Time range switch
  * Quickly change time range for every graph in the column
  */
 
