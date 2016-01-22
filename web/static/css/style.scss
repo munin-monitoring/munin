@@ -234,6 +234,7 @@ ul.timeRangeSwitch {
 	list-style: none;
 	font-size: 0;
 	@include box-sizing(border-box);
+	$timeRangeBackgroundColor: #EFEFF2;
 
 	li {
 		display: inline-block;
@@ -244,7 +245,7 @@ ul.timeRangeSwitch {
 		font-size: 11px;
 		font-weight: 400;
 		border: 1px solid rgba(0, 0, 0, 0.15);
-		background-color: #EFEFF2;
+		background-color: $timeRangeBackgroundColor;
 		@include transition-duration(150ms);
 		@include border-radius(1px);
 
@@ -254,13 +255,14 @@ ul.timeRangeSwitch {
 			position: relative;
 			z-index: 1;
 			border: 1px solid rgba(0, 0, 0, 0.25);
+			background-color: lighten($timeRangeBackgroundColor, 1);
 			@include box-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 		}
-		&.selected {
+		&.selected, &:active {
 			font-weight: 500;
-			background-color: #D8D8D8;
 
 			&, &:hover {
+				background-color: darken($timeRangeBackgroundColor, 8);
 				@include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.1));
 			}
 		}

@@ -1253,16 +1253,17 @@ ul.timeRangeSwitch li:hover {
   position: relative;
   z-index: 1;
   border: 1px solid rgba(0, 0, 0, 0.25);
+  background-color: #f2f2f4;
   -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   -o-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
-ul.timeRangeSwitch li.selected {
+ul.timeRangeSwitch li.selected, ul.timeRangeSwitch li:active {
   font-weight: 500;
-  background-color: #D8D8D8;
 }
-ul.timeRangeSwitch li.selected, ul.timeRangeSwitch li.selected:hover {
+ul.timeRangeSwitch li.selected, ul.timeRangeSwitch li.selected:hover, ul.timeRangeSwitch li:active, ul.timeRangeSwitch li:active:hover {
+  background-color: #d8d8e0;
   -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
   -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
   -o-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
