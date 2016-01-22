@@ -120,7 +120,7 @@ my %stat = _parse_stat_file("/proc/stat");
 my %vmstat = _parse_stat_file("/proc/vmstat");
 
 my $cpu_limit = (scalar(grep(/^cpu[0-9]+$/, keys %stat))) * 100;
-my @cpu_fields = qw(system user nice idle iowait irq softirq steal guest guest_nice);
+my @cpu_fields = qw(user nice system idle iowait irq softirq steal guest guest_nice);
 
 if ( %stat ) {
   $plugin->add_graphs
