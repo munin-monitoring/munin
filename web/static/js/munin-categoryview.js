@@ -46,8 +46,8 @@ $(document).ready(function() {
 	});
 
 	// Time range switch
-	var url = window.location.href;
-	var match = url.match(/(.*)-(.*)\.html/);
+	var url = window.location.pathname;
+	var match = url.match(/\/(.*)-(.*)\.html(\?.*)?$/);
 	var category = match[1],
 		timeRange = match[2];
 
