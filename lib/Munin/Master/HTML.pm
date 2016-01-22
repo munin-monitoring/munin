@@ -202,6 +202,12 @@ sub handle_request
 
 		$template_filename = "munin-problemview.tmpl";
 
+		$template_params{PATH} = [
+			# first args should have path and r_path for backlink to overview
+			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
+			{ "pathname" => "Problems" }
+		];
+
 		my $sth = $dbh->prepare_cached("SELECT nu.path, n.name, su.path, s.name, d.critical, d.warning, d.unknown FROM ds d
 				LEFT OUTER JOIN service s ON s.id = d.service_id
 				LEFT OUTER JOIN url su ON su.id = s.id and su.type = 'service'
