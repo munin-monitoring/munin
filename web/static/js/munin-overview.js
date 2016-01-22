@@ -51,4 +51,9 @@ $(document).ready(function() {
 	var sparklines = window.graphs = $('.sparkline');
 	sparklines.autoRefresh();
 	sparklines.graph();
+
+	// Assign tab-indexes to elements
+	$('.domain > a, .host > a').each(function(index) {
+		$(this).attr('tabindex', index+1);
+	});
 });

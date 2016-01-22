@@ -38,4 +38,9 @@ $(document).ready(function() {
 	$('.switchable[data-switch="header"]').list('header', {
 		list: $('.switchable_content[data-switch="header"]')
 	});
+
+	// Assign tab-indexes to elements
+	graphs.each(function(index) {
+		$(this).attr('tabindex', index+1);
+	});
 });

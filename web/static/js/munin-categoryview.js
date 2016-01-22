@@ -68,4 +68,9 @@ $(document).ready(function() {
 
 	// Init eventruler
 	$(this).eventRuler();
+
+	// Assign tab-indexes to elements
+	graphs.each(function(index) {
+		$(this).attr('tabindex', index+1);
+	});
 });
