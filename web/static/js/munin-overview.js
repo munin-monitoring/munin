@@ -49,7 +49,7 @@ $(document).ready(function() {
 
 	// Sparklines auto-refresh
 	var sparklines = window.graphs = $('.sparkline');
-	sparklines.autoRefresh();
+	window.autoRefresh = sparklines.autoRefresh();
 	sparklines.graph();
 
 	// Assign tab-indexes to elements

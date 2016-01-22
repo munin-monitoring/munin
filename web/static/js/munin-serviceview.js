@@ -29,7 +29,7 @@ $(document).ready(function() {
 
 	var graphs = window.graphs = $('.graph');
 	// Graphs auto-refresh
-	var autoRefresh = graphs.autoRefresh();
+	var autoRefresh = window.autoRefresh = graphs.autoRefresh();
 	graphs.graph();
 
 	addRefreshActionIcon(autoRefresh);

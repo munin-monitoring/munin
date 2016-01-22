@@ -457,6 +457,13 @@ header {
   position: fixed;
   width: 100%;
   top: 0;
+  -webkit-transition: transform 200ms linear;
+  -moz-transition: transform 200ms linear;
+  transition: transform 200ms linear;
+  transform: translateY(0%);
+}
+header.toolbar-hide {
+  transform: translateY(-100%);
 }
 header h1 {
   color: #fff;
@@ -1500,11 +1507,7 @@ ul.timeRangeSwitch li.selected, ul.timeRangeSwitch li.selected:hover, ul.timeRan
 
 .settingsModal dl {
   padding: 4px 0;
-  border-bottom: 1px solid #999;
   font-size: 0;
-}
-.settingsModal dl:last-child {
-  border-bottom: 0;
 }
 .settingsModal dl dt, .settingsModal dl dd {
   display: inline-block;

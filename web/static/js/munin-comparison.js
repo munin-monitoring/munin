@@ -9,7 +9,7 @@ $(document).ready(function() {
 	var trs = $('tr');
 
 	// Instantiate auto-refresh & dynazoom modal links components
-	var autoRefresh = graphs.autoRefresh();
+	var autoRefresh = window.autoRefresh = graphs.autoRefresh();
 	graphs.dynazoomModal();
 	graphs.graph();
 
