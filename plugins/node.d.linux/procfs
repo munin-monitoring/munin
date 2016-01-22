@@ -201,7 +201,7 @@ if ( %stat ) {
     my $field = $cpu_fields[$i];
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{min} = 0;
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{max} = $cpu_limit;
-    $plugin->{graphs}->{cpu}->{fields}->{$field}->{draw} = "AREASTACK";
+    $plugin->{graphs}->{cpu}->{fields}->{$field}->{draw} = ($field =~ m/^guest/) ? "LINE2" : "AREASTACK";
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{type} = "DERIVE";
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{value} = ${@stat{cpu}}[$i] * 100 / $HZ;
 
