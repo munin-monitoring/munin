@@ -2,3 +2,4 @@ etc/munin/plugin-conf.d
 etc/munin/plugins
 var/log/munin-node
 var/lib/munin-node
+var/lib/munin-node/plugin-state
