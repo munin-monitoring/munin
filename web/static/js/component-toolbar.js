@@ -48,17 +48,17 @@
 					var scrollPosition = $(this).scrollTop();
 
 					// Scrolling down
-					if (scrollPosition > lastScrollPosition) {
+					if (scrollPosition > lastScrollPosition && scrollPosition > $('header').height()) {
 						// If the header is currently showing
-						if (that.elem.is(':visible'))
-							that.elem.hide();
+						if (!that.elem.is('.toolbar-hide'))
+							that.elem.addClass('toolbar-hide');
 					}
 
 					// Scrolling up
 					else {
 						// If the header is currently hidden
-						if (!that.elem.is(':visible'))
-							that.elem.show();
+						if (that.elem.is('.toolbar-hide'))
+							that.elem.removeClass('toolbar-hide');
 					}
 
 					lastScrollPosition = scrollPosition;
