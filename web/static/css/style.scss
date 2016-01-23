@@ -172,6 +172,11 @@ p.graph_info {
 		display: block;
 		margin: 1px 5px 1px 0;
 		position: relative;
+
+		.sparkline {
+			width: 90px;
+			height: 28px;
+		}
 	}
 
 	.compare {

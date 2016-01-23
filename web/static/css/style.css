@@ -1156,6 +1156,10 @@ p.graph_info {
   margin: 1px 5px 1px 0;
   position: relative;
 }
+.groupview .overview-sparkline .sparkline {
+  width: 90px;
+  height: 28px;
+}
 .groupview .compare {
   border-bottom: 1px solid #ccc;
   background-color: rgba(0, 0, 0, 0.06);
