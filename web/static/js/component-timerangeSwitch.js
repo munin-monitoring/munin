@@ -7,6 +7,7 @@ $(document).ready(function() {
 	var actionIcon = window.toolbar.addActionIcon('mdi-clock', 'Change time range', false, null);
 	actionIcon.list('timeRangeSwitches', {
 		list: $('#switchable_timeRange'),
+		positionReference: $('header').find('.overflow'),
 		width: '270px'
 	});
 

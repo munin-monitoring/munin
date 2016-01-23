@@ -69,7 +69,7 @@
 		},
 
 		/**
-		 * Updates content's padding-top property to exactly fit toolbar height
+		 * Updates content's margin-top property to exactly fit toolbar height
 		 */
 		pushBackContent: function() {
 			$('#main').css('margin-top', this.elem.height() + 'px');
