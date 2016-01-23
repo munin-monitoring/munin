@@ -70,7 +70,8 @@ $(document).ready(function() {
 	$(this).eventRuler();
 
 	// Assign tab-indexes to elements
-	graphs.each(function(index) {
+	$('.graphLink').each(function(index) {
 		$(this).attr('tabindex', index+1);
 	});
+	removeTabIndexOutline();
 });

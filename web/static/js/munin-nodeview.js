@@ -113,7 +113,8 @@ $(document).ready(function() {
 	$(this).eventRuler();
 
 	// Assign tab-indexes to elements
-	$('.tabs > li:visible, .graph').each(function(index) {
+	$('.tabs > li:visible, .graphLink').each(function(index) {
 		$(this).attr('tabindex', index+1);
 	});
+	removeTabIndexOutline();
 });

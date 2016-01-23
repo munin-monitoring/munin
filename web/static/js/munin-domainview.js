@@ -64,4 +64,5 @@ $(document).ready(function() {
 	$('.treeview-root').find('a').each(function(index) {
 		$(this).attr('tabindex', index+1);
 	});
+	removeTabIndexOutline();
 });

@@ -8,16 +8,6 @@ $(document).ready(function() {
 	window.toolbar = $('header').toolbar();
 
 	addSettingsActionIcon();
-
-	// Enable outline on elements only if browser DOM using <Tab> key
-	$('[tabindex]').click(function() {
-		$(this).css('outline', 'none');
-		console.log('click');
-	}).on('keyup', function (event) {
-
-		if(event.keyCode == 9)
-			$(this).css('outline', '');
-	});
 });
 
 /**
@@ -75,6 +65,16 @@ function addSettingsActionIcon() {
 
 	window.toolbar.addActionIcon('mdi-settings', 'Settings', true, function() {
 		settingsModal.show();
+	});
+}
+
+function removeTabIndexOutline() {
+	// Enable outline on elements only if browser DOM using <Tab> key
+	$('[tabindex]').focus(function() {
+		$(this).css('outline', 'none');
+	}).on('keyup', function (event) {
+		if(event.keyCode == 9)
+			$(this).css('outline', '');
 	});
 }
 

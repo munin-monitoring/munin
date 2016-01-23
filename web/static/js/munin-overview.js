@@ -56,4 +56,5 @@ $(document).ready(function() {
 	$('.domain > a, .host > a').each(function(index) {
 		$(this).attr('tabindex', index+1);
 	});
+	removeTabIndexOutline();
 });
