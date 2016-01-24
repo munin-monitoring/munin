@@ -29,7 +29,7 @@ The following environment variables are used by this plugin:
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
 print_values() {
-    df -P -l -i 2>/dev/null | sed -e '1d' -e '/\/\//d' -e 's/%//' |
+    df -P -l -i -x btrfs 2>/dev/null | sed -e '1d' -e '/\/\//d' -e 's/%//' |
     while read dev avail used free pct fs; do
         echo "$(clean_fieldname $dev).value $pct"
     done
@@ -50,7 +50,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_vlabel %'
     echo 'graph_scale no'
     echo 'graph_category disk'
-    df -P -l -i  | sed -e '1d' -e '/\/\//d' -e 's/%//' | sort |
+    df -P -l -i -x btrfs | sed -e '1d' -e '/\/\//d' -e 's/%//' | sort |
     while read dev avail used free pct fs; do
 	name=$(clean_fieldname $dev)
 	echo "$name.label $fs"
