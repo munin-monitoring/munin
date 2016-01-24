@@ -142,13 +142,13 @@ only to that node.
 
 .. option:: address <value>
 
-   The host name, IP address, or alternate transport used to contact the node.
+   Specifies the host name or IP address, with an optional scheme.
 
-   Alternate transport is specified with:
+   Permitted schemes are "munin://", "ssh://" or "cmd://".  If no
+   scheme is specified, the default is "munin://"
 
-   ``ssh://<address>/<command> <command line arguments>``
-
-   See also :ref:`example-alternate-transport`.
+   The "ssh://" and "cmd://" schemes take arguments after the URL.
+   See :ref:`address-schemes` for examples.
 
 .. option:: port <port number>
 
@@ -239,48 +239,84 @@ Three nodes
 
 A minimal configuration file, using default settings for everything, and specifying three nodes.
 
-::
+.. code-block:: ini
 
   [mail.example.com]
-    address mail.example.com
+  address mail.example.com
 
   [web.example.com]
-    address web.example.com
+  address web.example.com
 
   [munin.example.com]
-    address localhost
+  address localhost
 
 Virtual node
 ------------
 
 A virtual node definition. Disable update, and make a graph consisting of data from other graphs.
 
-::
+.. code-block:: ini
 
-  [example.com;Totals]
-    update no
-    load.graph_title Total load
-        load.sum_load.label load
-        load.sum_load.special_stack mail=mail.example.com web=web.example.com munin=munin.example.com
+   [example.com;Totals]
+   update no
+   load.graph_title Total load
+   load.sum_load.label load
+   load.sum_load.special_stack mail=mail.example.com web=web.example.com munin=munin.example.com
 
-.. _example-alternate-transport:
+.. _address-schemes:
 
-Alternate transport
--------------------
+Address schemes
+---------------
 
-Connect to munin-nodes on a remote site, through a bastion host, using ssh.
+The scheme tells munin how to connect to munin nodes.
 
-::
+The munin:// scheme is default, if no scheme is specified. By default,
+Munin will connect to the munin node with TCP on port 4949.
 
-  [mail.site2.example.org]
-    address ssh://bastion.site2.example.org/bin/nc mail.site2.example.org 4949
+The following examples are equivalent:
 
-  [www.site2.example.org]
-    address ssh://bastion.site2.example.org/bin/nc www.site2.example.org 4949
+.. code-block:: ini
 
-Hint: When using the ssh\:// transport, you can configure how ssh
-behaves by editing `~munin/.ssh/config`.  See the :ref:`ssh transport
-configuration examples <example-transport-ssh>`.
+   # master: /etc/munin/munin.conf.d/node.example.conf
+   [mail.site2.example.org]
+   address munin://mail.site2.example.org
+
+   [mail.site2.example.org]
+   address munin://mail.site2.example.org:4949
+
+   [mail.site2.example.org]
+   address mail.site2.example.org
+
+   [mail.site2.example.org]
+   address mail.site2.example.org
+   port    4949
+
+
+To connect to a munin node through a shell command, use the "cmd://"
+prefix.
+
+.. code-block:: ini
+
+   # master: /etc/munin/munin.conf.d/node.example.conf
+   [mail.site2.example.org]
+   address cmd:///usr/bin/munin-async [...]
+
+To connect through ssh, use the "ssh://" prefix.
+
+.. code-block:: ini
+
+   # master: /etc/munin/munin.conf.d/node.example.conf
+   [mail.site2.example.org]
+   address ssh://bastion.site2.example.org/bin/nc mail.site2.example.org 4949
+
+   [www.site2.example.org]
+   address ssh://bastion.site2.example.org/bin/nc www.site2.example.org 4949
+
+.. note::
+
+   When using the ssh\:// transport, you can configure how ssh behaves
+   by editing `~munin/.ssh/config`.  See the :ref:`ssh transport
+   configuration examples <example-transport-ssh>`.
 
 SEE ALSO
 ========
