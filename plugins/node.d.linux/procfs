@@ -120,7 +120,8 @@ my %stat = _parse_stat_file("/proc/stat");
 my %vmstat = _parse_stat_file("/proc/vmstat");
 
 my $cpu_limit = (scalar(grep(/^cpu[0-9]+$/, keys %stat))) * 100;
-my @cpu_graph_order = qw(system user nice guest guest_nice idle iowait irq softirq steal);
+my @cpu_graph_order = qw(system   user    nice   guest  guest_nice  idle   iowait   irq  softirq  steal  );
+my @cpu_graph_color = qw(00CC00  0066B3  FF8000  777777   EE00CC   FFEDA3  FF8080  00FFCC 990099  FF0000 );
 
 if ( %stat ) {
   $plugin->add_graphs
@@ -200,7 +201,9 @@ if ( %stat ) {
   # Assign values according to the fields order in /proc/stat
   my @cpu_fields = qw(user nice system idle iowait irq softirq steal guest guest_nice);
   my %cpustat;
+  my %cpucolor;
   @cpustat{@cpu_fields} = @{$stat{cpu}};
+  @cpucolor{@cpu_graph_order} = @cpu_graph_color;
 
   foreach my $field (keys %cpustat) {
     my $value = $cpustat{$field};
@@ -219,6 +222,7 @@ if ( %stat ) {
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{max} = $cpu_limit;
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{draw} = "AREASTACK";
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{type} = "DERIVE";
+    $plugin->{graphs}->{cpu}->{fields}->{$field}->{colour} = $cpucolor{$field};
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{value} = $value * 100 / $HZ;
 
     my ($warning, $critical) = get_thresholds($field);
