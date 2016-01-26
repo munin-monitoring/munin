@@ -203,6 +203,7 @@ sub handle_request
 
 	$sth->execute($id, "graph_args");
 	my ($graph_args) = $sth->fetchrow_array() || "";
+	my @rrd_graph_args = split /\s+/, $graph_args;
 	DEBUG "graph_args: $graph_args";
 
 	$sth->execute($id, "graph_printf");
@@ -571,6 +572,7 @@ sub handle_request
 	my $tpng = Time::HiRes::time;
 	my @rrd_cmd = (
 		$rrd_fh->filename,
+		@rrd_graph_args,
 		@rrd_header,
 		@rrd_sum,
 		@rrd_def,
