@@ -54,8 +54,9 @@ $(document).ready(function() {
 
 	// Update sparklines extension
 	// This cannot be done directly in the template because of the TMPL_VAR variable scope in a TMPL_LOOP.
+	var graphExt = getCookie('graph_ext', 'png');
 	sparklines.each(function() {
-		$(this).data('graph').setGraphExt(getCookie('graph_ext', 'png'));
+		$(this).data('graph').setGraphExt(graphExt);
 	});
 
 	// Assign tab-indexes to elements
