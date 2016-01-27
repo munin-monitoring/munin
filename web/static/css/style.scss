@@ -172,6 +172,11 @@ p.graph_info {
 		display: block;
 		margin: 1px 5px 1px 0;
 		position: relative;
+
+		.sparkline {
+			width: 90px;
+			height: 28px;
+		}
 	}
 
 	.compare {
@@ -470,13 +475,8 @@ ul.timeRangeSwitch {
 .settingsModal {
 	dl {
 		padding: 4px 0;
-		border-bottom: 1px solid #999;
 		// Remove white spaces preventing side-by-side
 		font-size: 0;
-
-		&:last-child {
-			border-bottom: 0;
-		}
 
 		dt, dd {
 			display: inline-block;

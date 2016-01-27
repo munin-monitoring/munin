@@ -49,6 +49,19 @@ $(document).ready(function() {
 
 	// Sparklines auto-refresh
 	var sparklines = window.graphs = $('.sparkline');
-	sparklines.autoRefresh();
+	window.autoRefresh = sparklines.autoRefresh();
 	sparklines.graph();
+
+	// Update sparklines extension
+	// This cannot be done directly in the template because of the TMPL_VAR variable scope in a TMPL_LOOP.
+	var graphExt = getCookie('graph_ext', 'png');
+	sparklines.each(function() {
+		$(this).data('graph').setGraphExt(graphExt);
+	});
+
+	// Assign tab-indexes to elements
+	$('.domain > a, .host > a').each(function(index) {
+		$(this).attr('tabindex', index+1);
+	});
+	removeTabIndexOutline();
 });

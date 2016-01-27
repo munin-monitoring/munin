@@ -19,6 +19,12 @@ header {
 	position: fixed;
 	width: 100%;
 	top: 0;
+	@include transition(transform 200ms linear);
+	transform: translateY(0%);
+
+	&.toolbar-hide {
+		transform: translateY(-100%);
+	}
 
 	h1 {
 		color: #fff;

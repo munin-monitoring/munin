@@ -14,7 +14,8 @@
 
 	Modal.prototype = {
 		defaults: {
-			size: 'medium'
+			size: 'medium',
+			title: null
 		},
 
 		prepare: function() {
@@ -30,9 +31,8 @@
 				.append(
 					$('<div />')
 						.addClass('title')
-						.css('display', 'none')
 						.append(
-							$('<span />')
+							$('<span />').text(this.settings.title != null ? this.settings.title : '')
 						)
 						.append(
 							$('<a />')
@@ -81,12 +81,16 @@
 			var titleBar = this.modal.find('.title');
 			titleBar.find('span').text(title);
 			titleBar.show();
+
+			return this;
 		},
 
 		setOpenTarget: function(target) {
 			var icon = this.modal.find('.open');
 			icon.attr('href', target);
 			icon.show();
+
+			return this;
 		},
 
 		show: function() {
@@ -104,6 +108,8 @@
 				if (e.keyCode == 27)
 					that.hide();
 			});
+
+			return this;
 		},
 
 		hide: function() {
@@ -113,6 +119,8 @@
 
 			// Unregister ESC keypress event
 			$(document).off('keyup.modal');
+
+			return this;
 		},
 
 		/**
@@ -124,6 +132,8 @@
 
 			this.modal.css('width', Math.min(modalMaxWidth, $(window).width()));
 			this.modal.css('height', Math.min(modalMaxHeight), $(window).height());
+
+			return this;
 		},
 
 		getView: function() {

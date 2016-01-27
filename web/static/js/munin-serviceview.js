@@ -29,7 +29,7 @@ $(document).ready(function() {
 
 	var graphs = window.graphs = $('.graph');
 	// Graphs auto-refresh
-	var autoRefresh = graphs.autoRefresh();
+	var autoRefresh = window.autoRefresh = graphs.autoRefresh();
 	graphs.graph();
 
 	addRefreshActionIcon(autoRefresh);
@@ -38,4 +38,10 @@ $(document).ready(function() {
 	$('.switchable[data-switch="header"]').list('header', {
 		list: $('.switchable_content[data-switch="header"]')
 	});
+
+	// Assign tab-indexes to elements
+	$('.graphLink').each(function(index) {
+		$(this).attr('tabindex', index+1);
+	});
+	removeTabIndexOutline();
 });

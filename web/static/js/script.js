@@ -29,18 +29,29 @@ function addSettingsActionIcon() {
 	var settingsModalWrap = $('#settingsModalWrap');
 
 	// Set settings values
-	var graphExtSelect = $('#graph_ext');
-	graphExtSelect.val(getCookie('graph_ext'));
+	var graphExt_input = $('#graph_ext').val(getCookie('graph_ext', 'png'));
+	var graphAutoRefresh_input = $('#graph_autoRefresh').prop('checked', getCookie('graph_autoRefresh', 'true') == 'true');
+
 	settingsModalWrap.find('#settings_save').click(function() {
 		// Save parameters
-		var graphExt = graphExtSelect.val();
+		var graphExt = graphExt_input.val();
 		setCookie('graph_ext', graphExt);
 
+		var graphAutoRefresh = graphAutoRefresh_input.prop('checked');
+		setCookie('graph_autoRefresh', graphAutoRefresh);
+
 		// Update UI
-		if (window.graphs != undefined) {
+		if (window.graphs !== undefined) {
 			$.each(window.graphs, function (index, graph) {
 				$(graph).data('graph').setGraphExt(graphExt);
 			});
+		}
+
+		if (window.autoRefresh !== undefined) {
+			if (graphAutoRefresh)
+				window.autoRefresh.start();
+			else
+				window.autoRefresh.stop();
 		}
 
 		// Close modal
@@ -48,12 +59,22 @@ function addSettingsActionIcon() {
 	});
 
 	settingsModal = new Modal('settings', settingsModalWrap, {
-		size: 'small'
+		size: 'small',
+		title: 'Settings'
 	});
-	settingsModal.setTitle('Settings');
 
 	window.toolbar.addActionIcon('mdi-settings', 'Settings', true, function() {
 		settingsModal.show();
+	});
+}
+
+function removeTabIndexOutline() {
+	// Enable outline on elements only if browser DOM using <Tab> key
+	$('[tabindex]').focus(function() {
+		$(this).css('outline', 'none');
+	}).on('keyup', function (event) {
+		if(event.keyCode == 9)
+			$(this).css('outline', '');
 	});
 }
 
@@ -113,7 +134,7 @@ function setCookie(cname, cvalue, exdays) {
  * Get a cookie
  * Source: http://www.w3schools.com/js/js_cookies.asp
  */
-function getCookie(cname) {
+function getCookie(cname, defaultValue) {
 	var name = cname + "=";
 	var ca = document.cookie.split(';');
 	for(var i=0; i<ca.length; i++) {
@@ -121,5 +142,6 @@ function getCookie(cname) {
 		while (c.charAt(0)==' ') c = c.substring(1);
 		if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
 	}
-	return "";
+
+	return defaultValue;
 }

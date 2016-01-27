@@ -14,7 +14,7 @@ $(document).ready(function() {
 	tabs = $('.tabs').find('li');
 
 	// Instantiate auto-refresh & dynazoom modal links components
-	var autoRefresh = graphs.autoRefresh();
+	var autoRefresh = window.autoRefresh = graphs.autoRefresh();
 	graphs.dynazoomModal();
 	graphs.graph();
 
@@ -111,4 +111,10 @@ $(document).ready(function() {
 
 	// Init eventruler
 	$(this).eventRuler();
+
+	// Assign tab-indexes to elements
+	$('.tabs > li:visible, .graphLink').each(function(index) {
+		$(this).attr('tabindex', index+1);
+	});
+	removeTabIndexOutline();
 });

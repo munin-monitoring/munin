@@ -14,13 +14,30 @@
 		init: function() {
 			this.settings = $.extend({}, this.defaults, this.options, this.metadata);
 
-			// Start timer
-			var that = this;
-			setInterval(function() {
-				that.refreshAll.call(that);
-			}, 5*60*1000);
+			if (getCookie('graph_autoRefresh', true))
+				this.start();
 
 			return this;
+		},
+
+		start: function() {
+			if (this.intervalId !== undefined)
+				return;
+
+			var that = this;
+
+			// Start timer
+			this.intervalId = setInterval(function() {
+				that.refreshAll.call(that);
+			}, 5*60*1000);
+		},
+
+		stop: function() {
+			if (this.intervalId === undefined)
+				return;
+
+			clearInterval(this.intervalId);
+			this.intervalId = undefined;
 		},
 
 		refreshAll: function() {
