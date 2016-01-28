@@ -29,6 +29,10 @@
 			var left = positionReference.position().left + positionReference.outerHeight() / 2;
 			this.element.css('left', left);
 
+			// Make element fixed if parent is
+			if (this._isElementPositionFixed(trigger))
+				this.element.css('position', 'fixed');
+
 			// Check if element is out of view
 			this.element.show(); // So we can get its position & dimensions
 			var delta = $(window).width() - (this.element.position().left + this.element.outerWidth());
@@ -61,6 +65,19 @@
 				this.element.fadeOut(100);
 			else
 				this.element.hide();
+		},
+
+		_isElementPositionFixed: function(item) {
+			var isFixed = false;
+
+			$.each($.merge(item, item.parents()), function(index, parent) {
+				if ($(parent).css('position') == 'fixed') {
+					isFixed = true;
+					return false;
+				}
+			});
+
+			return isFixed;
 		}
 	};
 
