@@ -193,6 +193,12 @@ These are directly available.
 
 ============
 
+:Variable: **plugin**
+:Syntax: ``${var:plugin}``
+:Reference: Plugin's name as declared via config protocol or set in munin.conf.
+
+============
+
 :Variable: **graph_category**
 :Syntax: ``${var:graph_category}``
 :Reference: Plugin's category as declared via config protocol or set in munin.conf.
