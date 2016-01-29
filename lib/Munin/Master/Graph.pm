@@ -379,6 +379,14 @@ sub handle_request
 		$_color = $COLOUR[$field_number % $#COLOUR] unless defined $_color;
 		$_drawtype = "LINE" unless defined $_drawtype;
 
+		# Support extra modifiers like ":dashes=..."
+		my ($__drawtype, $__extramod) = $_drawtype =~ m/([^:]+)(:.+)?/;
+		if ($__extramod) {
+			$_drawtype = $__drawtype;
+		} else {
+			$__extramod = '';
+		}
+
 		# Handle the (LINE|AREA)STACK munin extensions
 		$_drawtype = $field_number ? "STACK" : "AREA" if $_drawtype eq "AREASTACK";
 		$_drawtype = $field_number ? "STACK" : "LINE" if $_drawtype eq "LINESTACK";
@@ -390,7 +398,7 @@ sub handle_request
 		# ... But we did still want to compute the related DEF & CDEF
 		next if $_has_negative;
 
-		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label\\l";
+		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label$__extramod\\l";
 
 		# Legend
 		push @rrd_vdef, "VDEF:vavg_$_rrdname=avg_$_rrdname,AVERAGE";
