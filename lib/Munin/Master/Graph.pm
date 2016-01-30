@@ -226,6 +226,7 @@ sub handle_request
 			rc.value,
 			gc.value,
 			gd.value,
+			gds.value,
 			pf.value,
 			ne.value,
 			sm.value as sum,
@@ -246,6 +247,7 @@ sub handle_request
 		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'rrd:cdef'
 		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
+		LEFT OUTER JOIN ds_attr gds ON gds.id = ds.id AND gds.name = 'drawstyle'
 		LEFT OUTER JOIN ds_attr pf ON pf.id = ds.id AND pf.name = 'printf'
 		LEFT OUTER JOIN ds_attr ne ON ne.id = ds.id AND ne.name = 'negative'
 		LEFT OUTER JOIN ds_attr sm ON sm.id = ds.id AND sm.name = 'sum'
@@ -284,6 +286,7 @@ sub handle_request
 			$_rrdname, $_label,
 			$_rrdfile, $_rrdfield, $_rrdalias, $_rrdcdef,
 			$_color, $_drawtype,
+			$_drawstyle,
 			$_printf,
 			$_negative,
 			$_sum,
@@ -379,6 +382,9 @@ sub handle_request
 		$_color = $COLOUR[$field_number % $#COLOUR] unless defined $_color;
 		$_drawtype = "LINE" unless defined $_drawtype;
 
+		# Handle draw style such as "dashes=..."
+		$_drawstyle = $_drawstyle ? ":$_drawstyle" : '';
+
 		# Handle the (LINE|AREA)STACK munin extensions
 		$_drawtype = $field_number ? "STACK" : "AREA" if $_drawtype eq "AREASTACK";
 		$_drawtype = $field_number ? "STACK" : "LINE" if $_drawtype eq "LINESTACK";
@@ -390,7 +396,7 @@ sub handle_request
 		# ... But we did still want to compute the related DEF & CDEF
 		next if $_has_negative;
 
-		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label\\l";
+		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label$_drawstyle\\l";
 
 		# Legend
 		push @rrd_vdef, "VDEF:vavg_$_rrdname=avg_$_rrdname,AVERAGE";
