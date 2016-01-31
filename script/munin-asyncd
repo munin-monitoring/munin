@@ -187,8 +187,13 @@ MAIN: while($keepgoing) {
 		PLUGIN: foreach my $plugin ( @{$plugins->{$node}} ) {
 			# See if this plugin should be updated
 			my $plugin_rate = $spoolwriter{$node}->get_metadata("plugin_rates/$plugin") || 300;
-			if ($when < ($last_updated{$plugin} || 0) + $plugin_rate) {
-				# not yet, next plugin
+			my $plugin_next = ($last_updated{$plugin} || 0) + $plugin_rate;
+			if ($when < $plugin_next) {
+				# not yet, wake me up later, and see next plugin
+				if ($plugin_next < $when_next) {
+					$when_next = $plugin_next;
+				}
+
 				next;
 			}
 
