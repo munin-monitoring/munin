@@ -201,6 +201,15 @@ MAIN: while($keepgoing) {
 				$when_next = $should_be_next;
 			}
 
+			DEBUG("[$$][$process_name] $plugin: should_have_been $should_have_been (" .
+				localtime($should_have_been) .
+				"), should_be_next: $should_be_next (" .
+				localtime($should_be_next) .
+				"), when: $when (" .
+				localtime($when) .
+				"), when_next: $when_next (" .
+				localtime($when_next) . ")" );
+
 			if ($do_fork && fork()) {
 				# parent, return directly
 				next PLUGIN;
