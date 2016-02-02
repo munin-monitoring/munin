@@ -29,7 +29,8 @@ function addSettingsActionIcon() {
 	var settingsModalWrap = $('#settingsModalWrap');
 
 	// Set settings values
-	var graphExt_input = $('#graph_ext').val(getCookie('graph_ext', 'png'));
+	var graphExt_current = getCookie('graph_ext', 'png');
+	var graphExt_input = $('#graph_ext').val(graphExt_current);
 	var graphAutoRefresh_input = $('#graph_autoRefresh').prop('checked', getCookie('graph_autoRefresh', 'true') == 'true');
 
 	settingsModalWrap.find('#settings_save').click(function() {
@@ -41,6 +42,7 @@ function addSettingsActionIcon() {
 		setCookie('graph_autoRefresh', graphAutoRefresh);
 
 		// Update UI
+		$('#content').removeClass('graphext-' + graphExt_current).addClass('graphext-' + graphExt);
 		if (window.graphs !== undefined) {
 			$.each(window.graphs, function (index, graph) {
 				$(graph).data('graph').setGraphExt(graphExt);
@@ -53,6 +55,8 @@ function addSettingsActionIcon() {
 			else
 				window.autoRefresh.stop();
 		}
+
+		graphExt_current = graphExt;
 
 		// Close modal
 		settingsModal.hide();
@@ -114,6 +118,19 @@ function getURLParams() {
 		urlParams[decode(match[1])] = decode(match[2]);
 
 	return urlParams;
+}
+
+/**
+ * Replaces a GET value in a URL
+ * 	Source: http://stackoverflow.com/questions/7171099/how-to-replace-url-parameter-with-javascript-jquery
+ */
+function replaceUrlParam(url, paramName, paramValue){
+	var pattern = new RegExp('\\b('+paramName+'=).*?(&|$)');
+
+	if (url.search(pattern) >= 0)
+		return url.replace(pattern,'$1' + paramValue + '$2');
+
+	return url + (url.indexOf('?')>0 ? '&' : '?') + paramName + '=' + paramValue
 }
 
 /**
