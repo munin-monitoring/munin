@@ -103,6 +103,11 @@ a:hover {
   padding: 10px 0 35px 0;
   color: #999;
 }
+.neutralMessage i {
+  display: block;
+  font-size: 45px;
+  margin-bottom: 20px;
+}
 
 .card {
   -webkit-box-shadow: 0 2px 1px rgba(0, 0, 0, 0.12);
@@ -681,6 +686,9 @@ header .action-icon#navigation-toggle i {
   table-layout: fixed;
   min-height: 600px;
 }
+#main.no-toolbar {
+  margin-top: 0;
+}
 
 /* Navigation */
 nav {
@@ -884,42 +892,12 @@ footer p.tagline:hover {
 /**
  * Graphs styling
  */
-a.unkn:link, a.unkn:visited, a.unkn:active, a.unkn:hover {
-  color: #ffaa00;
-}
-a.warn:link, a.warn:visited, a.warn:active, a.warn:hover {
-  color: #ffd300;
-}
-a.crit:link, a.crit:visited, a.crit:active, a.crit:hover {
-  color: #ff0000;
-}
-
-img {
-  border: 0;
-}
-
-.graphLink {
-  display: inline-block;
-  max-width: 500px;
-  vertical-align: top;
-  position: relative;
-  margin: 4px 4px 4px 0;
-  font-size: 0;
-}
-.graphLink:hover {
-  text-decoration: none;
-}
-.graphLink.iwarn {
-  background-color: #ED793F;
-}
-.graphLink.icrit {
-  background-color: #F14122;
-}
-
 .graph {
-  max-width: 100%;
   height: auto;
-  /* Colors are overridden by "color" property */
+  max-width: 100%;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
   border: 1px solid;
   -webkit-box-shadow: 0 0 2px 0;
   -moz-box-shadow: 0 0 2px 0;
@@ -928,10 +906,10 @@ img {
 }
 .graph.i {
   color: #fff;
-  -webkit-box-shadow: 0 0 2px 0 #888;
-  -moz-box-shadow: 0 0 2px 0 #888;
-  -o-box-shadow: 0 0 2px 0 #888;
-  box-shadow: 0 0 2px 0 #888;
+  -webkit-box-shadow: 0 0 1px 0 #888;
+  -moz-box-shadow: 0 0 1px 0 #888;
+  -o-box-shadow: 0 0 1px 0 #888;
+  box-shadow: 0 0 1px 0 #888;
 }
 .graph.iwarn, .graph.icrit {
   opacity: 0.95;
@@ -948,13 +926,27 @@ img {
 .graph.iremoved {
   opacity: 0.6;
 }
-.graph:hover + .dynazoomModalLink {
+.graph:hover + .graph-dynazoomModalLink {
   display: block;
   opacity: 0.5;
   filter: alpha(opacity=50);
 }
 
-.graph_loading {
+.graph-link {
+  min-width: 16px;
+  min-height: 16px;
+  max-width: 100%;
+  display: inline-block;
+  position: relative;
+  margin: 4px 7px 4px 0;
+  vertical-align: top;
+  font-size: 0;
+  /* Dynazoom modal link */
+}
+.graph-link:hover {
+  text-decoration: none;
+}
+.graph-link .graph-loading {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -963,9 +955,7 @@ img {
   margin-left: -8px;
   margin-top: -8px;
 }
-
-/* Dynazoom modal link */
-.dynazoomModalLink {
+.graph-link .graph-dynazoomModalLink {
   cursor: pointer;
   position: absolute;
   font-size: 18px !important;
@@ -985,27 +975,99 @@ img {
   -ms-border-radius: 2px;
   border-radius: 2px;
 }
-.dynazoomModalLink:hover {
+.graph-link .graph-dynazoomModalLink:hover {
   background-color: rgba(0, 0, 0, 0.1);
   opacity: 1;
   filter: alpha(opacity=100);
 }
+@media (max-width: 768px) {
+  .graph-link .graph-dynazoomModalLink {
+    display: none;
+  }
+}
+@media (max-width: 768px) {
+  .graph-link {
+    margin: 4px;
+  }
+}
+.graph-link.unkn:link, .graph-link.unkn:visited, .graph-link.unkn:active, .graph-link.unkn:hover {
+  color: #ffaa00;
+}
+.graph-link.warn {
+  background-color: #ED793F;
+}
+.graph-link.warn:link, .graph-link.warn:visited, .graph-link.warn:active, .graph-link.warn:hover {
+  color: #ffd300;
+}
+.graph-link.crit {
+  background-color: #F14122;
+}
+.graph-link.crit:link, .graph-link.crit:visited, .graph-link.crit:active, .graph-link.crit:hover {
+  color: #ff0000;
+}
+
+.table {
+  display: table;
+  table-layout: fixed;
+  max-width: 100%;
+}
+.table .table-row {
+  display: table-row;
+}
+.table .table-row .graph-col {
+  padding-top: 15px;
+  width: auto;
+  display: table-cell;
+}
+.table .table-row .graph-col:only-child {
+  display: inline-block;
+}
+@media (max-width: 768px) {
+  .table, .table .table-row, .table .table-row .graph-col {
+    display: block;
+  }
+}
+
+.row-fluid .graph-col {
+  display: inline-block;
+}
+.row-fluid.row-nowrap {
+  white-space: nowrap;
+  font-size: 0;
+}
+.row-fluid.row-nowrap .row-text {
+  font-size: 14px;
+}
+
+[data-graphext="pngx2"] .graph-col, [data-graphext="svg"] .graph-col {
+  min-width: 400px;
+  max-width: 625px;
+}
+@media (min-width: 1261px) {
+  [data-graphext="pngx2"] .graph-col, [data-graphext="svg"] .graph-col {
+    width: 50%;
+  }
+}
+@media (max-width: 400px) {
+  [data-graphext="pngx2"] .graph-col, [data-graphext="svg"] .graph-col {
+    min-width: 0;
+  }
+}
+[data-graphext="pngx2"] .graph-col .graph, [data-graphext="svg"] .graph-col .graph {
+  width: 100%;
+}
+
+img {
+  border: 0;
+}
 
 /* Content: comparison / categoryview */
-.categoryview .node, .comparison .node {
-  display: inline-block;
-  width: 500px;
-}
 .categoryview .category-head > div, .categoryview .comparison-head > div, .comparison .category-head > div, .comparison .comparison-head > div {
   display: inline-block;
   vertical-align: middle;
 }
 .categoryview .category-head .timeRangeSwitch, .categoryview .comparison-head .timeRangeSwitch, .comparison .category-head .timeRangeSwitch, .comparison .comparison-head .timeRangeSwitch {
   margin-left: 100px;
-}
-.categoryview table td, .comparison table td {
-  vertical-align: top;
-  padding-top: 15px;
 }
 
 /* Content: service view */
@@ -1610,22 +1672,20 @@ ul.timeRangeSwitch li.selected, ul.timeRangeSwitch li.selected:hover, ul.timeRan
 
   #content {
     display: block;
-    padding: 1em 0 1em 0;
+    padding: 1em 0;
     width: 100%;
   }
-  #content h2, #content h3 {
+  #content h2, #content h3, #content h4 {
     margin-left: 20px;
   }
-
-  /* Graphs */
-  .graph {
-    max-width: 97%;
-    display: block;
-    margin: auto;
+  #content .category-head, #content .comparison-head {
+    margin-left: 20px;
   }
-
-  .dynazoomModalLink {
-    display: none;
+  #content .category-head h2, #content .comparison-head h2 {
+    margin-left: 0;
+  }
+  #content .category-head .timeRangeSwitch, #content .comparison-head .timeRangeSwitch {
+    margin-left: 40px;
   }
 
   /* Overview */
@@ -1636,10 +1696,6 @@ ul.timeRangeSwitch li.selected, ul.timeRangeSwitch li.selected:hover, ul.timeRan
     padding-top: 0;
     clear: both;
     margin-left: 10px;
-  }
-
-  .timeRangeSwitchContainer {
-    top: 0;
   }
 
   .modal {

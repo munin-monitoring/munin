@@ -1,6 +1,7 @@
 /**
  * Graph component
  */
+
 (function($, window) {
 	var TimeRanges = {
 		Hour: 'hour',
@@ -46,6 +47,10 @@
 				.addClass('graph-loading')
 				.css('display', 'none')
 				.insertBefore(this.elem);
+
+			// Immediately switch to pngx2 on Retina displays
+			if (window.forcedGraphExt)
+				this.setGraphExt(window.forcedGraphExt);
 
 			return this;
 		},
@@ -125,3 +130,13 @@
 
 	window.Graph = Graph;
 }(jQuery, window));
+
+// Check if we should change from png to pngx2 on Retina displays
+window.forcedGraphExt = null;
+if (getCookie('graph_ext', null) == null && window.isRetina) {
+	var graphExt = Graph.GraphFormats.PNGx2;
+
+	setCookie('graph_ext', graphExt);
+	$('#content').attr('data-graphext', graphExt);
+	window.forcedGraphExt = graphExt;
+}

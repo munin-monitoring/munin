@@ -3,7 +3,7 @@
 <TMPL_UNLESS CONTENT_ONLY>
 	<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
 </TMPL_UNLESS>
-<div id="main">
+<div id="main" <TMPL_IF CONTENT_ONLY>class="no-toolbar"</TMPL_IF>>
 	<TMPL_UNLESS CONTENT_ONLY>
 		<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	</TMPL_UNLESS>

@@ -21,13 +21,10 @@ $problems-critical-color: #F14122;
 @import 'graphs';
 
 
+img { border: 0; }
+
 /* Content: comparison / categoryview */
 .categoryview, .comparison {
-	.node {
-		display: inline-block;
-		width: 500px;
-	}
-
 	.category-head, .comparison-head {
 		> div {
 			display: inline-block;
@@ -36,11 +33,6 @@ $problems-critical-color: #F14122;
 		.timeRangeSwitch {
 			margin-left: 100px;
 		}
-	}
-
-	table td {
-		vertical-align: top;
-		padding-top: 15px;
 	}
 }
 

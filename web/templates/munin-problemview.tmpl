@@ -3,7 +3,7 @@
 <TMPL_INCLUDE NAME="partial/logo_navigation_problem.tmpl">
 <div id="main" class="categoryview">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
-	<div id="content">
+	<div id="content" data-graphext="<TMPL_VAR GRAPH_EXT>">
 		<h2>Problems overview</h2>
 		<TMPL_IF CRITICAL>
 			<div class="problem" id="critical">
@@ -124,16 +124,13 @@
 			</div>
 		</TMPL_IF>
 
-	<TMPL_IF CRITICAL>
-	<TMPL_ELSE>
-		<TMPL_IF WARNING>
-		<TMPL_ELSE>
-			<TMPL_IF UNKNOWN>
-			<TMPL_ELSE>
-				<p class="neutralMessage">There are neither warnings nor errors to display.</p>
-			</TMPL_IF>
-		</TMPL_IF>
-	</TMPL_IF>
+		<TMPL_UNLESS CRITICAL>
+			<TMPL_UNLESS WARNING>
+				<TMPL_UNLESS UNKNOWN>
+					<p class="neutralMessage"><i class="mdi mdi-check-all"></i> There are neither warnings nor errors to display.</p>
+				</TMPL_UNLESS>
+			</TMPL_UNLESS>
+		</TMPL_UNLESS>
 	</div>
 </div>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">

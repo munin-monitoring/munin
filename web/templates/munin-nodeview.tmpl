@@ -4,7 +4,7 @@
 <div id="main">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<!-- Change the tabsenabled attribute to false to disable tabs -->
-	<div id="content" data-tabsenabled="true" data-tabs="true">
+	<div id="content" data-tabsenabled="true" data-tabs="true" data-graphext="<TMPL_VAR GRAPH_EXT>">
 		<!-- Node view -->
 		<h2><TMPL_VAR NAME></h2>
 
@@ -17,23 +17,29 @@
 			<div data-category="<TMPL_VAR ESCAPE="HTML" NAME>">
 				<TMPL_LOOP SERVICES>
 					<h4><TMPL_VAR ESCAPE="HTML" NAME></h4>
-					<a href="<TMPL_VAR URLX>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
-						<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-						  src="<TMPL_VAR IMGDAY>"
-						  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-						  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-						  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
-						  data-col="0" />
-					</a>
-					<a href="<TMPL_VAR URLX>" class="graphLink hide-if-overflows i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
-						<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-						  src="<TMPL_VAR IMGWEEK>"
-						  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-						  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-						  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
-						  data-col="1" />
-					</a>
-					<br />
+
+					<div class="row-fluid row-nowrap">
+						<div class="graph-col">
+							<a href="<TMPL_VAR URLX>" class="graph-link i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+								<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+								  src="<TMPL_VAR IMGDAY>"
+								  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+								  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
+								  data-col="0" />
+							</a>
+						</div>
+						<div class="graph-col hide-if-overflows">
+							<a href="<TMPL_VAR URLX>" class="graph-link i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+								<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+								  src="<TMPL_VAR IMGWEEK>"
+								  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+								  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
+								  data-col="1" />
+							</a>
+						</div>
+					</div>
 				</TMPL_LOOP>
 			</div>
 		</TMPL_LOOP>

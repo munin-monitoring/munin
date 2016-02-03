@@ -2,12 +2,19 @@
  * Main UI script
  *  This file is included in every page
  */
+window.isRetina = (
+	window.devicePixelRatio > 1 ||
+	(window.matchMedia && window.matchMedia("(-webkit-min-device-pixel-ratio: 1.5),(-moz-min-device-pixel-ratio: 1.5),(min-device-pixel-ratio: 1.5)").matches)
+);
 
 $(document).ready(function() {
-	// Init toolbar component
-	window.toolbar = $('header').toolbar();
+	// Check if toolbar has been included (it is not on dynazoom modal)
+	if (jQuery.fn.toolbar) {
+		// Init toolbar component
+		window.toolbar = $('header').toolbar();
 
-	addSettingsActionIcon();
+		addSettingsActionIcon();
+	}
 });
 
 /**
@@ -29,8 +36,7 @@ function addSettingsActionIcon() {
 	var settingsModalWrap = $('#settingsModalWrap');
 
 	// Set settings values
-	var graphExt_current = getCookie('graph_ext', 'png');
-	var graphExt_input = $('#graph_ext').val(graphExt_current);
+	var graphExt_input = $('#graph_ext').val(getCookie('graph_ext', 'png'));
 	var graphAutoRefresh_input = $('#graph_autoRefresh').prop('checked', getCookie('graph_autoRefresh', 'true') == 'true');
 
 	settingsModalWrap.find('#settings_save').click(function() {
@@ -42,7 +48,7 @@ function addSettingsActionIcon() {
 		setCookie('graph_autoRefresh', graphAutoRefresh);
 
 		// Update UI
-		$('#content').removeClass('graphext-' + graphExt_current).addClass('graphext-' + graphExt);
+		$('#content').attr('data-graphext', graphExt);
 		if (window.graphs !== undefined) {
 			$.each(window.graphs, function (index, graph) {
 				$(graph).data('graph').setGraphExt(graphExt);
@@ -55,8 +61,6 @@ function addSettingsActionIcon() {
 			else
 				window.autoRefresh.stop();
 		}
-
-		graphExt_current = graphExt;
 
 		// Close modal
 		settingsModal.hide();
