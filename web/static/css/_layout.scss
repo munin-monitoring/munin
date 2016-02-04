@@ -109,6 +109,10 @@ nav {
 			}
 		}
 	}
+
+	&.force-fold {
+		width: 0;
+	}
 }
 .navigation-mask {
 	display: none;

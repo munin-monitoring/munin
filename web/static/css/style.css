@@ -787,6 +787,9 @@ nav .navigation-wrapper .navigation .badge {
   -ms-border-radius: 10px;
   border-radius: 10px;
 }
+nav.force-fold {
+  width: 0;
+}
 
 .navigation-mask {
   display: none;
@@ -1225,6 +1228,7 @@ p.graph_info {
   border-bottom: 1px solid #ccc;
   background-color: rgba(0, 0, 0, 0.06);
   padding: 0 10px;
+  cursor: default;
   -webkit-box-shadow: inset 0 -2px 2px 0 rgba(0, 0, 0, 0.02);
   -moz-box-shadow: inset 0 -2px 2px 0 rgba(0, 0, 0, 0.02);
   -o-box-shadow: inset 0 -2px 2px 0 rgba(0, 0, 0, 0.02);
