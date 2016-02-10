@@ -271,7 +271,7 @@ sub handle_request
 		if ($category eq 'other') {
 			# account for those that explictly mention 'other' as category
 			$sth_cat = $dbh->prepare_cached(
-				"SELECT DISTINCT s.name FROM service s
+				"SELECT DISTINCT s.name, s.service_title FROM service s
 				LEFT JOIN service_categories sc ON s.id = sc.id
 				WHERE (sc.category = 'other' OR sc.id IS NULL)
 				AND EXISTS (select sa.id from service_attr sa where sa.id = s.id)
@@ -279,7 +279,7 @@ sub handle_request
 			$sth_cat->execute();
 		} else {
 			$sth_cat = $dbh->prepare_cached(
-				"SELECT DISTINCT s.name FROM service s
+				"SELECT DISTINCT s.name, s.service_title FROM service s
 				INNER JOIN service_categories sc ON s.id = sc.id
 				WHERE (sc.category = ?)
 				AND EXISTS (select sa.id from service_attr sa where sa.id = s.id)
@@ -288,8 +288,8 @@ sub handle_request
 		}
 
 		my @services;
-		while (my ($_service) = $sth_cat->fetchrow_array) {
-			push @services, _get_params_services_by_name($dbh, $_service, $time, $graph_ext);
+		while (my ($_service, $_service_title) = $sth_cat->fetchrow_array) {
+			push @services, _get_params_services_by_name($dbh, $_service, $_service_title, $time, $graph_ext);
 		}
 		$template_params{SERVICES} = \@services;
 
@@ -696,7 +696,7 @@ sub _get_params_services_for_comparison {
 # This is only called for category views, which start with the root URL,
 # so no need to handle basepath or multigraph parents for relative URLs
 sub _get_params_services_by_name {
-	my ($dbh, $service_name, $time, $graph_ext) = @_;
+	my ($dbh, $service_name, $service_title, $time, $graph_ext) = @_;
 
 	# TODO warning/critical state (use SUM sub-queries?)
 	# XXX this may be slow
@@ -727,6 +727,7 @@ sub _get_params_services_by_name {
 
 	return {
 		NAME => $service_name,
+		TITLE => $service_title,
 		GRAPHS => \@graphs,
 	};
 }

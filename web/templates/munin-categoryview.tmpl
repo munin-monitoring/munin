@@ -19,9 +19,10 @@
 
 		<div class="table">
 			<TMPL_LOOP SERVICES>
-				<div class="service table-row-group">
+				<div class="service table-row-group" data-name="<TMPL_VAR ESCAPE="HTML" NAME>/<TMPL_VAR ESCAPE="HTML" TITLE>">
 					<div class="table-row">
-						<h3 id="<TMPL_VAR ESCAPE="HTML" name>"><TMPL_VAR ESCAPE="HTML" NAME></h3>
+						<h3 id="<TMPL_VAR ESCAPE="HTML" name>"><TMPL_VAR ESCAPE="HTML" TITLE></h3>
+						<div class="subtitle"><TMPL_VAR ESCAPE="HTML" NAME></div>
 					</div>
 
 					<div class="table-row">
