@@ -1,6 +1,7 @@
 /**
  * Graph component
  */
+
 (function($, window) {
 	var TimeRanges = {
 		Hour: 'hour',
@@ -37,18 +38,19 @@
 			this.graphExt = matches[2];
 			this.params = matches.length >= 4 ? matches[3] : null;
 
-			// For refresh method, copy current attribute as backup
-			this.autorefreshSrc = this.elem.attr('src');
-
 			// Register load & error event to hide loading styles
 			this.registerLoadingEvents('load error');
 
 			// Append spinner
 			this.loadingSpinner = $('<img />')
 				.attr('src', '/static/img/loading.gif')
-				.addClass('graph_loading')
+				.addClass('graph-loading')
 				.css('display', 'none')
 				.insertBefore(this.elem);
+
+			// Immediately switch to pngx2 on Retina displays
+			if (window.forcedGraphExt)
+				this.setGraphExt(window.forcedGraphExt);
 
 			return this;
 		},
@@ -74,11 +76,10 @@
 		},
 
 		refresh: function() {
-			var src = this.autorefreshSrc;
+			var src = this.elem.attr('src');
 
-			// Add new timestamp
-			var prefix = src.indexOf('?') != -1 ? '&' : '?';
-			src += prefix + new Date().getTime();
+			// Replace timestamp in URL
+			src = replaceUrlParam(src, 't', new Date().getTime());
 
 			// Since we change the src attr, we have to reattach the error event
 			this.registerLoadingEvents('error');
@@ -129,3 +130,13 @@
 
 	window.Graph = Graph;
 }(jQuery, window));
+
+// Check if we should change from png to pngx2 on Retina displays
+window.forcedGraphExt = null;
+if (getCookie('graph_ext', null) == null && window.isRetina) {
+	var graphExt = Graph.GraphFormats.PNGx2;
+
+	setCookie('graph_ext', graphExt);
+	$('#content').attr('data-graphext', graphExt);
+	window.forcedGraphExt = graphExt;
+}

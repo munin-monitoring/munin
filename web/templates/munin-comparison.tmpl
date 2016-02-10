@@ -3,7 +3,7 @@
 <TMPL_INCLUDE NAME="partial/logo_navigation_comparison.tmpl">
 <div id="main" class="comparison">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
-	<div id="content" data-tabsenabled="true" data-tabs="true">
+	<div id="content" data-tabsenabled="true" data-tabs="true" data-graphext="<TMPL_VAR GRAPH_EXT>">
 		<div class="comparison-head">
 			<div>
 				<h2>Comparison</h2>
@@ -23,11 +23,11 @@
 
 		<TMPL_LOOP CATEGORIES>
 		<h3 id="<TMPL_VAR ESCAPE="HTML" GROUPNAME>"><TMPL_VAR ESCAPE="HTML" GROUPNAME></h3>
-		<table data-category="<TMPL_VAR ESCAPE="HTML" GROUPNAME>">
+		<div class="table" data-category="<TMPL_VAR ESCAPE="HTML" GROUPNAME>">
 			<TMPL_LOOP SERVICES>
-				<tr data-servicename="<TMPL_VAR ESCAPE="HTML" SERVICENAME>" data-servicetitle="<TMPL_VAR ESCAPE="HTML" SERVICETITLE>">
+				<div class="table-row" data-servicename="<TMPL_VAR ESCAPE="HTML" SERVICENAME>" data-servicetitle="<TMPL_VAR ESCAPE="HTML" SERVICETITLE>">
 					<TMPL_LOOP NODES>
-						<td>
+						<div class="graph-col">
 							<div class="node">
 								<span class="nodetitle">
 									<a href="<TMPL_VAR ESCAPE="URL" NODENAME>/index.html"><TMPL_VAR ESCAPE="HTML" NODENAME></a> &bull;
@@ -41,7 +41,7 @@
 								</span>
 								<br />
 								<TMPL_IF CIMG>
-									<a href="/<TMPL_VAR URL>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+									<a href="/<TMPL_VAR URL>" class="graph-link i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
 										<img src="<TMPL_VAR CIMG>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
 										  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
 										  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
@@ -49,11 +49,11 @@
 									</a>
 								</TMPL_IF>
 							</div>
-						</td>
+						</div>
 					</TMPL_LOOP>
-				</tr>
+				</div>
 			</TMPL_LOOP>
-		</table>
+		</div>
 		</TMPL_LOOP>
 	</div>
 </div>

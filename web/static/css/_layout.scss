@@ -13,6 +13,10 @@
 	display: table;
 	table-layout: fixed;
 	min-height: 600px;
+
+	&.no-toolbar {
+		margin-top: 0;
+	}
 }
 /* Navigation */
 nav {
@@ -104,6 +108,10 @@ nav {
 				@include border-radius(10px);
 			}
 		}
+	}
+
+	&.force-fold {
+		width: 0;
 	}
 }
 .navigation-mask {

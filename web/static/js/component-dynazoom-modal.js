@@ -20,7 +20,7 @@
 				return this;
 
 			// Add dynazoom modal link to each graph
-			this.elems.after($('<i />').addClass('mdi mdi-arrow-expand dynazoomModalLink'));
+			this.elems.after($('<i />').addClass('mdi mdi-arrow-expand graph-dynazoomModalLink'));
 
 			// Prepare a hidden modal
 			var iframe = $('<iframe />')
@@ -30,7 +30,7 @@
 			var dynazoomIframe = modal.getView().find('iframe');
 
 			// Bind onclick event
-			$('.dynazoomModalLink').click(function(e) {
+			$('.graph-dynazoomModalLink').click(function(e) {
 				e.preventDefault();
 
 				var img = $(this).parent().find('img.graph');

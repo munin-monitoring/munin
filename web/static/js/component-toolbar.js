@@ -32,7 +32,9 @@
 				var makeVisible = that.navigation.width() <= 0;
 				that.toggleNavigation(makeVisible);
 
-				setCookie('nav_panel_reduced', !makeVisible); // Save state
+				// Don't save state when force-reduced
+				if (!that.navigation.hasClass('force-fold'))
+					setCookie('nav_panel_reduced', !makeVisible); // Save state
 			});
 
 			// Fixed toolbar

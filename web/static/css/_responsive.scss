@@ -83,23 +83,19 @@
 
 	#content {
 		display: block;
-		padding: 1em 0 1em 0;
+		padding: 1em 0;
 		width: 100%;
 
-		h2, h3 {
+		h2, h3, h4 {
 			margin-left: 20px;
 		}
-	}
 
-	/* Graphs */
-	.graph {
-		max-width: 97%;
-		display: block;
-		margin: auto;
-	}
+		.category-head, .comparison-head {
+			margin-left: 20px;
 
-	.dynazoomModalLink {
-		display: none;
+			h2 { margin-left: 0; }
+			.timeRangeSwitch { margin-left: 40px; }
+		}
 	}
 
 	/* Overview */
@@ -112,8 +108,6 @@
 			margin-left: 10px;
 		}
 	}
-
-	.timeRangeSwitchContainer { top: 0; }
 
 	.modal {
 		width: 100%;

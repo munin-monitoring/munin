@@ -2,12 +2,19 @@
  * Main UI script
  *  This file is included in every page
  */
+window.isRetina = (
+	window.devicePixelRatio > 1 ||
+	(window.matchMedia && window.matchMedia("(-webkit-min-device-pixel-ratio: 1.5),(-moz-min-device-pixel-ratio: 1.5),(min-device-pixel-ratio: 1.5)").matches)
+);
 
 $(document).ready(function() {
-	// Init toolbar component
-	window.toolbar = $('header').toolbar();
+	// Check if toolbar has been included (it is not on dynazoom modal)
+	if (jQuery.fn.toolbar) {
+		// Init toolbar component
+		window.toolbar = $('header').toolbar();
 
-	addSettingsActionIcon();
+		addSettingsActionIcon();
+	}
 });
 
 /**
@@ -41,6 +48,7 @@ function addSettingsActionIcon() {
 		setCookie('graph_autoRefresh', graphAutoRefresh);
 
 		// Update UI
+		$('#content').attr('data-graphext', graphExt);
 		if (window.graphs !== undefined) {
 			$.each(window.graphs, function (index, graph) {
 				$(graph).data('graph').setGraphExt(graphExt);
@@ -114,6 +122,19 @@ function getURLParams() {
 		urlParams[decode(match[1])] = decode(match[2]);
 
 	return urlParams;
+}
+
+/**
+ * Replaces a GET value in a URL
+ * 	Source: http://stackoverflow.com/questions/7171099/how-to-replace-url-parameter-with-javascript-jquery
+ */
+function replaceUrlParam(url, paramName, paramValue){
+	var pattern = new RegExp('\\b('+paramName+'=).*?(&|$)');
+
+	if (url.search(pattern) >= 0)
+		return url.replace(pattern,'$1' + paramValue + '$2');
+
+	return url + (url.indexOf('?')>0 ? '&' : '?') + paramName + '=' + paramValue
 }
 
 /**
