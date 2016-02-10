@@ -1014,6 +1014,9 @@ footer p.tagline:hover {
   table-layout: fixed;
   max-width: 100%;
 }
+.table .table-row-group {
+  display: table-row-group;
+}
 .table .table-row {
   display: table-row;
 }
@@ -1058,6 +1061,11 @@ footer p.tagline:hover {
 }
 [data-graphext="pngx2"] .graph-col .graph, [data-graphext="svg"] .graph-col .graph {
   width: 100%;
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 1.3), only screen and (-o-min-device-pixel-ratio: 13 / 10), only screen and (min-resolution: 120dpi) {
+  [data-graphext="pngx2"] .graph-col, [data-graphext="svg"] .graph-col {
+    max-width: 1060px;
+  }
 }
 
 img {
