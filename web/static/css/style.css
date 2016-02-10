@@ -20,7 +20,7 @@ body {
   background: #FAFAFA;
   font-size: 14px;
   font-family: Roboto, sans-serif;
-  color: #666666;
+  color: #555555;
 }
 
 /* Titles */
@@ -247,11 +247,11 @@ a:hover {
   margin: 0 auto;
   z-index: 15;
   background-color: #fff;
-  border: 1px solid #666;
-  -webkit-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
-  -moz-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
-  -o-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
-  box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.13), 0 6px 20px 0 rgba(0, 0, 0, 0.13);
+  -moz-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.13), 0 6px 20px 0 rgba(0, 0, 0, 0.13);
+  -o-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.13), 0 6px 20px 0 rgba(0, 0, 0, 0.13);
+  box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.13), 0 6px 20px 0 rgba(0, 0, 0, 0.13);
   -webkit-border-radius: 2px;
   -moz-border-radius: 2px;
   -ms-border-radius: 2px;
@@ -267,11 +267,15 @@ a:hover {
   -moz-border-radius: 3px 3px 0 0;
   -ms-border-radius: 3px 3px 0 0;
   border-radius: 3px 3px 0 0;
-  border: 1px solid #3f535c;
+  border: 1px solid rgba(0, 0, 0, 0.2);
   background-color: #546E7A;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
+  -webkit-box-shadow: 0px 2px 5px -2px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: 0px 2px 5px -2px rgba(0, 0, 0, 0.4);
+  -o-box-shadow: 0px 2px 5px -2px rgba(0, 0, 0, 0.4);
+  box-shadow: 0px 2px 5px -2px rgba(0, 0, 0, 0.4);
 }
 .modal .title span {
   display: inline-block;
@@ -312,11 +316,7 @@ a:hover {
   border-radius: 0 0 2px 2px;
 }
 .modal .modalContent {
-  padding: 20px 30px;
-  -webkit-box-shadow: inset 0 1px 4px -1px rgba(0, 0, 0, 0.4);
-  -moz-box-shadow: inset 0 1px 4px -1px rgba(0, 0, 0, 0.4);
-  -o-box-shadow: inset 0 1px 4px -1px rgba(0, 0, 0, 0.4);
-  box-shadow: inset 0 1px 4px -1px rgba(0, 0, 0, 0.4);
+  padding: 15px 20px;
 }
 .modal .modalContent > *:first-child {
   margin-top: 0;
@@ -339,24 +339,14 @@ a:hover {
   position: fixed;
   top: 0;
   left: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.2);
   z-index: 14;
 }
 
 /* Form elements */
+input,
+button,
 select {
-  border: 1px solid #d1d1d1;
-}
-
-input[type="text"],
-input[type="number"],
-select {
-  padding: 4px 12px;
-  height: 30px;
-  max-width: 100%;
-  line-height: 1.4;
-  border: 1px solid #aaa;
-  background-color: #fff;
   -webkit-border-radius: 2px;
   -moz-border-radius: 2px;
   -ms-border-radius: 2px;
@@ -368,11 +358,20 @@ select {
   -moz-transition-duration: 150ms;
   -o-transition-duration: 150ms;
   transition-duration: 150ms;
+}
+
+input[type="text"],
+input[type="number"] {
+  padding: 4px 12px;
+  height: 30px;
+  max-width: 100%;
+  line-height: 1.4;
+  border: 1px solid #BFBFBF;
+  background-color: #fff;
   color: #555;
 }
 input[type="text"]:focus,
-input[type="number"]:focus,
-select:focus {
+input[type="number"]:focus {
   border-color: #546E7A;
   outline: 0;
   -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 8px -3px rgba(84, 110, 122, 0.4);
@@ -381,61 +380,109 @@ select:focus {
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 8px -3px rgba(84, 110, 122, 0.4);
 }
 input[type="text"].input-compact,
-input[type="number"].input-compact,
-select.input-compact {
+input[type="number"].input-compact {
   padding: 0 5px;
   height: 25px;
 }
 
 input[type="submit"],
 input[type="button"],
-button {
-  color: #fff;
+button,
+select {
+  color: #666666;
   display: inline-block;
-  text-transform: uppercase;
   font-size: 12px;
   font-weight: 500;
-  padding: 6px 12px;
-  -webkit-transition-duration: 200ms;
-  -moz-transition-duration: 200ms;
-  -o-transition-duration: 200ms;
-  transition-duration: 200ms;
-  -webkit-border-radius: 2px;
-  -moz-border-radius: 2px;
-  -ms-border-radius: 2px;
-  border-radius: 2px;
-  border: 1px solid #4e6671;
-  background: #546E7A;
+  padding: 7px 17px;
+  border: 1px solid #BFBFBF;
+  background-color: #F5F5F5;
+  cursor: pointer;
 }
 input[type="submit"]:hover,
 input[type="button"]:hover,
-button:hover {
-  text-decoration: none;
-  background: #506974;
-  -webkit-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.12), 0 2px 3px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 0 rgba(0, 0, 0, 0.2);
-  -moz-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.12), 0 2px 3px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 0 rgba(0, 0, 0, 0.2);
-  -o-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.12), 0 2px 3px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 0 rgba(0, 0, 0, 0.2);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.12), 0 2px 3px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 0 rgba(0, 0, 0, 0.2);
+button:hover,
+select:hover {
+  background-color: #fafafa;
+  -webkit-box-shadow: 0 1px 7px -2px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 1px 7px -2px rgba(0, 0, 0, 0.3);
+  -o-box-shadow: 0 1px 7px -2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 7px -2px rgba(0, 0, 0, 0.3);
 }
-input[type="submit"]:focus, input[type="submit"]:active,
-input[type="button"]:focus,
+input[type="submit"]:active,
 input[type="button"]:active,
-button:focus,
-button:active {
+button:active,
+select:active {
   outline: none;
-  background: #4a606b;
-  color: #fff;
+  background-color: #e8e8e8;
   -webkit-box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
   -moz-box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
   -o-box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
   box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
 }
-input[type="submit"] i,
-input[type="button"] i,
-button i {
-  margin: 0 3px 0 -3px;
-  font-size: 20px;
+input[type="submit"] i.mdi,
+input[type="button"] i.mdi,
+button i.mdi,
+select i.mdi {
+  margin: 0 3px 0 -6px;
   vertical-align: bottom;
+  font-size: 17px;
+  line-height: 14px;
+}
+input[type="submit"].button-primary, input[type="submit"][type="submit"],
+input[type="button"].button-primary,
+input[type="button"][type="submit"],
+button.button-primary,
+button[type="submit"],
+select.button-primary,
+select[type="submit"] {
+  color: #fff;
+  border-color: #217dbb;
+  background-color: #3498DB;
+}
+input[type="submit"].button-primary:hover, input[type="submit"][type="submit"]:hover,
+input[type="button"].button-primary:hover,
+input[type="button"][type="submit"]:hover,
+button.button-primary:hover,
+button[type="submit"]:hover,
+select.button-primary:hover,
+select[type="submit"]:hover {
+  background-color: #45a1de;
+  -webkit-box-shadow: 0 1px 7px -1px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: 0 1px 7px -1px rgba(0, 0, 0, 0.4);
+  -o-box-shadow: 0 1px 7px -1px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 7px -1px rgba(0, 0, 0, 0.4);
+}
+input[type="submit"].button-primary:active, input[type="submit"][type="submit"]:active,
+input[type="button"].button-primary:active,
+input[type="button"][type="submit"]:active,
+button.button-primary:active,
+button[type="submit"]:active,
+select.button-primary:active,
+select[type="submit"]:active {
+  background-color: #258cd1;
+  -webkit-box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
+  -o-box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
+}
+input[type="submit"] + button,
+input[type="button"] + button,
+button + button,
+select + button {
+  margin-left: 5px;
+}
+input[type="submit"].button-small,
+input[type="button"].button-small,
+button.button-small,
+select.button-small {
+  padding: 4px 11px;
+}
+
+.buttons-wrap {
+  cursor: default;
+  margin-top: 25px;
+  margin-bottom: 10px;
+  text-align: right;
 }
 
 /**
@@ -1718,7 +1765,7 @@ ul.timeRangeSwitch li.selected, ul.timeRangeSwitch li.selected:hover, ul.timeRan
     width: 100%;
     left: 0;
     top: 0;
-    margin-top: 0;
+    margin-top: 15px;
     margin-left: 0;
     max-height: 100%;
   }

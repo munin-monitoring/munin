@@ -36,8 +36,14 @@ function addSettingsActionIcon() {
 	var settingsModalWrap = $('#settingsModalWrap');
 
 	// Set settings values
-	var graphExt_input = $('#graph_ext').val(getCookie('graph_ext', 'png'));
-	var graphAutoRefresh_input = $('#graph_autoRefresh').prop('checked', getCookie('graph_autoRefresh', 'true') == 'true');
+	var graphExt_input = $('#graph_ext');
+	var graphAutoRefresh_input = $('#graph_autoRefresh');
+
+	var setSettingsValues = function() {
+		graphExt_input.val(getCookie('graph_ext', 'png'));
+		graphAutoRefresh_input.prop('checked', getCookie('graph_autoRefresh', 'true') == 'true');
+	};
+	setSettingsValues();
 
 	settingsModalWrap.find('#settings_save').click(function() {
 		// Save parameters
@@ -63,6 +69,12 @@ function addSettingsActionIcon() {
 		}
 
 		// Close modal
+		settingsModal.hide();
+	});
+
+	// Cancel
+	settingsModalWrap.find('#settings_cancel').click(function() {
+		setSettingsValues();
 		settingsModal.hide();
 	});
 
