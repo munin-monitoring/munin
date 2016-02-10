@@ -40,7 +40,7 @@
 					<div>
 						<input type="text" id="start_iso8601" class="input-compact" name="start_iso8601" size="24" /> /
 						<input type="text" id="stop_iso8601" class="input-compact" name="stop_iso8601" size="24" />
-						<input type="button" id="btnMaj" value="Update" />
+						<input type="button" id="btnMaj" value="Update" class="button-small" />
 					</div>
 				</div>
 
@@ -72,7 +72,7 @@
 				<input type="hidden" name="content_only" value="<TMPL_VAR CONTENT_ONLY>" />
 				<input type="hidden" id="graph_ext" name="graph_ext" value="<TMPL_VAR GRAPH_EXT>" />
 
-				<input type="submit" value="Submit" />
+				<button type="submit"><i class="mdi mdi-check"></i> Submit</button>
 				<input type="button" id="btnZoomOut" value="Zoom Out x2" />
 				<input type="button" id="reset" value="Reset" />
 			</form>
