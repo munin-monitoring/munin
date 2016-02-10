@@ -6,7 +6,7 @@
 $(document).ready(function() {
 	var content = $('#content');
 	var graphs = window.graphs = $('.graph');
-	var trs = $('tr');
+	var services = $('.table-row');
 
 	// Instantiate auto-refresh & dynazoom modal links components
 	var autoRefresh = window.autoRefresh = graphs.autoRefresh();
@@ -25,11 +25,9 @@ $(document).ready(function() {
 		else
 			tabs.hideTabs();
 
-		trs.each(function() {
-			var serviceName = $(this).data('servicename');
-			var serviceTitle = $(this).data('servicetitle');
-
-			if (window.toolbar.filterMatches(val, serviceName) || window.toolbar.filterMatches(val, serviceTitle)) {
+		services.each(function() {
+			if (window.toolbar.filterMatches(val, $(this).data('servicename'))
+				|| window.toolbar.filterMatches(val, $(this).data('servicetitle'))) {
 				$(this).show();
 			}
 			else {
@@ -48,8 +46,8 @@ $(document).ready(function() {
 		}
 
 		// Hide unnecessary categories names
-		$('table[data-category]').each(function() {
-			if ($(this).find('tr:visible').length == 0)
+		$('.table[data-category]').each(function() {
+			if ($(this).find('.table-row:visible').length == 0)
 				$(this).prev().hide();
 			else
 				$(this).prev().show();
