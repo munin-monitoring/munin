@@ -184,6 +184,7 @@ footer {
 	color: #fff;
 	font-size: 17px;
 	padding: 0;
+	text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
 	@include border-radius(2px 0 0 2px);
 	@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
 	@include opacity(0);
@@ -192,7 +193,7 @@ footer {
 	&.visible {
 		@include opacity(0.75);
 		height: auto;
-		padding: 4px 5px;
+		padding: 4px 7px;
 	}
 	&.visible:hover {
 		text-decoration: none;

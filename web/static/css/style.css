@@ -917,6 +917,7 @@ footer p.tagline:hover {
   color: #fff;
   font-size: 17px;
   padding: 0;
+  text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
   -webkit-border-radius: 2px 0 0 2px;
   -moz-border-radius: 2px 0 0 2px;
   -ms-border-radius: 2px 0 0 2px;
@@ -935,7 +936,7 @@ footer p.tagline:hover {
   opacity: 0.75;
   filter: alpha(opacity=75);
   height: auto;
-  padding: 4px 5px;
+  padding: 4px 7px;
 }
 #backToTop.visible:hover {
   text-decoration: none;

@@ -86,6 +86,21 @@ function addSettingsActionIcon() {
 	window.toolbar.addActionIcon('mdi-settings', 'Settings', true, function() {
 		settingsModal.show();
 	});
+
+	// Back to top button
+	var backToTop = $('#backToTop');
+	$(window).scroll(function() {
+		if ($(this).scrollTop() > 300)
+			backToTop.addClass('visible');
+		else
+			backToTop.removeClass('visible');
+	});
+	backToTop.click(function(e) {
+		e.preventDefault();
+		$('body, html').animate({
+			scrollTop: 0
+		}, 500);
+	});
 }
 
 function removeTabIndexOutline() {
