@@ -33,6 +33,7 @@ my %legal = map { $_ => 1 } qw(
 	dbdir
 	domain_order
 	draw
+	drawstyle
 	dropdownlimit
 	extinfo
 	fetch_data

@@ -95,7 +95,7 @@ my $config_parts = {
 my $configfile="$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
 # Fields to copy when "aliasing" a field
-my @COPY_FIELDS    = ("label", "draw", "type", "rrdfile", "fieldname", "info");
+my @COPY_FIELDS    = ("label", "draw", "drawstyle", "type", "rrdfile", "fieldname", "info");
 
 my @dircomponents = split('/',$0);
 my $me = pop(@dircomponents);
