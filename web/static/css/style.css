@@ -478,6 +478,17 @@ select.button-small {
   padding: 5px 11px;
 }
 
+select {
+  padding: 5px 6px;
+}
+select:active {
+  background-color: #F5F5F5;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  -o-box-shadow: none;
+  box-shadow: none;
+}
+
 .buttons-wrap {
   cursor: default;
   margin-top: 25px;
@@ -917,7 +928,7 @@ footer p.tagline:hover {
   color: #fff;
   font-size: 17px;
   padding: 0;
-  text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
+  text-shadow: 1px 1px rgba(0, 0, 0, 0.3);
   -webkit-border-radius: 2px 0 0 2px;
   -moz-border-radius: 2px 0 0 2px;
   -ms-border-radius: 2px 0 0 2px;
@@ -1125,11 +1136,11 @@ img {
 }
 
 /* Content: comparison / categoryview */
-.categoryview .category-head > div, .categoryview .comparison-head > div, .comparison .category-head > div, .comparison .comparison-head > div {
+.page-head > div {
   display: inline-block;
   vertical-align: middle;
 }
-.categoryview .category-head .timeRangeSwitch, .categoryview .comparison-head .timeRangeSwitch, .comparison .category-head .timeRangeSwitch, .comparison .comparison-head .timeRangeSwitch {
+.page-head .timeRangeSwitch {
   margin-left: 100px;
 }
 
@@ -1715,10 +1726,10 @@ ul.timeRangeSwitch li.selected, ul.timeRangeSwitch li.selected:hover, ul.timeRan
     height: 100%;
     max-width: 500px;
     background-color: #fff;
-    -webkit-box-shadow: 1px 0px 3px -1px rgba(0, 0, 0, 0.3);
-    -moz-box-shadow: 1px 0px 3px -1px rgba(0, 0, 0, 0.3);
-    -o-box-shadow: 1px 0px 3px -1px rgba(0, 0, 0, 0.3);
-    box-shadow: 1px 0px 3px -1px rgba(0, 0, 0, 0.3);
+    -webkit-box-shadow: 1px 0px 20px 0px rgba(0, 0, 0, 0.3);
+    -moz-box-shadow: 1px 0px 20px 0px rgba(0, 0, 0, 0.3);
+    -o-box-shadow: 1px 0px 20px 0px rgba(0, 0, 0, 0.3);
+    box-shadow: 1px 0px 20px 0px rgba(0, 0, 0, 0.3);
   }
   nav .navigation-wrapper {
     padding: 0;
@@ -1734,16 +1745,16 @@ ul.timeRangeSwitch li.selected, ul.timeRangeSwitch li.selected:hover, ul.timeRan
     padding: 1em 0;
     width: 100%;
   }
-  #content h2, #content h3, #content h4 {
+  #content h2, #content h3, #content h4, #content .subtitle {
     margin-left: 20px;
   }
-  #content .category-head, #content .comparison-head {
+  #content .page-head {
     margin-left: 20px;
   }
-  #content .category-head h2, #content .comparison-head h2 {
+  #content .page-head h2, #content .page-head .subtitle {
     margin-left: 0;
   }
-  #content .category-head .timeRangeSwitch, #content .comparison-head .timeRangeSwitch {
+  #content .page-head .timeRangeSwitch {
     margin-left: 40px;
   }
 

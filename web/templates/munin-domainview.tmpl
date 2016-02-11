@@ -4,15 +4,20 @@
 <div id="main">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<div id="content">
-		<h2><TMPL_VAR NAME></h2>
-		<TMPL_IF COMPARE>
-			<div class="subtitle">Compare
-				<a href="comparison-day.html">day</a>
-				<a href="comparison-week.html">week</a>
-				<a href="comparison-month.html">month</a>
-				<a href="comparison-year.html">year</a>
+		<div class="page-head">
+			<div>
+				<h2><TMPL_VAR NAME></h2>
+				<TMPL_IF COMPARE>
+					<div class="subtitle">Compare
+						<a href="comparison-day.html">day</a>
+						<a href="comparison-week.html">week</a>
+						<a href="comparison-month.html">month</a>
+						<a href="comparison-year.html">year</a>
+					</div>
+				</TMPL_IF>
 			</div>
-		</TMPL_IF>
+		</div>
+
 		<!-- Domain view -->
 		<ul class="domainview treeview-root">
 			<TMPL_LOOP GROUPS>

@@ -25,15 +25,13 @@ $problems-critical-color: #F14122;
 img { border: 0; }
 
 /* Content: comparison / categoryview */
-.categoryview, .comparison {
-	.category-head, .comparison-head {
-		> div {
-			display: inline-block;
-			vertical-align: middle;
-		}
-		.timeRangeSwitch {
-			margin-left: 100px;
-		}
+.page-head {
+	> div {
+		display: inline-block;
+		vertical-align: middle;
+	}
+	.timeRangeSwitch {
+		margin-left: 100px;
 	}
 }
 

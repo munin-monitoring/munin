@@ -5,8 +5,10 @@
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<!-- Change the tabsenabled attribute to false to disable tabs -->
 	<div id="content" data-tabsenabled="true" data-tabs="true" data-graphext="<TMPL_VAR GRAPH_EXT>">
-		<!-- Node view -->
-		<h2><TMPL_VAR NAME></h2>
+		<div class="page-head">
+			<!-- Node view -->
+			<h2><TMPL_VAR NAME></h2>
+		</div>
 
 		<!-- Tabs. No empty space allowed here (for styling) -->
 		<ul class="tabs"><li>all</li><TMPL_LOOP CATEGORIES><li

@@ -83,6 +83,15 @@ select {
 	}
 }
 
+select {
+	padding: 5px 6px;
+
+	&:active {
+		background-color: #F5F5F5;
+		@include box-shadow(none);
+	}
+}
+
 .buttons-wrap {
 	cursor: default;
 	margin-top: 25px;

@@ -71,7 +71,7 @@
 		height: 100%;
 		max-width: 500px;
 		background-color: #fff;
-		@include box-shadow(1px 0px 3px -1px rgba(0, 0, 0, 0.3));
+		@include box-shadow(1px 0px 20px 0px rgba(0, 0, 0, 0.3));
 
 		.navigation-wrapper {
 			padding: 0;
@@ -86,14 +86,14 @@
 		padding: 1em 0;
 		width: 100%;
 
-		h2, h3, h4 {
+		h2, h3, h4, .subtitle {
 			margin-left: 20px;
 		}
 
-		.category-head, .comparison-head {
+		.page-head {
 			margin-left: 20px;
 
-			h2 { margin-left: 0; }
+			h2, .subtitle { margin-left: 0; }
 			.timeRangeSwitch { margin-left: 40px; }
 		}
 	}
