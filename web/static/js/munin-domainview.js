@@ -2,6 +2,19 @@
  * Domainview specific javascript
  */
 $(document).ready(function() {
+	var treeviewRoot = $('.treeview-root'),
+		treeview = treeviewRoot.treeview();
+
+	// Init treeview
+	treeview.expandAll();
+	$('#reduce-all').click(function() {
+		treeview.reduceAll();
+	});
+	$('#expand-all').click(function() {
+		treeview.expandAll();
+	});
+
+
 	window.toolbar.prepareFilter('Filter plugins', function(val) {
 		if (val == '') {
 			// Empty filter: display everything
@@ -10,7 +23,7 @@ $(document).ready(function() {
 		}
 
 		// Treeview
-		expandAll();
+		treeview.expandAll();
 
 		// Loop on each plugin ("service")
 		$('.service').find('a').each(function() {
@@ -61,7 +74,7 @@ $(document).ready(function() {
 	});
 
 	// Assign tab-indexes to elements
-	$('.treeview-root').find('a').each(function(index) {
+	treeviewRoot.find('a').each(function(index) {
 		$(this).attr('tabindex', index+1);
 	});
 	removeTabIndexOutline();

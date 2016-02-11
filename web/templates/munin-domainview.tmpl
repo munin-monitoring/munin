@@ -7,14 +7,21 @@
 		<div class="page-head">
 			<div>
 				<h2><TMPL_VAR NAME></h2>
+
 				<TMPL_IF COMPARE>
-					<div class="subtitle">Compare
+					<div class="subtitle">
+						Compare
 						<a href="comparison-day.html">day</a>
 						<a href="comparison-week.html">week</a>
 						<a href="comparison-month.html">month</a>
 						<a href="comparison-year.html">year</a>
 					</div>
 				</TMPL_IF>
+				
+				<div class="subtitle">
+					<a id="reduce-all" href="#"><i class="mdi mdi-chevron-double-right"></i> Reduce all</a>
+					<a id="expand-all" href="#"><i class="mdi mdi-chevron-double-down"></i> Expand all</a>
+				</div>
 			</div>
 		</div>
 
@@ -131,6 +138,6 @@
 <a href="#" id="backToTop"><i class="mdi mdi-arrow-up"></i></a>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
 <script src="/static/js/munin-domainview.js"></script>
-<script src="/static/js/munin-domainview-treeview.js"></script>
+<script src="/static/js/component-treeview.js"></script>
 </body>
 </html>

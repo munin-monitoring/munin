@@ -101,6 +101,11 @@ function addSettingsActionIcon() {
 			scrollTop: 0
 		}, 500);
 	});
+
+	// Prevent /# in URL on href="#" links
+	$('a[href="#"]').click(function(e) {
+		e.preventDefault();
+	});
 }
 
 function removeTabIndexOutline() {
