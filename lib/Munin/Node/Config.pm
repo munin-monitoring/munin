@@ -266,7 +266,9 @@ sub _parse_plugin_line {
         return (group => [split /[\s,]+/, $var_value]);
     }
     elsif ($var_name eq 'command') {
-        return (command => [split /\s+/, $var_value]);
+    	# Don't split on escaped whitespace. Also support escaping the escape character.
+    	# Better implementations welcome :).
+        return (command => [reverse map {s/\\(.)/$1/g; scalar reverse} split /\s+(?=(?:\\\\)*(?!\\))/, reverse $var_value]);
     }
     elsif ($var_name eq 'host_name') {
         return (host_name => $var_value);

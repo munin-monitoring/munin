@@ -275,8 +275,15 @@ sub _service_command
 
     if ($sconf->{$service}{command}) {
         for my $t (@{ $sconf->{$service}{command} }) {
-            if ($t eq '%c') {
-                push @run, ("$dir/$service", $argument);
+            # Unfortunately, every occurence of %c will be expanded,
+            # even if we want to pass it unmodified to the target command,
+            # because we parse the original string during the config
+            # parsing step, at which we do not yet know the
+            # replacement value for %c. It is probably a minor inconvenience,
+            # though, since who will ever need to pass "%c" in a place
+            # like that?
+            if ($t =~ s/%c/$dir\/$service/g) {
+                push @run, ($t, $argument);
             } else {
                 push @run, ($t);
             }
