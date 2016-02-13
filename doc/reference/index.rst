@@ -57,4 +57,5 @@ Other reference material
 
    directories.rst
    plugin.rst
+   graph-category.rst
    history.rst
