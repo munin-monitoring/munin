@@ -431,7 +431,7 @@ sub _dump_into_sql {
 	$dbh->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
 		last_epoch INTEGER, last_value VARCHAR,
 		prev_epoch INTEGER, prev_value VARCHAR,
-		alarm VARCHAR
+		alarm VARCHAR, num_unknowns INTEGER
 		)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
 	my $sth_state = $dbh->prepare('INSERT INTO state (id, type, last_epoch, last_value, prev_epoch, prev_value) VALUES (?, ?, ?, ?, ?, ?)');

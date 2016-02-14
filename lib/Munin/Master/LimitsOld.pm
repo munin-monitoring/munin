@@ -64,7 +64,6 @@ my $verbose        = 0;
 my $force_run_as_root = 0;
 my %notes          = ();
 my $config;
-my $oldnotes;
 my $modified     = 0;
 my %default_text = (
     "default" =>
@@ -128,8 +127,6 @@ sub limits_main {
 
     munin_runlock("$config->{rundir}/munin-limits.lock");
 
-    $oldnotes = &munin_readconfig_part('limits', 1);
-
     initialize_for_nagios();
 
     initialize_contacts();
@@ -137,9 +134,6 @@ sub limits_main {
     process_limits();
 
     close_pipes();
-
-    &munin_writeconfig("$config->{dbdir}/limits", \%notes);
-    &munin_writeconfig_storable("$config->{dbdir}/limits.storable", \%notes);
 
     $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
 
@@ -325,7 +319,7 @@ sub process_service {
     DEBUG "[DEBUG] opening sql $datafilename";
     my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
     my $sth_state = $dbh->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm FROM state WHERE id = ? and type = ?');
-    my $sth_state_upt = $dbh->prepare('UPDATE alarm = ? FROM state WHERE id = ? and type = ?');
+    my $sth_state_upt = $dbh->prepare('UPDATE state SET alarm = ? WHERE id = ? and type = ?');
     my $sth_ds = $dbh->prepare('SELECT id FROM url WHERE path = ? and type = ?');
 
     foreach my $field (@$children) {
@@ -344,12 +338,6 @@ sub process_service {
 	$sth_ds->execute("$service_url/$fname", "ds");
 	my ($ds_id) = $sth_ds->fetchrow_array;
 
-	-       if ( defined($onfield) and
-		-            defined($onfield->{"state"}) ) {
-		-           $oldstate = $onfield->{"state"};
-		-       }
-
-
         my ($warn, $crit, $unknown_limit) = get_limits($field);
 
         # Skip fields without warning/critical definitions
@@ -361,7 +349,7 @@ sub process_service {
     	{
 		$sth_state->execute($ds_id, "ds");
 		my ($current_updated_timestamp, $current_updated_value,
-			$previous_updated_timestamp, $previous_updated_timestamp,
+			$previous_updated_timestamp, $previous_updated_value,
 			$old_alarm) = $sth_state->fetchrow_array;
 
 		my $oldstate = $old_alarm || 'ok';
