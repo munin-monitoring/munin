@@ -5,6 +5,9 @@
 
 @import 'header';
 
+$navigation-width: 200px;
+$navigation-width-mobile: 260px;
+
 /* Main */
 #main {
 	width: 100%;
@@ -22,7 +25,7 @@
 nav {
 	display: table-cell;
 	vertical-align: top;
-	width: 200px;
+	width: $navigation-width;
 
 	// Toggling animation
 	@include transition-duration(150ms);
@@ -31,7 +34,7 @@ nav {
 		overflow-x: hidden;
 
 		.navigation {
-			width: 200px;
+			width: $navigation-width;
 
 			> hr {
 				background-color: #ddd;
@@ -107,12 +110,16 @@ nav {
 				background-color: #999;
 				@include border-radius(10px);
 			}
+
+			.logo {
+				margin: 10px 15px 5px 15px;
+				@include opacity(0.8);
+			}
 		}
 	}
 
-	&.fold {
-		width: 0;
-	}
+	&.fold { width: 0; }
+	&.shown { width: $navigation-width; }
 }
 .navigation-mask {
 	display: none;

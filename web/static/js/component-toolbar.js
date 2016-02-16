@@ -24,7 +24,7 @@
 			this.navigationMask = $('.navigation-mask').click(function() {
 				that.toggleNavigation(false);
 
-				setCookie('nav_panel_reduced', true); // Save state
+				setCookie('nav_panel_fold', true); // Save state
 			});
 
 			// Navigation toggle
@@ -34,7 +34,7 @@
 
 				// Don't save state when force-reduced
 				if (!that.navigation.hasClass('force-fold'))
-					setCookie('nav_panel_reduced', !makeVisible); // Save state
+					setCookie('nav_panel_fold', !makeVisible); // Save state
 			});
 
 			// Fixed toolbar
@@ -220,8 +220,10 @@
 		},
 
 		toggleNavigation: function(visible) {
-			var targetWidth = visible ? 200 : 0;
-			this.navigation.css('width', targetWidth + 'px');
+			if (visible)
+				this.navigation.removeClass('fold').addClass('shown');
+			else
+				this.navigation.addClass('fold').removeClass('shown');
 
 			// Toggle navigation mask if necessary
 			if ($(document).width() < this.settings.mobileTriggerWidth) {

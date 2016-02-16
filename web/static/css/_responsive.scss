@@ -2,9 +2,12 @@
  * This file contains everything that makes munin responsive, and is included in style.scss
  */
 
+.show-mobile { display: none!important; }
+
 /* Small devices (tablets, smartphones) */
 @media (max-width: 768px) {
 	.hide-mobile { display: none!important; }
+	.show-mobile { display: block!important; }
 
 	header {
 		border-left: 0;
@@ -18,9 +21,7 @@
 			}
 
 			.logo {
-				margin-top: 0;
-				width: 30px;
-				@include opacity(1);
+				display: none;
 			}
 		}
 
@@ -77,8 +78,14 @@
 			padding: 0;
 			overflow-y: auto;
 
+			.navigation {
+				width: $navigation-width-mobile;
+			}
 			.timerangesList { @include opacity(1); }
 		}
+
+		&.fold { width: 0; }
+		&.shown { width: $navigation-width-mobile; }
 	}
 
 	#content {
