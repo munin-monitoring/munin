@@ -29,31 +29,22 @@
 			.filter {
 				display: inline-block;
 				margin-top: 0;
-				width: 200px;
+				width: 150px;
 
 				/* Don't expand on focus */
 				input[type=text] {
-					width: 200px;
-
-					&:focus {
-						width: 200px;
+					&, &:focus {
+						width: 150px;
 					}
 				}
 			}
-			.actions .action-icon {
-				margin-top: 0;
-			}
+		}
+		.actions .action-icon {
+			margin-top: 3px;
 		}
 
-		.pageTitle {
-			h1 {
-				padding-top: 10px;
-			}
-		}
-
-		.pageTitle {
-			display: block;
-			clear: both;
+		.pageTitle h1 {
+			padding-top: 0;
 		}
 	}
 

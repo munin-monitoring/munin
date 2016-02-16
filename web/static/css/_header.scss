@@ -79,11 +79,11 @@ header {
 		font-size: 16px;
 		color: #eee;
 		text-align: center;
-		display: block;
-		width: 100%;
+		display: inline-block;
 		@include box-sizing(border-box);
 
 		h1 {
+			display: inline-block;
 			vertical-align: middle;
 			padding-top: 4px;
 		}
@@ -122,7 +122,8 @@ header {
 		height: 31px;
 		overflow: hidden;
 		cursor: pointer;
-		margin: 5px 0 0 7px;
+		margin: 5px 0 0 5px;
+		vertical-align: middle;
 		@include transition-duration(150ms);
 		@include border-radius(2px);
 		@include user-select(none);
