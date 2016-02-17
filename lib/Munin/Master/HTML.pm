@@ -110,9 +110,10 @@ sub handle_request
 
 
 	# Reduced navigation panel
-	$template_params{NAV_PANEL_REDUCED} = exists $cookies{"nav_panel_reduced"}
-		? ($cookies{"nav_panel_reduced"}->value eq "true" ? 1 : 0)
+	$template_params{NAV_PANEL_FOLD} = exists $cookies{"nav_panel_fold"}
+		? ($cookies{"nav_panel_fold"}->value eq "true" ? 1 : 0)
 		: 0;
+	$template_params{NAV_PANEL_FOLD_FORCED} = 0;
 
 	# Common Navigation params
 	###################
@@ -294,7 +295,8 @@ sub handle_request
 		$template_params{SERVICES} = \@services;
 
 		# Force-reduce navigation panel
-		$template_params{NAV_PANEL_REDUCED} = 1;
+		$template_params{NAV_PANEL_FOLD} = 1;
+		$template_params{NAV_PANEL_FOLD_FORCED} = 1;
 	} elsif ($path =~ /^(.+)\/comparison-(day|month|week|year)\.html$/) {
 		# That's a comparison URL, handle it as special case of groups
 		$path = $1;
@@ -380,7 +382,8 @@ sub handle_request
 			}
 
 			# Force-reduce navigation panel
-			$template_params{NAV_PANEL_REDUCED} = 1;
+			$template_params{NAV_PANEL_FOLD} = 1;
+			$template_params{NAV_PANEL_FOLD_FORCED} = 1;
 		} else {
 			# Emit group template
 			$template_filename = 'munin-domainview.tmpl';

@@ -13,7 +13,7 @@
 				<i class="mdi mdi-menu"></i>
 			</div>
 		</div>
-		<a href="/" class="logo"></a>
+		<a href="/" class="logo logo-neg"></a>
 	</div>
 	<div class="right">
 		<div class="filter" style="display: none;">
@@ -29,7 +29,9 @@
 <div id="main">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 		<div id="content">
-			<h2>Overview</h2>
+			<div class="page-head">
+				<h2>Overview</h2>
+			</div>
 
 			<ul class="groupview">
 				<TMPL_LOOP GROUPS><TMPL_UNLESS MULTIGRAPH>

@@ -4,7 +4,7 @@
 <div id="main" class="comparison">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<div id="content" data-tabsenabled="true" data-tabs="true" data-graphext="<TMPL_VAR GRAPH_EXT>">
-		<div class="comparison-head">
+		<div class="page-head">
 			<div>
 				<h2>Comparison</h2>
 				<div class="subtitle"><TMPL_VAR NAME> - <TMPL_VAR TIMERANGE></div>
@@ -57,6 +57,7 @@
 		</TMPL_LOOP>
 	</div>
 </div>
+<a href="#" id="backToTop"><i class="mdi mdi-arrow-up"></i></a>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
 <script src="/static/js/component-eventruler.js"></script>
 <script src="/static/js/munin-comparison.js"></script>

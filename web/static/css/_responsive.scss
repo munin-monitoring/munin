@@ -2,9 +2,12 @@
  * This file contains everything that makes munin responsive, and is included in style.scss
  */
 
+.show-mobile { display: none!important; }
+
 /* Small devices (tablets, smartphones) */
 @media (max-width: 768px) {
 	.hide-mobile { display: none!important; }
+	.show-mobile { display: block!important; }
 
 	header {
 		border-left: 0;
@@ -18,9 +21,7 @@
 			}
 
 			.logo {
-				margin-top: 0;
-				width: 30px;
-				@include opacity(1);
+				display: none;
 			}
 		}
 
@@ -28,31 +29,22 @@
 			.filter {
 				display: inline-block;
 				margin-top: 0;
-				width: 200px;
+				width: 150px;
 
 				/* Don't expand on focus */
 				input[type=text] {
-					width: 200px;
-
-					&:focus {
-						width: 200px;
+					&, &:focus {
+						width: 150px;
 					}
 				}
 			}
-			.actions .action-icon {
-				margin-top: 0;
-			}
+		}
+		.actions .action-icon {
+			margin-top: 3px;
 		}
 
-		.pageTitle {
-			h1 {
-				padding-top: 10px;
-			}
-		}
-
-		.pageTitle {
-			display: block;
-			clear: both;
+		.pageTitle h1 {
+			padding-top: 0;
 		}
 	}
 
@@ -71,14 +63,20 @@
 		height: 100%;
 		max-width: 500px;
 		background-color: #fff;
-		@include box-shadow(1px 0px 3px -1px rgba(0, 0, 0, 0.3));
+		@include box-shadow(1px 0px 20px 0px rgba(0, 0, 0, 0.3));
 
 		.navigation-wrapper {
 			padding: 0;
 			overflow-y: auto;
 
+			.navigation {
+				width: $navigation-width-mobile;
+			}
 			.timerangesList { @include opacity(1); }
 		}
+
+		&.fold { width: 0; }
+		&.shown { width: $navigation-width-mobile; }
 	}
 
 	#content {
@@ -86,14 +84,14 @@
 		padding: 1em 0;
 		width: 100%;
 
-		h2, h3, h4 {
+		h2, h3, h4, .subtitle {
 			margin-left: 20px;
 		}
 
-		.category-head, .comparison-head {
+		.page-head {
 			margin-left: 20px;
 
-			h2 { margin-left: 0; }
+			h2, .subtitle { margin-left: 0; }
 			.timeRangeSwitch { margin-left: 40px; }
 		}
 	}
@@ -113,7 +111,7 @@
 		width: 100%;
 		left: 0;
 		top: 0;
-		margin-top: 0;
+		margin-top: 15px;
 		margin-left: 0;
 		max-height: 100%;
 	}

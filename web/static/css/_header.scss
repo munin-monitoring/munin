@@ -3,6 +3,29 @@
  * Imported in _layout.scss
  */
 
+.logo {
+	display: inline-block;
+	width: 118px;
+	height: 34px;
+	background-repeat: no-repeat;
+	background-position: 4px 2px;
+	background-size: 115px 30px;
+
+	// Normal version (black)
+	& {
+		/* SVG logo: fallback to png */
+		background-image: url('../img/logo-h.png');
+		background-image: linear-gradient(transparent, transparent), url('../img/logo-h.svg');
+	}
+
+	// Negative version (white)
+	&.logo-neg {
+		/* SVG logo: fallback to png */
+		background-image: url('../img/logo-h-neg.png');
+		background-image: linear-gradient(transparent, transparent), url('../img/logo-h-neg.svg');
+	}
+}
+
 header {
 	color: #fff;
 	min-height: 45px;
@@ -39,18 +62,8 @@ header {
 		font-size: 0;
 
 		.logo {
-			display: inline-block;
-			width: 118px;
-			height: 34px;
 			margin-top: 5px;
 			@include transition-duration(200ms);
-			background-repeat: no-repeat;
-			background-position: 4px 2px;
-			/* SVG logo: fallback to png */
-			background-image: url('../img/logo-h-neg.png');
-			background-image: linear-gradient(transparent, transparent),
-			url('../img/logo-h-neg.svg');
-			background-size: 115px 30px;
 			@include opacity(0.9);
 
 			&:hover {
@@ -66,11 +79,11 @@ header {
 		font-size: 16px;
 		color: #eee;
 		text-align: center;
-		display: block;
-		width: 100%;
+		display: inline-block;
 		@include box-sizing(border-box);
 
 		h1 {
+			display: inline-block;
 			vertical-align: middle;
 			padding-top: 4px;
 		}
@@ -109,7 +122,8 @@ header {
 		height: 31px;
 		overflow: hidden;
 		cursor: pointer;
-		margin: 5px 0 0 7px;
+		margin: 5px 0 0 5px;
+		vertical-align: middle;
 		@include transition-duration(150ms);
 		@include border-radius(2px);
 		@include user-select(none);

@@ -10,6 +10,7 @@
 /* SASS variables */
 $primary-color: 	#097D03;
 $secondary-color: 	#546E7A;
+$buttons-color:     #3498DB;
 $problems-warning-color:  #ED793F;
 $problems-critical-color: #F14122;
 
@@ -24,15 +25,13 @@ $problems-critical-color: #F14122;
 img { border: 0; }
 
 /* Content: comparison / categoryview */
-.categoryview, .comparison {
-	.category-head, .comparison-head {
-		> div {
-			display: inline-block;
-			vertical-align: middle;
-		}
-		.timeRangeSwitch {
-			margin-left: 100px;
-		}
+.page-head {
+	> div {
+		display: inline-block;
+		vertical-align: middle;
+	}
+	.timeRangeSwitch {
+		margin-left: 100px;
 	}
 }
 
@@ -186,8 +185,14 @@ p.graph_info {
 		a {
 			display: inline-block;
 			padding: 6px 7px;
-			opacity: 0.8;
 			font-size: 11px;
+			@include opacity(0.8);
+			@include transition-duration(150ms);
+
+			&:hover {
+				text-decoration: none;
+				background-color: rgba(0, 0, 0, 0.07);
+			}
 		}
 	}
 
@@ -206,7 +211,7 @@ p.graph_info {
 			@include border-radius(2px);
 
 			&:hover {
-				background-color: #dedede;
+				background-color: rgba(0, 0, 0, 0.05);
 				text-decoration: none;
 			}
 
@@ -321,15 +326,13 @@ ul.timeRangeSwitch {
 		.inputUnit {
 			display: inline-block;
 			padding: 0 5px;
-			line-height: 21px;
+			line-height: 23px;
 			margin-left: -2px;
-			height: 23px;
-			@include border-radius(0 4px 4px 0);
+			height: 26px;
+			@include border-radius(0 2px 2px 0);
 			cursor: default;
 			background-color: #eee;
 			border: 1px solid #aaa;
-			@include box-shadow(inset 0 1px 2px rgba(0,0,0,0.1));
-			color: #555;
 			vertical-align: top;
 		}
 		.half {
