@@ -193,6 +193,12 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "inact_clean.draw LINE1\n";
 	print "inact_clean.info Memory not currently used.\n";
     }
+    if (exists $mems{'KSM'}) {
+    print "ksm_sharing.label KSM sharing\n";
+    print "ksm_sharing.draw LINE2\n";
+    print "ksm_sharing.colour FFBFFF\n";
+    print "ksm_sharing.info Memory saved by KSM sharing\n";
+    }
     for my $field (qw(apps buffers swap cached free slab swap_cache page_tables vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean shmem)) {
     	my ($warning, $critical) = get_thresholds($field);
 	my $total = $mems{MemTotal};
@@ -288,6 +294,9 @@ print "inact_laundry.value ", $mems{'Inact_laundry'}, "\n"
 print "inact_clean.value ", $mems{'Inact_clean'}, "\n"
   if exists $mems{'Inact_clean'};
 
+print "ksm_sharing.value ", $mems{'KSM'}, "\n"
+  if exists $mems{'KSM'};
+
 exit 0;
 
 sub fetch_meminfo {
@@ -311,6 +320,7 @@ sub fetch_meminfo {
 	$mems{'Inactive'} = $mems{'Inact_dirty'} +
 	  $mems{'Inact_laundry'} + $mems{'Inact_clean'};
     }
+    &fetch_ksm;
 }
 
 sub fetch_slabinfo {
@@ -332,4 +342,20 @@ sub fetch_slabinfo {
     $mems{'Slab'} = $tot_slab_pages * 4096 if $tot_slab_pages gt 0;
 }
 
-# vim:syntax=perl:ts=8
+sub fetch_ksm {
+    open (IN, "/sys/kernel/mm/ksm/run") || return;
+    my $value = <IN>;
+    if (defined $value) {
+        chomp $value;
+        return unless $value;
+    }
+    close (IN);
+
+    open (IN, "/sys/kernel/mm/ksm/pages_sharing") || return;
+    $value = <IN>;
+    if (defined $value) {
+        chomp $value;
+        $mems{'KSM'} = $value * 4096;
+    }
+    close (IN);
+}
