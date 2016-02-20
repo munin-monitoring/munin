@@ -128,10 +128,22 @@ my (@include_re, @exclude_re);
 
 sub split_and_skip {
   my ($line) = @_;
+  my ($name, $capacity, $mountpt);
 
   # Parse the output
   chomp($_);
-  my ($name, undef, undef, undef, $capacity, $mountpt) = split(/\s+/, $_, 6);
+  # replace first initial occurence of two or more spaces before a group of four
+  # or more digits with exactly three spaces and the following digits.
+  s/\s{2,}(\d{4,})/   $1/;
+  #      devname        block   used    avail    cap    mountpt
+  if (/^([\w\/\s]+)\s{3}(\d+)\s+(\d+)\s+(\d+)\s+(\d+\%)\s+(.*)/) {
+    $name = $1;
+    $capacity = $5;
+    $mountpt = $6;
+  } else {
+    return undef;
+  }  
+
 
   return undef if $name eq 'Filesystem';
 
