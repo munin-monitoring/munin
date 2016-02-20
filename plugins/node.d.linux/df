@@ -156,7 +156,7 @@ sub split_and_skip {
   return if $name eq 'Filesystem';
 
   foreach my $re (@include_re) {
-    return if ($name =~ $re or $mountpt =~ $re);
+    return unless ($name =~ $re or $mountpt =~ $re);
   }
 
   foreach my $re (@exclude_re) {
