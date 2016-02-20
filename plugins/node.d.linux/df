@@ -153,14 +153,14 @@ sub split_and_skip {
     return;
   }
 
-  return undef if $name eq 'Filesystem';
+  return if $name eq 'Filesystem';
 
   foreach my $re (@include_re) {
-    return undef if ($name =~ $re or $mountpt =~ $re);
+    return if ($name =~ $re or $mountpt =~ $re);
   }
 
   foreach my $re (@exclude_re) {
-    return undef if ($name =~ $re or $mountpt =~ $re);
+    return if ($name =~ $re or $mountpt =~ $re);
   }
 
   $name = $mountpt if $usemntpt{$name};
