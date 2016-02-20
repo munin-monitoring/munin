@@ -128,10 +128,30 @@ my (@include_re, @exclude_re);
 
 sub split_and_skip {
   my ($line) = @_;
+  my ($name, $capacity, $mountpt);
 
-  # Parse the output
-  chomp($_);
-  my ($name, undef, undef, undef, $capacity, $mountpt) = split(/\s+/, $_, 6);
+  if ( m{
+          ^           # beginning of line
+          (.*\S)      # Filesystem
+          \s+
+          \d+         # 1024-blocks
+          \s+
+          \d+         # Used
+          \s+
+          \d+         # Available
+          \s+
+          (\d+)%      # Capacity
+          \s+
+          (/.*)       # Mounted on
+          $           # end of line
+        }smx
+      ) {
+    $name = $1;
+    $capacity = $2;
+    $mountpt = $3;
+  } else {
+    return;
+  }
 
   return undef if $name eq 'Filesystem';
 
@@ -144,8 +164,6 @@ sub split_and_skip {
   }
 
   $name = $mountpt if $usemntpt{$name};
-
-  $capacity =~ s/%$//;
 
   return [clean_fieldname($name), $mountpt, $capacity];
 }
