@@ -76,7 +76,13 @@ my $pg = Munin::Plugin::Pgsql->new(
             "SELECT usename,count(*) FROM pg_stat_activity WHERE procpid != pg_backend_pid() GROUP BY usename ORDER BY 1",
         ]
     ],
-    configquery => "SELECT DISTINCT usename,usename FROM pg_stat_activity ORDER BY 1",
+    configquery => [
+        "SELECT DISTINCT usename,usename FROM pg_stat_activity WHERE pid != pg_backend_pid() ORDER BY 1",
+        [
+            9.1,
+            "SELECT DISTINCT usename,usename FROM pg_stat_activity WHERE procpid != pg_backend_pid() ORDER BY 1",
+        ]
+    ],
 );
 
 $pg->Process();
