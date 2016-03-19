@@ -90,7 +90,7 @@ findspeed_mbps() {
     # iwlist first)
     if [[ -r /sys/class/net/$INTERFACE/speed ]]; then
             SPEED=$(cat /sys/class/net/$INTERFACE/speed 2>/dev/null)
-            if [[ -n "$SPEED" ]]; then
+            if [ -n "$SPEED" -a "$SPEED" -gt "0" ]; then
                 echo $SPEED
                 return
             fi
@@ -161,7 +161,7 @@ case $1 in
         ;;
     suggest)
         if [[ -r /proc/net/dev ]]; then
-            sed -rne '/^[[:space:]]*(lo|sit[[:digit:]]+):/d;s,^[[:space:]]*([^:]+):.*,\1,p' /proc/net/dev
+            sed -rne '/^[[:space:]]*(lo|gre[[:digit:]]|sit[[:digit:]]+|[a-z0-9]+\.[0-9]+):/d;s,^[[:space:]]*([^:]+):.*,\1,p' /proc/net/dev
         fi
         exit 0
         ;;
