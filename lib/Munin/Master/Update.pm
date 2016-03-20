@@ -440,7 +440,7 @@ sub _dump_into_sql {
 
 	# Configuration
 	$config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
-	for my $key (keys %$config) {
+	for my $key (sort keys %$config) {
 		next if ref $config->{$key};
 		$sth_param->execute($key, $config->{$key});
 	}
@@ -467,7 +467,7 @@ sub _dump_into_sql {
 			$sth_url->execute($node_id, "node", $url);
 		}
 
-		for my $attr (keys %$node) {
+		for my $attr (sort keys %$node) {
 			# Ignore the configref key, as it is redundant
 			next if $attr eq "configref";
 
@@ -482,7 +482,7 @@ sub _dump_into_sql {
 		DEBUG "[DEBUG] Reading state for $path in $state_file (Dumping)";
 		my $state = munin_read_storable($state_file) || {};
 
-		for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
+		for my $service (sort keys %{$self->{service_configs}{$host}{data_source}}) {
 			# Static HTML and graphs (both static and CGI) use forward slashes ('/')
 			# as the separator for urls of multigraph graph nodes, like:
 			#
@@ -503,7 +503,7 @@ sub _dump_into_sql {
 
 			my $is_category_set;
 			my $graph_order;
-			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
+			for my $attr (sort @{$self->{service_configs}{$host}{global}{$service}}) {
 				my ($attr_key, $attr_value) = @$attr;
 				# Category names should not be case sensitive. Store them all in lowercase.
 				if ($attr_key eq 'graph_category') {
@@ -526,7 +526,7 @@ sub _dump_into_sql {
 				$sth_service_category->execute($service_id, "other") unless $is_category_set;
 			}
 
-			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
+			for my $data_source (sort keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
 				my $order = _get_order($data_source, $graph_order);
 				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source", $order);
 				my $ds_id = _get_last_insert_id($dbh);
@@ -535,7 +535,7 @@ sub _dump_into_sql {
 				my $ds_type;
 				my $gfx_color;
 				my $cdef;
-				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
+				for my $attr (sort keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
 					my $value = $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr};
 					$sth_ds_attr->execute($ds_id, $attr, $value);
 
