@@ -625,22 +625,6 @@ sub _write_new_service_configs {
     $self->_print_old_service_configs_for_failed_workers($datafile_hash);
 
     $self->_dump_into_sql();
-
-    for my $host (keys %{$self->{service_configs}}) {
-        for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
-            for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
-                munin_set_var_path($datafile_hash, "$host:$service.$attr->[0]", $attr->[1]);
-            }
-            for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
-                for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
-                    munin_set_var_path($datafile_hash, "$host:$service.$data_source.$attr", $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
-                }
-            }
-        }
-    }
-
-    # Also write the binary (Storable) version
-    munin_writeconfig_storable($config->{dbdir}.'/datafile.storable', $datafile_hash);
 }
 
 

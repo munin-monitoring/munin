@@ -108,10 +108,6 @@ sub limits_startup {
     exit_if_run_by_super_user() unless $force_run_as_root;
 
     @always_send = qw{ok warning critical unknown} if $force;
-
-    munin_readconfig_base($conffile);
-    # XXX: check if it does actually need that part
-    $config = munin_readconfig_part('datafile', 0);
 }
 
 
