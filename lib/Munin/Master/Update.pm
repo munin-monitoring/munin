@@ -426,16 +426,29 @@ sub _dump_into_sql {
 	# values, along with a precomputed alarm state (UNKNOWN, NORMAL,
 	# WARNING, CRITICAL)
 	#
+	# But this is in a persistent DB. As it is stateful.
+	# Note that the whole DB will be stateful in the future, but this table
+	# is highly volatile anyway
+	my $datafilename_state = $datafilename;
+	$datafilename_state =~ s/\.sqlite$/-state.sqlite/;
+	my $dbh_state = DBI->connect("dbi:SQLite:dbname=$datafilename_state","","") or die $DBI::errstr;
+	#
 	# Note, this table is referenced by composite key (type,id) in order to be
 	# able to have any kind of states. Such as whole node states for example.
-	$dbh->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
+	$dbh_state->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
 		last_epoch INTEGER, last_value VARCHAR,
 		prev_epoch INTEGER, prev_value VARCHAR,
 		alarm VARCHAR, num_unknowns INTEGER
 		)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
-	my $sth_state = $dbh->prepare('INSERT INTO state (id, type, last_epoch, last_value, prev_epoch, prev_value) VALUES (?, ?, ?, ?, ?, ?)');
-	$sth_state->{RaiseError} = 1;
+	$dbh_state->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
+	my $sth_state = $dbh_state->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns
+		FROM state WHERE id = ? AND type = ?');
+	my $sth_state_i = $dbh_state->prepare(
+		'INSERT INTO state (last_epoch, last_value, prev_epoch, prev_value, id, type) VALUES (?, ?, ?, ?, ?, ?)');
+	my $sth_state_u = $dbh_state->prepare(
+		'UPDATE state SET last_epoch = ?, last_value = ?, prev_epoch = ?, prev_value = ? WHERE id = ? AND type = ?');
+	$sth_state_i->{RaiseError} = 0;
+	$sth_state_u->{RaiseError} = 0;
 
 
 	# Configuration
@@ -574,7 +587,19 @@ sub _dump_into_sql {
 				INFO "No state found for ds $ds_id ($rrdfile_prefix)" unless $state_ds;
 				next unless $state_ds;
 
-				$sth_state->execute($ds_id, "ds", @{ $state_ds->{current} }, @{ $state_ds->{previous} }, );
+				$sth_state_u->execute(
+						@{ $state_ds->{current} },
+						@{ $state_ds->{previous} },
+						$ds_id, "ds",
+					);
+				if ($sth_state_u->rows == 0) {
+					# No row updated, go insert !
+					$sth_state_i->execute(
+						@{ $state_ds->{current} },
+						@{ $state_ds->{previous} },
+						$ds_id, "ds",
+					);
+				}
 
 				# Insert the rrd:last in the main DB
 				$sth_ds_attr->execute($ds_id, "rrd:last", $state_ds->{current}[0] );

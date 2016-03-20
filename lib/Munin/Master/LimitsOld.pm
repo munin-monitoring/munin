@@ -316,17 +316,18 @@ sub process_service {
 
     use DBI;
     my $datafilename = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile.sqlite";
+    my $datafilename_state = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile-state.sqlite";
     DEBUG "[DEBUG] opening sql $datafilename";
     my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
-    my $sth_state = $dbh->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm FROM state WHERE id = ? and type = ?');
-    my $sth_state_upt = $dbh->prepare('UPDATE state SET alarm = ? WHERE id = ? and type = ?');
+    my $dbh_state = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+    my $sth_state = $dbh_state->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm FROM state WHERE id = ? and type = ?');
+    my $sth_state_upt = $dbh_state->prepare('UPDATE state SET alarm = ? WHERE id = ? and type = ?');
     my $sth_ds = $dbh->prepare('SELECT id FROM url WHERE path = ? and type = ?');
 
     foreach my $field (@$children) {
         next if (!defined $field or ref($field) ne "HASH");
         my $fname   = munin_get_node_name($field);
         my $fpath   = munin_get_node_loc($field);
-        my $onfield = munin_get_node($oldnotes, $fpath);
         my $oldstate = 'ok';
 
 
@@ -350,7 +351,7 @@ sub process_service {
 		$sth_state->execute($ds_id, "ds");
 		my ($current_updated_timestamp, $current_updated_value,
 			$previous_updated_timestamp, $previous_updated_value,
-			$old_alarm) = $sth_state->fetchrow_array;
+			$old_alarm, $num_unknowns) = $sth_state->fetchrow_array;
 
 		my $oldstate = $old_alarm || 'ok';
 
