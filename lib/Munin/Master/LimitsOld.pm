@@ -781,7 +781,8 @@ sub generate_service_message {
     }
 }
 
-
+# Homegrown templating engine.
+# XXX - Not sure it's a very good idea
 sub message_expand {
     my $hash = shift;
     my $text = shift;
