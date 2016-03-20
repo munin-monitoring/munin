@@ -575,6 +575,10 @@ sub _dump_into_sql {
 				next unless $state_ds;
 
 				$sth_state->execute($ds_id, "ds", @{ $state_ds->{current} }, @{ $state_ds->{previous} }, );
+
+				# Insert the rrd:last in the main DB
+				$sth_ds_attr->execute($ds_id, "rrd:last", $state_ds->{current}[0] );
+
 			}
 		}
 	}
