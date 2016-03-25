@@ -107,6 +107,8 @@ my %legal = map { $_ => 1 } qw(
 	rundir
 	service_order
 	skipdraw
+	ssh_command
+	ssh_options
 	stack
 	state
 	staticdir

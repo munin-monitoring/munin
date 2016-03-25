@@ -46,6 +46,9 @@ master <master-index>` configuration you need to configure a host with a
 You will need to create an SSH key for the "munin" user, and
 distribute this to all nodes running munin-asyncd.
 
+The ssh command and options can be customized in :ref:`munin.conf`
+with the ssh_command and ssh_options configuration options.
+
 On the munin node
 -----------------
 

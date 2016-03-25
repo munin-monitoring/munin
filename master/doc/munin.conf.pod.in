@@ -127,6 +127,19 @@ munin-cgi-graph jobs which we can't stop, but munin-cgi-graph will
 throttle down how many rrdgraph calls will be running at the same time
 to this number.  Affects: munin-cgi-graph and munin-fastcgi-graph.
 
+=item B<ssh_command> I<value>
+
+The name of the secure shell command to use.  Can be fully qualified,
+or looked up in $PATH.  Default: C<ssh>
+
+=item B<ssh_options> I<value>
+
+The C<ssh> command line options.  Defaults: C<-o
+ChallengeResponseAuthentication=no -o StrictHostKeyChecking=no>.
+
+If you need per-host ssh configuration, add these to
+F<~/munin/.ssh/config>
+
 =item B<tls> <value>
 
 Can have four values. C<paranoid>, C<enabled>, C<auto>, and
