@@ -80,7 +80,7 @@ otherwise.
 .. option:: graph_data_size <normal|huge>
 
    This directive sets the resolution of the RRD files that are
-   created by :ref:`munin-httpd`.
+   created by :ref:`munin-update`.
 
    Default is "normal".
 
