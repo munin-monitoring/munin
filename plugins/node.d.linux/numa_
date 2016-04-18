@@ -126,7 +126,7 @@ if [ "$1" = "config" ]; then
       echo "numa_miss.type DERIVE"
       echo "numa_foreign.label numa_foreign"
       echo "numa_foreign.info A process wanted to allocate memory from this node but ended up with memory from another node."
-      echo "numa_miss.type DERIVE"
+      echo "numa_foreign.type DERIVE"
       echo "interleave_hit.label interleave_hit"
       echo "interleave_hit.info Interleaving wanted to allocate memory from this node and succeeded."
       echo "interleave_hit.type DERIVE"
