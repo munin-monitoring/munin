@@ -101,7 +101,7 @@ if [ "$1" = "config" ]; then
       echo 'graph_order local_node other_node'
       echo "graph_title NUMA allocations from processes running on node ${NODE}"
       echo 'graph_args -l 0'
-      echo 'graph_vlabel pages'
+      echo 'graph_vlabel pages/${graph_period}'
       echo 'graph_info Shows where processes on this node got memory.'
     	echo 'graph_category system'
       echo "local_node.label local_node"
@@ -117,7 +117,7 @@ if [ "$1" = "config" ]; then
       echo 'graph_order numa_hit numa_miss numa_foreign interleave_hit'
       echo "graph_title NUMA Memory allocations against node ${NODE}"
       echo 'graph_args -l 0'
-      echo 'graph_vlabel pages'
+      echo 'graph_vlabel pages/${graph_period}'
       echo 'graph_info Status of memory allocation requests of this node'
     	echo 'graph_category system'
       echo "numa_hit.label numa_hit"
