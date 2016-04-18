@@ -107,9 +107,11 @@ if [ "$1" = "config" ]; then
       echo "local_node.label local_node"
       echo "local_node.info A process ran on this node and got memory from it."
       echo "local_node.type DERIVE"
+      echo "local_node.min 0"
       echo "other_node.label other_node"
       echo "other_node.info A process ran on this node and got memory from another node."
       echo "other_node.type DERIVE"
+      echo "other_node.min 0"
       ;;
   memory)
       echo 'graph_order numa_hit numa_miss numa_foreign interleave_hit'
@@ -121,15 +123,19 @@ if [ "$1" = "config" ]; then
       echo "numa_hit.label numa_hit"
       echo "numa_hit.info A process wanted to allocate memory from this node and succeeded."
       echo "numa_hit.type DERIVE"
+      echo "numa_hit.min 0"
       echo "numa_miss.label numa_miss"
       echo "numa_miss.info A process wanted to allocate memory from another node but ended up with memory from this node."
       echo "numa_miss.type DERIVE"
+      echo "numa_miss.min 0"
       echo "numa_foreign.label numa_foreign"
       echo "numa_foreign.info A process wanted to allocate memory from this node but ended up with memory from another node."
       echo "numa_foreign.type DERIVE"
+      echo "numa_foreign.min 0"
       echo "interleave_hit.label interleave_hit"
       echo "interleave_hit.info Interleaving wanted to allocate memory from this node and succeeded."
       echo "interleave_hit.type DERIVE"
+      echo "interleave_hit.min 0"
       ;;
   *)
       echo "$RESOURCE not defined."
