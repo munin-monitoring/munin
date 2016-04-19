@@ -139,7 +139,6 @@ if ( %stat ) {
        {
 	label => "Interrupts",
 	type  => "DERIVE",
-	max   => 100000,
 	min   => 0,
 	info  => "Interrupts are events that alter sequence of instructions executed by a processor. They can come from either hardware (exceptions, NMI, IRQ) or software",
 	value => $stat{intr}[0],
@@ -148,7 +147,6 @@ if ( %stat ) {
        {
 	label => "Context switches",
 	type  => "DERIVE",
-	max   => 100000,
 	min   => 0,
 	info  => "A context switch occurs when a multitasking operatings system suspends the currently running process, and starts executing another.",
 	value => $stat{ctxt}[0],
@@ -168,7 +166,6 @@ if ( %stat ) {
        {
 	type  => "DERIVE",
 	min   => 0,
-	max   => 100000,
 	value => $stat{processes}[0],
        },
       },
