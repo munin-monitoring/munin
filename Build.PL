@@ -119,6 +119,7 @@ my $build = Module::Build::CleanInstall->new(
         'Net::SSLeay'            => '1.65',
         'Net::Server::Daemonize' => '0.06',
         'Net::Server::Fork'      => '0',
+        'Parallel::ForkManager'  => '0',
         'Params::Validate'       => '1.13',
         'Alien::RRDtool'         => '0',
         'URI'                    => '1.64',

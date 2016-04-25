@@ -24,6 +24,7 @@ cat <<EOF
   libnet-server-perl
   libnet-snmp-perl
   libnet-ssleay-perl
+  libparallel-forkmanager-perl
   libparams-validate-perl
   librrds-perl
   libtest-class-perl

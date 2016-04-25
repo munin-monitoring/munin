@@ -14,7 +14,6 @@ use List::Util qw( shuffle );
 use Munin::Common::Defaults;
 use Munin::Master::Config;
 use Munin::Master::UpdateWorker;
-use Munin::Master::ProcessManager;
 use Munin::Master::Utils;
 
 my $config = Munin::Master::Config->instance()->{config};
@@ -46,8 +45,6 @@ sub run {
     $self->_do_with_lock_and_timing(sub {
         INFO "[INFO]: Starting munin-update";
 
-        $self->{old_service_configs} = $self->_read_old_service_configs();
-
         $self->{workers} = $self->_create_workers();
         $self->_run_workers();
 
@@ -56,27 +53,24 @@ sub run {
     });
 }
 
+sub get_dbh {
+	my ($self) = @_;
 
-sub _read_old_service_configs {
+	use DBI;
+	my $datafilename = $ENV{MUNIN_DBURL} || "$config->{dbdir}/datafile.sqlite";
+	# Note that we should reconnect for _each_ update part, as sharing a $dbh when forking()
+	# will bring unhappiness
+	#
+	# So, using a caching version has to be careful. And reopen it on each thread/subprocess.
 
-    # Read the datafile containing old configurations.  This should
-    # not fail in case of problems with the file.  In such a case the
-    # file should simply be ingored and a new one written.  Lets hope
-    # it does not repeat itself then.
+	# Not being able to open the DB connection seems FATAL to me. Better
+	# die loudly than injecting some misguided data
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
-    my ($self) = @_;
-
-    # Get old service configuration from the config instance since the
-    # syntaxes are identical.
-    my $oldconfig = Munin::Master::Config->instance()->{oldconfig};
-
-    my $datafile = $oldconfig->{config_file} = $config->{dbdir}.'/datafile';
-
-    $oldconfig = bless( munin_read_storable("$datafile.storable", $oldconfig), "Munin::Master::Config");
-
-    return $oldconfig;
+	# Plainly returns it, but do *not* put it in $self, as it will let Perl
+	# do its GC properly and closing it when out of scope.
+	return $dbh;
 }
-
 
 sub _create_rundir_if_missing {
     my ($self) = @_;
@@ -141,40 +135,45 @@ sub _do_with_lock_and_timing {
 
 
 sub _run_workers {
-    my ($self) = @_;
+	my ($self) = @_;
 
-    if ($config->{fork}) {
-        my $pm = Munin::Master::ProcessManager
-            ->new($self->_create_self_aware_worker_result_handler(),
-                  $self->_create_self_aware_worker_exception_handler());
-        $pm->add_workers(@{$self->{workers}});
-        $pm->start_work();
-    }
-    else {
-        for my $worker (@{$self->{workers}}) {
+	use Parallel::ForkManager;
 
-	    my $res ;
+	my $max_processes = $config->{max_processes};
 
-	    eval {
-		# do_work fails hard on a number of conditions
-		$res = $worker->do_work();
-	    };
+	# Do NOT fork if not set
+	$max_processes = 0 unless $config->{fork};
 
-	    $res=undef if $EVAL_ERROR;
+	my $pm = Parallel::ForkManager->new($max_processes);
 
-	    my $worker_id = $worker->{ID};
-	    if (defined($res)) {
-		$self->_handle_worker_result([$worker_id, $res]);
-	    } else {
-		# Need to handle connection failure same as other
-		# failures.  do_connect fails softly.
-		WARN "[WARNING] Failed worker ".$worker_id."\n";
-		push @{$self->{failed_workers}}, $worker_id;
-	    }
-        }
-    }
+	WORKER_LOOP:
+	for my $worker (@{$self->{workers}}) {
+		my $worker_pid = $pm->start();
+		next WORKER_LOOP if $worker_pid;
+
+		my $res;
+		eval {
+			# do_work fails hard on a number of conditions
+			$res = $worker->do_work();
+		};
+
+		$res = undef if $EVAL_ERROR;
+
+		my $worker_id = $worker->{ID};
+		if (defined($res)) {
+			$self->_handle_worker_result([$worker_id, $res]);
+		} else {
+			# Need to handle connection failure same as other
+			# failures.  do_connect fails softly.
+			WARN "[WARNING] Failed worker ".$worker_id."\n";
+			push @{$self->{failed_workers}}, $worker_id;
+		}
+
+		$pm->finish;
+	}
+
+	$pm->wait_all_children;
 }
-
 
 sub _create_self_aware_worker_result_handler {
     my ($self) = @_;
