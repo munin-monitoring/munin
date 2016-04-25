@@ -90,7 +90,7 @@ sub _create_workers {
 
     # Shuffle @hosts to avoid always having the same ordering
     # XXX - It might be best to preorder them on the TIMETAKEN ASC
-    #       in order that statisticall fast hosts are done first to increase
+    #       in order that statistically fast hosts are done first to increase
     #       the global throughtput
     @hosts = shuffle(@hosts);
 
@@ -98,6 +98,7 @@ sub _create_workers {
         @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts
     }
 
+    # Only create the "update yes" hosts
     @hosts = grep { $_->{update} } @hosts;
 
     return [ map { Munin::Master::UpdateWorker->new($_) } @hosts ];
