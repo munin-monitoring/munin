@@ -109,6 +109,10 @@ case ${1:-} in
 		configure_plugins
 		configure_master
 		;;
+	master)
+		make_sandbox
+		configure_master
+		;;
 	*)
 		make_sandbox
 		;;
