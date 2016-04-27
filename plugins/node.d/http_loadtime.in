@@ -1,5 +1,4 @@
-#!@@BASH@@
-# -*- sh -*-
+#!/usr/bin/env bash
 
 : << =cut
 
