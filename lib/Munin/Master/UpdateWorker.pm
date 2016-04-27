@@ -87,7 +87,7 @@ sub do_work {
 	);
 
 	# Try Connecting to the Carbon Server
-	if ($config->{carbon_server} ne "") {
+	if ($config->{carbon_server}) {
 		DEBUG "[DEBUG] Connecting to Carbon server $config->{carbon_server}:$config->{carbon_port}...";
 		$self->{carbon_socket} = IO::Socket::INET->new (
 				PeerAddr => $config->{carbon_server},
