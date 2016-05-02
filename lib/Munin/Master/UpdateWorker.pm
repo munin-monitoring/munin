@@ -46,9 +46,16 @@ sub new {
                                              $host->{port},
                                              $host->{host_name},
 					     $host);
-    $self->{state} = {};
+    # $worker already has a ref to $self, so avoid mem leak
     $self->{worker} = $worker;
     weaken($self->{worker});
+
+    # Inject the handlers to the SQL DB in the node, one for metadata, one for state.
+    #
+    # Note that it comes with no warranty, specially that it is, or isn't the
+    # same one.
+    $self->{node}{dbh} = {};
+    $self->{node}{dbh_state} = {};
 
     return $self;
 }
@@ -66,72 +73,51 @@ sub do_work {
     my $nodedesignation = $host."/".
 	$self->{host}{address}.":".$self->{host}{port};
 
-    my $lock_file = sprintf ('%s/munin-%s.lock',
-			     $config->{rundir},
-			     $path);
-
-    if (!munin_getlock($lock_file)) {
-	WARN "Could not get lock $lock_file for $nodedesignation. Skipping node.";
-        die "Could not get lock $lock_file for $nodedesignation. Skipping node.\n";
-    }
-
-    # Reading the state file, no need to lock it, since it's per node and we
-    # already have a lock on this.
-    my $state_file = sprintf ('%s/state-%s.storable', $config->{dbdir}, $path);
-    DEBUG "[DEBUG] Reading state for $path in $state_file";
-    $self->{state} = munin_read_storable($state_file) || {};
+    # No need to lock for the node. We'll use per plugin locking, and it will be
+    # handled directly in SQL. This will enable node-pushed updates.
 
     my %all_service_configs = (
-	data_source => {},
-	global => {},
+		data_source => {},
+		global => {},
 	);
 
 	# Try Connecting to the Carbon Server
-	if ($config->{carbon_server}) {
-		DEBUG "[DEBUG] Connecting to Carbon server $config->{carbon_server}:$config->{carbon_port}...";
-		$self->{carbon_socket} = IO::Socket::INET->new (
-				PeerAddr => $config->{carbon_server},
-				PeerPort => $config->{carbon_port},
-				Proto    => 'tcp',
-		) or WARN "[WARN] Couldn't connect to Carbon Server: $!";
-	}
+	$self->_connect_carbon_server() if $config->{carbon_server};
 
+	# Having a local handle looks easier
+	my $node = $self->{node};
 
     INFO "[INFO] starting work in $$ for $nodedesignation.\n";
-    my $done = $self->{node}->do_in_session(sub {
+    my $done = $node->do_in_session(sub {
 
 	eval {
 	    # A I/O timeout results in a violent exit.  Catch and handle.
 
-	    my @node_capabilities = $self->{node}->negotiate_capabilities();
+	    my @node_capabilities = $node->negotiate_capabilities();
 
             # Handle spoolfetch, one call to retrieve everything
-	    my %whole_config;
-	    my @plugins;
 	    if (grep /^spool$/, @node_capabilities) {
 		    my $spoolfetch_last_timestamp = $self->get_spoolfetch_timestamp();
 		    local $0 = "$0 -- spoolfetch($spoolfetch_last_timestamp)";
-		    %whole_config = $self->uw_spoolfetch($spoolfetch_last_timestamp);
 
-		    # XXX - Commented out, should be protect by a "if logger.isDebugEnabled()"
-		    #       since it is quite expensive
-		    #DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
+		    # We do inject the update handling, in order to have on-the-fly
+		    # updates, as we don't want to slurp the whole spoolfetched output
+		    # and process it later. It will surely timeout, and use a truckload
+		    # of RSS.
+		    my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub { $self->uw_handle_config( @_ ); } );
 
-		    # spoolfetching reported no data, skipping it.
-		    if (! $whole_config{global}{multigraph}[1]) {
-			    INFO "[INFO] $nodedesignation didn't send any data for spoolfetch. Ignoring it.";
-			    # adding ourself to failed_workers, so we use
-			    push @{ $self->{worker}->{failed_workers} },  $self->{ID};
-			   die "NO_SPOOLFETCH_DATA";
-		    }
+		    # update the timestamp if we spoolfetched something
+		    $self->set_spoolfetch_timestamp($timestamp) if $timestamp;
 
-		    # Gets the plugins from spoolfetch
-		    # Only keep the first one, the others will be multigraph-fetched
-		    @plugins = ( $whole_config{global}{multigraph}[0] ) ;
+		    # Note that spoolfetching hosts is always a success. BY DESIGN.
+		    # Since, if we cannot connect, or whatever else, it is NOT an issue.
+
+		    # No need to do more than that.
+		    return;
 	    }
 
 	    # Note: A multigraph plugin can present multiple services.
-	    @plugins = $self->{node}->list_plugins() unless @plugins;
+	    my @plugins = $node->list_plugins();
 
 	    # Shuffle @plugins to avoid always having the same ordering
 	    # XXX - It might be best to preorder them on the TIMETAKEN ASC
@@ -140,71 +126,35 @@ sub do_work {
 	    @plugins = shuffle(@plugins);
 
 	    for my $plugin (@plugins) {
+		DEBUG "[DEBUG] for my $plugin (@plugins)";
 		if (%{$config->{limit_services}}) {
 		    next unless $config->{limit_services}{$plugin};
 		}
 
-		DEBUG "[DEBUG] for my $plugin (@plugins)";
+		DEBUG "[DEBUG] config $plugin";
 
-		# Ask for config only if spoolfetch didn't already send it
-		my %service_config = %whole_config;
-	        unless (%service_config) {
-		       local $0 = "$0 -- config($plugin)";
-		       %service_config = $self->uw_fetch_service_config($plugin);
+		local $0 = "$0 -- config($plugin)";
+		my $last_timestamp = $node->fetch_service_config($plugin, sub { $self->uw_handle_config( @_ ); });
+
+		# Ignoring if $last_timestamp is undef, as we don't have config
+		if (! defined ($last_timestamp)) {
+			INFO "[INFO] $plugin did emit no proper config, ignoring";
+			next;
 		}
 
-		unless (%service_config) {
-		    WARN "[WARNING] Service $plugin on $nodedesignation ".
-			"returned no config";
-		    next;
-		}
+		# Done with this plugin on dirty config (we already have a timestamp for data)
+		# --> Note that dirtyconfig plugin are always polled every run,
+		#     as we don't have a way to know yet.
+		next if ($last_timestamp);
 
-		# Check if this plugin has already sent its data via a dirtyconfig
-		# Note that spoolfetch also uses dirtyconfig
-		my %service_data = $self->handle_dirty_config(\%service_config);
+		my $is_fresh_enough = $self->is_fresh_enough($nodedesignation, $plugin);
 
-		# default is 0 sec : always update when asked
-		my $update_rate = get_global_service_value(\%service_config, $plugin, "update_rate", 0);
-		my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
-		DEBUG "[DEBUG] update_rate $update_rate_in_seconds for $plugin on $nodedesignation";
+		next if ($is_fresh_enough);
 
-		my $new_data = 1;
+		DEBUG "[DEBUG] fetch $plugin";
+		local $0 = "$0 -- fetch($plugin)";
 
-		if (! %service_data) {
-			# Check if this plugin has to be updated
-			if ($update_rate_in_seconds
-				&& $self->is_fresh_enough($nodedesignation, $plugin, $update_rate_in_seconds)) {
-			    # It's fresh enough, skip this $service
-			    DEBUG "[DEBUG] $plugin is fresh enough, not updating it";
-			    $new_data = 0;
-			}
-
-			# __root__ is only a placeholder plugin for
-			# an empty spoolfetch so we should ignore it
-			# if asked to fetch it.
-			# But we should still do everything after than.
-			if ($new_data && $plugin ne "__root__") {
-				DEBUG "[DEBUG] No service data for $plugin, fetching it";
-				local $0 = "$0 -- fetch($plugin)";
-				%service_data = $self->{node}->fetch_service_data($plugin);
-			}
-		}
-
-		# If update_rate is aligned, round the "when" for alignment
-		if ($is_update_aligned) {
-			foreach my $service (keys %service_data) {
-				my $current_service_data = $service_data{$service};
-				foreach my $field (keys %$current_service_data) {
-					my $whens = $current_service_data->{$field}->{when};
-					for (my $i = 0; $i < scalar @$whens; $i ++) {
-						my $when = $whens->[$i];
-						my $rounded_when = round_to_granularity($when, $update_rate_in_seconds);
-						$whens->[$i] = $rounded_when;
-					}
-				}
-			}
-		}
-
+		$last_timestamp = $node->fetch_service_config($plugin, sub { $self->uw_handle_fetch( @_ , $update_rate, $last_timestamp); });
 
 		# Since different plugins can populate multiple
 		# positions in the service namespace we'll check for
@@ -259,10 +209,15 @@ sub do_work {
 
 	}; # eval
 
+	$self->_disconnect_carbon_server();
+
 	# kill the remaining process if needed
-	if ($self->{node}->{pid} && kill(0, $self->{node}->{pid})) {
-		INFO "[INFO] Killing subprocess $self->{node}->{pid}";
-		kill 'TERM', $self->{node}->{pid};
+	# (useful if we spawned an helper, as for cmd:// or ssh://)
+	# XXX - investigate why this leaks here. It should be handled directly by Node.pm
+	my $node_pid = $self->{node}->{pid};
+	if ($node_pid && kill(0, $node_pid)) {
+		INFO "[INFO] Killing subprocess $node_pid";
+		kill 'TERM', $node_pid;
 	}
 
 	if ($EVAL_ERROR =~ m/^NO_SPOOLFETCH_DATA /) {
@@ -274,16 +229,12 @@ sub do_work {
 	    return;
 	}
 
-	DEBUG "[DEBUG] Closing Carbon socket";
-	$self->{carbon_socket}->close if exists $self->{carbon_socket};
-
+FETCH_OK:
 	# Everything went smoothly.
 	DEBUG "[DEBUG] Everything went smoothly.";
 	return 1;
 
     }); # do_in_session
-
-    munin_removelock($lock_file);
 
     # Update the state file
     DEBUG "[DEBUG] Writing state for $path in $state_file";
@@ -402,19 +353,86 @@ sub handle_dirty_config {
 	return %service_data;
 }
 
+# For the uw_handle_* :
+# The $data has been already sanitized :
+# * chomp()
+# * comments are removed
+# * empty lines are removed
 
-sub uw_spoolfetch {
-    my ($self, $timestamp) = @_;
+# This handles one config part.
+# - It will automatically call uw_handle_fetch to handle dirty_config
+# - In case of multigraph (or spoolfetch) the caller has to call this for every multigraph part
+# - It handles empty $data, and just does nothing
+#
+# Returns the last updated timestamp
+sub uw_handle_config {
+	my ($self, $plugin, $now, $data, $last_timestamp) = @_;
 
-    my %whole_config = $self->{node}->spoolfetch($timestamp);
+	# Build FETCH data, just in case of dirty_config.
+	my @fetch_data;
 
-    # munin.conf might override stuff
-    foreach my $plugin (keys %whole_config) {
-	    my $merged_config = $self->uw_override_with_conf($plugin, $whole_config{$plugin});
-	    $whole_config{$plugin} = $merged_config;
-    }
+	for my $line (@$data) {
+		# Barbaric regex to parse the output of the config
+		next unless ($line =~ m{\A ([^\.]+)(?:\.(\S)+)? \s+ ([\S:]+) }xms);
+		my ($arg1, $arg2, $value) = ($1, $2, $3);
 
-    return %whole_config;
+		# Handle dirty_config
+		if ($arg2 && $arg2 eq "value") {
+			push @fetch_data, $line;
+			next;
+		}
+
+		# TODO - Update the DB with the updated plugin config
+		DEBUG "update DB with plugin:$plugin, $arg1.$arg2 = $value";
+	}
+
+	# timestamp == 0 means "Nothing was updated". We only count on the
+	# "fetch" part to provide us good timestamp info, as the "config" part
+	# doesn't contain any, specially in case we are spoolfetching.
+	#
+	# Also, the caller can override the $last_timestamp, to be called in a loop
+	$last_timestamp = 0 unless defined $last_timestamp;
+
+	# Delegate the FETCH part
+	my $timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
+	$last_timestamp = $timestamp if $timestamp > $last_timestamp;
+
+	return $last_timestamp;
+}
+
+# This handles one fetch part.
+# Returns the last updated timestamp
+sub uw_handle_fetch {
+	my ($self, $plugin, $now, $update_rate, $data) = @_;
+
+	# timestamp == 0 means "Nothing was updated"
+	my $last_timestamp = 0;
+
+	my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
+
+	# Process all the data in-order
+	for my $line (@$data) {
+		next unless ($line =~ m{\A ([^\.]+)(?:\.(\S)+)? \s+ ([\S:]+) }xms);
+		my ($field, $arg, $value) = ($1, $2, $3);
+
+		my $when = $now; # Default is NOW, unless specified
+		if ($value =~ /^(\d+):(.+)$/) {
+			$when = $1;
+			$value = $2;
+		}
+
+		# Always round the $when if plugin asks for. Rounding the plugin-provided
+		# time is weird, but we are doing it to follow the "least surprise principle".
+		$when = round_to_granularity($when, $update_rate_in_seconds) if $is_update_aligned);
+
+		# Update last_timestamp if the current update is more recent
+		$last_timestamp = $when if $when > $last_timestamp;
+
+		# Update all data-driven components: State, RRD, Graphite
+		# TODO
+	}
+
+	return $last_timestamp;
 }
 
 sub uw_fetch_service_config {
@@ -612,6 +630,22 @@ sub _ensure_tuning {
     }
 
     return $success;
+}
+
+sub _connect_carbon_server {
+	DEBUG "[DEBUG] Connecting to Carbon server $config->{carbon_server}:$config->{carbon_port}...";
+
+	$self->{carbon_socket} = IO::Socket::INET->new (
+		PeerAddr => $config->{carbon_server},
+		PeerPort => $config->{carbon_port},
+		Proto    => 'tcp',
+	) or WARN "[WARN] Couldn't connect to Carbon Server: $!";
+}
+
+sub _disconnect_carbon_server {
+	if ($self->{carbon_socket}) {
+		DEBUG "[DEBUG] Closing Carbon socket";
+		delete $self->{carbon_socket};
 }
 
 sub _update_carbon_server {
