@@ -147,7 +147,9 @@ sub do_work {
 		#     as we don't have a way to know yet.
 		next if ($last_timestamp);
 
-		my $is_fresh_enough = $self->is_fresh_enough($nodedesignation, $plugin);
+		my $update_rate = $self->get_update_rate($nodedesignation, $plugin);
+
+		my $is_fresh_enough = $self->is_fresh_enough($update_rate, $last_timestamp);
 
 		next if ($is_fresh_enough);
 
@@ -156,56 +158,10 @@ sub do_work {
 
 		$last_timestamp = $node->fetch_service_config($plugin, sub { $self->uw_handle_fetch( @_ , $update_rate, $last_timestamp); });
 
-		# Since different plugins can populate multiple
-		# positions in the service namespace we'll check for
-		# collisions and warn of them.
-
-		for my $service (keys %{$service_config{data_source}}) {
-		    if (defined($all_service_configs{data_source}{$service})) {
-			WARN "[WARNING] Service collision: plugin $plugin on "
-			    ."$nodedesignation reports $service which already "
-			    ."exists on that host.  Deleting new data.";
-			delete($service_config{data_source}{$service});
-		    delete($service_data{$service})
-			if defined $service_data{$service};
-		    }
-		}
-
-		# .extinfo fields come from "fetch" but must be saved
-		# like "config".
-
-		for my $service (keys %service_data) {
-		    for my $ds (keys %{$service_data{$service}}) {
-			my $extinfo = $service_data{$service}{$ds}{extinfo};
-			if (defined $extinfo) {
-			    $service_config{data_source}{$service}{$ds}{extinfo} =
-				$extinfo;
-			    DEBUG "[DEBUG] Copied extinfo $extinfo into "
-				."service_config for $service / $ds on "
-				.$nodedesignation;
-			}
-		    }
-		}
-
-		$self->_compare_and_act_on_config_changes(\%service_config);
-
-		%{$all_service_configs{data_source}} = (
-		    %{$all_service_configs{data_source}},
-		    %{$service_config{data_source}});
-
-		%{$all_service_configs{global}} = (
-		    %{$all_service_configs{global}},
-		    %{$service_config{global}});
-
-		next if (!$new_data);
-
-		my $last_updated_timestamp = $self->_update_rrd_files(\%service_config, \%service_data);
-		$self->_update_carbon_server(\%service_config, \%service_data);
-		$self->set_spoolfetch_timestamp($last_updated_timestamp);
 	    } # for @plugins
 
 	    # Send "quit" to node
-	    $self->{node}->quit();
+	    $node->quit();
 
 	}; # eval
 
@@ -214,10 +170,10 @@ sub do_work {
 	# kill the remaining process if needed
 	# (useful if we spawned an helper, as for cmd:// or ssh://)
 	# XXX - investigate why this leaks here. It should be handled directly by Node.pm
-	my $node_pid = $self->{node}->{pid};
+	my $node_pid = $node->{pid};
 	if ($node_pid && kill(0, $node_pid)) {
 		INFO "[INFO] Killing subprocess $node_pid";
-		kill 'TERM', $node_pid;
+		kill 'KILL', $node_pid; # Using SIGKILL, since normal termination didn't happen
 	}
 
 	if ($EVAL_ERROR =~ m/^NO_SPOOLFETCH_DATA /) {
@@ -236,16 +192,11 @@ FETCH_OK:
 
     }); # do_in_session
 
-    # Update the state file
-    DEBUG "[DEBUG] Writing state for $path in $state_file";
-    munin_write_storable($state_file, $self->{state});
-
     # This handles failure in do_in_session,
     return undef if ! $done || ! $done->{exit_value};
 
     return {
         time_used => Time::HiRes::time - $update_time,
-        service_configs => \%all_service_configs,
     }
 }
 
@@ -423,7 +374,7 @@ sub uw_handle_fetch {
 
 		# Always round the $when if plugin asks for. Rounding the plugin-provided
 		# time is weird, but we are doing it to follow the "least surprise principle".
-		$when = round_to_granularity($when, $update_rate_in_seconds) if $is_update_aligned);
+		$when = round_to_granularity($when, $update_rate_in_seconds) if $is_update_aligned;
 
 		# Update last_timestamp if the current update is more recent
 		$last_timestamp = $when if $when > $last_timestamp;
