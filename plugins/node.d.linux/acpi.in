@@ -13,7 +13,7 @@ Linux systems with ACPI support.
 
 =head1 CONFIGURATION
 
-Load the 'thermal_zone' kernel module and the plugin gets the thermal zones from /proc/acpi/thermal_zones/*/ automagically.
+Load the 'thermal' kernel module and the plugin gets the thermal zones from /sys/class/thermal/thermal_zone*/ automagically.
 
 =head1 USAGE
 
@@ -47,33 +47,31 @@ GPLv2
 =cut
 
 
-ATZ="$(echo /proc/acpi/thermal_zone/*/temperature)"
+ATZ="$(echo /sys/class/thermal/thermal_zone*)"
 
 do_ () { # Fetch
-    echo "$ATZ" | tr ' ' '\n' | awk -F'[ /\t]*' '{
-         ZONE=$5
-         getline < $0
-         print ZONE".value "$2
-    }'
+    for ZONE in $ATZ; do
+         TEMP=`cat $ZONE/temp`
+         echo `basename $ZONE`.value `echo $TEMP \* 0.001 | bc`
+    done
     exit 0
 }
 
 do_config () {
     echo "graph_title ACPI Thermal zone temperatures"
-    echo "graph_vlabel Celcius"
+    echo "graph_vlabel Celsius"
     echo "graph_category sensors"
     echo "graph_info This graph shows the temperature in different ACPI Thermal zones.  If there is only one it will usually be the case temperature."
-    echo "$ATZ" |
-    awk -F'[ /]' '{
-         print $5".label "$5;
-    }'
-                  
+    for ZONE in $ATZ; do
+         TYPE=`cat $ZONE/type`
+         echo `basename $ZONE`.label $TYPE
+    done
 }
 
 do_autoconf () {
     for f in $ATZ; do
-	test -r $f || {
-	    echo "no (cannot read $f)"
+	test -r $f/temp || {
+	    echo "no (cannot read $f/temp)"
 	    exit 0
 	}
     done
