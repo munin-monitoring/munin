@@ -633,6 +633,8 @@ sub _ensure_tuning {
 }
 
 sub _connect_carbon_server {
+	my $self = shift;
+
 	DEBUG "[DEBUG] Connecting to Carbon server $config->{carbon_server}:$config->{carbon_port}...";
 
 	$self->{carbon_socket} = IO::Socket::INET->new (
@@ -643,9 +645,12 @@ sub _connect_carbon_server {
 }
 
 sub _disconnect_carbon_server {
+	my $self = shift;
+
 	if ($self->{carbon_socket}) {
 		DEBUG "[DEBUG] Closing Carbon socket";
 		delete $self->{carbon_socket};
+	}
 }
 
 sub _update_carbon_server {
