@@ -147,7 +147,7 @@ sub do_work {
 		#     as we don't have a way to know yet.
 		next if ($last_timestamp);
 
-		my $update_rate = $self->get_update_rate($nodedesignation, $plugin);
+		my $update_rate = 300; # XXX - hard coded
 
 		my $is_fresh_enough = $self->is_fresh_enough($update_rate, $last_timestamp);
 
