@@ -94,6 +94,26 @@ EOF
 
 }
 
+configure_debug() {
+	banner CONFIGURE DEBUG
+
+        cat > "${CONFDIR}/munin.conf" <<EOF
+# Sandbox munin.conf
+
+tls                    disabled
+tls_private_key        $BASEDIR/t/tls/master_key.pem
+tls_certificate        $BASEDIR/t/tls/master_cert.pem
+tls_ca_certificate     $BASEDIR/t/tls/CA/ca_cert.pem
+tls_verify_certificate yes
+tls_verify_depth       5
+
+# Read node definitions and other configuration
+EOF
+
+	contrib/munin-node-debug --dump >> "${CONFDIR}/munin.conf"
+
+}
+
 stop_node() {
 	./dev_scripts/stop_munin-node
 }
