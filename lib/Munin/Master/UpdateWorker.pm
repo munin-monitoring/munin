@@ -327,6 +327,10 @@ sub uw_handle_config {
 		next unless ($line =~ m{\A ([^\.]+)(?:\.(\S)+)? \s+ ([\S:]+) }xms);
 		my ($arg1, $arg2, $value) = ($1, $2, $3);
 
+		# Both are optional, so NULL is allowed
+		$arg2 = "" unless defined $arg2;
+		$value = "" unless defined $value;
+
 		# Handle dirty_config
 		if ($arg2 && $arg2 eq "value") {
 			push @fetch_data, $line;
@@ -347,7 +351,7 @@ sub uw_handle_config {
 	# Delegate the FETCH part
 	my $update_rate = "300"; # XXX - should use the correct version
 	my $timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
-	$last_timestamp = $timestamp if $timestamp > $last_timestamp;
+	$last_timestamp = $timestamp if $timestamp && $timestamp > $last_timestamp;
 
 	return $last_timestamp;
 }
