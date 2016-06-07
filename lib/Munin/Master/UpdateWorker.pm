@@ -345,6 +345,7 @@ sub uw_handle_config {
 	$last_timestamp = 0 unless defined $last_timestamp;
 
 	# Delegate the FETCH part
+	my $update_rate = "300"; # XXX - should use the correct version
 	my $timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
 	$last_timestamp = $timestamp if $timestamp > $last_timestamp;
 
