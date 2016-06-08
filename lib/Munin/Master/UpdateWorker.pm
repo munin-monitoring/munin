@@ -323,8 +323,9 @@ sub uw_handle_config {
 	my @fetch_data;
 
 	for my $line (@$data) {
+		DEBUG "uw_handle_config: $line";
 		# Barbaric regex to parse the output of the config
-		next unless ($line =~ m{\A ([^\.]+)(?:\.(\S)+)? \s+ ([\S:]+) }xms);
+		next unless ($line =~ m{^([^\.]+)(?:\.(\S+))?\s+(.+)$});
 		my ($arg1, $arg2, $value) = ($1, $2, $3);
 
 		# Both are optional, so NULL is allowed
