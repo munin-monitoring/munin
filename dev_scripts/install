@@ -133,6 +133,10 @@ case ${1:-} in
 		make_sandbox
 		configure_master
 		;;
+	debug)
+		make_sandbox
+		configure_debug
+		;;
 	*)
 		make_sandbox
 		;;
