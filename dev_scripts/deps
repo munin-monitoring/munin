@@ -18,7 +18,7 @@ cat <<EOF
   libio-stringy-perl
   liblist-moreutils-perl
   liblog-dispatch-perl
-  libmodule-build-cleaninstall-perl
+  libmodule-build-perl
   libnet-dns-perl
   libnet-ip-perl
   libnet-server-perl
