@@ -77,7 +77,7 @@ Plugins are installed from:
 use strict;
 use warnings;
 
-use Module::Build::CleanInstall;
+use Module::Build;
 use File::Find;
 use Config;
 
@@ -95,7 +95,7 @@ else {
     $release_status = 'unstable';
 }
 
-my $build = Module::Build::CleanInstall->new(
+my $build = Module::Build->new(
     module_name        => 'Munin',
     dist_version       => $version,
     release_status     => $release_status,

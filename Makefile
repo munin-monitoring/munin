@@ -23,9 +23,6 @@ blib: Build
 install: Build
 	./Build install --destdir=$(DESTDIR) --verbose
 
-uninstall: Build
-	./Build uninstall --destdir=$(DESTDIR) --verbose
-
 
 clean: Build
 	./Build realclean
