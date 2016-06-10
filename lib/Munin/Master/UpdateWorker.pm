@@ -50,13 +50,6 @@ sub new {
     $self->{worker} = $worker;
     weaken($self->{worker});
 
-    # Inject the handlers to the SQL DB in the node, one for metadata, one for state.
-    #
-    # Note that it comes with no warranty, specially that it is, or isn't the
-    # same one.
-    $self->{node}{dbh} = {};
-    $self->{node}{dbh_state} = {};
-
     return $self;
 }
 
