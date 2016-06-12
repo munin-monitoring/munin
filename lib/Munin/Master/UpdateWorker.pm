@@ -218,8 +218,12 @@ sub _get_last_insert_id {
 }
 
 sub _db_mknode {
-	my ($self, $grp_id, $node_name) = @_;
+	my ($self, $grp_id, $node) = @_;
 	my $dbh = $self->{dbh};
+	my $node_name = $node->{host_name};
+
+	DEBUG "_db_mknode($grp_id)";
+	DEBUG "_db_mknode.node_name".Dumper($node);
 
 	my $sth_node_id = $dbh->prepare("SELECT id FROM node WHERE grp_id = ? AND name = ?");
 	$sth_node_id->execute($grp_id, $node_name);
@@ -249,7 +253,7 @@ sub _db_service {
 	DEBUG "_db_service.service_attr:".Dumper($fields);
 
 	# Save the whole service config, and drop it.
-	my $sth_service_id = $dbh->prepare("SELECT service_id FROM service WHERE node_id = ? AND name = ?");
+	my $sth_service_id = $dbh->prepare("SELECT id FROM service WHERE node_id = ? AND name = ?");
 	$sth_service_id->execute($node_id, $plugin);
 	my ($service_id) = $sth_service_id->fetchrow_array();
 
@@ -264,7 +268,7 @@ sub _db_service {
 		}
 
 		my $sth_fields_attr = $dbh->prepare("SELECT ds.name as field, ds_attr.name as attr, ds_attr.value FROM ds
-			LEFT OUTER JOIN ds_attr ON ds.id = ds.attr WHERE ds.service_id = ?");
+			LEFT OUTER JOIN ds_attr ON ds.id = ds_attr.id WHERE ds.service_id = ?");
 		$sth_fields_attr->execute($service_id);
 
 		my %fields_old;
@@ -406,7 +410,8 @@ sub uw_handle_config {
 	for my $line (@$data) {
 		DEBUG "uw_handle_config: $line";
 		# Barbaric regex to parse the output of the config
-		next unless ($line =~ m{^([^\.]+)(?:\.(\S+))?\s+(.+)$});
+		# graph_title hymir : Sea giant ===> $arg1: "graph_title", $arg2: undef, $value: "hymir : Sea giant"
+		next unless ($line =~ m{^([^\.\s]+)(?:\.(\S+))?\s+?(.+)$});
 		my ($arg1, $arg2, $value) = ($1, $2, $3);
 
 		if (! $arg2) {
