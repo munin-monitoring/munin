@@ -58,8 +58,8 @@ sub do_work {
     my ($self) = @_;
 
     my $update_time = Time::HiRes::time;
-
     my $host = $self->{host}{host_name};
+    my $group = $self->{host}{group};
     my $path = $self->{host}->get_full_path;
     $path =~ s{[:;]}{-}g;
 
@@ -83,10 +83,19 @@ sub do_work {
     INFO "[INFO] starting work in $$ for $nodedesignation.\n";
     my $done = $node->do_in_session(sub {
 
+	# A I/O timeout results in a violent exit.  Catch and handle.
 	eval {
-	    # A I/O timeout results in a violent exit.  Catch and handle.
+		# Create the group path
+		my $grp_id = $self->_db_mkgrp($group);
 
-	    my @node_capabilities = $node->negotiate_capabilities();
+		# Fetch the node name
+		my $node_name = $self->{node_name} || $self->{host};
+
+		# Create the node
+		my $node_id = $self->_db_mknode($grp_id, $node_name);
+
+		my @node_capabilities = $node->negotiate_capabilities();
+
 
             # Handle spoolfetch, one call to retrieve everything
 	    if (grep /^spool$/, @node_capabilities) {
@@ -191,6 +200,110 @@ FETCH_OK:
     return {
         time_used => Time::HiRes::time - $update_time,
     }
+}
+
+sub _db_mkgrp {
+	my ($self, $group) = @_;
+	my $dbh = $self->{dbh};
+
+	DEBUG "group:".Dumper($group);
+
+	return -42;
+}
+
+# This should go in a generic DB.pm
+sub _get_last_insert_id {
+	my ($dbh) = @_;
+	return $dbh->last_insert_id("", "", "", "");
+}
+
+sub _db_mknode {
+	my ($self, $grp_id, $node_name) = @_;
+	my $dbh = $self->{dbh};
+
+	my $sth_node_id = $dbh->prepare("SELECT id FROM node WHERE grp_id = ? AND name = ?");
+	$sth_node_id->execute($grp_id, $node_name);
+	my ($node_id) = $sth_node_id->fetchrow_array();
+
+	if (! defined $node_id) {
+		# Create the node
+		my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
+		my $path = "";
+		$sth_node->execute($grp_id, $node_name, $path);
+		$node_id = _get_last_insert_id($dbh);
+	} else {
+		# Nothing to do, the node doesn't need any updates anyway.
+		# Removal of nodes is *unsupported* yet.
+	}
+
+
+}
+
+sub _db_service {
+	my ($self, $plugin, $service_attr, $fields) = @_;
+	my $dbh = $self->{dbh};
+	my $node_id = $self->{node_id};
+
+	DEBUG "_db_service($node_id, $plugin)";
+	DEBUG "_db_service.service_attr:".Dumper($service_attr);
+	DEBUG "_db_service.service_attr:".Dumper($fields);
+
+	# Save the whole service config, and drop it.
+	my $sth_service_id = $dbh->prepare("SELECT service_id FROM service WHERE node_id = ? AND name = ?");
+	$sth_service_id->execute($node_id, $plugin);
+	my ($service_id) = $sth_service_id->fetchrow_array();
+
+	# Save the existing values
+	my (%service_attrs_old, %fields_old);
+	{
+		my $sth_service_attrs = $dbh->prepare("SELECT name, value FROM service_attr WHERE id = ?");
+		$sth_service_attrs->execute($service_id);
+
+		while (my ($_name, $_value) = $sth_service_attrs->fetchrow_array()) {
+			$service_attrs_old{$_name} = $_value;
+		}
+
+		my $sth_fields_attr = $dbh->prepare("SELECT ds.name as field, ds_attr.name as attr, ds_attr.value FROM ds
+			LEFT OUTER JOIN ds_attr ON ds.id = ds.attr WHERE ds.service_id = ?");
+		$sth_fields_attr->execute($service_id);
+
+		my %fields_old;
+		while (my ($_field, $_name, $_value) = $sth_fields_attr->fetchrow_array()) {
+			$fields_old{$_field}{$_name} = $_value;
+		}
+	}
+
+	DEBUG "_db_service.%service_attrs_old:" . Dumper(\%service_attrs_old);
+	DEBUG "_db_service.%fields_old:" . Dumper(\%fields_old);
+
+	# Leave room for refresh
+	# XXX - we might only update DB with diff.
+	my $sth_service_attrs_del = $dbh->prepare("DELETE FROM service_attr WHERE id = ?");
+	$sth_service_attrs_del->execute($service_id);
+
+	return ($service_id, \%service_attrs_old);
+}
+
+sub _db_service_attr {
+	my ($self, $service_id, $name, $value) = @_;
+	my $dbh = $self->{dbh};
+
+	DEBUG "_db_service_attr($service_id, $name, $value)";
+
+	# Save the whole service config, and drop it.
+	my $sth_service_attr = $dbh->prepare("INSERT INTO service (id, name, value) VALUES (?, ?, ?)");
+	$sth_service_attr->execute($service_id, $name, $value);
+}
+
+sub _db_ds_update {
+	my ($self, $service_id, $field, $attr, $value) = @_;
+	my $dbh = $self->{dbh};
+
+	my $node_id = $self->{node}{node_id};
+
+	DEBUG "_db_ds_update($service_id, $field, $attr, $value)";
+
+	my $sth_service_attr = $dbh->prepare("INSERT INTO service (id, name, value) VALUES (?, ?, ?)");
 }
 
 sub get_global_service_value {
@@ -315,25 +428,37 @@ sub uw_handle_config {
 	# Build FETCH data, just in case of dirty_config.
 	my @fetch_data;
 
+	# Parse the output to a simple HASH
+	my %service_attr;
+	my %fields;
 	for my $line (@$data) {
 		DEBUG "uw_handle_config: $line";
 		# Barbaric regex to parse the output of the config
 		next unless ($line =~ m{^([^\.]+)(?:\.(\S+))?\s+(.+)$});
 		my ($arg1, $arg2, $value) = ($1, $2, $3);
 
-		# Both are optional, so NULL is allowed
-		$arg2 = "" unless defined $arg2;
-		$value = "" unless defined $value;
+		if (! $arg2) {
+			# This is a service config line
+			$service_attr{$arg1} = $value;
+			next; # Handled
+		}
 
 		# Handle dirty_config
 		if ($arg2 && $arg2 eq "value") {
 			push @fetch_data, $line;
-			next;
+			next; # Handled
 		}
+
+		$fields{$arg1}{$arg2} = $value;
 
 		# TODO - Update the DB with the updated plugin config
 		DEBUG "update DB with plugin:$plugin, $arg1.$arg2 = $value";
 	}
+
+	# Sync to database
+	# Create/Update the service
+	my ($service_id, $service_attrs_old, $fields_old) = $self->_db_service($plugin, \%service_attr, \%fields);
+
 
 	# timestamp == 0 means "Nothing was updated". We only count on the
 	# "fetch" part to provide us good timestamp info, as the "config" part
