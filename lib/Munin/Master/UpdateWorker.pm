@@ -1030,7 +1030,6 @@ sub dump_to_file
 	my ($filename, $obj) = @_;
 	open(DUMPFILE, ">> $filename");
 
-	use Data::Dumper;
 	print DUMPFILE Dumper($obj);
 
 	close(DUMPFILE);
