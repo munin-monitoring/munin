@@ -381,34 +381,6 @@ sub round_to_granularity {
 	return $rounded_when;
 }
 
-sub handle_dirty_config {
-	my ($self, $service_config) = @_;
-
-	my %service_data;
-
-	my $services = $service_config->{global}{multigraph};
-	foreach my $service (@$services) {
-		my $service_data_source = $service_config->{data_source}->{$service};
-		foreach my $field (keys %$service_data_source) {
-			my $field_value = $service_data_source->{$field}->{value};
-			my $field_when = $service_data_source->{$field}->{when};
-
-			# If value not present, this field is not dirty fetched
-			next if (! defined $field_value);
-
-			DEBUG "[DEBUG] handle_dirty_config:$service, $field, @$field_when";
-			# Moves the "value" to the service_data
-			$service_data{$service}->{$field} ||= { when => [], value => [], };
-	                push @{$service_data{$service}{$field}{value}}, @$field_value;
-			push @{$service_data{$service}{$field}{when}}, @$field_when;
-
-			delete($service_data_source->{$field}{value});
-			delete($service_data_source->{$field}{when});
-		}
-	}
-
-	return %service_data;
-}
 
 # For the uw_handle_* :
 # The $data has been already sanitized :
