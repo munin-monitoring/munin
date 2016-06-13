@@ -138,6 +138,13 @@ case ${1:-} in
 		make_sandbox
 		configure_debug
 		;;
+	lib)
+		for src in lib/Munin/*/*.pm
+		do
+			dst=${src#*/}
+			cp -vf $src sandbox/lib/perl5/$dst
+		done
+		;;
 	*)
 		make_sandbox
 		;;
