@@ -16,7 +16,10 @@ use Munin::Master::Config;
 use Munin::Master::UpdateWorker;
 use Munin::Master::Utils;
 
+my $config_old;
 my $config = Munin::Master::Config->instance()->{config};
+$config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
+
 
 sub new {
     my ($class) = @_;
@@ -44,6 +47,13 @@ sub run {
 
     $self->_do_with_lock_and_timing(sub {
         INFO "[INFO]: Starting munin-update";
+
+	# Create the DB, using a local block to close the DB cnx
+	{
+		my $dbh = $self->get_dbh();
+		$self->_db_init($dbh, $dbh);
+		$config_old = $self->_db_params_update($dbh, $config);
+	}
 
         $self->{workers} = $self->_create_workers();
         $self->_run_workers();
@@ -371,6 +381,72 @@ sub _dump_groups_into_sql {
 	}
 }
 
+sub _db_init {
+	my ($self, $dbh, $dbh_state) = @_;
+
+	# We still use the temp file trick
+	$dbh->do("PRAGMA synchronous = 0");
+	$dbh->do("PRAGMA journal_mode = OFF");
+
+	# Create DB
+	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_g_grp ON grp (p_id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_node_attr ON node_attr (id, name)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_n_grp ON node (grp_id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
+		type VARCHAR DEFAULT 'GAUGE',
+		ordr INTEGER DEFAULT 0,
+		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
+
+	# Table that contains all the URL paths, in order to have a very fast lookup
+	$dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER NOT NULL, type VARCHAR NOT NULL, path VARCHAR NOT NULL, PRIMARY KEY(id,type))");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_url_path ON url (path)");
+
+	# Note, this table is referenced by composite key (type,id) in order to be
+	# able to have any kind of states. Such as whole node states for example.
+	$dbh_state->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
+		last_epoch INTEGER, last_value VARCHAR,
+		prev_epoch INTEGER, prev_value VARCHAR,
+		alarm VARCHAR, num_unknowns INTEGER
+		)");
+	$dbh_state->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
+}
+
+sub _db_params_update {
+	my ($self, $dbh, $params) = @_;
+
+	my $sth = $dbh->prepare('SELECT name, value FROM param');
+	$sth->execute();
+
+	my %old_params;
+	while (my ($_name, $_value) = $sth->fetchrow_array()) {
+		$old_params{$_name} = $_value;
+	}
+
+	$dbh->do('DELETE FROM param');
+
+	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
+
+	# Configuration
+	for my $key (sort keys %$params) {
+		next if ref $params->{$key};
+		$sth_param->execute($key, $params->{$key});
+	}
+
+	return \%old_params;
+}
+
 sub _dump_into_sql {
 	my ($self) = @_;
 
@@ -385,48 +461,20 @@ sub _dump_into_sql {
 	use DBI;
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
 
-	# We still use the temp file trick
-	$dbh->do("PRAGMA synchronous = 0");
-	$dbh->do("PRAGMA journal_mode = OFF");
 
-	# Create DB
-	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
-	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
-
-	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_g_grp ON grp (p_id)");
 	my $sth_grp = $dbh->prepare('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
 
-	$dbh->do("CREATE TABLE IF NOT EXISTS node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_node_attr ON node_attr (id, name)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_n_grp ON node (grp_id)");
 	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
 
-	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
 	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path, service_title, graph_info, subgraphs) VALUES (?, ?, ?, ?, ?, ?)');
 	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
-	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
 	my $sth_service_category = $dbh->prepare('INSERT INTO service_categories (id, category) VALUES (?, ?)');
 
-	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
-		type VARCHAR DEFAULT 'GAUGE',
-		ordr INTEGER DEFAULT 0,
-		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
 	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path, ordr) VALUES (?, ?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 	my $sth_ds_type = $dbh->prepare('UPDATE ds SET type = ? where id = ?');
 
-	# Table that contains all the URL paths, in order to have a very fast lookup
-	$dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER NOT NULL, type VARCHAR NOT NULL, path VARCHAR NOT NULL, PRIMARY KEY(id,type))");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_url_path ON url (path)");
 	my $sth_url = $dbh->prepare('INSERT INTO url (id, type, path) VALUES (?, ?, ?)');
 	$sth_url->{RaiseError} = 1;
 
@@ -442,14 +490,6 @@ sub _dump_into_sql {
 	$datafilename_state =~ s/\.sqlite$/-state.sqlite/;
 	my $dbh_state = DBI->connect("dbi:SQLite:dbname=$datafilename_state","","") or die $DBI::errstr;
 	#
-	# Note, this table is referenced by composite key (type,id) in order to be
-	# able to have any kind of states. Such as whole node states for example.
-	$dbh_state->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
-		last_epoch INTEGER, last_value VARCHAR,
-		prev_epoch INTEGER, prev_value VARCHAR,
-		alarm VARCHAR, num_unknowns INTEGER
-		)");
-	$dbh_state->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
 	my $sth_state = $dbh_state->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns
 		FROM state WHERE id = ? AND type = ?');
 	my $sth_state_i = $dbh_state->prepare(
@@ -460,12 +500,6 @@ sub _dump_into_sql {
 	$sth_state_u->{RaiseError} = 0;
 
 
-	# Configuration
-	$config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
-	for my $key (sort keys %$config) {
-		next if ref $config->{$key};
-		$sth_param->execute($key, $config->{$key});
-	}
 
 	# Recursively create groups
 	_dump_groups_into_sql($self->{group_repository}{groups}, undef, "", $dbh,
