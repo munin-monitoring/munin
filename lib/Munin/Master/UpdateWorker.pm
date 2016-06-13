@@ -96,6 +96,28 @@ sub do_work {
 
 		my @node_capabilities = $node->negotiate_capabilities();
 
+		my $dbh = $self->{dbh};
+		my $dbh_state = $self->{dbh_state};
+
+		# Prepare all the useful statements
+		$self->{sth}{node} = $dbh->prepare('REPLACE INTO node (grp_id, name, path) VALUES (?, ?, ?)');
+		$self->{sth}{node_attr} = $dbh->prepare('REPLACE INTO node_attr (id, name, value) VALUES (?, ?, ?)');
+		$self->{sth}{service} = $dbh->prepare('REPLACE INTO service (node_id, name, path, service_title, graph_info, subgraphs)
+			VALUES (?, ?, ?, ?, ?, ?)');
+		$self->{sth}{service_attr} = $dbh->prepare('REPLACE INTO service_attr (id, name, value) VALUES (?, ?, ?)');
+		$self->{sth}{ds} = $dbh->prepare('INSERT INTO ds (service_id, name, path, ordr) VALUES (?, ?, ?, ?)');
+		$self->{sth}{ds_attr} = $dbh->prepare('REPLACE INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+		$self->{sth}{ds_type} = $dbh->prepare('UPDATE ds SET type = ? where id = ?');
+		$self->{sth}{url} = $dbh->prepare('REPLACE INTO url (id, type, path) VALUES (?, ?, ?)');
+		$self->{sth}{url}->{RaiseError} = 1;
+		$self->{sth}{state} = $dbh_state->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns
+			FROM state WHERE id = ? AND type = ?');
+		$self->{sth}{state_i} = $dbh_state->prepare(
+			'REPLACE INTO state (last_epoch, last_value, prev_epoch, prev_value, id, type) VALUES (?, ?, ?, ?, ?, ?)');
+		$self->{sth}{state_u} = $dbh_state->prepare(
+			'UPDATE state SET last_epoch = ?, last_value = ?, prev_epoch = ?, prev_value = ? WHERE id = ? AND type = ?');
+		$self->{sth}{state_i}->{RaiseError} = 0;
+		$self->{sth}{state_u}->{RaiseError} = 0;
 
             # Handle spoolfetch, one call to retrieve everything
 	    if (grep /^spool$/, @node_capabilities) {
