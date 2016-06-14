@@ -173,6 +173,9 @@ sub _run_workers {
 			$res = $worker->do_work();
 		};
 
+		$worker->{dbh}->disconnect();
+		$worker->{dbh_state}->disconnect();
+
 		$res = undef if $EVAL_ERROR;
 
 		my $worker_id = $worker->{ID};
