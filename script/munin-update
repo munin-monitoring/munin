@@ -29,13 +29,15 @@ sub main {
 
     configure();
 
-    if ( $config->{debug} || $config->{screen} || $config->{verbose} ) {
-        my %log;
-        $log{output} = 'screen' if $config->{screen};
-        $log{level}  = 'info'   if $config->{verbose};
-        $log{level}  = 'debug'  if $config->{debug};
-        Munin::Common::Logger::configure(%log);
-    }
+    my %log = (
+        output => $config->{logoutput},
+        logdir => $config->{logdir},
+    );
+    $log{output} = 'screen' if $config->{screen};
+    $log{level}  = 'info'   if $config->{verbose};
+    $log{level}  = 'debug'  if $config->{debug};
+
+    Munin::Common::Logger::configure(%log);
 
     my $update = Munin::Master::Update->new();
     $update->run();
