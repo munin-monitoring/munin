@@ -136,6 +136,7 @@ sub configure {
             Log::Dispatch::File->new(
                 name      => 'configured',
                 filename  => $p{logfile} || ($p{logdir} . '/' . _program_name),
+                mode      => 'append',
                 min_level => $p{level},
                 callbacks => $file_format,
             )
