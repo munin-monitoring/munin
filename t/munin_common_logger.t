@@ -12,6 +12,9 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 use Test::More qw( no_plan );
+use FindBin;
+my $logdir = "$FindBin::Bin/../blib/log";
+
 BEGIN { use_ok(Munin::Common::Logger); }
 
 # do we have a log object?
@@ -66,11 +69,15 @@ BEGIN { use_ok(Munin::Common::Logger); }
 
 # configure - file
 {
-    ok( Munin::Common::Logger::configure( output => 'file' ),
+    ok( Munin::Common::Logger::configure(
+            logdir => $logdir,
+            output => 'file',
+        ),
         'change log output to file, default level'
     );
 
     ok( Munin::Common::Logger::configure(
+            logdir => $logdir,
             level  => 'warning',
             output => 'file'
         ),
