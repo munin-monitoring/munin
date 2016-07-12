@@ -7,8 +7,10 @@ use Carp;
 
 use Exporter;
 use Log::Dispatch;
+use Log::Dispatch::File;
 use Log::Dispatch::Screen;
 use Log::Dispatch::Syslog;
+use Munin::Common::Defaults;
 
 our @ISA = qw(Exporter);
 
@@ -47,6 +49,8 @@ my $screen_format = sub {
 
     return sprintf( "%s [%s]: %s\n", _timestamp, $level, $message );
 };
+
+my $file_format = $screen_format;
 
 my $syslog_format = sub {
     my %args    = @_;
@@ -94,13 +98,23 @@ sub configure {
         {   output => {
                 type    => SCALAR,
                 default => 'syslog',
-                regex   => qr/^(?:syslog|screen)$/
+                regex   => qr/^(?:syslog|screen|file)$/
             },
             level => {
                 type    => SCALAR,
                 default => 'warning',
                 regex =>
                     qr/^(?:debug|info|notice|warning|error|critical|alert|emergency)$/
+            },
+            logfile => {
+                type    => SCALAR,
+                default => '',
+                regex   => qr/^\/.*$/
+            },
+            logdir => {
+                type    => SCALAR,
+                default => $Munin::Common::Defaults::MUNIN_LOGDIR,
+                regex   => qr/^\/.*$/
             },
         }
     );
@@ -114,6 +128,16 @@ sub configure {
                 name      => 'configured',
                 min_level => $p{level},
                 callbacks => $screen_format
+            )
+        );
+    }
+    elsif ( $p{output} eq 'file' ) {
+        $log->add(
+            Log::Dispatch::File->new(
+                name      => 'configured',
+                filename  => $p{logfile} || ($p{logdir} . '/' . _program_name),
+                min_level => $p{level},
+                callbacks => $file_format,
             )
         );
     }

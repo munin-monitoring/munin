@@ -50,6 +50,7 @@ my $fasit = {
         htmldir                => '/opt/munin/sandbox/www',
         local_address          => 0,
         logdir                 => '/opt/munin/sandbox/var/log/munin',
+        logoutput              => 'syslog',
         max_processes          => 16,
         rundir                 => '/opt/munin/sandbox/var/run/munin',
         timeout                => 180,

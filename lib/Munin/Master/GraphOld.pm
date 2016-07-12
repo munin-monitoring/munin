@@ -13,7 +13,7 @@ feature proper object orientation like munin-update and will have to
 wait until later.
 
 Copyright (C) 2002-2010 Jimmy Olsen, Audun Ytterdal, Kjell Magne
-�ierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
+Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -307,10 +307,14 @@ sub graph_startup {
       print_usage_and_exit();
     }
 
-    if ( $debug || $screen ) {
-        my %log;
-        $log{output} = 'screen' if $screen;
-        $log{level}  = 'debug'  if $debug;
+    my %log;
+    if ( $debug || $screen || $log_file ) {
+        if ( $log_file ) {
+            $log{output}  = 'file';
+            $log{logfile} = $log_file;
+        }
+        $log{output}  = 'screen' if $screen;
+        $log{level}   = 'debug'  if $debug;
         Munin::Common::Logger::configure(%log);
     }
 
@@ -325,6 +329,15 @@ sub graph_startup {
 	munin_readconfig_base($conffile);
 	# XXX: check if it needs datafile at that point
 	$config = munin_readconfig_part('datafile', 0);
+    }
+
+    if (scalar keys %log == 0) {
+        # This means no command line overrides.  A bit unfortunate
+        # that --debug will cause output to go to 'syslog' even if
+        # logoutput is set to 'file'.
+        $log{output} = $config->{logoutput};
+        $log{logdir} = $config->{logdir};
+        Munin::Common::Logger::configure(%log);
     }
 
     $config->{debug} = $debug;
