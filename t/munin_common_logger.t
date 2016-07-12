@@ -12,8 +12,9 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 use Test::More qw( no_plan );
-use FindBin;
-my $logdir = "$FindBin::Bin/../blib/log";
+
+use File::Temp qw( tempdir );
+my $logdir = tempdir(CLEANUP => 1);
 
 BEGIN { use_ok(Munin::Common::Logger); }
 
