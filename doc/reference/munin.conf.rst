@@ -152,7 +152,7 @@ only to that node.
 
 .. option:: port <port number>
 
-   The port number of the node. Ignored if using alternate transport. Default is "4949".
+   The port number of the node. Ignored if using alternate transport. Undefined by default.
 
 .. option:: local_address <address>
 
