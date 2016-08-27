@@ -40,6 +40,9 @@ attempt to search for drives to probe.
 Copyright (c) 2005, Lutz Peter Christoph
 All rights reserved.
 
+2016-08-27, Gabriele Pohl (contact@dipohl.de)
+Fix for github issue #690
+
 =head1 LICENSE
 
 Redistribution and use in source and binary forms, with or without
@@ -223,11 +226,32 @@ foreach my $drive (@drives) {
   warn "[DEBUG] Command for $drive is % $cmd %\n" if $DEBUG;
 
   my $output = `$cmd`;
-  if ($? ne 0) {
-      print "$drive.value U\n";
-      print "$drive.extinfo Command $cmd on drive $drive failed: $?.  The plugin needs to have read permission on all monitored devices.\n";
-      warn "[ERROR] Command $cmd on drive $drive failed: $?.  The plugin needs to have read permission on all monitored devices.\n";
-      next;
+  my $cmd_exit = $?;
+
+  # Strip header
+  $output =~ s/.*?\n\n//s;
+  # Strip trailer
+  $output =~ s/Please specify device type with the -d option.\n//s;
+  $output =~ s/Use smartctl -h to get a usage summary//s;
+  $output =~ s/\n+$//s;
+
+  if ($cmd_exit != 0) {
+    print "$drive.value U\n";
+    if ($cmd_exit == -1) {
+      warn "[ERROR] Command $cmd on drive $drive failed to execute: $!";
+    } else {
+      my $smartctl_exit = $cmd_exit >> 8;
+      print "$drive.extinfo Command '$cmd' on drive $drive failed with exit($smartctl_exit)\n";
+
+      # exit (2) is a normal state with directive "--nocheck=standby" when device is in STANDBY or SLEEP mode
+      if ($smartctl_exit == 2 and $use_nocheck) {
+        if ($output =~ /(?:standby|sleep)/i) {
+          next;
+        }
+      }
+      warn "[ERROR] Command $cmd on drive $drive failed with exit($smartctl_exit): $output";
+    }
+    next;
   }
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
     print "$drive.value $1\n";
