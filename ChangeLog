@@ -1,3 +1,147 @@
+munin-2.999.3, 2016-09-04
+
+-------
+Summary
+-------
+
+That release is the 3nd beta of the 3.0 series. It is versionned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versionning or 3.0b3
+
+It contains various bugfixes.
+
+It is currently beta quality, that means that bugs *can* happen, but aren't
+really expected. They will have a  workaround and a proper fix soon.
+
+
+------------------
+Detailed Changelog
+------------------
+
+Adrien Chardon (1):
+      ui/navigation: Fix broken link id
+
+Andreas Maus (1):
+      Fix autoconf error in slapd_bdb_cache_ plugin
+
+Ferenc Wágner (4):
+      Set RRD type of numa_foreign to DERIVE (copy&paste typo)
+      Avoid false negative spikes on NUMA graphs on reboot
+      The NUMA graphs show page rates, not page numbers
+      procfs: the DERIVE type does not need max to avoid false spikes
+
+Kenyon Ralph (1):
+      plugins/node.d/ntp_states: fix "outlier" state spelling for recent versions of NTP
+
+Kim B. Heino (3):
+      if_: /sys/class/net/ reports speed 0 for some devices
+      if_, if_err_: add more virtual devices like gre0 and bond0.99 to skip list
+      if_: check for non-empty and >0 before reporting speed (thanks to ssm)
+
+Kjetil Torgrim Homme (1):
+      support for logging to file via Log::Dispatch::File
+
+Quentin Stoeckel (49):
+      Remove DYN_IMAGES references in views since it isn't used anymore
+      Prepare serving png or svg files depending on user preference
+      Allow toggling navigation panel using window.toolbar.toggleNavigation(visibility, animation)
+      Add a toggle button to toggle navigation panel visibility, handle mobiles
+      Fix navigation panel toggle on Firefox & SeaMonkey
+      Enhance navigation panel togge animation performances
+      Remove static dynazoom.html since it isn't used anymore
+      munin-dynazoom.html: don't hardcode graph extension (.png)
+      Dynazoom modal JS: use regex to extract timeRange from graphUrl
+      Enhance forms styling, split CSS into separate smaller part files
+      Allow changing graph_ext from a newly created settings modal
+      Make navigation panel state persistent
+      Fix eventRuler min x position when navigation menu is toggled
+      Remove fixed timeRange switchs and add those as a Toolbar action icon
+      Make the toolbar fixed at the top of the screen
+      Fix reading cookies in HTML.pm
+      Display timeRange switch in categoryview, force-disable navigation bar in comparison & category views
+      Enhance timerange switches styling
+      build: Add CGI::Cookie requirement to Build.PL
+      ui/timerange-switch: Fix timerange on categoryView
+      ui/timerange-switch: Enhance timerange switch styling
+      ui/problemview - Fix problems page missing <title> tag
+      ui: Set tabindex to elements
+      ui/toolbar Add toggle animation when showing/hiding toolbar
+      ui/settings: Add ability to disable graphs auto-refresh from UI settings
+      ui/css: Make Absolute elements fixed instead of absolute
+      ui/Toolbar: fix timerange Absolute component position on mobiles
+      ui/tabindex: Fix tabindex on graphs & tabs
+      ui/sparklines: Respect graph_ext parameter instead of hardcoded .png value
+      ui/overview: Don't fetch back the cookie on each each occurence
+      ui/js: Fix Absolute elements position from fixed parents
+      doc/alert: Add documentation about plugin field
+      ui/js: Fix wrong graph extension when using Graph.refresh()
+      css/layout: Adapt layout depending on screen resolution & graph extension
+      ui/navigation: Don't save navigation state when it has been force-reduced
+      ui/graphs: Handle graphs on higher dpi resolutions, fix categoryiew columns
+      ui/categoryview: Fix filter on categoryview
+      ui/comparison Fix comparison filter
+      ui/settings: Enhance settings modal styling
+      ui/dynazoom: Enhance dynazoom form styling
+      ui/backToTop: Add "Back to top" buttons to categoryview, comparison & domainview
+      ui: Enhance page headers on mobiles
+      ui/domainview: Refactor treeview JS, add "Expand all" & "Reduce all" links
+      ui/toolbar: Fix NAV_PANEL_FOLD_FORCED usage in HTML.pm
+      ui/drawer: Enhance drawer on mobiles
+      ui/toolbar: Allow toolbar title to fit in single line
+      ui/navigation: Fix syntax error
+      ui/navigation: Enhance navigation titles
+      ui/nodeview: Fix filter JS error
+
+Rob Speed (1):
+      Installation documentation update for FreeBSD
+
+Steve Schnepp (5):
+      update: fix typo in verbose handling
+      graph: support hidpi png
+      graph: format is png in hidpi mode
+      graph: fix typo in TITLE
+      asyncd: fix the 1h sleep
+
+Stig Sandbeck Mathisen (9):
+      Exclude btrfs from df_inode plugin
+      Update node address documentation
+      Remove unused files for munin-node
+      Remove unused PluginsBuilder.pm
+      Document graph categories
+      Use a regular expression to parse df output
+      Use a bare return to return failure
+      df: Make env.include_re include instead of exclude
+      Fix wrong documentation reference for graph_data_size
+
+Viktor Szépe (2):
+      Signal error in http_loadtime
+      Typo in condition
+
+absh (7):
+      Escape semicolons in graph item labels (such as "uhci_hcd:usb1") to prevent rrdtool from confusing them with field separators and failing thereupon.
+      typo fix: s/semicolon/colon/
+      Plugins' command parameter: don't split on escaped whitespace.
+      Bug fix for commit 2075373.
+      Fix cpu fields order in procfs plugin to match proc(5)
+      Make the cpu graph fields order the same as in the original plugin
+      Correct graphing of user and guest cpu stats
+
+dipohl (1):
+      Return smartctl exit code and warning message     Fixes github issue: hddtemp_smartctl fails on a drive in standby #690
+
+rantal (1):
+      Added OldGen graphs, switched used and free bytes (used is on bottom of the graph, free is on top)
+
+shapirus (7):
+      Fix for munin-update ignoring graph colors supplied by plugins
+      Set better readable colors for cpu graph
+      Pass graph_args list to rrdtool
+      Allow to specify draw style (e.g., dashes) via the new "drawstyle" parameter.
+      More logging for munin-asyncd aimed at fixing the 1h bug
+      Add the "drawstyle" parameter to the list of legal keywords
+      plugins/memory: draw the KSM-sharing value if present
+
+
 munin-2.999.2, 2016-01-10
 
 -------
