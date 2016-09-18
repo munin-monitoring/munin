@@ -9,6 +9,7 @@ munin (2.0.26-1) UNRELEASED; urgency=medium
   [ Holger Levsen ]
   * Imported new upstream release 2.0.26
   * Bump standards-version to 3.9.8, no changes necessary.
+  * Fix spelling error in debian/changelog, thanks lintian.
 
  -- Holger Levsen <holger@debian.org>  Sun, 18 Sep 2016 13:40:27 +0200
 
@@ -23,7 +24,7 @@ munin (2.0.25-2) unstable; urgency=medium
 
   [ Stig Sandbeck Mathisen ]
   * [bd20b96] Import RELEASE from upstream tarball (fix bad merge)
-  * [a14bbe5] Remove obsolete depedency perl-modules | libparse-recdescent-perl.
+  * [a14bbe5] Remove obsolete dependency perl-modules | libparse-recdescent-perl.
     Thanks to gregor herrmann (Closes: #797081)
   * [d947b2f] Do not purge directories potentially owned by other packages.
     Thanks to Andreas Beckmann (Closes: #793864)
