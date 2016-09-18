@@ -10,6 +10,8 @@ munin (2.0.26-1) UNRELEASED; urgency=medium
   * Imported new upstream release 2.0.26
   * Bump standards-version to 3.9.8, no changes necessary.
   * Fix spelling error in debian/changelog, thanks lintian.
+  * Fix "FTBFS with '.' removed from perl's @INC": add patch from 
+    Dominic Hargreaves to call perl with "-I.". (Closes: #835206)
 
  -- Holger Levsen <holger@debian.org>  Sun, 18 Sep 2016 13:40:27 +0200
 
