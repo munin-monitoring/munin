@@ -1,4 +1,4 @@
-munin (2.0.25-3) UNRELEASED; urgency=medium
+munin (2.0.26-1) UNRELEASED; urgency=medium
 
   [ Stig Sandbeck Mathisen ]
   * Fix path and whitespace in munin-async README.
@@ -6,7 +6,10 @@ munin (2.0.25-3) UNRELEASED; urgency=medium
   * Plugin config: Exclude /run/user from the df* plugins.
     Thanks to Jan-Philip Gehrcke (Closes: #788736)
 
- -- Holger Levsen <holger@debian.org>  Sun, 18 Sep 2016 13:35:39 +0200
+  [ Holger Levsen ]
+  * Imported new upstream release 2.0.26
+
+ -- Holger Levsen <holger@debian.org>  Sun, 18 Sep 2016 13:40:27 +0200
 
 munin (2.0.25-2) unstable; urgency=medium
 
