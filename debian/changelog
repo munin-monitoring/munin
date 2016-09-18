@@ -8,6 +8,7 @@ munin (2.0.26-1) UNRELEASED; urgency=medium
 
   [ Holger Levsen ]
   * Imported new upstream release 2.0.26
+  * Bump standards-version to 3.9.8, no changes necessary.
 
  -- Holger Levsen <holger@debian.org>  Sun, 18 Sep 2016 13:40:27 +0200
 
