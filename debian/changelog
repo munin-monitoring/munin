@@ -14,7 +14,7 @@ munin (2.0.26-1) unstable; urgency=medium
     Dominic Hargreaves to call perl with "-I.". (Closes: #835206)
   * Bump debian/compat to 9 and require debhelper >= 9.
 
- -- Holger Levsen <holger@debian.org>  Fri, 23 Sep 2016 20:13:50 +0200
+ -- Holger Levsen <holger@debian.org>  Fri, 23 Sep 2016 20:43:16 +0200
 
 munin (2.0.25-2) unstable; urgency=medium
 
