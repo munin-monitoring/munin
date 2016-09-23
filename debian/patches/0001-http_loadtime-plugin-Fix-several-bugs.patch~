@@ -14,23 +14,24 @@ Content-Transfer-Encoding: 8bit
  plugins/node.d/http_loadtime.in | 21 ++++++++++-----------
  1 file changed, 10 insertions(+), 11 deletions(-)
 
-Index: munin/plugins/node.d/http_loadtime.in
-===================================================================
---- munin.orig/plugins/node.d/http_loadtime.in
-+++ munin/plugins/node.d/http_loadtime.in
+diff --git a/plugins/node.d/http_loadtime.in b/plugins/node.d/http_loadtime.in
+index 4364a02..a9d7854 100644
+--- a/plugins/node.d/http_loadtime.in
++++ b/plugins/node.d/http_loadtime.in
 @@ -42,14 +42,15 @@ if [ "$1" = "autoconf" ]; then
  	echo "no (programs time, wget and tr required)"
  	    exit 0
      fi
 -    if ! $wget_bin -q -O /dev/null $target; then
-+    if ! wget -q -O /dev/null $target; then
- 
+-
 -    # check if url responds
 -    #
 -    wget --spider $target $wget_opt
 -    if [ "$?" != "0" ]; then
 -        echo "no (Cannot run wget against \"$target\")"
 -        exit 0
++    if ! wget -q -O /dev/null $target; then
++
 +        # check if url responds
 +        #
 +        wget --spider $target $wget_opt
@@ -41,7 +42,7 @@ Index: munin/plugins/node.d/http_loadtime.in
      fi
      echo yes
      exit 0
-@@ -70,8 +71,6 @@ TEMPO_DIR=$(mktemp -dt munin_http_loadti
+@@ -70,8 +71,6 @@ TEMPO_DIR=$(mktemp -dt munin_http_loadtime.XXXXXX) || exit 1
  
  trap "rm -rf $TEMPO_DIR" EXIT
  

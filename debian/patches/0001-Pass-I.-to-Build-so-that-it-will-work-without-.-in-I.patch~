@@ -7,10 +7,10 @@ Subject: [PATCH] Pass -I. to Build.PL so that it will work without '.' in @INC
  Makefile | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: munin/Makefile
-===================================================================
---- munin.orig/Makefile
-+++ munin/Makefile
+diff --git a/Makefile b/Makefile
+index cdc3577..ded00b8 100644
+--- a/Makefile
++++ b/Makefile
 @@ -449,7 +449,7 @@ t/install:
  
  # This builds */Build from Build.PL
@@ -20,3 +20,6 @@ Index: munin/Makefile
  
  build-%: %/Build
  	cd $* && $(PERL) Build
+-- 
+2.1.4
+
