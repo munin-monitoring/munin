@@ -9,18 +9,16 @@ var content,
 
 $(document).ready(function() {
 	content = $('#content');
-	graphs = $('.graph');
+	graphs = window.graphs = $('.graph');
 	h4s = $('h4');
 	tabs = $('.tabs').find('li');
 
 	// Instantiate auto-refresh & dynazoom modal links components
-	var autoRefresh = graphs.autoRefresh();
+	var autoRefresh = window.autoRefresh = graphs.autoRefresh();
 	graphs.dynazoomModal();
+	graphs.graph();
 
-	// Add toolbar actions
-	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
-		autoRefresh.refresh();
-	});
+	addRefreshActionIcon(autoRefresh);
 
 	var tabsComponent = $(this).tabs();
 
@@ -42,10 +40,6 @@ $(document).ready(function() {
 				h4s.filter(function() {
 					return $(this).text() == pluginName;
 				}).show();
-
-				// Show next <br>
-				if ($(this).parent().next()[0].tagName.toLowerCase() == 'br')
-					$(this).parent().next().show();
 			}
 			else {
 				$(this).parent().hide();
@@ -53,10 +47,6 @@ $(document).ready(function() {
 				h4s.filter(function() {
 					return $(this).text() == pluginName;
 				}).hide();
-
-				// Hide next <br>
-				if ($(this).parent().next()[0].tagName.toLowerCase() == 'br')
-					$(this).parent().next().hide();
 			}
 		});
 
@@ -78,7 +68,6 @@ $(document).ready(function() {
 				$(this).prev().show();
 		});
 
-		console.log(tabs.find('.active').index());
 		if (val.length == 0 // Empty filter
 			&& content.attr('data-tabsenabled') == 'true' // Tabs enabled
 			&& tabs.prevAll('.active').index() != 0 // Not "all"
@@ -88,25 +77,6 @@ $(document).ready(function() {
 		}
 	});
 
-
-	// Back to top button
-	var backToTop = $('#backToTop');
-	var offset = 300;
-
-	$(window).scroll(function() {
-		if ($(this).scrollTop() > offset)
-			backToTop.addClass('visible');
-		else
-			backToTop.removeClass('visible');
-	});
-
-	backToTop.click(function(e) {
-		e.preventDefault();
-		$('body, html').animate({
-			scrollTop: 0
-		}, 500);
-	});
-
 	// Node switch
 	$('.switchable[data-switch="header"]').list('header', {
 		list: $('.switchable_content[data-switch="header"]')
@@ -114,4 +84,10 @@ $(document).ready(function() {
 
 	// Init eventruler
 	$(this).eventRuler();
+
+	// Assign tab-indexes to elements
+	$('.tabs > li:visible, .graphLink').each(function(index) {
+		$(this).attr('tabindex', index+1);
+	});
+	removeTabIndexOutline();
 });

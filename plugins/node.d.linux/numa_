@@ -101,35 +101,41 @@ if [ "$1" = "config" ]; then
       echo 'graph_order local_node other_node'
       echo "graph_title NUMA allocations from processes running on node ${NODE}"
       echo 'graph_args -l 0'
-      echo 'graph_vlabel pages'
+      echo 'graph_vlabel pages/${graph_period}'
       echo 'graph_info Shows where processes on this node got memory.'
     	echo 'graph_category system'
       echo "local_node.label local_node"
       echo "local_node.info A process ran on this node and got memory from it."
       echo "local_node.type DERIVE"
+      echo "local_node.min 0"
       echo "other_node.label other_node"
       echo "other_node.info A process ran on this node and got memory from another node."
       echo "other_node.type DERIVE"
+      echo "other_node.min 0"
       ;;
   memory)
       echo 'graph_order numa_hit numa_miss numa_foreign interleave_hit'
       echo "graph_title NUMA Memory allocations against node ${NODE}"
       echo 'graph_args -l 0'
-      echo 'graph_vlabel pages'
+      echo 'graph_vlabel pages/${graph_period}'
       echo 'graph_info Status of memory allocation requests of this node'
     	echo 'graph_category system'
       echo "numa_hit.label numa_hit"
       echo "numa_hit.info A process wanted to allocate memory from this node and succeeded."
       echo "numa_hit.type DERIVE"
+      echo "numa_hit.min 0"
       echo "numa_miss.label numa_miss"
       echo "numa_miss.info A process wanted to allocate memory from another node but ended up with memory from this node."
       echo "numa_miss.type DERIVE"
+      echo "numa_miss.min 0"
       echo "numa_foreign.label numa_foreign"
       echo "numa_foreign.info A process wanted to allocate memory from this node but ended up with memory from another node."
-      echo "numa_miss.type DERIVE"
+      echo "numa_foreign.type DERIVE"
+      echo "numa_foreign.min 0"
       echo "interleave_hit.label interleave_hit"
       echo "interleave_hit.info Interleaving wanted to allocate memory from this node and succeeded."
       echo "interleave_hit.type DERIVE"
+      echo "interleave_hit.min 0"
       ;;
   *)
       echo "$RESOURCE not defined."

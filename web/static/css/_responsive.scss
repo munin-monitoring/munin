@@ -2,9 +2,12 @@
  * This file contains everything that makes munin responsive, and is included in style.scss
  */
 
+.show-mobile { display: none!important; }
+
 /* Small devices (tablets, smartphones) */
 @media (max-width: 768px) {
 	.hide-mobile { display: none!important; }
+	.show-mobile { display: block!important; }
 
 	header {
 		border-left: 0;
@@ -12,41 +15,36 @@
 		border-radius: 0;
 		padding: 5px;
 
-		.left .logo {
-			margin-top: 0;
-			width: 30px;
-			@include opacity(1);
+		.left {
+			&, .action-icon {
+				margin-left: 0;
+			}
+
+			.logo {
+				display: none;
+			}
 		}
 
 		.right {
 			.filter {
 				display: inline-block;
 				margin-top: 0;
-				width: 200px;
+				width: 150px;
 
 				/* Don't expand on focus */
 				input[type=text] {
-					width: 200px;
-
-					&:focus {
-						width: 200px;
+					&, &:focus {
+						width: 150px;
 					}
 				}
 			}
-			.actions .action-icon {
-				margin-top: 0;
-			}
+		}
+		.actions .action-icon {
+			margin-top: 3px;
 		}
 
-		.pageTitle {
-			h1 {
-				padding-top: 10px;
-			}
-		}
-
-		.pageTitle {
-			display: block;
-			clear: both;
+		.pageTitle h1 {
+			padding-top: 0;
 		}
 	}
 
@@ -57,78 +55,45 @@
 	}
 	nav {
 		display: block;
-		width: 100%;
+		position: fixed;
+		z-index: 10;
+		top: 0;
+		left: 0;
+		width: 0;
+		height: 100%;
 		max-width: 500px;
-		margin: auto;
+		background-color: #fff;
+		@include box-shadow(1px 0px 20px 0px rgba(0, 0, 0, 0.3));
 
-		#nav {
-			display: none;
-			border-right: 0;
+		.navigation-wrapper {
 			padding: 0;
-			margin-top: -4px;
+			overflow-y: auto;
 
-			h2 {
-				text-align: center;
-				padding-left: 0;
+			.navigation {
+				width: $navigation-width-mobile;
 			}
-			ul li {
-				text-align: center;
-				padding-right: 0;
-			}
-			.timerangesList { opacity: 1; }
+			.timerangesList { @include opacity(1); }
 		}
 
-		#navToggle,
-		#nav {
-			-moz-box-shadow: 0 0 2px 0 #777777;
-			-webkit-box-shadow: 0 0 2px 0 #777777;
-			-o-box-shadow: 0 0 2px 0 #777777;
-			box-shadow: 0 0 2px 0 #777777;
-			filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, Direction=NaN, Strength=2);
-		}
-
-		#navToggle {
-			display: block;
-			padding: 10px 15px;
-			background-color: rgba(0, 0, 0, 0.05);
-			font-weight: bold;
-			cursor: pointer;
-			font-family: sans-serif;
-
-			&:after {
-				content: "+";
-				float: right;
-				font-size: 18px;
-				font-weight: normal;
-				margin-top: -2px;
-				color: #797979;
-			}
-			&.expanded:after {
-				content: "-";
-				margin-top: -4px;
-			}
-		}
+		&.fold { width: 0; }
+		&.shown { width: $navigation-width-mobile; }
 	}
 
 	#content {
 		display: block;
-		padding: 1em 0 1em 0;
+		padding: 1em 0;
 		width: 100%;
 
-		h2, h3 {
+		h2, h3, h4, .subtitle {
 			margin-left: 20px;
 		}
-	}
 
-	/* Graphs */
-	.graph {
-		max-width: 97%;
-		display: block;
-		margin: auto;
-	}
+		.page-head {
+			margin-left: 20px;
 
-	.dynazoomModalLink {
-		display: none;
+			h2, .subtitle { margin-left: 0; }
+			.timeRangeSwitch { margin-left: 40px; }
+		}
 	}
 
 	/* Overview */
@@ -142,13 +107,11 @@
 		}
 	}
 
-	.timeRangeSwitchContainer { top: 0; }
-
 	.modal {
 		width: 100%;
 		left: 0;
 		top: 0;
-		margin-top: 0;
+		margin-top: 15px;
 		margin-left: 0;
 		max-height: 100%;
 	}

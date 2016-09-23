@@ -109,6 +109,7 @@ my $build = Module::Build->new(
         'DBI'                    => '1.631',
         'HTML::Template::Pro'    => '0',
         'HTTP::Server::Simple::CGI'    => '0',
+        'CGI::Cookie'            => '0',
         'IO::Socket::INET6'      => '2.69',
         'LWP::UserAgent'         => '6.06',
         'List::Util'             => '0',

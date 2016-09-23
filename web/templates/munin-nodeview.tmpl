@@ -4,30 +4,11 @@
 <div id="main">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	<!-- Change the tabsenabled attribute to false to disable tabs -->
-	<div id="content" data-tabsenabled="true" data-tabs="true">
-		<!-- Node view -->
-		<div class="timeRangeSwitchContainer">
-			<div class="timeRangeSwitch">
-				<ul>
-					<li>hour</li>
-					<li class="selected">day</li>
-					<li>week</li>
-					<li>month</li>
-					<li class="last">year</li>
-				</ul>
-			</div>
-			<div class="timeRangeSwitch hide-if-overflows">
-				<ul>
-					<li>hour</li>
-					<li>day</li>
-					<li class="selected">week</li>
-					<li>month</li>
-					<li class="last">year</li>
-				</ul>
-			</div>
+	<div id="content" data-tabsenabled="true" data-tabs="true" data-graphext="<TMPL_VAR GRAPH_EXT>">
+		<div class="page-head">
+			<!-- Node view -->
+			<h2><TMPL_VAR NAME></h2>
 		</div>
-
-		<h2><TMPL_VAR NAME></h2>
 
 		<!-- Tabs. No empty space allowed here (for styling) -->
 		<ul class="tabs"><li>all</li><TMPL_LOOP CATEGORIES><li
@@ -38,59 +19,29 @@
 			<div data-category="<TMPL_VAR ESCAPE="HTML" NAME>">
 				<TMPL_LOOP SERVICES>
 					<h4><TMPL_VAR ESCAPE="HTML" NAME></h4>
-					<a href="<TMPL_VAR URLX>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
-						<TMPL_UNLESS DYN_IMAGES>
-							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  src="<TMPL_VAR IMGDAY>"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
-							  data-col="0" />
-						<TMPL_ELSE>
-							<noscript>
-							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  src="<TMPL_VAR IMGDAY>"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
-							  data-col="0" />
-							</noscript>
-							<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  data-original="<TMPL_VAR IMGDAY>"
-							  src="/static/img/placeholder.gif"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
-							  data-col="0" />
-						</TMPL_UNLESS>
-					</a>
-					<a href="<TMPL_VAR URLX>" class="graphLink hide-if-overflows i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
-						<TMPL_UNLESS DYN_IMAGES>
-							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  src="<TMPL_VAR IMGWEEK>"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
-							  data-col="1" />
-						<TMPL_ELSE>
-							<noscript>
-							<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  src="<TMPL_VAR IMGWEEK>"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
-							  data-col="1" />
-							</noscript>
-							<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-							  data-original="<TMPL_VAR IMGWEEK>"
-							  src="/static/img/placeholder.gif"
-							  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
-							  data-col="1" />
-						</TMPL_UNLESS>
-					</a>
-					<br />
+
+					<div class="row-fluid row-nowrap">
+						<div class="graph-col">
+							<a href="<TMPL_VAR URLX>" class="graph-link i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+								<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+								  src="<TMPL_VAR IMGDAY>"
+								  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+								  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF>
+								  data-col="0" />
+							</a>
+						</div>
+						<div class="graph-col hide-if-overflows">
+							<a href="<TMPL_VAR URLX>" class="graph-link i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+								<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+								  src="<TMPL_VAR IMGWEEK>"
+								  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
+								  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+								  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF>
+								  data-col="1" />
+							</a>
+						</div>
+					</div>
 				</TMPL_LOOP>
 			</div>
 		</TMPL_LOOP>
@@ -98,14 +49,9 @@
 </div>
 <a href="#" id="backToTop"><i class="mdi mdi-arrow-up"></i></a>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
-<script src="/static/js/component-absolute.js"></script>
-<script src="/static/js/component-toolbar.js"></script>
-<script src="/static/js/component-autorefresh.js"></script>
 <script src="/static/js/munin-nodeview.js"></script>
-<script src="/static/js/munin-nodeview-timerangeswitch.js"></script>
+<script src="/static/js/component-timerangeSwitch.js"></script>
 <script src="/static/js/component-eventruler.js"></script>
 <script src="/static/js/component-tabs.js"></script>
-<script src="/static/js/component-modal.js"></script>
-<script src="/static/js/component-dynazoom-modal.js"></script>
 </body>
 </html>

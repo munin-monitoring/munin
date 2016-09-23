@@ -8,7 +8,12 @@
 <![endif]-->
 <header>
 	<div class="left">
-		<a href="/" class="logo"></a>
+		<div class="actions">
+			<div id="navigation-toggle" class="action-icon">
+				<i class="mdi mdi-menu"></i>
+			</div>
+		</div>
+		<a href="/" class="logo logo-neg"></a>
 	</div>
 	<div class="right">
 		<div class="filter" style="display: none;">
@@ -16,6 +21,7 @@
 			<input type="text" id="filter" />
 			<i id="cancelFilter" class="mdi mdi-window-close" style="display:none;"></i>
 		</div>
+		<div class="actions"></div>
 	</div>
 	<div class="pageTitle"><h1>Overview</h1></div>
 	<div class="clear"></div>
@@ -23,7 +29,9 @@
 <div id="main">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 		<div id="content">
-			<h2>Overview</h2>
+			<div class="page-head">
+				<h2>Overview</h2>
+			</div>
 
 			<ul class="groupview">
 				<TMPL_LOOP GROUPS><TMPL_UNLESS MULTIGRAPH>
@@ -139,9 +147,6 @@
 		</div>
 </div>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
-<script src="/static/js/component-absolute.js"></script>
-<script src="/static/js/component-toolbar.js"></script>
-<script src="/static/js/component-autorefresh.js"></script>
 <script src="/static/js/munin-overview.js"></script>
 <!--[if lt IE 9]>
 	<script>

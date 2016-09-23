@@ -3,7 +3,7 @@
 <TMPL_INCLUDE NAME="partial/logo_navigation_problem.tmpl">
 <div id="main" class="categoryview">
 	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
-	<div id="content">
+	<div id="content" data-graphext="<TMPL_VAR GRAPH_EXT>">
 		<h2>Problems overview</h2>
 		<TMPL_IF CRITICAL>
 			<div class="problem" id="critical">
@@ -20,25 +20,9 @@
 						<br />
 
 						<a href="<TMPL_VAR URL>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
-							<TMPL_UNLESS DYN_IMAGES>
-								<img src="<TMPL_VAR CIMGDAY>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>" class="graph i"
-								  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-								  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF> />
-							<TMPL_ELSE>
-								<noscript>
-									<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-									  src="<TMPL_VAR CIMGDAY>"
-									  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-									  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-									  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF> />
-								</noscript>
-								<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-								  data-original="<TMPL_VAR CIMGDAY>"
-								  src="/static/img/placeholder.gif"
-								  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-								  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
-								  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF> />
-							</TMPL_UNLESS>
+							<img src="<TMPL_VAR CIMGDAY>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>" class="graph i"
+							  <TMPL_IF IMGDAYWIDTH>width="<TMPL_VAR IMGDAYWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGDAYHEIGHT>height="<TMPL_VAR IMGDAYHEIGHT>"</TMPL_IF> />
 						</a>
 
 						<span class="nodetitle">
@@ -50,25 +34,9 @@
 						<br />
 
 						<a href="<TMPL_VAR URL>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
-							<TMPL_UNLESS DYN_IMAGES>
-								<img src="<TMPL_VAR CIMGWEEK>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>" class="graph i"
-								  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-								  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF> />
-							<TMPL_ELSE>
-								<noscript>
-									<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-									  src="<TMPL_VAR CIMGWEEK>"
-									  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-									  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-									  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF> />
-								</noscript>
-								<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-								  data-original="<TMPL_VAR CIMGWEEK>"
-								  src="/static/img/placeholder.gif"
-								  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-								  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
-								  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF> />
-						</TMPL_UNLESS>
+							<img src="<TMPL_VAR CIMGWEEK>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>" class="graph i"
+							  <TMPL_IF IMGWEEKWIDTH>width="<TMPL_VAR IMGWEEKWIDTH>" </TMPL_IF>
+							  <TMPL_IF IMGWEEKHEIGHT>height="<TMPL_VAR IMGWEEKHEIGHT>"</TMPL_IF> />
 						</a>
 					</div>
 					<br />
@@ -156,20 +124,15 @@
 			</div>
 		</TMPL_IF>
 
-	<TMPL_IF CRITICAL>
-	<TMPL_ELSE>
-		<TMPL_IF WARNING>
-		<TMPL_ELSE>
-			<TMPL_IF UNKNOWN>
-			<TMPL_ELSE>
-				<p class="neutralMessage">There are neither warnings nor errors to display.</p>
-			</TMPL_IF>
-		</TMPL_IF>
-	</TMPL_IF>
+		<TMPL_UNLESS CRITICAL>
+			<TMPL_UNLESS WARNING>
+				<TMPL_UNLESS UNKNOWN>
+					<p class="neutralMessage"><i class="mdi mdi-check-all"></i> There are neither warnings nor errors to display.</p>
+				</TMPL_UNLESS>
+			</TMPL_UNLESS>
+		</TMPL_UNLESS>
 	</div>
 </div>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
-<script src="/static/js/component-absolute.js"></script>
-<script src="/static/js/component-toolbar.js"></script>
 </body>
 </html>

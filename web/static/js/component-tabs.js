@@ -4,13 +4,6 @@
  */
 
 (function($, window) {
-	var tabsEnabled,
-		content,
-		tabsContainer,
-		tabs,
-		activeTab,
-		categoryTitles;
-
 	var Tabs = function(elem, options) {
 		this.elem = elem;
 		this.$elem = $(elem);
@@ -64,27 +57,12 @@
 
 			this.activeTab.addClass('active');
 
-			// Register tab click listener
-			this.tabs.click(function() {
-				that.activeTab.removeClass('active');
-				that.activeTab = $(this);
-				that.activeTab.addClass('active');
-
-				// Hide all categories
-				if ($(this).index() != 0) {
-					$('[data-category]').hide();
-					// Show the right one
-					$('[data-category="' + that.activeTab.text() + '"]').show();
-
-					that.categoryTitles.hide();
-				}
-				else { // ALL
-					$('[data-category]').show();
-					that.categoryTitles.show();
-				}
-
-				// Save state in URL
-				saveState('cat', that.activeTab.text());
+			// Register tab click/enter listener
+			this.tabs.click(function() { // click
+				that.goTo($(this));
+			}).keyup(function(e) { // <Enter>
+				if (e.keyCode === 13)
+					that.goTo($(this));
 			});
 
 			// Hide graphs that aren't in the activeTab category
@@ -109,6 +87,32 @@
 				this.showTabs();
 
 			return this;
+		},
+
+		/**
+		 * Switchs to a specific tab
+		 * @param tab DOM element
+		 */
+		goTo: function(tab) {
+			this.activeTab.removeClass('active');
+			this.activeTab = tab;
+			this.activeTab.addClass('active');
+
+			// Hide all categories
+			if (tab.index() != 0) {
+				$('[data-category]').hide();
+				// Show the right one
+				$('[data-category="' + this.activeTab.text() + '"]').show();
+
+				this.categoryTitles.hide();
+			}
+			else { // ALL
+				$('[data-category]').show();
+				this.categoryTitles.show();
+			}
+
+			// Save state in URL
+			saveState('cat', this.activeTab.text());
 		},
 
 		/**

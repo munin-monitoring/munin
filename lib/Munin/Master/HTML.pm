@@ -13,6 +13,8 @@ use Munin::Common::Logger;
 use File::Basename;
 use Data::Dumper;
 
+use CGI::Cookie;
+
 my @times = qw(day week month year);
 # Current incarnation of $cgi.
 # XXX - this is NOT thread-safe!
@@ -21,7 +23,7 @@ my $cgi;
 sub handle_request
 {
 	$cgi = shift;
-
+	my %cookies = CGI::Cookie->fetch;
 	my $path = $cgi->path_info();
 
 	# Handle static page now, since there is no need to do any SQL
@@ -55,8 +57,15 @@ sub handle_request
 		return;
 	}
 
-	my $graph_ext = $cgi->url_param("graph_ext");
-	$graph_ext = "png" unless defined $graph_ext;
+	# Get graph extension (jpg / png / svg / pngx2 /...)
+	# Get from cookie if it exists
+	my $graph_ext = "png";
+	if (defined $cgi->url_param("graph_ext")) {
+		$graph_ext = $cgi->url_param("graph_ext");
+	}
+	elsif (exists $cookies{"graph_ext"}) {
+		$graph_ext = $cookies{"graph_ext"}->value;
+	}
 
 	# Handle rest-like URL : .json & .xml
 	my $output_format = "html";
@@ -93,10 +102,18 @@ sub handle_request
 	my $comparison;
 	my $template_filename;
 	my %template_params = (
-		MUNIN_VERSION	=> $Munin::Common::Defaults::MUNIN_VERSION,
+		MUNIN_VERSION   => $Munin::Common::Defaults::MUNIN_VERSION,
 		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
-		R_PATH		=> '',
+		R_PATH          => '',
+		GRAPH_EXT       => $graph_ext
 	);
+
+
+	# Reduced navigation panel
+	$template_params{NAV_PANEL_FOLD} = exists $cookies{"nav_panel_fold"}
+		? ($cookies{"nav_panel_fold"}->value eq "true" ? 1 : 0)
+		: 0;
+	$template_params{NAV_PANEL_FOLD_FORCED} = 0;
 
 	# Common Navigation params
 	###################
@@ -186,6 +203,12 @@ sub handle_request
 
 		$template_filename = "munin-problemview.tmpl";
 
+		$template_params{PATH} = [
+			# first args should have path and r_path for backlink to overview
+			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
+			{ "pathname" => "Problems" }
+		];
+
 		my $sth = $dbh->prepare_cached("SELECT nu.path, n.name, su.path, s.name, d.critical, d.warning, d.unknown FROM ds d
 				LEFT OUTER JOIN service s ON s.id = d.service_id
 				LEFT OUTER JOIN url su ON su.id = s.id and su.type = 'service'
@@ -243,12 +266,13 @@ sub handle_request
 		];
 
 		$template_params{CATEGORY} = $category;
+		$template_params{TIMERANGE} = $time;
 
 		my $sth_cat;
 		if ($category eq 'other') {
 			# account for those that explictly mention 'other' as category
 			$sth_cat = $dbh->prepare_cached(
-				"SELECT DISTINCT s.name FROM service s
+				"SELECT DISTINCT s.name, s.service_title FROM service s
 				LEFT JOIN service_categories sc ON s.id = sc.id
 				WHERE (sc.category = 'other' OR sc.id IS NULL)
 				AND EXISTS (select sa.id from service_attr sa where sa.id = s.id)
@@ -256,7 +280,7 @@ sub handle_request
 			$sth_cat->execute();
 		} else {
 			$sth_cat = $dbh->prepare_cached(
-				"SELECT DISTINCT s.name FROM service s
+				"SELECT DISTINCT s.name, s.service_title FROM service s
 				INNER JOIN service_categories sc ON s.id = sc.id
 				WHERE (sc.category = ?)
 				AND EXISTS (select sa.id from service_attr sa where sa.id = s.id)
@@ -265,18 +289,20 @@ sub handle_request
 		}
 
 		my @services;
-		while (my ($_service) = $sth_cat->fetchrow_array) {
-			push @services, _get_params_services_by_name($dbh, $_service, $time, $graph_ext);
+		while (my ($_service, $_service_title) = $sth_cat->fetchrow_array) {
+			push @services, _get_params_services_by_name($dbh, $_service, $_service_title, $time, $graph_ext);
 		}
 		$template_params{SERVICES} = \@services;
+
+		# Force-reduce navigation panel
+		$template_params{NAV_PANEL_FOLD} = 1;
+		$template_params{NAV_PANEL_FOLD_FORCED} = 1;
 	} elsif ($path =~ /^(.+)\/comparison-(day|month|week|year)\.html$/) {
 		# That's a comparison URL, handle it as special case of groups
 		$path = $1;
 		$comparison = $2;
 	}
 
-	$graph_ext = $cgi->url_param("graph_ext") || $graph_ext;
-	$graph_ext = "png" unless defined $graph_ext;
 
 	# Handle normal pages only if not already handled
 	goto RENDERING if $template_filename;
@@ -354,6 +380,10 @@ sub handle_request
 			while (my ($cat_name) = $sth_cat->fetchrow_array) {
 				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id, $graph_ext, $comparison);
 			}
+
+			# Force-reduce navigation panel
+			$template_params{NAV_PANEL_FOLD} = 1;
+			$template_params{NAV_PANEL_FOLD_FORCED} = 1;
 		} else {
 			# Emit group template
 			$template_filename = 'munin-domainview.tmpl';
@@ -669,7 +699,7 @@ sub _get_params_services_for_comparison {
 # This is only called for category views, which start with the root URL,
 # so no need to handle basepath or multigraph parents for relative URLs
 sub _get_params_services_by_name {
-	my ($dbh, $service_name, $time, $graph_ext) = @_;
+	my ($dbh, $service_name, $service_title, $time, $graph_ext) = @_;
 
 	# TODO warning/critical state (use SUM sub-queries?)
 	# XXX this may be slow
@@ -700,6 +730,7 @@ sub _get_params_services_by_name {
 
 	return {
 		NAME => $service_name,
+		TITLE => $service_title,
 		GRAPHS => \@graphs,
 	};
 }

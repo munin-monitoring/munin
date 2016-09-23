@@ -14,6 +14,8 @@
 
 	Modal.prototype = {
 		defaults: {
+			size: 'medium',
+			title: null
 		},
 
 		prepare: function() {
@@ -24,14 +26,13 @@
 			// Create modal & append it to the body
 			this.modal = $('<div />')
 				.data('modalname', this.modalId)
-				.addClass('modal')
+				.addClass('modal modal-' + this.settings.size)
 				.css('display', 'none')
 				.append(
 					$('<div />')
 						.addClass('title')
-						.css('display', 'none')
 						.append(
-							$('<span />')
+							$('<span />').text(this.settings.title != null ? this.settings.title : '')
 						)
 						.append(
 							$('<a />')
@@ -54,7 +55,7 @@
 								)
 						)
 				)
-				.append(this.modalHTMLContent)
+				.append(this.modalHTMLContent.show())
 				.appendTo(body);
 
 			this.modalMask = $('<div />')
@@ -80,12 +81,16 @@
 			var titleBar = this.modal.find('.title');
 			titleBar.find('span').text(title);
 			titleBar.show();
+
+			return this;
 		},
 
 		setOpenTarget: function(target) {
 			var icon = this.modal.find('.open');
 			icon.attr('href', target);
 			icon.show();
+
+			return this;
 		},
 
 		show: function() {
@@ -103,6 +108,8 @@
 				if (e.keyCode == 27)
 					that.hide();
 			});
+
+			return this;
 		},
 
 		hide: function() {
@@ -112,6 +119,8 @@
 
 			// Unregister ESC keypress event
 			$(document).off('keyup.modal');
+
+			return this;
 		},
 
 		/**
@@ -123,6 +132,8 @@
 
 			this.modal.css('width', Math.min(modalMaxWidth, $(window).width()));
 			this.modal.css('height', Math.min(modalMaxHeight), $(window).height());
+
+			return this;
 		},
 
 		getView: function() {

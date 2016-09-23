@@ -2,23 +2,18 @@
  * Comparison specific code
  */
 
-var content,
-	graphs,
-	trs;
 
 $(document).ready(function() {
-	content = $('#content');
-	graphs = $('.graph');
-	trs = $('tr');
+	var content = $('#content');
+	var graphs = window.graphs = $('.graph');
+	var services = $('.table-row');
 
 	// Instantiate auto-refresh & dynazoom modal links components
-	var autoRefresh = graphs.autoRefresh();
+	var autoRefresh = window.autoRefresh = graphs.autoRefresh();
 	graphs.dynazoomModal();
+	graphs.graph();
 
-	// Add toolbar actions
-	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
-		autoRefresh.refresh();
-	});
+	addRefreshActionIcon(autoRefresh);
 
 	// Tabs
 	var tabs = $(this).tabs();
@@ -30,11 +25,9 @@ $(document).ready(function() {
 		else
 			tabs.hideTabs();
 
-		trs.each(function() {
-			var serviceName = $(this).data('servicename');
-			var serviceTitle = $(this).data('servicetitle');
-
-			if (window.toolbar.filterMatches(val, serviceName) || window.toolbar.filterMatches(val, serviceTitle)) {
+		services.each(function() {
+			if (window.toolbar.filterMatches(val, $(this).data('servicename'))
+				|| window.toolbar.filterMatches(val, $(this).data('servicetitle'))) {
 				$(this).show();
 			}
 			else {
@@ -53,8 +46,8 @@ $(document).ready(function() {
 		}
 
 		// Hide unnecessary categories names
-		$('table[data-category]').each(function() {
-			if ($(this).find('tr:visible').length == 0)
+		$('.table[data-category]').each(function() {
+			if ($(this).find('.table-row:visible').length == 0)
 				$(this).prev().hide();
 			else
 				$(this).prev().show();
@@ -74,14 +67,12 @@ $(document).ready(function() {
 
 	// Time range switch
 	var timeRangeSwitch = $('.timeRangeSwitch');
-	timeRangeSwitch.find('ul > li').click(function() {
+	timeRangeSwitch.find('li').click(function() {
 		if ($(this).hasClass('selected'))
 			return;
 
-		// Remove "selected" attribute
+		// Update "selected" attribute
 		$(this).parent().find('li').removeClass('selected');
-
-		// Add "selected" class to this
 		$(this).addClass('selected');
 
 		window.location.href = './comparison-' + $(this).text() + '.html?cat=' + $('ul.tabs').find('.active').text();
@@ -89,10 +80,15 @@ $(document).ready(function() {
 
 	// Set current time range
 	var url = window.location.href;
-	var regex = 'comparison-(.*).html';
-	var timeRange = url.match(regex)[1];
-	timeRangeSwitch.find('ul > li:contains(' + timeRange + ')').addClass('selected');
+	var timeRange = url.match(/comparison-(.*)\.html/)[1];
+	timeRangeSwitch.find('li:contains(' + timeRange + ')').addClass('selected');
 
 	// Init eventruler
 	$(this).eventRuler();
+
+	// Assign tab-indexes to elements
+	$('.tabs > li:visible, .graphLink').each(function(index) {
+		$(this).attr('tabindex', index+1);
+	});
+	removeTabIndexOutline();
 });

@@ -97,7 +97,9 @@ require 'rexml/document'
 w = {
     "jvm" =>  { "max" => "U",
                 "free" => "U",
-                "used" => "U" },
+                "used" => "U",
+                "OldGenMax" => "U",
+                "OldGenUsed" => "U" },
     "threads" =>  { "busy" => "U",
                     "idle" => "U",
                     "max" => "U" },
@@ -168,13 +170,17 @@ if ARGV[0] == "config"
             puts "graph_category tomcat"
             puts "graph_args --base 1024 -l 0"
             puts "graph_vlabel Bytes"
-	    puts "graph_order free used max"
+            puts "graph_order used free max OldGenUsed OldGenMax"
             puts "free.label free bytes";
-            puts "free.draw AREA";
+            puts "free.draw STACK";
             puts "used.label used bytes";
-            puts "used.draw STACK";
+            puts "used.draw AREA";
             puts "max.label maximum bytes";
             puts "max.draw LINE2";
+            puts "OldGenMax.label CMS Old Gen maximum bytes";
+            puts "OldGenMax.draw LINE2";
+            puts "OldGenUsed.label CMS Old Gen used bytes";
+            puts "OldGenUsed.draw LINE1";
         when "access"
             puts "graph_title Tomcat accesses"
             puts "graph_category tomcat"
@@ -261,6 +267,10 @@ node = REXML::XPath.first(doc, '//status/jvm/memory')
 w["jvm"]["max"] = node.attributes["max"]
 w["jvm"]["used"] = node.attributes["total"].to_i - node.attributes["free"].to_i
 w["jvm"]["free"] = node.attributes["free"]
+
+node = REXML::XPath.first(doc, "//status/jvm/memorypool[@name='CMS Old Gen']")
+w["jvm"]["OldGenMax"] = node.attributes["usageMax"]
+w["jvm"]["OldGenUsed"] = node.attributes["usageUsed"]
 
 # copy connector datas to hash
 node = REXML::XPath.first(doc, "//status/connector[@name='" + @connector + "']/threadInfo")

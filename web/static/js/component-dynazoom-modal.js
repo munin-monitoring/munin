@@ -3,18 +3,16 @@
  */
 (function($, window) {
 	var DynazoomModal = function(elems, options) {
-		this.elems = elems;
-		this.$elems = $(elems);
+		this.elems = $(elems);
 		this.options = options;
-		this.metadata = this.$elems.data('dynazoom-modal-options');
+		this.metadata = this.elems.data('dynazoom-modal-options');
 	};
 
 	DynazoomModal.prototype = {
 		defaults: { },
 
 		init: function() {
-			var that = this,
-				modalId = 'dynazoomModal';
+			var modalId = 'dynazoomModal';
 			this.settings = $.extend({}, this.defaults, this.options, this.metadata);
 
 			var body = $('body');
@@ -22,14 +20,17 @@
 				return this;
 
 			// Add dynazoom modal link to each graph
-			this.$elems.after($('<i />').addClass('mdi mdi-arrow-expand dynazoomModalLink'));
+			this.elems.after($('<i />').addClass('mdi mdi-arrow-expand graph-dynazoomModalLink'));
 
 			// Prepare a hidden modal
-			var modal = new Modal(modalId, '<iframe frameBorder="0" seamless="seamless"></iframe>');
+			var iframe = $('<iframe />')
+				.attr('frameBorder', '0')
+				.attr('seamless', 'seamless');
+			var modal = new Modal(modalId, iframe);
 			var dynazoomIframe = modal.getView().find('iframe');
 
 			// Bind onclick event
-			$('.dynazoomModalLink').click(function(e) {
+			$('.graph-dynazoomModalLink').click(function(e) {
 				e.preventDefault();
 
 				var img = $(this).parent().find('img.graph');
@@ -43,8 +44,7 @@
 				// Set start_epoch depending on graph time range (leave stop_epoch default)
 				// Get "day/month/..." from img src
 				var src = img.attr('src');
-				var timeRange = src.substr(src.lastIndexOf('-')+1); // Remove everything before -(day/week/...)
-				timeRange = timeRange.substr(0, timeRange.indexOf('.png')); // Remove .png?...
+				var timeRange = src.match(/(.*)-(hour|day|week|month|year)\.(.*)$/)[2];
 
 				var start_epoch = Math.round(new Date().getTime()/1000);
 				switch (timeRange) {

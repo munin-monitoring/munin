@@ -120,7 +120,7 @@ sub handle_request
 	my $t0 = Time::HiRes::time;
 	my $path = $cgi->path_info();
 
-	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png|[a-z]+)$/) {
+	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png(?:x(\d+))?|[a-z]+)$/) {
 		# We don't understand this URL
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
@@ -130,9 +130,11 @@ sub handle_request
 	}
 
 
-	my ($graph_path, $time, $start, $end, $format) = ($1, $2, $3, $4, $5);
+	my ($graph_path, $time, $start, $end, $format, $hidpi) = ($1, $2, $3, $4, $5, $6);
 	$start = $times{$time} unless defined $start;
 	$end = "" unless defined $end;
+
+	$format = "png" if $hidpi; # Only PNG is supported when HiDPI mode
 
 	# Only accept known formats
 	$format = uc($format);
@@ -201,6 +203,7 @@ sub handle_request
 
 	$sth->execute($id, "graph_args");
 	my ($graph_args) = $sth->fetchrow_array() || "";
+	my @rrd_graph_args = split /\s+/, $graph_args;
 	DEBUG "graph_args: $graph_args";
 
 	$sth->execute($id, "graph_printf");
@@ -223,6 +226,7 @@ sub handle_request
 			rc.value,
 			gc.value,
 			gd.value,
+			gds.value,
 			pf.value,
 			ne.value,
 			sm.value as sum,
@@ -243,6 +247,7 @@ sub handle_request
 		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'rrd:cdef'
 		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
+		LEFT OUTER JOIN ds_attr gds ON gds.id = ds.id AND gds.name = 'drawstyle'
 		LEFT OUTER JOIN ds_attr pf ON pf.id = ds.id AND pf.name = 'printf'
 		LEFT OUTER JOIN ds_attr ne ON ne.id = ds.id AND ne.name = 'negative'
 		LEFT OUTER JOIN ds_attr sm ON sm.id = ds.id AND sm.name = 'sum'
@@ -281,6 +286,7 @@ sub handle_request
 			$_rrdname, $_label,
 			$_rrdfile, $_rrdfield, $_rrdalias, $_rrdcdef,
 			$_color, $_drawtype,
+			$_drawstyle,
 			$_printf,
 			$_negative,
 			$_sum,
@@ -301,6 +307,9 @@ sub handle_request
 		$_printf .= "%s";
 
 		DEBUG "rrdname: $_rrdname";
+
+		# rrdtool fails on unescaped colons found in its input data
+		$_label =~ s/:/\\:/g;
 
 		# Handle .sum
 		if ($_sum) {
@@ -373,6 +382,9 @@ sub handle_request
 		$_color = $COLOUR[$field_number % $#COLOUR] unless defined $_color;
 		$_drawtype = "LINE" unless defined $_drawtype;
 
+		# Handle draw style such as "dashes=..."
+		$_drawstyle = $_drawstyle ? ":$_drawstyle" : '';
+
 		# Handle the (LINE|AREA)STACK munin extensions
 		$_drawtype = $field_number ? "STACK" : "AREA" if $_drawtype eq "AREASTACK";
 		$_drawtype = $field_number ? "STACK" : "LINE" if $_drawtype eq "LINESTACK";
@@ -384,7 +396,7 @@ sub handle_request
 		# ... But we did still want to compute the related DEF & CDEF
 		next if $_has_negative;
 
-		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label\\l";
+		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label$_drawstyle\\l";
 
 		# Legend
 		push @rrd_vdef, "VDEF:vavg_$_rrdname=avg_$_rrdname,AVERAGE";
@@ -497,6 +509,18 @@ sub handle_request
 		$height = 175;
 	}
 
+	my $font_size_title = 12;
+	my $font_size_default = 7;
+	my $font_size_legend = 7;
+
+	if ($hidpi) {
+		$width *= $hidpi;
+		$height *= $hidpi;
+		$font_size_title *= $hidpi;
+		$font_size_default *= $hidpi;
+		$font_size_legend *= $hidpi;
+	}
+
 	my @rrd_header = (
 		"--title", "$graph_title - $title",
 		"--watermark", "Munin " . $Munin::Common::Defaults::MUNIN_VERSION,
@@ -504,9 +528,9 @@ sub handle_request
 		"--start", $start,
 		"--slope-mode",
 
-		'--font', 'TITLE:12:Sans',
-		'--font', 'DEFAULT:7',
-		'--font', 'LEGEND:7',
+		'--font', "TITLE:$font_size_title:Sans",
+		'--font', "DEFAULT:$font_size_default",
+		'--font', "LEGEND:$font_size_legend",
                 # Colors coordinated with CSS.
                 '--color', 'BACK#F0F0F0',   # Area around the graph
                 '--color', 'FRAME#F0F0F0',  # Line around legend spot
@@ -554,6 +578,7 @@ sub handle_request
 	my $tpng = Time::HiRes::time;
 	my @rrd_cmd = (
 		$rrd_fh->filename,
+		@rrd_graph_args,
 		@rrd_header,
 		@rrd_sum,
 		@rrd_def,

@@ -2,20 +2,19 @@
 <body>
 <TMPL_INCLUDE NAME="partial/logo_navigation_comparison.tmpl">
 <div id="main" class="comparison">
-	<div id="content" data-tabsenabled="true" data-tabs="true">
-		<div class="comparison-head">
+	<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+	<div id="content" data-tabsenabled="true" data-tabs="true" data-graphext="<TMPL_VAR GRAPH_EXT>">
+		<div class="page-head">
 			<div>
 				<h2>Comparison</h2>
 				<div class="subtitle"><TMPL_VAR NAME> - <TMPL_VAR TIMERANGE></div>
 			</div>
-			<div class="timeRangeSwitch">
-				<ul>
-					<li>day</li>
-					<li>week</li>
-					<li>month</li>
-					<li class="last">year</li>
-				</ul>
-			</div>
+			<ul class="timeRangeSwitch">
+				<li>day</li>
+				<li>week</li>
+				<li>month</li>
+				<li>year</li>
+			</ul>
 		</div>
 
 		<!-- Tabs. No empty space allowed here (for styling) -->
@@ -24,11 +23,11 @@
 
 		<TMPL_LOOP CATEGORIES>
 		<h3 id="<TMPL_VAR ESCAPE="HTML" GROUPNAME>"><TMPL_VAR ESCAPE="HTML" GROUPNAME></h3>
-		<table data-category="<TMPL_VAR ESCAPE="HTML" GROUPNAME>">
+		<div class="table" data-category="<TMPL_VAR ESCAPE="HTML" GROUPNAME>">
 			<TMPL_LOOP SERVICES>
-				<tr data-servicename="<TMPL_VAR ESCAPE="HTML" SERVICENAME>" data-servicetitle="<TMPL_VAR ESCAPE="HTML" SERVICETITLE>">
+				<div class="table-row" data-servicename="<TMPL_VAR ESCAPE="HTML" SERVICENAME>" data-servicetitle="<TMPL_VAR ESCAPE="HTML" SERVICETITLE>">
 					<TMPL_LOOP NODES>
-						<td>
+						<div class="graph-col">
 							<div class="node">
 								<span class="nodetitle">
 									<a href="<TMPL_VAR ESCAPE="URL" NODENAME>/index.html"><TMPL_VAR ESCAPE="HTML" NODENAME></a> &bull;
@@ -42,46 +41,26 @@
 								</span>
 								<br />
 								<TMPL_IF CIMG>
-									<a href="/<TMPL_VAR URL>" class="graphLink i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
-										<TMPL_UNLESS DYN_IMAGES>
-											<img src="<TMPL_VAR CIMG>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
-											  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-											  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
-											  <TMPL_IF IMGHEIGHT>height="<TMPL_VAR IMGHEIGHT>"</TMPL_IF>/>
-										<TMPL_ELSE>
-											<noscript>
-												<img class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-												  src="<TMPL_VAR CIMG>"
-												  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-												  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
-												  <TMPL_IF IMGHEIGHT>height="<TMPL_VAR IMGHEIGHT>"</TMPL_IF>/>
-											</noscript>
-											<img class="graph lazy i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
-											  data-original="<TMPL_VAR CIMG>"
-											  src="/static/img/placeholder.gif"
-											  alt="<TMPL_VAR ESCAPE="HTML" NAME>"
-											  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
-											  <TMPL_IF IMGHEIGHT>height="<TMPL_VAR IMGHEIGHT>"</TMPL_IF>/>
-										</TMPL_UNLESS>
+									<a href="/<TMPL_VAR URL>" class="graph-link i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>">
+										<img src="<TMPL_VAR CIMG>" alt="<TMPL_VAR ESCAPE="HTML" LABEL>"
+										  class="graph i<TMPL_IF STATE_WARNING>warn</TMPL_IF><TMPL_IF STATE_CRITICAL>crit</TMPL_IF>"
+										  <TMPL_IF IMGWIDTH>width="<TMPL_VAR IMGWIDTH>" </TMPL_IF>
+										  <TMPL_IF IMGHEIGHT>height="<TMPL_VAR IMGHEIGHT>"</TMPL_IF>/>
 									</a>
 								</TMPL_IF>
 							</div>
-						</td>
+						</div>
 					</TMPL_LOOP>
-				</tr>
+				</div>
 			</TMPL_LOOP>
-		</table>
+		</div>
 		</TMPL_LOOP>
 	</div>
 </div>
+<a href="#" id="backToTop"><i class="mdi mdi-arrow-up"></i></a>
 <TMPL_INCLUDE NAME="partial/footer.tmpl">
-<script src="/static/js/component-absolute.js"></script>
-<script src="/static/js/component-toolbar.js"></script>
-<script src="/static/js/component-autorefresh.js"></script>
+<script src="/static/js/component-eventruler.js"></script>
 <script src="/static/js/munin-comparison.js"></script>
 <script src="/static/js/component-tabs.js"></script>
-<script src="/static/js/component-eventruler.js"></script>
-<script src="/static/js/component-modal.js"></script>
-<script src="/static/js/component-dynazoom-modal.js"></script>
 </body>
 </html>

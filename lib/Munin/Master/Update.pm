@@ -540,7 +540,7 @@ sub _dump_into_sql {
 					$sth_ds_attr->execute($ds_id, $attr, $value);
 
 					$ds_type = uc($value) if $attr eq "type";
-					$gfx_color = $value if $attr eq "color";
+					$gfx_color = $value if $attr eq "colour";
 					$cdef = $value if $attr eq "cdef";
 				}
 

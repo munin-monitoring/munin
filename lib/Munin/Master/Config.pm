@@ -151,6 +151,7 @@ my %booleans = map {$_ => 1} qw(
 		groups           => {},
 		local_address    => 0,
 		logdir           => $Munin::Common::Defaults::MUNIN_LOGDIR,
+		logoutput        => 'syslog',
 		max_processes    => 16,
 		rundir           => $Munin::Common::Defaults::MUNIN_STATEDIR,
 		timeout          => 180,

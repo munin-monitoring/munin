@@ -27,16 +27,21 @@ $(document).ready(function() {
 		}
 	});
 
+	var graphs = window.graphs = $('.graph');
 	// Graphs auto-refresh
-	var autoRefresh = $('.graph').autoRefresh();
+	var autoRefresh = window.autoRefresh = graphs.autoRefresh();
+	graphs.graph();
 
-	// Add toolbar actions
-	window.toolbar.addActionIcon('mdi-refresh', 'Refresh graphs', false, function() {
-		autoRefresh.refresh();
-	});
+	addRefreshActionIcon(autoRefresh);
 
 	// Switch to another graph in the same node
 	$('.switchable[data-switch="header"]').list('header', {
 		list: $('.switchable_content[data-switch="header"]')
 	});
+
+	// Assign tab-indexes to elements
+	$('.graphLink').each(function(index) {
+		$(this).attr('tabindex', index+1);
+	});
+	removeTabIndexOutline();
 });

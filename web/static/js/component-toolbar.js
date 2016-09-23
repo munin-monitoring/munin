@@ -1,26 +1,80 @@
 /**
- * Toolbar jQuery component
+ * Toolbar & navigation panel jQuery component
  */
 (function($) {
 	var Toolbar = function(elem, options) {
-		this.elem = elem;
-		this.$elem = $(elem);
+		this.elem = $(elem);
 		this.options = options;
-		this.metadata = this.$elem.data('toolbar-options');
+		this.metadata = this.elem.data('toolbar-options');
 	};
 
 	Toolbar.prototype = {
 		defaults: {
-
+			mobileTriggerWidth: 768
 		},
 
 		init: function() {
+			var that = this;
 			this.settings = $.extend({}, this.defaults, this.options, this.metadata);
 
 			// Init component
 			this.filterWrap = this.elem.find('.filter');
+			this.actions = this.elem.find('.right').find('.actions');
+			this.navigation = $('nav');
+			this.navigationMask = $('.navigation-mask').click(function() {
+				that.toggleNavigation(false);
+
+				setCookie('nav_panel_fold', true); // Save state
+			});
+
+			// Navigation toggle
+			this.elem.find('#navigation-toggle').click(function() {
+				var makeVisible = that.navigation.width() <= 0;
+				that.toggleNavigation(makeVisible);
+
+				// Don't save state when force-reduced
+				if (!that.navigation.hasClass('force-fold'))
+					setCookie('nav_panel_fold', !makeVisible); // Save state
+			});
+
+			// Fixed toolbar
+			this.pushBackContent();
+			$(window).resize(function() {
+				that.pushBackContent();
+			});
+
+			if ($(document).width() < 1260) {
+				// Fixed when scrolling down
+				var lastScrollPosition;
+				$(document).scroll(function () {
+					var scrollPosition = $(this).scrollTop();
+
+					// Scrolling down
+					if (scrollPosition > lastScrollPosition && scrollPosition > $('header').height()) {
+						// If the header is currently showing
+						if (!that.elem.is('.toolbar-hide'))
+							that.elem.addClass('toolbar-hide');
+					}
+
+					// Scrolling up
+					else {
+						// If the header is currently hidden
+						if (that.elem.is('.toolbar-hide'))
+							that.elem.removeClass('toolbar-hide');
+					}
+
+					lastScrollPosition = scrollPosition;
+				});
+			}
 
 			return this;
+		},
+
+		/**
+		 * Updates content's margin-top property to exactly fit toolbar height
+		 */
+		pushBackContent: function() {
+			$('#main').css('margin-top', this.elem.height() + 'px');
 		},
 
 		/**
@@ -125,7 +179,7 @@
 
 			if (overflow) {
 				// Add overflow button if it doesn't exist yet
-				if (!this.$elem.find('.overflow').length) {
+				if (!this.elem.find('.overflow').length) {
 					// Create overflow button
 					var overflowButton = $('<div />')
 						.addClass('action-icon overflow')
@@ -133,14 +187,18 @@
 						.append(
 							$('<i />').addClass('mdi mdi-dots-vertical')
 						)
-						.appendTo(this.$elem.find('.actions'));
+						.appendTo(this.actions);
 
 					// Create list
-					var list = overflowButton.list('overflow');
-
-					// Add item to list
-					list.addItem(icon, text, callback);
+					this.overflowList = overflowButton.list('overflow');
 				}
+
+				// Add item to list
+				var item = this.overflowList.addItem(icon, text, callback);
+
+				this.pushBackContent();
+
+				return item;
 			} else {
 				var button = $('<div />')
 					.addClass('action-icon')
@@ -148,12 +206,31 @@
 					.append(
 						$('<i />').addClass('mdi ' + icon)
 					)
-					.prependTo(this.$elem.find('.actions'));
+					.prependTo(this.actions);
 
 				// Tooltip for text
 				button.tooltip(text, {
 					singleLine: true
 				});
+
+				this.pushBackContent();
+
+				return button;
+			}
+		},
+
+		toggleNavigation: function(visible) {
+			if (visible)
+				this.navigation.removeClass('fold').addClass('shown');
+			else
+				this.navigation.addClass('fold').removeClass('shown');
+
+			// Toggle navigation mask if necessary
+			if ($(document).width() < this.settings.mobileTriggerWidth) {
+				if (visible)
+					this.navigationMask.fadeIn(150);
+				else
+					this.navigationMask.fadeOut(150);
 			}
 		}
 	};

@@ -14,7 +14,7 @@
 		/**
 		 * Shows the absolute element. Its position is computed from trigger element
 		 */
-		showElement: function(trigger, animate) {
+		showElement: function(trigger, positionReference, animate) {
 			var that = this;
 
 			if (this.element.is(':visible')) {
@@ -23,11 +23,15 @@
 			}
 
 			// Generate left & top element position
-			var triggerBottom = trigger.position().top + trigger.outerHeight(true);
+			var triggerBottom = positionReference.position().top + positionReference.outerHeight(true);
 			this.element.css('top', triggerBottom);
 
-			var left = trigger.position().left + trigger.outerHeight() / 2;
+			var left = positionReference.position().left + positionReference.outerHeight() / 2;
 			this.element.css('left', left);
+
+			// Make element fixed if parent is
+			if (this._isElementPositionFixed(trigger))
+				this.element.css('position', 'fixed');
 
 			// Check if element is out of view
 			this.element.show(); // So we can get its position & dimensions
@@ -61,6 +65,19 @@
 				this.element.fadeOut(100);
 			else
 				this.element.hide();
+		},
+
+		_isElementPositionFixed: function(item) {
+			var isFixed = false;
+
+			$.each($.merge(item, item.parents()), function(index, parent) {
+				if ($(parent).css('position') == 'fixed') {
+					isFixed = true;
+					return false;
+				}
+			});
+
+			return isFixed;
 		}
 	};
 
@@ -68,11 +85,10 @@
 	// Define Tooltip
 	var Tooltip = function(elem, message, options) {
 		Absolute.call(this);
-		this.trigger = elem;
-		this.$trigger = $(elem);
+		this.trigger = $(elem);
 		this.message = message;
 		this.options = options;
-		this.metadata = this.$trigger.data('tooltip-options');
+		this.metadata = this.trigger.data('tooltip-options');
 	};
 
 	Tooltip.prototype = new Absolute();
@@ -104,16 +120,16 @@
 
 		// Append <sup>?</sup> to trigger
 		if (this.settings.appendQuestionMark)
-			this.$trigger.html(this.$trigger.text() + '<sup>?</sup>');
+			this.trigger.html(this.trigger.text() + '<sup>?</sup>');
 
 		// Register mouseenter event
-		this.$trigger.mouseenter(function() {
-			that.showElement(that.$trigger, true);
+		this.trigger.mouseenter(function() {
+			that.showElement(that.trigger, that.trigger, true);
 		});
 
 		// Register mouseleave event
-		this.$trigger.mouseleave(function() {
-			that.hideElement(that.$trigger, true);
+		this.trigger.mouseleave(function() {
+			that.hideElement(true);
 		});
 
 		return this;
@@ -134,11 +150,10 @@
 	 */
 	var List = function(elem, name, options) {
 		Absolute.call(this);
-		this.trigger = elem;
-		this.$trigger = $(elem);
+		this.trigger = $(elem);
 		this.name = name;
 		this.options = options;
-		this.metadata = this.$trigger.data('list-options');
+		this.metadata = this.trigger.data('list-options');
 	};
 
 	List.prototype = new Absolute();
@@ -146,6 +161,9 @@
 
 	// Extend Absolute's prototype
 	List.prototype.defaults = {
+		width: 'auto',
+		positionReference: null,
+
 		// If null, will be created
 		list: null,
 
@@ -159,7 +177,9 @@
 		var that = this;
 		this.settings = $.extend({}, this.defaults, this.options, this.metadata);
 
-		var trigger = this.$trigger;
+		var trigger = this.trigger;
+		if (this.settings.positionReference == null)
+			this.settings.positionReference = trigger;
 
 		// List
 		if (this.settings.list == null) {
@@ -184,10 +204,11 @@
 		}
 
 		this.element = this.settings.list;
+		this.element.css('width', this.settings.width);
 
 		// Register event
 		trigger.click(function() {
-			that.showElement(trigger, false);
+			that.showElement(trigger, that.settings.positionReference, false);
 		});
 
 		return this;
@@ -196,7 +217,7 @@
 	List.prototype.addItem = function(icon, name, callback) {
 		var that = this;
 
-		$('<a />')
+		return $('<a />')
 			.attr('href', '#')
 			.text(name)
 			.prepend(
