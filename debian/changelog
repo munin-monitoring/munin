@@ -1,9 +1,9 @@
-munin (2.999.3-1) UNRELEASED; urgency=medium
+munin (2.999.3-1) experimental; urgency=medium
 
   [ Holger Levsen ]
   * Imported upstream release 2.999.3 (Closes: #773802)
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>  Wed, 13 Jan 2016 23:11:31 +0100
+ -- Holger Levsen <holger@debian.org>  Thu, 29 Sep 2016 12:28:34 +0200
 
 munin (2.1.9-1) experimental; urgency=medium
 
