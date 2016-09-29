@@ -144,7 +144,7 @@ Description: network-wide graphing framework (java plugins for node)
 Package: munin
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
- cron-daemon,
+ cron | cron-daemon,
  fonts-dejavu | ttf-dejavu,
  libdate-manip-perl,
  libdigest-md5-perl,
