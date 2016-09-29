@@ -31,7 +31,7 @@ Debian-specific information regarding the Munin node
     changes will likely break intrusion detection systems which relies
     on dpkg's database for reference.
 
-    It is worth noting that many things can be overrided in the core process'
+    It is worth noting that many things can be overridden in the core process'
     configuration file, so it is quite possible that a modification is not
     necessary.
 
