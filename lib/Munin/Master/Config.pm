@@ -4,7 +4,7 @@ use base qw(Munin::Common::Config);
 
 
 # Notes about config data structure:
-# 
+#
 # In Munin all configuration and gathered data is stored in the same
 # config tree of hashes.  Since ~april 2009 we've made the tree object
 # oriented so the objects in there must be instantiated as the right
@@ -12,7 +12,7 @@ use base qw(Munin::Common::Config);
 # behaviour when we itterate over the objects in the tree.
 #
 # The Class Munin::Common::Config is the base of Munin::Master::Config.
-# The master programs (munin-update, munin-graph, munin-html) instantiate
+# The master programs (munin-update, munin-limits) instantiate
 # a Munin::Master::Config object.
 #
 # Please note that the munin-node configuration is also based on
@@ -55,7 +55,7 @@ use base qw(Munin::Common::Config);
 #
 # All attributes (attribute names) are known and appears in the @legal
 # array (and accompanying hash).
-# 
+#
 # Structure:
 # - A group name is always postfixed by a ;
 # - The host name is the first word with a : after it
@@ -117,6 +117,7 @@ use Munin::Common::Logger;
 
 my %booleans = map {$_ => 1} qw(
     debug
+    verbose
     fork
     tls_verify_certificate
     update
@@ -134,11 +135,15 @@ my %booleans = map {$_ => 1} qw(
         $instance ||= bless {
 
 	    # To be able to identify if we're the root instance or a nested one.
-	    root_instance => 1, 
+	    root_instance => 1,
 
 	    config      => bless ( {
+		carbon_server    => "",
+		carbon_port      => "",
+		carbon_prefix    => "",
 		config_file      => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf",
 		dbdir            => $Munin::Common::Defaults::MUNIN_DBDIR,
+		verbose          => 0,
 		debug            => 0,
 		fork             => 1,
 		graph_data_size  => 'normal',
@@ -146,6 +151,7 @@ my %booleans = map {$_ => 1} qw(
 		groups           => {},
 		local_address    => 0,
 		logdir           => $Munin::Common::Defaults::MUNIN_LOGDIR,
+		logoutput        => 'syslog',
 		max_processes    => 16,
 		rundir           => $Munin::Common::Defaults::MUNIN_STATEDIR,
 		timeout          => 180,
@@ -213,7 +219,7 @@ sub _create_and_set {
 
 	$setref = $setref->{groups}{$group};
     }
-    
+
     if ($host) {
 	if (! defined ( $setref->{hosts}{$host} ) ) {
 	    $setref->{hosts}{$host} =
@@ -225,8 +231,8 @@ sub _create_and_set {
 	# Implant key/value into group
 	$setref->{$key} = $value;
     }
-    
-    # 
+
+    #
 }
 
 
@@ -262,7 +268,7 @@ sub _extract_group_name_from_definition {
 
     # Return bare hostname
     return $definition if $sc_loc == -1 and $dot_loc == -1;
-    
+
     # Return explicit group name
     return substr($definition, 0, $sc_loc)
 	if $sc_loc > -1 and ($dot_loc == -1 or $sc_loc < $dot_loc);
@@ -292,7 +298,7 @@ sub _concat_config_line {
     # This is shorthand for [domain;host.domain]:
     #   [host.domain]
     #     port 4949
-    # 
+    #
     # [group;]
     # [group;host]
     # [group;host:service]
@@ -402,7 +408,7 @@ sub _split_config_line {
 	$groups='';
     } else {
 	# Note that .+ is greedy so $groups is the whole groups grouping
-	$line =~ /(.+);(.*)/;  
+	$line =~ /(.+);(.*)/;
 	($groups, $line) = ($1, $2);
     }
 
@@ -425,7 +431,7 @@ sub _split_config_line {
 	substr($line,0,$cc+1) = '';
 	$key = $line;
     }
-    
+
     return ([split(';',$groups)],$host,$key);
 }
 
@@ -436,7 +442,7 @@ sub _split_config_line_ok {
     # If all is not well we'll corak here.
 
     my ($self,$longkey,$value) = @_;
-   
+
 
     my ($groups,$host,$key) = $self->_split_config_line($longkey);
 
@@ -465,7 +471,7 @@ sub _split_config_line_ok {
 sub _parse_config_line {
     # Parse and save contents of random user configuration.
     my ($self, $prefix, $key, $value) = @_;
-    
+
     my $longkey = $self->_concat_config_line_ok($prefix,$key,$value);
 
     $self->set_value($longkey,$value);
@@ -474,7 +480,7 @@ sub _parse_config_line {
 
 sub parse_config {
     my ($self, $io) = @_;
-        
+
     my $section = undef;
 
     my $continuation = '';
@@ -539,7 +545,7 @@ sub look_up {
     if (defined $value and
 	defined $value->{hosts} and
 	defined $value->{hosts}{$host}) {
-	
+
 	return $value->{hosts}{$host};
     };
 
@@ -549,7 +555,7 @@ sub look_up {
 
 sub get_groups_and_hosts {
     my ($self) = @_;
-    
+
     return $self->{groups};
 }
 
@@ -558,7 +564,7 @@ sub get_all_hosts {
     # Note! This method is implemented in multiple classes to make the
     # recursion complete.
     my ($self) = @_;
-    
+
     my @hosts = ();
     for my $group (values %{$self->{groups}}) {
         push @hosts, $group->get_all_hosts;
@@ -572,7 +578,7 @@ sub set {
     my ($self, $config) = @_;
 
     # Note: config overrides self.
-    %$self = (%$self, %$config); 
+    %$self = (%$self, %$config);
 }
 
 

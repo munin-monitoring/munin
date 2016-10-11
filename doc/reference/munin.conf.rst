@@ -1,6 +1,6 @@
-.. _munin.conf:
-
 .. program:: munin.conf
+
+.. _munin.conf:
 
 ============
  munin.conf
@@ -10,8 +10,14 @@ DESCRIPTION
 ===========
 
 This is the configuration file for the munin master. It is used by
-:ref:`munin-update`, :ref:`munin-graph`, :ref:`munin-limits`.
-:ref:`munin-html`.
+:ref:`munin-update` and :ref:`munin-limits`
+
+.. note::
+
+        All global directives have to be defined in the first section of the file!
+        It will not work if you place them in later sections of the config file.
+        We recommend to use the delivered munin.conf file and adapt it to your needs.
+
 
 .. _master-conf-global-directives:
 
@@ -31,12 +37,6 @@ otherwise.
    The directory where munin stores its logfiles. Default:
    /var/log/munin
 
-.. option:: htmldir <path>
-
-   The directory where :ref:`munin-html` stores generated HTML pages,
-   and where :ref:`munin-graph` stores graphs. Default:
-   /var/cache/munin/www
-
 .. option:: rundir <path>
 
    Directory for files tracking munin's current running state.
@@ -44,9 +44,8 @@ otherwise.
 
 .. option:: tmpldir <path>
 
-   Directories for templates used by :ref:`munin-html` and
-   :ref:`munin-httpd` to generate HTML pages. Default
-   /etc/munin/templates
+   Directories for templates used by :ref:`munin-httpd` to generate
+   HTML pages. Default /etc/munin/templates
 
 .. option:: fork <yes|no>
 
@@ -68,25 +67,20 @@ otherwise.
 
 .. option:: palette <default|old>
 
-   The palette used by :ref:`munin-graph` and :ref:`munin-httpd`
-   to color the graphs. The "default" palette has more colors and
-   better contrast than the "old" palette.
-
-   Affects: :ref:`munin-graph`
+   The palette used by :ref:`munin-httpd` to color the graphs. The
+   "default" palette has more colors and better contrast than the
+   "old" palette.
 
 .. option:: custom_palette rrggbb rrggbb ...
 
-   The user defined custom palette used by :ref:`munin-graph` and
-   :ref:`munin-httpd` to color the graphs. This option override
-   existing palette.  The palette must be space-separated 24-bit hex
-   color code.
-
-   Affects: :ref:`munin-graph`
+   The user defined custom palette used by :ref:`munin-httpd` to color
+   the graphs. This option overrides the existing palette.  The
+   palette must be space-separated 24-bit hex color code.
 
 .. option:: graph_data_size <normal|huge>
 
    This directive sets the resolution of the RRD files that are
-   created by :ref:`munin-graph` and :ref:`munin-httpd`.
+   created by :ref:`munin-update`.
 
    Default is "normal".
 
@@ -94,28 +88,6 @@ otherwise.
    days.
 
    Changing this directive has no effect on existing graphs
-
-   Affects: :ref:`munin-graph`
-
-.. option:: graph_strategy <cgi|cron>
-
-   If set to "cron", :ref:`munin-graph` will graph all services on all
-   nodes every run interval.
-
-   If set to "cgi", :ref:`munin-graph` will do nothing. This is the
-   proper setting when you run :ref:`munin-httpd`.
-
-   Affects: :ref:`munin-graph`
-
-.. option:: html_strategy <strategy>
-
-   Valid strategies are "cgi" and "cron". Default is "cgi".
-
-   If set to "cron", :ref:`munin-html` will recreate all html pages
-   every run interval.
-
-   If set to "cgi", :ref:`munin-html` will do nothing.  This is the
-   proper setting when you run :ref:`munin-httpd`.
 
 .. _directive-contact:
 
@@ -170,13 +142,13 @@ only to that node.
 
 .. option:: address <value>
 
-   The host name, IP address, or alternate transport used to contact the node.
+   Specifies the host name or IP address, with an optional scheme.
 
-   Alternate transport is specified with:
+   Permitted schemes are "munin://", "ssh://" or "cmd://".  If no
+   scheme is specified, the default is "munin://"
 
-   ``ssh://<address>/<command> <command line arguments>``
-
-   See also :ref:`example-alternate-transport`.
+   The "ssh://" and "cmd://" schemes take arguments after the URL.
+   See :ref:`address-schemes` for examples.
 
 .. option:: port <port number>
 
@@ -239,11 +211,13 @@ warning and critical levels or graph names.
 
 .. option:: graph_height <value>
 
-   The graph height for a specific service. Default is 175. Affects: :ref:`munin-graph`.
+   The graph height for a specific service. Default is 175. Affects:
+   :ref:`munin-httpd`.
 
 .. option:: graph_width <value>
 
-   The graph width for a specific service. Default is 400. Affects: :ref:`munin-graph`.
+   The graph width for a specific service. Default is 400. Affects:
+   :ref:`munin-httpd`.
 
 .. option:: warning <value>
 
@@ -265,48 +239,84 @@ Three nodes
 
 A minimal configuration file, using default settings for everything, and specifying three nodes.
 
-::
+.. code-block:: ini
 
   [mail.example.com]
-    address mail.example.com
+  address mail.example.com
 
   [web.example.com]
-    address web.example.com
+  address web.example.com
 
   [munin.example.com]
-    address localhost
+  address localhost
 
 Virtual node
 ------------
 
 A virtual node definition. Disable update, and make a graph consisting of data from other graphs.
 
-::
+.. code-block:: ini
 
-  [example.com;Totals]
-    update no
-    load.graph_title Total load
-        load.sum_load.label load
-        load.sum_load.special_stack mail=mail.example.com web=web.example.com munin=munin.example.com
+   [example.com;Totals]
+   update no
+   load.graph_title Total load
+   load.sum_load.label load
+   load.sum_load.special_stack mail=mail.example.com web=web.example.com munin=munin.example.com
 
-.. _example-alternate-transport:
+.. _address-schemes:
 
-Alternate transport
--------------------
+Address schemes
+---------------
 
-Connect to munin-nodes on a remote site, through a bastion host, using ssh.
+The scheme tells munin how to connect to munin nodes.
 
-::
+The munin:// scheme is default, if no scheme is specified. By default,
+Munin will connect to the munin node with TCP on port 4949.
 
-  [mail.site2.example.org]
-    address ssh://bastion.site2.example.org/bin/nc mail.site2.example.org 4949
+The following examples are equivalent:
 
-  [www.site2.example.org]
-    address ssh://bastion.site2.example.org/bin/nc www.site2.example.org 4949
+.. code-block:: ini
 
-Hint: When using the ssh\:// transport, you can configure how ssh
-behaves by editing `~munin/.ssh/config`.  See the :ref:`ssh transport
-configuration examples <example-transport-ssh>`.
+   # master: /etc/munin/munin.conf.d/node.example.conf
+   [mail.site2.example.org]
+   address munin://mail.site2.example.org
+
+   [mail.site2.example.org]
+   address munin://mail.site2.example.org:4949
+
+   [mail.site2.example.org]
+   address mail.site2.example.org
+
+   [mail.site2.example.org]
+   address mail.site2.example.org
+   port    4949
+
+
+To connect to a munin node through a shell command, use the "cmd://"
+prefix.
+
+.. code-block:: ini
+
+   # master: /etc/munin/munin.conf.d/node.example.conf
+   [mail.site2.example.org]
+   address cmd:///usr/bin/munin-async [...]
+
+To connect through ssh, use the "ssh://" prefix.
+
+.. code-block:: ini
+
+   # master: /etc/munin/munin.conf.d/node.example.conf
+   [mail.site2.example.org]
+   address ssh://bastion.site2.example.org/bin/nc mail.site2.example.org 4949
+
+   [www.site2.example.org]
+   address ssh://bastion.site2.example.org/bin/nc www.site2.example.org 4949
+
+.. note::
+
+   When using the ssh\:// transport, you can configure how ssh behaves
+   by editing `~munin/.ssh/config`.  See the :ref:`ssh transport
+   configuration examples <example-transport-ssh>`.
 
 SEE ALSO
 ========

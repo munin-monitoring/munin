@@ -21,21 +21,27 @@ $(document).ready(function() {
 	typeTds.each(function() {
 		var typeName = $(this).text();
 		if (typeName in DEFINITIONS) {
-			$(this).html(typeName + '<sup>?</sup>');
-			$(this).append('<div class="tooltip"><b>' + typeName + '</b>: ' + DEFINITIONS[typeName] + '</div>');
+			$(this).tooltip('<b>' + typeName + '</b>: ' + DEFINITIONS[typeName], {
+				appendQuestionMark: true
+			});
 		}
 	});
 
-	prepareTooltips(typeTds, function(td) {
-		return td.find('.tooltip');
-	});
-
-	// Append a loading <img> on each graph img
-	$('.graph').after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
-
+	var graphs = window.graphs = $('.graph');
 	// Graphs auto-refresh
-	startAutoRefresh();
+	var autoRefresh = window.autoRefresh = graphs.autoRefresh();
+	graphs.graph();
+
+	addRefreshActionIcon(autoRefresh);
 
 	// Switch to another graph in the same node
-	prepareSwitchable('header');
+	$('.switchable[data-switch="header"]').list('header', {
+		list: $('.switchable_content[data-switch="header"]')
+	});
+
+	// Assign tab-indexes to elements
+	$('.graphLink').each(function(index) {
+		$(this).attr('tabindex', index+1);
+	});
+	removeTabIndexOutline();
 });

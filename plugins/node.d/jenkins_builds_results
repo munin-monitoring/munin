@@ -33,7 +33,11 @@ Released under the GPLv2.
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
 if [ "$1" = "autoconf" ]; then
-	echo yes
+	if [ -d /var/lib/jenkins/jobs ]; then
+		echo yes
+	else
+		echo "no (/var/lib/jenkins/jobs not found)"
+	fi
 	exit 0
 fi
 

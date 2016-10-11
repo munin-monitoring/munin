@@ -107,12 +107,12 @@ my $build = Module::Build->new(
         'perl'                   => '5.10.0',
         'DBD::SQLite'            => '1.42',
         'DBI'                    => '1.631',
-        'File::Copy::Recursive'  => '0.38',
-        'HTML::Template'         => '2.95',
         'HTML::Template::Pro'    => '0',
         'HTTP::Server::Simple::CGI'    => '0',
+        'CGI::Cookie'            => '0',
         'IO::Socket::INET6'      => '2.69',
         'LWP::UserAgent'         => '6.06',
+        'List::Util'             => '0',
         'List::MoreUtils'        => '0.33',
         'Log::Dispatch'          => '2.41',
         'Net::SNMP'              => 'v6.0.1',
@@ -143,8 +143,6 @@ my $build = Module::Build->new(
             script/munin-asyncd
             script/munin-cron
             script/munin-doc
-            script/munin-graph
-            script/munin-html
             script/munin-httpd
             script/munin-limits
             script/munin-node
@@ -155,6 +153,7 @@ my $build = Module::Build->new(
     ],
     test_requires => {
         'IO::Scalar'          => '0',
+        'Test::Class'         => '0',
         'Test::Differences'   => '0.62',
         'Test::MockModule'    => '0',
         'Test::MockObject'    => '0',

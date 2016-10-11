@@ -9,38 +9,37 @@ var content,
 
 $(document).ready(function() {
 	content = $('#content');
-	graphs = $('.graph');
+	graphs = window.graphs = $('.graph');
 	h4s = $('h4');
 	tabs = $('.tabs').find('li');
 
-	// Append a loading <img> on each graph img
-	graphs.after('<img src="/static/img/loading.gif" class="graph_loading" style="display:none" />');
+	// Instantiate auto-refresh & dynazoom modal links components
+	var autoRefresh = window.autoRefresh = graphs.autoRefresh();
+	graphs.dynazoomModal();
+	graphs.graph();
 
-	// Auto-refresh
-	startAutoRefresh();
+	addRefreshActionIcon(autoRefresh);
+
+	var tabsComponent = $(this).tabs();
 
 	// Prepare filter
-	prepareFilter('Filter graphs', function(val) {
+	window.toolbar.prepareFilter('Filter graphs', function(val) {
 		if (val.length == 0)
-			showTabs();
+			tabsComponent.showTabs();
 		else
-			hideTabs();
+			tabsComponent.hideTabs();
 
 		graphs.each(function() {
 			var pluginName = $(this).attr('alt');
 			var src = $(this).attr('src');
 			var pluginId = src.substr(src.lastIndexOf('/')+1, src.lastIndexOf('-')-src.lastIndexOf('/')-1);
 
-			if (filterMatches(val, pluginName) || filterMatches(val, pluginId)) {
+			if (window.toolbar.filterMatches(val, pluginName) || window.toolbar.filterMatches(val, pluginId)) {
 				$(this).parent().show();
 				// Show plugin name
 				h4s.filter(function() {
 					return $(this).text() == pluginName;
 				}).show();
-
-				// Show next <br>
-				if ($(this).parent().next()[0].tagName.toLowerCase() == 'br')
-					$(this).parent().next().show();
 			}
 			else {
 				$(this).parent().hide();
@@ -48,51 +47,47 @@ $(document).ready(function() {
 				h4s.filter(function() {
 					return $(this).text() == pluginName;
 				}).hide();
-
-				// Hide next <br>
-				if ($(this).parent().next()[0].tagName.toLowerCase() == 'br')
-					$(this).parent().next().hide();
 			}
 		});
 
 		// If tabs aren't enabled, they are used as anchors links
 		if (content.attr('data-tabsenabled') == 'false') {
 			tabs.each(function() {
-				if (filterMatches(val, $(this).text()))
+				if (window.toolbar.filterMatches(val, $(this).text()))
 					$(this).show();
 				else
 					$(this).hide();
 			});
 		}
 
-		// Hide unneccary categories names
+		// Hide unnecessary categories names
 		$('div[data-category]').each(function() {
 			if ($(this).children(':visible').length == 0)
 				$(this).prev().hide();
 			else
 				$(this).prev().show();
 		});
-	});
 
-
-	// Back to top button
-	var backToTop = $('#backToTop');
-	var offset = 300;
-
-	$(window).scroll(function() {
-		if ($(this).scrollTop() > offset)
-			backToTop.addClass('visible');
-		else
-			backToTop.removeClass('visible');
-	});
-
-	backToTop.click(function(e) {
-		e.preventDefault();
-		$('body, html').animate({
-			scrollTop: 0
-		}, 500);
+		if (val.length == 0 // Empty filter
+			&& content.attr('data-tabsenabled') == 'true' // Tabs enabled
+			&& tabs.prevAll('.active').index() != 0 // Not "all"
+		) {
+			// Hide categories names
+			$('h3').hide();
+		}
 	});
 
 	// Node switch
-	prepareSwitchable('header');
+	$('.switchable[data-switch="header"]').list('header', {
+		list: $('.switchable_content[data-switch="header"]')
+	});
+
+	// Init eventruler
+	$(this).eventRuler();
+
+	// Assign tab-indexes to elements
+	$('.tabs > li:visible, .graphLink').each(function(index) {
+		$(this).attr('tabindex', index+1);
+	});
+	removeTabIndexOutline();
 });

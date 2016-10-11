@@ -1,3 +1,8 @@
+
+.. index::
+   triple: protocol; extension; multigraph
+   pair: capability; multigraph
+
 .. _plugin-protocol-multigraph:
 
 =====================================================

@@ -86,6 +86,10 @@ Alias for "--always-send ok,warning,critical,unknown"
 
 Force running as root (stupid and unnecessary). [--noforce-root]
 
+=item B<< --verbose >>
+
+Be verbose.
+
 =item B<< --help >>
 
 View help message.
@@ -103,22 +107,16 @@ with Munin's node.  Munin is a group of programs to gather data from
 Munin's nodes, graph them, create html-pages, and optionally warn Nagios
 about any off-limit values.
 
-Munin-limits checks if any values are above or below the set limits, and saves these notes to a file. This file
-is later used by programs like munin-nagios (to warn nagios) and munin-html (to incorporate them in the web
-display).
+Munin-limits checks if any values are above or below the set limits, and
+notifies contacts through configured programs and templates.
 
 If a service has fields with "warning" or "critical"-options (e.g. "load.warning 10"), and the munin-server
 configuration file contains the necessary configuration options, munin-limits will check its value.
 
 =head1 FILES
 
-	@@CONFDIR@@/munin.conf
-	@@DBDIR@@/*
-	@@STATEDIR@@/*
-
-=head1 VERSION
-
-This is munin-limits version @@VERSION@@
+        /etc/munin/munin.conf
+        /var/lib/munin/*
 
 =head1 AUTHORS
 

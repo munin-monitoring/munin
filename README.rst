@@ -38,15 +38,18 @@ Building status
 
 stable-2.0 : |build-stable2.0|
 
-devel : |build-devel|
+devel : |build-devel|  |coverage-devel|
 
 docs : |docs-latest|
 
-.. |build-stable2.0| image:: https://travis-ci.org/munin-monitoring/munin.png?branch=stable-2.0
+.. |build-stable2.0| image:: https://travis-ci.org/munin-monitoring/munin.svg?branch=stable-2.0
    :target: https://travis-ci.org/munin-monitoring/munin
 
-.. |build-devel| image:: https://travis-ci.org/munin-monitoring/munin.png?branch=devel
+.. |build-devel| image:: https://travis-ci.org/munin-monitoring/munin.svg?branch=devel
    :target: https://travis-ci.org/munin-monitoring/munin
+
+.. |coverage-devel| image:: https://coveralls.io/repos/munin-monitoring/munin/badge.svg?branch=devel&service=github
+   :target: https://coveralls.io/github/munin-monitoring/munin?branch=devel
 
 .. |docs-latest| image:: https://readthedocs.org/projects/munin/badge/?version=latest
    :target: http://guide.munin-monitoring.org/

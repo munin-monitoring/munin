@@ -1,7 +1,15 @@
 use warnings;
 use strict;
 
-use Test::More tests => 17;
+use Test::More;
+
+if ($ENV{TEST_HEAVY}) {
+    plan tests => 17;
+}
+else {
+    plan skip_all => 'set TEST_HEAVY to enable these tests'
+}
+
 use Time::HiRes qw(sleep);
 use File::Temp qw( tempdir );
 use Munin::Common::Logger;

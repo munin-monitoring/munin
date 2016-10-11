@@ -33,21 +33,11 @@ Munin Master
 Configuration items from @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                          $c->{'config_file'},
 
-Strategies
-----------
-
-graph_strategy         @<<<<<<<<<<<<<<<<<<
-                       $c->{'graph_strategy'} ||= '(unset)',
-html_strategy          @<<<<<<<<<<<<<<<<<<
-                       $c->{'html_strategy'} ||= '(unset)',
-
 Directories
 -----------
 
 dbdir                  @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                        $c->{'dbdir'} ||= '(unset)',
-htmldir                @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-                       $c->{'htmldir'} ||= '(unset)',
 logdir                 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                        $c->{'logdir'} ||= '(unset)',
 rundir                 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

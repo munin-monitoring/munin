@@ -1,14 +1,8 @@
-use warnings;
 use strict;
+use warnings;
 
-use Test::More tests => 1;
-use Test::MockObject;
+use lib qw(t/lib);
 
-# Faking RRDs.pm, as we don't really need it
-my $mock = Test::MockObject->new();
-$mock->fake_module( 'RRDs',
-	'create' => sub { },
-	'error' => sub { },
-);
+use Munin::Master::UpdateWorker::Tests;
 
-use_ok('Munin::Master::UpdateWorker');
+Test::Class->runtests;

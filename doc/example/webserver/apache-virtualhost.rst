@@ -7,22 +7,6 @@
 This example describes how to set up munin on a separate virtual host
 using apache httpd. It proxies all requests to :ref:`munin-httpd`
 
-Munin configuration
-===================
-
-This example assumes the following configuration in
-/etc/munin/munin.conf
-
-.. index::
-   pair: example; munin.conf
-   pair: example; graph_strategy
-   pair: example; html_strategy
-
-::
-
- graph_strategy cgi
- html_strategy  cgi
-
 Virtualhost configuration
 =========================
 

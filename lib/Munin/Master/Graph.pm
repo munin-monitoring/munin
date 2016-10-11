@@ -120,7 +120,7 @@ sub handle_request
 	my $t0 = Time::HiRes::time;
 	my $path = $cgi->path_info();
 
-	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png|[a-z]+)$/) {
+	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png(?:x(\d+))?|[a-z]+)$/) {
 		# We don't understand this URL
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
@@ -130,9 +130,11 @@ sub handle_request
 	}
 
 
-	my ($graph_path, $time, $start, $end, $format) = ($1, $2, $3, $4, $5);
+	my ($graph_path, $time, $start, $end, $format, $hidpi) = ($1, $2, $3, $4, $5, $6);
 	$start = $times{$time} unless defined $start;
 	$end = "" unless defined $end;
+
+	$format = "png" if $hidpi; # Only PNG is supported when HiDPI mode
 
 	# Only accept known formats
 	$format = uc($format);
@@ -201,6 +203,7 @@ sub handle_request
 
 	$sth->execute($id, "graph_args");
 	my ($graph_args) = $sth->fetchrow_array() || "";
+	my @rrd_graph_args = split /\s+/, $graph_args;
 	DEBUG "graph_args: $graph_args";
 
 	$sth->execute($id, "graph_printf");
@@ -223,8 +226,17 @@ sub handle_request
 			rc.value,
 			gc.value,
 			gd.value,
+			gds.value,
 			pf.value,
 			ne.value,
+			sm.value as sum,
+			st.value as stack,
+                        (
+                                select hn.id
+                                from ds hn
+                                JOIN ds_attr hn_attr ON hn.service_id = ds.service_id AND hn_attr.value = ds.name and hn_attr.name = 'negative'
+                                where hn.service_id = ds.service_id
+                        ) as negative_id,
 			s.last_epoch,
 			'dummy' as dummy
 		FROM ds
@@ -235,8 +247,11 @@ sub handle_request
 		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'rrd:cdef'
 		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
+		LEFT OUTER JOIN ds_attr gds ON gds.id = ds.id AND gds.name = 'drawstyle'
 		LEFT OUTER JOIN ds_attr pf ON pf.id = ds.id AND pf.name = 'printf'
 		LEFT OUTER JOIN ds_attr ne ON ne.id = ds.id AND ne.name = 'negative'
+		LEFT OUTER JOIN ds_attr sm ON sm.id = ds.id AND sm.name = 'sum'
+		LEFT OUTER JOIN ds_attr st ON st.id = ds.id AND st.name = 'stack'
 		LEFT OUTER JOIN state s ON s.id = ds.id AND s.type = 'ds'
 		WHERE ds.service_id = ?
 		ORDER BY ds.ordr ASC
@@ -246,16 +261,23 @@ sub handle_request
 	# Construction of the RRD command line
 	# We don't care anymore for rrdtool less than 1.4
 	my @rrd_def;
+	my @rrd_cdef;
+	my @rrd_vdef;
 	my @rrd_gfx;
 	my @rrd_gfx_negatives;
 	my @rrd_legend;
+	my @rrd_sum;
 
 	my %negatives;
 
+	push @rrd_gfx, "COMMENT:\\t";
 	push @rrd_gfx, "COMMENT:Cur\\t";
 	push @rrd_gfx, "COMMENT:Min\\t";
 	push @rrd_gfx, "COMMENT:Avg\\t";
-	push @rrd_gfx, "COMMENT:Max\\r";
+	push @rrd_gfx, "COMMENT:Max\\t\\r";
+
+	# CDEF dictionary
+	my %rrd_cdefs;
 
 	my $lastupdated;
 
@@ -264,8 +286,12 @@ sub handle_request
 			$_rrdname, $_label,
 			$_rrdfile, $_rrdfield, $_rrdalias, $_rrdcdef,
 			$_color, $_drawtype,
+			$_drawstyle,
 			$_printf,
 			$_negative,
+			$_sum,
+			$_stack,
+			$_has_negative,
 			$_lastupdated,
 		) = $sth->fetchrow_array()) {
 		# Note that we do *NOT* provide any defaults for those
@@ -276,57 +302,88 @@ sub handle_request
 		# 	- reduce the size of the CGI part, which is good for
 		# 	  security (& sometimes performances)
 
-		# If this field is the negative of another field, we don't draw it anymore
-		next if $negatives{$_rrdname};
-
 		# Fields inherit this field from their plugin, if not overrided
 		$_printf = $graph_printf unless defined $_printf;
 		$_printf .= "%s";
 
 		DEBUG "rrdname: $_rrdname";
 
-		# Handle virtual DS by overriding the fields that describe the RDD _file_
-		if ($_rrdalias && $_rrdalias =~ m/^(.*)\.([^.]+)$/) {
-			my ($_alias_service, $_alias_ds) = ($1, $2);
+		# rrdtool fails on unescaped colons found in its input data
+		$_label =~ s/:/\\:/g;
 
+		# Handle .sum
+		if ($_sum) {
+			# .sum is just a alias + cdef shortcut, an exemple is :
+			#
+			# inputtotal.sum \
+			#            ups-5a:snmp_ups_ups-5a_current.inputcurrent \
+			#            ups-5b:snmp_ups_ups-5b_current.inputcurrent
+			# outputtotal.sum \
+			#            ups-5a:snmp_ups_ups-5a_current.outputcurrent \
+			#            ups-5b:snmp_ups_ups-5b_current.outputcurrent
+			#
+			my @sum_items = split(/ +/, $_sum);
+			my @sum_items_generated;
+			my $sum_item_idx = 0;
+			for my $sum_item (@sum_items) {
+				my $sum_item_rrdname = "s_" . $sum_item_idx . "_" . $_rrdname;
+				push @sum_items_generated, $sum_item_rrdname;
+
+				# Get the RRD from the $sum_item
+				my ($sum_item_rrdfile, $sum_item_rrdfield, $sum_item_lastupdated)
+					= get_alias_rrdfile($dbh, $sum_item);
+
+
+				push @rrd_sum, "DEF:avg_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":AVERAGE";
+				push @rrd_sum, "DEF:min_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":MIN";
+				push @rrd_sum, "DEF:max_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":MAX";
+
+				# The sum lastupdated is the latest of its parts.
+				if (! $_lastupdated || $_lastupdated < $sum_item_lastupdated) {
+					$_lastupdated = $sum_item_lastupdated;
+				}
+			} continue {
+				$sum_item_idx ++;
+			}
+
+			# Now, the real meat. The CDEF SUMMING.
+			# The initial 0 is because you have to have an initial value when chain summing
+			for my $t (qw(min avg max)) {
+				# Yey... a nice little MapReduce :-)
+				my @s = map { $t . "_" . $_ } @sum_items_generated;
+				my $cdef_sums = join(",+,", @s);
+				push @rrd_sum, "CDEF:$t". "_r_" . "$_rrdname=0," . $cdef_sums . ",+";
+			}
+		}
+
+		# Handle virtual DS by overriding the fields that describe the RDD _file_
+		if ($_rrdalias) {
 			# This is a virtual DS, we have to fetch the original values
-			($_rrdfile, $_rrdfield, $_lastupdated) = $dbh->selectrow_array("
-				SELECT
-					rf.value,
-					rd.value,
-					st.last_epoch,
-					'dummy' as dummy
-				FROM ds
-				INNER JOIN service s ON s.id = ds.service_id AND (
-					s.name = ?
-				OR	s.path = ?
-				)
-				LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
-				LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
-				LEFT OUTER JOIN state st ON st.id = ds.id AND st.type = 'ds'
-				WHERE ds.name = ?
-				ORDER BY ds.ordr ASC
-			", undef, $_alias_service, $_alias_service, $_alias_ds);
-			DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield, $_lastupdated)";
+			($_rrdfile, $_rrdfield, $_lastupdated) = get_alias_rrdfile($dbh, $_rrdalias);
 		}
 
 		# Fetch the data from the RRDs
 		my $real_rrdname = $_rrdcdef ? "r_$_rrdname" : $_rrdname;
-		push @rrd_def, "DEF:avg_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
-		push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
-		push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+		if (! $_sum) {
+			push @rrd_def, "DEF:avg_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
+			push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
+			push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+		}
 
 		# Handle an eventual cdef
 		if ($_rrdcdef) {
-			# Sustitute the name with the real RRD
-			push @rrd_def, "CDEF:avg_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "avg_$real_rrdname");
-			push @rrd_def, "CDEF:min_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "min_$real_rrdname");
-			push @rrd_def, "CDEF:max_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "max_$real_rrdname");
+			# Populate the CDEF dictionnary, to be able to swosh it at the end.
+			# As it will enable to solve inter-field CDEFs.
+			$rrd_cdefs{$_rrdname}->{_rrdcdef} = $_rrdcdef;
+			$rrd_cdefs{$_rrdname}->{real_rrdname} = $real_rrdname;
 		}
 
 		# Graph them
 		$_color = $COLOUR[$field_number % $#COLOUR] unless defined $_color;
 		$_drawtype = "LINE" unless defined $_drawtype;
+
+		# Handle draw style such as "dashes=..."
+		$_drawstyle = $_drawstyle ? ":$_drawstyle" : '';
 
 		# Handle the (LINE|AREA)STACK munin extensions
 		$_drawtype = $field_number ? "STACK" : "AREA" if $_drawtype eq "AREASTACK";
@@ -335,46 +392,52 @@ sub handle_request
 		# Override a STACK to LINE if it's the first field
 		$_drawtype = "LINE" if $_drawtype eq "STACK" && ! $field_number;
 
-		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label\\l";
+		# If this field is the negative of another field, we don't draw it anymore
+		# ... But we did still want to compute the related DEF & CDEF
+		next if $_has_negative;
+
+		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label$_drawstyle\\l";
 
 		# Legend
-		push @rrd_def, "VDEF:vavg_$_rrdname=avg_$_rrdname,AVERAGE";
-		push @rrd_def, "VDEF:vmin_$_rrdname=min_$_rrdname,MINIMUM";
-		push @rrd_def, "VDEF:vmax_$_rrdname=max_$_rrdname,MAXIMUM";
+		push @rrd_vdef, "VDEF:vavg_$_rrdname=avg_$_rrdname,AVERAGE";
+		push @rrd_vdef, "VDEF:vmin_$_rrdname=min_$_rrdname,MINIMUM";
+		push @rrd_vdef, "VDEF:vmax_$_rrdname=max_$_rrdname,MAXIMUM";
 
-		push @rrd_def, "VDEF:vlst_$_rrdname=avg_$_rrdname,LAST";
+		push @rrd_vdef, "VDEF:vlst_$_rrdname=avg_$_rrdname,LAST";
 
-		push @rrd_gfx, "COMMENT:\\u"; # Rewind the line, to have \r after the \l
+		my $is_label_small = length($_label) <= 20;
+		if ($is_label_small) {
+			push @rrd_gfx, "COMMENT:\\u"; # Rewind the line, to have \r after the \l
+		}
+
 
 		# Handle negatives
 		if ($_negative) {
 			# We'll have a negative counterpart
-			push @rrd_def, "CDEF:avg_n_$_rrdname=avg_$_negative,-1,*";
-			push @rrd_def, "CDEF:min_n_$_rrdname=min_$_negative,-1,*";
-			push @rrd_def, "CDEF:max_n_$_rrdname=max_$_negative,-1,*";
+			push @rrd_vdef, "CDEF:avg_n_$_rrdname=avg_$_negative,-1,*";
+			push @rrd_vdef, "CDEF:min_n_$_rrdname=min_$_negative,-1,*";
+			push @rrd_vdef, "CDEF:max_n_$_rrdname=max_$_negative,-1,*";
 
-			push @rrd_def, "VDEF:vavg_n_$_rrdname=avg_n_$_rrdname,AVERAGE";
-			push @rrd_def, "VDEF:vmin_n_$_rrdname=min_n_$_rrdname,MINIMUM";
-			push @rrd_def, "VDEF:vmax_n_$_rrdname=max_n_$_rrdname,MAXIMUM";
+			push @rrd_vdef, "VDEF:vavg_n_$_rrdname=avg_n_$_rrdname,AVERAGE";
+			push @rrd_vdef, "VDEF:vmin_n_$_rrdname=min_n_$_rrdname,MINIMUM";
+			push @rrd_vdef, "VDEF:vmax_n_$_rrdname=max_n_$_rrdname,MAXIMUM";
 
-			push @rrd_def, "VDEF:vlst_n_$_rrdname=avg_n_$_rrdname,LAST";
-
-			# We just handled $_negative, so we can ignore it later
-			$negatives{$_negative} ++;
+			push @rrd_vdef, "VDEF:vlst_n_$_rrdname=avg_n_$_rrdname,LAST";
 		}
 
 		# Displaying the values as POSITIVE/NEGATIVE if $_negative
-		push @rrd_gfx, "GPRINT:vlst_$_rrdname:$_printf";
-		push @rrd_gfx, "COMMENT:/", "GPRINT:vlst_n_$_rrdname:$_printf" if $_negative;
 		push @rrd_gfx, "COMMENT:\\t";
-		push @rrd_gfx, "GPRINT:vmin_$_rrdname:$_printf";
-		push @rrd_gfx, "COMMENT:/", "GPRINT:vmin_n_$_rrdname:$_printf" if $_negative;
-		push @rrd_gfx, "COMMENT:\\t";
-		push @rrd_gfx, "GPRINT:vavg_$_rrdname:$_printf";
-		push @rrd_gfx, "COMMENT:/", "GPRINT:vavg_n_$_rrdname:$_printf" if $_negative;
-		push @rrd_gfx, "COMMENT:\\t";
-		push @rrd_gfx, "GPRINT:vmax_$_rrdname:$_printf";
-		push @rrd_gfx, "COMMENT:/", "GPRINT:vmax_n_$_rrdname:$_printf" if $_negative;
+
+		for my $t (qw(lst min avg max)) {
+			if (! $_negative) {
+				push @rrd_gfx, "GPRINT:v$t"."_$_rrdname:$_printf\\t";
+			} else {
+				push @rrd_gfx, "GPRINT:v$t"."_$_rrdname:$_printf\\g";
+				push @rrd_gfx, "COMMENT:/\\g";
+				push @rrd_gfx, "GPRINT:v$t"."_n_$_rrdname:$_printf\\g";
+			}
+		}
+
 		push @rrd_gfx, "COMMENT:\\r";
 
 		# Push to another array, to have these at the end
@@ -386,6 +449,23 @@ sub handle_request
 		$field_number ++;
 	}
 
+	# Handle the plugin-authored CDEF
+	for my $_rrdname (keys %rrd_cdefs) {
+		my $_rrdcdef = $rrd_cdefs{$_rrdname}->{_rrdcdef};
+		my $real_rrdname = $rrd_cdefs{$_rrdname}->{real_rrdname};
+
+		for my $t (qw(min avg max)) {
+			my $expanded_cdef = expand_cdef($_rrdname, $_rrdcdef, $t . "_$real_rrdname");
+			for my $inner_rrdname (keys %rrd_cdefs) {
+				next if ($inner_rrdname eq $_rrdname); # Already handled
+
+				# expand an eventual sibling field to its realrrdname
+				my $inner_real_rrdname = $rrd_cdefs{$inner_rrdname}->{real_rrdname};
+				$expanded_cdef = expand_cdef($inner_rrdname, $expanded_cdef, $t . "_$inner_real_rrdname");
+			}
+			push @rrd_def, "CDEF:$t"."_$_rrdname=$expanded_cdef";
+		}
+	}
 
 	# $end is possibly in future
 	$end = $end ? $end : time;
@@ -429,6 +509,18 @@ sub handle_request
 		$height = 175;
 	}
 
+	my $font_size_title = 12;
+	my $font_size_default = 7;
+	my $font_size_legend = 7;
+
+	if ($hidpi) {
+		$width *= $hidpi;
+		$height *= $hidpi;
+		$font_size_title *= $hidpi;
+		$font_size_default *= $hidpi;
+		$font_size_legend *= $hidpi;
+	}
+
 	my @rrd_header = (
 		"--title", "$graph_title - $title",
 		"--watermark", "Munin " . $Munin::Common::Defaults::MUNIN_VERSION,
@@ -436,8 +528,9 @@ sub handle_request
 		"--start", $start,
 		"--slope-mode",
 
-                '--font', 'DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans',
-                '--font', 'LEGEND:7:DejaVuSansMono,DejaVu Sans Mono,DejaVu LGC Sans Mono,Bitstream Vera Sans Mono,monospace',
+		'--font', "TITLE:$font_size_title:Sans",
+		'--font', "DEFAULT:$font_size_default",
+		'--font', "LEGEND:$font_size_legend",
                 # Colors coordinated with CSS.
                 '--color', 'BACK#F0F0F0',   # Area around the graph
                 '--color', 'FRAME#F0F0F0',  # Line around legend spot
@@ -485,8 +578,12 @@ sub handle_request
 	my $tpng = Time::HiRes::time;
 	my @rrd_cmd = (
 		$rrd_fh->filename,
+		@rrd_graph_args,
 		@rrd_header,
+		@rrd_sum,
 		@rrd_def,
+		@rrd_cdef,
+		@rrd_vdef,
 		@rrd_gfx,
 		@rrd_gfx_negatives,
 		@rrd_legend,
@@ -524,6 +621,8 @@ sub handle_request
 sub remove_dups {
 	my ($str) = @_;
 
+	return unless $str;
+
 	my @a = split(/ +/, $str);
 	my %seen;
 	@a = grep { ! ($seen{$_}++) } @a;
@@ -554,12 +653,40 @@ sub expand_cdef {
 	return $_rrdcdef;
 }
 
+sub RRDs_graph {
+	use IPC::Open3;
+	use IO::String;
+
+	# RRDs::graph() is *STATEFUL*. It doesn't emit the same PNG
+	# when called the second time.
+	#
+	# return RRDs::graph(@_);
+
+	# We just revert to spawning a full featured rrdtool cmd for now.
+	my $chld_out = new IO::String();
+	my $chld_in = new IO::String();
+	my $chld_err = new IO::String();
+
+	local $ENV{PATH} = $1 if $ENV{PATH} =~ /(.*)/;
+
+	my $chld_pid = open3($chld_out, $chld_in, $chld_err, "rrdtool", "graphv", @_);
+
+	DEBUG "[DEBUG] RRDs_graph(chld_out=".${$chld_out->string_ref}.")";
+	DEBUG "[DEBUG] RRDs_graph(chld_err=".${$chld_err->string_ref}.")";
+
+	waitpid( $chld_pid, 0 );
+
+	my $child_exit_status = ($? >> 8);
+
+	return $child_exit_status;
+}
+
 sub RRDs_graph_or_dump {
 	use RRDs;
 
 	my $fileext = shift;
 	if ($fileext =~ m/PNG|SVG|EPS|PDF/) {
-		return RRDs::graph(@_);
+		return RRDs_graph(@_);
 	}
 
 	DEBUG "[DEBUG] RRDs_graph(fileext=$fileext)";
@@ -635,19 +762,29 @@ sub RRDs_graph_or_dump {
 		print $out_fh "</xport>\n";
 	} elsif ($fileext eq "JSON") {
 		print $out_fh "{\n";
-		print $out_fh "    meta: { \n";
-		print $out_fh "        start: $start,\n";
-		print $out_fh "        step: $step,\n";
-		print $out_fh "        end: $end,\n";
-		print $out_fh "        rows: " . (scalar @$values) . ",\n";
-		print $out_fh "        columns: " . (scalar @$columns) . ",\n";
-		print $out_fh "        legend: [\n";
-		for my $column ( @{ $columns } ) {
-			print $out_fh "            \"$column\",\n";
+		print $out_fh "    \"meta\": { \n";
+		print $out_fh "        \"start\": $start,\n";
+		print $out_fh "        \"step\": $step,\n";
+		print $out_fh "        \"end\": $end,\n";
+		print $out_fh "        \"rows\": " . (scalar @$values) . ",\n";
+		print $out_fh "        \"columns\": " . (scalar @$columns) . ",\n";
+		print $out_fh "        \"legend\": [\n";
+		my $index = 0;
+		my @json_columns = map { s/\\l$//; $_; } @{ $columns }; # Remove trailing "\l"
+		for my $column ( @json_columns ) {
+			print $out_fh "            \"$column\"";
+
+			my $is_last_column = ($index != scalar(@json_columns)-1);
+			if ($is_last_column) {
+				print $out_fh ",";
+			}
+			print $out_fh "\n";
+
+			$index++;
 		}
-		print $out_fh "        ],\n";
+		print $out_fh "        ]\n";
 		print $out_fh "    }, \n";
-		print $out_fh "    data: [ \n";
+		print $out_fh "    \"data\": [ \n";
 		my $idx_value = 0;
 		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
 			print $out_fh "        [ $epoch";
@@ -655,14 +792,50 @@ sub RRDs_graph_or_dump {
 			for my $value (@$row) {
 				print $out_fh ", " . (defined $value ? $value : '"NaN"');
 			}
-			print $out_fh " ],\n";
+			print $out_fh " ]";
+			# Don't print "," for the last item
+			if ($epoch != $end) {
+				print $out_fh ",";
+			}
+			print $out_fh "\n";
 		}
-		print $out_fh "    ], \n";
+		print $out_fh "    ] \n";
 		print $out_fh "}\n";
 	}
 
 	my $rrd_error = RRDs::error();
 	return $rrd_error;
+}
+
+sub get_alias_rrdfile
+{
+	my ($dbh, $_rrdalias) = @_;
+
+	return unless ($_rrdalias =~ m/^(.*)\.([^.]+)$/);
+
+	my ($_alias_service, $_alias_ds) = ($1, $2);
+
+	# This is a virtual DS, we have to fetch the original values
+	my ($_rrdfile, $_rrdfield, $_lastupdated) = $dbh->selectrow_array("
+		SELECT
+			rf.value,
+			rd.value,
+			st.last_epoch,
+			'dummy' as dummy
+		FROM ds
+		INNER JOIN service s ON s.id = ds.service_id AND (
+			s.name = ?
+		OR	s.path = ?
+		)
+		LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
+		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
+		LEFT OUTER JOIN state st ON st.id = ds.id AND st.type = 'ds'
+		WHERE ds.name = ?
+		ORDER BY ds.ordr ASC
+	", undef, $_alias_service, $_alias_service, $_alias_ds);
+	DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield, $_lastupdated)";
+
+	return ($_rrdfile, $_rrdfield, $_lastupdated);
 }
 
 1;

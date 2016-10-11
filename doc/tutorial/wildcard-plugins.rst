@@ -28,7 +28,7 @@ Then via the :ref:`munin-node-configure <munin-node-configure>` command,
 your munin-node will suggest shell commands to setup the required symlinks
 in the *servicedir* under ``/etc/munin/plugins``.
 
-For 3rd-Party wildcard plugins We recoomend to install them into an own
+For 3rd-Party wildcard plugins We recommend to install them into an own
 directory e.g. ``/usr/local/munin/lib/plugins`` and call
 ``munin-node-configure`` with flag ``--libdir <your 3rd-party directory>``.
 

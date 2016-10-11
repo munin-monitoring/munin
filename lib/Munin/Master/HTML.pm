@@ -13,6 +13,8 @@ use Munin::Common::Logger;
 use File::Basename;
 use Data::Dumper;
 
+use CGI::Cookie;
+
 my @times = qw(day week month year);
 # Current incarnation of $cgi.
 # XXX - this is NOT thread-safe!
@@ -21,7 +23,7 @@ my $cgi;
 sub handle_request
 {
 	$cgi = shift;
-
+	my %cookies = CGI::Cookie->fetch;
 	my $path = $cgi->path_info();
 
 	# Handle static page now, since there is no need to do any SQL
@@ -55,15 +57,22 @@ sub handle_request
 		return;
 	}
 
-	my $graph_ext = $cgi->url_param("graph_ext");
-	$graph_ext = "png" unless defined $graph_ext;
+	# Get graph extension (jpg / png / svg / pngx2 /...)
+	# Get from cookie if it exists
+	my $graph_ext = "png";
+	if (defined $cgi->url_param("graph_ext")) {
+		$graph_ext = $cgi->url_param("graph_ext");
+	}
+	elsif (exists $cookies{"graph_ext"}) {
+		$graph_ext = $cookies{"graph_ext"}->value;
+	}
 
 	# Handle rest-like URL : .json & .xml
 	my $output_format = "html";
 	if ($path =~ /.(json|xml)$/) {
 		$output_format = $1;
-		# Replace that part with a /, in order to simplify the next handling
-		$path =~ s/.(json|xml)$/\//;
+		# Replace that part with a ".html" in order to simplify the next handling
+		$path =~ s/.(json|xml)$/.html/;
 	}
 
 
@@ -93,10 +102,18 @@ sub handle_request
 	my $comparison;
 	my $template_filename;
 	my %template_params = (
-		MUNIN_VERSION	=> $Munin::Common::Defaults::MUNIN_VERSION,
+		MUNIN_VERSION   => $Munin::Common::Defaults::MUNIN_VERSION,
 		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
-		R_PATH		=> '',
+		R_PATH          => '',
+		GRAPH_EXT       => $graph_ext
 	);
+
+
+	# Reduced navigation panel
+	$template_params{NAV_PANEL_FOLD} = exists $cookies{"nav_panel_fold"}
+		? ($cookies{"nav_panel_fold"}->value eq "true" ? 1 : 0)
+		: 0;
+	$template_params{NAV_PANEL_FOLD_FORCED} = 0;
 
 	# Common Navigation params
 	###################
@@ -186,7 +203,54 @@ sub handle_request
 
 		$template_filename = "munin-problemview.tmpl";
 
+		$template_params{PATH} = [
+			# first args should have path and r_path for backlink to overview
+			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
+			{ "pathname" => "Problems" }
+		];
+
+		my $sth = $dbh->prepare_cached("SELECT nu.path, n.name, su.path, s.name, d.critical, d.warning, d.unknown FROM ds d
+				LEFT OUTER JOIN service s ON s.id = d.service_id
+				LEFT OUTER JOIN url su ON su.id = s.id and su.type = 'service'
+				LEFT OUTER JOIN node n ON n.id = s.node_id
+				LEFT OUTER JOIN url nu ON nu.id = n.id and nu.type = 'node'
+				WHERE d.critical = 1 OR d.warning = 1 OR d.unknown = 1
+			");
+		$sth->execute();
+
+		my @criticals;
+		my @warnings;
+		my @unknowns;
+		while (my ($_node_url, $_node_name, $_url, $_s_name, $_c, $_w, $_u) = $sth->fetchrow_array) {
+
+			my $img_day = $_url . "-day.png";
+			my $img_week = $_url . "-day.png";
+
+			my $item = {
+				NODEURL => $_node_url,
+				NODENAME => $_node_name,
+				URL => $_url,
+				URLX => $_url,
+				LABEL => $_s_name,
+
+				STATE_CRITICAL => $_c,
+				STATE_WARNING => $_w,
+				STATE_UNKNOWN => $_u,
+
+				CIMGDAY => $img_day,
+				CIMGWEEK => $img_week,
+			};
+
+			push @criticals, $item if $_c;
+			push @warnings, $item if $_w;
+			push @unknowns, $item if $_u;
+		}
+
 		# TODO - Create the model (problem)
+		$template_params{CRITICAL} = \@criticals;
+		$template_params{WARNING} = \@warnings;
+		$template_params{UNKNOWN} = \@unknowns;
+
 	} elsif ($path =~ /^([^\/]+)-(day|month|week|year)\.html$/) {
 		# That's a category URL
 		$template_filename = 'munin-categoryview.tmpl';
@@ -202,38 +266,43 @@ sub handle_request
 		];
 
 		$template_params{CATEGORY} = $category;
+		$template_params{TIMERANGE} = $time;
 
 		my $sth_cat;
 		if ($category eq 'other') {
 			# account for those that explictly mention 'other' as category
 			$sth_cat = $dbh->prepare_cached(
-				"SELECT DISTINCT s.name FROM service s
+				"SELECT DISTINCT s.name, s.service_title FROM service s
 				LEFT JOIN service_categories sc ON s.id = sc.id
-				WHERE sc.category = 'other' OR sc.id IS NULL
+				WHERE (sc.category = 'other' OR sc.id IS NULL)
+				AND EXISTS (select sa.id from service_attr sa where sa.id = s.id)
 				ORDER BY s.name");
 			$sth_cat->execute();
 		} else {
 			$sth_cat = $dbh->prepare_cached(
-				"SELECT DISTINCT s.name FROM service s
+				"SELECT DISTINCT s.name, s.service_title FROM service s
 				INNER JOIN service_categories sc ON s.id = sc.id
-				WHERE sc.category = ?
+				WHERE (sc.category = ?)
+				AND EXISTS (select sa.id from service_attr sa where sa.id = s.id)
 				ORDER BY s.name");
 			$sth_cat->execute($category);
 		}
 
 		my @services;
-		while (my ($_service) = $sth_cat->fetchrow_array) {
-			push @services, _get_params_services_by_name($dbh, $_service, $time, $graph_ext);
+		while (my ($_service, $_service_title) = $sth_cat->fetchrow_array) {
+			push @services, _get_params_services_by_name($dbh, $_service, $_service_title, $time, $graph_ext);
 		}
 		$template_params{SERVICES} = \@services;
+
+		# Force-reduce navigation panel
+		$template_params{NAV_PANEL_FOLD} = 1;
+		$template_params{NAV_PANEL_FOLD_FORCED} = 1;
 	} elsif ($path =~ /^(.+)\/comparison-(day|month|week|year)\.html$/) {
 		# That's a comparison URL, handle it as special case of groups
 		$path = $1;
 		$comparison = $2;
 	}
 
-	$graph_ext = $cgi->url_param("graph_ext") || $graph_ext;
-	$graph_ext = "png" unless defined $graph_ext;
 
 	# Handle normal pages only if not already handled
 	goto RENDERING if $template_filename;
@@ -295,20 +364,26 @@ sub handle_request
 
 		if ($comparison) {
 			# Emit group comparison template
-			$template_filename = "munin-comparison-$comparison.tmpl";
+			$template_filename = "munin-comparison.tmpl";
+
+			$template_params{TIMERANGE} = $comparison;
 
 			# Get all categories in this group
 			my $sth_cat = $dbh->prepare_cached(
 				"SELECT DISTINCT sa_c.category cat FROM node n
 				INNER JOIN service s ON s.node_id = n.id
 				INNER JOIN service_categories sa_c ON sa_c.id = s.id
-				WHERE n.grp_id = ? ORDER BY sa_c.value ASC");
+				WHERE n.grp_id = ? ORDER BY sa_c.category ASC");
 			$sth_cat->execute($id);
 
 			$template_params{CATEGORIES} = [];
 			while (my ($cat_name) = $sth_cat->fetchrow_array) {
-				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id, $graph_ext);
+				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id, $graph_ext, $comparison);
 			}
+
+			# Force-reduce navigation panel
+			$template_params{NAV_PANEL_FOLD} = 1;
+			$template_params{NAV_PANEL_FOLD_FORCED} = 1;
 		} else {
 			# Emit group template
 			$template_filename = 'munin-domainview.tmpl';
@@ -373,9 +448,14 @@ sub handle_request
 
 		my $sth;
 
-		$sth = $dbh->prepare_cached("SELECT name,service_title,graph_info,subgraphs FROM service WHERE id = ?");
+		$sth = $dbh->prepare_cached("SELECT name,service_title,graph_info,subgraphs,category,
+									(SELECT MAX(warning) FROM ds WHERE service_id = service.id) as state_warning,
+									(SELECT MAX(critical) FROM ds WHERE service_id = service.id) as state_critical
+									FROM service
+									LEFT JOIN service_categories ON service.id = service_categories.id
+									WHERE service.id = ?");
 		$sth->execute($id);
-		my ($graph_name, $graph_title, $graph_info, $multigraph) = $sth->fetchrow_array();
+		my ($graph_name, $graph_title, $graph_info, $multigraph, $category, $state_warning, $state_critical) = $sth->fetchrow_array();
 
 		$sth = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
 		$sth->execute($id);
@@ -426,9 +506,15 @@ sub handle_request
 			year => $epoch_now - (3600 * 24 * 400),
 		);
 
-		# Add some more information (graph name, title)
+		# Add some more information (graph name, title, category, nodeview path)
 		$service_template_params{GRAPH_NAME} = $graph_name;
 		$service_template_params{GRAPH_TITLE} = $graph_title;
+		$service_template_params{CATEGORY} = $category;
+		$service_template_params{NODEVIEW_PATH} = "/" . dirname($path);
+
+		# Problems
+		$service_template_params{STATE_WARNING} = $state_warning;
+		$service_template_params{STATE_CRITICAL} = $state_critical;
 
 		for my $t (@times) {
 			my $epoch = "start_epoch=$epoch_start{$t}&stop_epoch=$epoch_now";
@@ -559,11 +645,11 @@ sub _get_params_groups {
 }
 
 sub _get_params_services_for_comparison {
-	my ($basepath, $dbh, $category_name, $grp_id, $graph_ext) = @_;
+	my ($basepath, $dbh, $category_name, $grp_id, $graph_ext, $comparison) = @_;
 
 	# Get all possible services with the specified category under the specified group
 	my $sth_srv = $dbh->prepare_cached(
-		"SELECT DISTINCT s.name FROM service s
+		"SELECT DISTINCT s.name, s.service_title FROM service s
 		INNER JOIN node n ON s.node_id = n.id
 		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		WHERE n.grp_id = ? ORDER BY s.name ASC");
@@ -585,7 +671,7 @@ sub _get_params_services_for_comparison {
 	);
 
 	$sth_srv->execute($category_name, $grp_id);
-	while (my ($service_name) = $sth_srv->fetchrow_array) {
+	while (my ($service_name, $service_title) = $sth_srv->fetchrow_array) {
 		# Skip multigraph sub-graphs
 		next if $service_name =~ /\./;
 
@@ -593,18 +679,18 @@ sub _get_params_services_for_comparison {
 		$sth_node->execute($service_name, $grp_id);
 		while (my ($node_name, $node_url, $srv_url, $srv_label) = $sth_node->fetchrow_array) {
 			my $_srv_url = "$srv_url.html" if defined $srv_url;
-			my %_img_urls = map { ("CIMG$_" => "/$srv_url-$_.$graph_ext") } @times if defined $srv_url;
+			my $_img_url = "/$srv_url-$comparison.$graph_ext" if defined $srv_url;
 			push @nodes, {
 				R_PATH => '',
 				NODENAME => $node_name,
 				URL1 => substr($node_url, length($basepath) + 1),
 				LABEL => $srv_label,
 				URL => $_srv_url,
-				%_img_urls,
+				CIMG => $_img_url,
 			};
 		}
 
-		push @{$category{SERVICES}}, { NODES => \@nodes };
+		push @{$category{SERVICES}}, { NODES => \@nodes, SERVICENAME => $service_name, SERVICETITLE => $service_title };
 	}
 
 	return \%category;
@@ -613,7 +699,7 @@ sub _get_params_services_for_comparison {
 # This is only called for category views, which start with the root URL,
 # so no need to handle basepath or multigraph parents for relative URLs
 sub _get_params_services_by_name {
-	my ($dbh, $service_name, $time, $graph_ext) = @_;
+	my ($dbh, $service_name, $service_title, $time, $graph_ext) = @_;
 
 	# TODO warning/critical state (use SUM sub-queries?)
 	# XXX this may be slow
@@ -644,6 +730,7 @@ sub _get_params_services_by_name {
 
 	return {
 		NAME => $service_name,
+		TITLE => $service_title,
 		GRAPHS => \@graphs,
 	};
 }
@@ -651,33 +738,47 @@ sub _get_params_services_by_name {
 sub _get_params_services {
 	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id, $graph_ext) = @_;
 
-	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url
+	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url,
+									(SELECT MAX(warning) FROM ds WHERE service_id = s.id) as state_warning,
+									(SELECT MAX(critical) FROM ds WHERE service_id = s.id) as state_critical
 		FROM service s
 		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
 		WHERE s.node_id = ?
+		AND EXISTS (select sa.id from service_attr sa where sa.id = s.id)
 		ORDER BY service_title ASC");
 	$sth->execute($category_name, $node_id);
 
 	my $services = [];
-	while (my ($_s_id, $_s_name, $_service_title, $_subgraphs, $_url) = $sth->fetchrow_array) {
+
+	# Group-level sums
+	my $n_warnings = 0;
+	my $n_criticals = 0;
+
+	while (my ($_s_id, $_s_name, $_service_title, $_subgraphs, $_url, $_state_warning, $_state_critical) = $sth->fetchrow_array) {
 		# Skip sub-graphs if not in multigraph
 		next if not $multigraph_parent and $_s_name =~ /\./;
 		# Skip unrelated graphs if in multigraph
 		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
+		$n_warnings += $_state_warning;
+		$n_criticals += $_state_critical;
+
 		my %imgs = map { ("IMG$_" => "/$_url-$_.$graph_ext") } @times;
 		push @$services, {
 			NAME => $_service_title,
 			URLX => substr($_url, 1 + length($base_path)) . ($_subgraphs ? "/" : ".html"),
-			%imgs,
+			STATE_WARNING => $_state_warning,
+			STATE_CRITICAL => $_state_critical,
+			%imgs
 		};
 	}
-
 
 	return {
 		NAME => $category_name,
 		SERVICES => $services,
+		STATE_WARNING => $n_warnings > 0,
+		STATE_CRITICAL => $n_criticals > 0
 	};
 }
 
@@ -743,6 +844,7 @@ sub url_to_path
 		{
 			'pathname' => $name,
 			'path' => url_absolutize(join '/', @paths[0..$_]) . '/',
+			'switchable' => 1
 		}
 	} 0..$#paths;
 

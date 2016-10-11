@@ -1,3 +1,645 @@
+munin-2.999.3, 2016-09-04
+
+-------
+Summary
+-------
+
+That release is the 3nd beta of the 3.0 series. It is versionned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versionning or 3.0b3
+
+It contains various bugfixes.
+
+It is currently beta quality, that means that bugs *can* happen, but aren't
+really expected. They will have a  workaround and a proper fix soon.
+
+
+------------------
+Detailed Changelog
+------------------
+
+Adrien Chardon (1):
+      ui/navigation: Fix broken link id
+
+Andreas Maus (1):
+      Fix autoconf error in slapd_bdb_cache_ plugin
+
+Ferenc Wágner (4):
+      Set RRD type of numa_foreign to DERIVE (copy&paste typo)
+      Avoid false negative spikes on NUMA graphs on reboot
+      The NUMA graphs show page rates, not page numbers
+      procfs: the DERIVE type does not need max to avoid false spikes
+
+Kenyon Ralph (1):
+      plugins/node.d/ntp_states: fix "outlier" state spelling for recent versions of NTP
+
+Kim B. Heino (3):
+      if_: /sys/class/net/ reports speed 0 for some devices
+      if_, if_err_: add more virtual devices like gre0 and bond0.99 to skip list
+      if_: check for non-empty and >0 before reporting speed (thanks to ssm)
+
+Kjetil Torgrim Homme (1):
+      support for logging to file via Log::Dispatch::File
+
+Quentin Stoeckel (49):
+      Remove DYN_IMAGES references in views since it isn't used anymore
+      Prepare serving png or svg files depending on user preference
+      Allow toggling navigation panel using window.toolbar.toggleNavigation(visibility, animation)
+      Add a toggle button to toggle navigation panel visibility, handle mobiles
+      Fix navigation panel toggle on Firefox & SeaMonkey
+      Enhance navigation panel togge animation performances
+      Remove static dynazoom.html since it isn't used anymore
+      munin-dynazoom.html: don't hardcode graph extension (.png)
+      Dynazoom modal JS: use regex to extract timeRange from graphUrl
+      Enhance forms styling, split CSS into separate smaller part files
+      Allow changing graph_ext from a newly created settings modal
+      Make navigation panel state persistent
+      Fix eventRuler min x position when navigation menu is toggled
+      Remove fixed timeRange switchs and add those as a Toolbar action icon
+      Make the toolbar fixed at the top of the screen
+      Fix reading cookies in HTML.pm
+      Display timeRange switch in categoryview, force-disable navigation bar in comparison & category views
+      Enhance timerange switches styling
+      build: Add CGI::Cookie requirement to Build.PL
+      ui/timerange-switch: Fix timerange on categoryView
+      ui/timerange-switch: Enhance timerange switch styling
+      ui/problemview - Fix problems page missing <title> tag
+      ui: Set tabindex to elements
+      ui/toolbar Add toggle animation when showing/hiding toolbar
+      ui/settings: Add ability to disable graphs auto-refresh from UI settings
+      ui/css: Make Absolute elements fixed instead of absolute
+      ui/Toolbar: fix timerange Absolute component position on mobiles
+      ui/tabindex: Fix tabindex on graphs & tabs
+      ui/sparklines: Respect graph_ext parameter instead of hardcoded .png value
+      ui/overview: Don't fetch back the cookie on each each occurence
+      ui/js: Fix Absolute elements position from fixed parents
+      doc/alert: Add documentation about plugin field
+      ui/js: Fix wrong graph extension when using Graph.refresh()
+      css/layout: Adapt layout depending on screen resolution & graph extension
+      ui/navigation: Don't save navigation state when it has been force-reduced
+      ui/graphs: Handle graphs on higher dpi resolutions, fix categoryiew columns
+      ui/categoryview: Fix filter on categoryview
+      ui/comparison Fix comparison filter
+      ui/settings: Enhance settings modal styling
+      ui/dynazoom: Enhance dynazoom form styling
+      ui/backToTop: Add "Back to top" buttons to categoryview, comparison & domainview
+      ui: Enhance page headers on mobiles
+      ui/domainview: Refactor treeview JS, add "Expand all" & "Reduce all" links
+      ui/toolbar: Fix NAV_PANEL_FOLD_FORCED usage in HTML.pm
+      ui/drawer: Enhance drawer on mobiles
+      ui/toolbar: Allow toolbar title to fit in single line
+      ui/navigation: Fix syntax error
+      ui/navigation: Enhance navigation titles
+      ui/nodeview: Fix filter JS error
+
+Rob Speed (1):
+      Installation documentation update for FreeBSD
+
+Steve Schnepp (5):
+      update: fix typo in verbose handling
+      graph: support hidpi png
+      graph: format is png in hidpi mode
+      graph: fix typo in TITLE
+      asyncd: fix the 1h sleep
+
+Stig Sandbeck Mathisen (9):
+      Exclude btrfs from df_inode plugin
+      Update node address documentation
+      Remove unused files for munin-node
+      Remove unused PluginsBuilder.pm
+      Document graph categories
+      Use a regular expression to parse df output
+      Use a bare return to return failure
+      df: Make env.include_re include instead of exclude
+      Fix wrong documentation reference for graph_data_size
+
+Viktor Szépe (2):
+      Signal error in http_loadtime
+      Typo in condition
+
+absh (7):
+      Escape semicolons in graph item labels (such as "uhci_hcd:usb1") to prevent rrdtool from confusing them with field separators and failing thereupon.
+      typo fix: s/semicolon/colon/
+      Plugins' command parameter: don't split on escaped whitespace.
+      Bug fix for commit 2075373.
+      Fix cpu fields order in procfs plugin to match proc(5)
+      Make the cpu graph fields order the same as in the original plugin
+      Correct graphing of user and guest cpu stats
+
+dipohl (1):
+      Return smartctl exit code and warning message     Fixes github issue: hddtemp_smartctl fails on a drive in standby #690
+
+rantal (1):
+      Added OldGen graphs, switched used and free bytes (used is on bottom of the graph, free is on top)
+
+shapirus (7):
+      Fix for munin-update ignoring graph colors supplied by plugins
+      Set better readable colors for cpu graph
+      Pass graph_args list to rrdtool
+      Allow to specify draw style (e.g., dashes) via the new "drawstyle" parameter.
+      More logging for munin-asyncd aimed at fixing the 1h bug
+      Add the "drawstyle" parameter to the list of legal keywords
+      plugins/memory: draw the KSM-sharing value if present
+
+
+munin-2.999.2, 2016-01-10
+
+-------
+Summary
+-------
+
+That release is the 2nd beta of the 3.0 series. It is versionned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versionning or 3.0b2
+
+It contains an updated UI.
+
+It is currently beta quality, that means that bugs *can* happen, but aren't
+really expected. They will have a  workaround and a proper fix soon.
+
+------------------
+Detailed Changelog
+------------------
+
+Alexander (1):
+      Remove unneeded forks in plugin.sh
+
+Andreas Teuchert (2):
+      snmp__if_multi: Set warning to 75% of interface speed instead of 133%.
+      Improve graph titles.
+
+Devin Howard (1):
+      typo
+
+Kim B. Heino (3):
+      apc_nis: add line frequency monitoring
+      vlan_: fix syntax error
+      http_loadtime: not all time-binaries support --quiet (RHEL7, ...)
+
+M. Maraun (7):
+      Started to add verbose parameter.
+      verbose across the scripts added.
+      Started to add verbose parameter.
+      verbose across the scripts added.
+      Rebase the add verbose
+      Test expanded.
+      add my name to authors files
+
+Martin Sucha (1):
+      Add an explanation why COUNTER is harmful
+
+Peter Suschlik (1):
+      Use highres (SVG) badges in README
+
+Quentin Stoeckel (34):
+      Fix $verbose typo in munin-update
+      Use "::" as pages title separator instead of ">"
+      Merge pull request #595 from chteuchteu/www-title-separator
+      Add FontAwesome files to project
+      Replace PNG icons with FontAwesome equivalents
+      Use Material Design Icons (community version) instead of FontAwesome
+      Fix filter icon not appearing on IE8
+      Merge pull request #603 from chteuchteu/ui-icons
+      Delete useless JS file
+      Enhance tabs styling
+      JS: Fix .trim() usages (not defined in IE8)
+      Merge pull request #604 from chteuchteu/ui-misc
+      Prevent line breaks from header title, fix text vertical-align
+      Enhance overall toolbar appearance on lower resolution devices
+      Merge pull request #614 from chteuchteu/new-ui-css-fix
+      Create .action-icon class from eventRulerToggle
+      Rewrite eventRuler as a jQuery plugin
+      Rewrite autoRefresh as a jQuery plugin
+      Rewrite tabs as jQuery plugin
+      Fix eventRuler plugin
+      Create a toolbar component, wrapping filter code
+      Fix sanitizeFilter calls
+      Rewrite dynazoomModal as a jQuery plugin
+      Rewrite modal as a jQuery plugin
+      Rewrite tooltips as a jQuery plugin...
+      Avoid tooltips from being displayed off-screen
+      Rewrite switchable & tooltip, implement Toolbar overflow
+      Show only munin's logo (not text) on mobile devices
+      Set Roboto, sans-serif as the default font-family
+      Add refresh buttons when using auto-refresh, JS & CSS fixes
+      Nodeview: fix categories appearance when canceling filter ; various CSS & JS fixes
+      Merge pull request #615 from chteuchteu/new-ui-cleanup
+      Update UI colors
+      Merge pull request #616 from chteuchteu/new-ui-colors
+
+Steve Schnepp (5):
+      Merge pull request #569 from maxbeth/issue405_verbose
+      Merge pull request #585 from ms7s/patch-1
+      graph: handle -T upon rrdtool launch
+      httpd: Trust PERL5LIB from environment
+      Merge commit '6b47ec5f0f89750e86209ce24b641ff37c0c2dfe' into devel
+
+Stig Sandbeck Mathisen (5):
+      Merge pull request #594 from chteuchteu/fix-munin-update-typo
+      Merge pull request #596 from ssm/feature/bcg-fixes
+      Merge pull request #606 from Self-Perfection/patch-1
+      Merge pull request #608 from devvmh/patch-1
+      Merge pull request #611 from splattael/readme-svg-badge
+
+dipohl (2):
+      DOC: critical and warning level can also be decimal numbers
+      DOC: Add note on importance of order in munin.conf
+
+
+munin-2.999.1, 2015-10-14
+
+-------
+Summary
+-------
+
+That release is the 1rst beta of the 3.0 series. It is versionned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versionning or 3.0b1
+
+It mostly consists of fixes.
+
+It is currently beta quality, that means that bugs *can* happen, but aren't
+really expected. They will have a  workaround and a proper fix soon.
+
+------------------
+Detailed Changelog
+------------------
+
+Kenyon Ralph (3):
+      munin-node-configure: allow setting SNMP domain
+      munin-node-configure: allow setting SNMP domain
+      add SNMP domain to tests
+
+Kieran Clancy (1):
+      Config when update_rate slower than cron interval
+
+Quentin Stoeckel (1):
+      Fix JSON structure syntax, closes #565
+
+Steve Schnepp (11):
+      graph: get .sum & .stack from sql
+      graph: initial add sum command
+      www: "&bull;" isn't supported in every font
+      graph: implement .sum
+      graph: fix the output of the rrdtool command
+      graph: simplify the fonts handling
+      graph: sum, continued
+      plugins: fix sum_cdef_tester plugin
+      http: do not emit empty services
+      plugins: fix sum_cdef_tester
+      http: fix .sum
+
+Stig Sandbeck Mathisen (7):
+      Document graph_printf
+      Remove bind9 plugin in favour of bind9_rndc
+      Update df_abs plugin
+      Do not sort smart_ plugin attributes
+      Remove empty "hidden knowledge" section in the doc
+      Document FQN, Fully Qualified Name
+      Add missing dependency on List::Util to Build.PL
+
+Trygve Vea (1):
+      Erronous config in example
+
+nii_kenichi (1):
+      Typo corrected
+
+
+munin-2.99.3, 2015-09-15
+
+-------
+Summary
+-------
+
+That release is the 3nd alpha of the 3.0 series. It is versionned 2.99.x so
+numeric only sorting works, as we do have distro that rely on that.
+
+It mostly consists of fixes.
+
+It is currently alpha quality, that means that bugs *are* expected, but they
+should all have some workaround.
+
+------------------
+Detailed Changelog
+------------------
+
+Michael 'PoempelFox' Meier (1):
+      split cache into cache + shmem in linux memory plugin
+
+Quentin Stoeckel (10):
+      Prevent -week graph from showing if there's not enough room to display it
+      Redesign plugin gallery front page
+      Fix modal iframe height
+      Open docs in modals, add docs styling
+      Enhance plugin gallery responsiveness
+      Enhance gallery lists
+      Update INSTALL file
+      Remove brackets from download links & add class to it for styling
+      Add CSS styling directly to generated documentation HTML files
+      Add missing closing tag to navigation
+
+Steve Schnepp (16):
+      dev_scripts: make a script that actually works
+      master: avoid graphing negative ds as standalone
+      deps: add some deps for testing & CI
+      graph: fixed the graphing gliches on pos/neg values
+      graph: use a full-featured rrdtool instead of RRDs
+      graph: fix negative SQL
+      httpd: make the script executable
+      dev_scripts: create the plugin state dir
+      graph: fix comments
+      gallery: remove the .in handling for plugin
+      graph: activate out-of-process rrd graphing
+      graph: limit the legend label in graph to 20 chars
+      graph: use a line break on 20+ chars labels
+      graph: cleanup old commented code
+      graph: fix cdef inter-fields handling
+      gitignore: adding coverage dir output
+
+Stig Sandbeck Mathisen (23):
+      remove old munin graph and html code
+      remove Munin::Master::Utils::munin_nscasend
+      remove Munin::Master::Utils::munin_delete
+      remove Munin::Master::Utils::munin_configpart_revision
+      remove Munin::Master::Utils::munin_get_bool_val
+      remove Munin::Master::Utils::munin_node_status
+      remove Munin::Master::Utils::munin_category_status
+      remove Munin::Master::Utils::munin_service_status
+      remove Munin::Master::Utils::munin_field_status
+      remove Munin::Master::Utils::munin_get_picture_filename
+      remove Munin::Master::Utils::munin_get_html_filename
+      remove Munin::Master::Utils::munin_find_node_by_fqn
+      remove Munin::Master::Utils::munin_get_separated_node
+      remove Munin::Master::Utils::munin_get_host_path_from_string
+      remove Munin::Master::Utils::wait_for_remaining_children
+      remove Munin::Master::Utils::look_for_child
+      remove Munin::Master::Utils::munin_graph_column_headers
+      remove Munin::Master::Utils::munin_get_max_label_length
+      remove Munin::Master::Utils::munin_get_field_order
+      remove Munin::Master::Utils::munin_draw_field
+      Remove contrib items with with munin-graph/html focus
+      Remove documentation for munin-graph and munin-html
+      Remove dependencies for old code
+
+mcarton (2):
+      Fix spelling mistake in munin-update SYNOPSIS
+      Fix markdown formating
+
+
+munin-2.99.2, 2015-08-18
+
+-------
+Summary
+-------
+
+That release is the 2nd alpha of the 3.0 series. It is versionned 2.99.x so
+numeric only sorting works.
+
+It mostly consists of fixes, code removal and adding a meaningful test suite.
+
+It is currently alpha quality, that means that bugs *are* expected, but they
+should all have some workaround.
+
+------------------
+Detailed Changelog
+------------------
+
+Quentin Stoeckel (14):
+      Enhance plugins description in service view
+      Reduce header bar height
+      Rename style-2.1.css to style.css
+      Change pages encoding from iso-8859-1 to UTF-8
+      Use HTML5's new tags
+      Implement filter in comparison page
+      Implement switchable component in comparison header
+      Replace munin-comparison-*.tmpl with munin-comparison.tmpl
+      Implement tabs in comparison page
+      Fix comparison filte according to tabs changes
+      Rename Javascript resources (prepend "component-" for commonly used items)
+      Add event ruler to comparison page
+      Use nodeview's time range switch in comparison page
+      Add dynazoom modal icon on each comparison graph
+
+Steve Schnepp (8):
+      dev_scripts: adding some tools as well
+      doc: remove useless use of ./
+      ttf: remove the TTF fonts
+      master: remove munin-update_old
+      master: remove MasterBuilder.pm
+      master/doc: remove old POD
+      contrib: remove old DB_File related stuff
+      html: fix comparison page
+
+Stig Sandbeck Mathisen (51):
+      Update list of development environment debs
+      Move author tests to xt/
+      Add a cpanfile
+      ignore local/ used by carton
+      Add tests for Munin::Master::Host
+      Add tests for Munin::Master::Group
+      Test get_all_hosts in Munin::Master::Group
+      Use Test::Deep to verify data structure
+      Test add_host, just verify type of array members
+      Test get_all_hosts, just verify type of array members
+      Test give_attributes_to_hosts correctly
+      rename subroutines for order and clarity
+      lint and polish
+      Munin::Master::Host::Test - rename subroutines for order and clarity
+      Update tests for Munin::Node::Session
+      Add small code tests for Munin::Master::ProcessManager
+      remove, not needed for now
+      add Test::Class as dependency
+      Update tests for Munin::Master::GroupRepository
+      Add tests for Munin::Master::Worker
+      Improve test coverage of Munin::Master::ProcessManager
+      Improve test coverage of Munin::Master::Group
+      Tidy and lint tests
+      avoid overwriting @hosts again
+      Improve test coverage for Munin::Master::Config
+      Improve test coverage for Munin::Common::Defaults
+      Check for $ENV{TEST_MEDIUM} for networked tests
+      Test function look_up in Munin::Master::Config
+      add incomplete test for get_all_hosts in Munin::Master::Config
+      test function get_groups_and_hosts in Munin::Master::Config
+      Test continuation lines
+      Update tests for Munin::Master::UpdateWorker
+      Improve test coverage of Munin::Master::Utils
+      Fix bug in Munin::Master::Utils->munin_get_host_path_from_string
+      Add minimal testing for Munin::Master::Graph
+      Test remove_dups
+      Rewrite tests for Munin::Master::Update
+      Return early if argument is empty
+      Run the SMALL and MEDIUM test suite
+      Set both variables, instead of doubling the builds
+      Add Alien::RRDTool to cpanfile
+      Move timing tests to TEST_HEAVY class
+      Try using coveralls.io
+      Add minimal test for Munin::Master::HTML
+      Remove Munin::Common::DictFile
+      Do not run test coverage in parallel
+      Add coverage.io badge to README.rst
+      RST syntax fix
+      RST is picky
+      Add Test::Deep to cpanfile test section
+      Test Munin.pm
+
+
+munin-2.99.1, 2015-05-11
+
+-------
+Summary
+-------
+
+That release is the first alpha of the 3.0 series. It is versionned 2.99.x so
+numeric only sorting works.
+
+It mostly features a whole new UI, that should be much more "responsive",
+both in term of mobile & response time.
+
+It also removes the whole CGI stuff, and remplace it with a integrated httpd
+daemon, that is way easier to setup, so transition might be a little bit
+painful (that's part of the "why the bump to 3.0")
+
+It is currently alpha quality, that means that bugs *are* expected, but they
+should all have some workaround.
+
+------------------
+Detailed Changelog
+------------------
+
+Daniel Black (2):
+      mysql: ma_binlog_size defined was bad check for graph bin_relay_log.
+      mysql: add graph binlog_groupcommit
+
+Darac Marjal (4):
+      Add the ability for Munin to write data to Carbon
+      Clean up most of the perlcritic errors
+      Update, and pass, tests
+      Add proper Line Ending for carbon
+
+Dmitry Marakasov (3):
+      Fix buffer memory accounting
+      Calculate diskspace/inode usage percent accurately
+      Sort df output
+
+Ed Szynaka (1):
+      Added autoconf to spamstats
+
+Gabriele (4):
+      Fixed setting of warning limit and some minor issues
+      Doc: Content from wiki page MuninAlertVariables to Munin-Guide
+      Doc: Wiki page protocol-config to Munin-Guide     1st portion, will be continued
+      Doc: Wiki page protocol-config to Munin-Guide
+
+Kenyon Ralph (3):
+      add Transport Domain environment variable for Munin::Plugin::SNMP
+      add snmpdomain option
+      explain how to do SNMP over IPv6
+
+Kjetil Torgrim Homme (1):
+      reduce number of forked processes
+
+Quentin S (39):
+      Tabs: fix issue where graphs weren't properly hidden on first page load with default active tab
+      Serviceview: send STATE_WARNING & STATE_CRITICAL information to template
+      Serviceview: send STATE_UNKNOWN information to template
+      Send STATE_CRITICAL & STATE_WARNING information to overview & nodeview templates
+      Add some styling to overview & nodeview warnings & criticals
+      Extract critical & warning colors as SASS variables
+      Nodeview: add "ALL" category
+      Allow auto-switching to category tab using URL anchor
+      Fix weird hover in header when using switchable
+      Display plugin name (apache_accesses) and category in serviceview
+      Add link to category in serviceview subtitle
+      Add a title to switchables content
+      Fix issue where clearing filter field doesn't update the url
+      Fix conflicts between nodeview tabs and filter
+      Fix favicon 404 error
+      Move "Compare" links in domainview from header to subtitle to enhance readability
+      Implement simple treeview in domainview
+      Domainview: solve treeview vs filter conflict
+      Fix wrong nodeview eventruler toolip, closes #478
+      Replace spaces with tabs in nodeview-eventruler.js
+      Fix issue where eventruler wasn't disabled on mobiles
+      Add an 'open' button to dynazoom modal
+      CSS: use relative paths
+      Fix autorefresh loading image
+      Enhance categoryview
+      Enhance categoryview
+      Fix header links
+      Enhance modal design
+      Use HTML::Template tags short version
+      Enhance modal on smaller resolutions
+      Slightly lighten overview list
+      Enhance overall header bar feeling
+      Fix header on mobiles
+      Enhance navbar hover effect
+      Enhance cross-browser compatibility
+      Fix dynazoom form submit inside modal
+      Display a warning for users using IE<=8
+      Make the IE8 warning message dismissable
+      Fix wrong dynazoom epoch values
+
+Quentin Stoeckel (3):
+      Avoid triggering filter change event on every keyPress
+      Enhance time range switch styling
+      Enhance dynazoom form responsiveness
+
+Steve Schnepp (18):
+      doc: little rewordings
+      doc: little formating
+      doc: little formating
+      doc: little formating
+      doc: little formating
+      doc: little formating
+      doc: fix typo in reference
+      Revert "doc: fix typo in reference"
+      doc: fix some references
+      doc: adding a link to new plugin content
+      doc: update reference for dev
+      doc: improve formatting
+      doc: add the official warning about COUNTER
+      build: Adding the MANIFEST.SKIP
+      httpd: avoid routing category page to Graph.pm
+      httpd: adding the problem model
+      httpd: fix XML for special pages
+      http: also emit warning and unknowns
+
+Stig Sandbeck Mathisen (23):
+      Use Munin::Common::Logger in the async programs
+      fix: declare $screen
+      Log level is "info", not "verbose"
+      Remove redundant logging code
+      Add a Munin::Common::Utils, with is_valid_hostname
+      Make async class constructors more robust
+      Validate hostname on input
+      This function was moved to Munin::Common::Utils
+      doc: add dirtyconfig protocol extension
+      doc: highlight with bash, and fix typo
+      doc: add protocol index entries
+      doc: make a directory for development
+      doc: new "development environment" guide
+      doc: add index entries for plugin magic markers
+      doc: update meta-documentation
+      Workaround: Unset the carbon_ config defaults
+      Update tests for the carbon_ variables
+      Update autoconf for jenkins plugins
+      Document test categories
+      Require TEST_MEDIUM environment variable for complex tests
+      count plugins before testing
+      remove redundant set of variables
+      Remove python compiled plugins after syntax check
+
+dipohl (1):
+      Doc: Wiki page fieldname.type to Munin-Guide
+
+mcarton (1):
+      Fix spelling mistake
+
+nusenu (1):
+      OpenBSD: add swap usage to memory plugin
+
+
 munin-2.1.12, 2015-05-04
 
 -------

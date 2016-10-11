@@ -120,7 +120,8 @@ my %stat = _parse_stat_file("/proc/stat");
 my %vmstat = _parse_stat_file("/proc/vmstat");
 
 my $cpu_limit = (scalar(grep(/^cpu[0-9]+$/, keys %stat))) * 100;
-my @cpu_fields = qw(system user nice idle iowait irq softirq steal guest guest_nice);
+my @cpu_graph_order = qw(system   user    nice   guest  guest_nice  idle   iowait   irq  softirq  steal  );
+my @cpu_graph_color = qw(00CC00  0066B3  FF8000  777777   EE00CC   FFEDA3  FF8080  00FFCC 990099  FF0000 );
 
 if ( %stat ) {
   $plugin->add_graphs
@@ -138,7 +139,6 @@ if ( %stat ) {
        {
 	label => "Interrupts",
 	type  => "DERIVE",
-	max   => 100000,
 	min   => 0,
 	info  => "Interrupts are events that alter sequence of instructions executed by a processor. They can come from either hardware (exceptions, NMI, IRQ) or software",
 	value => $stat{intr}[0],
@@ -147,7 +147,6 @@ if ( %stat ) {
        {
 	label => "Context switches",
 	type  => "DERIVE",
-	max   => 100000,
 	min   => 0,
 	info  => "A context switch occurs when a multitasking operatings system suspends the currently running process, and starts executing another.",
 	value => $stat{ctxt}[0],
@@ -167,7 +166,6 @@ if ( %stat ) {
        {
 	type  => "DERIVE",
 	min   => 0,
-	max   => 100000,
 	value => $stat{processes}[0],
        },
       },
@@ -180,7 +178,7 @@ if ( %stat ) {
       scale    => "no",
       info     => "This graph shows how CPU time is spent.",
       category => "system",
-      order    => join(" ", @cpu_fields),
+      order    => join(" ", @cpu_graph_order),
       fields =>
       {
        system     => { info => "CPU time spent by the kernel in system activities" },
@@ -197,13 +195,32 @@ if ( %stat ) {
      }
     );
 
-  for (my $i = 0; $i < scalar(@cpu_fields); $i++) {
-    my $field = $cpu_fields[$i];
+  # Assign values according to the fields order in /proc/stat
+  my @cpu_fields = qw(user nice system idle iowait irq softirq steal guest guest_nice);
+  my %cpustat;
+  my %cpucolor;
+  @cpustat{@cpu_fields} = @{$stat{cpu}};
+  @cpucolor{@cpu_graph_order} = @cpu_graph_color;
+
+  foreach my $field (keys %cpustat) {
+    my $value = $cpustat{$field};
+
+    # According to function account_guest_time() in kernel/sched/cputime.c,
+    # the Linux kernel includes the guest and guest_nice counters in the
+    # host's own user and nice counters.
+    # Hence we need to subtract the guest values from user and nice, since
+    # we want to graph the host's own counters and guest counters independently.
+    if ($field eq 'user') {
+      $value -= $cpustat{guest};
+    } elsif ($field eq 'nice') {
+      $value -= $cpustat{guest_nice};
+    }
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{min} = 0;
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{max} = $cpu_limit;
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{draw} = "AREASTACK";
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{type} = "DERIVE";
-    $plugin->{graphs}->{cpu}->{fields}->{$field}->{value} = ${@stat{cpu}}[$i] * 100 / $HZ;
+    $plugin->{graphs}->{cpu}->{fields}->{$field}->{colour} = $cpucolor{$field};
+    $plugin->{graphs}->{cpu}->{fields}->{$field}->{value} = $value * 100 / $HZ;
 
     my ($warning, $critical) = get_thresholds($field);
     $plugin->{graphs}->{cpu}->{fields}->{$field}->{warning} = adjust_threshold($warning, $cpu_limit);

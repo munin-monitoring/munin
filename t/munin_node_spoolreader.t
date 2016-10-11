@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 18;
+use Test::More tests => 9;
 use Test::LongString;
 
 use POSIX ();
@@ -30,7 +30,13 @@ use Munin::Node::SpoolWriter;
 
 
 ### fetch
-{
+subtest 'spool write' => sub {
+    if ($ENV{TEST_MEDIUM}) {
+        plan tests => 4;
+    }
+    else {
+        plan skip_all => 'set TEST_MEDIUM to run these tests';
+    }
     my $dir = tempdir(CLEANUP => 1);
     my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
     my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
@@ -88,8 +94,15 @@ system.value 1234567910:3
 EOS
 
     is_string($reader->fetch(1234567999), '', 'Timestamp postdates the last result: empty string');
-}
-{
+};
+
+subtest 'blank line should be ignored' => sub {
+    if ($ENV{TEST_MEDIUM}) {
+        plan tests => 1;
+    }
+    else {
+        plan skip_all => 'set TEST_MEDIUM to run this test';
+    }
     my $dir = tempdir(CLEANUP => 1);
     my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
     my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
@@ -110,8 +123,15 @@ system.label system
 system.value 1234567890:1
 EOS
 
-}
-{
+};
+
+subtest 'multiple services' => sub {
+    if ($ENV{TEST_MEDIUM}) {
+        plan tests => 3;
+    }
+    else {
+        plan skip_all => 'set TEST_MEDIUM to run this test';
+    }
     my $dir = tempdir(CLEANUP => 1);
     my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
     my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
@@ -153,8 +173,15 @@ slab.label slab
 slab.value 1234567910:123
 EOS
 
-}
-{
+};
+
+subtest 'single service, multiple results' => sub {
+    if ($ENV{TEST_MEDIUM}) {
+        plan tests => 2;
+    }
+    else {
+        plan skip_all => 'set TEST_MEDIUM to run this test';
+    }
     my $dir = tempdir(CLEANUP => 1);
     my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
     my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
@@ -187,12 +214,18 @@ system.label system
 system.value 1234567990:4
 EOT
     like($fetched, qr(\A$f1$f2|$f2$f1\Z)m, 'Got results for both services, in either order, and nothing else');
-}
+};
 
 
 ### _get_spooled_plugins
 ### list
-{
+subtest 'multiple services, multiple results' => sub {
+    if ($ENV{TEST_MEDIUM}) {
+        plan tests => 4;
+    }
+    else {
+        plan skip_all => 'set TEST_MEDIUM to run this test';
+    }
     my $dir = tempdir(CLEANUP => 1);
     my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
     my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
@@ -228,5 +261,4 @@ EOT
 
     is_deeply([ sort $reader->_get_spooled_plugins ], [ sort qw( fnord floop blort ) ], 'Retrieved list of spooled plugins');
     is($reader->list, "blort floop fnord\n", 'Retrieved stringified list of spooled plugins');
-}
-
+};

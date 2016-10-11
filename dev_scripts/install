@@ -33,6 +33,7 @@ make_sandbox() {
 		sandbox/var/lib
 		sandbox/var/run
 		sandbox/var/spool
+		sandbox/var/plugin-state
 EOF
 }
 

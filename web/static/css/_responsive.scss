@@ -1,0 +1,136 @@
+/*
+ * This file contains everything that makes munin responsive, and is included in style.scss
+ */
+
+.show-mobile { display: none!important; }
+
+/* Small devices (tablets, smartphones) */
+@media (max-width: 768px) {
+	.hide-mobile { display: none!important; }
+	.show-mobile { display: block!important; }
+
+	header {
+		border-left: 0;
+		border-right: 0;
+		border-radius: 0;
+		padding: 5px;
+
+		.left {
+			&, .action-icon {
+				margin-left: 0;
+			}
+
+			.logo {
+				display: none;
+			}
+		}
+
+		.right {
+			.filter {
+				display: inline-block;
+				margin-top: 0;
+				width: 150px;
+
+				/* Don't expand on focus */
+				input[type=text] {
+					&, &:focus {
+						width: 150px;
+					}
+				}
+			}
+		}
+		.actions .action-icon {
+			margin-top: 3px;
+		}
+
+		.pageTitle h1 {
+			padding-top: 0;
+		}
+	}
+
+	/* Different nav */
+	#main {
+		display: block;
+		min-height: 0;
+	}
+	nav {
+		display: block;
+		position: fixed;
+		z-index: 10;
+		top: 0;
+		left: 0;
+		width: 0;
+		height: 100%;
+		max-width: 500px;
+		background-color: #fff;
+		@include box-shadow(1px 0px 20px 0px rgba(0, 0, 0, 0.3));
+
+		.navigation-wrapper {
+			padding: 0;
+			overflow-y: auto;
+
+			.navigation {
+				width: $navigation-width-mobile;
+			}
+			.timerangesList { @include opacity(1); }
+		}
+
+		&.fold { width: 0; }
+		&.shown { width: $navigation-width-mobile; }
+	}
+
+	#content {
+		display: block;
+		padding: 1em 0;
+		width: 100%;
+
+		h2, h3, h4, .subtitle {
+			margin-left: 20px;
+		}
+
+		.page-head {
+			margin-left: 20px;
+
+			h2, .subtitle { margin-left: 0; }
+			.timeRangeSwitch { margin-left: 40px; }
+		}
+	}
+
+	/* Overview */
+	ul.groupview {
+		margin: 20px 15px!important;
+
+		.categories {
+			padding-top: 0;
+			clear: both;
+			margin-left: 10px;
+		}
+	}
+
+	.modal {
+		width: 100%;
+		left: 0;
+		top: 0;
+		margin-top: 15px;
+		margin-left: 0;
+		max-height: 100%;
+	}
+
+	.dzForm #dynaForm .half {
+		display: block;
+		width: 100%;
+	}
+}
+
+/* Hide second graph in nodeview when there's not enough horizontal space to show both */
+@media (max-width: 1260px) {
+	.hide-if-overflows { display: none!important; }
+}
+
+/* Medium devices */
+@media (max-width: 992px) {
+}
+
+/* Large devices (large desktops) */
+@media (max-width: 1200px) {
+}

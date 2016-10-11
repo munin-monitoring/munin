@@ -1,0 +1,171 @@
+/**
+ * Graphs styling
+ */
+
+.graph {
+	// Width is defined lower
+	height: auto;
+	max-width: 100%;
+	@include box-sizing(border-box);
+
+	// Colors are overridden by "color" property
+	border: 1px solid;
+	@include box-shadow(0 0 2px 0);
+
+	&.i {
+		color: #fff;
+		@include box-shadow(0 0 1px 0 #888);
+	}
+	&.iwarn, &.icrit { opacity: 0.95; }
+	&.iwarn { color: $problems-warning-color; }
+	&.icrit { color: $problems-critical-color; }
+	&.iunkn { color: #ffaa00; }
+	&.iremoved { opacity: 0.6; }
+
+	&:hover+.graph-dynazoomModalLink {
+		display: block;
+		@include opacity(0.5);
+	}
+}
+
+.graph-link {
+	min-width: 16px;
+	min-height: 16px;
+	max-width: 100%;
+	display: inline-block;
+	position: relative;
+	margin: 4px 7px 4px 0;
+	vertical-align: top;
+	font-size: 0;
+
+	&:hover { text-decoration: none }
+
+	.graph-loading {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 16px;
+		height: 16px;
+		margin-left: -8px;
+		margin-top: -8px;
+	}
+
+	/* Dynazoom modal link */
+	.graph-dynazoomModalLink {
+		cursor: pointer;
+		position: absolute;
+		font-size: 18px!important;
+		color: #000;
+		top: 3px;
+		right: 3px;
+		border: 1px solid transparent;
+		padding: 1px 2px 2px 2px;
+		@include opacity(0);
+		@include transition-duration(150ms);
+		@include border-radius(2px);
+
+		&:hover {
+			background-color: rgba(0, 0, 0, 0.1);
+			@include opacity(1);
+		}
+
+		@media (max-width: 768px) {
+			display: none;
+		}
+
+	}
+
+	@media (max-width: 768px) {
+		margin: 4px;
+	}
+
+	// "Problems"
+	&.unkn {
+		&:link, &:visited, &:active, &:hover { color: #ffaa00; }
+	}
+	&.warn {
+		background-color: $problems-warning-color;
+		&:link, &:visited, &:active, &:hover { color: #ffd300; }
+	}
+	&.crit {
+		background-color: $problems-critical-color;
+		&:link, &:visited, &:active, &:hover { color: #ff0000; }
+	}
+}
+
+// Containers
+.table {
+	display: table;
+	table-layout: fixed;
+	max-width: 100%;
+
+	.table-row-group {
+		display: table-row-group;
+	}
+
+	.table-row {
+		display: table-row;
+
+		.graph-col {
+			padding-top: 15px;
+			width: auto;
+			display: table-cell;
+
+			&:only-child {
+				display: inline-block;
+			}
+		}
+	}
+
+	@media (max-width: 768px) {
+		&, & .table-row, & .table-row .graph-col {
+			display: block;
+		}
+	}
+}
+
+.row-fluid {
+	.graph-col {
+		display: inline-block;
+	}
+
+	// Simple nowrap row
+	&.row-nowrap {
+		white-space: nowrap;
+		// Remove white-space between graphs
+		font-size: 0;
+
+		.row-text {
+			font-size: 14px;
+		}
+	}
+}
+
+// Cols dimensions
+[data-graphext="pngx2"], [data-graphext="svg"] {
+	.graph-col {
+		min-width: 400px;
+		max-width: 625px;
+
+		// [1 graph] < 1260 < [2 graphs]
+		@media (min-width: 1261px) {
+			width: 50%;
+		}
+
+		// Remove min-width on too small devices
+		@media (max-width: 400px) {
+			min-width: 0;
+		}
+
+		.graph {
+			width: 100%;
+		}
+
+		// High-dpi devices: higher max-width
+		@media 	only screen and (-webkit-min-device-pixel-ratio: 1.3),
+				only screen and (-o-min-device-pixel-ratio: 13/10),
+				only screen and (min-resolution: 120dpi) {
+			max-width: 1060px;
+		}
+	}
+}

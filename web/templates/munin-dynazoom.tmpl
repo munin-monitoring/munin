@@ -1,14 +1,14 @@
 <TMPL_INCLUDE NAME="partial/head.tmpl">
 <body>
-<TMPL_UNLESS NAME="CONTENT_ONLY">
+<TMPL_UNLESS CONTENT_ONLY>
 	<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
 </TMPL_UNLESS>
-<div id="main">
-	<TMPL_UNLESS NAME="CONTENT_ONLY">
+<div id="main" <TMPL_IF CONTENT_ONLY>class="no-toolbar"</TMPL_IF>>
+	<TMPL_UNLESS CONTENT_ONLY>
 		<TMPL_INCLUDE NAME="partial/navigation.tmpl">
 	</TMPL_UNLESS>
 	<div id="content">
-		<TMPL_UNLESS NAME="CONTENT_ONLY">
+		<TMPL_UNLESS CONTENT_ONLY>
 			<h2>Graph zoom</h2>
 		</TMPL_UNLESS>
 
@@ -31,31 +31,31 @@
 				<div>
 					<!-- Plugin Name : "domain/hostname" -->
 					<label for="plugin_name">Plugin Name <em>(domain/hostname/plugin_name)</em></label>
-					<div><input type="text" id="plugin_name" name="plugin_name" size="64" /></div>
+					<div><input type="text" id="plugin_name" class="input-compact" name="plugin_name" size="64" /></div>
 				</div>
 
 				<div class="half">
 					<!-- Start and stop -->
 					<label for="start_iso8601">Graph Start / Stop <em>(format: <span id="formatExample"></span>)</em></label>
 					<div>
-						<input type="text" id="start_iso8601" name="start_iso8601" size="24" /> /
-						<input type="text" id="stop_iso8601" name="stop_iso8601" size="24" />
-						<input type="button" id="btnMaj" value="Update" />
+						<input type="text" id="start_iso8601" class="input-compact" name="start_iso8601" size="24" /> /
+						<input type="text" id="stop_iso8601" class="input-compact" name="stop_iso8601" size="24" />
+						<input type="button" id="btnMaj" value="Update" class="button-small" />
 					</div>
 				</div>
 
 				<div class="half">
 					<label for="start_epoch">Epoch</label>
-					<input type="text" id="start_epoch" name="start_epoch" size="10" /> /
-					<input type="text" id="stop_epoch" name="stop_epoch" size="10" />
+					<input type="text" id="start_epoch" class="input-compact" name="start_epoch" size="10" /> /
+					<input type="text" id="stop_epoch" class="input-compact" name="stop_epoch" size="10" />
 				</div>
 
 				<div class="half">
 					<!-- Limit high & low -->
 					<label for="lower_limit">Low / high limit</label>
 					<div>
-						<input type="text" id="lower_limit" name="lower_limit" size="10" /> /
-						<input type="text" id="upper_limit" name="upper_limit" size="10" />
+						<input type="text" id="lower_limit" class="input-compact" name="lower_limit" size="10" /> /
+						<input type="text" id="upper_limit" class="input-compact" name="upper_limit" size="10" />
 					</div>
 				</div>
 
@@ -63,22 +63,24 @@
 					<!-- Image size -->
 					<label for="size_x">Graph size <em>(w/o legend)</em></label>
 					<div>
-						<input type="number" id="size_x" name="size_x" /><div class="inputUnit">px</div> /
-						<input type="number" id="size_y" name="size_y" /><div class="inputUnit">px</div>
+						<input type="number" id="size_x" class="input-compact" name="size_x" /><div class="inputUnit">px</div> /
+						<input type="number" id="size_y" class="input-compact" name="size_y" /><div class="inputUnit">px</div>
 					</div>
 				</div>
 
 				<input type="hidden" id="cgiurl_graph" name="cgiurl_graph" />
+				<input type="hidden" name="content_only" value="<TMPL_VAR CONTENT_ONLY>" />
+				<input type="hidden" id="graph_ext" name="graph_ext" value="<TMPL_VAR GRAPH_EXT>" />
 
-				<input type="submit" value="Submit" />
-				<input type="button" id="btnZoomOut" value="Zoom Out x2" />
+				<button type="submit"><i class="mdi mdi-check"></i> Submit</button>
+				<input type="button" id="btnZoomOut" value="Zoom out x2" />
 				<input type="button" id="reset" value="Reset" />
 			</form>
 		</div>
 	</div>
 </div>
-<script src="/static/js/dynazoom.js"></script>
-<TMPL_UNLESS NAME="CONTENT_ONLY">
+<script src="/static/js/munin-dynazoom.js"></script>
+<TMPL_UNLESS CONTENT_ONLY>
 	<TMPL_INCLUDE NAME="partial/footer.tmpl">
 </TMPL_UNLESS>
 </body>

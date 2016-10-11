@@ -50,8 +50,8 @@ Binary packages:
 
 .. code-block:: bash
 
- pkg_add -r munin-master
- pkg_add -r munin-node
+ pkg install munin-master
+ pkg install munin-node
 
 Debian/Ubuntu
 -------------

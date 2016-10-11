@@ -14,6 +14,9 @@ use English qw(-no_match_vars);
 my %legal = map { $_ => 1 } qw(
 	address
 	always_send
+	carbon_server
+	carbon_port
+	carbon_prefix
 	category_order
 	cdef
 	cdef_name
@@ -30,6 +33,7 @@ my %legal = map { $_ => 1 } qw(
 	dbdir
 	domain_order
 	draw
+	drawstyle
 	dropdownlimit
 	extinfo
 	fetch_data

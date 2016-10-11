@@ -12,6 +12,10 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 use Test::More qw( no_plan );
+
+use File::Temp qw( tempdir );
+my $logdir = tempdir(CLEANUP => 1);
+
 BEGIN { use_ok(Munin::Common::Logger); }
 
 # do we have a log object?
@@ -55,6 +59,31 @@ BEGIN { use_ok(Munin::Common::Logger); }
 
     eval { Munin::Common::Logger::configure( output => 'invalid' ) };
     like( $@, qr{did not pass regex check}, 'invalid log output' );
+
+    eval { Munin::Common::Logger::configure( logdir => 'invalid' ) };
+    like( $@, qr{did not pass regex check}, 'invalid log dir' );
+
+    eval { Munin::Common::Logger::configure( logfile => 'invalid' ) };
+    like( $@, qr{did not pass regex check}, 'invalid log file' );
+
+}
+
+# configure - file
+{
+    ok( Munin::Common::Logger::configure(
+            logdir => $logdir,
+            output => 'file',
+        ),
+        'change log output to file, default level'
+    );
+
+    ok( Munin::Common::Logger::configure(
+            logdir => $logdir,
+            level  => 'warning',
+            output => 'file'
+        ),
+        'change log level to warning, output to file'
+    );
 
 }
 

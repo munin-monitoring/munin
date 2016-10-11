@@ -1,6 +1,8 @@
-use warnings;
 use strict;
+use warnings;
 
-use Test::More tests => 1;
+use lib qw(t/lib);
 
-use_ok('Munin::Master::Host');
+use Munin::Master::Host::Tests;
+
+Test::Class->runtests;

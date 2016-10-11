@@ -2,7 +2,14 @@ use warnings;
 use strict;
 
 use Munin::Master::Config;
-use Test::More tests => 15;
+use Test::More;
+if ($ENV{TEST_MEDIUM}) {
+    plan tests => 15;
+}
+else {
+    plan skip_all => 'set TEST_MEDIUM to enable these tests';
+}
+
 use Test::MockModule;
 use Test::MockObject::Extends;
 use Test::Exception;

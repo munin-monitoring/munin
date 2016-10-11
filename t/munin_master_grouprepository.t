@@ -1,6 +1,8 @@
-use warnings;
 use strict;
+use warnings;
 
-use Test::More tests => 1;
+use lib qw(t/lib);
 
-use_ok('Munin::Master::GroupRepository');
+use Munin::Master::GroupRepository::Tests;
+
+Test::Class->runtests;

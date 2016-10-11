@@ -81,11 +81,12 @@ sub parse_args
 	my $libdir     = "$Munin::Common::Defaults::MUNIN_LIBDIR/plugins";
 
 	my $debug = 0;
+	my $verbose = 0;
 	my $pidebug = 0;
 	my ($suggest, $shell, $removes, $newer);
 	my $exit_not_error = 1;
 	my @families;
-	my (@snmp_hosts, $snmpver, $snmpcomm, $snmpport);
+	my (@snmp_hosts, $snmpver, $snmpcomm, $snmpport, $snmpdomain);
     my ($snmp3username, $snmp3authpass, $snmp3authproto, $snmp3privpass, $snmp3privproto);
 
     print_usage_and_exit() unless GetOptions(
@@ -100,6 +101,7 @@ sub parse_args
         'remove-also!'    => \$removes,
 
         'debug!'          => \$debug,
+        'verbose!'        => \$verbose,
         'pidebug!'        => \$pidebug,
 
         # paths
@@ -113,6 +115,7 @@ sub parse_args
         'snmp=s'          => \@snmp_hosts,
         'snmpversion=s'   => \$snmpver,
         'snmpport=i'      => \$snmpport,
+        'snmpdomain=s'    => \$snmpdomain,
         # SNMPv1/2c
         'snmpcommunity=s' => \$snmpcomm,
         # SNMPv3
@@ -141,6 +144,7 @@ sub parse_args
         hosts        => \@snmp_hosts,
         version      => $snmpver,
         port         => $snmpport,
+        domain       => $snmpdomain,
 
         community    => $snmpcomm,
 
@@ -178,6 +182,7 @@ sub parse_args
         servicedir => $servicedir,  # needed for creating/removing links
         sconfdir   => $sconfdir,
 
+        VERBOSE => $verbose,
         DEBUG   => $debug,
     });
 
@@ -468,6 +473,10 @@ to install the plugins.
 
 =over 4
 
+=item B<< --verbose >>
+
+Be verbose.
+
 =item B<< --help >>
 
 Show this help page.
@@ -582,6 +591,12 @@ The SNMP version (1, 2c or 3) to use. ['2c']
 =item B<< --snmpport <port> >>
 
 The SNMP port to use [161]
+
+=item B<< --snmpdomain <domain> >>
+
+The Transport Domain to use for exchanging SNMP messages. The default
+is UDP/IPv4. Possible values: 'udp', 'udp4', 'udp/ipv4'; 'udp6',
+'udp/ipv6'; 'tcp', 'tcp4', 'tcp/ipv4'; 'tcp6', 'tcp/ipv6'.
 
 =item B<SNMP 1/2c authentication>
 

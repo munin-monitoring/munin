@@ -1,33 +1,42 @@
-<div class="navContainer">
-	<div id="navToggle">Toggle navigation menu</div>
-	<div id="nav">
-		<h2>Problems</h2>
-		<ul>
-			<li><div class="badge"><TMPL_VAR NAME="NCRITICAL"></div><a href="/problems.html#critical">Critical</a></li>
-			<li><div class="badge"><TMPL_VAR NAME="NWARNING"></div><a href="/problems.html#warnings">Warning</a></li>
-			<li><div class="badge"><TMPL_VAR NAME="NUNKNOWN"></div><a href="/problems.html#unknowns">Unknown</a></li>
-		</ul>
-		<hr />
-		<h2>Groups</h2>
-		<ul>
-		<TMPL_LOOP NAME="ROOTGROUPS">
-			<li><a href="/<TMPL_VAR NAME="URL">"><TMPL_VAR NAME="NAME"></a></li>
-		</TMPL_LOOP>
-		</ul>
-		<hr />
-		<h2>Categories</h2>
-		<ul class="categories">
-		<TMPL_LOOP NAME="GLOBALCATS">
-			<li>
-				<div class="timerangesList">
-					<a href="/<TMPL_VAR NAME="URLDAY">">d</a>
-					<a href="/<TMPL_VAR NAME="URLWEEK">">w</a>
-					<a href="/<TMPL_VAR NAME="URLMONTH">">m</a>
-					<a href="/<TMPL_VAR NAME="URLYEAR">">y</a>
-				</div>
-				<a href="/<TMPL_VAR NAME="URLDAY">"><TMPL_VAR NAME="NAME"></a>
-			</li>
-		</TMPL_LOOP>
-		</ul>
+<nav class="<TMPL_IF NAV_PANEL_FOLD>fold</TMPL_IF> <TMPL_IF NAV_PANEL_FORCE_FOLD>force-fold</TMPL_IF>">
+	<div class="navigation-wrapper">
+		<div class="navigation">
+			<div class="show-mobile">
+				<div class="logo"></div>
+			</div>
+			<hr />
+
+			<h2>Problems</h2>
+			<ul>
+				<li><div class="badge"><TMPL_VAR NCRITICAL></div><a href="/problems.html#critical">Critical</a></li>
+				<li><div class="badge"><TMPL_VAR NWARNING></div><a href="/problems.html#warning">Warning</a></li>
+				<li><div class="badge"><TMPL_VAR NUNKNOWN></div><a href="/problems.html#unknown">Unknown</a></li>
+			</ul>
+			<hr />
+
+			<h2>Groups</h2>
+			<ul>
+				<TMPL_LOOP ROOTGROUPS>
+					<li><a href="/<TMPL_VAR URL>"><TMPL_VAR NAME></a></li>
+				</TMPL_LOOP>
+			</ul>
+			<hr />
+
+			<h2>Categories</h2>
+			<ul class="categories">
+				<TMPL_LOOP GLOBALCATS>
+					<li>
+						<div class="timerangesList">
+							<a href="/<TMPL_VAR URLDAY>">d</a>
+							<a href="/<TMPL_VAR URLWEEK>">w</a>
+							<a href="/<TMPL_VAR URLMONTH>">m</a>
+							<a href="/<TMPL_VAR URLYEAR>">y</a>
+						</div>
+						<a href="/<TMPL_VAR URLDAY>"><TMPL_VAR NAME></a>
+					</li>
+				</TMPL_LOOP>
+			</ul>
+		</div>
 	</div>
-</div>
+</nav>
+<div class="navigation-mask"></div>

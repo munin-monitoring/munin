@@ -1,31 +1,59 @@
-<div class="header">
-	<a href="/" class="logo"></a>
+<header>
+	<div class="left">
+		<div class="actions">
+			<div id="navigation-toggle" class="action-icon">
+				<i class="mdi mdi-menu"></i>
+			</div>
+		</div>
+		<a href="/" class="logo logo-neg"></a>
+	</div>
+	<div class="right">
+		<div class="filter" style="display: none;">
+			<i class="mdi mdi-magnify"></i>
+			<input type="text" id="filter" />
+			<i id="cancelFilter" class="mdi mdi-window-close" style="display:none;"></i>
+		</div>
+		<div class="actions"></div>
+	</div>
 	<div class="pageTitle">
 		<h1>
-			<TMPL_LOOP NAME="PATH">
-				<TMPL_IF NAME="PATHNAME"> &bull;
-					<TMPL_IF NAME="PATH"><a href="<TMPL_VAR NAME="PATH">"></TMPL_IF><TMPL_VAR NAME="PATHNAME"><TMPL_IF NAME="PATH"></a></TMPL_IF>
+			<TMPL_LOOP PATH>
+				<TMPL_IF PATHNAME> <i class="mdi mdi-chevron-right"></i>
+					<TMPL_IF PATH>
+						<a href="<TMPL_VAR PATH>"><!--
+					<TMPL_ELSE>
+						<TMPL_IF SWITCHABLE>
+							<div class="switchable" data-switch="header"><!--
+						<TMPL_ELSE>
+							<!--
+						</TMPL_IF>
+					</TMPL_IF>
+					--><TMPL_VAR PATHNAME><!--
+					<TMPL_IF PATH>
+						--></a>
+					<TMPL_ELSE>
+						<TMPL_IF SWITCHABLE>
+							--></div>
+						<TMPL_ELSE>
+							-->
+						</TMPL_IF>
+					</TMPL_IF>
 				<TMPL_ELSE>
-					<TMPL_IF NAME="PATH"><a href="<TMPL_VAR NAME="PATH">"></TMPL_IF>Overview<TMPL_IF NAME="PATH"></a></TMPL_IF>
+					<a href="/">Overview</a>
 				</TMPL_IF>
 			</TMPL_LOOP>
-			[
-			<a href="comparison-day.html">day</a>
-			<a href="comparison-week.html">week</a>
-			<a href="comparison-month.html">month</a>
-			<a href="comparison-year.html">year</a> ]
+			<i class="mdi mdi-chevron-right"></i> Comparison
 		</h1>
-		<div class="subtitle">
-			<span class="categories">
-				<TMPL_VAR NAME="NAME"> [
-				<TMPL_LOOP NAME="CATEGORIES">
-					<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
-					  <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF>
-					  href="#<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">"><TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME"></a>
-				</TMPL_LOOP>
-				]
-			</span>
-		</div>
 	</div>
 	<div class="clear"></div>
-</div>
+	<TMPL_IF LARGESET>
+		<div class="switchable_content" data-switch="header">
+			<div class="title"><TMPL_VAR INFO_OPTION></div>
+			<TMPL_LOOP PEERS>
+				<a <TMPL_IF LINK>href="<TMPL_VAR LINK>"</TMPL_IF>>
+					<TMPL_VAR NAME>
+				</a>
+			</TMPL_LOOP>
+		</div>
+	</TMPL_IF>
+</header>

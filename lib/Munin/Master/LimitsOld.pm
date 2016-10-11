@@ -50,6 +50,7 @@ use Munin::Master::Utils;
 use Munin::Common::Defaults;
 
 my $DEBUG          = 0;
+my $VERBOSE        = 0;
 my $conffile       = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 my $do_usage       = 0;
 my $do_version     = 0;
@@ -59,6 +60,7 @@ my @limit_contacts = ();
 my @always_send    = ();
 my $screen         = 0;
 my $force          = 0;
+my $verbose        = 0;
 my $force_run_as_root = 0;
 my %notes          = ();
 my $config;
@@ -85,6 +87,7 @@ sub limits_startup {
         "contact=s" => \@limit_contacts,
         "config=s"  => \$conffile,
         "debug"     => \$DEBUG,
+        "verbose"   => \$VERBOSE,
         "screen"    => \$screen,
         "force!"    => \$force,
         "always-send=s" => \@always_send,

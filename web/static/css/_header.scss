@@ -1,0 +1,232 @@
+/**
+ * Header-specific styling
+ * Imported in _layout.scss
+ */
+
+.logo {
+	display: inline-block;
+	width: 118px;
+	height: 34px;
+	background-repeat: no-repeat;
+	background-position: 4px 2px;
+	background-size: 115px 30px;
+
+	// Normal version (black)
+	& {
+		/* SVG logo: fallback to png */
+		background-image: url('../img/logo-h.png');
+		background-image: linear-gradient(transparent, transparent), url('../img/logo-h.svg');
+	}
+
+	// Negative version (white)
+	&.logo-neg {
+		/* SVG logo: fallback to png */
+		background-image: url('../img/logo-h-neg.png');
+		background-image: linear-gradient(transparent, transparent), url('../img/logo-h-neg.svg');
+	}
+}
+
+header {
+	color: #fff;
+	min-height: 45px;
+	margin: 0 auto;
+	padding: 1px 12px 1px 0;
+	text-align: center;
+	background-color: $primary-color;
+	z-index: 5;
+	border-bottom: 1px solid #3A713C;
+	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.5));
+	@include box-sizing(border-box);
+
+	// Fixed position
+	position: fixed;
+	width: 100%;
+	top: 0;
+	@include transition(transform 200ms linear);
+	transform: translateY(0%);
+
+	&.toolbar-hide {
+		transform: translateY(-100%);
+	}
+
+	h1 {
+		color: #fff;
+		margin: 0;
+		cursor: default;
+		font-size: 15px;
+		font-weight: 400;
+	}
+
+	.left {
+		float: left;
+		font-size: 0;
+
+		.logo {
+			margin-top: 5px;
+			@include transition-duration(200ms);
+			@include opacity(0.9);
+
+			&:hover {
+				@include opacity(1);
+			}
+		}
+	}
+
+	.pageTitle {
+		font-weight: 100;
+		margin-top: 7px;
+		min-height: 24px;
+		font-size: 16px;
+		color: #eee;
+		text-align: center;
+		display: inline-block;
+		@include box-sizing(border-box);
+
+		h1 {
+			display: inline-block;
+			vertical-align: middle;
+			padding-top: 4px;
+		}
+
+		a, div.switchable {
+			display: inline-block;
+			color: #fff;
+			@include transition-duration(200ms);
+			padding: 2px 6px;
+			@include border-radius(2px);
+			border: 1px solid transparent;
+			white-space: nowrap;
+			margin: -4px 0 4px 0;
+
+			&:hover {
+				color: #fff;
+				background-color: rgba(0, 0, 0, 0.15);
+				text-decoration: none;
+			}
+		}
+	}
+
+	.right {
+		float: right;
+	}
+
+	.actions {
+		display: inline-block;
+		margin-left: 5px;
+		vertical-align: top;
+	}
+
+	.action-icon {
+		display: inline-block;
+		width: 31px;
+		height: 31px;
+		overflow: hidden;
+		cursor: pointer;
+		margin: 5px 0 0 5px;
+		vertical-align: middle;
+		@include transition-duration(150ms);
+		@include border-radius(2px);
+		@include user-select(none);
+
+		i {
+			font-size: 19px;
+			padding: 6px;
+		}
+
+		&:hover {
+			background-color: rgba(0, 0, 0, 0.15);
+		}
+
+		&.pressed {
+			@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+			background-color: rgba(0, 0, 0, 0.2);
+		}
+
+		// Adjustments for single items
+		&#navigation-toggle i {
+			font-size: 20px;
+			padding-top: 5px;
+			padding-bottom: 7px;
+		}
+	}
+}
+
+/* Filter input */
+.filter {
+	width: 300px;
+	margin-top: 4px;
+	position: relative;
+	text-align: right;
+	display: inline-block;
+	vertical-align: top;
+
+	input[type=text] {
+		width: 250px;
+		height: auto;
+		padding: 9px 28px 9px 31px;
+		border: 0;
+		color: #fff;
+		color: rgba(255, 255, 255, 0.9);
+		font-size: 12px;
+		@include transition-duration(150ms);
+		@include box-shadow(none);
+		@include box-sizing(border-box);
+		background-color: rgb(44, 113, 47);
+		background-color: rgba(0, 0, 0, 0.2);
+
+		&:hover {
+			background-color: rgba(0, 0, 0, 0.22);
+		}
+
+		&:focus {
+			outline: none;
+			background-color: rgb(39, 99, 41);
+			background-color: rgba(0, 0, 0, 0.3);
+			width: 300px;
+		}
+
+		/* Placeholder text color */
+		&::-webkit-input-placeholder {
+			color: #ffffff;
+			@include opacity(0.8);
+		}
+		&:-moz-placeholder { /* Firefox 18- */
+			color: #ffffff;
+			@include opacity(0.8);
+		}
+		&::-moz-placeholder {  /* Firefox 19+ */
+			color: #ffffff;
+			@include opacity(0.8);
+		}
+		&:-ms-input-placeholder {
+			color: #ffffff;
+			@include opacity(0.8);
+		}
+
+		/* Hide IE's cross on text field */
+		&::-ms-clear {
+			display: none;
+		}
+	}
+
+	.mdi-window-close {
+		@include opacity(0.8);
+		cursor: pointer;
+		position: absolute;
+		top: 0;
+		right: 0;
+		padding: 9px;
+	}
+
+	.mdi-magnify {
+		@include opacity(0.8);
+		margin-right: -28px;
+		font-size: 18px;
+		vertical-align: middle;
+		position: relative;
+	}
+
+	#overview-search-noresult {
+		margin: 30px 15px;
+	}
+}
