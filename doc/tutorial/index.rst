@@ -28,3 +28,4 @@ also read :ref:`Part III <install-index>`.
    nagios.rst
    advanced-features.rst
    monitoring-the-unreachable.rst
+   troubleshooting.rst
