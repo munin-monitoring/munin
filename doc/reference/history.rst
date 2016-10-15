@@ -33,6 +33,9 @@ July 2014
 Glossary
 ========
 
+.. index::
+   single: Munin Exchange
+
 .. _Munin-Exchange:
 
 Munin Exchange

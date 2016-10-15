@@ -27,5 +27,6 @@ also read :ref:`Part III <install-index>`.
    alert.rst
    nagios.rst
    advanced-features.rst
+   extraordinary-usage.rst
    monitoring-the-unreachable.rst
    troubleshooting.rst
