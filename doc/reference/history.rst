@@ -47,6 +47,6 @@ So it was decided to move all the plugins repository over to github branch "cont
 Github is now the official way of contributing 3rd-party plugins to
 get them included in the core collection by the Munin developer team.
 
-They are tagged with **familiy contrib** (see: ``--family contrib``) in :ref:`munin-node-configure <munin-node-configure>`.
+They are tagged with **familiy contrib** (see: :option:`--families` in :ref:`munin-node-configure`).
 
 See also: :ref:`munin-gallery`
