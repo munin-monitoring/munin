@@ -72,7 +72,7 @@ contrib
    triple: magic marker; family; test
 
 test
-    This is a test plugin. It does used when testing munin.
+    This is a test plugin. It is used when testing munin.
 
 .. index::
    triple: magic marker; family; example
