@@ -209,7 +209,7 @@ Global attributes
   | Decides whether munin-update should fetch data for the graph.
   |
   | Note that the graph will be shown even if updates are disabled and then be blank.
-:See also:
+:See also: Set to ``no`` when dealing with :ref:`Graph aggregation <example-plugin-aggregate>` and/or :ref:`loaning data <example-aggregated-stack>`.
 :Default: 'yes'
 
 .. _update_rate:
