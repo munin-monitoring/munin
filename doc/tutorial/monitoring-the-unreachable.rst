@@ -34,6 +34,8 @@ that contains very useful information.
 
 .. image:: MuninSSHForwarding.png
 
+.. _xinetd-bouncing:
+
 Bouncing
 --------
 

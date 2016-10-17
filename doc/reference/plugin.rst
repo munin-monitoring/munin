@@ -80,10 +80,10 @@ Global attributes
 :Value: space separated list of data sources (fieldnames)
 :Type: optional
 :Description:
-  | Ensures that the listed fields are displayed in specified order. Any additional fields are added in the order of appearance after fields appearing on this list.
+  | Ensures that the listed fields are displayed in specified order. Any additional fields are added in the order of appearance after fields appearing on this list. This attribute is useful when STACKing data sources with :ref:`fieldname.draw <fieldname.draw>`.
   |
-  | This attribute is also used for "loaning", which is the practice of taking data sources from other graphs.
-:See also: `Loaning Data <http://munin-monitoring.org/wiki/LoaningData>`_
+  | It's also used for :ref:`loaning data <example-plugin-aggregate>` from other data sources (other plugins), which enables Munin to :ref:`create aggregate or other kinds of combined graphs <aggregate-graphs>`.
+:See also: `Loaning Data <http://munin-monitoring.org/wiki/LoaningData>`_, :ref:`Aggregate Graphs <aggregate-graphs>`
 :Default:
 
 ============
@@ -402,7 +402,7 @@ Data source attributes
 :Value: GAUGE|COUNTER|DERIVE|ABSOLUTE
 :Type: optional
 :Description: Sets the RRD Data Source Type for this field. The values **must** be written in capitals. The type used may introduce restrictions for ``{fieldname.value}``.
-:See also: rrdcreate_
+:See also: :ref:`Datatypes <datatypes>`, rrdcreate_
 :Default: GAUGE
 
 .. Note::
