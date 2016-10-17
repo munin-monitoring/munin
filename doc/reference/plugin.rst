@@ -44,10 +44,13 @@ Global attributes
 .. _graph_category:
 
 :Attribute: **graph_category**
-:Value: lower case string, no whitespace
+:Value: string (Allowed characters: [a-z0-9-.])
 :Type: optional
-:Description: Category used to sort the graph on the generated index web page.
-:See also: `Well known categories <http://munin-monitoring.org/wiki/graph_category_list>`_
+:Description: 
+  | Name of the category used to sort the graphs on the generated index web page.
+  | Lower case string as we like a consistent view and want to avoid duplicates.
+  | No whitespace as this makes the build of Munin Gallery a lot easier.
+:See also: `Well known categories <http://munin-monitoring.org/wiki/graph_category_list>`_, `Plugin Gallery <http://munin-monitoring.org/wiki/PluginGallery>`_
 :Default: 'other'
 
 ============
