@@ -27,7 +27,7 @@ The first example shows how to create a graph by loaning data from other sources
 
 Line 06 is only a placeholder, which will be populated later by using :ref:`sum <fieldname.sum>` and :ref:`cdef <fieldname.cdef>`.
 
-:: 
+::
 
   01     temperatures.update no
   02     temperatures.graph_args --base 1000 -l 0
@@ -61,9 +61,9 @@ Explanations, per line
 * 01 - 04: The usual headers
 * 05 - 11: Defines the graph order, where 5 out of 6 data sources are borrowed elsewhere
   Note: Line 11 defines a not yet "populated" data source.
-* 12 - 17: Sums 5 other data sources (temperatures from 5 disks), 
+* 12 - 17: Sums 5 other data sources (temperatures from 5 disks),
   into the "donald_disk" data source
-* 18: Divides the "donald_disk" data source by the number of sources (5) 
+* 18: Divides the "donald_disk" data source by the number of sources (5)
   to create an average
 * 19 - 24: Labels to make it all look neat
 
