@@ -43,7 +43,7 @@ Suggests:
  logtail,
  munin,
  munin-plugins-java,
- mysql-client,
+ default-mysql-client,
  net-tools,
  python,
  ruby,
