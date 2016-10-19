@@ -1,4 +1,4 @@
-munin (2.0.26-3) UNRELEASED; urgency=medium
+munin (2.0.26-3) unstable; urgency=medium
 
   * Add depends to lsb-base to munin and munin-async, thanks lintian.
   * Change munin-node's depends on mysql-client to default-mysql-client,
@@ -8,7 +8,7 @@ munin (2.0.26-3) UNRELEASED; urgency=medium
     not even part of oldstable. Also remove all "Provides: munin-plugins"
     except one.
 
- -- Holger Levsen <holger@debian.org>  Wed, 19 Oct 2016 23:14:45 +0200
+ -- Holger Levsen <holger@debian.org>  Wed, 19 Oct 2016 23:26:07 +0200
 
 munin (2.0.26-2) unstable; urgency=medium
 
