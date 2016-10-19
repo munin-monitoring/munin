@@ -219,6 +219,7 @@ Description: network-wide graphing framework (async master/client)
 Package: munin-doc
 Section: doc
 Architecture: all
+Multi-Arch: same
 Depends: ${perl:Depends}, ${misc:Depends}
 Breaks: munin-common (<< 2)
 Replaces: munin-common (<< 2)
