@@ -24,7 +24,7 @@ Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
  gawk,
  libnet-server-perl,
- lsb-base (>= 3.2-4),
+ lsb-base (>= 4.1),
  munin-common (>= ${binary:Version}),
  munin-plugins-core,
  procps,
@@ -144,6 +144,7 @@ Description: network-wide graphing framework (java plugins for node)
 Package: munin
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
+ lsb-base (>= 4.1),
  cron | cron-daemon,
  fonts-dejavu | ttf-dejavu,
  libdate-manip-perl,
@@ -199,6 +200,7 @@ Description: network-wide graphing framework (common)
 Package: munin-async
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
+ lsb-base (>= 4.1),
  adduser,
  munin-common (>= ${binary:Version}),
  munin-node,

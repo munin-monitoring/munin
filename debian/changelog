@@ -1,3 +1,9 @@
+munin (2.0.26-3) UNRELEASED; urgency=medium
+
+  * Add depends to lsb-base to munin and munin-async, thanks lintian.
+
+ -- Holger Levsen <holger@debian.org>  Wed, 19 Oct 2016 23:14:45 +0200
+
 munin (2.0.26-2) unstable; urgency=medium
 
   * Fix typos in munin.NEWS and munin-node.README.Debian, thanks lintian.
