@@ -4,6 +4,9 @@ munin (2.0.26-3) UNRELEASED; urgency=medium
   * Change munin-node's depends on mysql-client to default-mysql-client,
     thanks lintian.
   * Set "Multi-Arch: same" for munin-doc.
+  * Remove Breaks: and Replaces: on munin* packages lower than 2.0, those are
+    not even part of oldstable. Also remove all "Provides: munin-plugins"
+    except one.
 
  -- Holger Levsen <holger@debian.org>  Wed, 19 Oct 2016 23:14:45 +0200
 

@@ -65,12 +65,8 @@ Description: network-wide graphing framework (node)
 Package: munin-plugins-core
 Provides: munin-plugins
 Replaces:
- munin-node (<<1.999.4548-3~),
- munin-plugins (<<1.999.4548-3~),
  munin-plugins-extra (<<2.0.21-1),
 Breaks:
- munin-node (<<1.999.4548-3~),
- munin-plugins (<<1.999.4548-3~),
  munin-plugins-extra (<<2.0.21-1),
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, munin-common (>= ${binary:Version})
@@ -108,7 +104,6 @@ Package: munin-plugins-extra
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends}, munin-common (>= ${binary:Version})
 Suggests: libnet-netmask-perl, python, libnet-telnet-perl
-Provides: munin-plugins
 Description: network-wide graphing framework (user contributed plugins for node)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
@@ -126,9 +121,6 @@ Architecture: all
 Depends: ${misc:Depends},
  default-jre-headless | java6-runtime-headless | java5-runtime-headless | java2-runtime-headless,
  munin-common (>= ${binary:Version}),
-Provides: munin-plugins
-Replaces: munin-java-plugins (<<1.999.4548-3~)
-Breaks: munin-java-plugins (<<1.999.4548-3~)
 Description: network-wide graphing framework (java plugins for node)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
@@ -221,8 +213,6 @@ Section: doc
 Architecture: all
 Multi-Arch: same
 Depends: ${perl:Depends}, ${misc:Depends}
-Breaks: munin-common (<< 2)
-Replaces: munin-common (<< 2)
 Description: network-wide graphing framework (documentation)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
