@@ -236,6 +236,22 @@ Global attributes
 Data source attributes
 ======================
 
+.. _notes-on-fieldnames:
+
+Notes on field names
+--------------------
+
+Each data source in a plugin must be identified by a field name.
+
+The characters must be ``[a-zA-Z0-9_]``, while the first character must be ``[a-zA-Z_]``.
+
+Reserved keyword(s): A field must not be named ``root``. If it's done `Graph generation would be stopped <http://munin-monitoring.org/ticket/921>`_.
+
+In earlier versions of Munin the fieldname may not exceed 19 characters in length.  Since munin 1.2 this limit has been circumvented.
+
+Field name attributes
+---------------------
+
 .. _fieldname.cdef:
 
 :Attribute: **{fieldname}.cdef**

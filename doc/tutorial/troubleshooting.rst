@@ -70,6 +70,7 @@ E.g. if the masters node tree has the following entry:
 
  If the connection test fails, check the :ref:`allow directive <initial_configuration>` in :ref:`munin-node.conf` and make sure any firewalls allow contact on destination port 4949.
 
+.. _debugging-plugins:
 
 Debugging Plugins
 =======================
@@ -286,7 +287,7 @@ Other mumbo-jumbo
       --service df"
 
 
-See Also
+See also
 ========
 
  * `No Graph FAQ <http://munin-monitoring.org/wiki/FAQ_no_graphs>`_
