@@ -211,7 +211,7 @@ Description: network-wide graphing framework (async master/client)
 Package: munin-doc
 Section: doc
 Architecture: all
-Multi-Arch: same
+Multi-Arch: foreign
 Depends: ${perl:Depends}, ${misc:Depends}
 Description: network-wide graphing framework (documentation)
  Munin is a highly flexible and powerful solution used to create graphs of

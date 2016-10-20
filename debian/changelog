@@ -1,3 +1,9 @@
+munin (2.0.26-4) unstable; urgency=medium
+
+  * Fix brown paper bag bug: set "Multi-Arch: foreign" for munin-doc.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 20 Oct 2016 18:38:19 +0200
+
 munin (2.0.26-3) unstable; urgency=medium
 
   * Add depends to lsb-base to munin and munin-async, thanks lintian.
