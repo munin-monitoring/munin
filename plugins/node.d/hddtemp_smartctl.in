@@ -24,7 +24,7 @@ The following environment variables are used
              used.
  dev_$dev  - monitoring device for one drive, e.g. twe0
 
-If the "smartctl" enviroment variable is not set the plugin will
+If the "smartctl" environment variable is not set the plugin will
 search your $PATH, /usr/bin, /usr/sbin, /usr/local/bin and
 /usr/local/sbin for a file called "smartctl", and use that.
 
@@ -40,6 +40,9 @@ attempt to search for drives to probe.
 
 Copyright (c) 2005, Lutz Peter Christoph
 All rights reserved.
+
+2016-08-27, Gabriele Pohl (contact@dipohl.de)
+Fix for github issue #690
 
 =head1 LICENSE
 
@@ -162,7 +165,7 @@ if ($^O eq 'linux') {
   
 } elsif ($^O eq 'freebsd') {
   opendir(DEV, '/dev');
-  @drives = grep /^ad[0-9]+$/, readdir DEV;
+  @drives = grep /^(ada?|da)[0-9]+$/, readdir DEV;
   closedir(DEV);
 } elsif ($^O eq 'solaris') {
   @drives = map { s@.*/@@ ; $_ } glob '/dev/rdsk/c*t*d*s2';
@@ -224,11 +227,32 @@ foreach my $drive (@drives) {
   warn "[DEBUG] Command for $drive is % $cmd %\n" if $DEBUG;
 
   my $output = `$cmd`;
-  if ($? ne 0) {
-      print "$drive.value U\n";
-      print "$drive.extinfo Command $cmd on drive $drive failed: $?.  The plugin needs to have read permission on all monitored devices.\n";
-      warn "[ERROR] Command $cmd on drive $drive failed: $?.  The plugin needs to have read permission on all monitored devices.\n";
-      next;
+  my $cmd_exit = $?;
+
+  # Strip header
+  $output =~ s/.*?\n\n//s;
+  # Strip trailer
+  $output =~ s/Please specify device type with the -d option.\n//s;
+  $output =~ s/Use smartctl -h to get a usage summary//s;
+  $output =~ s/\n+$//s;
+
+  if ($cmd_exit != 0) {
+    print "$drive.value U\n";
+    if ($cmd_exit == -1) {
+      warn "[ERROR] Command $cmd on drive $drive failed to execute: $!";
+    } else {
+      my $smartctl_exit = $cmd_exit >> 8;
+      print "$drive.extinfo Command '$cmd' on drive $drive failed with exit($smartctl_exit)\n";
+
+      # exit (2) is a normal state with directive "--nocheck=standby" when device is in STANDBY or SLEEP mode
+      if ($smartctl_exit == 2 and $use_nocheck) {
+        if ($output =~ /(?:standby|sleep)/i) {
+          next;
+        }
+      }
+      warn "[ERROR] Command $cmd on drive $drive failed with exit($smartctl_exit): $output";
+    }
+    next;
   }
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
     print "$drive.value $1\n";
@@ -236,6 +260,9 @@ foreach my $drive (@drives) {
     my @F = split /\s+/, $1;
     print "$drive.value $F[9]\n";
   } elsif ($output =~ /^(231 Temperature_Celsius.*)/m) {
+    my @F = split ' ', $1;
+    print "$drive.value $F[9]\n";
+  } elsif ($output =~ /^(190 Airflow_Temperature_Cel.*)/m) {
     my @F = split ' ', $1;
     print "$drive.value $F[9]\n";
   } else {
