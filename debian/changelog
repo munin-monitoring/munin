@@ -1,3 +1,10 @@
+munin (2.0.27-1) unstable; urgency=medium
+
+  * New upstream version, (Closes: #767032, #768553, #825136, #834194), see
+    upstream ChangeLog for details.
+
+ -- Holger Levsen <holger@debian.org>  Mon, 31 Oct 2016 21:59:54 +0100
+
 munin (2.0.26-4) unstable; urgency=medium
 
   * Fix brown paper bag bug: set "Multi-Arch: foreign" for munin-doc.
