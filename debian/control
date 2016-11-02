@@ -338,6 +338,7 @@ Description: perl bindings for Postgresql munin plugins
 Package: munin
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
+ lsb-base (>= 3.0-6),
  adduser,
  cron | cron-daemon,
  fonts-dejavu,

@@ -5,6 +5,8 @@ munin (2.999.3-2) UNRELEASED; urgency=medium
       lintian.
     - remove dependency on perl-modules as munin-async already depends on
       ${perl:Depends}, thanks lintian.
+    - add a depends on lsb-base (>= 3.0-6) for the munin binary package,
+      thanks lintian.
   * debian/munin.munin-httpd.service: remove whitespace from key definition,
     thanks lintian.
 
