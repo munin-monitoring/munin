@@ -394,8 +394,7 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  adduser,
  munin-common (>= ${binary:Version}),
- munin-node,
- perl-modules,
+ munin-node
 Description: network-wide graphing framework (async master/client)
  Munin is a highly flexible and powerful solution used to create
  graphs of virtually everything imaginable throughout your network,
