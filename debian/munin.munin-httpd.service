@@ -6,7 +6,7 @@ Documentation=man:munin-httpd http://guide.munin-monitoring.org/en/latest/refere
 Type=simple
 Restart=always
 User=munin-httpd
-Environment= "RRDCACHED_ADDRESS=/run/munin/flush.sock"
+Environment="RRDCACHED_ADDRESS=/run/munin/flush.sock"
 ExecStart=/usr/bin/munin-httpd
 PrivateDevices=true
 PrivateTmp=true
