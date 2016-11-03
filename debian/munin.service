@@ -1,0 +1,23 @@
+[Unit]
+Description=Munin networked resource monitoring
+Documentation=man:munin http://guide.munin-monitoring.org/en/latest/reference/munin.html
+
+[Service]
+Type=simple
+Restart=always
+User=munin
+ExecStart=/usr/bin/rrdcached -g \
+  -p /run/munin/rrdcached.pid \
+  -w 1800 -z 1800 -f 3600 \
+  -B -b /var/lib/munin \
+  -j /var/spool/munin/update \
+  -m 0600 -l /run/munin/update.sock \
+  -m 0660 -P FLUSH -l /run/munin/flush.sock
+PrivateDevices=true
+PrivateNetwork=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

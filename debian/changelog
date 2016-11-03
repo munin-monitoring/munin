@@ -1,3 +1,10 @@
+munin (2.0.27-2) UNRELEASED; urgency=medium
+
+  * Add debian/munin.service and remove debian/munin.links as that linked the
+    service file to /dev/null. (Closes: #837788) 
+
+ -- Holger Levsen <holger@debian.org>  Thu, 03 Nov 2016 14:26:03 +0100
+
 munin (2.0.27-1) unstable; urgency=medium
 
   * New upstream version, (Closes: #767032, #768553, #825136, #834194), see
