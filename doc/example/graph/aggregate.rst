@@ -1,7 +1,10 @@
 .. _example-plugin-aggregate:
 .. index::
    single: Aggregating munin plugins
+   pair: data source; loan
    pair: plugin; aggregate
+   pair: plugin; virtual
+   pair: virtual; node
 
 ==============================
  Graph aggregation by example
@@ -187,5 +190,6 @@ field name, namely "output" (lines 31 - 35).
 Further reading
 ===============
 
+ * :ref:`Graph aggregation stacking example <example-aggregated-stack>`
  * :ref:`Using SNMP plugins <tutorial-snmp>`
  * :ref:`munin.conf <munin.conf>` directives explained

@@ -15,6 +15,7 @@ Examples of munin and related configuration are gathered here.
    rrdcached/upstart.rst
    rrdcached/systemd.rst
    graph/aggregate.rst
+   graph/aggregated-stack.rst
    tips/multimaster.rst
    transport/ssh.rst
    service/service.rst

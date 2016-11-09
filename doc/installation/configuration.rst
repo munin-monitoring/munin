@@ -1,3 +1,5 @@
+.. _initial_configuration:
+
 =======================
  Initial configuration
 =======================

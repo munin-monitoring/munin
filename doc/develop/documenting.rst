@@ -37,6 +37,8 @@ section in the plugins code file accordingly.
 Finally send a patch or a pull request on github to help us improve
 the plugins documentation.
 
+.. _munin-gallery:
+
 Munin Gallery
 =============
 
