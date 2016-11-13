@@ -26,11 +26,11 @@ Plugin Documentation
 Plugin documentation is included in each plugin, written using the POD
 [#]_ style format
 
-The command line utility :ref:`munin-doc` can be used to display the
-info pages about the plugins.  Call ``munin-doc buddyinfo`` to get the
+The command line utility :ref:`munindoc` can be used to display the
+info pages about the plugins.  Call ``munindoc buddyinfo`` to get the
 documentation for plugin ``buddyinfo``.
 
-Have a look at the `munin-doc instruction page in our Trac wiki
+Have a look at the `munindoc instruction page in our Trac wiki
 <http://munin-monitoring.org/wiki/munindoc>`_ and edit or add the pod
 section in the plugins code file accordingly.
 

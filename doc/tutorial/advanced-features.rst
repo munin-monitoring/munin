@@ -5,6 +5,9 @@ Introduction
 ------------
 Alias
 -----
+
+.. _aggregate-graphs:
+
 Aggregate graphs
 ----------------
 

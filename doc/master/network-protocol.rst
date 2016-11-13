@@ -46,6 +46,7 @@ nodes
 
 .. index::
    triple: protocol; command; config
+.. _plugin-config:
 
 config *<query-item>*
     Shows the plugins configuration items. See the config protocol for a full description.

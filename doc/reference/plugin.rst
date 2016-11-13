@@ -44,10 +44,13 @@ Global attributes
 .. _graph_category:
 
 :Attribute: **graph_category**
-:Value: lower case string, no whitespace
+:Value: string (Allowed characters: [a-z0-9-.])
 :Type: optional
-:Description: Category used to sort the graph on the generated index web page.
-:See also: `Well known categories <http://munin-monitoring.org/wiki/graph_category_list>`_
+:Description: 
+  | Name of the category used to sort the graphs on the generated index web page.
+  | Lower case string as we like a consistent view and want to avoid duplicates.
+  | No whitespace as this makes the build of Munin Gallery a lot easier.
+:See also: `Well known categories <http://munin-monitoring.org/wiki/graph_category_list>`_, `Plugin Gallery <http://munin-monitoring.org/wiki/PluginGallery>`_
 :Default: 'other'
 
 ============
@@ -80,10 +83,10 @@ Global attributes
 :Value: space separated list of data sources (fieldnames)
 :Type: optional
 :Description:
-  | Ensures that the listed fields are displayed in specified order. Any additional fields are added in the order of appearance after fields appearing on this list.
+  | Ensures that the listed fields are displayed in specified order. Any additional fields are added in the order of appearance after fields appearing on this list. This attribute is useful when STACKing data sources with :ref:`fieldname.draw <fieldname.draw>`.
   |
-  | This attribute is also used for "loaning", which is the practice of taking data sources from other graphs.
-:See also: `Loaning Data <http://munin-monitoring.org/wiki/LoaningData>`_
+  | It's also used for :ref:`loaning data <example-plugin-aggregate>` from other data sources (other plugins), which enables Munin to :ref:`create aggregate or other kinds of combined graphs <aggregate-graphs>`.
+:See also: `Loaning Data <http://munin-monitoring.org/wiki/LoaningData>`_, :ref:`Aggregate Graphs <aggregate-graphs>`
 :Default:
 
 ============
@@ -209,7 +212,7 @@ Global attributes
   | Decides whether munin-update should fetch data for the graph.
   |
   | Note that the graph will be shown even if updates are disabled and then be blank.
-:See also:
+:See also: Set to ``no`` when dealing with :ref:`Graph aggregation <example-plugin-aggregate>` and/or :ref:`loaning data <example-aggregated-stack>`.
 :Default: 'yes'
 
 .. _update_rate:
@@ -232,6 +235,22 @@ Global attributes
 
 Data source attributes
 ======================
+
+.. _notes-on-fieldnames:
+
+Notes on field names
+--------------------
+
+Each data source in a plugin must be identified by a field name.
+
+The characters must be ``[a-zA-Z0-9_]``, while the first character must be ``[a-zA-Z_]``.
+
+Reserved keyword(s): A field must not be named ``root``. If it's done `Graph generation would be stopped <http://munin-monitoring.org/ticket/921>`_.
+
+In earlier versions of Munin the fieldname may not exceed 19 characters in length.  Since munin 1.2 this limit has been circumvented.
+
+Field name attributes
+---------------------
 
 .. _fieldname.cdef:
 
@@ -402,7 +421,7 @@ Data source attributes
 :Value: GAUGE|COUNTER|DERIVE|ABSOLUTE
 :Type: optional
 :Description: Sets the RRD Data Source Type for this field. The values **must** be written in capitals. The type used may introduce restrictions for ``{fieldname.value}``.
-:See also: rrdcreate_
+:See also: :ref:`Datatypes <datatypes>`, rrdcreate_
 :Default: GAUGE
 
 .. Note::
