@@ -30,23 +30,47 @@
 # DocumentRoot of the Gallery
 HTMLDIR=/var/www/html/munin-gallery
 
+# SVN root directory
+SVNROOTDIR=$HTMLDIR/contrib/svn
+
 # Directory within DocumentRoot to store pages and images about the plugins
-WORKDIR=$HTMLDIR/contrib/plugins
+WORKDIR=$SVNROOTDIR/trunk/plugins
 
 # This directory is for files only needed to build the Gallery
 SCRIPTDIR=/home/gap/projects/munin/github/munin/contrib/plugin-gallery
+
+# Check existence of SVNROOTDIR
+if (! test -d "$SVNROOTDIR") then
+    echo "ERROR: No svn directory found! Please create it here: $SVNROOTDIR"
+    exit;
+fi
+
+# Check existence of WORKDIR
+if (! test -d "$WORKDIR") then
+    echo "ERROR: working directory in svn branch trunk not found! I looked for this directory: $WORKDIR"
+    echo "I'll now try to fix this.."
+    svn co --depth empty https://github.com/munin-monitoring/contrib.git $SVNROOTDIR
+    cd $SVNROOTDIR
+    svn up trunk
+    if (! test -d "$WORKDIR") then
+        echo "svn checkout failed! I give up.."
+        exit;
+    else 
+        echo "ok. I fixed it"
+    fi
+fi
+
+cd $WORKDIR
 
 # Remove POD pages of last run
 find $WORKDIR -name *.html -exec rm {} \;
 
 # Download github files
 if test -d "$WORKDIR/.svn"; then
-  cd $WORKDIR 
-  svn update --accept theirs-full
+  svn up trunk
 else
-  svn checkout https://github.com/munin-monitoring/contrib/trunk/plugins $WORKDIR
-  # We want a relative path as output of find and grep
-  cd $WORKDIR 
+  echo "ERROR: working directory is not under svn control!"
+  exit;
 fi
 
 # Find relation between plugins and categories
