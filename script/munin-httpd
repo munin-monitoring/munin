@@ -32,8 +32,8 @@ package Munin::Master::Http;
 use strict;
 use warnings;
 
-use HTTP::Server::Simple::CGI;
-use base qw(HTTP::Server::Simple::CGI);
+use HTTP::Server::Simple::CGI::PreFork;
+use base qw(HTTP::Server::Simple::CGI::PreFork);
 
 use Munin::Master::Graph;
 use Munin::Master::HTML;
@@ -62,4 +62,4 @@ sub handle_request
 package main;
 
 # start the server on port 4948
-Munin::Master::Http->new(4948)->run();
+Munin::Master::Http->new(4948)->run(prefork => 1, max_servers => 10);
