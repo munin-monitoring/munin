@@ -87,10 +87,10 @@ if [ "$1" = "config" ]; then
     echo 'malformed.type DERIVE'
     echo 'malformed.min 0'
 
-    echo 'bad_signature.label Requests with bad signature'
-    echo 'bad_signature.info total request packets with a bad signature'
-    echo 'bad_signature.type DERIVE'
-    echo 'bad_signature.min 0'
+    echo 'bad_authenticator.label Requests with bad authenticator'
+    echo 'bad_authenticator.info total request packets with a bad authenticator'
+    echo 'bad_authenticator.type DERIVE'
+    echo 'bad_authenticator.min 0'
 
     echo 'dropped.label Dropped requests'
     echo 'dropped.info total request packets dropped for other reasons'
@@ -105,4 +105,4 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-$RADMIN -f $SOCKETFILE -e "stats client acct" | awk '{print $1".value " $2}'
+$RADMIN -f $SOCKETFILE -e "stats client acct" | awk '{print $1".value " $2}' | sed 's/signature/authenticator/'
