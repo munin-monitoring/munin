@@ -11,11 +11,12 @@ df_abs - Plugin to monitor absolute disk usage
 The following configuration parameters are used by this plugin
 
  [df_abs]
-  env.exclude  - space separated list of file system types to exclude
-  env.warning  - Warning percentage
-  env.critical - Critical percentage
-  env.total    - Enable/Disable graph total [on|off]
-  env.dfopts   - Override commandline options for calling "df"
+  env.exclude     - space separated list of file system types to exclude
+  env.exclude_re  - space separated regex list of devices or mount points to exlcude
+  env.warning     - Warning percentage
+  env.critical    - Critical percentage
+  env.total       - Enable/Disable graph total [on|off]
+  env.dfopts      - Override commandline options for calling "df"
 
 This plugin will monitor local filesystems by default.  To monitor
 network filesystems, set "env.dfopts", and omit the "-l" option.
@@ -23,11 +24,12 @@ network filesystems, set "env.dfopts", and omit the "-l" option.
 =head2 DEFAULT CONFIGURATION
 
  [df_abs]
-  env.exclude  iso9660
-  env.warning  92
-  env.critical 98
-  env.total    on
-  env.dfopts   -P -l
+  env.exclude     iso9660
+  env.exclude_re  ^/dev/sdc
+  env.warning     92
+  env.critical    98
+  env.total       on
+  env.dfopts      -P -l
 
 =head2 EXAMPLE CONFIGURATION
 
@@ -100,9 +102,23 @@ if [ "$1" = "config" ]; then
                 fi
         done
         exit 0
+		for re in $exclude_re
+		do
+			if [[ "$dev" =~ $re ]] || [[ "$mnt" =~ $re ]]
+			then
+				continue 2
+			fi
+		done
 fi
 
 df $dfopts $exclude | sed 1d | grep -v "//" |
-   while read dev size used avail cap mnt; do
-        echo "$(get_fieldname $dev $mnt).value $used"
+	while read dev size used avail cap mnt; do
+		for re in $exclude_re
+		do
+			if [[ "$dev" =~ $re ]] || [[ "$mnt" =~ $re ]]
+			then
+				continue 2
+			fi
+		done
+		echo "$(get_fieldname $dev $mnt).value $used"
 done
