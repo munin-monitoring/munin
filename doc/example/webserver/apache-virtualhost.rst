@@ -28,6 +28,9 @@ Add a new virtualhost, using the following example:
      ErrorLog  /var/log/apache2/munin.example.org-error.log
      CustomLog /var/log/apache2/munin.example.org-access.log combined
 
+     RewriteEngine On
+     RewriteRule ^/(.*\.html)$ /srv/www/munin.example.org/$1          [L]
+
      # Proxy everything to munin-httpd
      ProxyPass        / http://localhost:4948/
      ProxyPassReverse / http://localhost:4948/
