@@ -94,7 +94,7 @@ sub _do_connect {
 		return 0;
 	}
     } elsif ($uri->scheme eq "ssh") {
-	    my $ssh_command = "ssh -o ChallengeResponseAuthentication=no -o StrictHostKeyChecking=no ";
+	    my $ssh_command = sprintf("%s %s", $config->{ssh_command}, $config->{ssh_options});
 	    my $user_part = ($uri->user) ? ($uri->user . "@") : "";
 	    my $remote_cmd = ($uri->path ne '/') ? $uri->path : "";
 
