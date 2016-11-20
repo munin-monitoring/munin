@@ -162,6 +162,8 @@ my %booleans = map {$_ => 1} qw(
 		tmpldir          => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
 	        staticdir        => "$Munin::Common::Defaults::MUNIN_CONFDIR/static",
 	        cgitmpdir        => "$Munin::Common::Defaults::MUNIN_DBDIR/cgi-tmp",
+		ssh_command      => "ssh",
+		ssh_options      => "-o ChallengeResponseAuthentication=no -o StrictHostKeyChecking=no",
 	    }, $class ),
 
 	    oldconfig => bless ( {
