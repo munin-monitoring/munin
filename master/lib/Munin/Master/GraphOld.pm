@@ -53,7 +53,12 @@ use Time::HiRes;
 use Text::ParseWords;
 
 # For UTF-8 handling (plugins are assumed to use Latin 1)
-if ($RRDs::VERSION >= 1.3) { use Encode; }
+if ($RRDs::VERSION >= 1.3) {
+    use Encode;
+    use Encode::Guess;
+    Encode->import;
+    Encode::Guess->import;
+}
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -1392,8 +1397,8 @@ sub process_service {
         if ($RRDs::VERSION >= 1.3) {
             @complete = map {
                 my $str = $_;
-                $str = encode("utf8", (decode("latin1", $_)));
-                $str;
+                my $utf8 = guess_encoding($str, 'utf8');
+                ref $utf8 ? $str : encode("utf8", (decode("latin1", $_)));
             } @complete;
         }
 
