@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 : << =cut
 
@@ -85,8 +85,8 @@ if [ "$1" = "config" ]; then
     do
         uri_short=`echo ${uri:0:30}`
         if [ "$uri_short" != "$uri" ]; then uri_short=$uri_short"..."; fi
-        echo `escapeUri $uri`".label $uri_short"
-        echo `escapeUri $uri`".info page load time"
+        echo $(escapeUri $uri)".label $uri_short"
+        echo $(escapeUri $uri)".info page load time"
     done
     exit 0
 fi
