@@ -47,9 +47,10 @@ use strict;
 my $MYSQLADMIN = $ENV{mysqladmin} || "mysqladmin";
 my $COMMAND    = "$MYSQLADMIN $ENV{mysqlopts} extended-status";
 
-my %WANTED = ( "Com_delete"  => "delete", 
-			   "Com_insert"  => "insert",
-               "Com_select"  => "select", 
+my @WANTED_ORDER = ( "Com_select", "Com_delete", "Com_insert", "Com_update", "Com_replace", "Qcache_hits" );
+my %WANTED = ( "Com_delete"  => "delete",
+               "Com_insert"  => "insert",
+               "Com_select"  => "select",
                "Com_update"  => "update",
                "Com_replace" => "replace",
                "Qcache_hits" => "cache_hits",
@@ -95,7 +96,7 @@ graph_category mysql
 graph_info Note that this is a old plugin which is no longer installed by default.  It is retained for compatibility with old installations.
 graph_total total\n");
 
-    for my $key (keys %WANTED) {
+    foreach my $key (@WANTED_ORDER){
         my $title = $WANTED{$key};
         print("$title.label ${title}\n",
               "$title.min 0\n",
