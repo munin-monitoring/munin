@@ -77,7 +77,7 @@ just link the plugin as C<df_inode>.
 =head1 MAGIC MARKERS
 
   #%# family=auto
-  #%# capabilities=autoconf
+  #%# capabilities=autoconf multigraph
 
 =head1 BUGS
 
@@ -98,6 +98,8 @@ GPLv2
 use strict;
 use warnings;
 use Munin::Plugin;
+
+need_multigraph();
 
 # Reset locale to C
 $ENV{LC_ALL} = 'C';
@@ -179,6 +181,7 @@ if ($mode eq 'autoconf' ) {
   exit 0;
 } elsif ($mode eq 'config' ) {
   print <<END;
+multigraph df
 graph_title $title in percent
 graph_args --upper-limit 100 -l 0
 graph_vlabel %
@@ -186,10 +189,23 @@ graph_scale no
 graph_category disk
 END
 
+  # Summary graph
+  print "min.label Lowest disk usage\n";
+  print "max.label Highest disk usage\n";
+
+  # Detailed graphs
   foreach my $df (@df_output) {
     my ($name, $mountpt) = @{$df};
-    print $name, ".label ", $mountpt, "\n";
-    print_thresholds($name, undef, undef, 92, 98);
+    print <<END;
+multigraph df.$name
+graph_title $title for $mountpt in percent
+graph_args --upper-limit 100 -l 0
+graph_vlabel %
+graph_scale no
+graph_category disk
+df.label $mountpt
+END
+    print_thresholds("df", undef, undef, 92, 98);
   }
 
   unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 ) {
@@ -197,7 +213,19 @@ END
   }
 }
 
+# Summary graph
+my $min=100, my $max=0;
+foreach my $df (@df_output) {
+  my (undef, undef, $percent) = @{$df};
+  $min = $percent if $percent < $min;
+  $max = $percent if $percent > $max;
+}
+print "multigraph df\n";
+print "min.value ", $min, "\n";
+print "max.value ", $max, "\n";
+# Detailed graphs
 foreach my $df (@df_output) {
   my ($name, undef, $percent) = @{$df};
-  print $name, ".value ", $percent, "\n";
+  print "multigraph df.", $name, "\n";
+  print "df.value ", $percent, "\n";
 }
