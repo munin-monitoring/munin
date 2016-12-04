@@ -60,7 +60,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     if (! graph_check_cron() ) {
         print  "graph_info This graph shows the run time of the four different processes making up a munin-master run.  Munin-master is run from cron every 5 minutes and we want each of the programmes in munin-master to complete before the next instance starts.  Especially munin-update and munin-graph are time consuming and their run time bears watching. If munin-update uses too long time to run please see the munin-update graph to determine which host is slowing it down.  If munin-graph is running too slow you need to get clever (email the munin-users mailing list) unless you can buy a faster computer with better disks to run munin on.\n";
     } else {
-        print  "graph_info This graph shows the run time of the thre different processes making up a munin-master run.  Munin-master is run from cron every 5 minutes and we want each of the programmes in munin-master to complete before the next instance starts.  Especially munin-update is time consuming and its run time bears watching. If munin-update uses too long time to run please see the munin-update graph to determine which host is slowing it down.\n";
+        print  "graph_info This graph shows the run time of the three different processes making up a munin-master run.  Munin-master is run from cron every 5 minutes and we want each of the programmes in munin-master to complete before the next instance starts.  Especially munin-update is time consuming and its run time bears watching. If munin-update uses too long time to run please see the munin-update graph to determine which host is slowing it down.\n";
     }
     print "graph_args --base 1000 -l 0\n",
           "graph_scale yes\n",

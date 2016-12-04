@@ -960,7 +960,7 @@ sub munin_readconfig_part {
 		exit(1);
 	}
 	# missing ok, return last value if we have one, copy config if not
-	if (undef == $config_parts->{$what}{config}) {
+	unless (defined $config_parts->{$what}{config}) {
 		# well, not if we shouldn't include the config
 		if ($config_parts->{$what}{include_base}) {
 			$doupdate = 1;

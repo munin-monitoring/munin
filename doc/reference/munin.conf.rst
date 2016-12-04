@@ -101,6 +101,37 @@ otherwise.
    html pages you must configure a web server to run
    :ref:`munin-cgi-graph` instead.
 
+.. option:: ssh_command <command>
+
+   The name of the secure shell command to use.  Can be fully
+   qualified or looked up in $PATH.
+
+   Defaults to "ssh".
+
+.. option:: ssh_options <options>
+
+   The options for the secure shell command.
+
+   Defaults are "-o ChallengeResponseAuthentication=no -o
+   StrictHostKeyChecking=no".  Please adjust this according to your
+   desired security level.
+
+   With the defaults, the master will accept and store the node ssh
+   host keys with the first connection. If a host ever changes its ssh
+   host keys, you will need to manually remove the old host key from
+   the ssh known hosts file. (with: ssh-keygen -R <node-hostname>, as
+   well as ssh-keygen -R <node-ip-address>)
+
+   You can remove "StrictHostKeyChecking=no" to increase security, but
+   you will have to manually manage the known hosts file.  Do so by
+   running "ssh <node-hostname>" manually as the munin user, for each
+   node, and accept the ssh host keys.
+
+   If you would like the master to accept all node host keys, even
+   when they change, use the options "-o
+   UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o
+   PreferredAuthentications=publickey".
+
 .. index::
    pair: example; munin.conf
 

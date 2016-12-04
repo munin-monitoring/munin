@@ -97,12 +97,7 @@ if [ "x$1" = "xsuggest" ] ; then
 fi
 
 if [ "x$1" = "xautoconf" ] ; then
-    NC=`which nc 2>/dev/null`
-    if [ "x$NC" = "x" ] ; then
-      echo "no (nc not found)"
-      exit 0
-    fi
-    $NC -n -z $ip $port >/dev/null 2>&1
+    $JAVA_BIN -cp $MUNIN_JAR $JAVA_OPTS org.munin.plugin.jmx.PortProbe $port $ip
     CONNECT=$?
 
     $JAVA_BIN -? >/dev/null 2>&1

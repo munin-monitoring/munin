@@ -9,7 +9,7 @@
 <h3 id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3>
 <table>
 	<TMPL_LOOP NAME="SERVICES">
-		<tr><td>
+		<tr><td><TMPL_VAR ESCAPE="HTML" NAME="NAME"></td></tr><tr><td>
 		<a href="<TMPL_VAR NAME="URLX">">
 		<img class="i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
 		 src="<TMPL_VAR NAME="IMGDAY">"
