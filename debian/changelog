@@ -1,3 +1,10 @@
+munin (2.0.28-1) unstable; urgency=medium
+
+  * New upstream version. (Closes: #846391, #598554), see upstream ChangeLog
+    for details.
+
+ -- Holger Levsen <holger@debian.org>  Tue, 06 Dec 2016 13:15:50 +0100
+
 munin (2.0.27-1) unstable; urgency=medium
 
   * New upstream version, (Closes: #767032, #768553, #825136, #834194), see
