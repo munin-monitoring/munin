@@ -21,7 +21,7 @@
 INTERFACE=${0##*if_}
 
 if [ "$1" = "autoconf" ]; then
-	if [ -x /usr/bin/netstat ]; then
+	if [ -x /sbin/ifconfig -o -x /usr/bin/netstat ]; then
 		echo yes
 		exit 0
 	else
@@ -31,8 +31,12 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 if [ "$1" = "suggest" ]; then
-	if [ -x /usr/bin/netstat ]; then
-		netstat -i -b -n | sed -n -e '/^faith/d' -e '/^lo[0-9]/d' -e '/^pflog/d' -e '/<Link#[0-9]*>/s/\** .*//p'
+	if [ -x /sbin/ifconfig ]
+	then
+		ifconfig -l | sed -Ee 's/[[:<:]](pfsync|faith|pf(log|sync)|lo|plip|carp|enc|fwe)[^ ]*//g' | xargs -n 1 echo
+		exit 0
+	elif [ -x /usr/bin/netstat ]; then
+		netstat -i -b -n | sed -n -e '/^faith/d' -e '/^lo[0-9]/d' -e '/^pf(log|sync)/d' -e '/<Link#[0-9]*>/s/\** .*//p'
 		exit 0
 	else
 		exit 1
@@ -67,8 +71,14 @@ BEGIN { rsum = 0; osum = 0; }
 /<Link#[0-9]*>/ {
 	if (NF == 10) { 
 		rsum += $6; osum += $9;
-	} else {
-		rsum += $7; osum += $10;
+	} else if (NF == 11) {
+		if ($4 ~ /:/) {
+			rsum += $7; osum += $10;
+		} else {
+			rsum += $7; osum += $10;
+		}
+	} else { # NF == 12
+		rsum += $8; osum += $11;
 	}
 }
 END {
@@ -82,9 +92,18 @@ else
 	if (NF == 10) { 
 		print "rbytes.value", $6;
 		print "obytes.value", $9;
-	} else {
-		print "rbytes.value", $7;
-		print "obytes.value", $10;
+	} else if (NF == 11) {
+		if ($4 ~ /:/) {
+			print "rbytes.value", $7;
+			print "obytes.value", $10;
+		} else {
+			print "rbytes.value", $7;
+			print "obytes.value", $10;
+		}
+	} else { # NF == 12
+		print "rbytes.value", $8;
+		print "obytes.value", $11;
 	}
 }'
 fi
+
