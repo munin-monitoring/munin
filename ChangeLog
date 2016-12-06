@@ -1,3 +1,111 @@
+munin-2.999.4, 2016-12-04
+
+-------
+Summary
+-------
+
+That release is the 4rd beta of the 3.0 series. It is versionned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versionning or 3.0b4
+
+It contains various bugfixes.
+
+It is currently beta quality, that means that bugs *can* happen, but aren't
+really expected. They will have a  workaround and a proper fix soon.
+
+
+------------------
+Detailed Changelog
+------------------
+
+Arran Cudbard-Bell (1):
+      Signature was renamed to authenticator for FreeRADIUS v2.2.1
+
+Artur Smęt (1):
+      Add queries for PostgreSQL 9.4
+
+Axel Huebl (4):
+      Fix 1350, user agent, auto config
+      Multi-URL and requisites support (with backwards compatible options)
+      Remove Autoconf
+      Review Comments
+
+Békefi Gábor (1):
+      Correcting mysql_queries plugin random hash ordering.
+
+Daniel Reichelt (1):
+      plugins/df_abs: add support for env.exclude_re
+
+Dongsik Park (1):
+      .html file static path add. for Categories memu.
+
+Gabriele Pohl (1):
+      Fix Gallery issues: changes in github svn support
+      Included js in gallery-header.html brings 404
+      Fix invalid HTML format (Unclosed element span)
+
+Hans van Kranenburg (1):
+      Use configured plugin group as primary group
+
+InsanePrawn (1):
+      Update smart_
+
+Iván Montoro (1):
+      Add IPv6 support
+
+Jean-Louis Dupond (1):
+      haproxy_ng: add SessionRate and adjust title of current sessions value
+
+Klas Meder Boqvist (1):
+      p/postgres_users ignore own connection
+
+Lionel Sausin (1):
+      Multigraphy the df plugin for Linux
+
+Lucas Holt (1):
+      Ignore linsysfs like we ignore linprocfs on FreeBSD
+
+Mark H. Wood (1):
+      Replace trivial use of Netcat with our own gadget to test for an open port.
+
+Steve Schnepp (30):
+      httpd: adding some preforking
+      doc: bump the copyright to 2016
+      Fixing the whole devel mess (1)
+      Fixing the whole devel mess (2)
+
+Stig Sandbeck Mathisen (1):
+      Add configuration for ssh master-node transport
+
+Tobias Kappé (1):
+      Ignore current process when configuring labels for postgres_users plugin.
+
+Vincas Dargis (1):
+      Update postgres_connections_ for PostgreSQL 9.6
+
+dipohl (18):
+      DOC: Improved version of wiki page MuninConfigurationMasterExampleStack     moved to TheMuninGuide
+      doc: Subsection titles were on first hierarchy level
+      doc: moved wiki page to MuninGuide (MuninTroubleshooting)
+      doc: moved wiki page PluginDebugging to MuninGuide
+      doc: Moved wiki page MuninExchangeIsDown to MuninGuide
+      doc: rework munin-node.conf     merged wiki page munin-node.conf and current release of munin-node.conf
+      doc: moved wiki page MuninAggregateGraphs to MuninGuide
+      doc: Refer to option --families directly.
+      doc: more explanations on Munin Exchange
+      doc: move wiki page MuninExtraordinaryUsage to MuninGuide
+      doc: wiki page "update" merged with MuninGuide and     after that deleted from Trac
+      doc: merge content from wiki, add cross references
+      doc: wiki page graph_args moved to MuninGuide and btw. merged some     content from other wiki pages
+      doc: script name is munindoc, not munin-doc
+      doc: wiki content moved to MuninGuide     page MuninConfigurationMasterExampleCombined
+      doc: new page added to index
+      doc: page HowToWritePlugins moved to MuninGuide
+
+Данило Глинський (Danylo Hlynskyi) (1):
+      typo
+
+
 munin-2.999.3, 2016-09-04
 
 -------
@@ -194,19 +302,15 @@ Peter Suschlik (1):
 Quentin Stoeckel (34):
       Fix $verbose typo in munin-update
       Use "::" as pages title separator instead of ">"
-      Merge pull request #595 from chteuchteu/www-title-separator
       Add FontAwesome files to project
       Replace PNG icons with FontAwesome equivalents
       Use Material Design Icons (community version) instead of FontAwesome
       Fix filter icon not appearing on IE8
-      Merge pull request #603 from chteuchteu/ui-icons
       Delete useless JS file
       Enhance tabs styling
       JS: Fix .trim() usages (not defined in IE8)
-      Merge pull request #604 from chteuchteu/ui-misc
       Prevent line breaks from header title, fix text vertical-align
       Enhance overall toolbar appearance on lower resolution devices
-      Merge pull request #614 from chteuchteu/new-ui-css-fix
       Create .action-icon class from eventRulerToggle
       Rewrite eventRuler as a jQuery plugin
       Rewrite autoRefresh as a jQuery plugin
@@ -223,23 +327,13 @@ Quentin Stoeckel (34):
       Set Roboto, sans-serif as the default font-family
       Add refresh buttons when using auto-refresh, JS & CSS fixes
       Nodeview: fix categories appearance when canceling filter ; various CSS & JS fixes
-      Merge pull request #615 from chteuchteu/new-ui-cleanup
       Update UI colors
-      Merge pull request #616 from chteuchteu/new-ui-colors
 
 Steve Schnepp (5):
-      Merge pull request #569 from maxbeth/issue405_verbose
-      Merge pull request #585 from ms7s/patch-1
       graph: handle -T upon rrdtool launch
       httpd: Trust PERL5LIB from environment
-      Merge commit '6b47ec5f0f89750e86209ce24b641ff37c0c2dfe' into devel
 
 Stig Sandbeck Mathisen (5):
-      Merge pull request #594 from chteuchteu/fix-munin-update-typo
-      Merge pull request #596 from ssm/feature/bcg-fixes
-      Merge pull request #606 from Self-Perfection/patch-1
-      Merge pull request #608 from devvmh/patch-1
-      Merge pull request #611 from splattael/readme-svg-badge
 
 dipohl (2):
       DOC: critical and warning level can also be decimal numbers

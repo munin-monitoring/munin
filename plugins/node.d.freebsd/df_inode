@@ -16,7 +16,7 @@
 
 print_values() {
 	mfs=0
-	/bin/df -P -i -t noprocfs,devfs,fdescfs,linprocfs,nfs,nullfs,cd9660 | tail +2 | grep -v "//" | while read i; do
+	/bin/df -P -i -t noprocfs,devfs,fdescfs,linprocfs,linsysfs,nfs,nullfs,cd9660 | tail +2 | grep -v "//" | while read i; do
 		case $i in
 		mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
 		*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
@@ -43,7 +43,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_category disk'
 	echo 'graph_scale no'
 	echo 'graph_info This graph shows the inode usage for the partitions of types that use inodes.'
-	/bin/df -P -i -t noprocfs,devfs,fdescfs,linprocfs,nfs,nullfs,cd9660 | tail +2 | grep -v "//" | awk "
+	/bin/df -P -i -t noprocfs,devfs,fdescfs,linprocfs,linsysfs,nfs,nullfs,cd9660 | tail +2 | grep -v "//" | awk "
 		BEGIN {
 			mfs = 0
 		}

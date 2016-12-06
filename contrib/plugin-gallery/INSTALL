@@ -15,13 +15,17 @@ from this directory thereto
 
 Create a directory to put the webfiles to.
 Set variable HTMLDIR in gallery-build.sh to this PATH.
-Create a subdirectory 'distro' therin.
+Create a subdirectory 'distro' and a subdirectory 'contrib' therin.
+Under each of these also create a subdirectory 'svn'.
 Put the directory 'static' from the subdirectory 'www' into HTMLDIR
 
 So HTMLDIR should initially have this structure:
 
 .
+./contrib
+./contrib/svn
 ./distro
+./distro/svn
 ./static
 ./static/css
 ./static/css/_response.scss	(optionnal, CSS source)
@@ -47,7 +51,8 @@ Setup vhost for the gallery in your webservers configuration.
 
 If you want to set another ownership for the webserver files
 run the build process under user root, and set variable 
-WWWUSER and WWWGROUP in gallery-build.sh accordingly.
+WWWUSER and WWWGROUP in gallery-build.sh and 
+gallery-contrib-build.sh accordingly.
 
 4. Setup a daily cronjob
 ------------------------

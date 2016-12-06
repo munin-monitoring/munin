@@ -59,12 +59,6 @@ These are the most common Net::Server options used in
 
    Default: undef (STDERR)
 
-.. option:: port
-
-   The TCP port the munin node listens on
-
-   Default: 4949
-
 .. option:: pid_file
 
    The pid file of the process
@@ -76,12 +70,6 @@ These are the most common Net::Server options used in
    To run munin node in background set this to "1". If you want
    munin-node to run as a foreground process, comment this line out
    and set "setsid" to "0".
-
-.. option:: host
-
-   The IP address the munin node process listens on
-
-   Default: * (All interfaces)
 
 .. option:: user
 
@@ -103,6 +91,22 @@ These are the most common Net::Server options used in
 
    Default: undef
 
+.. option:: global_timeout
+
+   :ref:`munin-node` holds the connection to Munin master only a limited number of seconds to get the requested operation finished.
+   If the time runs out the node will close the connection.
+
+   Timeout for the whole transaction. Units are in sec.
+
+   Default: 900 seconds (15 min)
+
+.. option:: timeout
+
+   This is the timeout for each plugin.
+   If plugins take longer to run, this will disconnect the master.
+
+   Default: 60 seconds
+
 .. option:: allow
 
    A regular expression defining which hosts may connect to the munin
@@ -120,14 +124,19 @@ These are the most common Net::Server options used in
 
    Like cidr_allow, but used for denying host access
 
-.. option:: timeout
+.. option:: host
 
-   Number of seconds after the last activity by the master until the
-   node will close the connection.
+   The IP address the munin node process listens on
 
-   If plugins take longer to run, this may disconnect the master.
+   Default: * (All interfaces)
 
-   Default: 20 seconds
+.. option:: port
+
+   The TCP port the munin node listens on
+
+   Default: 4949
+
+.. _example-munin-node.conf:
 
 EXAMPLE
 =======
@@ -139,26 +148,70 @@ A pretty normal configuration file:
 
 ::
 
-  host *
-  port 4949
-
-  cidr_allow 127.0.0.0/8
-  cidr_allow 192.0.2.0/24
-
-  user       root
-  group      root
-  background 1
-  setsid     1
+  #
+  # Example config-file for munin-node
+  #
 
   log_level 4
-  log_file  /var/log/munin/munin-node.log
-  pid_file  /var/run/munin-node.pid
+  log_file /var/log/munin-node/munin-node.log
+  pid_file /var/run/munin/munin-node.pid
 
+  background 1
+  setsid 1
+
+  user root
+  group root
+
+  # This is the timeout for the whole transaction.
+  # Units are in sec. Default is 15 min
+  #
+  # global_timeout 900
+
+  # This is the timeout for each plugin.
+  # Units are in sec. Default is 1 min
+  #
+  # timeout 60
+
+  # Regexps for files to ignore
+  ignore_file [\#~]$
+  ignore_file DEADJOE$
   ignore_file \.bak$
-  ignore_file ^README$
-  ignore_file \.dpkg-(old|new)$
+  ignore_file %$
+  ignore_file \.dpkg-(tmp|new|old|dist)$
   ignore_file \.rpm(save|new)$
-  ignore_file \.puppet-new$
+  ignore_file \.pod$
+
+  # Set this if the client doesn't report the correct hostname when
+  # telnetting to localhost, port 4949
+  #
+  host_name localhost.localdomain
+
+  # A list of addresses that are allowed to connect.  This must be a
+  # regular expression, since Net::Server does not understand CIDR-style
+  # network notation unless the perl module Net::CIDR is installed.  You
+  # may repeat the allow line as many times as you'd like
+
+  allow ^127\.0\.0\.1$
+  allow ^::1$
+
+  # If you have installed the Net::CIDR perl module, you can use one or more
+  # cidr_allow and cidr_deny address/mask patterns.  A connecting client must
+  # match any cidr_allow, and not match any cidr_deny.  Note that a netmask
+  # *must* be provided, even if it's /32
+  #
+  # Example:
+  #
+  # cidr_allow 127.0.0.1/32
+  # cidr_allow 192.0.2.0/24
+  # cidr_deny  192.0.2.42/32
+
+  # Which address to bind to;
+  host *
+  # host 127.0.0.1
+
+  # And which port
+  port 4949
+
 
 SEE ALSO
 ========
