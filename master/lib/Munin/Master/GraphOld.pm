@@ -1791,7 +1791,8 @@ sub expand_cdef {
 
     foreach my $field (@{munin_find_field($service, "label")}) {
         my $fieldname = munin_get_node_name($field);
-        my $rrdname = &orig_to_cdef($service, $fieldname);
+        my $srrdname = &orig_to_cdef($service, $fieldname);
+        my $rrdname = &get_field_name($srrdname);
         if ($cdef =~ /\b$fieldname\b/) {
             $max =~ s/([,=])$fieldname([,=]|$)/$1a$rrdname$2/g;
             $min =~ s/([,=])$fieldname([,=]|$)/$1i$rrdname$2/g;
