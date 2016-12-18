@@ -230,7 +230,7 @@ sub _db_mkgrp {
 
 	DEBUG "group:".Dumper($group);
 	my $grp_name = $group->{group_name};
-	my $p_id = undef;
+	my $p_id = 0; # XXX - 0 is a magic number that says NO_PARENT, as the == NULL doesn't work
 
 	# Create the group if needed
 	my $sth_grp_id = $dbh->prepare("SELECT id FROM grp WHERE name = ? AND p_id = ?");
