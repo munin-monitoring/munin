@@ -136,8 +136,8 @@ sub do_work {
 		    # Note that spoolfetching hosts is always a success. BY DESIGN.
 		    # Since, if we cannot connect, or whatever else, it is NOT an issue.
 
-		    # No need to do more than that.
-		    return;
+		    # No need to do more than that on this node
+		    goto NODE_END;
 	    }
 
 	    # Note: A multigraph plugin can present multiple services.
@@ -183,7 +183,7 @@ sub do_work {
 		$last_timestamp = $node->fetch_service_data($plugin, sub { $self->uw_handle_fetch( @_ , $update_rate, $last_timestamp); });
 
 	    } # for @plugins
-
+NODE_END:
 	    # Send "quit" to node
 	    $node->quit();
 
