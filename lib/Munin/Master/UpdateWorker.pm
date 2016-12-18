@@ -229,8 +229,26 @@ sub _db_mkgrp {
 	my $dbh = $self->{dbh};
 
 	DEBUG "group:".Dumper($group);
+	my $grp_name = $group->{group_name};
+	my $p_id = undef;
 
-	return -42;
+	# Create the group if needed
+	my $sth_grp_id = $dbh->prepare("SELECT id FROM grp WHERE name = ? AND p_id = ?");
+	$sth_grp_id->execute($grp_name, $p_id);
+	my ($grp_id) = $sth_grp_id->fetchrow_array();
+
+	if (! defined $grp_id) {
+		# Create the Group
+		my $sth_grp = $dbh->prepare('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
+		my $path = "";
+		$sth_grp->execute($grp_name, $p_id, $path);
+		$grp_id = _get_last_insert_id($dbh);
+	} else {
+		# Nothing to do, the grp doesn't need any updates anyway.
+		# Removal of grp is *unsupported* yet.
+	}
+
+	return $grp_id;
 }
 
 # This should go in a generic DB.pm
