@@ -93,6 +93,7 @@ sub do_work {
 
 		# Create the node
 		my $node_id = $self->_db_mknode($grp_id, $node_name);
+		$self->{node_id} = $node_id;
 
 		my @node_capabilities = $node->negotiate_capabilities();
 
