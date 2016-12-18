@@ -291,7 +291,7 @@ sub _db_service {
 
 	DEBUG "_db_service($node_id, $plugin)";
 	DEBUG "_db_service.service_attr:".Dumper($service_attr);
-	DEBUG "_db_service.service_attr:".Dumper($fields);
+	DEBUG "_db_service.fields:".Dumper($fields);
 
 	# Save the whole service config, and drop it.
 	my $sth_service_id = $dbh->prepare("SELECT id FROM service WHERE node_id = ? AND name = ?");
