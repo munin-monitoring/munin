@@ -298,6 +298,15 @@ sub _db_service {
 	$sth_service_id->execute($node_id, $plugin);
 	my ($service_id) = $sth_service_id->fetchrow_array();
 
+	if (! defined $service_id) {
+		# Doesn't exist yet, create it
+		my $sth_service = $dbh->prepare("INSERT INTO service (node_id, name) VALUES (?, ?)");
+		$sth_service->execute($node_id, $plugin);
+		$service_id = _get_last_insert_id($dbh);
+	}
+
+	DEBUG "_db_service.service_id:$service_id";
+
 	# Save the existing values
 	my (%service_attrs_old, %fields_old);
 	{
