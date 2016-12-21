@@ -44,10 +44,10 @@ p.graph_info {
 
 #legend {
 	border-collapse: collapse;
-	@include border-radius(2px);
+	border-radius: 2px;
 	margin: 20px 0;
 	background-color: #fff;
-	@include box-shadow(0 1px 3px 0 rgba(0, 0, 0, 0.2));
+	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
 	border: 1px solid #bbb;
 
 	.legendHead {
@@ -57,10 +57,10 @@ p.graph_info {
 		color: #fff;
 		text-shadow: 1px 1px 0 darken($secondary-color, 10);
 		margin: -1px;
-		@include border-radius(2px 2px 0 0);
+		border-radius: 2px 2px 0 0;
 		border: 1px solid darken($secondary-color, 10);
 		background-color: $secondary-color;
-		@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
+		box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
 
 		th {
 			padding: 6px 10px 6px 15px;
@@ -94,10 +94,10 @@ p.graph_info {
 	max-width: 900px;
 
 	> li {
-		@include border-radius(1px);
+		border-radius: 1px;
 		margin-bottom: 20px;
 		background-color: #fff;
-		@include box-shadow(0 1px 3px 0 rgba(0, 0, 0, 0.1));
+		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 		border: 1px solid #ccc;
 	}
 
@@ -110,15 +110,15 @@ p.graph_info {
 			display: block;
 			padding: 6px 20px;
 			margin: -1px;
-			@include border-radius(2px 2px 0 0);
+			border-radius: 2px 2px 0 0;
 			border: 1px solid darken($secondary-color, 10);
 			background-color: $secondary-color;
-			@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.15));
+			box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.15);
 			@include transition-duration(100ms);
 
 			&:hover {
 				background-color: darken($secondary-color, 3);
-				@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
+				box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
 				text-decoration: none;
 			}
 		}
@@ -175,7 +175,7 @@ p.graph_info {
 		background-color: rgba(0, 0, 0, 0.06);
 		padding: 0 10px;
 		cursor: default;
-		@include box-shadow(inset 0 -2px 2px 0 rgba(0, 0, 0, 0.02));
+		box-shadow: inset 0 -2px 2px 0 rgba(0, 0, 0, 0.02);
 
 		.mdi {
 			vertical-align: sub;
@@ -186,7 +186,7 @@ p.graph_info {
 			display: inline-block;
 			padding: 6px 7px;
 			font-size: 11px;
-			@include opacity(0.8);
+			opacity: 0.8;
 			@include transition-duration(150ms);
 
 			&:hover {
@@ -208,7 +208,7 @@ p.graph_info {
 			font-size: 11px;
 			letter-spacing: -0.5px;
 			@include transition-duration(150ms);
-			@include border-radius(2px);
+			border-radius: 2px;
 
 			&:hover {
 				background-color: rgba(0, 0, 0, 0.05);
@@ -250,23 +250,23 @@ ul.timeRangeSwitch {
 		border: 1px solid rgba(0, 0, 0, 0.15);
 		background-color: $timeRangeBackgroundColor;
 		@include transition-duration(150ms);
-		@include border-radius(1px);
+		border-radius: 1px;
 
-		&:first-child { @include border-radius(2px 1px 1px 2px); }
-		&:last-child { @include border-radius(1px 2px 2px 1px); }
+		&:first-child { border-radius: 2px 1px 1px 2px; }
+		&:last-child { border-radius: 1px 2px 2px 1px; }
 		&:hover {
 			position: relative;
 			z-index: 1;
 			border: 1px solid rgba(0, 0, 0, 0.25);
 			background-color: lighten($timeRangeBackgroundColor, 1);
-			@include box-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 		}
 		&.selected, &:active {
 			font-weight: 500;
 
 			&, &:hover {
 				background-color: darken($timeRangeBackgroundColor, 8);
-				@include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.1));
+				box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
 			}
 		}
 	}
@@ -276,11 +276,11 @@ ul.timeRangeSwitch {
 .dynazoomGraph { max-width: none; }
 .overlayDiv {
 	zoom: 1;
-	@include opacity(.55);
+	opacity: .55;
 	background-color: #eee;
 	position: absolute;
 	z-index: 2;
-	@include border-radius(2px);
+	border-radius: 2px;
 
 	&.dragging {
 		visibility: visible;
@@ -292,10 +292,10 @@ ul.timeRangeSwitch {
 		@include transition-duration(100ms);
 
 		&:hover {
-			@include opacity(.6);
+			opacity: .6;
 		}
 		&:active {
-			@include opacity(.65);
+			opacity: .65;
 		}
 	}
 }
@@ -329,7 +329,7 @@ ul.timeRangeSwitch {
 			line-height: 23px;
 			margin-left: -2px;
 			height: 26px;
-			@include border-radius(0 2px 2px 0);
+			border-radius: 0 2px 2px 0;
 			cursor: default;
 			background-color: #eee;
 			border: 1px solid #aaa;
@@ -359,7 +359,7 @@ ul.timeRangeSwitch {
 	#eventRuler {
 		border-left: 1px solid #000;
 		border-right: 1px solid #fff;
-		@include opacity(0.5);
+		opacity: 0.5;
 		height: 100%;
 		width: 0;
 	}
@@ -371,7 +371,7 @@ ul.timeRangeSwitch {
 		margin: 10px 0 0 -30px;
 		padding: 0 30px;
 		border-bottom: 1px solid #dedede;
-		@include box-shadow(0 2px 5px -3px rgba(0, 0, 0, 0.2));
+		box-shadow: 0 2px 5px -3px rgba(0, 0, 0, 0.2);
 
 		li {
 			list-style: none;
@@ -385,7 +385,7 @@ ul.timeRangeSwitch {
 			border-bottom: 2px solid transparent;
 			cursor: pointer;
 			@include transition-duration(200ms);
-			@include border-radius(2px 2px 0 0);
+			border-radius: 2px 2px 0 0;
 
 			&:hover { background-color: rgba(0, 0, 0, 0.03); }
 			&.active {
@@ -435,10 +435,10 @@ ul.timeRangeSwitch {
 		font-size: 15px;
 		cursor: pointer;
 		@include user-select(none);
-		@include opacity(0.7);
+		opacity: 0.7;
 
 		&:hover {
-			@include opacity(0.9);
+			opacity: 0.9;
 		}
 	}
 
