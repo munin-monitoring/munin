@@ -686,6 +686,10 @@ sub _update_rrd_files {
     my $last_timestamp = 0;
 
     for my $service (keys %{$nested_service_config->{data_source}}) {
+	my $update = get_config_for_service($nested_service_config->{global}{$service}, "update");
+	if (defined($update) and $update eq 'no') {
+	    next;
+	}
 
 	my $service_config = $nested_service_config->{data_source}{$service};
 	my $service_data   = $nested_service_data->{$service};
