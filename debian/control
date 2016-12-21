@@ -138,7 +138,7 @@ Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
  lsb-base (>= 4.1),
  cron | cron-daemon,
- fonts-dejavu | ttf-dejavu,
+ fonts-dejavu-core,
  libdate-manip-perl,
  libdigest-md5-perl,
  libfile-copy-recursive-perl,

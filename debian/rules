@@ -56,7 +56,7 @@ override_dh_auto_install:
 	rm -v $(CURDIR)/debian/munin/var/cache/munin/www/.htaccess
 
 	# Remove bundled VeraMono.ttf, debian gets this font from 
-	# the ttf-dejavu package. http://bugs.debian.org/548508
+	# the fonts-dejavu-core package. http://bugs.debian.org/548508
 	rm -v $(CURDIR)/debian/munin/usr/share/munin/DejaVuSans*.ttf
 
 	# Munin::Plugins & plugins.sh go into munin-common.

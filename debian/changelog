@@ -1,3 +1,10 @@
+munin (2.0.28-2) UNRELEASED; urgency=medium
+
+  * Replace dependency on ttf-dejavu | fonts-dejavu with a dependency on
+    fonts-dejavu-core.
+
+ -- Holger Levsen <holger@debian.org>  Wed, 21 Dec 2016 09:59:37 +0100
+
 munin (2.0.28-1) unstable; urgency=medium
 
   * New upstream version. (Closes: #846391, #598554), see upstream ChangeLog
