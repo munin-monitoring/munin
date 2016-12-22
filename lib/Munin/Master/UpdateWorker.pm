@@ -335,6 +335,11 @@ sub _db_service {
 	my $sth_service_attrs_del = $dbh->prepare("DELETE FROM service_attr WHERE id = ?");
 	$sth_service_attrs_del->execute($service_id);
 
+	for my $attr (keys %$service_attr) {
+		my $_service_value = $service_attr->{$attr};
+		$self->_db_service_attr($service_id, $attr, $_service_value);
+	}
+
 	return ($service_id, \%service_attrs_old);
 }
 
@@ -345,7 +350,7 @@ sub _db_service_attr {
 	DEBUG "_db_service_attr($service_id, $name, $value)";
 
 	# Save the whole service config, and drop it.
-	my $sth_service_attr = $dbh->prepare("INSERT INTO service (id, name, value) VALUES (?, ?, ?)");
+	my $sth_service_attr = $dbh->prepare("INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)");
 	$sth_service_attr->execute($service_id, $name, $value);
 }
 
