@@ -338,7 +338,7 @@ Field name attributes
 .. _fieldname.label:
 
 :Attribute: **{fieldname}.label**
-:Value: anything except # and \
+:Value: anything except # and \\
 :Type: required
 :Description: The label used in the legend for the graph on the HTML page.
 :See also:
