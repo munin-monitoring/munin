@@ -63,8 +63,10 @@ my $pg = Munin::Plugin::Pgsql->new(
     vlabel => 'Connections',
     basequery => [
         "SELECT pg_database.datname,COALESCE(count,0) AS count FROM pg_database LEFT JOIN (SELECT datname,count(*) FROM pg_stat_activity WHERE pid != pg_backend_pid() GROUP BY datname) AS tmp ON pg_database.datname=tmp.datname WHERE datallowconn ORDER BY 1",
-        [
-            9.1,
+        [ 9.4,
+            "SELECT pg_database.datname,COALESCE(count,0) AS count FROM pg_database LEFT JOIN (SELECT datname,count(*) FROM pg_stat_activity WHERE pid != pg_backend_pid() GROUP BY datname) AS tmp ON pg_database.datname=tmp.datname WHERE datallowconn ORDER BY 1",
+        ],
+        [ 9.1,
             "SELECT pg_database.datname,COALESCE(count,0) AS count FROM pg_database LEFT JOIN (SELECT datname,count(*) FROM pg_stat_activity WHERE procpid != pg_backend_pid() GROUP BY datname) AS tmp ON pg_database.datname=tmp.datname WHERE datallowconn ORDER BY 1",
         ]
     ],
