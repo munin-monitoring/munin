@@ -1,3 +1,54 @@
+munin-2.999.5, 2016-12-31
+
+-------
+Summary
+-------
+
+That release is the 5rd beta of the 3.0 series. It is versionned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versionning or 3.0b5
+
+It contains various bugfixes.
+
+It is currently beta quality, that means that bugs *can* happen, but aren't
+really expected. They will have a  workaround and a proper fix soon.
+
+
+------------------
+Detailed Changelog
+------------------
+
+Hiroshi Shirosaki (2):
+      Fix Java committed memory bigger than Max
+      Suppress returned no data warnings on munin-update
+
+Kenyon Ralph (3):
+      grammar corrections
+      plugin ref: fix {fieldname}.label documentation
+      plugin ref: escape the backslash
+
+Mathieu Arnold (3):
+      Fix if_ and if_errcoll_ plugins.
+      Fix when using more than one swap device.
+      Add an if_packets_ to monitor packets going through an interface.
+
+Peter J. Holzer (1):
+      p/postgres_querylength_: don't stack times
+
+Steve Schnepp (4):
+      asyncd: add dirtyconfig cap
+      p/freebsd/if_packets_: use /bin/sh
+      travis: "devel" branch is no more
+      travis: don't do tests on all Perl versions
+
+Vlad K (2):
+      Fix netstat active connection openings string
+      Annotate and fix netstat's active connections match.
+
+dipohl (1):
+      Fix invalid HTML in Plugin-Gallery
+
+
 munin-2.999.4, 2016-12-04
 
 -------

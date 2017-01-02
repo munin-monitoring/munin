@@ -136,8 +136,8 @@ my $plugins = {};
 	) || die "Error creating socket: $!"; 
 
 	local $0 = "munin-asyncd [$metahostname] [list]";
-	DEBUG("[sock][>] cap multigraph");
-	print $sock "cap multigraph\n";
+	DEBUG("[sock][>] cap multigraph dirtyconfig");
+	print $sock "cap multigraph dirtyconfig\n";
 	<$sock>; # Read the first header comment line
 	<$sock>; # Read the multigraph response line
 	foreach my $node (@nodes)
@@ -288,6 +288,8 @@ sub fetch_data
 		print STDERR "[$$][$process_name][>][$plugin][sock] config $plugin\n" if $debug;
 		print $sock "config $plugin\n";
 
+		my $is_dirtyconfig;
+
 		my $output_rows = [];
 
 		while(my $line = <$sock>) {
@@ -307,12 +309,17 @@ sub fetch_data
 				# This has to be sent back to the master
 				$spoolwriter{$node}->set_metadata("plugin_rates/$plugin", $1);
 			}
+
+			$is_dirtyconfig = 1 if ($line =~ m/^[^.]+\.value /);
 		}
 
 		# handle the special case of cli update_rate
 		if ($update_rate && ! grep { $_ =~ m/^update_rate (\d+)/ } @$output_rows ) {
 			push @$output_rows, "update_rate $update_rate";
 		}
+
+		# if dirty config, bypass the "fetch" part
+		goto WRITE_SPOOL if $is_dirtyconfig;
 
 		INFO("[$$][$process_name][>][$plugin] asking for data\n");
                 DEBUG("[sock][>][$plugin] fetch $plugin\n");
@@ -331,6 +338,7 @@ sub fetch_data
 			push @$output_rows, $line;
 		}
 
+WRITE_SPOOL:
 		# Write the whole load into the spool
 		$spoolwriter{$node}->write($when, $plugin, $output_rows);
 }

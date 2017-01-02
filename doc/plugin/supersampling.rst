@@ -8,9 +8,9 @@ Every monitoring software has a polling rate. It is usually 5 min,
 because it's the sweet spot that enables frequent updates yet still
 having a low overhead.
 
-Munin is not different in that respect: it's data fetching routines
+Munin is not different in that respect: its data fetching routines
 have to be launched every 5 min, otherwise you'll face data loss.
-And this 5 min period is deeply grained in the code. So changing it is
+And this 5 min period is deeply ingrained in the code. So changing it is
 possible, but very tedious and error prone.
 
 But sometimes we need a very fine sampling rate. Every 10 seconds
