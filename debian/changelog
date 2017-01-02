@@ -1,9 +1,9 @@
-munin (2.999.5-1) UNRELEASED; urgency=medium
+munin (2.999.5-1) experimental; urgency=medium
 
   * New upstream version. (Closes: #847649)
   * Replace dependency on fonts-dejavu with one on fonts-dejavu-core.
 
- -- Holger Levsen <holger@debian.org>  Wed, 21 Dec 2016 10:02:25 +0100
+ -- Holger Levsen <holger@debian.org>  Mon, 02 Jan 2017 14:16:24 +0100
 
 munin (2.999.4-1) experimental; urgency=medium
 
