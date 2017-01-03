@@ -339,6 +339,15 @@ sub _db_service {
 		$self->_db_service_attr($service_id, $attr, $_service_value);
 	}
 
+	# Handle the fields
+	for my $field_name (keys %$fields) {
+		my $_field_attrs = $fields->{$field_name};
+		$self->_db_ds_update($service_id, $field_name, $_field_attrs);
+
+	}
+
+	DEBUG "_db_service() = $service_id";
+
 	return ($service_id, \%service_attrs_old);
 }
 
@@ -354,14 +363,35 @@ sub _db_service_attr {
 }
 
 sub _db_ds_update {
-	my ($self, $service_id, $field, $attr, $value) = @_;
+	my ($self, $service_id, $field_name, $attrs) = @_;
 	my $dbh = $self->{dbh};
 
-	my $node_id = $self->{node}{node_id};
+	DEBUG "_db_ds_update($service_id, $field_name, $attrs)";
 
-	DEBUG "_db_ds_update($service_id, $field, $attr, $value)";
+	my $sth_id = $dbh->prepare("SELECT id FROM ds WHERE service_id = ? AND name = ?");
+	$sth_id->execute($service_id, $field_name);
 
-	my $sth_service_attr = $dbh->prepare("INSERT INTO service (id, name, value) VALUES (?, ?, ?)");
+	my ($ds_id) = $sth_id->fetchrow_array();
+
+	if (! defined $ds_id) {
+		# Doesn't exist yet, create it
+		my $sth_ds = $dbh->prepare("INSERT INTO ds (service_id, name) VALUES (?, ?)");
+		$sth_ds->execute($service_id, $field_name);
+		$ds_id = _get_last_insert_id($dbh);
+	}
+
+	# Remove the ds rows
+	my $sth_del_attr = $dbh->prepare('DELETE FROM ds_attr WHERE id = ?');
+	$sth_del_attr->execute($ds_id);
+
+	# Reinsert the other rows
+	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+	for my $field_attr (keys %$attrs) {
+		my $_value = $attrs->{$field_attr};
+		$sth_ds_attr->execute($ds_id, $field_attr, $_value);
+	}
+
+	return $ds_id;
 }
 
 sub get_global_service_value {
