@@ -83,6 +83,7 @@ sub do_work {
     INFO "[INFO] starting work in $$ for $nodedesignation.\n";
     my $done = $node->do_in_session(sub {
 
+	$self->{dbh}->begin_work();
 	# A I/O timeout results in a violent exit.  Catch and handle.
 	eval {
 		# Create the group path
@@ -187,7 +188,7 @@ sub do_work {
 NODE_END:
 	    # Send "quit" to node
 	    $node->quit();
-
+	$self->{dbh}->commit();
 	}; # eval
 
 	$self->_disconnect_carbon_server();
@@ -485,7 +486,6 @@ sub round_to_granularity {
 sub uw_handle_config {
 	my ($self, $plugin, $now, $data, $last_timestamp) = @_;
 
-	$self->{dbh}->begin_work();
 
 	# Build FETCH data, just in case of dirty_config.
 	my @fetch_data;
@@ -532,7 +532,6 @@ sub uw_handle_config {
 	my $timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
 	$last_timestamp = $timestamp if $timestamp && $timestamp > $last_timestamp;
 
-	$self->{dbh}->commit();
 	return $last_timestamp;
 }
 
