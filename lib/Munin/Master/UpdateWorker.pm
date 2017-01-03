@@ -511,9 +511,6 @@ sub uw_handle_config {
 		}
 
 		$fields{$arg1}{$arg2} = $value;
-
-		# TODO - Update the DB with the updated plugin config
-		DEBUG "update DB with plugin:$plugin, $arg1.$arg2 = $value";
 	}
 
 	# Sync to database
