@@ -35,7 +35,7 @@ header {
 	background-color: $primary-color;
 	z-index: 5;
 	border-bottom: 1px solid #3A713C;
-	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.5));
+	box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
 	@include box-sizing(border-box);
 
 	// Fixed position
@@ -64,10 +64,10 @@ header {
 		.logo {
 			margin-top: 5px;
 			@include transition-duration(200ms);
-			@include opacity(0.9);
+			opacity: 0.9;
 
 			&:hover {
-				@include opacity(1);
+				opacity: 1;
 			}
 		}
 	}
@@ -93,7 +93,7 @@ header {
 			color: #fff;
 			@include transition-duration(200ms);
 			padding: 2px 6px;
-			@include border-radius(2px);
+			border-radius: 2px;
 			border: 1px solid transparent;
 			white-space: nowrap;
 			margin: -4px 0 4px 0;
@@ -125,7 +125,7 @@ header {
 		margin: 5px 0 0 5px;
 		vertical-align: middle;
 		@include transition-duration(150ms);
-		@include border-radius(2px);
+		border-radius: 2px;
 		@include user-select(none);
 
 		i {
@@ -138,7 +138,7 @@ header {
 		}
 
 		&.pressed {
-			@include box-shadow(inset 1px 1px 0 rgba(0,0,0,0.05));
+			box-shadow: inset 1px 1px 0 rgba(0,0,0,0.05);
 			background-color: rgba(0, 0, 0, 0.2);
 		}
 
@@ -169,7 +169,7 @@ header {
 		color: rgba(255, 255, 255, 0.9);
 		font-size: 12px;
 		@include transition-duration(150ms);
-		@include box-shadow(none);
+		box-shadow: none;
 		@include box-sizing(border-box);
 		background-color: rgb(44, 113, 47);
 		background-color: rgba(0, 0, 0, 0.2);
@@ -188,19 +188,19 @@ header {
 		/* Placeholder text color */
 		&::-webkit-input-placeholder {
 			color: #ffffff;
-			@include opacity(0.8);
+			opacity: 0.8;
 		}
 		&:-moz-placeholder { /* Firefox 18- */
 			color: #ffffff;
-			@include opacity(0.8);
+			opacity: 0.8;
 		}
 		&::-moz-placeholder {  /* Firefox 19+ */
 			color: #ffffff;
-			@include opacity(0.8);
+			opacity: 0.8;
 		}
 		&:-ms-input-placeholder {
 			color: #ffffff;
-			@include opacity(0.8);
+			opacity: 0.8;
 		}
 
 		/* Hide IE's cross on text field */
@@ -210,7 +210,7 @@ header {
 	}
 
 	.mdi-window-close {
-		@include opacity(0.8);
+		opacity: 0.8;
 		cursor: pointer;
 		position: absolute;
 		top: 0;
@@ -219,7 +219,7 @@ header {
 	}
 
 	.mdi-magnify {
-		@include opacity(0.8);
+		opacity: 0.8;
 		margin-right: -28px;
 		font-size: 18px;
 		vertical-align: middle;
