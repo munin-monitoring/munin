@@ -89,7 +89,7 @@ sub do_work {
 		my $grp_id = $self->_db_mkgrp($group);
 
 		# Fetch the node name
-		my $node_name = $self->{node_name} || $self->{host};
+		my $node_name = $self->{node_name} || $self->{host}->{host_name};
 
 		# Create the node
 		my $node_id = $self->_db_mknode($grp_id, $node_name);
@@ -259,12 +259,10 @@ sub _get_last_insert_id {
 }
 
 sub _db_mknode {
-	my ($self, $grp_id, $node) = @_;
+	my ($self, $grp_id, $node_name) = @_;
 	my $dbh = $self->{dbh};
-	my $node_name = $node->{host_name};
 
-	DEBUG "_db_mknode($grp_id)";
-	DEBUG "_db_mknode.node_name".Dumper($node);
+	DEBUG "_db_mknode($grp_id, $node_name)";
 
 	my $sth_node_id = $dbh->prepare("SELECT id FROM node WHERE grp_id = ? AND name = ?");
 	$sth_node_id->execute($grp_id, $node_name);
@@ -281,7 +279,8 @@ sub _db_mknode {
 		# Removal of nodes is *unsupported* yet.
 	}
 
-
+	DEBUG "_db_mknode() = $node_id";
+	return $node_id;
 }
 
 sub _db_service {
