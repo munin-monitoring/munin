@@ -485,6 +485,8 @@ sub round_to_granularity {
 sub uw_handle_config {
 	my ($self, $plugin, $now, $data, $last_timestamp) = @_;
 
+	$self->{dbh}->begin_work();
+
 	# Build FETCH data, just in case of dirty_config.
 	my @fetch_data;
 
@@ -530,6 +532,7 @@ sub uw_handle_config {
 	my $timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
 	$last_timestamp = $timestamp if $timestamp && $timestamp > $last_timestamp;
 
+	$self->{dbh}->commit();
 	return $last_timestamp;
 }
 
