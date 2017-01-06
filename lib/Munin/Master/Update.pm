@@ -77,6 +77,9 @@ sub get_dbh {
 	# die loudly than injecting some misguided data
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
+	$dbh->do("PRAGMA synchronous = NORMAL");
+	$dbh->do("PRAGMA journal_mode = WAL");
+
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
 	return $dbh;
@@ -386,10 +389,6 @@ sub _dump_groups_into_sql {
 
 sub _db_init {
 	my ($self, $dbh, $dbh_state) = @_;
-
-	# We still use the temp file trick
-	$dbh->do("PRAGMA synchronous = 0");
-	$dbh->do("PRAGMA journal_mode = OFF");
 
 	# Create DB
 	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
