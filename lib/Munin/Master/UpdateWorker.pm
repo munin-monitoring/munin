@@ -181,8 +181,11 @@ sub do_work {
 		DEBUG "[DEBUG] fetch $plugin";
 		local $0 = "$0 -- fetch($plugin)";
 
-		$last_timestamp = $node->fetch_service_data($plugin, sub { $self->uw_handle_fetch( @_ , $update_rate, $last_timestamp); });
-
+		$last_timestamp = $node->fetch_service_data($plugin,
+			sub {
+				$self->uw_handle_fetch($plugin, $last_timestamp, $update_rate, @_);
+			}
+		);
 	    } # for @plugins
 NODE_END:
 	    # Send "quit" to node

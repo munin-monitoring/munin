@@ -591,7 +591,7 @@ sub parse_service_data {
 
 
 sub fetch_service_data {
-    my ($self, $plugin) = @_;
+    my ($self, $plugin, $uw_handle_data) = @_;
 
     my $t0 = [gettimeofday];
 
@@ -603,9 +603,7 @@ sub fetch_service_data {
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
     DEBUG "[DEBUG] data: $elapsed sec for '$plugin' on $nodedesignation";
 
-    $plugin = $self->_sanitise_plugin_name($plugin);
-
-    return $self->parse_service_data($plugin, $lines);
+    return $uw_handle_data->($lines);
 }
 
 sub quit {
