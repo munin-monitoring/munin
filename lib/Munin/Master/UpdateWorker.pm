@@ -397,6 +397,30 @@ sub _db_ds_update {
 	return $ds_id;
 }
 
+sub _db_state_update {
+	my ($self, $plugin, $field, $when, $value) = @_;
+	my $dbh = $self->{dbh};
+
+	DEBUG "_db_state_update($plugin, $field, $when, $value)";
+	my $ds_id = 0; # XXX - Fetch the correct DS_ID
+
+	my $sth_state = $dbh->prepare("SELECT last_epoch, last_value FROM state WHERE id = ? AND type = ?");
+	$sth_state->execute($ds_id, "ds");
+	my ($last_epoch, $last_value) = $sth_state->fetchrow_array();
+
+	if (! defined $last_epoch) {
+		# No line exists yet. Create It.
+		my $sth_state_i = $dbh->prepare("INSERT INTO state (id, type) VALUES (?, ?)");
+		$sth_state_i->execute($ds_id, "ds");
+	}
+
+	# Update the state with the new values
+	my ($prev_epoch, $prev_value) = ($last_epoch, $last_value);
+	my $sth_state_u = $dbh->prepare("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
+	$sth_state_u->execute($when, $value, $ds_id, "ds");
+}
+
+
 sub get_global_service_value {
 	my ($service_config, $service, $conf_field_name, $default) = @_;
 	foreach my $array (@{$service_config->{global}{$service}}) {
@@ -568,7 +592,7 @@ sub uw_handle_fetch {
 		$last_timestamp = $when if $when > $last_timestamp;
 
 		# Update all data-driven components: State, RRD, Graphite
-		# TODO
+		$self->_db_state_update($plugin, $field, $when, $value);
 	}
 
 	return $last_timestamp;
