@@ -400,13 +400,27 @@ sub _db_ds_update {
 sub _db_state_update {
 	my ($self, $plugin, $field, $when, $value) = @_;
 	my $dbh = $self->{dbh};
+	my $node_id = $self->{node_id};
 
 	DEBUG "_db_state_update($plugin, $field, $when, $value)";
-	my $ds_id = 0; # XXX - Fetch the correct DS_ID
+	DEBUG "_db_state_update.node_id:$node_id";
+	my $sth_ds = $dbh->prepare("
+		SELECT ds.id FROM ds
+		JOIN service s ON ds.service_id = s.id AND s.node_id = ? AND s.name = ?
+		WHERE ds.name = ?");
+	$sth_ds->execute($node_id, $plugin, $field);
+	my ($ds_id) = $sth_ds->fetchrow_array();
+	DEBUG "_db_state_update.ds_id:$ds_id";
 
 	my $sth_state = $dbh->prepare("SELECT last_epoch, last_value FROM state WHERE id = ? AND type = ?");
 	$sth_state->execute($ds_id, "ds");
 	my ($last_epoch, $last_value) = $sth_state->fetchrow_array();
+
+	{
+		no warnings;
+		DEBUG "_db_state_update.last_epoch:$last_epoch";
+		DEBUG "_db_state_update.last_value:$last_value";
+	}
 
 	if (! defined $last_epoch) {
 		# No line exists yet. Create It.
