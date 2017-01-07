@@ -8,6 +8,7 @@ cat <<EOF
   libdbd-sqlite3-perl
   libdbi-perl
   libdevel-cover-perl
+  libdevel-nytprof-perl
   libfile-copy-recursive-perl
   libfile-readbackwards-perl
   libfile-slurp-perl
