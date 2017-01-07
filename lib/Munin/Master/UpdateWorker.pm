@@ -181,9 +181,10 @@ sub do_work {
 		DEBUG "[DEBUG] fetch $plugin";
 		local $0 = "$0 -- fetch($plugin)";
 
+		my $now = time;
 		$last_timestamp = $node->fetch_service_data($plugin,
 			sub {
-				$self->uw_handle_fetch($plugin, $last_timestamp, $update_rate, @_);
+				$self->uw_handle_fetch($plugin, $now, $update_rate, @_);
 			}
 		);
 	    } # for @plugins
