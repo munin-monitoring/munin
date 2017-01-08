@@ -475,7 +475,7 @@ sub handle_request
 	# future begins at this horizontal ruler
 	if ($lastupdated) {
 		# TODO - we have to find the last updated for aliased items
-		push(@rrd_gfx, "VRULE:$lastupdated#999999:Last update:dashes=2,5\\l");
+		push(@rrd_gfx, "VRULE:$lastupdated#999999:Last update:dashes=2,5");
 		my $last_update_str = escape_for_rrd(scalar localtime($lastupdated));
 		push @rrd_gfx, "COMMENT:\\u";
 		push @rrd_gfx, "COMMENT:$last_update_str\\r";
