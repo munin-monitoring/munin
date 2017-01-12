@@ -176,14 +176,14 @@ sub do_work {
 
 		my $update_rate = 300; # XXX - hard coded
 
-		my $is_fresh_enough = $self->is_fresh_enough($update_rate, $last_timestamp);
+		my $now = time;
+		my $is_fresh_enough = $self->is_fresh_enough($update_rate, $last_timestamp, $now);
 
 		next if ($is_fresh_enough);
 
 		DEBUG "[DEBUG] fetch $plugin";
 		local $0 = "$0 f($plugin)";
 
-		my $now = time;
 		$last_timestamp = $node->fetch_service_data($plugin,
 			sub {
 				$self->uw_handle_fetch($plugin, $now, $update_rate, @_);
@@ -451,26 +451,20 @@ sub get_global_service_value {
 }
 
 sub is_fresh_enough {
-	my ($self, $nodedesignation, $service, $update_rate_in_seconds) = @_;
+	my ($self, $update_rate, $last_timestamp, $now) = @_;
 
-	DEBUG "is_fresh_enough asked for $service with a rate of $update_rate_in_seconds";
+	DEBUG "is_fresh_enough($update_rate, $last_timestamp, $now)";
 
-	my $last_updated = $self->{state}{last_updated}{$service} || "0 0";
-	DEBUG "last_updated{$service}: " . $last_updated;
-	my @last = split(/ /, $last_updated);
+	my ($is_update_aligned, $update_rate_in_sec) = parse_update_rate($update_rate);
 
-	use Time::HiRes qw(gettimeofday tv_interval);
-	my $now = [ gettimeofday ];
+	DEBUG "update_rate_in_sec:$update_rate_in_sec";
 
-	my $age = tv_interval(\@last, $now);
-	DEBUG "last: [" . join(",", @last) . "], now: [" . join(", ", @$now) . "], age: $age";
-	my $is_fresh_enough = ($age < $update_rate_in_seconds) ? 1 : 0;
+	my $age = $now - $last_timestamp;
+
+	DEBUG "now:$now, age:$age";
+
+	my $is_fresh_enough = ($age < $update_rate_in_sec) ? 1 : 0;
 	DEBUG "is_fresh_enough  $is_fresh_enough";
-
-	if (! $is_fresh_enough) {
-		DEBUG "new value: " . join(" ", @$now);
-		$self->{state}{last_updated}{$service} = join(" ", @$now);
-	}
 
 	return $is_fresh_enough;
 }
