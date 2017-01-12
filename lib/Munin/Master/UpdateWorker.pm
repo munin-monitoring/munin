@@ -492,7 +492,7 @@ sub set_spoolfetch_timestamp {
 sub parse_update_rate {
 	my ($update_rate_config) = @_;
 
-	my ($is_update_aligned, $update_rate_in_sec);
+	my ($update_rate_in_sec, $is_update_aligned);
 	if ($update_rate_config =~ m/(\d+[a-z]?)( aligned)?/) {
 		$update_rate_in_sec = to_sec($1);
 		$is_update_aligned = $2;
