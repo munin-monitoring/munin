@@ -102,22 +102,22 @@ sub do_work {
 		my $dbh = $self->{dbh};
 		my $dbh_state = $self->{dbh_state};
 
-		# Prepare all the useful statements
-		$self->{sth}{node} = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
-		$self->{sth}{node_attr} = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
-		$self->{sth}{service} = $dbh->prepare('INSERT INTO service (node_id, name, path, service_title, graph_info, subgraphs)
+		# prepare_cached all the useful statements
+		$self->{sth}{node} = $dbh->prepare_cached('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
+		$self->{sth}{node_attr} = $dbh->prepare_cached('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
+		$self->{sth}{service} = $dbh->prepare_cached('INSERT INTO service (node_id, name, path, service_title, graph_info, subgraphs)
 			VALUES (?, ?, ?, ?, ?, ?)');
-		$self->{sth}{service_attr} = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
-		$self->{sth}{ds} = $dbh->prepare('INSERT INTO ds (service_id, name, path, ordr) VALUES (?, ?, ?, ?)');
-		$self->{sth}{ds_attr} = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
-		$self->{sth}{ds_type} = $dbh->prepare('UPDATE ds SET type = ? where id = ?');
-		$self->{sth}{url} = $dbh->prepare('INSERT INTO url (id, type, path) VALUES (?, ?, ?)');
+		$self->{sth}{service_attr} = $dbh->prepare_cached('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
+		$self->{sth}{ds} = $dbh->prepare_cached('INSERT INTO ds (service_id, name, path, ordr) VALUES (?, ?, ?, ?)');
+		$self->{sth}{ds_attr} = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+		$self->{sth}{ds_type} = $dbh->prepare_cached('UPDATE ds SET type = ? where id = ?');
+		$self->{sth}{url} = $dbh->prepare_cached('INSERT INTO url (id, type, path) VALUES (?, ?, ?)');
 		$self->{sth}{url}->{RaiseError} = 1;
-		$self->{sth}{state} = $dbh_state->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns
+		$self->{sth}{state} = $dbh_state->prepare_cached('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns
 			FROM state WHERE id = ? AND type = ?');
-		$self->{sth}{state_i} = $dbh_state->prepare(
+		$self->{sth}{state_i} = $dbh_state->prepare_cached(
 			'INSERT INTO state (last_epoch, last_value, prev_epoch, prev_value, id, type) VALUES (?, ?, ?, ?, ?, ?)');
-		$self->{sth}{state_u} = $dbh_state->prepare(
+		$self->{sth}{state_u} = $dbh_state->prepare_cached(
 			'UPDATE state SET last_epoch = ?, last_value = ?, prev_epoch = ?, prev_value = ? WHERE id = ? AND type = ?');
 		$self->{sth}{state_i}->{RaiseError} = 0;
 		$self->{sth}{state_u}->{RaiseError} = 0;
@@ -240,13 +240,14 @@ sub _db_mkgrp {
 	my $p_id = 0; # XXX - 0 is a magic number that says NO_PARENT, as the == NULL doesn't work
 
 	# Create the group if needed
-	my $sth_grp_id = $dbh->prepare("SELECT id FROM grp WHERE name = ? AND p_id = ?");
+	my $sth_grp_id = $dbh->prepare_cached("SELECT id FROM grp WHERE name = ? AND p_id = ?");
 	$sth_grp_id->execute($grp_name, $p_id);
 	my ($grp_id) = $sth_grp_id->fetchrow_array();
+	$sth_grp_id->finish();
 
 	if (! defined $grp_id) {
 		# Create the Group
-		my $sth_grp = $dbh->prepare('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
+		my $sth_grp = $dbh->prepare_cached('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
 		my $path = "";
 		$sth_grp->execute($grp_name, $p_id, $path);
 		$grp_id = _get_last_insert_id($dbh);
@@ -270,13 +271,14 @@ sub _db_mknode {
 
 	DEBUG "_db_mknode($grp_id, $node_name)";
 
-	my $sth_node_id = $dbh->prepare("SELECT id FROM node WHERE grp_id = ? AND name = ?");
+	my $sth_node_id = $dbh->prepare_cached("SELECT id FROM node WHERE grp_id = ? AND name = ?");
 	$sth_node_id->execute($grp_id, $node_name);
 	my ($node_id) = $sth_node_id->fetchrow_array();
+	$sth_node_id->finish();
 
 	if (! defined $node_id) {
 		# Create the node
-		my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
+		my $sth_node = $dbh->prepare_cached('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 		my $path = "";
 		$sth_node->execute($grp_id, $node_name, $path);
 		$node_id = _get_last_insert_id($dbh);
@@ -299,13 +301,14 @@ sub _db_service {
 	DEBUG "_db_service.fields:".Dumper($fields);
 
 	# Save the whole service config, and drop it.
-	my $sth_service_id = $dbh->prepare("SELECT id FROM service WHERE node_id = ? AND name = ?");
+	my $sth_service_id = $dbh->prepare_cached("SELECT id FROM service WHERE node_id = ? AND name = ?");
 	$sth_service_id->execute($node_id, $plugin);
 	my ($service_id) = $sth_service_id->fetchrow_array();
+	$sth_service_id->finish();
 
 	if (! defined $service_id) {
 		# Doesn't exist yet, create it
-		my $sth_service = $dbh->prepare("INSERT INTO service (node_id, name) VALUES (?, ?)");
+		my $sth_service = $dbh->prepare_cached("INSERT INTO service (node_id, name) VALUES (?, ?)");
 		$sth_service->execute($node_id, $plugin);
 		$service_id = _get_last_insert_id($dbh);
 	}
@@ -315,14 +318,15 @@ sub _db_service {
 	# Save the existing values
 	my (%service_attrs_old, %fields_old);
 	{
-		my $sth_service_attrs = $dbh->prepare("SELECT name, value FROM service_attr WHERE id = ?");
+		my $sth_service_attrs = $dbh->prepare_cached("SELECT name, value FROM service_attr WHERE id = ?");
 		$sth_service_attrs->execute($service_id);
 
 		while (my ($_name, $_value) = $sth_service_attrs->fetchrow_array()) {
 			$service_attrs_old{$_name} = $_value;
 		}
+		$sth_service_attrs->finish();
 
-		my $sth_fields_attr = $dbh->prepare("SELECT ds.name as field, ds_attr.name as attr, ds_attr.value FROM ds
+		my $sth_fields_attr = $dbh->prepare_cached("SELECT ds.name as field, ds_attr.name as attr, ds_attr.value FROM ds
 			LEFT OUTER JOIN ds_attr ON ds.id = ds_attr.id WHERE ds.service_id = ?");
 		$sth_fields_attr->execute($service_id);
 
@@ -330,6 +334,7 @@ sub _db_service {
 		while (my ($_field, $_name, $_value) = $sth_fields_attr->fetchrow_array()) {
 			$fields_old{$_field}{$_name} = $_value;
 		}
+		$sth_fields_attr->finish();
 	}
 
 	DEBUG "_db_service.%service_attrs_old:" . Dumper(\%service_attrs_old);
@@ -337,7 +342,7 @@ sub _db_service {
 
 	# Leave room for refresh
 	# XXX - we might only update DB with diff.
-	my $sth_service_attrs_del = $dbh->prepare("DELETE FROM service_attr WHERE id = ?");
+	my $sth_service_attrs_del = $dbh->prepare_cached("DELETE FROM service_attr WHERE id = ?");
 	$sth_service_attrs_del->execute($service_id);
 
 	for my $attr (keys %$service_attr) {
@@ -364,7 +369,7 @@ sub _db_service_attr {
 	DEBUG "_db_service_attr($service_id, $name, $value)";
 
 	# Save the whole service config, and drop it.
-	my $sth_service_attr = $dbh->prepare("INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)");
+	my $sth_service_attr = $dbh->prepare_cached("INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)");
 	$sth_service_attr->execute($service_id, $name, $value);
 }
 
@@ -374,24 +379,25 @@ sub _db_ds_update {
 
 	DEBUG "_db_ds_update($service_id, $field_name, $attrs)";
 
-	my $sth_id = $dbh->prepare("SELECT id FROM ds WHERE service_id = ? AND name = ?");
+	my $sth_id = $dbh->prepare_cached("SELECT id FROM ds WHERE service_id = ? AND name = ?");
 	$sth_id->execute($service_id, $field_name);
 
 	my ($ds_id) = $sth_id->fetchrow_array();
+	$sth_id->finish();
 
 	if (! defined $ds_id) {
 		# Doesn't exist yet, create it
-		my $sth_ds = $dbh->prepare("INSERT INTO ds (service_id, name) VALUES (?, ?)");
+		my $sth_ds = $dbh->prepare_cached("INSERT INTO ds (service_id, name) VALUES (?, ?)");
 		$sth_ds->execute($service_id, $field_name);
 		$ds_id = _get_last_insert_id($dbh);
 	}
 
 	# Remove the ds rows
-	my $sth_del_attr = $dbh->prepare('DELETE FROM ds_attr WHERE id = ?');
+	my $sth_del_attr = $dbh->prepare_cached('DELETE FROM ds_attr WHERE id = ?');
 	$sth_del_attr->execute($ds_id);
 
 	# Reinsert the other rows
-	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+	my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 	for my $field_attr (keys %$attrs) {
 		my $_value = $attrs->{$field_attr};
 		$sth_ds_attr->execute($ds_id, $field_attr, $_value);
@@ -407,17 +413,19 @@ sub _db_state_update {
 
 	DEBUG "_db_state_update($plugin, $field, $when, $value)";
 	DEBUG "_db_state_update.node_id:$node_id";
-	my $sth_ds = $dbh->prepare("
+	my $sth_ds = $dbh->prepare_cached("
 		SELECT ds.id FROM ds
 		JOIN service s ON ds.service_id = s.id AND s.node_id = ? AND s.name = ?
 		WHERE ds.name = ?");
 	$sth_ds->execute($node_id, $plugin, $field);
 	my ($ds_id) = $sth_ds->fetchrow_array();
 	DEBUG "_db_state_update.ds_id:$ds_id";
+	$sth_ds->finish();
 
-	my $sth_state = $dbh->prepare("SELECT last_epoch, last_value FROM state WHERE id = ? AND type = ?");
+	my $sth_state = $dbh->prepare_cached("SELECT last_epoch, last_value FROM state WHERE id = ? AND type = ?");
 	$sth_state->execute($ds_id, "ds");
 	my ($last_epoch, $last_value) = $sth_state->fetchrow_array();
+	$sth_state->finish();
 
 	{
 		no warnings;
@@ -427,13 +435,13 @@ sub _db_state_update {
 
 	if (! defined $last_epoch) {
 		# No line exists yet. Create It.
-		my $sth_state_i = $dbh->prepare("INSERT INTO state (id, type) VALUES (?, ?)");
+		my $sth_state_i = $dbh->prepare_cached("INSERT INTO state (id, type) VALUES (?, ?)");
 		$sth_state_i->execute($ds_id, "ds");
 	}
 
 	# Update the state with the new values
 	my ($prev_epoch, $prev_value) = ($last_epoch, $last_value);
-	my $sth_state_u = $dbh->prepare("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
+	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
 	$sth_state_u->execute($when, $value, $ds_id, "ds");
 }
 
