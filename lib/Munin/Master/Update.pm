@@ -169,8 +169,9 @@ sub _run_workers {
 		eval {
 			# Inject the 2 dbh (meta + state)
 			# XXX - It is in the same DB for now
-			$worker->{dbh} = get_dbh();
-			$worker->{dbh_state} = get_dbh();
+			my $common_dbh = get_dbh();
+			$worker->{dbh} = $common_dbh;
+			$worker->{dbh_state} = $common_dbh;
 
 			# do_work fails hard on a number of conditions
 			$res = $worker->do_work();
