@@ -495,7 +495,7 @@ sub parse_update_rate {
 	my ($update_rate_in_sec, $is_update_aligned);
 	if ($update_rate_config =~ m/(\d+[a-z]?)( aligned)?/) {
 		$update_rate_in_sec = to_sec($1);
-		$is_update_aligned = $2;
+		$is_update_aligned = ($2 || 0);
 	} else {
 		return (0, 0);
 	}
