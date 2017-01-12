@@ -66,6 +66,8 @@ sub do_work {
     my $nodedesignation = $host."/".
 	$self->{host}{address}.":".$self->{host}{port};
 
+    local $0 = "$0 [$nodedesignation]";
+
     # No need to lock for the node. We'll use per plugin locking, and it will be
     # handled directly in SQL. This will enable node-pushed updates.
 
@@ -123,7 +125,7 @@ sub do_work {
             # Handle spoolfetch, one call to retrieve everything
 	    if (grep /^spool$/, @node_capabilities) {
 		    my $spoolfetch_last_timestamp = $self->get_spoolfetch_timestamp();
-		    local $0 = "$0 -- spoolfetch($spoolfetch_last_timestamp)";
+		    local $0 = "$0 s($spoolfetch_last_timestamp)";
 
 		    # We do inject the update handling, in order to have on-the-fly
 		    # updates, as we don't want to slurp the whole spoolfetched output
@@ -158,7 +160,7 @@ sub do_work {
 
 		DEBUG "[DEBUG] config $plugin";
 
-		local $0 = "$0 -- config($plugin)";
+		local $0 = "$0 c($plugin)";
 		my $last_timestamp = $node->fetch_service_config($plugin, sub { $self->uw_handle_config( @_ ); });
 
 		# Ignoring if $last_timestamp is undef, as we don't have config
@@ -179,7 +181,7 @@ sub do_work {
 		next if ($is_fresh_enough);
 
 		DEBUG "[DEBUG] fetch $plugin";
-		local $0 = "$0 -- fetch($plugin)";
+		local $0 = "$0 f($plugin)";
 
 		my $now = time;
 		$last_timestamp = $node->fetch_service_data($plugin,
