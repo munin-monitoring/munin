@@ -260,9 +260,9 @@ sub get_hostname
 {
 	my ($i) = @_;
 
-	my @gods = keys( %{ $fun_names->{gods} } );
-	my @worlds = keys( %{ $fun_names->{worlds} } );
-	my @groups = keys( %{ $fun_names->{groups} } );
+	my @gods = sort keys( %{ $fun_names->{gods} } );
+	my @worlds = sort keys( %{ $fun_names->{worlds} } );
+	my @groups = sort keys( %{ $fun_names->{groups} } );
 
 
 	my $hostname = _get_from_array($i, \@gods, 1);
@@ -282,7 +282,7 @@ sub get_service
 {
 	my ($plugin_number) = @_;
 
-	my @giants = keys( %{ $fun_names->{giants} } );
+	my @giants = sort keys( %{ $fun_names->{giants} } );
 	my $giant = _get_from_array($plugin_number, \@giants, 1);
 
 	return $giant;
@@ -292,7 +292,7 @@ sub get_service_title
 {
 	my ($plugin_number)= @_;
 
-	my @giants = keys( %{ $fun_names->{giants} } );
+	my @giants = sort keys( %{ $fun_names->{giants} } );
 	my $giant = _get_from_array($plugin_number, \@giants, 0);
 
 	return $giant . " : " . $fun_names->{giants}->{$giant};
@@ -302,7 +302,7 @@ sub get_service_category
 {
 	my ($plugin_number)= @_;
 
-	my @locations = keys( %{ $fun_names->{locations} } );
+	my @locations = sort keys( %{ $fun_names->{locations} } );
 	my $location = _get_from_array($plugin_number, \@locations, 0);
 
 	return $location;
@@ -312,7 +312,7 @@ sub get_ds
 {
 	my ($plugin_number, $i) = @_;
 
-	my @weapons = keys( %{ $fun_names->{weapons} } );
+	my @weapons = sort keys( %{ $fun_names->{weapons} } );
 	my $weapon = _get_from_array($i, \@weapons, 1);
 
 	return $weapon;
@@ -321,7 +321,7 @@ sub get_ds
 sub get_ds_info
 {
 	my ($plugin_name, $i) = @_;
-	my @weapons = keys( %{ $fun_names->{weapons} } );
+	my @weapons = sort keys( %{ $fun_names->{weapons} } );
 	my $weapon = _get_from_array($i, \@weapons, 0);
 
 	return $fun_names->{weapons}->{$weapon};
