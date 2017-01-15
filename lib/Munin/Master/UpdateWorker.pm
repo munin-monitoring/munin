@@ -351,15 +351,16 @@ sub _db_service {
 	}
 
 	# Handle the fields
+	my %ds_ids;
 	for my $field_name (keys %$fields) {
 		my $_field_attrs = $fields->{$field_name};
-		$self->_db_ds_update($service_id, $field_name, $_field_attrs);
-
+		my $ds_id = $self->_db_ds_update($service_id, $field_name, $_field_attrs);
+		$ds_ids{$field_name} = $ds_id;
 	}
 
 	DEBUG "_db_service() = $service_id";
 
-	return ($service_id, \%service_attrs_old);
+	return ($service_id, \%service_attrs_old, \%fields_old, \%ds_ids);
 }
 
 sub _db_service_attr {
@@ -563,14 +564,22 @@ sub uw_handle_config {
 
 	# Sync to database
 	# Create/Update the service
-	my ($service_id, $service_attrs_old, $fields_old) = $self->_db_service($plugin, \%service_attr, \%fields);
+	my ($service_id, $service_attrs_old, $fields_old, $ds_ids) = $self->_db_service($plugin, \%service_attr, \%fields);
 
 	# Create the RRDs
 	for my $ds_name (keys %fields) {
 		my $ds_config = $fields{$ds_name};
+		my $ds_id = $ds_ids->{$ds_name};
 
 		my $first_epoch = time; # XXX - we should be able to have some delay in the past for spoolfetched plugins
 		my $rrd_file = $self->_create_rrd_file_if_needed($plugin, $ds_name, $ds_config, $first_epoch);
+
+		# Update the RRD file
+		# XXX - Should be handled in a stateful way, as now it is reconstructed everytime
+		my $dbh = $self->{dbh};
+		my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+		$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
+		$sth_ds_attr->execute($ds_id, "rrd:field", "42");
 	}
 
 	# timestamp == 0 means "Nothing was updated". We only count on the
