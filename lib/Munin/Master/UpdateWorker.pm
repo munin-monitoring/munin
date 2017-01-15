@@ -94,7 +94,7 @@ sub do_work {
 		my $node_name = $self->{node_name} || $self->{host}->{host_name};
 
 		# Create the node
-		my $node_id = $self->_db_mknode($grp_id, $node_name);
+		my $node_id = $self->_db_node($grp_id, $node_name);
 		$self->{node_id} = $node_id;
 
 		my @node_capabilities = $node->negotiate_capabilities();
@@ -265,11 +265,11 @@ sub _get_last_insert_id {
 	return $dbh->last_insert_id("", "", "", "");
 }
 
-sub _db_mknode {
+sub _db_node {
 	my ($self, $grp_id, $node_name) = @_;
 	my $dbh = $self->{dbh};
 
-	DEBUG "_db_mknode($grp_id, $node_name)";
+	DEBUG "_db_node($grp_id, $node_name)";
 
 	my $sth_node_id = $dbh->prepare_cached("SELECT id FROM node WHERE grp_id = ? AND name = ?");
 	$sth_node_id->execute($grp_id, $node_name);
@@ -287,7 +287,7 @@ sub _db_mknode {
 		# Removal of nodes is *unsupported* yet.
 	}
 
-	DEBUG "_db_mknode() = $node_id";
+	DEBUG "_db_node() = $node_id";
 	return $node_id;
 }
 
