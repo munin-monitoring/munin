@@ -231,6 +231,18 @@ FETCH_OK:
     }
 }
 
+sub _db_url {
+	my ($self, $type, $id, $path) = @_;
+	my $dbh = $self->{dbh};
+
+	my $sth_d_url = $dbh->prepare_cached("DELETE FROM url WHERE type = ? AND id = ?");
+	$sth_d_url->execute($type, $id);
+
+
+	my $sth_url = $dbh->prepare_cached('INSERT INTO url (type, id, path) VALUES (?, ?, ?)');
+	$sth_url->execute($type, $id, $path);
+}
+
 sub _db_mkgrp {
 	my ($self, $group) = @_;
 	my $dbh = $self->{dbh};
