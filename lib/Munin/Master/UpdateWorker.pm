@@ -565,6 +565,13 @@ sub uw_handle_config {
 	# Create/Update the service
 	my ($service_id, $service_attrs_old, $fields_old) = $self->_db_service($plugin, \%service_attr, \%fields);
 
+	# Create the RRDs
+	for my $ds_name (keys %fields) {
+		my $ds_config = $fields{$ds_name};
+
+		my $first_epoch = time; # XXX - we should be able to have some delay in the past for spoolfetched plugins
+		my $rrd_file = $self->_create_rrd_file_if_needed($plugin, $ds_name, $ds_config, $first_epoch);
+	}
 
 	# timestamp == 0 means "Nothing was updated". We only count on the
 	# "fetch" part to provide us good timestamp info, as the "config" part
