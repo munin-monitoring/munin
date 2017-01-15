@@ -444,6 +444,8 @@ sub _db_state_update {
 	my ($prev_epoch, $prev_value) = ($last_epoch, $last_value);
 	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
 	$sth_state_u->execute($when, $value, $ds_id, "ds");
+
+	return $ds_id;
 }
 
 
@@ -627,7 +629,34 @@ sub uw_handle_fetch {
 		$last_timestamp = $when if $when > $last_timestamp;
 
 		# Update all data-driven components: State, RRD, Graphite
-		$self->_db_state_update($plugin, $field, $when, $value);
+		my $ds_id = $self->_db_state_update($plugin, $field, $when, $value);
+
+		my ($rrd_file, $rrd_field);
+		{
+			# XXX - Quite inefficient, but works
+			my $dbh = $self->{dbh};
+			my $sth_rrdinfos = $dbh->prepare_cached(
+				"SELECT name, value FROM ds_attr WHERE id = ? AND name in (
+					'rrd:file',
+					'rrd:field'
+				)"
+			);
+			$sth_rrdinfos->execute($ds_id);
+			while ( my @row = $sth_rrdinfos->fetchrow_array ) {
+				$rrd_file  = $row[1] if $row[0] eq "rrd:file";
+				$rrd_field = $row[1] if $row[0] eq "rrd:field";
+			}
+			$sth_rrdinfos->finish();
+		}
+
+		# This is a little convoluted but is needed as the API permits
+		# vectorized updates
+		my $ds_values = {
+			"value" => [ $value, ],
+			"when" => [ $when, ],
+		};
+		$self->_update_rrd_file($rrd_file, $field, $ds_values);
+
 	}
 
 	return $last_timestamp;
@@ -1192,15 +1221,13 @@ sub to_mul_nb {
 }
 
 sub _update_rrd_file {
-    my ($self, $rrd_file, $ds_name, $ds_values) = @_;
+	my ($self, $rrd_file, $ds_name, $ds_values) = @_;
 
-    my $values = $ds_values->{value};
+	my $values = $ds_values->{value};
 
-    # Some kind of mismatch between fetch and config can cause this.
-    return if !defined($values);
+	# Some kind of mismatch between fetch and config can cause this.
+	return unless defined($values);
 
-    my ($previous_updated_timestamp, $previous_updated_value) = @{ $self->{state}{value}{"$rrd_file:42"}{current} || [ ] };
-    my @update_rrd_data;
 	if ($config->{"rrdcached_socket"}) {
 		if (! -e $config->{"rrdcached_socket"} || ! -w $config->{"rrdcached_socket"}) {
 			WARN "[WARN] RRDCached feature ignored: rrdcached socket not writable";
@@ -1213,64 +1240,74 @@ sub _update_rrd_file {
 		}
 	}
 
-    my ($current_updated_timestamp, $current_updated_value) = ($previous_updated_timestamp, $previous_updated_value);
-    for (my $i = 0; $i < scalar @$values; $i++) {
-        my $value = $values->[$i];
-        my $when = $ds_values->{when}[$i];
+	my @update_rrd_data;
 
-	# Ignore values that is not in monotonic increasing timestamp for the RRD.
-	# Otherwise it will reject the whole update
-	next if ($current_updated_timestamp && $when <= $current_updated_timestamp);
+	my ($current_updated_timestamp, $current_updated_value);
+	for (my $i = 0; $i < scalar @$values; $i++) {
+		my $value = $values->[$i];
+		my $when = $ds_values->{when}[$i];
 
-        if ($value =~ /\d[Ee]([+-]?\d+)$/) {
-            # Looks like scientific format.  RRDtool does not
-            # like it so we convert it.
-            my $magnitude = $1;
-            if ($magnitude < 0) {
-                # Preserve at least 4 significant digits
-                $magnitude = abs($magnitude) + 4;
-                $value = sprintf("%.*f", $magnitude, $value);
-            } else {
-                $value = sprintf("%.4f", $value);
-            }
-        }
+		# Ignore values that are not in monotonic increasing timestamp for the RRD.
+		# Otherwise it will reject the whole update
+		next if ($current_updated_timestamp && $when <= $current_updated_timestamp);
 
-        # Schedule for addition
-        push @update_rrd_data, "$when:$value";
+		# RRDtool does not like scientific format so we convert it.
+		$value = convert_to_float($value);
 
-	$current_updated_timestamp = $when;
-	$current_updated_value = $value;
-    }
+		# Schedule for addition
+		push @update_rrd_data, "$when:$value";
 
-    DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
-    if ($ENV{RRDCACHED_ADDRESS} && (scalar @update_rrd_data > 32) ) {
-        # RRDCACHED only takes about 4K worth of commands. If the commands is
-        # too large, we have to break it in smaller calls.
-        #
-        # Note that 32 is just an arbitrary choosed number. It might be tweaked.
-        #
-        # For simplicity we only call it with 1 update each time, as RRDCACHED
-        # will buffer for us as suggested on the rrd mailing-list.
-        # https://lists.oetiker.ch/pipermail/rrd-users/2011-October/018196.html
-        for my $update_rrd_data (@update_rrd_data) {
-            RRDs::update($rrd_file, $update_rrd_data);
-            # Break on error.
-            last if RRDs::error;
-        }
-    } else {
-        RRDs::update($rrd_file, @update_rrd_data);
-    }
+		$current_updated_timestamp = $when;
+		$current_updated_value = $value;
+	}
 
-    if (my $ERROR = RRDs::error) {
-        #confess Dumper @_;
-        ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
-    }
+	DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
+	if ($ENV{RRDCACHED_ADDRESS} && (scalar @update_rrd_data > 32) ) {
+		# RRDCACHED only takes about 4K worth of commands. If the commands is
+		# too large, we have to break it in smaller calls.
+		#
+		# Note that 32 is just an arbitrary choosed number. It might be tweaked.
+		#
+		# For simplicity we only call it with 1 update each time, as RRDCACHED
+		# will buffer for us as suggested on the rrd mailing-list.
+		# https://lists.oetiker.ch/pipermail/rrd-users/2011-October/018196.html
+		for my $update_rrd_data (@update_rrd_data) {
+			DEBUG "RRDs::update($rrd_file, $update_rrd_data)";
+			RRDs::update($rrd_file, $update_rrd_data);
+			# Break on error.
+			last if RRDs::error;
+		}
+	} else {
+		# normal vector-update the RRD
+		DEBUG "RRDs::update($rrd_file, @update_rrd_data)";
+		RRDs::update($rrd_file, @update_rrd_data);
+	}
 
-    # Stores the previous and the current value in the state db to avoid having to do an RRD lookup if needed
-    $self->{state}{value}{"$rrd_file:42"}{current} = [ $current_updated_timestamp, $current_updated_value ];
-    $self->{state}{value}{"$rrd_file:42"}{previous} = [ $previous_updated_timestamp, $previous_updated_value ];
+	if (my $ERROR = RRDs::error) {
+		#confess Dumper @_;
+		ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
+	}
 
-    return $current_updated_timestamp;
+	return $current_updated_timestamp;
+}
+
+sub convert_to_float
+{
+	my $value = shift;
+
+	# Only convert if it looks like scientific format
+	return $value unless ($value =~ /\d[Ee]([+-]?\d+)$/);
+
+	my $magnitude = $1;
+	if ($magnitude < 0) {
+		# Preserve at least 4 significant digits
+		$magnitude = abs($magnitude) + 4;
+		$value = sprintf("%.*f", $magnitude, $value);
+	} else {
+		$value = sprintf("%.4f", $value);
+	}
+
+	return $value
 }
 
 sub dump_to_file
