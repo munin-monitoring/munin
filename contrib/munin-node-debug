@@ -95,7 +95,8 @@ if ($dump_config) {
 		my $port = $starting_port + $i;
 		for (my $p = 0; $p < $nb_servers_per_port; $p++) {
 			my $hostname = get_hostname($i, $p);
-			print "[$hostname]\n";
+			my $group = get_group($i, $p);
+			print "[$group;$hostname]\n";
 			print "     address 127.0.0.1\n";
 			print "     port $port\n";
 			print "\n";
@@ -290,6 +291,21 @@ sub get_hostname
 
 
 	return "$hostname.$world.$group";
+}
+
+sub get_group
+{
+	my ($i, $j) = @_;
+
+	my @gods = sort keys( %{ $fun_names->{gods} } );
+	my @worlds = sort keys( %{ $fun_names->{worlds} } );
+	my @groups = sort keys( %{ $fun_names->{groups} } );
+
+
+	my $world = _get_from_array($i, \@worlds, 0);
+	my $group = _get_from_array($i, \@groups, 0);
+
+	return "$group;$world.$group";
 }
 
 sub get_category
