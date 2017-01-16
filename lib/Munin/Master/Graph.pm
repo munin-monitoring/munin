@@ -654,13 +654,13 @@ sub expand_cdef {
 }
 
 sub RRDs_graph {
-	use IPC::Open3;
-	use IO::String;
-
 	# RRDs::graph() is *STATEFUL*. It doesn't emit the same PNG
 	# when called the second time.
 	#
-	# return RRDs::graph(@_);
+	return RRDs::graph(@_);
+
+	use IPC::Open3;
+	use IO::String;
 
 	# We just revert to spawning a full featured rrdtool cmd for now.
 	my $chld_out = new IO::String();
