@@ -268,6 +268,9 @@ sub _db_mkgrp {
 		# Removal of grp is *unsupported* yet.
 	}
 
+	my $url = "group/$grp_id/$grp_name";
+	$self->_db_url("group", $grp_id, $url);
+
 	return $grp_id;
 }
 
@@ -298,6 +301,9 @@ sub _db_node {
 		# Nothing to do, the node doesn't need any updates anyway.
 		# Removal of nodes is *unsupported* yet.
 	}
+
+	my $url = "node/$node_id/$node_name";
+	$self->_db_url("node", $node_id, $url);
 
 	DEBUG "_db_node() = $node_id";
 	return $node_id;
@@ -381,6 +387,9 @@ sub _db_service {
 		my $ds_id = $self->_db_ds_update($service_id, $field_name, $_field_attrs);
 		$ds_ids{$field_name} = $ds_id;
 	}
+
+	my $url = "service/$service_id/$plugin";
+	$self->_db_url("service", $service_id, $url);
 
 	DEBUG "_db_service() = $service_id";
 
