@@ -129,7 +129,7 @@ sub handle_request
 
 	# Groups nav
 	{
-		my $sth = $dbh->prepare_cached("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' WHERE g.p_id IS NULL ORDER BY g.name ASC");
+		my $sth = $dbh->prepare_cached("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' WHERE g.p_id = 0 ORDER BY g.name ASC");
 		$sth->execute();
 
 		my $rootgroups = [];
@@ -175,7 +175,7 @@ sub handle_request
 			# Constructing the recursive datastructure.
 			# Note that it is quite naive, and not optimized for speed.
 			my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ? ORDER BY g.name ASC");
-			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL ORDER BY g.name ASC");
+			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = 0 ORDER BY g.name ASC");
 			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
 
 			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, undef, $graph_ext);
@@ -322,7 +322,7 @@ sub handle_request
 		# Constructing the recursive datastructure.
 		# Note that it is quite naive, and not optimized for speed.
 		my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ? ORDER BY g.name ASC");
-		my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL ORDER BY g.name ASC");
+		my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = 0 ORDER BY g.name ASC");
 		my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
 
 		my $sth_p_id = $dbh->prepare_cached("SELECT g.p_id FROM grp g WHERE g.id = ?");
