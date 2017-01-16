@@ -362,6 +362,18 @@ sub _db_service {
 		$self->_db_service_attr($service_id, $attr, $_service_value);
 	}
 
+	# Handle the service_category
+	{
+		my $category = $service_attr->{graph_category} || "other";
+
+		# XXX - might only INSERT IT IF NOT PRESENT
+		my $sth_service_cat_del = $dbh->prepare_cached("DELETE FROM service_categories WHERE id = ? and category = ?");
+		$sth_service_cat_del->execute($service_id, $category);
+
+		my $sth_service_cat = $dbh->prepare_cached("INSERT INTO service_categories (id, category) VALUES (?, ?)");
+		$sth_service_cat->execute($service_id, $category);
+	}
+
 	# Handle the fields
 	my %ds_ids;
 	for my $field_name (keys %$fields) {
