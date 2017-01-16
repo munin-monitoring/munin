@@ -257,8 +257,13 @@ sub _db_mkgrp {
 	my $dbh = $self->{dbh};
 
 	DEBUG "group:".Dumper($group);
-	my $grp_name = $group->{group_name};
+
+	# Recursively creates the group path
 	my $p_id = 0; # XXX - 0 is a magic number that says NO_PARENT, as the == NULL doesn't work
+
+	$p_id = $self->_db_mkgrp($group->{group}) if defined $group->{group};
+
+	my $grp_name = $group->{group_name};
 
 	# Create the group if needed
 	my $sth_grp_id = $dbh->prepare_cached("SELECT id FROM grp WHERE name = ? AND p_id = ?");
