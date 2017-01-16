@@ -232,12 +232,21 @@ FETCH_OK:
 }
 
 sub _db_url {
-	my ($self, $type, $id, $path) = @_;
+	my ($self, $type, $id, $path, $p_type, $p_id) = @_;
 	my $dbh = $self->{dbh};
+
+	if ($p_type) {
+		my $sth_g_url = $dbh->prepare_cached("SELECT path FROM url WHERE type = ? AND id = ?");
+		$sth_g_url->execute($p_type, $p_id);
+		my ($p_path) = $sth_g_url->fetchrow_array();
+		$sth_g_url->finish();
+
+		# prefix with the parent URL if provided
+		$path = "$p_path/$path" if $p_path;
+	}
 
 	my $sth_d_url = $dbh->prepare_cached("DELETE FROM url WHERE type = ? AND id = ?");
 	$sth_d_url->execute($type, $id);
-
 
 	my $sth_url = $dbh->prepare_cached('INSERT INTO url (type, id, path) VALUES (?, ?, ?)');
 	$sth_url->execute($type, $id, $path);
@@ -268,8 +277,7 @@ sub _db_mkgrp {
 		# Removal of grp is *unsupported* yet.
 	}
 
-	my $url = "group/$grp_id/$grp_name";
-	$self->_db_url("group", $grp_id, $url);
+	$self->_db_url("group", $grp_id, $grp_name);
 
 	return $grp_id;
 }
@@ -302,8 +310,7 @@ sub _db_node {
 		# Removal of nodes is *unsupported* yet.
 	}
 
-	my $url = "node/$node_id/$node_name";
-	$self->_db_url("node", $node_id, $url);
+	$self->_db_url("node", $node_id, $node_name, "group", $grp_id);
 
 	DEBUG "_db_node() = $node_id";
 	return $node_id;
@@ -388,8 +395,7 @@ sub _db_service {
 		$ds_ids{$field_name} = $ds_id;
 	}
 
-	my $url = "service/$service_id/$plugin";
-	$self->_db_url("service", $service_id, $url);
+	$self->_db_url("service", $service_id, $plugin, "node", $node_id);
 
 	DEBUG "_db_service() = $service_id";
 
