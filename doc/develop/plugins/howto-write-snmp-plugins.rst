@@ -19,12 +19,7 @@ Supporting library
 
 If you have used SNMP plugins with Munin you may have noticed that there is a
 uniform way to configure them. This is implemented in the perl library
-Munin::Plugin::SNMP (Perl module) which is supplied in Munin 1.3.5 (not yet
-released) and probably also in 1.2.6 (not yet released). If you want to use
-this module already now it has always been in the distribution, but it has
-never been installed. Until the module is released as part of a release you may
-prefer a copy from the SVN trunk though since it is much enhanced over the
-historic version.
+`Munin::Plugin::SNMP` (Perl module) which is supplied in Munin 1.4.
 
 If you run `perldoc Munin::Plugin::SNMP` you'll see the programmers
 documentation for the module and its public functions - as usual. This also
@@ -37,7 +32,9 @@ A load plugin
 Returning to the absolute simplest case I would have picked a `snmp__load`
 plugin for this HOWTO, but not many devices supports that. Uptime on the other
 hand is very basic to SNMP devices. If you snmpwalk some device the uptime will
-be there among the first 10 lines::
+be there among the first 10 lines:
+
+::
 
         DISMAN-EVENT-MIB::sysUpTimeInstance = Timeticks: (138007908) 15 days, 23:21:19.08
 
@@ -76,14 +73,15 @@ If you call this `snmp__uptime` and then in `/etc/munin/plugins` make a symlink
 to it: If your device is called "switch" (this should be in DNS (or the hosts
 file) and possible to look up): `ln -s snmp_switch_uptime ...`
 
-Then the plugin has to be configured, `/etc/munin/plugin-conf.d/snmp` for the imagined device called "switch"::
+Then the plugin has to be configured, `/etc/munin/plugin-conf.d/snmp` for the imagined device called "switch":
+
+::
 
         [snmp_*]
            env.version 2
            env.community public
 
 Now you can do munin-run snmp_switch_uptime as root:
-
 
 ::
 
