@@ -13,3 +13,4 @@ Guidelines for developing Munin plugins
    :maxdepth: 2
 
    howto-write-plugins.rst
+   howto-write-snmp-plugins.rst
