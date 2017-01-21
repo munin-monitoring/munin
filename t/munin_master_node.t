@@ -4,7 +4,7 @@ use strict;
 use Munin::Master::Config;
 use Test::More;
 if ($ENV{TEST_MEDIUM}) {
-    plan tests => 15;
+    plan tests => 10;
 }
 else {
     plan skip_all => 'set TEST_MEDIUM to enable these tests';
@@ -129,14 +129,3 @@ sub setup {
 }
 
 
-### fetch_service_data
-{
-    my $node = setup();
-    $node->mock('_node_read', sub {
-		  return ['# timeout: bla bla bla'];
-		});
-
-    throws_ok { $node->fetch_service_data('foo') }
-        qr/Timeout in fetch from 'foo'/,
-            'Fetch service data - Timeout throws exception';
-}
