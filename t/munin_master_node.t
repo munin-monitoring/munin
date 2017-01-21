@@ -123,7 +123,7 @@ sub setup {
     $node->mock('_node_read', sub {
 		  return ['# timeout: bla bla bla'];
 		});
-    throws_ok { $node->fetch_service_config('foo') }
+    throws_ok { $node->fetch_service_config('foo', sub { return; } ) }
         qr/Timeout error on node/,
             'Fetch service config - Timeout throws exception';
 }
@@ -140,7 +140,7 @@ sub setup {
 
 #die Dumper { $node->fetch_service_config('fun') };
 
-    my %res = $node->fetch_service_config('fun');
+    my %res = $node->fetch_service_config('fun', sub { return; } );
     eq_or_diff(\%res, {
             global => {
                 multigraph => [ 'fun' ],
@@ -205,7 +205,7 @@ sub setup {
 			  'graph_order zip baz',
 			  ];
 		});
-    my %res = $node->fetch_service_config('fun');
+    my %res = $node->fetch_service_config('fun', sub { return; });
     is_deeply(\%res, {
             global => {
                 multigraph => [qw( fun )],
