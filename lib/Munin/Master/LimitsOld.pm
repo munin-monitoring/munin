@@ -64,7 +64,6 @@ my $verbose        = 0;
 my $force_run_as_root = 0;
 my %notes          = ();
 my $config;
-my $oldnotes;
 my $modified     = 0;
 my %default_text = (
     "default" =>
@@ -109,10 +108,6 @@ sub limits_startup {
     exit_if_run_by_super_user() unless $force_run_as_root;
 
     @always_send = qw{ok warning critical unknown} if $force;
-
-    munin_readconfig_base($conffile);
-    # XXX: check if it does actually need that part
-    $config = munin_readconfig_part('datafile', 0);
 }
 
 
@@ -128,8 +123,6 @@ sub limits_main {
 
     munin_runlock("$config->{rundir}/munin-limits.lock");
 
-    $oldnotes = &munin_readconfig_part('limits', 1);
-
     initialize_for_nagios();
 
     initialize_contacts();
@@ -137,9 +130,6 @@ sub limits_main {
     process_limits();
 
     close_pipes();
-
-    &munin_writeconfig("$config->{dbdir}/limits", \%notes);
-    &munin_writeconfig_storable("$config->{dbdir}/limits.storable", \%notes);
 
     $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
 
@@ -317,26 +307,33 @@ sub process_service {
     $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
     $hash->{'recovered'} = {};
 
-    my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $host);
-    DEBUG "[DEBUG] state_file: $state_file";
-    my $state = munin_read_storable($state_file) || {};
+    my $service_url = sprintf ('%s/%s', $hash->{group}, $host);
+    DEBUG "[DEBUG] service_url: $service_url";
+
+    use DBI;
+    my $datafilename = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile.sqlite";
+    my $datafilename_state = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile-state.sqlite";
+    DEBUG "[DEBUG] opening sql $datafilename";
+    my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+    my $dbh_state = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+    my $sth_state = $dbh_state->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm FROM state WHERE id = ? and type = ?');
+    my $sth_state_upt = $dbh_state->prepare('UPDATE state SET alarm = ? WHERE id = ? and type = ?');
+    my $sth_ds = $dbh->prepare('SELECT id FROM url WHERE path = ? and type = ?');
 
     foreach my $field (@$children) {
         next if (!defined $field or ref($field) ne "HASH");
         my $fname   = munin_get_node_name($field);
         my $fpath   = munin_get_node_loc($field);
-        my $onfield = munin_get_node($oldnotes, $fpath);
         my $oldstate = 'ok';
+
 
 	# Test directly here as get_limits is in truth recursive and
 	# that fools us when processing multigraphs.
 	next if (!defined($field->{warning}) and !defined($field->{critical}));
 
 	# get the old state if there is one, or leave it empty.
-	if ( defined($onfield) and
-	     defined($onfield->{"state"}) ) {
-	    $oldstate = $onfield->{"state"};
-	}
+	$sth_ds->execute("$service_url/$fname", "ds");
+	my ($ds_id) = $sth_ds->fetchrow_array;
 
         my ($warn, $crit, $unknown_limit) = get_limits($field);
 
@@ -347,9 +344,12 @@ sub process_service {
         DEBUG "[DEBUG] field: " . munin_dumpconfig_as_str($field);
 	my $value;
     	{
-		my $rrd_filename = munin_get_rrd_filename($field);
-		my ($current_updated_timestamp, $current_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{current} || [ ] };
-		my ($previous_updated_timestamp, $previous_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{previous} || [ ] };
+		$sth_state->execute($ds_id, "ds");
+		my ($current_updated_timestamp, $current_updated_value,
+			$previous_updated_timestamp, $previous_updated_value,
+			$old_alarm, $num_unknowns) = $sth_state->fetchrow_array;
+
+		my $oldstate = $old_alarm || 'ok';
 
 		my $heartbeat = 600; # XXX - $heartbeat is a fixed 10 min (2 runs of 5 min).
 		if (! $field->{type} || $field->{type} eq "GAUGE") {
@@ -551,6 +551,10 @@ sub process_service {
                 }
 	    }
         }
+
+	# Replicate the state into the SQL DB
+	my $new_state = $onfield->{"state"};
+	$sth_state_upt->execute($new_state, $ds_id, "ds");
     }
     generate_service_message($hash);
 }
@@ -777,7 +781,8 @@ sub generate_service_message {
     }
 }
 
-
+# Homegrown templating engine.
+# XXX - Not sure it's a very good idea
 sub message_expand {
     my $hash = shift;
     my $text = shift;

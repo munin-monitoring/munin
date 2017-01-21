@@ -14,10 +14,12 @@ use List::Util qw( shuffle );
 use Munin::Common::Defaults;
 use Munin::Master::Config;
 use Munin::Master::UpdateWorker;
-use Munin::Master::ProcessManager;
 use Munin::Master::Utils;
 
+my $config_old;
 my $config = Munin::Master::Config->instance()->{config};
+$config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
+
 
 sub new {
     my ($class) = @_;
@@ -46,7 +48,12 @@ sub run {
     $self->_do_with_lock_and_timing(sub {
         INFO "[INFO]: Starting munin-update";
 
-        $self->{old_service_configs} = $self->_read_old_service_configs();
+	# Create the DB, using a local block to close the DB cnx
+	{
+		my $dbh = $self->get_dbh();
+		$self->_db_init($dbh, $dbh);
+		$config_old = $self->_db_params_update($dbh, $config);
+	}
 
         $self->{workers} = $self->_create_workers();
         $self->_run_workers();
@@ -56,27 +63,27 @@ sub run {
     });
 }
 
+sub get_dbh {
+	my ($self) = @_;
 
-sub _read_old_service_configs {
+	use DBI;
+	my $datafilename = $ENV{MUNIN_DBURL} || "$config->{dbdir}/datafile.sqlite";
+	# Note that we should reconnect for _each_ update part, as sharing a $dbh when forking()
+	# will bring unhappiness
+	#
+	# So, using a caching version has to be careful. And reopen it on each thread/subprocess.
 
-    # Read the datafile containing old configurations.  This should
-    # not fail in case of problems with the file.  In such a case the
-    # file should simply be ingored and a new one written.  Lets hope
-    # it does not repeat itself then.
+	# Not being able to open the DB connection seems FATAL to me. Better
+	# die loudly than injecting some misguided data
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
-    my ($self) = @_;
+	$dbh->do("PRAGMA synchronous = NORMAL");
+	$dbh->do("PRAGMA journal_mode = WAL");
 
-    # Get old service configuration from the config instance since the
-    # syntaxes are identical.
-    my $oldconfig = Munin::Master::Config->instance()->{oldconfig};
-
-    my $datafile = $oldconfig->{config_file} = $config->{dbdir}.'/datafile';
-
-    $oldconfig = bless( munin_read_storable("$datafile.storable", $oldconfig), "Munin::Master::Config");
-
-    return $oldconfig;
+	# Plainly returns it, but do *not* put it in $self, as it will let Perl
+	# do its GC properly and closing it when out of scope.
+	return $dbh;
 }
-
 
 sub _create_rundir_if_missing {
     my ($self) = @_;
@@ -96,7 +103,7 @@ sub _create_workers {
 
     # Shuffle @hosts to avoid always having the same ordering
     # XXX - It might be best to preorder them on the TIMETAKEN ASC
-    #       in order that statisticall fast hosts are done first to increase
+    #       in order that statistically fast hosts are done first to increase
     #       the global throughtput
     @hosts = shuffle(@hosts);
 
@@ -104,6 +111,7 @@ sub _create_workers {
         @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts
     }
 
+    # Only create the "update yes" hosts
     @hosts = grep { $_->{update} } @hosts;
 
     return [ map { Munin::Master::UpdateWorker->new($_) } @hosts ];
@@ -141,40 +149,54 @@ sub _do_with_lock_and_timing {
 
 
 sub _run_workers {
-    my ($self) = @_;
+	my ($self) = @_;
 
-    if ($config->{fork}) {
-        my $pm = Munin::Master::ProcessManager
-            ->new($self->_create_self_aware_worker_result_handler(),
-                  $self->_create_self_aware_worker_exception_handler());
-        $pm->add_workers(@{$self->{workers}});
-        $pm->start_work();
-    }
-    else {
-        for my $worker (@{$self->{workers}}) {
+	use Parallel::ForkManager;
 
-	    my $res ;
+	my $max_processes = $config->{max_processes};
 
-	    eval {
-		# do_work fails hard on a number of conditions
-		$res = $worker->do_work();
-	    };
+	# Do NOT fork if not set
+	$max_processes = 0 unless $config->{fork};
 
-	    $res=undef if $EVAL_ERROR;
+	my $pm = Parallel::ForkManager->new($max_processes);
 
-	    my $worker_id = $worker->{ID};
-	    if (defined($res)) {
-		$self->_handle_worker_result([$worker_id, $res]);
-	    } else {
-		# Need to handle connection failure same as other
-		# failures.  do_connect fails softly.
-		WARN "[WARNING] Failed worker ".$worker_id."\n";
-		push @{$self->{failed_workers}}, $worker_id;
-	    }
-        }
-    }
+	WORKER_LOOP:
+	for my $worker (@{$self->{workers}}) {
+		my $worker_pid = $pm->start();
+		next WORKER_LOOP if $worker_pid;
+
+		my $res;
+		eval {
+			# Inject the 2 dbh (meta + state)
+			# XXX - It is in the same DB for now
+			my $common_dbh = get_dbh();
+			$worker->{dbh} = $common_dbh;
+			$worker->{dbh_state} = $common_dbh;
+
+			# do_work fails hard on a number of conditions
+			$res = $worker->do_work();
+		};
+
+		$worker->{dbh}->disconnect();
+		$worker->{dbh_state}->disconnect();
+
+		$res = undef if $EVAL_ERROR;
+
+		my $worker_id = $worker->{ID};
+		if (defined($res)) {
+			$self->_handle_worker_result([$worker_id, $res]);
+		} else {
+			# Need to handle connection failure same as other
+			# failures.  do_connect fails softly.
+			WARN "[WARNING] Failed worker ".$worker_id."\n";
+			push @{$self->{failed_workers}}, $worker_id;
+		}
+
+		$pm->finish;
+	}
+
+	$pm->wait_all_children;
 }
-
 
 sub _create_self_aware_worker_result_handler {
     my ($self) = @_;
@@ -366,8 +388,75 @@ sub _dump_groups_into_sql {
 	}
 }
 
+sub _db_init {
+	my ($self, $dbh, $dbh_state) = @_;
+
+	# Create DB
+	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS r_g_grp ON grp (p_id, name)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_node_attr ON node_attr (id, name)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_n_grp ON node (grp_id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_service_n_n ON service (node_id, name)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
+		type VARCHAR DEFAULT 'GAUGE',
+		ordr INTEGER DEFAULT 0,
+		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
+
+	# Table that contains all the URL paths, in order to have a very fast lookup
+	$dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER NOT NULL, type VARCHAR NOT NULL, path VARCHAR NOT NULL, PRIMARY KEY(id,type))");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_url_path ON url (path)");
+
+	# Note, this table is referenced by composite key (type,id) in order to be
+	# able to have any kind of states. Such as whole node states for example.
+	$dbh_state->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
+		last_epoch INTEGER, last_value VARCHAR,
+		prev_epoch INTEGER, prev_value VARCHAR,
+		alarm VARCHAR, num_unknowns INTEGER
+		)");
+	$dbh_state->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
+}
+
+sub _db_params_update {
+	my ($self, $dbh, $params) = @_;
+
+	my $sth = $dbh->prepare('SELECT name, value FROM param');
+	$sth->execute();
+
+	my %old_params;
+	while (my ($_name, $_value) = $sth->fetchrow_array()) {
+		$old_params{$_name} = $_value;
+	}
+
+	$dbh->do('DELETE FROM param');
+
+	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
+
+	# Configuration
+	for my $key (sort keys %$params) {
+		next if ref $params->{$key};
+		$sth_param->execute($key, $params->{$key});
+	}
+
+	return \%old_params;
+}
+
 sub _dump_into_sql {
 	my ($self) = @_;
+
+	DEBUG "[DEBUG] Writing sql disabled";
+	return;
+
 
 	my $datafilename = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile.sqlite";
 	my $datafilename_tmp = $datafilename . ".$$";
@@ -376,48 +465,20 @@ sub _dump_into_sql {
 	use DBI;
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
 
-	# We still use the temp file trick
-	$dbh->do("PRAGMA synchronous = 0");
-	$dbh->do("PRAGMA journal_mode = OFF");
 
-	# Create DB
-	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
-	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
-
-	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_g_grp ON grp (p_id)");
 	my $sth_grp = $dbh->prepare('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
 
-	$dbh->do("CREATE TABLE IF NOT EXISTS node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_node_attr ON node_attr (id, name)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_n_grp ON node (grp_id)");
 	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
 
-	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
 	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path, service_title, graph_info, subgraphs) VALUES (?, ?, ?, ?, ?, ?)');
 	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
-	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
 	my $sth_service_category = $dbh->prepare('INSERT INTO service_categories (id, category) VALUES (?, ?)');
 
-	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
-		type VARCHAR DEFAULT 'GAUGE',
-		ordr INTEGER DEFAULT 0,
-		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
 	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path, ordr) VALUES (?, ?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 	my $sth_ds_type = $dbh->prepare('UPDATE ds SET type = ? where id = ?');
 
-	# Table that contains all the URL paths, in order to have a very fast lookup
-	$dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER NOT NULL, type VARCHAR NOT NULL, path VARCHAR NOT NULL, PRIMARY KEY(id,type))");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_url_path ON url (path)");
 	my $sth_url = $dbh->prepare('INSERT INTO url (id, type, path) VALUES (?, ?, ?)');
 	$sth_url->{RaiseError} = 1;
 
@@ -426,24 +487,23 @@ sub _dump_into_sql {
 	# values, along with a precomputed alarm state (UNKNOWN, NORMAL,
 	# WARNING, CRITICAL)
 	#
-	# Note, this table is referenced by composite key (type,id) in order to be
-	# able to have any kind of states. Such as whole node states for example.
-	$dbh->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
-		last_epoch INTEGER, last_value VARCHAR,
-		prev_epoch INTEGER, prev_value VARCHAR,
-		alarm VARCHAR
-		)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
-	my $sth_state = $dbh->prepare('INSERT INTO state (id, type, last_epoch, last_value, prev_epoch, prev_value) VALUES (?, ?, ?, ?, ?, ?)');
-	$sth_state->{RaiseError} = 1;
+	# But this is in a persistent DB. As it is stateful.
+	# Note that the whole DB will be stateful in the future, but this table
+	# is highly volatile anyway
+	my $datafilename_state = $datafilename;
+	$datafilename_state =~ s/\.sqlite$/-state.sqlite/;
+	my $dbh_state = DBI->connect("dbi:SQLite:dbname=$datafilename_state","","") or die $DBI::errstr;
+	#
+	my $sth_state = $dbh_state->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns
+		FROM state WHERE id = ? AND type = ?');
+	my $sth_state_i = $dbh_state->prepare(
+		'INSERT INTO state (last_epoch, last_value, prev_epoch, prev_value, id, type) VALUES (?, ?, ?, ?, ?, ?)');
+	my $sth_state_u = $dbh_state->prepare(
+		'UPDATE state SET last_epoch = ?, last_value = ?, prev_epoch = ?, prev_value = ? WHERE id = ? AND type = ?');
+	$sth_state_i->{RaiseError} = 0;
+	$sth_state_u->{RaiseError} = 0;
 
 
-	# Configuration
-	$config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
-	for my $key (keys %$config) {
-		next if ref $config->{$key};
-		$sth_param->execute($key, $config->{$key});
-	}
 
 	# Recursively create groups
 	_dump_groups_into_sql($self->{group_repository}{groups}, undef, "", $dbh,
@@ -467,7 +527,7 @@ sub _dump_into_sql {
 			$sth_url->execute($node_id, "node", $url);
 		}
 
-		for my $attr (keys %$node) {
+		for my $attr (sort keys %$node) {
 			# Ignore the configref key, as it is redundant
 			next if $attr eq "configref";
 
@@ -482,7 +542,7 @@ sub _dump_into_sql {
 		DEBUG "[DEBUG] Reading state for $path in $state_file (Dumping)";
 		my $state = munin_read_storable($state_file) || {};
 
-		for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
+		for my $service (sort keys %{$self->{service_configs}{$host}{data_source}}) {
 			# Static HTML and graphs (both static and CGI) use forward slashes ('/')
 			# as the separator for urls of multigraph graph nodes, like:
 			#
@@ -503,7 +563,7 @@ sub _dump_into_sql {
 
 			my $is_category_set;
 			my $graph_order;
-			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
+			for my $attr (sort @{$self->{service_configs}{$host}{global}{$service}}) {
 				my ($attr_key, $attr_value) = @$attr;
 				# Category names should not be case sensitive. Store them all in lowercase.
 				if ($attr_key eq 'graph_category') {
@@ -526,7 +586,7 @@ sub _dump_into_sql {
 				$sth_service_category->execute($service_id, "other") unless $is_category_set;
 			}
 
-			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
+			for my $data_source (sort keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
 				my $order = _get_order($data_source, $graph_order);
 				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source", $order);
 				my $ds_id = _get_last_insert_id($dbh);
@@ -535,7 +595,7 @@ sub _dump_into_sql {
 				my $ds_type;
 				my $gfx_color;
 				my $cdef;
-				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
+				for my $attr (sort keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
 					my $value = $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr};
 					$sth_ds_attr->execute($ds_id, $attr, $value);
 
@@ -574,7 +634,23 @@ sub _dump_into_sql {
 				INFO "No state found for ds $ds_id ($rrdfile_prefix)" unless $state_ds;
 				next unless $state_ds;
 
-				$sth_state->execute($ds_id, "ds", @{ $state_ds->{current} }, @{ $state_ds->{previous} }, );
+				$sth_state_u->execute(
+						@{ $state_ds->{current} },
+						@{ $state_ds->{previous} },
+						$ds_id, "ds",
+					);
+				if ($sth_state_u->rows == 0) {
+					# No row updated, go insert !
+					$sth_state_i->execute(
+						@{ $state_ds->{current} },
+						@{ $state_ds->{previous} },
+						$ds_id, "ds",
+					);
+				}
+
+				# Insert the rrd:last in the main DB
+				$sth_ds_attr->execute($ds_id, "rrd:last", $state_ds->{current}[0] );
+
 			}
 		}
 	}
@@ -596,22 +672,6 @@ sub _write_new_service_configs {
     $self->_print_old_service_configs_for_failed_workers($datafile_hash);
 
     $self->_dump_into_sql();
-
-    for my $host (keys %{$self->{service_configs}}) {
-        for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
-            for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
-                munin_set_var_path($datafile_hash, "$host:$service.$attr->[0]", $attr->[1]);
-            }
-            for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
-                for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
-                    munin_set_var_path($datafile_hash, "$host:$service.$data_source.$attr", $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
-                }
-            }
-        }
-    }
-
-    # Also write the binary (Storable) version
-    munin_writeconfig_storable($config->{dbdir}.'/datafile.storable', $datafile_hash);
 }
 
 
