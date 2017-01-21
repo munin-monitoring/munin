@@ -9,7 +9,7 @@ addons:
   apt:
     packages:
       - devscripts
-      - bdbd-pg-perl
+      - libdbd-pg-perl
       - libdbd-sqlite3-perl
       - libdbi-perl
       - libdevel-cover-perl
