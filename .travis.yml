@@ -43,9 +43,6 @@ addons:
       - libxml-dumper-perl
       - libxml-libxml-perl
       - libxml-parser-perl
-      - python-sphinx
-      - rrdtool
-      - sqlite3
 notifications:
   email: false
   irc:
