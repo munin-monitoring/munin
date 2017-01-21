@@ -91,7 +91,7 @@ findspeed_mbps() {
     # iwlist first)
     if [[ -r /sys/class/net/$INTERFACE/speed ]]; then
             SPEED=$(cat /sys/class/net/$INTERFACE/speed 2>/dev/null)
-            if [ -n "$SPEED" -a "$SPEED" -gt "0" ]; then
+            if [[ "$SPEED" -gt 0 ]]; then
                 echo $SPEED
                 return
             fi
