@@ -4,7 +4,7 @@ use strict;
 use Munin::Master::Config;
 use Test::More;
 if ($ENV{TEST_MEDIUM}) {
-    plan tests => 10;
+    plan tests => 9;
 }
 else {
     plan skip_all => 'set TEST_MEDIUM to enable these tests';
@@ -115,17 +115,4 @@ sub setup {
 
     is_deeply(\@res, [qw(foo bar baz)], 'List plugins');
 }
-
-
-### fetch_service_config
-{
-    my $node = setup();
-    $node->mock('_node_read', sub {
-		  return ['# timeout: bla bla bla'];
-		});
-    throws_ok { $node->fetch_service_config('foo', sub { return; } ) }
-        qr/Timeout error on node/,
-            'Fetch service config - Timeout throws exception';
-}
-
 
