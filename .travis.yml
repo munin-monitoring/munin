@@ -9,9 +9,7 @@ perl:
 branches:
  only:
   - stable-2.0
-  - devel
   - master
-  - travis-container
 addons:
   apt:
     packages:
