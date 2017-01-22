@@ -205,7 +205,7 @@ Run :ref:`munin-update` as user ``munin`` on the Munin master machine.
 ::
 
   # su -s /bin/bash munin
-  $ /usr/share/munin/munin-update --debug --nofork --stdout --host foo.example.com --service df
+  $ /usr/share/munin/munin-update --debug --nofork --host foo.example.com --service df
 
 You should get a line like this:
 
@@ -277,12 +277,12 @@ The graphs are empty
 Other mumbo-jumbo
 -----------------
 
- * Run the different stages in :ref:`munin-cron` manually, using ``--debug``, ``--nofork``, ``--stdout``, something like this:
+ * Run the different stages in :ref:`munin-cron` manually, using ``--debug``, ``--nofork``, something like this:
 
 ::
 
   # su - munin -c "/usr/lib/munin/munin-update \
-      --debug --nofork --stdout \
+      --debug --nofork \
       --host foo.example.com \
       --service df"
 
