@@ -52,9 +52,7 @@ printf 'ntp_err.value '
 
 if [ $(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.') -ge 427 ]
 then
-    cmd=ntpq
+    ntpq -c kerninfo | awk '/^estimated error:/ { print $3 / 1000 }'
 else
-    cmd=ntpdc
+    ntpdc -c kerninfo | awk '/^estimated error:/ { print $3 }'
 fi
-
-$cmd -c kerninfo | awk '/^estimated error:/ { print $3 }'
