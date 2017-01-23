@@ -1,6 +1,8 @@
 munin (2.999.6-1) UNRELEASED; urgency=medium
 
   * New upstream release, adopting debian/patches accordingly.
+  * Add libdevel-nytprof-perl and libparallel-forkmanager-perl to
+    build-depends.
 
  -- Holger Levsen <holger@debian.org>  Mon, 23 Jan 2017 13:40:47 +0100
 
