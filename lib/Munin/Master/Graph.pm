@@ -237,7 +237,7 @@ sub handle_request
                                 JOIN ds_attr hn_attr ON hn.service_id = ds.service_id AND hn_attr.value = ds.name and hn_attr.name = 'negative'
                                 where hn.service_id = ds.service_id
                         ) as negative_id,
-			s.last_epoch,
+			rl.value as last_epoch,
 			'dummy' as dummy
 		FROM ds
 		LEFT OUTER JOIN ds_attr l ON l.id = ds.id AND l.name = 'label'
@@ -252,7 +252,7 @@ sub handle_request
 		LEFT OUTER JOIN ds_attr ne ON ne.id = ds.id AND ne.name = 'negative'
 		LEFT OUTER JOIN ds_attr sm ON sm.id = ds.id AND sm.name = 'sum'
 		LEFT OUTER JOIN ds_attr st ON st.id = ds.id AND st.name = 'stack'
-		LEFT OUTER JOIN state s ON s.id = ds.id AND s.type = 'ds'
+		LEFT OUTER JOIN ds_attr rl ON rl.id = ds.id AND rl.name = 'rrd:last'
 		WHERE ds.service_id = ?
 		ORDER BY ds.ordr ASC
 	");
@@ -475,7 +475,7 @@ sub handle_request
 	# future begins at this horizontal ruler
 	if ($lastupdated) {
 		# TODO - we have to find the last updated for aliased items
-		push(@rrd_gfx, "VRULE:$lastupdated#999999:Last update:dashes=2,5\\l");
+		push(@rrd_gfx, "VRULE:$lastupdated#999999:Last update:dashes=2,5");
 		my $last_update_str = escape_for_rrd(scalar localtime($lastupdated));
 		push @rrd_gfx, "COMMENT:\\u";
 		push @rrd_gfx, "COMMENT:$last_update_str\\r";
@@ -654,13 +654,13 @@ sub expand_cdef {
 }
 
 sub RRDs_graph {
-	use IPC::Open3;
-	use IO::String;
-
 	# RRDs::graph() is *STATEFUL*. It doesn't emit the same PNG
 	# when called the second time.
 	#
-	# return RRDs::graph(@_);
+	return RRDs::graph(@_);
+
+	use IPC::Open3;
+	use IO::String;
 
 	# We just revert to spawning a full featured rrdtool cmd for now.
 	my $chld_out = new IO::String();
@@ -820,7 +820,7 @@ sub get_alias_rrdfile
 		SELECT
 			rf.value,
 			rd.value,
-			st.last_epoch,
+			rl.value,
 			'dummy' as dummy
 		FROM ds
 		INNER JOIN service s ON s.id = ds.service_id AND (
@@ -829,7 +829,7 @@ sub get_alias_rrdfile
 		)
 		LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
 		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
-		LEFT OUTER JOIN state st ON st.id = ds.id AND st.type = 'ds'
+		LEFT OUTER JOIN ds_attr rl ON rl.id = ds.id AND rl.name = 'rrd:last'
 		WHERE ds.name = ?
 		ORDER BY ds.ordr ASC
 	", undef, $_alias_service, $_alias_service, $_alias_ds);

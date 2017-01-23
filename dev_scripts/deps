@@ -8,6 +8,7 @@ cat <<EOF
   libdbd-sqlite3-perl
   libdbi-perl
   libdevel-cover-perl
+  libdevel-nytprof-perl
   libfile-copy-recursive-perl
   libfile-readbackwards-perl
   libfile-slurp-perl
@@ -24,6 +25,7 @@ cat <<EOF
   libnet-server-perl
   libnet-snmp-perl
   libnet-ssleay-perl
+  libparallel-forkmanager-perl
   libparams-validate-perl
   librrds-perl
   libtest-class-perl

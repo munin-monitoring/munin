@@ -17,6 +17,7 @@ use Getopt::Long;
 $| = 1;
 
 my $nb_servers = 3;
+my $nb_servers_per_port = 1;
 my $nb_plugins = 30;
 my $fields_per_plugin = 5;
 my $starting_port = 24949;
@@ -36,6 +37,7 @@ my $arg_ret = GetOptions(
 	"nb-plugins|n=i" => \$nb_plugins,
 	"nb-fields|f=i" => \$fields_per_plugin,
 	"nb-servers|s=i" => \$nb_servers,
+	"nb-servers-port|v=i" => \$nb_servers_per_port,
 	"update-rate=i" => \$update_rate,
 
 	"startint-port|p=i" => \$starting_port,
@@ -60,8 +62,9 @@ if ($help) {
 Options:
     --help                   View this message.
 
-    -s --nb-servers <int>     Number of servers [3]
-    -p --start-port <int>     Starting TCP listening port [24949]
+    -s --nb-servers <int>      Number of servers [3]
+    -v --nb-servers-port <int> Number of virtual servers per port [1]
+    -p --start-port <int>      Starting TCP listening port [24949]
 
     -n --nb-plugins <int>     Number of plugins per server [30] 
     -f --nb-fields  <int>     Number of fields per plugins [5]
@@ -90,11 +93,14 @@ $starting_epoch = time + $starting_epoch if ($starting_epoch < 0);
 if ($dump_config) {
 	for (my $i = 0; $i < $nb_servers; $i++) {
 		my $port = $starting_port + $i;
-		my $hostname = get_hostname($i);
-		print "[$hostname]\n";
-		print "     address 127.0.0.1\n";
-		print "     port $port\n";
-		print "\n";
+		for (my $p = 0; $p < $nb_servers_per_port; $p++) {
+			my $hostname = get_hostname($i, $p);
+			my $group = get_group($i, $p);
+			print "[$group;$hostname]\n";
+			print "     address 127.0.0.1\n";
+			print "     port $port\n";
+			print "\n";
+		}
 	}
 	
 	# Only dump config
@@ -141,6 +147,7 @@ sub service
 {
 	my $client = shift;
 	my $sockport = $client->sockport();
+	debug("[$$] client connected on $sockport");
 
 	my $hostname = get_hostname($sockport);
 
@@ -228,6 +235,15 @@ sub service
 			print $client ".\n";
 		} elsif ($line =~ m/^quit/) {
 			return;
+		} elsif ($line =~ m/^nodes/) {
+			print "asked nodes:" if $is_debug;
+			for (my $p = 0; $p < $nb_servers_per_port; $p++) {
+				my $vhost = get_hostname($sockport, $p);
+				print $client "$vhost ";
+				print " $vhost" if $is_debug;
+			}
+			print $client "\n";
+			print "\n" if $is_debug;
 		} else {
 			print $client "# Command not found\n";
 		}
@@ -258,19 +274,38 @@ sub _get_from_array
 
 sub get_hostname
 {
-	my ($i) = @_;
+	my ($i, $j) = @_;
 
-	my @gods = keys( %{ $fun_names->{gods} } );
-	my @worlds = keys( %{ $fun_names->{worlds} } );
-	my @groups = keys( %{ $fun_names->{groups} } );
+	my @gods = sort keys( %{ $fun_names->{gods} } );
+	my @worlds = sort keys( %{ $fun_names->{worlds} } );
+	my @groups = sort keys( %{ $fun_names->{groups} } );
 
 
 	my $hostname = _get_from_array($i, \@gods, 1);
+
+	# prefix with the virtual node part
+	$hostname = "v$j-$hostname" if $j;
+
 	my $world = _get_from_array($i, \@worlds, 0);
 	my $group = _get_from_array($i, \@groups, 0);
 
 
 	return "$hostname.$world.$group";
+}
+
+sub get_group
+{
+	my ($i, $j) = @_;
+
+	my @gods = sort keys( %{ $fun_names->{gods} } );
+	my @worlds = sort keys( %{ $fun_names->{worlds} } );
+	my @groups = sort keys( %{ $fun_names->{groups} } );
+
+
+	my $world = _get_from_array($i, \@worlds, 0);
+	my $group = _get_from_array($i, \@groups, 0);
+
+	return "$group;$world.$group";
 }
 
 sub get_category
@@ -282,7 +317,7 @@ sub get_service
 {
 	my ($plugin_number) = @_;
 
-	my @giants = keys( %{ $fun_names->{giants} } );
+	my @giants = sort keys( %{ $fun_names->{giants} } );
 	my $giant = _get_from_array($plugin_number, \@giants, 1);
 
 	return $giant;
@@ -292,7 +327,7 @@ sub get_service_title
 {
 	my ($plugin_number)= @_;
 
-	my @giants = keys( %{ $fun_names->{giants} } );
+	my @giants = sort keys( %{ $fun_names->{giants} } );
 	my $giant = _get_from_array($plugin_number, \@giants, 0);
 
 	return $giant . " : " . $fun_names->{giants}->{$giant};
@@ -302,7 +337,7 @@ sub get_service_category
 {
 	my ($plugin_number)= @_;
 
-	my @locations = keys( %{ $fun_names->{locations} } );
+	my @locations = sort keys( %{ $fun_names->{locations} } );
 	my $location = _get_from_array($plugin_number, \@locations, 0);
 
 	return $location;
@@ -312,7 +347,7 @@ sub get_ds
 {
 	my ($plugin_number, $i) = @_;
 
-	my @weapons = keys( %{ $fun_names->{weapons} } );
+	my @weapons = sort keys( %{ $fun_names->{weapons} } );
 	my $weapon = _get_from_array($i, \@weapons, 1);
 
 	return $weapon;
@@ -321,7 +356,7 @@ sub get_ds
 sub get_ds_info
 {
 	my ($plugin_name, $i) = @_;
-	my @weapons = keys( %{ $fun_names->{weapons} } );
+	my @weapons = sort keys( %{ $fun_names->{weapons} } );
 	my $weapon = _get_from_array($i, \@weapons, 0);
 
 	return $fun_names->{weapons}->{$weapon};

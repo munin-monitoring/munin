@@ -1,10 +1,145 @@
+munin-2.999.6, 2017-01-17
+
+-------
+Summary
+-------
+
+That release is the 6th beta of the 3.0 series. It is versionned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versionning or 3.0b6
+
+It contains a rewrite of munin-update to directly handle the SQL metadata on
+the fly, and not to delegate it to later. It therefore means that RRD and SQL
+are updated from the worker processes themselves, and that it scales much
+better.
+
+Also, there is a provision for a persistant DB, which can open the way for a
+real DB such a PG instead of SQLite. This lays also the basis of horizontal
+scaling.
+
+And finally, the code is *much* more readable thanks to SQL. Those infamous
+datastructures, which were very fast in the first place, were impeding code
+and parallelisation.
+
+This also means that several features don't work still, such as spoolfetching
+or vectorfetching. They'll come in the next versions.
+
+------------------
+Detailed Changelog
+------------------
+
+Johann Bauer (1):
+      Remove trailing \l from rrdtool command
+
+Kenyon Ralph (3):
+      Revert "if_: check for non-empty and >0 before reporting speed (thanks to ssm)"
+      README.rst: remove references to deleted branch devel
+      README.rst: update coverage status from devel to master
+
+Quentin Stoeckel (1):
+      SCSS: remove useless mixins, fixes CSS validation errors & warnings     box-shadow, border-radius and opacity vendor prefixes aren't necessary anymore.     DXImageTransform.Microsoft.Shadow is known to cause CSS validation errors.
+
+Steve Schnepp (91):
+      build: add uninstall target
+      limits: use the SQL db instead of the storable
+      Limits: fix
+      sql: have mostly reproductible PK from run to run
+      update: insert the lastupdate directly in ds_attr
+      update: use a persistent sqlite for state
+      limits: fully remove the storable
+      limits: add a comment
+      build: use Module::Build::CleanInstall
+      update: use Parallel::ForkManager
+      dev_scripts: adding a "master" target
+      update: fix typos in comments
+      update: do handle undefined carbon server
+      update: beginning the handling of spoolfetch
+      update: remove extra
+      update: quick hack for update_rate
+      update: fix the carbon subs
+      dev_scripts: adding a debug target
+      update: avoid warnings when parsing
+      update: hard coded update_time
+      build: exclude temp vim files
+      dev_scripts: add debug target
+      update: fix fetch
+      dev_scripts: use a debug with 20 nodes
+      update: fix the regex to parse the config output
+      Revert "build: add uninstall target"
+      Revert "build: use Module::Build::CleanInstall"
+      update: adding the DB handler in the Worker
+      update: remove redundant Data::Dumper
+      update: rewrite the update routine
+      update: remove extra function
+      update: disable the SQL dump at the end
+      update: fix parsing bugs
+      dev_scripts: adding a 'lib' target to install
+      update: eventually create the DB before Workers
+      update: precompile all the queries
+      update: disconnect from DB as soon as possible
+      update: insert the groups in SQL
+      update: cleanup the connection properly
+      update: create an unique index on GRP
+      update: REPLACE doesn't work as expected
+      update: use p_id = 0
+      update: insert the current node_id in $self
+      update: fix the DEBUG message
+      update: create service entry if not existing
+      update: insert service_attr
+      update: fix node_id in service
+      update: handle the fields
+      update: remove the wrong comment
+      update: prepare_cached instead of prepare
+      update: use Transaction
+      Revert "update: prepare_cached instead of prepare"
+      update: per node txn
+      Revert "update: per node txn"
+      update: use a sane SQLite config for persistant DB
+      update: Use the callback for data fetching
+      update: updating the state in SQL
+      update: retrieve the ds_id from the node_id
+      update: fix timeing when calling plugin fetch
+      dev_scripts: adding Perl Perf lib
+      update: add an index on service
+      update: use a single DB connection per worker
+      u: fix declaration order in parse_update_rate
+      u: add a default value for parse_update_rate
+      u: reduce the process name clutter
+      u: fix is_fresh_enough()
+      u: use cached prepared statments
+      debug: sort the nodes
+      debug: adding a -v to have virtual hosts
+      u: create rrd files
+      u: create the RRD files
+      u: updating the RRD
+      dev_scripts: adding a helper for the debug node
+      u: rename db_mknode to db_node
+      u: adding SQL for url
+      h: use grp.p_id == 0 to indicate root nodes
+      u: Handle the service_categories table
+      u: adding the url table handling
+      u: use old urls
+      dev_scripts: adding run_debug_node
+      g: use RRDs instead of forking()
+      doc: adding howto-write-snmp-plugins
+      doc: fix versionning, since the source page is old
+      debug: adding top level groups
+      u: recursively create the groups
+      t: remove obsolete tests
+      t: the fetch_service_config() sub has a callback
+      t: we also need to update cpanfile
+      t: simplify the Munin::Master::Node testing
+      t: fix testing of munin_master_node
+      t: remove test Fetch service config
+
+
 munin-2.999.5, 2016-12-31
 
 -------
 Summary
 -------
 
-That release is the 5rd beta of the 3.0 series. It is versionned 2.999.x so
+That release is the 5th beta of the 3.0 series. It is versionned 2.999.x so
 numeric only sorting works, as we do have distro that rely on that. Packagers
 can use that versionning or 3.0b5
 

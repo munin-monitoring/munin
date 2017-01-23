@@ -1,24 +1,4 @@
 /* SASS mixins */
-@mixin border-radius($radius) {
-	-webkit-border-radius: $radius;
-	-moz-border-radius: $radius;
-	-ms-border-radius: $radius;
-	border-radius: $radius;
-}
-@mixin box-shadow($shadow1, $shadow2:false, $shadow3:false) {
-	$params: $shadow1;
-	@if $shadow2 { $params: $shadow1, $shadow2; }
-	@if $shadow3 { $params: $shadow1, $shadow2, $shadow3; }
-	-webkit-box-shadow: $params;
-	-moz-box-shadow: $params;
-	-o-box-shadow: $params;
-	box-shadow: $params;
-}
-@mixin opacity($opacity) {
-	opacity: $opacity;
-	$opacity-ie: $opacity * 100;
-	filter: alpha(opacity=$opacity-ie); //IE8
-}
 @mixin box-sizing($param) {
 	box-sizing: $param;
 	-moz-box-sizing: $param;
@@ -38,7 +18,6 @@
 	transition-duration: $duration;
 }
 @mixin user-select($value) {
-	-webkit-touch-callout: $value;
 	-webkit-user-select: $value;
 	-moz-user-select: $value;
 	-ms-user-select: $value;

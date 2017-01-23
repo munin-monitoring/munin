@@ -94,6 +94,27 @@ EOF
 
 }
 
+configure_debug() {
+	banner CONFIGURE DEBUG
+
+        cat > "${CONFDIR}/munin.conf" <<EOF
+# Sandbox munin.conf
+
+tls                    disabled
+tls_private_key        $BASEDIR/t/tls/master_key.pem
+tls_certificate        $BASEDIR/t/tls/master_cert.pem
+tls_ca_certificate     $BASEDIR/t/tls/CA/ca_cert.pem
+tls_verify_certificate yes
+tls_verify_depth       5
+
+# Read node definitions and other configuration
+includedir ${CONFDIR}/munin-conf.d
+EOF
+
+	contrib/munin-node-debug --dump -S 20 > "${CONFDIR}/munin-conf.d/node.debug.conf"
+
+}
+
 stop_node() {
 	./dev_scripts/stop_munin-node
 }
@@ -108,6 +129,21 @@ case ${1:-} in
 		configure_node
 		configure_plugins
 		configure_master
+		;;
+	master)
+		make_sandbox
+		configure_master
+		;;
+	debug)
+		make_sandbox
+		configure_debug
+		;;
+	lib)
+		for src in lib/Munin/*/*.pm
+		do
+			dst=${src#*/}
+			cp -vf $src sandbox/lib/perl5/$dst
+		done
 		;;
 	*)
 		make_sandbox

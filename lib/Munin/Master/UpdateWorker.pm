@@ -46,7 +46,7 @@ sub new {
                                              $host->{port},
                                              $host->{host_name},
 					     $host);
-    $self->{state} = {};
+    # $worker already has a ref to $self, so avoid mem leak
     $self->{worker} = $worker;
     weaken($self->{worker});
 
@@ -58,80 +58,93 @@ sub do_work {
     my ($self) = @_;
 
     my $update_time = Time::HiRes::time;
-
     my $host = $self->{host}{host_name};
+    my $group = $self->{host}{group};
     my $path = $self->{host}->get_full_path;
     $path =~ s{[:;]}{-}g;
 
     my $nodedesignation = $host."/".
 	$self->{host}{address}.":".$self->{host}{port};
 
-    my $lock_file = sprintf ('%s/munin-%s.lock',
-			     $config->{rundir},
-			     $path);
+    local $0 = "$0 [$nodedesignation]";
 
-    if (!munin_getlock($lock_file)) {
-	WARN "Could not get lock $lock_file for $nodedesignation. Skipping node.";
-        die "Could not get lock $lock_file for $nodedesignation. Skipping node.\n";
-    }
-
-    # Reading the state file, no need to lock it, since it's per node and we
-    # already have a lock on this.
-    my $state_file = sprintf ('%s/state-%s.storable', $config->{dbdir}, $path);
-    DEBUG "[DEBUG] Reading state for $path in $state_file";
-    $self->{state} = munin_read_storable($state_file) || {};
+    # No need to lock for the node. We'll use per plugin locking, and it will be
+    # handled directly in SQL. This will enable node-pushed updates.
 
     my %all_service_configs = (
-	data_source => {},
-	global => {},
+		data_source => {},
+		global => {},
 	);
 
 	# Try Connecting to the Carbon Server
-	if ($config->{carbon_server} ne "") {
-		DEBUG "[DEBUG] Connecting to Carbon server $config->{carbon_server}:$config->{carbon_port}...";
-		$self->{carbon_socket} = IO::Socket::INET->new (
-				PeerAddr => $config->{carbon_server},
-				PeerPort => $config->{carbon_port},
-				Proto    => 'tcp',
-		) or WARN "[WARN] Couldn't connect to Carbon Server: $!";
-	}
+	$self->_connect_carbon_server() if $config->{carbon_server};
 
+	# Having a local handle looks easier
+	my $node = $self->{node};
 
     INFO "[INFO] starting work in $$ for $nodedesignation.\n";
-    my $done = $self->{node}->do_in_session(sub {
+    my $done = $node->do_in_session(sub {
 
+	# A I/O timeout results in a violent exit.  Catch and handle.
 	eval {
-	    # A I/O timeout results in a violent exit.  Catch and handle.
+		# Create the group path
+		my $grp_id = $self->_db_mkgrp($group);
 
-	    my @node_capabilities = $self->{node}->negotiate_capabilities();
+		# Fetch the node name
+		my $node_name = $self->{node_name} || $self->{host}->{host_name};
+
+		# Create the node
+		my $node_id = $self->_db_node($grp_id, $node_name);
+		$self->{node_id} = $node_id;
+
+		my @node_capabilities = $node->negotiate_capabilities();
+
+		my $dbh = $self->{dbh};
+		my $dbh_state = $self->{dbh_state};
+
+		# prepare_cached all the useful statements
+		$self->{sth}{node} = $dbh->prepare_cached('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
+		$self->{sth}{node_attr} = $dbh->prepare_cached('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
+		$self->{sth}{service} = $dbh->prepare_cached('INSERT INTO service (node_id, name, path, service_title, graph_info, subgraphs)
+			VALUES (?, ?, ?, ?, ?, ?)');
+		$self->{sth}{service_attr} = $dbh->prepare_cached('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
+		$self->{sth}{ds} = $dbh->prepare_cached('INSERT INTO ds (service_id, name, path, ordr) VALUES (?, ?, ?, ?)');
+		$self->{sth}{ds_attr} = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+		$self->{sth}{ds_type} = $dbh->prepare_cached('UPDATE ds SET type = ? where id = ?');
+		$self->{sth}{url} = $dbh->prepare_cached('INSERT INTO url (id, type, path) VALUES (?, ?, ?)');
+		$self->{sth}{url}->{RaiseError} = 1;
+		$self->{sth}{state} = $dbh_state->prepare_cached('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns
+			FROM state WHERE id = ? AND type = ?');
+		$self->{sth}{state_i} = $dbh_state->prepare_cached(
+			'INSERT INTO state (last_epoch, last_value, prev_epoch, prev_value, id, type) VALUES (?, ?, ?, ?, ?, ?)');
+		$self->{sth}{state_u} = $dbh_state->prepare_cached(
+			'UPDATE state SET last_epoch = ?, last_value = ?, prev_epoch = ?, prev_value = ? WHERE id = ? AND type = ?');
+		$self->{sth}{state_i}->{RaiseError} = 0;
+		$self->{sth}{state_u}->{RaiseError} = 0;
 
             # Handle spoolfetch, one call to retrieve everything
-	    my %whole_config;
-	    my @plugins;
 	    if (grep /^spool$/, @node_capabilities) {
 		    my $spoolfetch_last_timestamp = $self->get_spoolfetch_timestamp();
-		    local $0 = "$0 -- spoolfetch($spoolfetch_last_timestamp)";
-		    %whole_config = $self->uw_spoolfetch($spoolfetch_last_timestamp);
+		    local $0 = "$0 s($spoolfetch_last_timestamp)";
 
-		    # XXX - Commented out, should be protect by a "if logger.isDebugEnabled()"
-		    #       since it is quite expensive
-		    #DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
+		    # We do inject the update handling, in order to have on-the-fly
+		    # updates, as we don't want to slurp the whole spoolfetched output
+		    # and process it later. It will surely timeout, and use a truckload
+		    # of RSS.
+		    my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub { $self->uw_handle_config( @_ ); } );
 
-		    # spoolfetching reported no data, skipping it.
-		    if (! $whole_config{global}{multigraph}[1]) {
-			    INFO "[INFO] $nodedesignation didn't send any data for spoolfetch. Ignoring it.";
-			    # adding ourself to failed_workers, so we use
-			    push @{ $self->{worker}->{failed_workers} },  $self->{ID};
-			   die "NO_SPOOLFETCH_DATA";
-		    }
+		    # update the timestamp if we spoolfetched something
+		    $self->set_spoolfetch_timestamp($timestamp) if $timestamp;
 
-		    # Gets the plugins from spoolfetch
-		    # Only keep the first one, the others will be multigraph-fetched
-		    @plugins = ( $whole_config{global}{multigraph}[0] ) ;
+		    # Note that spoolfetching hosts is always a success. BY DESIGN.
+		    # Since, if we cannot connect, or whatever else, it is NOT an issue.
+
+		    # No need to do more than that on this node
+		    goto NODE_END;
 	    }
 
 	    # Note: A multigraph plugin can present multiple services.
-	    @plugins = $self->{node}->list_plugins() unless @plugins;
+	    my @plugins = $node->list_plugins();
 
 	    # Shuffle @plugins to avoid always having the same ordering
 	    # XXX - It might be best to preorder them on the TIMETAKEN ASC
@@ -140,129 +153,58 @@ sub do_work {
 	    @plugins = shuffle(@plugins);
 
 	    for my $plugin (@plugins) {
+		DEBUG "[DEBUG] for my $plugin (@plugins)";
 		if (%{$config->{limit_services}}) {
 		    next unless $config->{limit_services}{$plugin};
 		}
 
-		DEBUG "[DEBUG] for my $plugin (@plugins)";
+		DEBUG "[DEBUG] config $plugin";
 
-		# Ask for config only if spoolfetch didn't already send it
-		my %service_config = %whole_config;
-	        unless (%service_config) {
-		       local $0 = "$0 -- config($plugin)";
-		       %service_config = $self->uw_fetch_service_config($plugin);
+		local $0 = "$0 c($plugin)";
+		my $last_timestamp = $node->fetch_service_config($plugin, sub { $self->uw_handle_config( @_ ); });
+
+		# Ignoring if $last_timestamp is undef, as we don't have config
+		if (! defined ($last_timestamp)) {
+			INFO "[INFO] $plugin did emit no proper config, ignoring";
+			next;
 		}
 
-		unless (%service_config) {
-		    WARN "[WARNING] Service $plugin on $nodedesignation ".
-			"returned no config";
-		    next;
-		}
+		# Done with this plugin on dirty config (we already have a timestamp for data)
+		# --> Note that dirtyconfig plugin are always polled every run,
+		#     as we don't have a way to know yet.
+		next if ($last_timestamp);
 
-		# Check if this plugin has already sent its data via a dirtyconfig
-		# Note that spoolfetch also uses dirtyconfig
-		my %service_data = $self->handle_dirty_config(\%service_config);
+		my $update_rate = 300; # XXX - hard coded
 
-		# default is 0 sec : always update when asked
-		my $update_rate = get_global_service_value(\%service_config, $plugin, "update_rate", 0);
-		my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
-		DEBUG "[DEBUG] update_rate $update_rate_in_seconds for $plugin on $nodedesignation";
+		my $now = time;
+		my $is_fresh_enough = $self->is_fresh_enough($update_rate, $last_timestamp, $now);
 
-		my $new_data = 1;
+		next if ($is_fresh_enough);
 
-		if (! %service_data) {
-			# Check if this plugin has to be updated
-			if ($update_rate_in_seconds
-				&& $self->is_fresh_enough($nodedesignation, $plugin, $update_rate_in_seconds)) {
-			    # It's fresh enough, skip this $service
-			    DEBUG "[DEBUG] $plugin is fresh enough, not updating it";
-			    $new_data = 0;
+		DEBUG "[DEBUG] fetch $plugin";
+		local $0 = "$0 f($plugin)";
+
+		$last_timestamp = $node->fetch_service_data($plugin,
+			sub {
+				$self->uw_handle_fetch($plugin, $now, $update_rate, @_);
 			}
-
-			# __root__ is only a placeholder plugin for
-			# an empty spoolfetch so we should ignore it
-			# if asked to fetch it.
-			# But we should still do everything after than.
-			if ($new_data && $plugin ne "__root__") {
-				DEBUG "[DEBUG] No service data for $plugin, fetching it";
-				local $0 = "$0 -- fetch($plugin)";
-				%service_data = $self->{node}->fetch_service_data($plugin);
-			}
-		}
-
-		# If update_rate is aligned, round the "when" for alignment
-		if ($is_update_aligned) {
-			foreach my $service (keys %service_data) {
-				my $current_service_data = $service_data{$service};
-				foreach my $field (keys %$current_service_data) {
-					my $whens = $current_service_data->{$field}->{when};
-					for (my $i = 0; $i < scalar @$whens; $i ++) {
-						my $when = $whens->[$i];
-						my $rounded_when = round_to_granularity($when, $update_rate_in_seconds);
-						$whens->[$i] = $rounded_when;
-					}
-				}
-			}
-		}
-
-
-		# Since different plugins can populate multiple
-		# positions in the service namespace we'll check for
-		# collisions and warn of them.
-
-		for my $service (keys %{$service_config{data_source}}) {
-		    if (defined($all_service_configs{data_source}{$service})) {
-			WARN "[WARNING] Service collision: plugin $plugin on "
-			    ."$nodedesignation reports $service which already "
-			    ."exists on that host.  Deleting new data.";
-			delete($service_config{data_source}{$service});
-		    delete($service_data{$service})
-			if defined $service_data{$service};
-		    }
-		}
-
-		# .extinfo fields come from "fetch" but must be saved
-		# like "config".
-
-		for my $service (keys %service_data) {
-		    for my $ds (keys %{$service_data{$service}}) {
-			my $extinfo = $service_data{$service}{$ds}{extinfo};
-			if (defined $extinfo) {
-			    $service_config{data_source}{$service}{$ds}{extinfo} =
-				$extinfo;
-			    DEBUG "[DEBUG] Copied extinfo $extinfo into "
-				."service_config for $service / $ds on "
-				.$nodedesignation;
-			}
-		    }
-		}
-
-		$self->_compare_and_act_on_config_changes(\%service_config);
-
-		%{$all_service_configs{data_source}} = (
-		    %{$all_service_configs{data_source}},
-		    %{$service_config{data_source}});
-
-		%{$all_service_configs{global}} = (
-		    %{$all_service_configs{global}},
-		    %{$service_config{global}});
-
-		next if (!$new_data);
-
-		my $last_updated_timestamp = $self->_update_rrd_files(\%service_config, \%service_data);
-		$self->_update_carbon_server(\%service_config, \%service_data);
-		$self->set_spoolfetch_timestamp($last_updated_timestamp);
+		);
 	    } # for @plugins
-
+NODE_END:
 	    # Send "quit" to node
-	    $self->{node}->quit();
+	    $node->quit();
 
 	}; # eval
 
+	$self->_disconnect_carbon_server();
+
 	# kill the remaining process if needed
-	if ($self->{node}->{pid} && kill(0, $self->{node}->{pid})) {
-		INFO "[INFO] Killing subprocess $self->{node}->{pid}";
-		kill 'TERM', $self->{node}->{pid};
+	# (useful if we spawned an helper, as for cmd:// or ssh://)
+	# XXX - investigate why this leaks here. It should be handled directly by Node.pm
+	my $node_pid = $node->{pid};
+	if ($node_pid && kill(0, $node_pid)) {
+		INFO "[INFO] Killing subprocess $node_pid";
+		kill 'KILL', $node_pid; # Using SIGKILL, since normal termination didn't happen
 	}
 
 	if ($EVAL_ERROR =~ m/^NO_SPOOLFETCH_DATA /) {
@@ -274,29 +216,282 @@ sub do_work {
 	    return;
 	}
 
-	DEBUG "[DEBUG] Closing Carbon socket";
-	$self->{carbon_socket}->close if exists $self->{carbon_socket};
-
+FETCH_OK:
 	# Everything went smoothly.
 	DEBUG "[DEBUG] Everything went smoothly.";
 	return 1;
 
     }); # do_in_session
 
-    munin_removelock($lock_file);
-
-    # Update the state file
-    DEBUG "[DEBUG] Writing state for $path in $state_file";
-    munin_write_storable($state_file, $self->{state});
-
     # This handles failure in do_in_session,
     return undef if ! $done || ! $done->{exit_value};
 
     return {
         time_used => Time::HiRes::time - $update_time,
-        service_configs => \%all_service_configs,
     }
 }
+
+sub _db_url {
+	my ($self, $type, $id, $path, $p_type, $p_id) = @_;
+	my $dbh = $self->{dbh};
+
+	if ($p_type) {
+		my $sth_g_url = $dbh->prepare_cached("SELECT path FROM url WHERE type = ? AND id = ?");
+		$sth_g_url->execute($p_type, $p_id);
+		my ($p_path) = $sth_g_url->fetchrow_array();
+		$sth_g_url->finish();
+
+		# prefix with the parent URL if provided
+		$path = "$p_path/$path" if $p_path;
+	}
+
+	my $sth_d_url = $dbh->prepare_cached("DELETE FROM url WHERE type = ? AND id = ?");
+	$sth_d_url->execute($type, $id);
+
+	my $sth_url = $dbh->prepare_cached('INSERT INTO url (type, id, path) VALUES (?, ?, ?)');
+	$sth_url->execute($type, $id, $path);
+}
+
+sub _db_mkgrp {
+	my ($self, $group) = @_;
+	my $dbh = $self->{dbh};
+
+	DEBUG "group:".Dumper($group);
+
+	# Recursively creates the group path
+	my $p_id = 0; # XXX - 0 is a magic number that says NO_PARENT, as the == NULL doesn't work
+
+	$p_id = $self->_db_mkgrp($group->{group}) if defined $group->{group};
+
+	my $grp_name = $group->{group_name};
+
+	# Create the group if needed
+	my $sth_grp_id = $dbh->prepare_cached("SELECT id FROM grp WHERE name = ? AND p_id = ?");
+	$sth_grp_id->execute($grp_name, $p_id);
+	my ($grp_id) = $sth_grp_id->fetchrow_array();
+	$sth_grp_id->finish();
+
+	if (! defined $grp_id) {
+		# Create the Group
+		my $sth_grp = $dbh->prepare_cached('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
+		my $path = "";
+		$sth_grp->execute($grp_name, $p_id, $path);
+		$grp_id = _get_last_insert_id($dbh);
+	} else {
+		# Nothing to do, the grp doesn't need any updates anyway.
+		# Removal of grp is *unsupported* yet.
+	}
+
+	$self->_db_url("group", $grp_id, $grp_name);
+
+	return $grp_id;
+}
+
+# This should go in a generic DB.pm
+sub _get_last_insert_id {
+	my ($dbh) = @_;
+	return $dbh->last_insert_id("", "", "", "");
+}
+
+sub _db_node {
+	my ($self, $grp_id, $node_name) = @_;
+	my $dbh = $self->{dbh};
+
+	DEBUG "_db_node($grp_id, $node_name)";
+
+	my $sth_node_id = $dbh->prepare_cached("SELECT id FROM node WHERE grp_id = ? AND name = ?");
+	$sth_node_id->execute($grp_id, $node_name);
+	my ($node_id) = $sth_node_id->fetchrow_array();
+	$sth_node_id->finish();
+
+	if (! defined $node_id) {
+		# Create the node
+		my $sth_node = $dbh->prepare_cached('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
+		my $path = "";
+		$sth_node->execute($grp_id, $node_name, $path);
+		$node_id = _get_last_insert_id($dbh);
+	} else {
+		# Nothing to do, the node doesn't need any updates anyway.
+		# Removal of nodes is *unsupported* yet.
+	}
+
+	$self->_db_url("node", $node_id, $node_name, "group", $grp_id);
+
+	DEBUG "_db_node() = $node_id";
+	return $node_id;
+}
+
+sub _db_service {
+	my ($self, $plugin, $service_attr, $fields) = @_;
+	my $dbh = $self->{dbh};
+	my $node_id = $self->{node_id};
+
+	DEBUG "_db_service($node_id, $plugin)";
+	DEBUG "_db_service.service_attr:".Dumper($service_attr);
+	DEBUG "_db_service.fields:".Dumper($fields);
+
+	# Save the whole service config, and drop it.
+	my $sth_service_id = $dbh->prepare_cached("SELECT id FROM service WHERE node_id = ? AND name = ?");
+	$sth_service_id->execute($node_id, $plugin);
+	my ($service_id) = $sth_service_id->fetchrow_array();
+	$sth_service_id->finish();
+
+	if (! defined $service_id) {
+		# Doesn't exist yet, create it
+		my $sth_service = $dbh->prepare_cached("INSERT INTO service (node_id, name) VALUES (?, ?)");
+		$sth_service->execute($node_id, $plugin);
+		$service_id = _get_last_insert_id($dbh);
+	}
+
+	DEBUG "_db_service.service_id:$service_id";
+
+	# Save the existing values
+	my (%service_attrs_old, %fields_old);
+	{
+		my $sth_service_attrs = $dbh->prepare_cached("SELECT name, value FROM service_attr WHERE id = ?");
+		$sth_service_attrs->execute($service_id);
+
+		while (my ($_name, $_value) = $sth_service_attrs->fetchrow_array()) {
+			$service_attrs_old{$_name} = $_value;
+		}
+		$sth_service_attrs->finish();
+
+		my $sth_fields_attr = $dbh->prepare_cached("SELECT ds.name as field, ds_attr.name as attr, ds_attr.value FROM ds
+			LEFT OUTER JOIN ds_attr ON ds.id = ds_attr.id WHERE ds.service_id = ?");
+		$sth_fields_attr->execute($service_id);
+
+		my %fields_old;
+		while (my ($_field, $_name, $_value) = $sth_fields_attr->fetchrow_array()) {
+			$fields_old{$_field}{$_name} = $_value;
+		}
+		$sth_fields_attr->finish();
+	}
+
+	DEBUG "_db_service.%service_attrs_old:" . Dumper(\%service_attrs_old);
+	DEBUG "_db_service.%fields_old:" . Dumper(\%fields_old);
+
+	# Leave room for refresh
+	# XXX - we might only update DB with diff.
+	my $sth_service_attrs_del = $dbh->prepare_cached("DELETE FROM service_attr WHERE id = ?");
+	$sth_service_attrs_del->execute($service_id);
+
+	for my $attr (keys %$service_attr) {
+		my $_service_value = $service_attr->{$attr};
+		$self->_db_service_attr($service_id, $attr, $_service_value);
+	}
+
+	# Handle the service_category
+	{
+		my $category = $service_attr->{graph_category} || "other";
+
+		# XXX - might only INSERT IT IF NOT PRESENT
+		my $sth_service_cat_del = $dbh->prepare_cached("DELETE FROM service_categories WHERE id = ? and category = ?");
+		$sth_service_cat_del->execute($service_id, $category);
+
+		my $sth_service_cat = $dbh->prepare_cached("INSERT INTO service_categories (id, category) VALUES (?, ?)");
+		$sth_service_cat->execute($service_id, $category);
+	}
+
+	# Handle the fields
+	my %ds_ids;
+	for my $field_name (keys %$fields) {
+		my $_field_attrs = $fields->{$field_name};
+		my $ds_id = $self->_db_ds_update($service_id, $field_name, $_field_attrs);
+		$ds_ids{$field_name} = $ds_id;
+	}
+
+	$self->_db_url("service", $service_id, $plugin, "node", $node_id);
+
+	DEBUG "_db_service() = $service_id";
+
+	return ($service_id, \%service_attrs_old, \%fields_old, \%ds_ids);
+}
+
+sub _db_service_attr {
+	my ($self, $service_id, $name, $value) = @_;
+	my $dbh = $self->{dbh};
+
+	DEBUG "_db_service_attr($service_id, $name, $value)";
+
+	# Save the whole service config, and drop it.
+	my $sth_service_attr = $dbh->prepare_cached("INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)");
+	$sth_service_attr->execute($service_id, $name, $value);
+}
+
+sub _db_ds_update {
+	my ($self, $service_id, $field_name, $attrs) = @_;
+	my $dbh = $self->{dbh};
+
+	DEBUG "_db_ds_update($service_id, $field_name, $attrs)";
+
+	my $sth_id = $dbh->prepare_cached("SELECT id FROM ds WHERE service_id = ? AND name = ?");
+	$sth_id->execute($service_id, $field_name);
+
+	my ($ds_id) = $sth_id->fetchrow_array();
+	$sth_id->finish();
+
+	if (! defined $ds_id) {
+		# Doesn't exist yet, create it
+		my $sth_ds = $dbh->prepare_cached("INSERT INTO ds (service_id, name) VALUES (?, ?)");
+		$sth_ds->execute($service_id, $field_name);
+		$ds_id = _get_last_insert_id($dbh);
+	}
+
+	# Remove the ds rows
+	my $sth_del_attr = $dbh->prepare_cached('DELETE FROM ds_attr WHERE id = ?');
+	$sth_del_attr->execute($ds_id);
+
+	# Reinsert the other rows
+	my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+	for my $field_attr (keys %$attrs) {
+		my $_value = $attrs->{$field_attr};
+		$sth_ds_attr->execute($ds_id, $field_attr, $_value);
+	}
+
+	return $ds_id;
+}
+
+sub _db_state_update {
+	my ($self, $plugin, $field, $when, $value) = @_;
+	my $dbh = $self->{dbh};
+	my $node_id = $self->{node_id};
+
+	DEBUG "_db_state_update($plugin, $field, $when, $value)";
+	DEBUG "_db_state_update.node_id:$node_id";
+	my $sth_ds = $dbh->prepare_cached("
+		SELECT ds.id FROM ds
+		JOIN service s ON ds.service_id = s.id AND s.node_id = ? AND s.name = ?
+		WHERE ds.name = ?");
+	$sth_ds->execute($node_id, $plugin, $field);
+	my ($ds_id) = $sth_ds->fetchrow_array();
+	DEBUG "_db_state_update.ds_id:$ds_id";
+	$sth_ds->finish();
+
+	my $sth_state = $dbh->prepare_cached("SELECT last_epoch, last_value FROM state WHERE id = ? AND type = ?");
+	$sth_state->execute($ds_id, "ds");
+	my ($last_epoch, $last_value) = $sth_state->fetchrow_array();
+	$sth_state->finish();
+
+	{
+		no warnings;
+		DEBUG "_db_state_update.last_epoch:$last_epoch";
+		DEBUG "_db_state_update.last_value:$last_value";
+	}
+
+	if (! defined $last_epoch) {
+		# No line exists yet. Create It.
+		my $sth_state_i = $dbh->prepare_cached("INSERT INTO state (id, type) VALUES (?, ?)");
+		$sth_state_i->execute($ds_id, "ds");
+	}
+
+	# Update the state with the new values
+	my ($prev_epoch, $prev_value) = ($last_epoch, $last_value);
+	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
+	$sth_state_u->execute($when, $value, $ds_id, "ds");
+
+	return $ds_id;
+}
+
 
 sub get_global_service_value {
 	my ($service_config, $service, $conf_field_name, $default) = @_;
@@ -311,26 +506,20 @@ sub get_global_service_value {
 }
 
 sub is_fresh_enough {
-	my ($self, $nodedesignation, $service, $update_rate_in_seconds) = @_;
+	my ($self, $update_rate, $last_timestamp, $now) = @_;
 
-	DEBUG "is_fresh_enough asked for $service with a rate of $update_rate_in_seconds";
+	DEBUG "is_fresh_enough($update_rate, $last_timestamp, $now)";
 
-	my $last_updated = $self->{state}{last_updated}{$service} || "0 0";
-	DEBUG "last_updated{$service}: " . $last_updated;
-	my @last = split(/ /, $last_updated);
+	my ($is_update_aligned, $update_rate_in_sec) = parse_update_rate($update_rate);
 
-	use Time::HiRes qw(gettimeofday tv_interval);
-	my $now = [ gettimeofday ];
+	DEBUG "update_rate_in_sec:$update_rate_in_sec";
 
-	my $age = tv_interval(\@last, $now);
-	DEBUG "last: [" . join(",", @last) . "], now: [" . join(", ", @$now) . "], age: $age";
-	my $is_fresh_enough = ($age < $update_rate_in_seconds) ? 1 : 0;
+	my $age = $now - $last_timestamp;
+
+	DEBUG "now:$now, age:$age";
+
+	my $is_fresh_enough = ($age < $update_rate_in_sec) ? 1 : 0;
 	DEBUG "is_fresh_enough  $is_fresh_enough";
-
-	if (! $is_fresh_enough) {
-		DEBUG "new value: " . join(" ", @$now);
-		$self->{state}{last_updated}{$service} = join(" ", @$now);
-	}
 
 	return $is_fresh_enough;
 }
@@ -354,10 +543,10 @@ sub set_spoolfetch_timestamp {
 sub parse_update_rate {
 	my ($update_rate_config) = @_;
 
-	my ($is_update_aligned, $update_rate_in_sec);
+	my ($update_rate_in_sec, $is_update_aligned);
 	if ($update_rate_config =~ m/(\d+[a-z]?)( aligned)?/) {
 		$update_rate_in_sec = to_sec($1);
-		$is_update_aligned = $2;
+		$is_update_aligned = ($2 || 0);
 	} else {
 		return (0, 0);
 	}
@@ -373,48 +562,148 @@ sub round_to_granularity {
 	return $rounded_when;
 }
 
-sub handle_dirty_config {
-	my ($self, $service_config) = @_;
 
-	my %service_data;
+# For the uw_handle_* :
+# The $data has been already sanitized :
+# * chomp()
+# * comments are removed
+# * empty lines are removed
 
-	my $services = $service_config->{global}{multigraph};
-	foreach my $service (@$services) {
-		my $service_data_source = $service_config->{data_source}->{$service};
-		foreach my $field (keys %$service_data_source) {
-			my $field_value = $service_data_source->{$field}->{value};
-			my $field_when = $service_data_source->{$field}->{when};
+# This handles one config part.
+# - It will automatically call uw_handle_fetch to handle dirty_config
+# - In case of multigraph (or spoolfetch) the caller has to call this for every multigraph part
+# - It handles empty $data, and just does nothing
+#
+# Returns the last updated timestamp
+sub uw_handle_config {
+	my ($self, $plugin, $now, $data, $last_timestamp) = @_;
 
-			# If value not present, this field is not dirty fetched
-			next if (! defined $field_value);
+	$self->{dbh}->begin_work();
 
-			DEBUG "[DEBUG] handle_dirty_config:$service, $field, @$field_when";
-			# Moves the "value" to the service_data
-			$service_data{$service}->{$field} ||= { when => [], value => [], };
-	                push @{$service_data{$service}{$field}{value}}, @$field_value;
-			push @{$service_data{$service}{$field}{when}}, @$field_when;
+	# Build FETCH data, just in case of dirty_config.
+	my @fetch_data;
 
-			delete($service_data_source->{$field}{value});
-			delete($service_data_source->{$field}{when});
+	# Parse the output to a simple HASH
+	my %service_attr;
+	my %fields;
+	for my $line (@$data) {
+		DEBUG "uw_handle_config: $line";
+		# Barbaric regex to parse the output of the config
+		# graph_title hymir : Sea giant ===> $arg1: "graph_title", $arg2: undef, $value: "hymir : Sea giant"
+		next unless ($line =~ m{^([^\.\s]+)(?:\.(\S+))?\s+?(.+)$});
+		my ($arg1, $arg2, $value) = ($1, $2, $3);
+
+		if (! $arg2) {
+			# This is a service config line
+			$service_attr{$arg1} = $value;
+			next; # Handled
 		}
+
+		# Handle dirty_config
+		if ($arg2 && $arg2 eq "value") {
+			push @fetch_data, $line;
+			next; # Handled
+		}
+
+		$fields{$arg1}{$arg2} = $value;
 	}
 
-	return %service_data;
+	# Sync to database
+	# Create/Update the service
+	my ($service_id, $service_attrs_old, $fields_old, $ds_ids) = $self->_db_service($plugin, \%service_attr, \%fields);
+
+	# Create the RRDs
+	for my $ds_name (keys %fields) {
+		my $ds_config = $fields{$ds_name};
+		my $ds_id = $ds_ids->{$ds_name};
+
+		my $first_epoch = time; # XXX - we should be able to have some delay in the past for spoolfetched plugins
+		my $rrd_file = $self->_create_rrd_file_if_needed($plugin, $ds_name, $ds_config, $first_epoch);
+
+		# Update the RRD file
+		# XXX - Should be handled in a stateful way, as now it is reconstructed everytime
+		my $dbh = $self->{dbh};
+		my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+		$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
+		$sth_ds_attr->execute($ds_id, "rrd:field", "42");
+	}
+
+	# timestamp == 0 means "Nothing was updated". We only count on the
+	# "fetch" part to provide us good timestamp info, as the "config" part
+	# doesn't contain any, specially in case we are spoolfetching.
+	#
+	# Also, the caller can override the $last_timestamp, to be called in a loop
+	$last_timestamp = 0 unless defined $last_timestamp;
+
+	# Delegate the FETCH part
+	my $update_rate = "300"; # XXX - should use the correct version
+	my $timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
+	$last_timestamp = $timestamp if $timestamp && $timestamp > $last_timestamp;
+
+	$self->{dbh}->commit();
+	return $last_timestamp;
 }
 
+# This handles one fetch part.
+# Returns the last updated timestamp
+sub uw_handle_fetch {
+	my ($self, $plugin, $now, $update_rate, $data) = @_;
 
-sub uw_spoolfetch {
-    my ($self, $timestamp) = @_;
+	# timestamp == 0 means "Nothing was updated"
+	my $last_timestamp = 0;
 
-    my %whole_config = $self->{node}->spoolfetch($timestamp);
+	my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
 
-    # munin.conf might override stuff
-    foreach my $plugin (keys %whole_config) {
-	    my $merged_config = $self->uw_override_with_conf($plugin, $whole_config{$plugin});
-	    $whole_config{$plugin} = $merged_config;
-    }
+	# Process all the data in-order
+	for my $line (@$data) {
+		next unless ($line =~ m{\A ([^\.]+)(?:\.(\S)+)? \s+ ([\S:]+) }xms);
+		my ($field, $arg, $value) = ($1, $2, $3);
 
-    return %whole_config;
+		my $when = $now; # Default is NOW, unless specified
+		if ($value =~ /^(\d+):(.+)$/) {
+			$when = $1;
+			$value = $2;
+		}
+
+		# Always round the $when if plugin asks for. Rounding the plugin-provided
+		# time is weird, but we are doing it to follow the "least surprise principle".
+		$when = round_to_granularity($when, $update_rate_in_seconds) if $is_update_aligned;
+
+		# Update last_timestamp if the current update is more recent
+		$last_timestamp = $when if $when > $last_timestamp;
+
+		# Update all data-driven components: State, RRD, Graphite
+		my $ds_id = $self->_db_state_update($plugin, $field, $when, $value);
+
+		my ($rrd_file, $rrd_field);
+		{
+			# XXX - Quite inefficient, but works
+			my $dbh = $self->{dbh};
+			my $sth_rrdinfos = $dbh->prepare_cached(
+				"SELECT name, value FROM ds_attr WHERE id = ? AND name in (
+					'rrd:file',
+					'rrd:field'
+				)"
+			);
+			$sth_rrdinfos->execute($ds_id);
+			while ( my @row = $sth_rrdinfos->fetchrow_array ) {
+				$rrd_file  = $row[1] if $row[0] eq "rrd:file";
+				$rrd_field = $row[1] if $row[0] eq "rrd:field";
+			}
+			$sth_rrdinfos->finish();
+		}
+
+		# This is a little convoluted but is needed as the API permits
+		# vectorized updates
+		my $ds_values = {
+			"value" => [ $value, ],
+			"when" => [ $when, ],
+		};
+		$self->_update_rrd_file($rrd_file, $field, $ds_values);
+
+	}
+
+	return $last_timestamp;
 }
 
 sub uw_fetch_service_config {
@@ -612,6 +901,27 @@ sub _ensure_tuning {
     }
 
     return $success;
+}
+
+sub _connect_carbon_server {
+	my $self = shift;
+
+	DEBUG "[DEBUG] Connecting to Carbon server $config->{carbon_server}:$config->{carbon_port}...";
+
+	$self->{carbon_socket} = IO::Socket::INET->new (
+		PeerAddr => $config->{carbon_server},
+		PeerPort => $config->{carbon_port},
+		Proto    => 'tcp',
+	) or WARN "[WARN] Couldn't connect to Carbon Server: $!";
+}
+
+sub _disconnect_carbon_server {
+	my $self = shift;
+
+	if ($self->{carbon_socket}) {
+		DEBUG "[DEBUG] Closing Carbon socket";
+		delete $self->{carbon_socket};
+	}
 }
 
 sub _update_carbon_server {
@@ -959,15 +1269,13 @@ sub to_mul_nb {
 }
 
 sub _update_rrd_file {
-    my ($self, $rrd_file, $ds_name, $ds_values) = @_;
+	my ($self, $rrd_file, $ds_name, $ds_values) = @_;
 
-    my $values = $ds_values->{value};
+	my $values = $ds_values->{value};
 
-    # Some kind of mismatch between fetch and config can cause this.
-    return if !defined($values);
+	# Some kind of mismatch between fetch and config can cause this.
+	return unless defined($values);
 
-    my ($previous_updated_timestamp, $previous_updated_value) = @{ $self->{state}{value}{"$rrd_file:42"}{current} || [ ] };
-    my @update_rrd_data;
 	if ($config->{"rrdcached_socket"}) {
 		if (! -e $config->{"rrdcached_socket"} || ! -w $config->{"rrdcached_socket"}) {
 			WARN "[WARN] RRDCached feature ignored: rrdcached socket not writable";
@@ -980,64 +1288,74 @@ sub _update_rrd_file {
 		}
 	}
 
-    my ($current_updated_timestamp, $current_updated_value) = ($previous_updated_timestamp, $previous_updated_value);
-    for (my $i = 0; $i < scalar @$values; $i++) {
-        my $value = $values->[$i];
-        my $when = $ds_values->{when}[$i];
+	my @update_rrd_data;
 
-	# Ignore values that is not in monotonic increasing timestamp for the RRD.
-	# Otherwise it will reject the whole update
-	next if ($current_updated_timestamp && $when <= $current_updated_timestamp);
+	my ($current_updated_timestamp, $current_updated_value);
+	for (my $i = 0; $i < scalar @$values; $i++) {
+		my $value = $values->[$i];
+		my $when = $ds_values->{when}[$i];
 
-        if ($value =~ /\d[Ee]([+-]?\d+)$/) {
-            # Looks like scientific format.  RRDtool does not
-            # like it so we convert it.
-            my $magnitude = $1;
-            if ($magnitude < 0) {
-                # Preserve at least 4 significant digits
-                $magnitude = abs($magnitude) + 4;
-                $value = sprintf("%.*f", $magnitude, $value);
-            } else {
-                $value = sprintf("%.4f", $value);
-            }
-        }
+		# Ignore values that are not in monotonic increasing timestamp for the RRD.
+		# Otherwise it will reject the whole update
+		next if ($current_updated_timestamp && $when <= $current_updated_timestamp);
 
-        # Schedule for addition
-        push @update_rrd_data, "$when:$value";
+		# RRDtool does not like scientific format so we convert it.
+		$value = convert_to_float($value);
 
-	$current_updated_timestamp = $when;
-	$current_updated_value = $value;
-    }
+		# Schedule for addition
+		push @update_rrd_data, "$when:$value";
 
-    DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
-    if ($ENV{RRDCACHED_ADDRESS} && (scalar @update_rrd_data > 32) ) {
-        # RRDCACHED only takes about 4K worth of commands. If the commands is
-        # too large, we have to break it in smaller calls.
-        #
-        # Note that 32 is just an arbitrary choosed number. It might be tweaked.
-        #
-        # For simplicity we only call it with 1 update each time, as RRDCACHED
-        # will buffer for us as suggested on the rrd mailing-list.
-        # https://lists.oetiker.ch/pipermail/rrd-users/2011-October/018196.html
-        for my $update_rrd_data (@update_rrd_data) {
-            RRDs::update($rrd_file, $update_rrd_data);
-            # Break on error.
-            last if RRDs::error;
-        }
-    } else {
-        RRDs::update($rrd_file, @update_rrd_data);
-    }
+		$current_updated_timestamp = $when;
+		$current_updated_value = $value;
+	}
 
-    if (my $ERROR = RRDs::error) {
-        #confess Dumper @_;
-        ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
-    }
+	DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
+	if ($ENV{RRDCACHED_ADDRESS} && (scalar @update_rrd_data > 32) ) {
+		# RRDCACHED only takes about 4K worth of commands. If the commands is
+		# too large, we have to break it in smaller calls.
+		#
+		# Note that 32 is just an arbitrary choosed number. It might be tweaked.
+		#
+		# For simplicity we only call it with 1 update each time, as RRDCACHED
+		# will buffer for us as suggested on the rrd mailing-list.
+		# https://lists.oetiker.ch/pipermail/rrd-users/2011-October/018196.html
+		for my $update_rrd_data (@update_rrd_data) {
+			DEBUG "RRDs::update($rrd_file, $update_rrd_data)";
+			RRDs::update($rrd_file, $update_rrd_data);
+			# Break on error.
+			last if RRDs::error;
+		}
+	} else {
+		# normal vector-update the RRD
+		DEBUG "RRDs::update($rrd_file, @update_rrd_data)";
+		RRDs::update($rrd_file, @update_rrd_data);
+	}
 
-    # Stores the previous and the current value in the state db to avoid having to do an RRD lookup if needed
-    $self->{state}{value}{"$rrd_file:42"}{current} = [ $current_updated_timestamp, $current_updated_value ];
-    $self->{state}{value}{"$rrd_file:42"}{previous} = [ $previous_updated_timestamp, $previous_updated_value ];
+	if (my $ERROR = RRDs::error) {
+		#confess Dumper @_;
+		ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
+	}
 
-    return $current_updated_timestamp;
+	return $current_updated_timestamp;
+}
+
+sub convert_to_float
+{
+	my $value = shift;
+
+	# Only convert if it looks like scientific format
+	return $value unless ($value =~ /\d[Ee]([+-]?\d+)$/);
+
+	my $magnitude = $1;
+	if ($magnitude < 0) {
+		# Preserve at least 4 significant digits
+		$magnitude = abs($magnitude) + 4;
+		$value = sprintf("%.*f", $magnitude, $value);
+	} else {
+		$value = sprintf("%.4f", $value);
+	}
+
+	return $value
 }
 
 sub dump_to_file
@@ -1045,7 +1363,6 @@ sub dump_to_file
 	my ($filename, $obj) = @_;
 	open(DUMPFILE, ">> $filename");
 
-	use Data::Dumper;
 	print DUMPFILE Dumper($obj);
 
 	close(DUMPFILE);

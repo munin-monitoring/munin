@@ -13,25 +13,6 @@ $primary-color: 	#388E3C;
 $secondary-color: 	#546E7A;
 
 /* SASS mixins */
-@mixin border-radius($radius) {
-	-webkit-border-radius: $radius;
-	-moz-border-radius: $radius;
-	-ms-border-radius: $radius;
-	border-radius: $radius;
-}
-@mixin box-shadow($shadow1, $shadow2:false) {
-	$params: $shadow1;
-	@if $shadow2 { $params: $shadow1, $shadow2; }
-	-webkit-box-shadow: $params;
-	-moz-box-shadow: $params;
-	-o-box-shadow: $params;
-	box-shadow: $params;
-}
-@mixin opacity($opacity) {
-	opacity: $opacity;
-	$opacity-ie: $opacity * 100;
-	filter: alpha(opacity=$opacity-ie); //IE8
-}
 @mixin box-sizing($param) {
 	box-sizing: $param;
 	-moz-box-sizing: $param;
@@ -110,7 +91,7 @@ hr {
 	margin: 20px 0;
 	border: 0;
 	border-top: 1px solid #888;
-	@include box-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 a {
@@ -142,11 +123,11 @@ img { border: 0; }
 	height: auto;
 	/* Colors are overridden by "color" property */
 	border: 1px solid;
-	@include box-shadow(0 0 2px 0);
+	box-shadow: 0 0 2px 0;
 
 	&.i {
 		color: #fff;
-		@include box-shadow(0 0 2px 0 #888);
+		box-shadow: 0 0 2px 0 #888;
 	}
 }
 
@@ -161,7 +142,7 @@ header {
 	position: relative;
 	z-index: 5;
 	border-bottom: 1px solid #3A713C;
-	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.5));
+	box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
 	@include box-sizing(border-box);
 
 	h1 {
@@ -186,10 +167,10 @@ header {
 		linear-gradient(transparent, transparent),
 		url('../img/logo-h-neg.svg');
 		background-size: 115px 30px;
-		@include opacity(0.8);
+		opacity: 0.8;
 
 		&:hover {
-			@include opacity(1);
+			opacity: 1;
 		}
 	}
 
@@ -213,7 +194,7 @@ header {
 			color: #fff;
 			@include transition-duration(200ms);
 			padding: 2px 6px;
-			@include border-radius(2px);
+			border-radius: 2px;
 			border: 1px solid transparent;
 
 			&:hover {
@@ -248,7 +229,7 @@ nav {
 		background-color: #ddd;
 		height: 1px;
 		margin: 0;
-		@include box-shadow(none);
+		box-shadow: none;
 		border: 0;
 	}
 	> h2 {
@@ -297,8 +278,8 @@ nav {
 			}
 		}
 	}
-	ul.categories:hover .timerangesList { @include opacity(0.5); }
-	ul.categories li:hover .timerangesList { @include opacity(1); }
+	ul.categories:hover .timerangesList { opacity: 0.5; }
+	ul.categories li:hover .timerangesList { opacity: 1; }
 
 	.badge {
 		float: right;
@@ -312,7 +293,7 @@ nav {
 		color: #fff;
 		text-align: center;
 		background-color: #999;
-		@include border-radius(10px);
+		border-radius: 10px;
 	}
 }
 
@@ -323,7 +304,7 @@ nav {
 	background-color: #ffffff;
 	border-left: 1px solid #ccc;
 	border-left: 1px solid rgba(0, 0, 0, 0.01);
-	@include box-shadow(0 1px 2px 0 rgba(0, 0, 0, 0.35));
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
 	@include box-sizing(border-box);
 
 	h2 {
@@ -381,7 +362,7 @@ footer {
 }
 
 .card {
-	@include box-shadow(0 2px 1px rgba(0, 0, 0, 0.12));
+	box-shadow: 0 2px 1px rgba(0, 0, 0, 0.12);
 	background: #fff;
 }
 
@@ -390,13 +371,13 @@ footer {
 	position: absolute;
 	z-index: 10;
 	max-width: 450px;
-	@include box-shadow(0 0 5px 0 rgba(0, 0, 0, 0.3));
+	box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
 	padding: 5px 10px;
 	background-color: #777;
 	background-color: rgba(0, 0, 0, 0.6);
 	border: 0;
 	color: #fff;
-	@include border-radius(2px);
+	border-radius: 2px;
 	font-size: 12px;
 	text-align: justify;
 }
@@ -414,8 +395,8 @@ footer {
 	height: 630px;
 	background-color: #fff;
 	border: 1px solid #666;
-	@include box-shadow(0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2));
-	@include border-radius(2px);
+	box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
+	border-radius: 2px;
 
 	.title {
 		font-family: $secondary-font;
@@ -424,7 +405,7 @@ footer {
 		display: block;
 		padding: 5px 5px 5px 20px;
 		margin: -1px -1px 0 -1px;
-		@include border-radius(3px 3px 0 0);
+		border-radius: 3px 3px 0 0;
 		border: 1px solid darken($secondary-color, 10);
 		background-color: $secondary-color;
 		@include box-sizing(border-box);
@@ -465,7 +446,7 @@ footer {
 		width: 100%;
 		height: 100%;
 		border: 0;
-		@include border-radius(0 0 2px 2px);
+		border-radius: 0 0 2px 2px;
 	}
 }
 .modalMask {
@@ -497,12 +478,12 @@ ul.groupview {
 
 			.host {
 				.download {
-					@include opacity(0.3);
+					opacity: 0.3;
 					@include transition-duration(200ms);
 					margin-right: 6px;
 				}
 				&:hover .download {
-					@include opacity(1);
+					opacity: 1;
 				}
 			}
 		}

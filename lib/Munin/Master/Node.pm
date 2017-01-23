@@ -416,24 +416,44 @@ sub parse_service_config {
 
 
 sub fetch_service_config {
-    my ($self, $service) = @_;
+	my ($self, $service, $uw_handle_config) = @_;
 
-    my $t0 = [gettimeofday];
+	my $t0 = [gettimeofday];
 
-    DEBUG "[DEBUG] Fetching service configuration for '$service'";
-    $self->_node_write_single("config $service\n");
+	my $now = time; # Using the time of the call for the timing
 
-    # The whole config in one fell swoop.
-    my $lines = $self->_node_read();
+	DEBUG "[DEBUG] Fetching service configuration for '$service'";
+	$self->_node_write_single("config $service\n");
 
-    my $elapsed = tv_interval($t0);
+	# The whole config in one fell swoop.
+	my $lines = $self->_node_read();
 
-    my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-    DEBUG "[DEBUG] config: $elapsed sec for '$service' on $nodedesignation";
+	my $elapsed = tv_interval($t0);
 
-    $service = $self->_sanitise_plugin_name($service);
+	my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
+	DEBUG "[DEBUG] config: $elapsed sec for '$service' on $nodedesignation";
 
-    return $self->parse_service_config($service, $lines);
+	$service = $self->_sanitise_plugin_name($service);
+
+	# Calling back uw_handle_config() with each multigraph block
+	my $lines_block = [];
+	my $local_service_name = $service;
+
+	my $last_timestamp = 0;
+	for my $line (@$lines) {
+		if ($line =~ m{\A multigraph \s+ (.+) }xms) {
+			$local_service_name = $1;
+			$last_timestamp = $uw_handle_config->($local_service_name, $now, $lines_block, $last_timestamp);
+			next;
+		}
+
+		push @$lines_block, $line;
+	}
+
+	# This is the last multigraph, or the whole plugin if not multigraph
+	$last_timestamp = $uw_handle_config->($local_service_name, $now, $lines_block, $last_timestamp);
+
+	return $last_timestamp;
 }
 
 sub spoolfetch {
@@ -571,7 +591,7 @@ sub parse_service_data {
 
 
 sub fetch_service_data {
-    my ($self, $plugin) = @_;
+    my ($self, $plugin, $uw_handle_data) = @_;
 
     my $t0 = [gettimeofday];
 
@@ -583,9 +603,7 @@ sub fetch_service_data {
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
     DEBUG "[DEBUG] data: $elapsed sec for '$plugin' on $nodedesignation";
 
-    $plugin = $self->_sanitise_plugin_name($plugin);
-
-    return $self->parse_service_data($plugin, $lines);
+    return $uw_handle_data->($lines);
 }
 
 sub quit {
