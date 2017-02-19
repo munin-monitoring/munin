@@ -4,9 +4,9 @@
 Using SNMP plugins
 ===================
 
-(Curbed from an e-mail written by Rune Nordbøe Skilingstad)
+(Cribbed from an e-mail written by Rune Nordbøe Skilingstad)
 
-The easy way to configure snmp plugins in Munin is to use :ref:`munin-node-configure <munin-node-configure>`.
+The easy way to configure SNMP plugins in Munin is to use :ref:`munin-node-configure <munin-node-configure>`.
 
 In this setup, both munin and munin-node runs on the server "dumbledore",
 and we also want to monitor the router "netopia" using SNMP plugins.
@@ -14,8 +14,8 @@ The setup is shown below:
 
 .. image:: Munin-snmp-via-dumbledore.png
 
-On the node you want to use as an snmp gateway ("dumbledore"),
-run the configure script against your snmp enabled device ("netopia").
+On the node you want to use as an SNMP gateway ("dumbledore"),
+run the configure script against your SNMP-enabled device ("netopia").
 
 ::
 
