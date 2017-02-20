@@ -66,7 +66,7 @@ cd $WORKDIR
 find $WORKDIR -name *.html -exec rm {} \;
 
 # Download github files
-if test -d "$WORKDIR/.svn"; then
+if test -d "$SVNROOTDIR/.svn"; then
   svn up trunk
 else
   echo "ERROR: working directory is not under svn control!"
