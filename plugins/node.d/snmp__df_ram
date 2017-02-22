@@ -51,6 +51,8 @@ my $MAXLABEL = 20;
 my $host      = $ENV{host}      || undef;
 my $port      = $ENV{port}      || 161;
 my $community = $ENV{community} || "public";
+my $warnlevel = $ENV{warning}   || "92";
+my $critlevel = $ENV{critical}  || "95";
 
 my $response;
 
@@ -178,12 +180,26 @@ if (defined $ARGV[0] and $ARGV[0] eq "config")
 
 	foreach my $part (keys %partitions)
 	{
-		print (&get_name_by_mp ($part), ".label ");
-		print (length($part)<=$MAXLABEL ? $part : "...".substr($part,-($MAXLABEL-3)));
-		print ("\n");
-		print (&get_name_by_mp ($part), ".warning 92\n");
-		print (&get_name_by_mp ($part), ".critical 98\n");
-		print (&get_name_by_mp ($part), ".info Usage for ". ($partitions{$part}{extinfo}||$part)."\n");
+                my $unit = &get_name_by_mp ($part);
+                print ($unit, ".label ");
+                print (length($part)<=$MAXLABEL ? $part : "...".substr($part,-($MAXLABEL-3)));
+                print ("\n");
+                if (defined $ENV{join('', $unit, "_warning")})
+                {
+                        print ($unit, ".warning ", $ENV{join('', $unit, "_warning")}, "\n");
+                } else
+                {
+                        print ($unit, ".warning ", $warnlevel, "\n");
+                }
+                if (defined $ENV{join('', $unit, "_critical")})
+                {
+                        print ($unit, ".critical ", $ENV{join('', $unit, "_critical")}, "\n");
+                } else
+                {
+                        print ($unit, ".critical ", $critlevel, "\n");
+                }
+                print ($unit, ".info Usage for ". ($partitions{$part}{extinfo}||$part)."\n");
+
 	}
 	exit 0;
 }
