@@ -84,7 +84,7 @@ awk -f $SCRIPTDIR/prep-catnav-contrib.awk -v scriptdir=$SCRIPTDIR $SCRIPTDIR/cat
 cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav-contrib.html $SCRIPTDIR/static/gallery-cat-footer.html >$SCRIPTDIR/static/prep-index-contrib.html
 
 # Create entry page
-cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav-contrib.html $SCRIPTDIR/static/gallery-cat-footer.html $SCRIPTDIR/static/gallery-intro.html $SCRIPTDIR/static/gallery-footer.html >$HTMLDIR/contrib/index.html
+cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav-contrib.html $SCRIPTDIR/static/gallery-cat-footer.html $SCRIPTDIR/static/gallery-intro-contrib.html $SCRIPTDIR/static/gallery-footer.html >$HTMLDIR/contrib/index.html
 
 # Create Gallery pages for all categories that were explicitly set in the plugin script files
 awk -f $SCRIPTDIR/print-gallery-contrib.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/catsorted-contrib.lst >$SCRIPTDIR/print-gallery1-contrib.log
