@@ -1,0 +1,68 @@
+From 42ce18f24d3eae8be33526a198bf21e4f2330230 Mon Sep 17 00:00:00 2001
+From: Steve Schnepp <steve.schnepp@pwkf.org>
+Date: Sat, 25 Feb 2017 11:20:52 +0100
+Subject: [PATCH] Fix wrong parameter expansion in CGI
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+As Tomaž Šolc <tomaz.solc@tablix.org> said :
+
+	Munin package in Jessie has a local file write vulnerability when CGI graphs are
+	enabled. Setting multiple "upper_limit" GET parameters allows overwriting any
+	file accessible to the www-data user.
+
+And sstj <stevie.trujillo@gmail.com> said :
+
+	Running munin-2.0.25 on Gentoo. I observed this message in the logs
+
+	2016/07/26 21:57:54 [PERL WARNING] CGI::param called in list context
+	from /usr/libexec/munin/cgi/munin-cgi-graph line 450, this can lead to
+	vulnerabilities. See the warning in "Fetching the value or values of a
+	single named parameter" at /usr/lib64/perl5/vendor_perl/5.20.2/CGI.pm
+	line 404.
+
+	This allows injecting options into munin-cgi-graph (similar to
+	http://munin-monitoring.org/ticket/1238 ), by doing something like
+	this:
+
+	&upper_limit=500&upper_limit=--output-file&upper_limit=/tmp/test.txt
+
+	which wrote the graph to /tmp/test.txt
+
+Closes: #721, D:855705, CVE-2017-6188
+---
+ master/_bin/munin-cgi-graph.in | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
+
+--- a/master/_bin/munin-cgi-graph.in
++++ b/master/_bin/munin-cgi-graph.in
+@@ -447,14 +447,20 @@ sub draw_graph {
+ 		   '--output-file', $filename );
+ 
+     # Sets the correct size on a by_graph basis
+-    push @params, "--size_x", CGI::param("size_x")
+-      if (defined(CGI::param("size_x")));
+-    push @params, "--size_y", CGI::param("size_y")
+-      if (defined(CGI::param("size_y")));
+-    push @params, "--upper_limit", CGI::param("upper_limit")
+-      if (CGI::param("upper_limit"));
+-    push @params, "--lower_limit", CGI::param("lower_limit")
+-      if (CGI::param("lower_limit"));
++
++    # using a temporary variable to avoid expansion in list context and fix CVE-2017-6188
++    my $size_x = CGI::param("size_x");
++    push @params, "--size_x", $size_x if defined $size_x;
++
++    my $size_y = CGI::param("size_y");
++    push @params, "--size_y", $size_y if defined $size_y;
++
++    my $upper_limit = CGI::param("upper_limit");
++    push @params, "--upper_limit", $upper_limit if defined $upper_limit;
++
++    my $lower_limit = CGI::param("lower_limit");
++    push @params, "--lower_limit", $lower_limit if defined $lower_limit;
++
+ 
+     # Sometimes we want to set the IMG size, and not the canvas.
+     push @params, "--full_size_mode"

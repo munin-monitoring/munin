@@ -1,3 +1,14 @@
+munin (2.0.25-1+deb8u1) jessie-security; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Fix wrong parameter expansion in CGI (CVE-2017-6188)
+    Fixes local file write vulnerability when CGI graphs are enabled.
+    Setting multiple upper_limit GET parameters allows overwriting any file
+    accessible to the user running the CGI script.
+    Thanks to Tomaž Šolc <tomaz.solc@tablix.org> (Closes: #855705)
+
+ -- Salvatore Bonaccorso <carnil@debian.org>  Sat, 25 Feb 2017 17:20:04 +0100
+
 munin (2.0.25-1) unstable; urgency=medium
 
   * New upstream bugfix release. (Closes: #769415, #770745, #770746, #770826),
