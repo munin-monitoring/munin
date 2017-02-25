@@ -1,3 +1,11 @@
+munin (2.0.6-4+deb7u3) wheezy-security; urgency=high
+
+  * Non-maintainer upload by the LTS Team.
+  * CVE-2017-6188: Fix local file write vulnerability in munin-cgi-graph 
+    (Closes: #855705)
+
+ -- Jonas Meurer <mejo@debian.org>  Sat, 25 Feb 2017 16:45:04 +0100
+
 munin (2.0.6-4+deb7u2) wheezy-security; urgency=high
 
   [ Christoph Biedl ]
