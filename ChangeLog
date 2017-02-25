@@ -1,5 +1,41 @@
 -*- text -*-
 
+munin-2.0.31, 2017-02-25
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: GH:607
+
+------------------
+Detailed Changelog
+------------------
+
+Kenyon Ralph (1):
+      ntp_kernel plugins: convert ntpq output to seconds
+
+
+munin-2.0.30.1, 2017-02-25
+
+-------
+Summary
+-------
+
+Security release.
+
+Closes: GH:721, D:855705, CVE-2017-6188
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      Fix wrong parameter expansion in CGI
+
+
 munin-2.0.30, 2017-01-18
 
 -------
