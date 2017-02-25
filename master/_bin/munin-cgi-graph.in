@@ -447,14 +447,20 @@ sub draw_graph {
 		   '--output-file', $filename );
 
     # Sets the correct size on a by_graph basis
-    push @params, "--size_x", CGI::param("size_x")
-      if (defined(CGI::param("size_x")));
-    push @params, "--size_y", CGI::param("size_y")
-      if (defined(CGI::param("size_y")));
-    push @params, "--upper_limit", CGI::param("upper_limit")
-      if (CGI::param("upper_limit"));
-    push @params, "--lower_limit", CGI::param("lower_limit")
-      if (CGI::param("lower_limit"));
+
+    # using a temporary variable to avoid expansion in list context and fix CVE-2017-6188
+    my $size_x = CGI::param("size_x");
+    push @params, "--size_x", $size_x if defined $size_x;
+
+    my $size_y = CGI::param("size_y");
+    push @params, "--size_y", $size_y if defined $size_y;
+
+    my $upper_limit = CGI::param("upper_limit");
+    push @params, "--upper_limit", $upper_limit if defined $upper_limit;
+
+    my $lower_limit = CGI::param("lower_limit");
+    push @params, "--lower_limit", $lower_limit if defined $lower_limit;
+
 
     # Sometimes we want to set the IMG size, and not the canvas.
     push @params, "--full_size_mode"
