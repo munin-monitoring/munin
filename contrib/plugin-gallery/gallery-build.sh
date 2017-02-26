@@ -4,9 +4,11 @@
 # integrated in the Munin plugins collected at github
 # so that users can browse info about available plugins
 #
-# In this stage we address the plugins from the Munin Distribution.
-# A second stage shall follow, where we treat the 3rd party
-# plugins contributed via another github repository.
+# In this stage we address the plugins from the Munin Distribution 2.0.
+# https://github.com/munin-monitoring/munin/tree/stable-2.0/plugins
+#
+# As these have file endings ".in" we have to maintain
+# a separate build script.
 # 
 # Plugin authors shall contribute example graphs
 # for their plugins also. Rules are defined here:
@@ -31,16 +33,32 @@
 # DocumentRoot of the Gallery
 HTMLDIR=/var/www/html/munin-gallery
 
+# source for which the Gallery should be build
+REPO=munin
+BRANCH=stable-2.0
+
 # SVN cannot clone github branch "stable-2.0"
 # at least I found no way to do it..
 # As a workaround I'll use a zip download.
 SVNROOTDIR=$HTMLDIR/distro/svn
 
 # Directory within DocumentRoot to store pages and images about the plugins
-WORKDIR=$SVNROOTDIR/munin-stable-2.0/plugins
+WORKDIR=$SVNROOTDIR/$REPO-$BRANCH/plugins
 
 # This directory is for files only needed to build the Gallery
 SCRIPTDIR=/home/gap/projects/munin/github/munin/contrib/plugin-gallery
+
+# Start protocol
+echo "
+================================
+Building Munin Plugin Gallery for repo $REPO (branch $BRANCH)
+
+Your presets:
+
+SVNROOTDIR: $SVNROOTDIR
+HTMLDIR: $HTMLDIR
+WORKDIR: $WORKDIR
+"
 
 # Check existence of SVNROOTDIR
 if (! test -d "$SVNROOTDIR") then
@@ -48,34 +66,35 @@ if (! test -d "$SVNROOTDIR") then
     exit;
 fi
 
-cd $SVNROOTDIR
+echo "Preparations..
+..cleaning data of the last run"
 
-# Check existence of WORKDIR
-if (! test -d "$WORKDIR") then
-    echo "ERROR: working directory not found! I looked for this directory: $WORKDIR"
-    echo "I'll now try to fix this.."
-    wget https://github.com/munin-monitoring/munin/archive/stable-2.0.zip $SVNROOTDIR
-    unzip -d $SVNROOTDIR $SVNROOTDIR/stable-2.0.zip munin-stable-2.0/plugins/* 
-    if (! test -d "$WORKDIR") then
-        echo "download of branch stable 2.0 from github failed! I give up.."
-        exit;
-    else 
-        echo "ok. I fixed it"
-    fi
+if (test -d "$WORKDIR") then
+
+   echo "..empty workdir"
+   rm -rf $WORKDIR
+
+   # This method is only relevant, if we
+   # use svn or git to update local repo
+   # At the time we remove *everything* and extract a fresh zipfile
+   #   # Remove all POD generated plugin pages from the last run
+   #   find $WORKDIR -name *.html -exec rm {} \;
+
 fi
 
+echo "..remove existing Gallery pages"
+rm -rf $HTMLDIR/$BRANCH/*.html
+
+echo "..remove existing zip download file"
+rm $SVNROOTDIR/$BRANCH.zip
+
+echo "..get a fresh zip file from github repo"
+wget --no-verbose --output-document=$SVNROOTDIR/$BRANCH.zip https://github.com/munin-monitoring/$REPO/archive/$BRANCH.zip 
+unzip -q -d $SVNROOTDIR $SVNROOTDIR/$BRANCH.zip $REPO-$BRANCH/plugins/*
+
 cd $WORKDIR
-
-# Download github files
-# Get a fresh copy of the stable-2.0 branch
-#rm $SVNROOTDIR/stable-2.0.zip
-#wget https://github.com/munin-monitoring/munin/archive/stable-2.0.zip $SVNROOTDIR
-#unzip -d $SVNROOTDIR $SVNROOTDIR/stable-2.0.zip munin-stable-2.0/plugins/* 
-
-# Remove POD pages of last run
-rm -rf $HTMLDIR/*.html
-find $SVNROOTDIR -name *.html -exec rm {} \;
-
+echo "
+Start building the new gallery pages.."
 
 # Find relation between plugins and categories
 grep -iR --exclude-from=$SCRIPTDIR/grep-files.excl category node.* | grep -v .svn | sort -u > $SCRIPTDIR/cat.lst
@@ -115,7 +134,13 @@ awk -f $SCRIPTDIR/include-graphs.awk -v workdir=$WORKDIR $SCRIPTDIR/example-grap
 chmod -R a+rx $HTMLDIR
 
 # Some statistic
+echo "
+STATISTICS
+----------"
 echo `cat $SCRIPTDIR/nocat-plugins.lst | wc -l` "plugins without category were assigned to category 'other'"
 echo `grep "output saved" $SCRIPTDIR/print-gallery?.log | wc -l` "times created perldoc pages with content"
 echo `grep "No documentation" $SCRIPTDIR/print-gallery?.log | wc -l` "times no perldoc content found"
 echo `cat $SCRIPTDIR/example-graphs.lst | wc -l` "example graph images illustrate the plugin pages"
+
+# End protocol
+echo "================================"

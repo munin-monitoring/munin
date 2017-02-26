@@ -30,48 +30,69 @@
 # DocumentRoot of the Gallery
 HTMLDIR=/var/www/html/munin-gallery
 
-# SVN root directory
-SVNROOTDIR=$HTMLDIR/contrib/svn
+# source for which the Gallery should be build
+REPO=contrib
+BRANCH=master
+
+# SVN did not get recent updates with "svn up trunk"
+# Switch to zip download instead
+# though will not change the names to avoid work and errors..
+# This is the directory where the zipfile will be placed
+SVNROOTDIR=$HTMLDIR/$REPO/svn
 
 # Directory within DocumentRoot to store pages and images about the plugins
-WORKDIR=$SVNROOTDIR/trunk/plugins
+WORKDIR=$SVNROOTDIR/$REPO-$BRANCH/plugins
 
 # This directory is for files only needed to build the Gallery
 SCRIPTDIR=/home/gap/projects/munin/github/munin/contrib/plugin-gallery
 
+# Start protocol
+echo "
+================================
+Building Munin Plugin Gallery for repo $REPO (branch $BRANCH)
+
+Your presets:
+
+SVNROOTDIR: $SVNROOTDIR
+HTMLDIR: $HTMLDIR
+WORKDIR: $WORKDIR
+"
+
 # Check existence of SVNROOTDIR
 if (! test -d "$SVNROOTDIR") then
-    echo "ERROR: No svn directory found! Please create it here: $SVNROOTDIR"
+    echo "ERROR: Directory for github download not found! Please create it here: $SVNROOTDIR"
     exit;
 fi
 
-# Check existence of WORKDIR
-if (! test -d "$WORKDIR") then
-    echo "ERROR: working directory in svn branch trunk not found! I looked for this directory: $WORKDIR"
-    echo "I'll now try to fix this.."
-    svn co --depth empty https://github.com/munin-monitoring/contrib.git $SVNROOTDIR
-    cd $SVNROOTDIR
-    svn up trunk
-    if (! test -d "$WORKDIR") then
-        echo "svn checkout failed! I give up.."
-        exit;
-    else 
-        echo "ok. I fixed it"
-    fi
+echo "Preparations..
+..cleaning data of the last run"
+
+if (test -d "$WORKDIR") then
+
+   echo "..empty workdir"
+   rm -rf $WORKDIR
+
+   # This method is only relevant, if we 
+   # use svn or git to update local repo
+   # At the time we remove *everything* and extract a fresh zipfile
+   #   # Remove all POD generated plugin pages from the last run
+   #   find $WORKDIR -name *.html -exec rm {} \;
+
 fi
+
+echo "..remove existing Gallery pages"
+rm -rf $HTMLDIR/$BRANCH/*.html
+
+echo "..remove existing zip download file"
+rm $SVNROOTDIR/$BRANCH.zip
+
+echo "..get a fresh zip file from github repo"
+wget --no-verbose --output-document=$SVNROOTDIR/$BRANCH.zip https://github.com/munin-monitoring/$REPO/archive/$BRANCH.zip 
+unzip -q -d $SVNROOTDIR $SVNROOTDIR/$BRANCH.zip $REPO-$BRANCH/plugins/*
 
 cd $WORKDIR
-
-# Remove POD pages of last run
-find $WORKDIR -name *.html -exec rm {} \;
-
-# Download github files
-if test -d "$SVNROOTDIR/.svn"; then
-  svn up trunk
-else
-  echo "ERROR: working directory is not under svn control!"
-  exit;
-fi
+echo "
+Start building the new gallery pages.."
 
 # Find relation between plugins and categories
 grep -iR --exclude-from=$SCRIPTDIR/grep-files-contrib.excl graph_category * | grep -v .svn | sort -u > $SCRIPTDIR/cat-contrib.lst
@@ -84,7 +105,7 @@ awk -f $SCRIPTDIR/prep-catnav-contrib.awk -v scriptdir=$SCRIPTDIR $SCRIPTDIR/cat
 cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav-contrib.html $SCRIPTDIR/static/gallery-cat-footer.html >$SCRIPTDIR/static/prep-index-contrib.html
 
 # Create entry page
-cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav-contrib.html $SCRIPTDIR/static/gallery-cat-footer.html $SCRIPTDIR/static/gallery-intro-contrib.html $SCRIPTDIR/static/gallery-footer.html >$HTMLDIR/contrib/index.html
+cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav-contrib.html $SCRIPTDIR/static/gallery-cat-footer.html $SCRIPTDIR/static/gallery-intro-contrib.html $SCRIPTDIR/static/gallery-footer.html >$HTMLDIR/$REPO/index.html
 
 # Create Gallery pages for all categories that were explicitly set in the plugin script files
 awk -f $SCRIPTDIR/print-gallery-contrib.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/catsorted-contrib.lst >$SCRIPTDIR/print-gallery1-contrib.log
@@ -111,6 +132,9 @@ awk -f $SCRIPTDIR/include-graphs-contrib.awk -v workdir=$WORKDIR $SCRIPTDIR/exam
 chmod -R a+rx $HTMLDIR
 
 # Some statistic
+echo "
+STATISTICS
+----------"
 echo `cat $SCRIPTDIR/nocat-plugins-contrib.lst | wc -l` "plugins without category were assigned to category 'other'"
 echo `grep "output saved" $SCRIPTDIR/print-gallery*-contrib.log | wc -l` "times created perldoc pages with content"
 echo `grep "No documentation" $SCRIPTDIR/print-gallery*-contrib.log | wc -l` "times no perldoc content found"
