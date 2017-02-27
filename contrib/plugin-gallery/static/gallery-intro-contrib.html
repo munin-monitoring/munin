@@ -1,67 +1,41 @@
 <h2>Welcome to the Munin Plugin Gallery</h2>
 
 <div class="intro">
-	<p>This is the place where you can browse description and graph images for our Munin Plugins.
-	It is not ready and complete yet. Example graph images are still missing and many plugins lack perldoc sections.
-	Help from contributors is welcome :-)</p>
+	<p>This is the place where you can browse description and graph images for our Munin Plugins.</p>
 
 	<p>The gallery has two showrooms. One called <a href="/index.html">Core Collection</a> for
 	the plugins that we deliver with the distribution of Munin-Node
 	and one called <a href="/contrib/index.html">3rd-Party Collection</a> for the plugins from the wild,
 	that were uploaded to our <a href="https://github.com/munin-monitoring/contrib">Contrib-Repository</a>.</p>
 
-	<h3>Initiative to increase usability in 3rd-Party Collection</h3>
+	<p>Start browsing the plugin collection with a click on the categories in left side menu.</p>
 
-	<p>Our build script for this gallery collection reports on 2017-02-22:</p>
+	<h3>Increase usability in 3rd-Party Collection</h3>
+
+	<p>Our build script for this gallery collection said today (2017-02-27):</p>
 
 	<pre>
-	80 plugins without category were assigned to category 'other'
-	321 times created perldoc pages with content
-	766 times no perldoc content found
-	39 example graph images illustrate the plugin pages
+        144 plugins without category were assigned to category 'other'
+        321 times created perldoc pages with content
+        766 times no perldoc content found
+        40 example graph images illustrate the plugin pages
         </pre>
 
 	<p>It is great (!) to have so many plugins, graph images and pages already, but it will need a lot of work
-	to fill missing pages and upload images for useful plugins, that are
+	to fill missing pages and upload images for useful plugins, that are 
 	not well presented in the gallery at the time. We will be happy if you help by adding info in perldoc format
 	and representative example graph images to the contrib repo.
 	The more descriptive content is there, the more helpful the Plugin Gallery will be ~</p>
 
 	<p>Have a look at our instructions in the <a href="http://munin-monitoring.org/wiki/PluginGallery">Munin Wiki</a></p>
 
-	<p>To get a clear and user-friendly overview in the plugin gallery (and on Munin WebGUI), we just started with reducing the number of categories.
+	<p>To get a clear and user-friendly overview in the plugin gallery (and on Munin WebGUI), we work on reducing the number of categories.
 	Have a look at our list of <a href="http://munin-monitoring.org/wiki/graph_category_list"><em>well-known-categories</em></a>,
-	which is a proposal and can be discussed on our <a href="https://lists.sourceforge.net/lists/listinfo/munin-users">user mailing list</a>.</p>
+        and choose an appropriate category to present your plugin in the gallery.</p>
 
-	<h3>Generic Categories</h3>
+        <p>Users can always change the category to adapt their personal view by changing the plugins sourcecode 
+        before distributing it on their servers or by configuration setting on the Munin masters side (munin.conf).</p>
 
-	<ul>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/auth-index.html">auth</a> (All measurements around authentication servers and services (freeradius, kerberos, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/appserver-index.html">appserver</a> (Application servers like Glassfish, JBoss, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/backup-index.html">backup</a> (All measurements around creation of backups)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/db-index.html">db</a> (Database: including MySQL, Oracle, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/cloud-index.html">cloud</a></li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/cpu-index.html">cpu</a> (CPU measurements)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/disk-index.html">disk</a> (Disk measurements: disk space, free inodes, throughput, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/dns-index.html">dns</a> (bind, pdns, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/fs-index.html">fs</a> (Filesystem: including ZFS, samba, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/fw-index.html">fw</a> (Firewall: moblock, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/htc-index.html">htc</a> (High-throughput computing: including boinc, condor, bitcoin, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/loadbalancer-index.html">loadbalancer</a> (haproxy, ipvs, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/mail-index.html">mail</a> (Mail throughput, mail queues, etc.)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/memory-index.html">memory</a> (All kind of memory measurements. Note that info about memory caching servers is also placed here)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/munin-index.html">munin</a> (Monitoring the monitoring.. (includes other monitoring servers also) [shall we choose another name then? -> monitoring?]</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/network-index.html">network</a> (Network efficiency, bandwidth, amounts of data transported etc.)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/processes-index.html">processes</a> (Process and kernel related measurements.</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/san-index.html">san</a> (Storage Area Network)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/search-index.html">search</a> (All kinds of measurement around search engines.)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/security-index.html">security</a> (Info about pending update packages for OS, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/sensors-index.html">sensors</a> (Hardware measurements: temperature, power, devices health state, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/system-index.html">system</a></li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/spamfilter-index.html">spamfilter</a> (Watch your spam fighters at work. spamassassin, spamd, ..)</li>
-		<li><a href="http://gallery.munin-monitoring.org/contrib/webserver-index.html">webserver</a> (All kinds of webserver measurements for Apache, nginx and other webserver and also utilities like varnish.)</li>
-	</ul>
-
-
-	<p>And now start browsing the plugin collection with a click on a generic category (see above) or any from the left side menu.</p>
+        <p>Our well-known-category list is a proposal and can be discussed on our 
+        <a href="https://lists.sourceforge.net/lists/listinfo/munin-users">user mailing list</a>.</p>
 </div>

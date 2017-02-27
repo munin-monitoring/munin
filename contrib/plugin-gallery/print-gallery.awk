@@ -12,11 +12,15 @@
 # (for example COPYING); If not, see <http://www.gnu.org/licenses/>.
 #
 
+@include "well-known-categories.incl"
+
 BEGIN {
   lastcategory = ""
   lastnode = ""
   firstnode = "true"
-  header = "\t<h2>Category :: %s (Core Collection)</h2>\n\t<ul class=\"groupview\">\n"
+  # Template will get filled with category and category description (%s)
+  header = "\t<h2>Category :: %s (Core Collection)</h2>\n<p><big><em>%s</em></big></p>\t<ul class=\"groupview\">\n"
+
   nodeheader = "\t\t<li ><span class=\"domain\">%s</span>\n\t\t<ul>\n"
   nodefooter = "\t\t</ul>\n\t\t</li>\n"
   tmplplugin = "\t\t\t<li><span class=\"host\"><a href=\"https://raw.githubusercontent.com/munin-monitoring/munin/stable-2.0/plugins/%s\" title=\"Download\" class=\"download\"><img src=\"/static/img/download.gif\" alt=\"Download\"></a></span>&nbsp;<span class=\"host\"><a href=\"distro/svn/munin-stable-2.0/plugins/%s/%s.html\" title=\"Info\">%s</a></span></li>\n"
@@ -47,7 +51,7 @@ BEGIN {
     # create file for this category
     fname = htmldir "/" category "-index.html"
     system ("cp " scriptdir "/static/prep-index.html " fname)
-    printf(header,category) >> fname
+    printf(header,category,arr[category]) >> fname
     lastcategory = category
     firstnode = "true"
   }

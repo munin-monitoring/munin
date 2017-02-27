@@ -90,6 +90,9 @@ echo "..get a fresh zip file from github repo"
 wget --no-verbose --output-document=$SVNROOTDIR/$BRANCH.zip https://github.com/munin-monitoring/$REPO/archive/$BRANCH.zip 
 unzip -q -d $SVNROOTDIR $SVNROOTDIR/$BRANCH.zip $REPO-$BRANCH/plugins/*
 
+echo "..cp list of well-known-categories to WORKDIR"
+cp $SCRIPTDIR/well-known-categories.incl $WORKDIR
+
 cd $WORKDIR
 echo "
 Start building the new gallery pages.."
