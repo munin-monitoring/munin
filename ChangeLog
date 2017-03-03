@@ -1,5 +1,22 @@
 -*- text -*-
 
+munin-2.0.33, 2017-03-02
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #804, DH:856536
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      cgi: use Scalar::Util::looks_like_number
+
 munin-2.0.32, 2017-03-01
 
 -------
