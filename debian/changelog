@@ -1,3 +1,9 @@
+munin (2.0.33-1) unstable; urgency=medium
+
+  * New upstream release. (Closes: #856536) 
+
+ -- Holger Levsen <holger@debian.org>  Fri, 03 Mar 2017 23:44:55 +0100
+
 munin (2.0.32-1) unstable; urgency=medium
 
   * New upstream release. (Closes: #856455)
