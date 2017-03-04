@@ -1,50 +1,48 @@
 HOW TO SETUP
 ------------
 
+0. Install requirements
+-----------------------
+
+This build process requires perl-doc, otherwise the scripts will fail silently.
+
+
 1. Directory of the build process
 ---------------------------------
 
-Create a directory (outside from webserver access)
-for the scripts, temporary files and logs of the build process.
-Set variable SCRIPTDIR in gallery-build.sh to this PATH
-and put all the files and also the directory 'static'
-from this directory thereto
+The SCRIPTDIR contains all necessary scripts and will be used for storing build fragments.
+
+  SCRIPTDIR="/some/path/gallery-workdir"
+  mkdir -p "$SCRIPTDIR"
+  find . -maxdepth 1 -type f -exec cp '{}' "$SCRIPTDIR/" \;
+  cp -r static "$SCRIPTDIR/"
+  sed -i "s#^SCRIPTDIR=.*#SCRIPTDIR=$SCRIPTDIR#" "$SCRIPTDIR/gallery-build.sh" "$SCRIPTDIR/gallery-contrib-build.sh"
+
 
 2. Webserver DocumentRoot
 -------------------------
 
-Create a directory to put the webfiles to.
-Set variable HTMLDIR in gallery-build.sh to this PATH.
-Create a subdirectory 'distro' and a subdirectory 'contrib' therin.
-Under each of these also create a subdirectory 'svn'.
-Put the directory 'static' from the subdirectory 'www' into HTMLDIR
+The HTMLDIR will contain generated html files. Its content will be published by your webserver.
 
-So HTMLDIR should initially have this structure:
+  HTMLDIR="/some/path/gallery-html"
+  sed -i "s#^HTMLDIR=.*#HTMLDIR=$HTMLDIR#" "$SCRIPTDIR/gallery-build.sh" "$SCRIPTDIR/gallery-contrib-build.sh"
+  mkdir -p "$HTMLDIR/distro/svn" "$HTMLDIR/contrib/svn"
+  cp -r www/static "$HTMLDIR/"
 
-.
-./contrib
-./contrib/svn
-./distro
-./distro/svn
-./static
-./static/css
-./static/css/_response.scss	(optionnal, CSS source)
-./static/css/style-doc.css
-./static/css/style-doc.scss	(optionnal, CSS source)
-./static/css/style.css
-./static/css/style.scss		(optionnal, CSS source)
-./static/img
-./static/img/download.gif
-./static/img/favicon.ico
-./static/img/glyphicons-208-remove-2-white.png
-./static/img/glyphicons-390-new-window-alt-white.png
-./static/img/logo-h-neg.png
-./static/img/logo-h-neg.svg
-./static/js
-./static/js/jquery-1.8.3.js
-./static/js/script.js
 
-Setup vhost for the gallery in your webservers configuration.
+Setup a vhost for the gallery in your webservers configuration, e.g. for Apache2:
+
+  <VirtualHost *>
+      ServerName munin-gallery.example.org
+      DocumentRoot /some/path/gallery-html
+      <Directory /some/path/gallery-html>
+          Require all granted
+      </Directory>
+  </VirtualHost>
+
+Media links within the templates are absolute (e.g. /static/...) - thus you need a separate domain
+(vhost) for the munin gallery.
+
 
 3. Ownership of webserver files
 -------------------------------
