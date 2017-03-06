@@ -1,3 +1,9 @@
+munin (2.0.33-1~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- Holger Levsen <holger@debian.org>  Mon, 06 Mar 2017 17:48:52 +0100
+
 munin (2.0.33-1) unstable; urgency=medium
 
   * New upstream release. (Closes: #856536) 
