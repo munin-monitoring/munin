@@ -1,2 +1,4 @@
 0001-http_loadtime-plugin-Fix-several-bugs.patch
 0002-Fix-wrong-parameter-expansion-in-CGI.patch
+0003-cgi-handle-the-empty-string-in-CGI-arguments.patch
+0004-cgi-use-Scalar-Util-looks_like_number.patch

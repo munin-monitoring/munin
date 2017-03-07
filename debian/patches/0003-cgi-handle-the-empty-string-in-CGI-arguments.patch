@@ -1,0 +1,43 @@
+From 549bd25d6a45e153159ef8535fc070a71093a3c9 Mon Sep 17 00:00:00 2001
+From: Steve Schnepp <steve.schnepp@pwkf.org>
+Date: Wed, 1 Mar 2017 20:16:04 +0100
+Subject: [PATCH] cgi: handle the empty string in CGI arguments
+
+The previous fix is a little too restrictive. And it just adds the parameters
+if it is defined. Which should not be the case if it is an empty string.
+
+Note that a simple "if" test has the nasty side-effect of being false if the
+value is "0".
+
+A more complete test should be done then.
+
+It might be better to fix the dynazoom call itself, but as we already touched
+that area, and failed, let's try to contain this and avoid having the change
+spreading epidemically :)
+---
+ master/_bin/munin-cgi-graph.in | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+--- a/master/_bin/munin-cgi-graph.in
++++ b/master/_bin/munin-cgi-graph.in
+@@ -450,16 +450,16 @@ sub draw_graph {
+ 
+     # using a temporary variable to avoid expansion in list context and fix CVE-2017-6188
+     my $size_x = CGI::param("size_x");
+-    push @params, "--size_x", $size_x if defined $size_x;
++    push @params, "--size_x", $size_x if $size_x || ($size_x eq "0");
+ 
+     my $size_y = CGI::param("size_y");
+-    push @params, "--size_y", $size_y if defined $size_y;
++    push @params, "--size_y", $size_y if $size_y || ($size_y eq "0");
+ 
+     my $upper_limit = CGI::param("upper_limit");
+-    push @params, "--upper_limit", $upper_limit if defined $upper_limit;
++    push @params, "--upper_limit", $upper_limit if $upper_limit || ($upper_limit eq "0");
+ 
+     my $lower_limit = CGI::param("lower_limit");
+-    push @params, "--lower_limit", $lower_limit if defined $lower_limit;
++    push @params, "--lower_limit", $lower_limit if $lower_limit || ($lower_limit eq "0");
+ 
+ 
+     # Sometimes we want to set the IMG size, and not the canvas.

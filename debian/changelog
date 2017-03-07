@@ -1,3 +1,22 @@
+munin (2.0.25-1+deb8u3) jessie-security; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * cgi: use Scalar::Util::looks_like_number.
+    Fix regression, causing munin-cgi-graph to spam munin logs with Perl
+    warnings of uninitialized value use for $size_x, $size_y, $upper_limit
+    or $lower_limit. (Closes: #856536)
+
+ -- Salvatore Bonaccorso <carnil@debian.org>  Fri, 03 Mar 2017 06:10:34 +0100
+
+munin (2.0.25-1+deb8u2) jessie-security; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * cgi: handle the empty string in CGI arguments.
+    Fix regression in zooming functionality via munin-cgi-graph introduced
+    by the original fix for CVE-2017-6188. (Closes: #856455)
+
+ -- Salvatore Bonaccorso <carnil@debian.org>  Wed, 01 Mar 2017 21:05:07 +0100
+
 munin (2.0.25-1+deb8u1) jessie-security; urgency=high
 
   * Non-maintainer upload by the Security Team.

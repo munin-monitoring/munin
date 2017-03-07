@@ -1,0 +1,43 @@
+From 6373554b1cc8bee886947cee598e86d1d9ea1e4a Mon Sep 17 00:00:00 2001
+From: Steve Schnepp <steve.schnepp@pwkf.org>
+Date: Fri, 3 Mar 2017 00:55:40 +0100
+Subject: [PATCH] cgi: use Scalar::Util::looks_like_number
+
+As Jonas Meurer <jonas@freesources.org> said in a comment, it is much
+better to use Scalar::Util::looks_like_number() instead of coming up
+with a semi-clever algo.
+
+Closes: #804
+---
+ master/_bin/munin-cgi-graph.in | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+--- a/master/_bin/munin-cgi-graph.in
++++ b/master/_bin/munin-cgi-graph.in
+@@ -447,19 +447,22 @@ sub draw_graph {
+ 		   '--output-file', $filename );
+ 
+     # Sets the correct size on a by_graph basis
++    { use Scalar::Util qw(looks_like_number);
+ 
+     # using a temporary variable to avoid expansion in list context and fix CVE-2017-6188
+     my $size_x = CGI::param("size_x");
+-    push @params, "--size_x", $size_x if $size_x || ($size_x eq "0");
++    push @params, "--size_x", $size_x if looks_like_number($size_x);
+ 
+     my $size_y = CGI::param("size_y");
+-    push @params, "--size_y", $size_y if $size_y || ($size_y eq "0");
++    push @params, "--size_y", $size_y if looks_like_number($size_y);
+ 
+     my $upper_limit = CGI::param("upper_limit");
+-    push @params, "--upper_limit", $upper_limit if $upper_limit || ($upper_limit eq "0");
++    push @params, "--upper_limit", $upper_limit if looks_like_number($upper_limit);
+ 
+     my $lower_limit = CGI::param("lower_limit");
+-    push @params, "--lower_limit", $lower_limit if $lower_limit || ($lower_limit eq "0");
++    push @params, "--lower_limit", $lower_limit if looks_like_number($lower_limit);
++
++    }
+ 
+ 
+     # Sometimes we want to set the IMG size, and not the canvas.
