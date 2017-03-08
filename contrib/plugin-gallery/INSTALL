@@ -17,7 +17,7 @@ The SCRIPTDIR contains all necessary scripts and will be used for storing build 
   cd contrib/plugin-gallery # Every command is relative to the contrib/plugin-gallery directory
   find . -maxdepth 1 -type f -exec cp '{}' "$SCRIPTDIR/" \;
   cp -r static "$SCRIPTDIR/"
-  sed -i "s#^SCRIPTDIR=.*#SCRIPTDIR=$SCRIPTDIR#" "$SCRIPTDIR/gallery-build.sh" "$SCRIPTDIR/gallery-contrib-build.sh"
+  perl -i.orig -lnpe "s,^SCRIPTDIR=.*,SCRIPTDIR=$SCRIPTDIR," "$SCRIPTDIR/gallery-build.sh" "$SCRIPTDIR/gallery-contrib-build.sh"
 
 
 2. Webserver DocumentRoot
@@ -26,7 +26,7 @@ The SCRIPTDIR contains all necessary scripts and will be used for storing build 
 The HTMLDIR will contain generated html files. Its content will be published by your webserver.
 
   HTMLDIR="/some/path/gallery-html"
-  sed -i "s#^HTMLDIR=.*#HTMLDIR=$HTMLDIR#" "$SCRIPTDIR/gallery-build.sh" "$SCRIPTDIR/gallery-contrib-build.sh"
+  perl -i.orig -lnpe "s,^HTMLDIR=.*,HTMLDIR=$HTMLDIR," "$SCRIPTDIR/gallery-build.sh" "$SCRIPTDIR/gallery-contrib-build.sh"
   mkdir -p "$HTMLDIR/distro/svn" "$HTMLDIR/contrib/svn"
   cp -r www/static "$HTMLDIR/"
 
