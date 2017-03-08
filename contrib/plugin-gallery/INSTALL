@@ -14,6 +14,7 @@ The SCRIPTDIR contains all necessary scripts and will be used for storing build 
 
   SCRIPTDIR="/some/path/gallery-workdir"
   mkdir -p "$SCRIPTDIR"
+  cd contrib/plugin-gallery # Every command is relative to the contrib/plugin-gallery directory
   find . -maxdepth 1 -type f -exec cp '{}' "$SCRIPTDIR/" \;
   cp -r static "$SCRIPTDIR/"
   sed -i "s#^SCRIPTDIR=.*#SCRIPTDIR=$SCRIPTDIR#" "$SCRIPTDIR/gallery-build.sh" "$SCRIPTDIR/gallery-contrib-build.sh"
