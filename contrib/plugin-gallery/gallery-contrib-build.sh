@@ -88,6 +88,8 @@ rm $SVNROOTDIR/$BRANCH.zip
 
 echo "..get a fresh zip file from github repo"
 wget --no-verbose --output-document=$SVNROOTDIR/$BRANCH.zip https://github.com/munin-monitoring/$REPO/archive/$BRANCH.zip 
+rm -Rf $SVNROOTDIR/$REPO-$BRANCH
+mkdir -p $SVNROOTDIR/$REPO-$BRANCH/plugins
 unzip -q -d $SVNROOTDIR $SVNROOTDIR/$BRANCH.zip $REPO-$BRANCH/plugins/*
 
 echo "..cp list of well-known-categories to WORKDIR"
