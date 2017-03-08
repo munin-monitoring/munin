@@ -106,7 +106,7 @@ grep -iR --exclude-from=$SCRIPTDIR/grep-files.excl category node.* | grep -v .sv
 awk -F : -f $SCRIPTDIR/split-greplist.awk $SCRIPTDIR/cat.lst | LC_COLLATE=C sort -u > $SCRIPTDIR/catsorted.lst
 
 # Create categories navigation snippet to integrate in each page
-awk -f $SCRIPTDIR/prep-catnav.awk -v scriptdir=$SCRIPTDIR $SCRIPTDIR/catsorted.lst | sort >$SCRIPTDIR/cat-plugins.lst
+awk -f $SCRIPTDIR/well-known-categories.incl -f $SCRIPTDIR/prep-catnav.awk -v scriptdir=$SCRIPTDIR $SCRIPTDIR/catsorted.lst | sort >$SCRIPTDIR/cat-plugins.lst
 
 # Compile template for category pages
 cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav.html $SCRIPTDIR/static/gallery-cat-footer.html >$SCRIPTDIR/static/prep-index.html
@@ -115,7 +115,7 @@ cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.h
 cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav.html $SCRIPTDIR/static/gallery-cat-footer.html $SCRIPTDIR/static/gallery-intro.html $SCRIPTDIR/static/gallery-footer.html >$HTMLDIR/index.html
 
 # Create Gallery pages for all categories that were explicitly set in the plugin script files
-awk -f $SCRIPTDIR/print-gallery.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/catsorted.lst >$SCRIPTDIR/print-gallery1.log
+awk -f $SCRIPTDIR/well-known-categories.incl -f $SCRIPTDIR/print-gallery.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/catsorted.lst >$SCRIPTDIR/print-gallery1.log
 
 # Find the plugins that fell thru the sieve..
 find node.* -name '*.in' | grep -v node.d.debug | sort > $SCRIPTDIR/all-plugins.lst
@@ -127,7 +127,7 @@ grep ^other $SCRIPTDIR/catsorted.lst >>$SCRIPTDIR/nocat-plugins.lst
 LC_COLLATE=C sort -u $SCRIPTDIR/nocat-plugins.lst > $SCRIPTDIR/other-plugins.lst
 
 # Create Gallery pages for category "other"
-awk -f $SCRIPTDIR/print-gallery.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/other-plugins.lst >$SCRIPTDIR/print-gallery2.log
+awk -f $SCRIPTDIR/well-known-categories.incl -f $SCRIPTDIR/print-gallery.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/other-plugins.lst >$SCRIPTDIR/print-gallery2.log
 
 # Collect example graphs
 find node.* -name '*.png' | grep -v node.d.debug | sort > $SCRIPTDIR/example-graphs.lst

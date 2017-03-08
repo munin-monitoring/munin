@@ -104,7 +104,7 @@ grep -iR --exclude-from=$SCRIPTDIR/grep-files-contrib.excl graph_category * | gr
 awk -F : -f $SCRIPTDIR/split-greplist.awk $SCRIPTDIR/cat-contrib.lst | LC_COLLATE=C sort -u > $SCRIPTDIR/catsorted-contrib.lst
 
 # Create categories navigation snippet to integrate in each page
-awk -f $SCRIPTDIR/prep-catnav-contrib.awk -v scriptdir=$SCRIPTDIR $SCRIPTDIR/catsorted-contrib.lst | sort >$SCRIPTDIR/cat-plugins-contrib.lst
+awk -f $SCRIPTDIR/well-known-categories.incl -f $SCRIPTDIR/prep-catnav-contrib.awk -v scriptdir=$SCRIPTDIR $SCRIPTDIR/catsorted-contrib.lst | sort >$SCRIPTDIR/cat-plugins-contrib.lst
 
 # Compile template for category pages
 cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav-contrib.html $SCRIPTDIR/static/gallery-cat-footer.html >$SCRIPTDIR/static/prep-index-contrib.html
@@ -113,7 +113,7 @@ cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.h
 cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav-contrib.html $SCRIPTDIR/static/gallery-cat-footer.html $SCRIPTDIR/static/gallery-intro-contrib.html $SCRIPTDIR/static/gallery-footer.html >$HTMLDIR/$REPO/index.html
 
 # Create Gallery pages for all categories that were explicitly set in the plugin script files
-awk -f $SCRIPTDIR/print-gallery-contrib.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/catsorted-contrib.lst >$SCRIPTDIR/print-gallery1-contrib.log
+awk -f $SCRIPTDIR/well-known-categories.incl -f $SCRIPTDIR/print-gallery-contrib.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/catsorted-contrib.lst >$SCRIPTDIR/print-gallery1-contrib.log
 
 # Find the plugins that fell thru the sieve..
 find . -type f | grep -v .html | grep -v .svn | grep -v .png | grep -v .txt | grep -v .rst | grep -v .ini | grep -v .conf | grep -v README | grep -v .git | awk '{print substr($0,3)}' |sort > $SCRIPTDIR/all-plugins-contrib.lst
@@ -125,7 +125,7 @@ grep ^other $SCRIPTDIR/catsorted-contrib.lst >>$SCRIPTDIR/nocat-plugins-contrib.
 LC_COLLATE=C sort -u $SCRIPTDIR/nocat-plugins-contrib.lst > $SCRIPTDIR/other-plugins-contrib.lst
 
 # Create Gallery pages for category "other"
-awk -f $SCRIPTDIR/print-gallery-contrib.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/other-plugins-contrib.lst >$SCRIPTDIR/print-gallery2-contrib.log
+awk -f $SCRIPTDIR/well-known-categories.incl -f $SCRIPTDIR/print-gallery-contrib.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/other-plugins-contrib.lst >$SCRIPTDIR/print-gallery2-contrib.log
 
 # Collect example graphs
 find . -name '*.png' | grep example-graphs |  awk '{print substr($0,3)}' | sort > $SCRIPTDIR/example-graphs-contrib.lst

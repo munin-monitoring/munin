@@ -12,8 +12,6 @@
 # (for example COPYING); If not, see <http://www.gnu.org/licenses/>.
 #
 
-@include "well-known-categories.incl"
-
 BEGIN {
   lastcategory = ""
   lastnode = ""

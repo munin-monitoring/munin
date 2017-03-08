@@ -1,5 +1,3 @@
-@include "well-known-categories.incl"
-
 BEGIN {
 
   lastcategory = "";

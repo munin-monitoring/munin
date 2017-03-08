@@ -1,4 +1,3 @@
-@include "well-known-categories.incl"
 BEGIN {
   lastcategory = "";
   tmpl = "\t\t<li><a href=\"%s-index.html\" title=\"%s\">%s</a></li>\n"
