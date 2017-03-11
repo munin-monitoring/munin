@@ -18,7 +18,7 @@ require valid-user
 #
 # We could use <IfModule mod_expires> around here, but I want it to be
 # as evident as possible that you either have to load mod_expires _or_
-# you coment out/remove these lines.
+# you comment out/remove these lines.
 
 # Set the default expiery time for files 5 minutes 10 seconds from
 # their creation (modification) time.  There are probably new files by

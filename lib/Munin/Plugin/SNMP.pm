@@ -491,7 +491,7 @@ sub get_single {
 	return $response->{$oid};
 }
 
-=head2 get_by_regex() - Retrive table of values filtered by regex applied to the value
+=head2 get_by_regex() - Retrieve table of values filtered by regex applied to the value
 
 This example shows the usage for a netstat plugin.
 

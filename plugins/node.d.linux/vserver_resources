@@ -143,7 +143,7 @@ common vserver plugin code into Munin::Plugin::Linux::Vserver?
 =item Multigraph
 
 make it so you can specify more than one resource to be graphed?
-Alternatively define combined ressource-display: VM+RSS+ANON+SHM and
+Alternatively define combined resource-display: VM+RSS+ANON+SHM and
 FILES+OFD+LOCK+SOCK (for one vserver only), and/or make it so you can
 graph all resources for one vserver
 

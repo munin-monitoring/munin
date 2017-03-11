@@ -282,7 +282,7 @@ Date.prototype.formatDate = function (input,time) {
             // A full numeric representation of a year, 4 digits
     
             // we first check, if getFullYear is supported. if it
-            // is, we just use that. ppks code is nice, but wont
+            // is, we just use that. ppks code is nice, but won't
             // work with dates outside 1900-2038, or something like that
             if (date.getFullYear) {
                 var newDate = new Date("January 1 2001 00:00:00 +0000");

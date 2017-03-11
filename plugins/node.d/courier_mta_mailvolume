@@ -9,7 +9,7 @@ delivered by courier-mta
 
 =head1 CONFIGURATION
 
-The following environent variables are used by this plugin:
+The following environment variables are used by this plugin:
 
  logdir  - Where to find logfiles
  logfile - What file to read in logdir

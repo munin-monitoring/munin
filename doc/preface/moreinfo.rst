@@ -14,7 +14,7 @@ Munin Guide
 
 These are the pages you are currently reading. It is aimed at the first read.
 The chapters are designed as a walk-through of Munin's components in a very guided
-manner. Its read constitutes the **basis** of every documention available.
+manner. Its read constitutes the **basis** of every documentation available.
 Specially when asking live (IRC_, mailing-lists_) channels, users there will
 expect that you read the Guide prior to asking.
 
@@ -140,7 +140,7 @@ lives, families and jobs to deal with also.
 
 You are more than welcome to just hang out, and while we don't mind
 the occational intrusion of the real world into the flow, keep it
-mostly on topic, and dont paste random links unless they are *really*
+mostly on topic, and don't paste random links unless they are *really*
 spectacular and intelligent.
 
 Note that ``m-r-b`` is our beloved ``munin-relay-bot`` that bridges the

@@ -33,7 +33,7 @@ space being used.  It uses /usr/bin/svmon, /usr/sbin/lsps, and
 =head2 RESTRICTIONS
 
 /usr/bin/svmon can only be executed by root.  The other commands
-(lsps, lsattr) should be executable by everyone be defualt.
+(lsps, lsattr) should be executable by everyone be default.
 
 =head1 MAGIC MARKERS
 

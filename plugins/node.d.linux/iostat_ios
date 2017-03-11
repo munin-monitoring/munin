@@ -212,7 +212,7 @@ sub get_state {
     return(undef) unless ( -r STATEFILE);
     eval {
 	# Using eval, if it breaks while retrieve, $R is still undef.
-	# No need to unlink() it, since it will be overriden anyway.
+	# No need to unlink() it, since it will be overridden anyway.
 	$R = retrieve( STATEFILE );
     };
     return($R);

@@ -21,7 +21,7 @@
 
 =head1 NAME
 
-Munin::Plugin::Framwork - Framework for Munin Perl plugins
+Munin::Plugin::Framework - Framework for Munin Perl plugins
 
 =head1 SYNOPSIS
 

@@ -302,7 +302,7 @@ sub handle_request
 		# 	- reduce the size of the CGI part, which is good for
 		# 	  security (& sometimes performances)
 
-		# Fields inherit this field from their plugin, if not overrided
+		# Fields inherit this field from their plugin, if not overridden
 		$_printf = $graph_printf unless defined $_printf;
 		$_printf .= "%s";
 
@@ -372,7 +372,7 @@ sub handle_request
 
 		# Handle an eventual cdef
 		if ($_rrdcdef) {
-			# Populate the CDEF dictionnary, to be able to swosh it at the end.
+			# Populate the CDEF dictionary, to be able to swosh it at the end.
 			# As it will enable to solve inter-field CDEFs.
 			$rrd_cdefs{$_rrdname}->{_rrdcdef} = $_rrdcdef;
 			$rrd_cdefs{$_rrdname}->{real_rrdname} = $real_rrdname;

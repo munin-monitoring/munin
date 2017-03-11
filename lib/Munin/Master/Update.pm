@@ -618,7 +618,7 @@ sub _dump_into_sql {
 
 				my $rrd_file_type = lc(substr($ds_type, 0, 1));
 				my $rrd_file = "$rrdfile_prefix-$rrd_file_type.rrd";
-				my $rrd_field = "42"; # TODO - This could be overriden
+				my $rrd_field = "42"; # TODO - This could be overridden
 
 				# Insert RRD specific attributes
 				$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
