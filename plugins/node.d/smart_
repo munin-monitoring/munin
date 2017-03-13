@@ -134,6 +134,18 @@ def read_values(hard_drive):
             elif l[:18]=="ID# ATTRIBUTE_NAME" :
                 # Start reading the Attributes block
                 read_values=1
+            # smartctl has a different output format for (my?) SAS drives.
+            # Match on some of the output from them here
+            elif l[:25]=="Current Drive Temperature" :
+                fields=string.split(l)
+                if 'temperature' not in smart_values:
+                        smart_values['temperature']={}
+                smart_values['temperature']['value']=fields[3]
+            elif l[:22]=="Drive Trip Temperature" :
+                fields=string.split(l)
+                if 'temperature' not in smart_values:
+                        smart_values['temperature']={}
+                smart_values['temperature']['threshold']=fields[3]
         exit_status=smart_output.close()
         if exit_status!=None :
             # smartctl exit code is a bitmask, check man page.
