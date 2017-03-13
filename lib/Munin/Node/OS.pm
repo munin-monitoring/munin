@@ -68,7 +68,7 @@ sub check_perms_if_paranoid
     # Check dir as well
     if (-f $target) {
         (my $dirname = $target) =~ s{[^/]+$}{};
-        return $class->check_perms($dirname);
+        return $class->check_perms_if_paranoid($dirname);
     }
 
     return 1;
