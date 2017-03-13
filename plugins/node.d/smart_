@@ -145,7 +145,7 @@ def read_values(hard_drive):
                 fields=string.split(l)
                 if 'temperature' not in smart_values:
                         smart_values['temperature']={}
-                smart_values['temperature']['threshold']=fields[3]
+                smart_values['temperature']['threshold_max']=fields[3]
         exit_status=smart_output.close()
         if exit_status!=None :
             # smartctl exit code is a bitmask, check man page.
@@ -219,7 +219,15 @@ def print_config(hard_drive) :
     for key in attributes :
         if key in ['smartctl_exit_status','model'] : continue
         print(key+'.label '+key)
-        if report_warnings: print(key+'.critical '+smart_values_state[key]["threshold"]+':')
+        if report_warnings:
+            threshold_min=''
+            threshold_max=''
+            if 'threshold' in smart_values_state[key]:
+                threshold_min=smart_values_state[key]["threshold"]
+            if 'threshold_max' in smart_values_state[key]:
+                threshold_max=smart_values_state[key]["threshold_max"]
+            if threshold_min or threshold_max:
+                print(key+'.critical '+threshold_min+':'+threshold_max)
     print('smartctl_exit_status.label smartctl_exit_status')
     if report_warnings: print('smartctl_exit_status.warning '+smart_values_state['smartctl_exit_status']["threshold"])
 
