@@ -104,7 +104,7 @@ fi
 
 if [ "$1" = "config" ]; then
 	echo "graph_title $NAME $TITLE"
-	echo 'graph_args --base 1024'
+	echo 'graph_args --base 1024 --lower-limit 0 --upper-limit 100'
 	echo 'graph_category disk'
 
 	export IN INNAME OUT OUTNAME CDEF
