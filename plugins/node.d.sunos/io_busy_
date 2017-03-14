@@ -72,7 +72,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -x /usr/bin/kstat ]; then
-		kstat -p -c '/disk|nfs|tape/' -s "/^$IN\$/" | sed -e 's/:.*//' -e 's/ssd/sd/' -e '/^fd$/d' | sort -u
+		kstat -p -c '/disk|nfs|tape/' -s "/^$IN\$/" | sed -e 's/:.*//' -e 's/ssd|vdc|zvblk/sd/' -e '/^fd$/d' | sort -u
 		exit 0
 	else
 		exit 1
@@ -81,7 +81,7 @@ fi
 
 REGEX="$MODULE"
 if [ $MODULE = "sd" ]; then
-	REGEX="/^s?sd$/"
+	REGEX="/^(s?sd|vdc|zvblk)$/"
 	NAME="Disk Device"
 elif [ $MODULE = "dad" ]; then
 	NAME="IDE Disk Device"
