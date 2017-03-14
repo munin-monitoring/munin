@@ -133,14 +133,14 @@ if [ "$1" = "config" ]; then
 			echo "${dev}_$IN.type DERIVE"
 			echo "${dev}_$IN.min 0"
 			echo "${dev}_$IN.max 1000000000"
-			if [ -n "$CDEV" ]; then
+			if [ -n "$CDEF" ]; then
 				echo "${dev}_$IN.cdef ${dev}_$IN$CDEF"
 			fi
 			echo "${dev}_$OUT.label ${dev}_$OUTNAME"
 			echo "${dev}_$OUT.type DERIVE"
 			echo "${dev}_$OUT.min 0"
 			echo "${dev}_$OUT.max 1000000000"
-			if [ -n "$CDEV" ]; then
+			if [ -n "$CDEF" ]; then
 				echo "${dev}_$OUT.cdef ${dev}_$OUT$CDEF"
 			fi
 		done
