@@ -11,6 +11,7 @@ The following environment variables are used by this plugin
 
   [bind_rndc]
     env.rndc		/usr/sbin/rndc
+    env.rndc_options	
     env.querystats      /var/run/named.stats
 
 The user/group that runs the plugin must have read access to the stats
@@ -61,12 +62,13 @@ License not documented.
 use strict;
 
 my $rndc = defined($ENV{rndc}) ? $ENV{rndc} : '/usr/sbin/rndc';
+my $rndc_options = defined($ENV{rndc_options}) ? $ENV{rndc_options} : '';
 my $querystats = $ENV{querystats} || '/var/run/named.stats';
 my %IN;
 
 # attempt to create log file if it doesn't exist
 if ( ! -r $querystats ) {
-    system("$rndc stats");
+    system("$rndc $rndc_options stats");
 }
 
 # open the log file, and get its size
@@ -74,7 +76,7 @@ open(my $stats, '<', $querystats) or die "$0: $querystats: $!\n";
 my $size = (stat $stats)[7];
 
 # call rdnc and go directly to the correct offset
-system("$rndc stats");
+system("$rndc $rndc_options stats");
 seek($stats , $size, 0);
 
 # We want the last block like this in the file (bind 9.early)
