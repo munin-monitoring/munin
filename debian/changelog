@@ -1,3 +1,10 @@
+munin (2.0.6-4+deb7u4) wheezy-security; urgency=high
+
+  * Non-maintainer upload by the LTS Team.
+  * Fix regression introduced by last security update. (Closes: #856455)
+
+ -- Jonas Meurer <mejo@debian.org>  Fri, 03 Mar 2017 01:40:42 +0100
+
 munin (2.0.6-4+deb7u3) wheezy-security; urgency=high
 
   * Non-maintainer upload by the LTS Team.
