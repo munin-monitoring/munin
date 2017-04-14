@@ -837,7 +837,7 @@ sub munin_readconfig_part {
     	my @stat = stat($filename);
 	if ($config_parts->{$what}{timestamp} < $stat[9]) {
 	    # could use _raw if we wanted to read non-storable fallback
-	    $config_parts->{$what}{config} = undef; # Unalloc RAM for old config, since it will be overriden anyway.
+	    $config_parts->{$what}{config} = undef; # Unalloc RAM for old config, since it will be overridden anyway.
 	    $part = munin_readconfig_storable($filename);
 	    $config_parts->{$what}{timestamp} = $stat[9];
 	    $doupdate = 1;

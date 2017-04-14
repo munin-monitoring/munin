@@ -5,7 +5,7 @@
 # In the interest of keeping this Makefile simple, it does not attempt to provide the flexibility
 # provided by using Build.PL directly. (See perldoc Module::Build).
 
-# Defaults/paths. Allows $(CONFIG) to be overrided by
+# Defaults/paths. Allows $(CONFIG) to be overridden by
 # make command line
 DEFAULTS = Makefile.config
 CONFIG = Makefile.config

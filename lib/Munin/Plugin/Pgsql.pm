@@ -209,7 +209,7 @@ by 'configquery'.
 
 The size of the array should match the number of defined counters. If 'stack'
 parameter is in use, then only first element of array will be used for the first
-counter and the remaining ones will be overidden by 'STACK'.
+counter and the remaining ones will be overridden by 'STACK'.
 
 =cut
 

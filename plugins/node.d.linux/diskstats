@@ -45,7 +45,7 @@ if ( defined $ARGV[0] && $ARGV[0] eq 'config' ) {
 my ( $prev_time, %prev_diskstats );
 eval {
 	# Using eval, if it breaks while retrieve, $R is still undef.
-	# No need to unlink() it, since it will be overriden anyway.
+	# No need to unlink() it, since it will be overridden anyway.
 	( $prev_time, %prev_diskstats ) = choose_old_state();
 };
 

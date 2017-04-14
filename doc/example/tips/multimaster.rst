@@ -33,7 +33,7 @@ to have **all** nodes in groups.
 Overview
 ========
 
-Munin-Master runs differents scripts via the cron script (munin-cron).
+Munin-Master runs different scripts via the cron script (munin-cron).
 
 ``munin-update``
 	is the only part actually connecting to the nodes. It gathers

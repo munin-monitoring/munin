@@ -58,7 +58,7 @@ sub load_config()
 		next if (/^[[:space:]]*#/); # comment
 		next if (/^[[:space:]]*$/); # empty line
 		unless (/^[[:space:]]*([^[:space:]]+)[[:space:]]+([^[:space:]]+)[[:space:]]*$/) {
-			die "$.: Unrecogized line format\n";
+			die "$.: Unrecognized line format\n";
 		}
 		my ($key, $value) = ($1, $2);
 		if (not defined $config_type->{$key}) {

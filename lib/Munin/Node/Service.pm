@@ -97,7 +97,7 @@ sub prepare_plugin_environment
     # LC_ALL should be enough, but some plugins don't follow specs (#1014)
     $ENV{LANG} = 'C';
 
-    # PATH should be *very* sane by default. Can be overrided via 
+    # PATH should be *very* sane by default. Can be overridden via 
     # config file if needed (Closes #863 and #1128).
     $ENV{PATH} = '/usr/sbin:/usr/bin:/sbin:/bin';
 
@@ -276,7 +276,7 @@ sub _service_command
 
     if ($sconf->{$service}{command}) {
         for my $t (@{ $sconf->{$service}{command} }) {
-            # Unfortunately, every occurence of %c will be expanded,
+            # Unfortunately, every occurrence of %c will be expanded,
             # even if we want to pass it unmodified to the target command,
             # because we parse the original string during the config
             # parsing step, at which we do not yet know the

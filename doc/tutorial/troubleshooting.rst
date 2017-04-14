@@ -78,7 +78,7 @@ Debugging Plugins
 Which plugins are enabled on the node?
 --------------------------------------
 
-Does :ref:`munin-node` recognize any plugins? Try issuing the command ``list`` (beeing connected to the agent) and a (long) list of plugins should show.
+Does :ref:`munin-node` recognize any plugins? Try issuing the command ``list`` (being connected to the agent) and a (long) list of plugins should show.
 
 ::
 

@@ -103,7 +103,7 @@ my $session = Munin::Plugin::SNMP->session(-translate =>
 
 my $uptime = $session->get_single (".1.3.6.1.2.1.1.3.0") || 'U';
 
-print "Retrived uptime is '$uptime'\n" if $Munin::Plugin::SNMP::DEBUG;
+print "Retrieved uptime is '$uptime'\n" if $Munin::Plugin::SNMP::DEBUG;
 
 if ($uptime ne 'U') {
     $uptime /= 8640000;

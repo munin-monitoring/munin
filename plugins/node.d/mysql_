@@ -75,7 +75,7 @@ or with a unix_socket plugin (INSTALL PLUGIN unix_socket SONAME 'auth_socket')
 
 Note: requires 'user munin' in the configuration.
 
-The minimum required priviledges of the munin database user is:
+The minimum required privileges of the munin database user is:
 
   GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'munin'@'localhost';
 
@@ -2106,7 +2106,7 @@ sub is_user_statistics {
 }
 
 #
-# In 'SHOW ENGINE INNODB STATUS' 64 bit integers are not formated as
+# In 'SHOW ENGINE INNODB STATUS' 64 bit integers are not formatted as
 # plain integers. They are either:
 #
 #   - split in two and needs to be shifted together,
@@ -2180,7 +2180,7 @@ sub parse_innodb_status {
 }
 
 
-# This regular expression handles the different formating of 64-bit
+# This regular expression handles the different formatting of 64-bit
 # integers in different versions of the innodb engine. Either two
 # decimal 32-bit integers separated by a space, or a single
 # hexadecimal 64-bit integer.

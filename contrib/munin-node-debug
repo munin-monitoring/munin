@@ -78,7 +78,7 @@ Options:
                                Can be relative to now if negative [-3600] 
 
     -d --dump                 Only dump a generated munin.conf part [no]
-       --debug                Print debug informations [no] 
+       --debug                Print debug information [no] 
 
 };
 	exit 0;

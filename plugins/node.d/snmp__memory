@@ -17,7 +17,7 @@ The following configuration variables are used
 
 Based on snmp__df plugin.... If this plugin reports
 different numbers from the snmp_winmem plugin it must be due
-to snmp impementation quirks....
+to snmp implementation quirks....
 
 =head1 AUTHOR
 
