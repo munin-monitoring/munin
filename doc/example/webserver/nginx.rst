@@ -42,7 +42,7 @@ www-data, and run the processes as the "munin" user.
     -u munin -g munin /usr/lib/munin/cgi/munin-cgi-graph
 
   spawn-fcgi -s /var/run/munin/fastcgi-html.sock  -U www-data \
-    -u munin -g munin /usr/lib/munin/cgi/munin-html-graph
+    -u munin -g munin /usr/lib/munin/cgi/munin-cgi-html
 
 Note: Depending on your installation method, the "munin-\*-graph"
 programs may be in another directory. Check Makefile.config if you
