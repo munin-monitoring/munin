@@ -1,3 +1,11 @@
+munin (2.999.6-2) UNRELEASED; urgency=medium
+
+  * Add libhttp-server-simple-cgi-prefork-perl, libo-string-perl and
+    libparallel-forkmanager-perl to the munin binary packages depends.
+    Thanks to Frederik Himpe for the bug report! (Closes: #860879)
+
+ -- Holger Levsen <holger@debian.org>  Fri, 21 Apr 2017 14:04:10 +0200
+
 munin (2.999.6-1) experimental; urgency=medium
 
   * New upstream release, adopting debian/patches accordingly.
