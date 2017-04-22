@@ -144,7 +144,7 @@ if [ "$CMD" = "years" ]; then
 	(( no_of_years-- )) # We don't need that last entry in the array
 	if [ "$1" = "config" ]; then
                 echo "graph_title Number of years"
-                echo "graph_category Squeezebox"
+                echo "graph_category radio"
 		echo "graph_args --base 1000 -l 0"
 		# echo -n "graph_order "
 		# echo $years_array | tr '[:space:]' " y"
@@ -175,7 +175,7 @@ if [ "$CMD" = "years" ]; then
 elif [ "$CMD" = "signalstrength" -o "$CMD" = "mixer volume" ]; then
         if [ "$1" = "config" ]; then
             echo "graph_title $TITLE"
-            echo "graph_category Squeezebox"
+            echo "graph_category radio"
             COUNT=$(printf "%b" "player count ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 3)
             (( COUNT-- ))
             for ID in $(seq 0 $COUNT); do
@@ -192,13 +192,14 @@ elif [ "$CMD" = "signalstrength" -o "$CMD" = "mixer volume" ]; then
             MAC=$(printf "%b" "player id $ID ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%3A/:/g')
             VAL=$(printf "%b" "$MAC $CMD ?\nexit\n"| $NC $HOST $PORT | cut -d " " -f 2- | sed "s/$CMD //")
             MAC2=$(echo $MAC| sed 's/://g')
+            [ $VAL -eq 0 ] && VAL=100
             echo "$MAC2.value $VAL"
 	done
 else
 	if [ "$1" = "config" ]; then
 		echo "graph_title Number of $ATTR"
 		echo "graph_scale no"
-		echo "graph_category Squeezebox"
+		echo "graph_category radio"
 		echo "$ATTR.label $ATTR"
 		exit 0
 	fi

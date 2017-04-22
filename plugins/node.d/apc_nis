@@ -66,6 +66,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_args -l 0 --base 1000\n";
     print "graph_vlabel A bit of all (Volt, time, %)\n";
     print "graph_info Values received for apcupsd available at $host:$port\n";
+    print "graph_category sensors\n";
     print "battery_volt.label batt volt (V)\n";
     print "battery_volt.type GAUGE\n";
     print "battery_volt.max 300\n";
