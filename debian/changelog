@@ -1,3 +1,9 @@
+munin (2.999.6-3) experimental; urgency=medium
+
+  * Fix typoed package name, it's libio-string-perl, not libo-string-perl.
+
+ -- Holger Levsen <holger@debian.org>  Mon, 24 Apr 2017 16:51:40 +0200
+
 munin (2.999.6-2) experimental; urgency=medium
 
   * Add libhttp-server-simple-cgi-prefork-perl, libo-string-perl and
