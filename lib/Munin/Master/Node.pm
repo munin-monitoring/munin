@@ -457,13 +457,15 @@ sub fetch_service_config {
 }
 
 sub spoolfetch {
-    my ($self, $timestamp) = @_;
+    my ($self, $timestamp, $uw_handle_config) = @_;
 
     DEBUG "[DEBUG] Fetching spooled services since $timestamp (" . localtime($timestamp) . ")";
     $self->_node_write_single("spoolfetch $timestamp\n");
 
     # The whole stuff in one fell swoop.
-    my $lines = $self->_node_read();
+    my $trigger = sub { $_ =~ m/^multigraph /; };
+    my $callback = sub { $uw_handle_config->($self, $plugin, $now, $data, $last_timestamp) };
+    my $lines = $self->_node_read($trigger, $callback);
 
     # using the multigraph parsing. 
     # Using "__root__" as a special plugin name. 
@@ -661,29 +663,28 @@ sub _node_write_single {
 
 sub _node_read_single {
     my ($self) = @_;
-    my $res = undef;
 
-    my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
-      if ($self->{tls} && $self->{tls}->session_started()) {
-          $res = $self->{tls}->read();
-      }
-      else {
+    my $res;
+    my $tls = $self->{tls};
+    if ($tls && $tls->session_started()) {
+        $res = $tls->read();
+    } else {
           $res = readline $self->{reader};
-      }
-      # Remove \r *and* \n. Normally only one, since we read line per line.
-      $res =~ tr/\x{d}\x{a}//d if defined $res;
-      return 1;
-    });
-    if ($timed_out) {
-        LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.
-	    ".  Terminating process.";
     }
+
     if (!defined($res)) {
 	# Probable socket not open.  Why are we here again then?
-	# aren't we supposed to be in "do in session"?
 	LOGCROAK "[FATAL] Socket read from ".$self->{host}." failed.  Terminating process.";
     }
+
+    # Remove \r *and* \n
+    # Normally only one, since we read line per line.
+    # .. It has to be done in reverse order as we remove \n first, then \r.
+    $res =~ s/\n$// if defined $res;
+    $res =~ s/\r$// if defined $res;
+
     DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\"." if $debug;
+
     return $res;
 }
 
@@ -720,16 +721,20 @@ sub _node_read_fast {
 }
 
 sub _node_read {
-    my ($self) = @_;
+    my ($self, $trigger, $callback) = @_;
     my @array = ();
 
     my $line = $self->_node_read_single();
-    while($line ne ".") {
+    while($line = $self->_node_read_single()) {
+	last if $line eq ".";
         push @array, $line;
-        $line = $self->_node_read_single();
+
+	# inject trigger if present
+	if ($trigger && $trigger->($line)) {
+		$callback->(@array);
+	}
     }
 
-    DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return \@array;
 }
 
