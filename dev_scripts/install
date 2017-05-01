@@ -29,6 +29,15 @@ make_sandbox() {
 		sandbox/etc/munin-conf.d
 		sandbox/etc/plugin-conf.d
 		sandbox/etc/plugins
+EOF
+
+	if [ ! -z "$XDG_RUNTIME_DIR" -a -r "$XDG_RUNTIME_DIR" ]
+	then
+		mkdir -p "$XDG_RUNTIME_DIR/munin-sandbox-var"
+		[ -e "$XDG_RUNTIME_DIR/munin-sandbox-var" ] || ln -sv "$XDG_RUNTIME_DIR/munin-sandbox-var" sandbox/var
+	fi
+
+	xargs mkdir -p -v <<EOF
 		sandbox/var/log
 		sandbox/var/lib
 		sandbox/var/run
