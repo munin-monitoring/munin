@@ -463,9 +463,13 @@ sub spoolfetch {
     $self->_node_write_single("spoolfetch $timestamp\n");
 
     # The whole stuff in one fell swoop.
-    my $trigger = sub { $_ =~ m/^multigraph /; };
-    my $callback = sub { $uw_handle_config->($self, $plugin, $now, $data, $last_timestamp) };
-    my $lines = $self->_node_read($trigger, $callback);
+    my $now = time;
+    my $last_timestamp = $timestamp;
+    my $callback = sub {
+	    my ($plugin, $data) = @_;
+	    $last_timestamp = $uw_handle_config->($self, $plugin, $now, $data, $last_timestamp)
+    };
+    my $lines = $self->_node_read($callback);
 
     # using the multigraph parsing. 
     # Using "__root__" as a special plugin name. 
@@ -721,20 +725,37 @@ sub _node_read_fast {
 }
 
 sub _node_read {
-    my ($self, $trigger, $callback) = @_;
+    my ($self, $callback) = @_;
+
+    my $current_plugin;
     my @array = ();
 
-    my $line = $self->_node_read_single();
-    while($line = $self->_node_read_single()) {
+    while(my $line = $self->_node_read_single()) {
 	last if $line eq ".";
         push @array, $line;
 
-	# inject trigger if present
-	if ($trigger && $trigger->($line)) {
-		$callback->(@array);
+	# The trigger is always "multigraph ..."
+	# We do callback the callback if defined
+	if ($callback && $line =~ m/^multigaph (\S)+/) {
+		my $new_plugin = $1;
+
+		# Callback is called with ($plugin, $data) to flush the previous plugins
+		# ... if there's already a plugin
+		$callback->($current_plugin, \@array) if $current_plugin;
+
+		# Handled the old one. Moving to the new one.
+		$current_plugin = $new_plugin;
+		@array = ();
 	}
     }
 
+    # Handle the multigaph one last time
+    if ($callback && $current_plugin) {
+	$callback->($current_plugin, \@array);
+	@array = ();
+    }
+
+    # Return the remaining @array
     return \@array;
 }
 
