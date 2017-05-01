@@ -674,6 +674,7 @@ sub uw_handle_fetch {
 
 		# Update all data-driven components: State, RRD, Graphite
 		my $ds_id = $self->_db_state_update($plugin, $field, $when, $value);
+	        DEBUG "[DEBUG] ds_id($plugin, $field, $when, $value) = $ds_id";
 
 		my ($rrd_file, $rrd_field);
 		{
@@ -699,6 +700,7 @@ sub uw_handle_fetch {
 			"value" => [ $value, ],
 			"when" => [ $when, ],
 		};
+		DEBUG "[DEBUG] self->_update_rrd_file($rrd_file, $field, $ds_values";
 		$self->_update_rrd_file($rrd_file, $field, $ds_values);
 
 	}
