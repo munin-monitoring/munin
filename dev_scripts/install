@@ -31,7 +31,8 @@ make_sandbox() {
 		sandbox/etc/plugins
 EOF
 
-	if [ ! -z "$XDG_RUNTIME_DIR" -a -r "$XDG_RUNTIME_DIR" ]
+	XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-}
+	if [ ! -z $XDG_RUNTIME_DIR ] && [ -r "$XDG_RUNTIME_DIR" ]
 	then
 		mkdir -p "$XDG_RUNTIME_DIR/munin-sandbox-var"
 		[ -e "$XDG_RUNTIME_DIR/munin-sandbox-var" ] || ln -sv "$XDG_RUNTIME_DIR/munin-sandbox-var" sandbox/var
