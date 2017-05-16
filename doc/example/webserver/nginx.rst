@@ -36,7 +36,7 @@ Add the following to /etc/nginx/sites-enabled/default::
             expires modified +310s;
     }
    
-For Zoom to work you also need to add the following to your configuration    
+For Zoom to work you also need to add the following to the same configuration file::
          
          location ^~ /munin-cgi/munin-cgi-graph/ { 
           access_log off;       
