@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# Plugin to measure OpenNTPd offset, delay and jitter for the active peer.
+#
+# Usage: Place it in the munin plugins directory (/usr/local/etc/munin/plugins/
+# or /etc/munin/plugins/). Might require running as root in order to access the
+# ntpctl socket.
+#
+# AUTHOR:  Vladimir Krstulja <info@acheronmedia.com>
+# LICENSE: GPLv2
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+NTPCTL=`which ntpctl`
+
+# Config
+if [ "$1" = "autoconf" ] ; then
+	if [ -f "$NTPCTL" ]; then
+		echo 'yes'
+	else
+		echo 'no (no ntpctl)'
+	fi
+	exit 0
+fi
+
+# Autoconf
+if [ "$1" = "config" ] ; then
+	echo "graph_title OpenNTP offset statistics for active peer"
+	echo "graph_args --base 1000 --vertical-label seconds --lower-limit 0"
+	echo "graph_category time"
+	echo "graph_info Current status: `$NTPCTL -s status`"
+	echo "delay.label Delay"
+	echo "delay.cdef delay,1000,/"
+	echo "offset.label Offset"
+	echo "offset.cdef offset,1000,/"
+	echo "jitter.label Jitter"
+	echo "jitter.cdef jitter,1000,/"
+	exit 0
+fi
+
+# Main plugin function
+$NTPCTL -s all | awk '/\*/{printf("offset.value %.3f\ndelay.value %.3f\njitter.value %.3f\n",$7,$8,$9)}'
+
