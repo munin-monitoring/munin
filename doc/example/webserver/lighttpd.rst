@@ -22,7 +22,8 @@ This example assumes the following configuration in
 
 ::
 
- # graph_strategy should be commented out, if present
+ # Use cgi rendering for graph and html
+ graph_strategy cgi
  html_strategy cgi
 
 Webserver configuration
@@ -36,7 +37,7 @@ Webserver configuration
   alias.url += ( "/munin-static" => "/etc/munin/static" )
   alias.url += ( "/munin"        => "/var/cache/munin/www/" )
 
-  fastcgi.server += ("/munin/cgi/munin-cgi-graph" =>
+  fastcgi.server += ("/munin-cgi/munin-cgi-graph" =>
                      (( "socket"      => "/var/run/lighttpd/munin-cgi-graph.sock",
                         "bin-path"    => "/usr/lib/munin/cgi/munin-cgi-graph",
                         "check-local" => "disable",
