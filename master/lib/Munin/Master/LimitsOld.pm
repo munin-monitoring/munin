@@ -559,7 +559,12 @@ sub get_limits {
     my $warning  = undef;
     my $crit          = munin_get($hash, "critical",      undef);
     my $warn          = munin_get($hash, "warning",       undef);
-    my $unknown_limit = munin_get($hash, "unknown_limit", 3);
+    my $unknown_limit = munin_get($hash, "unknown_limit", undef);
+
+    if (not defined $unknown_limit) {
+        my $host_node = get_host_node($hash);
+        $unknown_limit = munin_get($host_node, "unknown_limit", 3);
+    }
 
     my $name = munin_get_node_name($hash);
 
