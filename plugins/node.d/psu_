@@ -57,10 +57,9 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000 --vertical-label processes -l 0'
 	echo 'graph_category processes'
 	echo "count.label $name"
-	echo 'processes.draw LINE2'
+	echo 'count.draw LINE2'
 	exit 0
 fi
 
 printf "count.value "
 (pgrep -u "$name"; pgrep -U "$name") | sort -u | wc -l
-
