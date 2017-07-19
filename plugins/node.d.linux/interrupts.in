@@ -63,10 +63,6 @@ if [ "$1" = "config" ]; then
 	# Specify type
 	echo 'intr.type DERIVE'
 	echo 'ctx.type DERIVE'
-	# Set max (should always be done with counters) Note: this is max
-	# per second.
-	echo 'intr.max 100000'
-	echo 'ctx.max 100000'
 	echo 'intr.min 0'
 	echo 'ctx.min 0'
 
