@@ -100,8 +100,8 @@ function refreshImg() {
 		+ "-pinpoint=" + parseInt(form.start_epoch.value) + "," + parseInt(form.stop_epoch.value)
 		+ ".png"
 		+ "?" 
-		+ "&lower_limit=" + form.lower_limit.value
-		+ "&upper_limit=" + form.upper_limit.value
+		+ (form.lower_limit.value ? "&lower_limit=" + form.lower_limit.value : "")
+		+ (form.upper_limit.value ? "&upper_limit=" + form.upper_limit.value : "")
 		+ "&size_x=" + form.size_x.value
 		+ "&size_y=" + form.size_y.value
 	;
