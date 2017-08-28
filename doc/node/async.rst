@@ -171,6 +171,14 @@ distribute this to all nodes running munin-asyncd.
 The ssh command and options can be customized in :ref:`munin.conf`
 with the ssh_command and ssh_options configuration options.
 
+You can also specify the SSH port directly in the address,
+if a node is not reachable using the default SSH port (22):
+
+::
+
+  [random2.example.org]
+    address ssh://munin-async@random2.example.org:2222
+
 On the munin node
 -----------------
 
