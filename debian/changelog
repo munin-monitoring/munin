@@ -11,6 +11,7 @@ munin (2.0.33-2) UNRELEASED; urgency=medium
   * Drop obsolete dependency on dh-systemd, nowadays taken care of by
     debhelper. 
   * Switch Vcs-Browser URL to https and use /git/ not /gitweb/ as well. 
+  * Drop deprecated upstart files for munin, munin-node and munin-async.
 
  -- Holger Levsen <holger@debian.org>  Fri, 29 Sep 2017 18:26:34 +0200
 
