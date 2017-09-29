@@ -10,7 +10,7 @@ Build-Depends-Indep:
  htmldoc,
  perl,
 Build-Depends:
- debhelper (>=9),
+ debhelper (>=10.2.5~),
  dh-systemd (>= 1.4),
  libmodule-build-perl,
 Standards-Version: 4.1.1
