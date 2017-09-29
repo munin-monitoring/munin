@@ -15,7 +15,7 @@ Build-Depends:
 Standards-Version: 4.1.1
 Homepage: http://munin-monitoring.org
 Vcs-Git: git://anonscm.debian.org/collab-maint/munin.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/munin.git
+Vcs-Browser: https://anonscm.debian.org/git/collab-maint/munin.git
 
 Package: munin-node
 Architecture: all
