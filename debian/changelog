@@ -2,6 +2,8 @@ munin (2.0.33-2) UNRELEASED; urgency=medium
 
   * Bump Standards-Version to 4.1.1, no changes needed.
   * Bump debian/compat to 10 and build-depend on debhelper >= 10.2.5~.
+  * debian/rules: call dh with --no-parallel, as debhelper compat 10
+    introduces parallel building. This will probably also "fix" #839233.
   * Drop version from suggestion on smartmontools, the suggested version is
     satisfied in oldoldstable even.
   * Drop unnecessary "Testsuite:autopkgtest" header from debian/control,

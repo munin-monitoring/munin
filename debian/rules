@@ -5,7 +5,10 @@ export DH_VERBOSE=1
 MAKEOPTS = CONFIG=debian/Makefile.config INSTALL_PLUGINS="auto manual snmpauto contrib"
 
 %:
-	dh $@ --with systemd
+	# --no-parallel was introduced with debhelper compat level 10
+	# (else it would fail to build) - this will probably also
+	# "fix"  #839233
+	dh $@ --with systemd --no-parallel
 
 override_dh_auto_build:
 	# ./getversion reads RELEASE if it exists
