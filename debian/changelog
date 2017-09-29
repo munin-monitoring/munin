@@ -14,6 +14,8 @@ munin (2.0.33-2) UNRELEASED; urgency=medium
   * Drop deprecated upstart files for munin, munin-node and munin-async.
   * debian/(munin|munin-node|munin-async).postinst: drop legacy code dealing
     with pre-Jessie releases.
+  * Drop Breaks and Replaces for munin-plugins-core on pre-Jessie versions
+    of munin-plugins-extra.
 
  -- Holger Levsen <holger@debian.org>  Fri, 29 Sep 2017 18:26:34 +0200
 
