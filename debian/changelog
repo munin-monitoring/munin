@@ -12,6 +12,8 @@ munin (2.0.33-2) UNRELEASED; urgency=medium
     debhelper. 
   * Switch Vcs-Browser URL to https and use /git/ not /gitweb/ as well. 
   * Drop deprecated upstart files for munin, munin-node and munin-async.
+  * debian/(munin|munin-node|munin-async).postinst: drop legacy code dealing
+    with pre-Jessie releases.
 
  -- Holger Levsen <holger@debian.org>  Fri, 29 Sep 2017 18:26:34 +0200
 

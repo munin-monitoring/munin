@@ -4,30 +4,6 @@ set -e
 
 prevver="$2"
 
-initperms() {
-	chown munin:adm /var/log/munin
-	chmod 755 /var/log/munin
-	
-	chown root:munin /etc/munin/plugin-conf.d
-	chmod 750 /etc/munin/plugin-conf.d
-}
-
-fixoverrides() {
-	# even though we don't use /var/lib/munin/(plugin-state) anymore we should still remove old overrides
-        overrides="
-/etc/munin/plugin-conf.d
-/var/lib/munin
-/var/lib/munin/plugin-state
-/var/log/munin
-"
-
-        for override in $overrides; do
-                if dpkg-statoverride --list $override >/dev/null; then
-                        dpkg-statoverride --remove $override
-                fi
-        done
-}
-
 init_plugins() {
 	TMPFILE=`mktemp /tmp/munin-node.configure.XXXXXXXXXX`
 	TMPFILE_STDERR=`mktemp /tmp/munin-node.configure.err.XXXXXXXXXX`
@@ -65,14 +41,6 @@ init_plugins() {
 
 case "$1" in
 	configure)
-		# after wheezy / squeeze-sloppy-backports this and fixoverrides() can be removed completly
-		if dpkg --compare-versions "$2" le "2.0~rc5-1"; then
-			fixoverrides
-		fi
-		# after wheezy / squeeze-sloppy-backports just test for [ "$2" = 0 ]
-		if dpkg --compare-versions "$2" le "2.0.0-1" ; then
-			initperms
-		fi
 		init_plugins
 		;;
         triggered)

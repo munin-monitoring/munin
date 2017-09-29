@@ -4,56 +4,13 @@ set -e
 
 prevver="$2"
 
-initperms() {
-	chown munin:adm /var/log/munin
-	chmod 755 /var/log/munin
-
-	chown munin:munin /var/lib/munin
-	chmod 755 /var/lib/munin
-
-	# create munin-cgi-html.log since www-data cannot create it itself
-	touch /var/log/munin/munin-cgi-html.log
-	chown www-data:adm /var/log/munin/munin-cgi-html.log
-	chmod 640 /var/log/munin/munin-cgi-html.log
-
-	# create munin-cgi-graph.log since www-data cannot create it itself
-	touch /var/log/munin/munin-cgi-graph.log
-	chown www-data:adm /var/log/munin/munin-cgi-graph.log
-	chmod 640 /var/log/munin/munin-cgi-graph.log
-
-	chown munin:munin /var/cache/munin/www
-	chmod 755 /var/cache/munin/www
-
-	mkdir -p /var/lib/munin/cgi-tmp
-	chown munin:www-data /var/lib/munin/cgi-tmp
-	chmod 775 /var/lib/munin/cgi-tmp
-}
-
-fixoverrides() {
-
-        overrides="
-/var/cache/munin/www
-/var/lib/munin
-/var/log/munin
-/var/log/munin/munin-cgi-graph.log
-/var/log/munin/munin-cgi-html.log
-"
-
-        for override in $overrides; do
-                if dpkg-statoverride --list $override >/dev/null; then
-                        dpkg-statoverride --remove $override
-                fi
-        done
-}
-
 apache_install() {
 	# if you add more webservers here, dont forget to also remove them in postrm
         webserver=apache2
         webserver_init_script="/etc/init.d/$webserver"
         if [ -d /etc/$webserver/conf.d ] && [ ! -e /etc/$webserver/conf.d/munin ]; then
-		if [ -z "$prevver" ] || ( dpkg --compare-versions "$prevver" ge 1.4.6-1~ && dpkg --compare-versions "$prevver" lt 1.4.7~ ) ; then
+		if [ -z "$prevver" ] ; then
 			# only create link on new installs
-			# or when upgrading from a version where it was removed unconditionally
 	                ln -s ../../munin/apache.conf /etc/$webserver/conf.d/munin
 		fi
 		if [ -f $webserver_init_script ];then
@@ -72,7 +29,6 @@ apache_install() {
 		ln -s ../../munin/apache24.conf /etc/$webserver/conf-available/munin.conf
 
 		# activate configuration on new install with apache2-mainscript-helper
-		# TODO: Migration from installed Munin with apache2.2 to apache 2.4
 		if [ -z "$prevver" ]; then
 			if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
 				. /usr/share/apache2/apache2-maintscript-helper
@@ -82,17 +38,8 @@ apache_install() {
 	fi
 }
 
-
 case "$1" in
 	configure)
-		# after wheezy / squeeze-sloppy-backports this and fixoverrides() can be removed completly
-		if dpkg --compare-versions "$2" le "2.0~rc5-1" ; then
-			fixoverrides
-		fi
-		# after wheezy / squeeze-sloppy-backports just test for [ -z "$2" ]
-		if dpkg --compare-versions "$2" le "2.0~rc6-2" ; then
-			initperms
-		fi
 		if [ -z "$2" ] ; then
 			apache_install $@
 		fi
