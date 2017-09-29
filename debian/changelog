@@ -2,6 +2,8 @@ munin (2.0.33-2) UNRELEASED; urgency=medium
 
   * Bump Standards-Version to 4.1.1, no changes needed.
   * Bump debian/compat to 10 and build-depend on debhelper >= 10.2.5~.
+  * Drop version from suggestion on smartmontools, the suggested version is
+    satisfied in oldoldstable even.
 
  -- Holger Levsen <holger@debian.org>  Fri, 29 Sep 2017 18:26:34 +0200
 
