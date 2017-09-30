@@ -1,3 +1,10 @@
+munin (2.0.33-3) UNRELEASED; urgency=medium
+
+  [ Stig Sandbeck Mathisen ]
+  * Delay start of munin-node until network is up. (Closes: #865488)
+
+ -- Holger Levsen <holger@debian.org>  Sat, 30 Sep 2017 01:59:50 +0200
+
 munin (2.0.33-2) unstable; urgency=medium
 
   * Bump Standards-Version to 4.1.1, no changes needed.
