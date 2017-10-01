@@ -49,7 +49,7 @@ Build-Depends-Indep:
  python3-sphinx,
  ruby,
 Build-Depends: debhelper (>=9)
-Standards-Version: 3.9.8
+Standards-Version: 4.1.1
 Homepage: http://munin-monitoring.org
 Vcs-Git: git://anonscm.debian.org/collab-maint/munin.git
 Vcs-Browser: http://anonscm.debian.org/cgit/collab-maint/munin.git

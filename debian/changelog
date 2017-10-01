@@ -2,6 +2,7 @@ munin (2.999.6-4) UNRELEASED; urgency=medium
 
   * Declare Breaks and Replaces munin-doc (<<2.999.6-4) for munin binary
     package. (Closes: #769158)
+  * Bump Standards-Version to 4.1.1, no changes needed.
 
  -- Holger Levsen <holger@debian.org>  Mon, 02 Oct 2017 00:22:24 +0200
 
