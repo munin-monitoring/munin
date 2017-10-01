@@ -1,6 +1,7 @@
 [Unit]
 Description=Munin Node
 Documentation=man:munin-node(1) http://guide.munin-monitoring.org/en/latest/reference/munin-node.html
+After=network-online.target
 
 [Service]
 EnvironmentFile=-/etc/default/munin-node
