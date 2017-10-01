@@ -1,3 +1,10 @@
+munin (2.999.6-4) UNRELEASED; urgency=medium
+
+  * Declare Breaks and Replaces munin-doc (<<2.999.6-4) for munin binary
+    package. (Closes: #769158)
+
+ -- Holger Levsen <holger@debian.org>  Mon, 02 Oct 2017 00:22:24 +0200
+
 munin (2.999.6-3) experimental; urgency=medium
 
   * Fix typoed package name, it's libio-string-perl, not libo-string-perl.

@@ -363,6 +363,10 @@ Depends: ${perl:Depends}, ${misc:Depends},
  rrdtool,
 Recommends: munin-node, munin-doc
 Suggests: www-browser
+Breaks:
+ munin-doc (<<2.999.6-4),
+Replaces:
+ munin-doc (<<2.999.6-4),
 Description: network-wide graphing framework (grapher/gatherer)
  Munin is a highly flexible and powerful solution used to create
  graphs of virtually everything imaginable throughout your network,
