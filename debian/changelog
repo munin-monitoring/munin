@@ -1,14 +1,16 @@
 munin (2.999.6-4) UNRELEASED; urgency=medium
 
-  * Declare Breaks and Replaces munin-doc (<<2.999.6-4) for munin binary
-    package. (Closes: #769158)
-  * Drop ancient Breaks and replaces munin-common (<< 2) for munin-doc
-    binary package.
-  * Bump Standards-Version to 4.1.1, no changes needed.
-  * Bump debian/compat to 10 and build-depend on debhelper >= 10.2.5~ and drop
-    dh-systemd from build-depends because of that.
-  * Drop unnecessary "Testsuite:autopkgtest" header from debian/control,
-    thanks lintian.
+  * debian/control:
+    - Declare Breaks and Replaces munin-doc (<<2.999.6-4) for munin binary
+      package. (Closes: #769158)
+    - Drop ancient Breaks and replaces munin-common (<< 2) for munin-doc
+      binary package.
+    - Bump debian/compat to 10 and build-depend on debhelper >= 10.2.5~ and drop
+      dh-systemd from build-depends because of that.
+    - Bump Standards-Version to 4.1.1, no changes needed.
+    - Drop unnecessary "Testsuite:autopkgtest" header from debian/control,
+      thanks lintian.
+    - Whitespace cleanup.
 
  -- Holger Levsen <holger@debian.org>  Mon, 02 Oct 2017 00:22:24 +0200
 
