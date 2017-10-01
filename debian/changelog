@@ -1,4 +1,4 @@
-munin (2.999.6-4) UNRELEASED; urgency=medium
+munin (2.999.6-4) experimental; urgency=medium
 
   * debian/control:
     - Declare Breaks and Replaces munin-doc (<<2.999.6-4) for munin binary
@@ -15,7 +15,7 @@ munin (2.999.6-4) UNRELEASED; urgency=medium
   * debian/munin-node.service:  Delay start of munin-node until network is up.
     (Based on db05c3ab01 by Stig Sandbeck Mathisen in 2.0.33-3.) (Closes: #865488)
 
- -- Holger Levsen <holger@debian.org>  Mon, 02 Oct 2017 00:22:24 +0200
+ -- Holger Levsen <holger@debian.org>  Mon, 02 Oct 2017 01:53:30 +0200
 
 munin (2.999.6-3) experimental; urgency=medium
 
