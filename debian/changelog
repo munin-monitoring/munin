@@ -11,6 +11,7 @@ munin (2.999.6-4) UNRELEASED; urgency=medium
     - Drop unnecessary "Testsuite:autopkgtest" header from debian/control,
       thanks lintian.
     - Whitespace cleanup.
+    - Switch Vcs-Browser URL to https and use /git/ not /gitweb/ as well.
 
  -- Holger Levsen <holger@debian.org>  Mon, 02 Oct 2017 00:22:24 +0200
 
