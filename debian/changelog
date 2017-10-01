@@ -3,6 +3,8 @@ munin (2.999.6-4) UNRELEASED; urgency=medium
   * Declare Breaks and Replaces munin-doc (<<2.999.6-4) for munin binary
     package. (Closes: #769158)
   * Bump Standards-Version to 4.1.1, no changes needed.
+  * Bump debian/compat to 10 and build-depend on debhelper >= 10.2.5~ and drop
+    dh-systemd from build-depends because of that.
 
  -- Holger Levsen <holger@debian.org>  Mon, 02 Oct 2017 00:22:24 +0200
 
