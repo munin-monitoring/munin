@@ -131,7 +131,7 @@ Package: munin
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
  lsb-base (>= 4.1),
- cron | cron-daemon,
+ cron | cron-daemon | systemd-sysv,
  fonts-dejavu-core,
  libdate-manip-perl,
  libdigest-md5-perl,
