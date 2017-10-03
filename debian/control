@@ -319,7 +319,7 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  lsb-base (>= 3.0-6),
  adduser,
- cron | cron-daemon,
+ cron | cron-daemon | systemd-sysv,
  fonts-dejavu-core,
  libdbd-sqlite3-perl,
  libfile-copy-recursive-perl,
