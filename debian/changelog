@@ -1,9 +1,9 @@
-munin (2.0.33-4) UNRELEASED; urgency=medium
+munin (2.0.33-4) unstable; urgency=medium
 
   * Add systemd-sysv as alternate dependency to cron | cron-daemon. Thanks to
     Christian Göttsche for the suggestion! (Closes: #877658)
 
- -- Holger Levsen <holger@debian.org>  Wed, 04 Oct 2017 00:19:05 +0200
+ -- Holger Levsen <holger@debian.org>  Thu, 05 Oct 2017 22:44:11 +0200
 
 munin (2.0.33-3) unstable; urgency=medium
 
