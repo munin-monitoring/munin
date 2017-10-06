@@ -2,6 +2,7 @@ munin (2.999.6-5) UNRELEASED; urgency=medium
 
   * Add systemd-sysv as alternate dependency to cron | cron-daemon. Thanks to
     Christian Göttsche for the suggestion! (Closes: #877658)
+  * Fixup too long changelog line in previous version, thanks lintian.
 
  -- Holger Levsen <holger@debian.org>  Wed, 04 Oct 2017 00:16:35 +0200
 
@@ -20,7 +21,8 @@ munin (2.999.6-4) experimental; urgency=medium
     - Whitespace cleanup.
     - Switch Vcs-Browser URL to https and use /git/ not /gitweb/ as well.
   * debian/munin-node.service:  Delay start of munin-node until network is up.
-    (Based on db05c3ab01 by Stig Sandbeck Mathisen in 2.0.33-3.) (Closes: #865488)
+    (Based on db05c3ab01 by Stig Sandbeck Mathisen in 2.0.33-3.)
+    (Closes: #865488)
 
  -- Holger Levsen <holger@debian.org>  Mon, 02 Oct 2017 01:53:30 +0200
 
