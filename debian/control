@@ -137,8 +137,10 @@ Depends: ${perl:Depends}, ${misc:Depends},
  libmunin-plugin-http-perl,
  libwww-perl,
  munin-common,
-Replaces: munin-plugins-core (<< 2.999.1-1~)
-Breaks: munin-plugins-core (<< 2.999.1-1~)
+Replaces: munin-plugins-core (<< 2.999.1-1~),
+ munin-plugins-extra (<<2.999.6-5)
+Breaks: munin-plugins-core (<< 2.999.1-1~),
+ munin-plugins-extra (<<2.999.6-5)
 Description: munin plugins for monitoring web servers
  This package contains munin plugins for monitoring web servers using
  http.
@@ -149,8 +151,10 @@ Depends: ${perl:Depends}, ${misc:Depends},
  libdbd-mysql-perl,
  munin-common,
  default-mysql-client,
-Replaces: munin-plugins-core (<< 2.999.1-1~)
-Breaks: munin-plugins-core (<< 2.999.1-1~)
+Replaces: munin-plugins-core (<< 2.999.1-1~),
+ munin-plugins-extra (<<2.999.6-5)
+Breaks: munin-plugins-core (<< 2.999.1-1~),
+ munin-plugins-extra (<<2.999.6-5)
 Description: munin plugins for monitoring MySQL
  This package contains munin plugins for monitoring MySQL servers.
 

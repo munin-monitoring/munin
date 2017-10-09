@@ -3,6 +3,9 @@ munin (2.999.6-5) UNRELEASED; urgency=medium
   * Add systemd-sysv as alternate dependency to cron | cron-daemon. Thanks to
     Christian Göttsche for the suggestion! (Closes: #877658)
   * Fixup too long changelog line in previous version, thanks lintian.
+  * munin-plugins-http and munin-plugins-mysql: add Breaks: and Replaces:
+    munin-plugins-extra (<<2.999.6-5). Thanks to Andreas Beckmann.
+    (Closes: #769158)
 
  -- Holger Levsen <holger@debian.org>  Wed, 04 Oct 2017 00:16:35 +0200
 
