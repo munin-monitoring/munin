@@ -111,10 +111,10 @@ my $filesystems = get_by_regex ($session, $hrFSIndex, "[1-9]");
 
 foreach my $filesys (keys %$filesystems)
 {
-	my $mp = get_single ($session, $hrFSMountPoint . $filesys);
+    my $mp = get_single ($session, $hrFSMountPoint . $filesys);
     my $st = get_single ($session, $hrFSStorageIndex . $filesys);
-	$partitions{$mp}{partition} = $filesys;
-	$partitions{$mp}{disk} = $st;
+    $partitions{$mp}{partition} = $filesys;
+    $partitions{$mp}{disk} = $st;
     print "# Added mountpoint \"$mp\" as \"$filesys\" on disk \"$st\”...\n" if $Munin::Plugin::SNMP::DEBUG;
 }
 
