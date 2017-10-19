@@ -18,10 +18,10 @@ port.  On a router you might get one plugin pr. VLAN interface.
 As a rule SNMP plugins need site specific configuration.  The default
 configuration (shown here) will only work on insecure sites/devices:
 
-   [snmp_*]
+	[snmp_*]
 	env.version 2
-        env.community public
-        env.ifTypeOnly ethernetCsmacd
+	env.community public
+	env.ifTypeOnly ethernetCsmacd
 
 In general SNMP is not very secure at all unless you use SNMP version
 3 which supports authentication and privacy (encryption).  But in any
@@ -35,17 +35,17 @@ default the plugin shows only interfaces identified as
 'ethernetCsmacd'.  To see what interface types your switch, router, or
 other net thing uses you can use this command:
 
-  snmpwalk -c public -v 2c switch 1.3.6.1.2.1.2.2.1.3
+	snmpwalk -c public -v 2c switch 1.3.6.1.2.1.2.2.1.3
 
 It may show something like this:
 
-  IF-MIB::ifType.1 = INTEGER: ethernetCsmacd(6)
-  IF-MIB::ifType.4 = INTEGER: mplsTunnel(150)
-  IF-MIB::ifType.5 = INTEGER: other(1)
-  IF-MIB::ifType.6 = INTEGER: softwareLoopback(24)
-  IF-MIB::ifType.8 = INTEGER: tunnel(131)
-  IF-MIB::ifType.13 = INTEGER: propVirtual(53)
-  IF-MIB::ifType.123 = INTEGER: l2vlan(135)
+	IF-MIB::ifType.1 = INTEGER: ethernetCsmacd(6)
+	IF-MIB::ifType.4 = INTEGER: mplsTunnel(150)
+	IF-MIB::ifType.5 = INTEGER: other(1)
+	IF-MIB::ifType.6 = INTEGER: softwareLoopback(24)
+	IF-MIB::ifType.8 = INTEGER: tunnel(131)
+	IF-MIB::ifType.13 = INTEGER: propVirtual(53)
+	IF-MIB::ifType.123 = INTEGER: l2vlan(135)
 
 propVirtual or l2vlan is usualy used for VLAN interfaces.  Tunnel
 would normaly be for VPNs.  A minor horde of different interface types
@@ -77,22 +77,22 @@ ifOutDiscards.
 
 =head1 MAGIC MARKERS
 
-  #%# family=snmpauto
-  #%# capabilities=snmpconf
+	#%# family=snmpauto
+	#%# capabilities=snmpconf
 
 =head1 VERSION
 
-  $Id: snmp__if_.in 1818 2009-01-03 19:29:30Z janl $
+	$Id: snmp__if_.in 1818 2009-01-03 19:29:30Z janl $
 
 =head1 BUGS
 
 Should support indexing by
 
-  - ifIndex
-  - ifName
-  - ifDescr
-  - ifAlias
-  - mac-address
+	- ifIndex
+	- ifName
+	- ifDescr
+	- ifAlias
+	- mac-address
 
 (and anything else MRTG can index by) in addition to OID-index as now.
 
@@ -189,251 +189,251 @@ my $ifOIDBase          = "1.3.6.1.2.1.2.2.1";		# ifEntry
 my $ifv2OIDBase        = "1.3.6.1.2.1.31.1.1.1";	# ifXEntry
 
 my %ifTypes = (
-    other => 1,
-    regular1822 => 2,
-    hdh1822 => 3,
-    ddnX25 => 4,
-    rfc877x25 => 5,
-    ethernetCsmacd => 6,
-    iso88023Csmacd => 7,
-    iso88024TokenBus => 8,
-    iso88025TokenRing => 9,
-    iso88026Man => 10,
-    starLan => 11,
-    proteon10Mbit => 12,
-    proteon80Mbit => 13,
-    hyperchannel => 14,
-    fddi => 15,
-    lapb => 16,
-    sdlc => 17,
-    ds1 => 18,
-    e1 => 19,
-    basicISDN => 20,
-    primaryISDN => 21,
-    propPointToPointSerial => 22,
-    ppp => 23,
-    softwareLoopback => 24,
-    eon => 25,
-    ethernet3Mbit => 26,
-    nsip => 27,
-    slip => 28,
-    ultra => 29,
-    ds3 => 30,
-    sip => 31,
-    frameRelay => 32,
-    rs232 => 33,
-    para => 34,
-    arcnet => 35,
-    arcnetPlus => 36,
-    atm => 37,
-    miox25 => 38,
-    sonet => 39,
-    x25ple => 40,
-    iso88022llc => 41,
-    localTalk => 42,
-    smdsDxi => 43,
-    frameRelayService => 44,
-    v35 => 45,
-    hssi => 46,
-    hippi => 47,
-    modem => 48,
-    aal5 => 49,
-    sonetPath => 50,
-    sonetVT => 51,
-    smdsIcip => 52,
-    propVirtual => 53,
-    propMultiplexor => 54,
-    ieee80212 => 55,
-    fibreChannel => 56,
-    hippiInterface => 57,
-    frameRelayInterconnect => 58,
-    aflane8023 => 59,
-    aflane8025 => 60,
-    cctEmul => 61,
-    fastEther => 62,
-    isdn => 63,
-    v11 => 64,
-    v36 => 65,
-    g703at64k => 66,
-    g703at2mb => 67,
-    qllc => 68,
-    fastEtherFX => 69,
-    channel => 70,
-    ieee80211 => 71,
-    ibm370parChan => 72,
-    escon => 73,
-    dlsw => 74,
-    isdns => 75,
-    isdnu => 76,
-    lapd => 77,
-    ipSwitch => 78,
-    rsrb => 79,
-    atmLogical => 80,
-    ds0 => 81,
-    ds0Bundle => 82,
-    bsc => 83,
-    async => 84,
-    cnr => 85,
-    iso88025Dtr => 86,
-    eplrs => 87,
-    arap => 88,
-    propCnls => 89,
-    hostPad => 90,
-    termPad => 91,
-    frameRelayMPI => 92,
-    x213 => 93,
-    adsl => 94,
-    radsl => 95,
-    sdsl => 96,
-    vdsl => 97,
-    iso88025CRFPInt => 98,
-    myrinet => 99,
-    voiceEM => 100,
-    voiceFXO => 101,
-    voiceFXS => 102,
-    voiceEncap => 103,
-    voiceOverIp => 104,
-    atmDxi => 105,
-    atmFuni => 106,
-    atmIma => 107,
-    pppMultilinkBundle => 108,
-    ipOverCdlc => 109,
-    ipOverClaw => 110,
-    stackToStack => 111,
-    virtualIpAddress => 112,
-    mpc => 113,
-    ipOverAtm => 114,
-    iso88025Fiber => 115,
-    tdlc => 116,
-    gigabitEthernet => 117,
-    hdlc => 118,
-    lapf => 119,
-    v37 => 120,
-    x25mlp => 121,
-    x25huntGroup => 122,
-    trasnpHdlc => 123,
-    interleave => 124,
-    fast => 125,
-    ip => 126,
-    docsCableMaclayer => 127,
-    docsCableDownstream => 128,
-    docsCableUpstream => 129,
-    a12MppSwitch => 130,
-    tunnel => 131,
-    coffee => 132,
-    ces => 133,
-    atmSubInterface => 134,
-    l2vlan => 135,
-    l3ipvlan => 136,
-    l3ipxvlan => 137,
-    digitalPowerline => 138,
-    mediaMailOverIp => 139,
-    dtm => 140,
-    dcn => 141,
-    ipForward => 142,
-    msdsl => 143,
-    ieee1394 => 144,
-    'if-gsn' => 145,
-    dvbRccMacLayer => 146,
-    dvbRccDownstream => 147,
-    dvbRccUpstream => 148,
-    atmVirtual => 149,
-    mplsTunnel => 150,
-    srp => 151,
-    voiceOverAtm => 152,
-    voiceOverFrameRelay => 153,
-    idsl => 154,
-    compositeLink => 155,
-    ss7SigLink => 156,
-    propWirelessP2P => 157,
-    frForward => 158,
-    rfc1483 => 159,
-    usb => 160,
-    ieee8023adLag => 161,
-    bgppolicyaccounting => 162,
-    frf16MfrBundle => 163,
-    h323Gatekeeper => 164,
-    h323Proxy => 165,
-    mpls => 166,
-    mfSigLink => 167,
-    hdsl2 => 168,
-    shdsl => 169,
-    ds1FDL => 170,
-    pos => 171,
-    dvbAsiIn => 172,
-    dvbAsiOut => 173,
-    plc => 174,
-    nfas => 175,
-    tr008 => 176,
-    gr303RDT => 177,
-    gr303IDT => 178,
-    isup => 179,
-    propDocsWirelessMaclayer => 180,
-    propDocsWirelessDownstream => 181,
-    propDocsWirelessUpstream => 182,
-    hiperlan2 => 183,
-    propBWAp2Mp => 184,
-    sonetOverheadChannel => 185,
-    digitalWrapperOverheadChannel => 186,
-    aal2 => 187,
-    radioMAC => 188,
-    atmRadio => 189,
-    imt => 190,
-    mvl => 191,
-    reachDSL => 192,
-    frDlciEndPt => 193,
-    atmVciEndPt => 194,
-    opticalChannel => 195,
-    opticalTransport => 196,
-    propAtm => 197,
-    voiceOverCable => 198,
-    infiniband => 199,
-    teLink => 200,
-    q2931 => 201,
-    virtualTg => 202,
-    sipTg => 203,
-    sipSig => 204,
-    docsCableUpstreamChannel => 205,
-    econet => 206,
-    pon155 => 207,
-    pon622 => 208,
-    bridge => 209,
-    linegroup => 210,
-    voiceEMFGD => 211,
-    voiceFGDEANA => 212,
-    voiceDID => 213,
-    mpegTransport => 214,
-    sixToFour => 215,
-    gtp => 216,
-    pdnEtherLoop1 => 217,
-    pdnEtherLoop2 => 218,
-    opticalChannelGroup => 219,
-    homepna => 220,
-    gfp => 221,
-    ciscoISLvlan => 222,
-    actelisMetaLOOP => 223,
-    fcipLink => 224,
-    rpr => 225,
-    qam => 226,
-    lmp => 227,
-    cblVectaStar => 228,
-    docsCableMCmtsDownstream => 229,
-    adsl2 => 230,
-    macSecControlledIF => 231,
-    macSecUncontrolledIF => 232,
-    aviciOpticalEther => 233,
-    atmbond => 234,
-    voiceFGDOS => 235,
-    mocaVersion1 => 236,
-    ieee80216WMAN => 237,
-    adsl2plus => 238,
-    dvbRcsMacLayer => 239,
-    dvbTdm => 240,
-    dvbRcsTdma => 241,
-    x86Laps => 242,
-    wwanPP => 243,
-    wwanPP2 => 244
-    );
+		other => 1,
+		regular1822 => 2,
+		hdh1822 => 3,
+		ddnX25 => 4,
+		rfc877x25 => 5,
+		ethernetCsmacd => 6,
+		iso88023Csmacd => 7,
+		iso88024TokenBus => 8,
+		iso88025TokenRing => 9,
+		iso88026Man => 10,
+		starLan => 11,
+		proteon10Mbit => 12,
+		proteon80Mbit => 13,
+		hyperchannel => 14,
+		fddi => 15,
+		lapb => 16,
+		sdlc => 17,
+		ds1 => 18,
+		e1 => 19,
+		basicISDN => 20,
+		primaryISDN => 21,
+		propPointToPointSerial => 22,
+		ppp => 23,
+		softwareLoopback => 24,
+		eon => 25,
+		ethernet3Mbit => 26,
+		nsip => 27,
+		slip => 28,
+		ultra => 29,
+		ds3 => 30,
+		sip => 31,
+		frameRelay => 32,
+		rs232 => 33,
+		para => 34,
+		arcnet => 35,
+		arcnetPlus => 36,
+		atm => 37,
+		miox25 => 38,
+		sonet => 39,
+		x25ple => 40,
+		iso88022llc => 41,
+		localTalk => 42,
+		smdsDxi => 43,
+		frameRelayService => 44,
+		v35 => 45,
+		hssi => 46,
+		hippi => 47,
+		modem => 48,
+		aal5 => 49,
+		sonetPath => 50,
+		sonetVT => 51,
+		smdsIcip => 52,
+		propVirtual => 53,
+		propMultiplexor => 54,
+		ieee80212 => 55,
+		fibreChannel => 56,
+		hippiInterface => 57,
+		frameRelayInterconnect => 58,
+		aflane8023 => 59,
+		aflane8025 => 60,
+		cctEmul => 61,
+		fastEther => 62,
+		isdn => 63,
+		v11 => 64,
+		v36 => 65,
+		g703at64k => 66,
+		g703at2mb => 67,
+		qllc => 68,
+		fastEtherFX => 69,
+		channel => 70,
+		ieee80211 => 71,
+		ibm370parChan => 72,
+		escon => 73,
+		dlsw => 74,
+		isdns => 75,
+		isdnu => 76,
+		lapd => 77,
+		ipSwitch => 78,
+		rsrb => 79,
+		atmLogical => 80,
+		ds0 => 81,
+		ds0Bundle => 82,
+		bsc => 83,
+		async => 84,
+		cnr => 85,
+		iso88025Dtr => 86,
+		eplrs => 87,
+		arap => 88,
+		propCnls => 89,
+		hostPad => 90,
+		termPad => 91,
+		frameRelayMPI => 92,
+		x213 => 93,
+		adsl => 94,
+		radsl => 95,
+		sdsl => 96,
+		vdsl => 97,
+		iso88025CRFPInt => 98,
+		myrinet => 99,
+		voiceEM => 100,
+		voiceFXO => 101,
+		voiceFXS => 102,
+		voiceEncap => 103,
+		voiceOverIp => 104,
+		atmDxi => 105,
+		atmFuni => 106,
+		atmIma => 107,
+		pppMultilinkBundle => 108,
+		ipOverCdlc => 109,
+		ipOverClaw => 110,
+		stackToStack => 111,
+		virtualIpAddress => 112,
+		mpc => 113,
+		ipOverAtm => 114,
+		iso88025Fiber => 115,
+		tdlc => 116,
+		gigabitEthernet => 117,
+		hdlc => 118,
+		lapf => 119,
+		v37 => 120,
+		x25mlp => 121,
+		x25huntGroup => 122,
+		trasnpHdlc => 123,
+		interleave => 124,
+		fast => 125,
+		ip => 126,
+		docsCableMaclayer => 127,
+		docsCableDownstream => 128,
+		docsCableUpstream => 129,
+		a12MppSwitch => 130,
+		tunnel => 131,
+		coffee => 132,
+		ces => 133,
+		atmSubInterface => 134,
+		l2vlan => 135,
+		l3ipvlan => 136,
+		l3ipxvlan => 137,
+		digitalPowerline => 138,
+		mediaMailOverIp => 139,
+		dtm => 140,
+		dcn => 141,
+		ipForward => 142,
+		msdsl => 143,
+		ieee1394 => 144,
+		'if-gsn' => 145,
+		dvbRccMacLayer => 146,
+		dvbRccDownstream => 147,
+		dvbRccUpstream => 148,
+		atmVirtual => 149,
+		mplsTunnel => 150,
+		srp => 151,
+		voiceOverAtm => 152,
+		voiceOverFrameRelay => 153,
+		idsl => 154,
+		compositeLink => 155,
+		ss7SigLink => 156,
+		propWirelessP2P => 157,
+		frForward => 158,
+		rfc1483 => 159,
+		usb => 160,
+		ieee8023adLag => 161,
+		bgppolicyaccounting => 162,
+		frf16MfrBundle => 163,
+		h323Gatekeeper => 164,
+		h323Proxy => 165,
+		mpls => 166,
+		mfSigLink => 167,
+		hdsl2 => 168,
+		shdsl => 169,
+		ds1FDL => 170,
+		pos => 171,
+		dvbAsiIn => 172,
+		dvbAsiOut => 173,
+		plc => 174,
+		nfas => 175,
+		tr008 => 176,
+		gr303RDT => 177,
+		gr303IDT => 178,
+		isup => 179,
+		propDocsWirelessMaclayer => 180,
+		propDocsWirelessDownstream => 181,
+		propDocsWirelessUpstream => 182,
+		hiperlan2 => 183,
+		propBWAp2Mp => 184,
+		sonetOverheadChannel => 185,
+		digitalWrapperOverheadChannel => 186,
+		aal2 => 187,
+		radioMAC => 188,
+		atmRadio => 189,
+		imt => 190,
+		mvl => 191,
+		reachDSL => 192,
+		frDlciEndPt => 193,
+		atmVciEndPt => 194,
+		opticalChannel => 195,
+		opticalTransport => 196,
+		propAtm => 197,
+		voiceOverCable => 198,
+		infiniband => 199,
+		teLink => 200,
+		q2931 => 201,
+		virtualTg => 202,
+		sipTg => 203,
+		sipSig => 204,
+		docsCableUpstreamChannel => 205,
+		econet => 206,
+		pon155 => 207,
+		pon622 => 208,
+		bridge => 209,
+		linegroup => 210,
+		voiceEMFGD => 211,
+		voiceFGDEANA => 212,
+		voiceDID => 213,
+		mpegTransport => 214,
+		sixToFour => 215,
+		gtp => 216,
+		pdnEtherLoop1 => 217,
+		pdnEtherLoop2 => 218,
+		opticalChannelGroup => 219,
+		homepna => 220,
+		gfp => 221,
+		ciscoISLvlan => 222,
+		actelisMetaLOOP => 223,
+		fcipLink => 224,
+		rpr => 225,
+		qam => 226,
+		lmp => 227,
+		cblVectaStar => 228,
+		docsCableMCmtsDownstream => 229,
+		adsl2 => 230,
+		macSecControlledIF => 231,
+		macSecUncontrolledIF => 232,
+		aviciOpticalEther => 233,
+		atmbond => 234,
+		voiceFGDOS => 235,
+		mocaVersion1 => 236,
+		ieee80216WMAN => 237,
+		adsl2plus => 238,
+		dvbRcsMacLayer => 239,
+		dvbTdm => 240,
+		dvbRcsTdma => 241,
+		x86Laps => 242,
+		wwanPP => 243,
+		wwanPP2 => 244
+		);
 
 my %ifTypeByNum = map { $ifTypes{$_} => $_; } keys %ifTypes;
 
@@ -442,388 +442,388 @@ my $snmpinfo;
 my $snmpinfoX;
 
 sub do_collect {
-    # Collect information from SNMP agent
+	# Collect information from SNMP agent
 
-    my $session = Munin::Plugin::SNMP->session();
+	my $session = Munin::Plugin::SNMP->session();
 
-    $snmpinfo = $session->get_hash(
-	-baseoid => $ifOIDBase,
-	-cols    =>
-	{ 2  => 'ifDescr',
-	  # Type: See above
-	  3  => 'ifType',
-	  4  => 'ifMtu',
-	  5  => 'ifSpeed',
-	  6  => 'ifMac',
-	  7  => 'ifAdminStatus',
-	  # Oper: 1) up 2) down 3) testing
-	  # 4) unknown, 5) dormant 6) not present
-	  # 7) lowerLayerDown
-	  8  => 'ifOperStatus',
-	  10 => 'ifInOctets',
-	  11 => 'ifInUcastPkts',
-	  13 => 'ifInDiscards',
-	  14 => 'ifInErrors',
-	  15 => 'ifUnUnknownProtos',
-	  16 => 'ifOutOctets',
-	  18 => 'ifOutNUcastPkts',
-	  19 => 'ifOutDiscards',
-	  20 => 'ifOutErrors',
-	});
+	$snmpinfo = $session->get_hash(
+		-baseoid => $ifOIDBase,
+		-cols    =>
+		{ 2  => 'ifDescr',
+			# Type: See above
+			3  => 'ifType',
+			4  => 'ifMtu',
+			5  => 'ifSpeed',
+			6  => 'ifMac',
+			7  => 'ifAdminStatus',
+			# Oper: 1) up 2) down 3) testing
+			# 4) unknown, 5) dormant 6) not present
+			# 7) lowerLayerDown
+			8  => 'ifOperStatus',
+			10 => 'ifInOctets',
+			11 => 'ifInUcastPkts',
+			13 => 'ifInDiscards',
+			14 => 'ifInErrors',
+			15 => 'ifUnUnknownProtos',
+			16 => 'ifOutOctets',
+			18 => 'ifOutNUcastPkts',
+			19 => 'ifOutDiscards',
+			20 => 'ifOutErrors',
+		});
 
-    # ifXEntry - SNMP v2 and up only - on some devices
-    $snmpinfoX = $session->get_hash(
-	-baseoid => $ifv2OIDBase,
-	-cols    =>
-	{ 2  => 'ifInMulticastPkts',
-	  3  => 'ifInBroadcastPkts',
-	  4  => 'ifOutMulticastPkts',
-	  5  => 'ifOutBroadcastPkts',
-	  6  => 'ifHCInOctets',
-	  10 => 'ifHCOutOctets',
-	  15 => 'ifHighSpeed',
-	  18 => 'ifAlias',
+	# ifXEntry - SNMP v2 and up only - on some devices
+	$snmpinfoX = $session->get_hash(
+		-baseoid => $ifv2OIDBase,
+		-cols    =>
+		{ 2  => 'ifInMulticastPkts',
+			3  => 'ifInBroadcastPkts',
+			4  => 'ifOutMulticastPkts',
+			5  => 'ifOutBroadcastPkts',
+			6  => 'ifHCInOctets',
+			10 => 'ifHCOutOctets',
+			15 => 'ifHighSpeed',
+			18 => 'ifAlias',
 	});
 }
 
 
 
 sub do_preprocess_if {
-    my ($mediatype, $if) = @_;
+	my ($mediatype, $if) = @_;
 
-    my $response = $snmpinfo->{$if}->{ifType} || 1;
+	my $response = $snmpinfo->{$if}->{ifType} || 1;
 
-    if (defined($mediatype)) {
-	if (defined($mediatype->{$response})) {
-	    # This is one of the interesting media types
-	} else {
-	    # This media type is not interesting.  Remove.
-	    delete $snmpinfo->{$if} if exists $snmpinfo->{$if};
-	    delete $snmpinfoX->{$if} if exists $snmpinfoX->{$if};
-	    return;
+	if (defined($mediatype)) {
+		if (defined($mediatype->{$response})) {
+				# This is one of the interesting media types
+		} else {
+				# This media type is not interesting.  Remove.
+				delete $snmpinfo->{$if} if exists $snmpinfo->{$if};
+				delete $snmpinfoX->{$if} if exists $snmpinfoX->{$if};
+				return;
+		}
 	}
-    }
 
-    if (defined ($response = $snmpinfo->{$if}->{ifOperStatus})) {
-	# 1 = up,  2 = down,  7 = lowerLayerDown
-	if ($response == 2 or $response == 7) {
-	    # Fold recognized down states into one.
-	    $response = $snmpinfo->{$if}->{ifOperStatus} = 2;
-	} elsif ($response != 1) {
-	    # This interface is fishy, remove and forget.
-	    delete $snmpinfo->{$if} if exists $snmpinfo->{$if};
-	    delete $snmpinfoX->{$if} if exists $snmpinfoX->{$if};
-	    return;
+	if (defined ($response = $snmpinfo->{$if}->{ifOperStatus})) {
+		# 1 = up,  2 = down,  7 = lowerLayerDown
+		if ($response == 2 or $response == 7) {
+				# Fold recognized down states into one.
+				$response = $snmpinfo->{$if}->{ifOperStatus} = 2;
+		} elsif ($response != 1) {
+				# This interface is fishy, remove and forget.
+				delete $snmpinfo->{$if} if exists $snmpinfo->{$if};
+				delete $snmpinfoX->{$if} if exists $snmpinfoX->{$if};
+				return;
+		}
 	}
-    }
 }
 
 
 sub do_preprocess {
-    my $mediatypes = 'ethernetCsmacd';
+	my $mediatypes = 'ethernetCsmacd';
 
-    if (exists( $ENV{'ifTypeOnly'} )) {
-	$mediatypes = $ENV{'ifTypeOnly'};
-    }
-
-    my @mediatypes = split(/[ ,]+/,$mediatypes);
-
-    # Hash of numerical media types the user finds interesting.
-    my $mediatype={}; 
-
-    if ($mediatypes eq 'ALL') {
-	$mediatype = undef;
-    } else {
-	foreach my $type (@mediatypes) {
-	    if (exists($ifTypes{$type})) {
-		$mediatype->{$ifTypes{$type}} = 1;
-	    } else {
-		die "Unknown media type '$type' specified in ifTypeOnly\n";
-	    }
+	if (exists( $ENV{'ifTypeOnly'} )) {
+		$mediatypes = $ENV{'ifTypeOnly'};
 	}
-    }
 
-    foreach my $if (keys %{$snmpinfo}) {
-	do_preprocess_if($mediatype, $if);
-    }
+	my @mediatypes = split(/[ ,]+/,$mediatypes);
+
+	# Hash of numerical media types the user finds interesting.
+	my $mediatype={};
+
+	if ($mediatypes eq 'ALL') {
+		$mediatype = undef;
+	} else {
+		foreach my $type (@mediatypes) {
+			if (exists($ifTypes{$type})) {
+				$mediatype->{$ifTypes{$type}} = 1;
+			} else {
+				die "Unknown media type '$type' specified in ifTypeOnly\n";
+			}
+		}
+	}
+
+	foreach my $if (keys %{$snmpinfo}) {
+		do_preprocess_if($mediatype, $if);
+	}
 }
 
 
 sub do_config_root {
-    my ($host) = @_;
+	my ($host) = @_;
 
-    print "multigraph if_bytes\n";
-    print "graph_title $host interface traffic\n";
-    print "graph_order recv send\n";
-    print "graph_args --base 1000\n";
-    print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
-    print "graph_category network\n";
-    print "graph_info This graph shows the total traffic for $host\n";
+	print "multigraph if_bytes\n";
+	print "graph_title $host interface traffic\n";
+	print "graph_order recv send\n";
+	print "graph_args --base 1000\n";
+	print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
+	print "graph_category network\n";
+	print "graph_info This graph shows the total traffic for $host\n";
 
-    print "send.info Bits sent/received by $host\n";
-    print "recv.label recv\n";
-    print "recv.type DERIVE\n";
-    print "recv.graph no\n";
-    print "recv.cdef recv,8,*\n";
-    print "recv.min 0\n";
-    print "send.label bps\n";
-    print "send.type DERIVE\n";
-    print "send.negative recv\n";
-    print "send.cdef send,8,*\n";
-    print "send.min 0\n";
+	print "send.info Bits sent/received by $host\n";
+	print "recv.label recv\n";
+	print "recv.type DERIVE\n";
+	print "recv.graph no\n";
+	print "recv.cdef recv,8,*\n";
+	print "recv.min 0\n";
+	print "send.label bps\n";
+	print "send.type DERIVE\n";
+	print "send.negative recv\n";
+	print "send.cdef send,8,*\n";
+	print "send.min 0\n";
 
-    print "multigraph if_errors\n";
-    print "graph_title $host interface errors\n";
-    print "graph_order recv send\n";
-    print "graph_scale no\n";
-    print "graph_args --base 1000\n";
-    print "graph_vlabel errors in (-) / out (+) per \${graph_period}\n";
-    print "graph_category network\n";
-    print "graph_info This graph shows the total errors for $host\n";
+	print "multigraph if_errors\n";
+	print "graph_title $host interface errors\n";
+	print "graph_order recv send\n";
+	print "graph_scale no\n";
+	print "graph_args --base 1000\n";
+	print "graph_vlabel errors in (-) / out (+) per \${graph_period}\n";
+	print "graph_category network\n";
+	print "graph_info This graph shows the total errors for $host\n";
 
-    print "send.info Errors in outgoing/incoming traffic on $host\n";
-    print "recv.label recv\n";
-    print "recv.type DERIVE\n";
-    print "recv.graph no\n";
-    print "recv.min 0\n";
-    print "send.label Errors\n";
-    print "send.type DERIVE\n";
-    print "send.negative recv\n";
-    print "send.min 0\n";
+	print "send.info Errors in outgoing/incoming traffic on $host\n";
+	print "recv.label recv\n";
+	print "recv.type DERIVE\n";
+	print "recv.graph no\n";
+	print "recv.min 0\n";
+	print "send.label Errors\n";
+	print "send.type DERIVE\n";
+	print "send.negative recv\n";
+	print "send.min 0\n";
 }
 
 
 sub do_config_if {
-    my ($host,$version,$if) = @_;
+	my ($host,$version,$if) = @_;
 
-    my $alias = $snmpinfo->{$if}->{ifDescr} || "Interface $if";
+	my $alias = $snmpinfo->{$if}->{ifDescr} || "Interface $if";
 
-    if (! ($alias =~ /\d+/) ) {
-	# If there are no numbers in the $alias add the if index
-	$alias .=" (if $if)";
-    }
-
-    my $extrainfo = '';
-
-    if (defined ($response = $snmpinfo->{$if}->{ifOperStatus})) {
-	if ($response == 2) {
-	    # Interface is down
-	    $extrainfo .= ' The interface is currently down.'
+	if (! ($alias =~ /\d+/) ) {
+		# If there are no numbers in the $alias add the if index
+		$alias .=" (if $if)";
 	}
-    }
 
-    my $warn = undef;
-    my $speed = 0;
+	my $extrainfo = '';
 
-    if (defined ($speed = $snmpinfoX->{$if}->{ifHighSpeed}) and $speed) {
-      # Speed in 1,000,000 bits per second
-      $speed = $speed * 1000000;
-      $warn = $speed / 75 * 100;
+	if (defined ($response = $snmpinfo->{$if}->{ifOperStatus})) {
+		if ($response == 2) {
+			# Interface is down
+			$extrainfo .= ' The interface is currently down.'
+		}
+	}
 
-      my $textspeed = scaleNumber($speed,'bps','',
-				  'The interface speed is %.1f%s%s.');
+	my $warn = undef;
+	my $speed = 0;
 
-      $extrainfo .= ' '.$textspeed if $textspeed;
-    } elsif (defined ($speed = $snmpinfo->{$if}->{ifSpeed}) and $speed) {
-        # Speed in bits pr. second
-	$warn = $speed*100/75;
+	if (defined ($speed = $snmpinfoX->{$if}->{ifHighSpeed}) and $speed) {
+		# Speed in 1,000,000 bits per second
+		$speed = $speed * 1000000;
+		$warn = $speed / 75 * 100;
 
-	my $textspeed = scaleNumber($speed,'bps','',
-				    'The interface speed is %.1f%s%s.');
+		my $textspeed = scaleNumber($speed,'bps','',
+				'The interface speed is %.1f%s%s.');
 
-	$extrainfo .= " ".$textspeed if $textspeed;
-    }
+		$extrainfo .= ' '.$textspeed if $textspeed;
+	} elsif (defined ($speed = $snmpinfo->{$if}->{ifSpeed}) and $speed) {
+		# Speed in bits pr. second
+		$warn = $speed*100/75;
 
-    if (defined ($snmpinfoX->{$if}->{ifHCInOctets})) {
-	# If we get an answer at the 64 bit OID then this switch
-	# supports the extended MIB
+		my $textspeed = scaleNumber($speed,'bps','',
+							'The interface speed is %.1f%s%s.');
 
-	$extrainfo .= " This switch supports 64 bit byte counters and these are used by this plugin.";
-    } else {
-	# If not we only have a 32 bit counter and are lost.
-	$extrainfo .= " NOTE! This switch supports only 32 bit byte counters which makes the plugin unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps.  This means that for interfaces where much traffic is sent this plugin will report false thruputs and cannot be trusted.";
+		$extrainfo .= " ".$textspeed if $textspeed;
+	}
 
-	# unless perhaps the operator can get us snmp version 2c or 3?
-	$extrainfo .= " I notice that you use SNMP version 1 which does not support 64 bit quantities.  You may get better results if you switch to SNMP version 2c or 3.  Please refer to the plugin documentation."
-	  if $version == 1;
-    }
+	if (defined ($snmpinfoX->{$if}->{ifHCInOctets})) {
+		# If we get an answer at the 64 bit OID then this switch
+		# supports the extended MIB
 
-    $response = $snmpinfo->{$if}->{ifType};
-    $extrainfo .= " This is a '".$ifTypeByNum{$response}."' interface.";
+		$extrainfo .= " This switch supports 64 bit byte counters and these are used by this plugin.";
+	} else {
+		# If not we only have a 32 bit counter and are lost.
+		$extrainfo .= " NOTE! This switch supports only 32 bit byte counters which makes the plugin unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps.  This means that for interfaces where much traffic is sent this plugin will report false thruputs and cannot be trusted.";
 
-    print "multigraph if_bytes.if_$if\n";
+		# unless perhaps the operator can get us snmp version 2c or 3?
+		$extrainfo .= " I notice that you use SNMP version 1 which does not support 64 bit quantities.  You may get better results if you switch to SNMP version 2c or 3.  Please refer to the plugin documentation."
+			if $version == 1;
+	}
 
-    print "graph_title Interface $alias traffic\n";
-    print "graph_order recv send\n";
-    print "graph_args --base 1000\n";
-    print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
-    print "graph_category network\n";
-    print "graph_info This graph shows traffic for the \"$alias\" network interface.$extrainfo\n";
-    print "send.info Bits sent/received by this interface.\n";
-    print "recv.label recv\n";
-    print "recv.type DERIVE\n";
-    print "recv.graph no\n";
-    print "recv.cdef recv,8,*\n";
-    print "recv.max $speed\n" if $speed;
-    print "recv.min 0\n";
-    print "recv.warning ", (-$warn), "\n" if defined $warn;
-    print "send.label bps\n";
-    print "send.type DERIVE\n";
-    print "send.negative recv\n";
-    print "send.cdef send,8,*\n";
-    print "send.max $speed\n" if $speed;
-    print "send.min 0\n";
-    print "send.warning $warn\n" if defined $warn;
+	$response = $snmpinfo->{$if}->{ifType};
+	$extrainfo .= " This is a '".$ifTypeByNum{$response}."' interface.";
 
-    print "multigraph if_errors.if_$if\n";
+	print "multigraph if_bytes.if_$if\n";
 
-    print "graph_title Interface $alias errors\n";
-    print "graph_order recv send\n";
-    print "graph_args --base 1000\n";
-    print "graph_scale no\n";
-    print "graph_vlabel errors in (-) / out (+) per \${graph_period}\n";
-    print "graph_category network\n";
-    print "graph_info This graph shows errors for the \"$alias\" network interface.$extrainfo\n";
-    print "send.info Errors in outgoing/incoming traffic on this interface.\n";
-    print "recv.label recv\n";
-    print "recv.type DERIVE\n";
-    print "recv.graph no\n";
-    print "recv.min 0\n";
-    print "recv.warning 1\n";
-    print "send.label errors\n";
-    print "send.type DERIVE\n";
-    print "send.negative recv\n";
-    print "send.min 0\n";
-    print "send.warning 1\n";
+	print "graph_title Interface $alias traffic\n";
+	print "graph_order recv send\n";
+	print "graph_args --base 1000\n";
+	print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
+	print "graph_category network\n";
+	print "graph_info This graph shows traffic for the \"$alias\" network interface.$extrainfo\n";
+	print "send.info Bits sent/received by this interface.\n";
+	print "recv.label recv\n";
+	print "recv.type DERIVE\n";
+	print "recv.graph no\n";
+	print "recv.cdef recv,8,*\n";
+	print "recv.max $speed\n" if $speed;
+	print "recv.min 0\n";
+	print "recv.warning ", (-$warn), "\n" if defined $warn;
+	print "send.label bps\n";
+	print "send.type DERIVE\n";
+	print "send.negative recv\n";
+	print "send.cdef send,8,*\n";
+	print "send.max $speed\n" if $speed;
+	print "send.min 0\n";
+	print "send.warning $warn\n" if defined $warn;
+
+	print "multigraph if_errors.if_$if\n";
+
+	print "graph_title Interface $alias errors\n";
+	print "graph_order recv send\n";
+	print "graph_args --base 1000\n";
+	print "graph_scale no\n";
+	print "graph_vlabel errors in (-) / out (+) per \${graph_period}\n";
+	print "graph_category network\n";
+	print "graph_info This graph shows errors for the \"$alias\" network interface.$extrainfo\n";
+	print "send.info Errors in outgoing/incoming traffic on this interface.\n";
+	print "recv.label recv\n";
+	print "recv.type DERIVE\n";
+	print "recv.graph no\n";
+	print "recv.min 0\n";
+	print "recv.warning 1\n";
+	print "send.label errors\n";
+	print "send.type DERIVE\n";
+	print "send.negative recv\n";
+	print "send.min 0\n";
+	print "send.warning 1\n";
 }
 
 
 sub do_fetch_root {
-    # Construct root graphs fro the if_bytes and if_error spaces
+	# Construct root graphs fro the if_bytes and if_error spaces
 
-    my $in = 0;
-    my $out = 0;
-    my $inerr = 0;
-    my $outerr = 0;
+	my $in = 0;
+	my $out = 0;
+	my $inerr = 0;
+	my $outerr = 0;
 
-    foreach my $if (keys %{$snmpinfo}) {
-	# Do not take interface up or down-ness into account, the
-	# interface counters are not reset when the interface goes up
-	# so we must always account for all interfaces.
+	foreach my $if (keys %{$snmpinfo}) {
+		# Do not take interface up or down-ness into account, the
+		# interface counters are not reset when the interface goes up
+		# so we must always account for all interfaces.
 
-	# But note that do_fetch_if has previously removed all
-	# interfaces with a "fishy" status.  That is a possible bug.
-	# Or a feature.  We'll see.
+		# But note that do_fetch_if has previously removed all
+		# interfaces with a "fishy" status.  That is a possible bug.
+		# Or a feature.  We'll see.
 
-	$in += $snmpinfoX->{$if}->{ifHCInOctets} ||
-	  $snmpinfo->{$if}->{ifInOctets};
+		$in += $snmpinfoX->{$if}->{ifHCInOctets} ||
+			$snmpinfo->{$if}->{ifInOctets};
 
-	$out += $snmpinfoX->{$if}->{ifHCOutOctets} ||
-	  $snmpinfo->{$if}->{ifOutOctets};
+		$out += $snmpinfoX->{$if}->{ifHCOutOctets} ||
+			$snmpinfo->{$if}->{ifOutOctets};
 
-	$inerr += ( $snmpinfo->{$if}->{ifInErrors} || 0 ) +
-	  ( $snmpinfo->{$if}->{ifInDiscards} || 0 );
+		$inerr += ( $snmpinfo->{$if}->{ifInErrors} || 0 ) +
+			( $snmpinfo->{$if}->{ifInDiscards} || 0 );
 
-	$outerr += ( $snmpinfo->{$if}->{ifOutErrors} || 0 ) +
-	  ( $snmpinfo->{$if}->{ifOutDiscards} || 0 );
+		$outerr += ( $snmpinfo->{$if}->{ifOutErrors} || 0 ) +
+			( $snmpinfo->{$if}->{ifOutDiscards} || 0 );
 
-    }
+	}
 
-    print "multigraph if_bytes\n";
-    print "recv.value $in\n";
-    print "send.value $out\n";
+	print "multigraph if_bytes\n";
+	print "recv.value $in\n";
+	print "send.value $out\n";
 
-    print "multigraph if_errors\n";
-    print "recv.value $inerr\n";
-    print "send.value $outerr\n";
+	print "multigraph if_errors\n";
+	print "recv.value $inerr\n";
+	print "send.value $outerr\n";
 }
 
 
 sub do_fetch_if {
-    my($if) = @_;
+	my($if) = @_;
 
-    my $status = $snmpinfo->{$if}->{ifOperStatus} || 1;
+	my $status = $snmpinfo->{$if}->{ifOperStatus} || 1;
 
-    my $response;
+	my $response;
 
-    # 1 means up
-    # 2 means set to down
-    # Everything else we ignore.
+	# 1 means up
+	# 2 means set to down
+	# Everything else we ignore.
 
-    print "multigraph if_bytes.if_$if\n";
+	print "multigraph if_bytes.if_$if\n";
 
-    if ($status == 2) {
-	# Interface is down
-	print "recv.value U\n";
-	print "send.value U\n";
-	print "send.extinfo This interface is currently down.\n";
-	goto if_errors;
-    }
+	if ($status == 2) {
+		# Interface is down
+		print "recv.value U\n";
+		print "send.value U\n";
+		print "send.extinfo This interface is currently down.\n";
+		goto if_errors;
+	}
 
-    if (defined ($response = $snmpinfoX->{$if}->{ifHCInOctets} ||
-		 $snmpinfo->{$if}->{ifInOctets})) {
-	print "recv.value ", $response, "\n";
-    } else {
-	# No response...
-	print "recv.value U\n";
-   }
+	if (defined ($response = $snmpinfoX->{$if}->{ifHCInOctets} ||
+			$snmpinfo->{$if}->{ifInOctets})) {
+		print "recv.value ", $response, "\n";
+	} else {
+		# No response...
+		print "recv.value U\n";
+	}
 
-    if (defined ($response = $snmpinfoX->{$if}->{ifHCOutOctets} ||
-		 $snmpinfo->{$if}->{ifOutOctets})) {
-	print "send.value ", $response, "\n";
-    } else {
-	# No response...
-	print "send.value U\n";
-    }
+	if (defined ($response = $snmpinfoX->{$if}->{ifHCOutOctets} ||
+			$snmpinfo->{$if}->{ifOutOctets})) {
+		print "send.value ", $response, "\n";
+	} else {
+		# No response...
+		print "send.value U\n";
+	}
 
-  if_errors:
+	if_errors:
 
-    print "multigraph if_errors.if_$if\n";
+		print "multigraph if_errors.if_$if\n";
 
-    if ($status == 2) {
-	print "recv.value U\n";
-	print "send.value U\n";
-	print "send.extinfo This interface is down\n";
-	return;
-    }
+		if ($status == 2) {
+			print "recv.value U\n";
+			print "send.value U\n";
+			print "send.extinfo This interface is down\n";
+			return;
+		}
 
-    $response = ( $snmpinfo->{$if}->{ifInErrors} || 0 ) +
-      ( $snmpinfo->{$if}->{ifInDiscards} || 0 );
+		$response = ( $snmpinfo->{$if}->{ifInErrors} || 0 ) +
+			( $snmpinfo->{$if}->{ifInDiscards} || 0 );
 
-    print "recv.value $response\n";
+		print "recv.value $response\n";
 
-    $response = ( $snmpinfo->{$if}->{ifOutErrors} || 0 ) +
-      ( $snmpinfo->{$if}->{ifOutDiscards} || 0 );
+		$response = ( $snmpinfo->{$if}->{ifOutErrors} || 0 ) +
+			( $snmpinfo->{$if}->{ifOutDiscards} || 0 );
 
-    print "send.value $response\n";
+		print "send.value $response\n";
 }
 
 
 sub do_config {
 
-    my ($host,undef,$version) = Munin::Plugin::SNMP->config_session();
+	my ($host,undef,$version) = Munin::Plugin::SNMP->config_session();
 
-    print "host_name $host\n" unless $host eq 'localhost';
+	print "host_name $host\n" unless $host eq 'localhost';
 
-    # Also do overview graph with all ports summarized
-    foreach my $if (sort {$a <=> $b} keys %{$snmpinfo}) {
-	do_config_if($host,$version,$if);
-    }
+	# Also do overview graph with all ports summarized
+	foreach my $if (sort {$a <=> $b} keys %{$snmpinfo}) {
+		do_config_if($host,$version,$if);
+	}
 
-    do_config_root($host);
+	do_config_root($host);
 }
 
 
 sub do_fetch {
-    # Also do overview graph with all ports summarized and collected
-    # meta information in graph_info.
-    # Add to this error graphs and so on.  And meta information about
-    # interface type.
+	# Also do overview graph with all ports summarized and collected
+	# meta information in graph_info.
+	# Add to this error graphs and so on.  And meta information about
+	# interface type.
 
-    foreach my $if (sort {$a <=> $b} keys %{$snmpinfo}) {
-	do_fetch_if($if);
-    }
-    do_fetch_root();
+	foreach my $if (sort {$a <=> $b} keys %{$snmpinfo}) {
+		do_fetch_if($if);
+	}
+	do_fetch_root();
 }
 
 # ############################## MAIN ################################
@@ -832,8 +832,8 @@ do_collect;
 do_preprocess;
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
-    do_config();
-    exit 0;
+	do_config();
+	exit 0;
 }
 
 do_fetch();

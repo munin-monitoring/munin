@@ -17,9 +17,9 @@ up (If I have understood the MIBs rightly :-)
 As a rule SNMP plugins need site specific configuration.  The default
 configuration (shown here) will only work on insecure sites/devices.
 
-   [snmp_*]
-        env.version 2
-        env.community public
+	[snmp_*]
+	env.version 2
+	env.community public
 
 In general SNMP is not very secure at all unless you use SNMP version
 3 which supports authentication and privacy (encryption).  But in any
@@ -52,12 +52,12 @@ contents of the sysUpTimeInstance OID.
 
 =head1 MAGIC MARKERS
 
-  #%# family=snmpauto
-  #%# capabilities=snmpconf
+	#%# family=snmpauto
+	#%# capabilities=snmpconf
 
 =head1 VERSION
 
-  $Id$
+	$Id$
 
 =head1 BUGS
 
@@ -85,14 +85,14 @@ use strict;
 use Munin::Plugin::SNMP;
 
 if (defined $ARGV[0] and $ARGV[0] eq "snmpconf") {
-        print "require 1.3.6.1.2.1.1.3.0 [0-9]\n"; # Number
-        exit 0;
+	print "require 1.3.6.1.2.1.1.3.0 [0-9]\n"; # Number
+	exit 0;
 }
 
 if (defined $ARGV[0] and $ARGV[0] eq "config") {
-    my ($host) = Munin::Plugin::SNMP->config_session();
-        print "host_name $host\n" unless $host eq 'localhost';
-        print "graph_title System Uptime
+	my ($host) = Munin::Plugin::SNMP->config_session();
+	print "host_name $host\n" unless $host eq 'localhost';
+	print "graph_title System Uptime
 graph_args --base 1000 -l 0
 graph_vlabel uptime in days
 graph_category system
@@ -101,18 +101,18 @@ uptime.label uptime
 uptime.info The system uptime itself in days.
 uptime.draw AREA
 ";
-        exit 0;
+	exit 0;
 }
 
 my $session = Munin::Plugin::SNMP->session(-translate =>
-                                           [ -timeticks => 0x0 ]);
+		[ -timeticks => 0x0 ]);
 
 my $uptime = $session->get_single (".1.3.6.1.2.1.1.3.0") || 'U';
 
 print "Retrived uptime is '$uptime'\n" if $Munin::Plugin::SNMP::DEBUG;
 
 if ($uptime ne 'U') {
-    $uptime /= 8640000;
+	$uptime /= 8640000;
 }
 
 print "uptime.value ", $uptime, "\n";

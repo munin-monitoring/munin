@@ -18,9 +18,9 @@ port.  On a router you might get one plugin pr. VLAN interface.
 As a rule SNMP plugins need site specific configuration.  The default
 configuration (shown here) will only work on insecure sites/devices:
 
-   [snmp_*]
+	 [snmp_*]
 	env.version 2
-        env.community public
+				env.community public
 
 In general SNMP is not very secure at all unless you use SNMP version
 3 which supports authentication and privacy (encryption).  But in any
@@ -49,12 +49,12 @@ counters (see FEATURES below).
 
 =head1 MAGIC MARKERS
 
-  #%# family=snmpauto
-  #%# capabilities=snmpconf
+	#%# family=snmpauto
+	#%# capabilities=snmpconf
 
 =head1 VERSION
 
-  $Id$
+	$Id$
 
 =head1 BUGS
 
@@ -131,9 +131,9 @@ if (defined $ARGV[0] and $ARGV[0] eq "snmpconf") {
 }
 
 if ($Munin::Plugin::me =~ /_if_(\d+)$/) {
-    $iface = $1;
+	$iface = $1;
 } else {
-    die "Could not determine interface number from ".$Munin::Plugin::me."\n";
+	die "Could not determine interface number from ".$Munin::Plugin::me."\n";
 }
 
 my $ifEntryDescr       = "1.3.6.1.2.1.2.2.1.2.$iface";
@@ -153,104 +153,103 @@ my ($session, $error);
 $session = Munin::Plugin::SNMP->session();
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
-    my ($host,undef,$version) = Munin::Plugin::SNMP->config_session();
+	my ($host,undef,$version) = Munin::Plugin::SNMP->config_session();
 
-    print "host_name $host\n" unless $host eq 'localhost';
+	print "host_name $host\n" unless $host eq 'localhost';
 
-    my $alias = $session->get_single($ifEntryAlias) ||
-      $session->get_single($ifEntryDescr) ||
-	"Interface $iface";
+	my $alias = $session->get_single($ifEntryAlias) ||
+		$session->get_single($ifEntryDescr) ||
+		"Interface $iface";
 
-    if (! ($alias =~ /\d+/) ) {
-	# If there are no numbers in the $alias add the if index
-	$alias .=" (if $iface)";
-    }
-
-    my $extrainfo = '';
-
-    if (defined ($response = $session->get_single($ifEntryStatus))) {
-	if ($response == 2) {
-	    # Interface is down
-	    $extrainfo .= ' The interface is currently down.'
+	if (! ($alias =~ /\d+/) ) {
+		# If there are no numbers in the $alias add the if index
+		$alias .=" (if $iface)";
 	}
-    }
 
-    my $warn = undef;
-    my $speed = undef;
+	my $extrainfo = '';
 
-    if (defined ($speed = $session->get_single($ifEntrySpeed))) {
-	$warn = $speed/8;
+	if (defined ($response = $session->get_single($ifEntryStatus))) {
+		if ($response == 2) {
+			# Interface is down
+			$extrainfo .= ' The interface is currently down.'
+		}
+	}
 
-	# Warn at 1/8th of actuall speed?  Or just remove warning?
-	# Tempted to set warning at 80%. 80% over 5 minutes is pretty
-	# busy.
+	my $warn = undef;
+	my $speed = undef;
 
-	my $textspeed = scaleNumber($speed,,'bps','',
-				   'The interface speed is %.1f%s%s.');
+	if (defined ($speed = $session->get_single($ifEntrySpeed))) {
+		$warn = $speed/8;
 
-	$extrainfo .= " ".$textspeed if $textspeed;
-    }
+		# Warn at 1/8th of actuall speed?  Or just remove warning?
+		# Tempted to set warning at 80%. 80% over 5 minutes is pretty
+		# busy.
 
-    if (defined ($session->get_single($ifEntryIn64Octets))) {
+		my $textspeed = scaleNumber($speed,,'bps','',
+			 'The interface speed is %.1f%s%s.');
 
-	# If we get an answer at the 64 bit OID then this switch
-	# supports the extended MIB
+		$extrainfo .= " ".$textspeed if $textspeed;
+	}
 
-	$extrainfo .= " This switch supports 64 bit byte counters and these are used by this plugin.";
-    } else {
-	# If not we only have a 32 bit counter and are lost.
-	$extrainfo .= " NOTE! This switch supports only 32 bit byte counters which makes the plugin unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps.  This means that for interfaces where much traffic is sent this plugin will report false thruputs and cannot be trusted.";
+	if (defined ($session->get_single($ifEntryIn64Octets))) {
+		# If we get an answer at the 64 bit OID then this switch
+		# supports the extended MIB
+		$extrainfo .= " This switch supports 64 bit byte counters and these are used by this plugin.";
 
-	# unless perhaps the operator can get us snmp version 2c or 3?
-	$extrainfo .= " I notice that you use SNMP version 1 which does not support 64 bit quantities.  You may get better results if you switch to SNMP version 2c or 3.  Please refer to the plugin documentation."
-	  if $version == 1;
-    }
+	} else {
+		# If not we only have a 32 bit counter and are lost.
+		$extrainfo .= " NOTE! This switch supports only 32 bit byte counters which makes the plugin unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps.  This means that for interfaces where much traffic is sent this plugin will report false thruputs and cannot be trusted.";
 
-    print "graph_title Interface $alias traffic\n";
-    print "graph_order recv send\n";
-    print "graph_args --base 1000\n";
-    print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
-    print "graph_category network\n";
-    print "graph_info This graph shows traffic for the \"$alias\" network interface.$extrainfo\n";
-    print "send.info Bits sent/received by this interface.\n";
-    print "recv.label recv\n";
-    print "recv.type DERIVE\n";
-    print "recv.graph no\n";
-    print "recv.cdef recv,8,*\n";
-    print "recv.max $speed\n";
-    print "recv.min 0\n";
-    print "recv.warning ", (-$warn), "\n" if defined $warn;
-    print "send.label bps\n";
-    print "send.type DERIVE\n";
-    print "send.negative recv\n";
-    print "send.cdef send,8,*\n";
-    print "send.max $speed\n";
-    print "send.min 0\n";
-    print "send.warning $warn\n" if defined $warn;
-    exit 0;
+		# unless perhaps the operator can get us snmp version 2c or 3?
+		$extrainfo .= " I notice that you use SNMP version 1 which does not support 64 bit quantities.  You may get better results if you switch to SNMP version 2c or 3.  Please refer to the plugin documentation."
+			if $version == 1;
+	}
+
+	print "graph_title Interface $alias traffic\n";
+	print "graph_order recv send\n";
+	print "graph_args --base 1000\n";
+	print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
+	print "graph_category network\n";
+	print "graph_info This graph shows traffic for the \"$alias\" network interface.$extrainfo\n";
+	print "send.info Bits sent/received by this interface.\n";
+	print "recv.label recv\n";
+	print "recv.type DERIVE\n";
+	print "recv.graph no\n";
+	print "recv.cdef recv,8,*\n";
+	print "recv.max $speed\n";
+	print "recv.min 0\n";
+	print "recv.warning ", (-$warn), "\n" if defined $warn;
+	print "send.label bps\n";
+	print "send.type DERIVE\n";
+	print "send.negative recv\n";
+	print "send.cdef send,8,*\n";
+	print "send.max $speed\n";
+	print "send.min 0\n";
+	print "send.warning $warn\n" if defined $warn;
+	exit 0;
 }
 
 if (defined ($response = $session->get_single($ifEntryStatus))) {
-    if ($response == 2) {
-	# Interface is down
-	print "recv.value U\n";
-	print "send.value U\n";
-	exit 0;
-    }
+	if ($response == 2) {
+		# Interface is down
+		print "recv.value U\n";
+		print "send.value U\n";
+		exit 0;
+	}
 }
 
 if (defined ($response = $session->get_single($ifEntryIn64Octets) ||
-	                 $session->get_single($ifEntryInOctets))) {
-    print "recv.value ", $response, "\n";
+		$session->get_single($ifEntryInOctets))) {
+	print "recv.value ", $response, "\n";
 } else {
-    # No response...
-    print "recv.value U\n";
+	# No response...
+	print "recv.value U\n";
 }
 
 if (defined ($response = $session->get_single($ifEntryOut64Octets) ||
-	                 $session->get_single($ifEntryOutOctets))) {
-    print "send.value ", $response, "\n";
+		 $session->get_single($ifEntryOutOctets))) {
+	print "send.value ", $response, "\n";
 } else {
-    # No response...
-    print "send.value U\n";
+	# No response...
+	print "send.value U\n";
 }

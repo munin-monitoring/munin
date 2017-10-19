@@ -49,64 +49,64 @@ my $fanDisabled = 2;
 my $fanUnavailable = 99;
 
 if (defined $ARGV[0] and $ARGV[0] eq 'snmpconf') {
-    print "require $fanBase.\n";
-    # Require known, enabled and available fans
-    print "require $fanBase.$fanStatus. ^[3-9]|[1-8][0-9]|9[0-8]\$\n";
+	print "require $fanBase.\n";
+	# Require known, enabled and available fans
+	print "require $fanBase.$fanStatus. ^[3-9]|[1-8][0-9]|9[0-8]\$\n";
 
-    exit 0;
+	exit 0;
 }
 
 
 my ($session, $error) = Munin::Plugin::SNMP->session();
 
 if ($error) {
-    die "# Error: $error\n";
+	die "# Error: $error\n";
 }
 
 my $fans =  $session->get_hash(-baseoid => $fanBase,
-				-cols    => { $fanCabinetId          => 'cabinet',
-					      $fanNumber             => 'number',
-					      $fanStatus             => 'status',
-					      $fanPurpose            => 'purpose',
-					      $fanCurrentSpeed       => 'value',
-					      $fanDesignation        => 'label',
-					    },
-			       ) or die $session->error();
+	-cols    => { $fanCabinetId          => 'cabinet',
+			$fanNumber             => 'number',
+			$fanStatus             => 'status',
+			$fanPurpose            => 'purpose',
+			$fanCurrentSpeed       => 'value',
+			$fanDesignation        => 'label',
+	},
+) or die $session->error();
 
 for my $key (keys %$fans) {
-    my $fan = $fans->{$key};
-    $fan->{info} = "Cabinet $fan->{cabinet} fan $fan->{number}";
-    # Delete sensors with unknown, disabled or unavailable status
-    delete $fans->{$key}
-      if $fan->{status} == $fanUnknown ||
-	$fan->{status} == $fanDisabled ||
-	$fan->{status} == $fanUnavailable;
+	my $fan = $fans->{$key};
+	$fan->{info} = "Cabinet $fan->{cabinet} fan $fan->{number}";
+	# Delete sensors with unknown, disabled or unavailable status
+	delete $fans->{$key}
+			if $fan->{status} == $fanUnknown ||
+			$fan->{status} == $fanDisabled ||
+			$fan->{status} == $fanUnavailable;
 }
 
 if (defined $ARGV[0] and $ARGV[0] eq 'config') {
-    print <<EOM;
+	print <<EOM;
 graph_title Fans
 graph_args -l 0
 graph_vlabel RPM
 graph_category sensors
 EOM
-    print 'graph_order ', join(' ', map { get_id($_) } oid_lex_sort keys %$fans), "\n";
-    print 'host_name ', $session->hostname(), "\n"
-      unless $session->hostname eq 'localhost';
-      
-    for my $fan (keys %$fans) {
-	my $id = get_id($fan);
-	for my $key (qw(label info)) {
-	    print "$id.$key $fans->{$fan}{$key}\n";
+	print 'graph_order ', join(' ', map { get_id($_) } oid_lex_sort keys %$fans), "\n";
+	print 'host_name ', $session->hostname(), "\n"
+			unless $session->hostname eq 'localhost';
+
+	for my $fan (keys %$fans) {
+		my $id = get_id($fan);
+		for my $key (qw(label info)) {
+			print "$id.$key $fans->{$fan}{$key}\n";
+		}
+		print "$id.type GAUGE\n";
 	}
-	print "$id.type GAUGE\n";
-    }
 } else {
-    print get_id($_), '.value ', $fans->{$_}{value}, "\n"
-      for keys %$fans;
+	print get_id($_), '.value ', $fans->{$_}{value}, "\n"
+			for keys %$fans;
 }
 
 sub get_id {
-    (my $id = shift) =~ tr/\./_/;
-    return 'fan'.$id;
+	(my $id = shift) =~ tr/\./_/;
+	return 'fan'.$id;
 }

@@ -19,9 +19,9 @@ running Microsoft Windows.
 As a rule SNMP plugins need site specific configuration.  The default
 configuration (shown here) will only work on insecure sites/devices.
 
-   [snmp_*]
+	[snmp_*]
 	env.version 2
-        env.community public
+	env.community public
 
 In general SNMP is not very secure at all unless you use SNMP version
 3 which supports authentication and privacy (encryption).  But in any
@@ -41,12 +41,12 @@ uses the contents of the hrSWRunPerfMem column of hrSWRunPerfTable.
 
 =head1 MAGIC MARKERS
 
-  #%# family=snmpauto
-  #%# capabilities=snmpconf
+	#%# family=snmpauto
+	#%# capabilities=snmpconf
 
 =head1 VERSION
 
-  $Id$
+	$Id$
 
 =head1 BUGS
 
@@ -100,11 +100,10 @@ my $result = $session->get_table(-baseoid => '1.3.6.1.2.1.25.5.1.1.2');
 my $used = 0;
 
 foreach my $val (values %$result) {
-    $used += ($val * 1024);
+	$used += ($val * 1024);
 }
 
 my $total = $session->get_single('1.3.6.1.2.1.25.2.2.0') * 1024;
 
 print "used.value $used\n";
 print "total.value $total\n";
-

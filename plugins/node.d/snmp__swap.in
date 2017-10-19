@@ -33,10 +33,10 @@ use Munin::Plugin::SNMP;
 my $response;
 
 if (defined $ARGV[0] and $ARGV[0] eq "snmpconf") {
-    # HOST-RESOURCES-MIB::hrStorageType 
-    # HOST-RESOURCES-TYPES::hrStorageVirtualMemory
-    print "require 1.3.6.1.2.1.25.2.3.1.2. 1.3.6.1.2.1.25.2.1.3\n"; 
-    exit 0;
+	# HOST-RESOURCES-MIB::hrStorageType
+	# HOST-RESOURCES-TYPES::hrStorageVirtualMemory
+	print "require 1.3.6.1.2.1.25.2.3.1.2. 1.3.6.1.2.1.25.2.1.3\n";
+	exit 0;
 }
 
 my $session = Munin::Plugin::SNMP->session();
@@ -52,27 +52,26 @@ my $swapsize = 0;
 my $swapused = 0;
 
 foreach my $swap (keys %$swap_d) {
-    $swapsize += $session->get_single($hrStorageSize . $swap);
-    $swapused += $session->get_single($hrStorageUsed . $swap);
+	$swapsize += $session->get_single($hrStorageSize . $swap);
+	$swapused += $session->get_single($hrStorageUsed . $swap);
 }
 
 if (defined $ARGV[0] and $ARGV[0] eq "config") {
-    my ($host) = Munin::Plugin::SNMP->config_session();
-    print "host_name $host\n" unless $host eq 'localhost';
-    print "graph_title Virtual memory usage\n";
-    if ($swapsize > 0) {
-	print "graph_args -l 0 --base 1024 --upper-limit $swapsize\n";
-    } else {
-	print "graph_args -l 0 --base 1024\n";
-    }
-    print "graph_vlabel Bytes\n";
-    print "graph_category disk\n";
-    print "graph_info This graph shows swap usage in bytes.\n";
-    print "swap.label swap\n";
-    print "swap.type DERIVE\n";
-    print "swap.min 0\n";
-    exit 0;
+	my ($host) = Munin::Plugin::SNMP->config_session();
+	print "host_name $host\n" unless $host eq 'localhost';
+	print "graph_title Virtual memory usage\n";
+	if ($swapsize > 0) {
+		print "graph_args -l 0 --base 1024 --upper-limit $swapsize\n";
+	} else {
+		print "graph_args -l 0 --base 1024\n";
+	}
+	print "graph_vlabel Bytes\n";
+	print "graph_category disk\n";
+	print "graph_info This graph shows swap usage in bytes.\n";
+	print "swap.label swap\n";
+	print "swap.type DERIVE\n";
+	print "swap.min 0\n";
+	exit 0;
 }
 
 print "swap.value $swapused\n";
-

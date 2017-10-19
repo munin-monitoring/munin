@@ -49,66 +49,66 @@ my $tempSensorDisabled = 2;
 my $tempSensorUnavailable = 99;
 
 if (defined $ARGV[0] and $ARGV[0] eq 'snmpconf') {
-    print "require $tempBase.\n";
-    # Require known, enabled and available sensors
-    print "require $tempBase.$tempSensorStatus. ^[3-9]|[1-8][0-9]|9[0-8]\$\n";
+	print "require $tempBase.\n";
+	# Require known, enabled and available sensors
+	print "require $tempBase.$tempSensorStatus. ^[3-9]|[1-8][0-9]|9[0-8]\$\n";
 
-    exit 0;
+	exit 0;
 }
 
 
 my ($session, $error) = Munin::Plugin::SNMP->session();
 
 if ($error) {
-    die "# Error: $error\n";
+	die "# Error: $error\n";
 }
 
 my $temps =  $session->get_hash(-baseoid => $tempBase,
-				-cols    => { $tempCabinetId          => 'cabinet',
-					      $tempSensorNumber       => 'number',
-					      $tempSensorStatus       => 'status',
-					      $tempSensorPurpose      => 'purpose',
-					      $tempUpperWarningLevel  => 'warning',
-					      $tempUpperCriticalLevel => 'critical',
-					      $tempCurrentValue       => 'value',
-					      $tempSensorDesignation  => 'label',
-					    },
-			       ) or die $session->error();
+		-cols    => { $tempCabinetId          => 'cabinet',
+			$tempSensorNumber       => 'number',
+			$tempSensorStatus       => 'status',
+			$tempSensorPurpose      => 'purpose',
+			$tempUpperWarningLevel  => 'warning',
+			$tempUpperCriticalLevel => 'critical',
+			$tempCurrentValue       => 'value',
+			$tempSensorDesignation  => 'label',
+		},
+) or die $session->error();
 
 for my $key (keys %$temps) {
-    my $temp = $temps->{$key};
-    $temp->{info} = "Cabinet $temp->{cabinet} sensor $temp->{number}";
-    # Delete sensors with status unknown, disabled or unavailable
-    delete $temps->{$key}
-      if $temp->{status} == $tempSensorUnknown ||
-	$temp->{status} == $tempSensorDisabled ||
-	$temp->{status} == $tempSensorUnavailable;
+	my $temp = $temps->{$key};
+	$temp->{info} = "Cabinet $temp->{cabinet} sensor $temp->{number}";
+	# Delete sensors with status unknown, disabled or unavailable
+	delete $temps->{$key}
+		if $temp->{status} == $tempSensorUnknown ||
+		$temp->{status} == $tempSensorDisabled ||
+		$temp->{status} == $tempSensorUnavailable;
 }
 
 if (defined $ARGV[0] and $ARGV[0] eq 'config') {
-    print <<EOM;
+	print <<EOM;
 graph_title Temperatures
 graph_args -l 0
 graph_vlabel degrees Celcius
 graph_category sensors
 EOM
-    print 'graph_order ', join(' ', map { get_id($_) } oid_lex_sort keys %$temps), "\n";
-    print 'host_name ', $session->hostname(), "\n"
-      unless $session->hostname eq 'localhost';
-      
-    for my $sensor (keys %$temps) {
-	my $id = get_id($sensor);
-	for my $key (qw(label warning critical info)) {
-	    print "$id.$key $temps->{$sensor}->{$key}\n";
+	print 'graph_order ', join(' ', map { get_id($_) } oid_lex_sort keys %$temps), "\n";
+	print 'host_name ', $session->hostname(), "\n"
+		unless $session->hostname eq 'localhost';
+
+	for my $sensor (keys %$temps) {
+		my $id = get_id($sensor);
+		for my $key (qw(label warning critical info)) {
+			print "$id.$key $temps->{$sensor}->{$key}\n";
+		}
+		print "$id.type GAUGE\n";
 	}
-	print "$id.type GAUGE\n";
-    }
 } else {
-    print get_id($_), '.value ', $temps->{$_}{value}, "\n"
-      for keys %$temps;
+	print get_id($_), '.value ', $temps->{$_}{value}, "\n"
+		for keys %$temps;
 }
 
 sub get_id {
-    (my $id = shift) =~ tr/\./_/;
-    return 'temp'.$id;
+	(my $id = shift) =~ tr/\./_/;
+	return 'temp'.$id;
 }
