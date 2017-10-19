@@ -18,9 +18,9 @@ port.  On a router you might get one plugin pr. VLAN interface.
 As a rule SNMP plugins need site specific configuration.  The default
 configuration (shown here) will only work on insecure sites/devices:
 
-	 [snmp_*]
+	[snmp_*]
 	env.version 2
-				env.community public
+	env.community public
 
 In general SNMP is not very secure at all unless you use SNMP version
 3 which supports authentication and privacy (encryption).  But in any
