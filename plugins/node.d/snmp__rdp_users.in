@@ -19,9 +19,9 @@ be monitored.
 As a rule SNMP plugins need site specific configuration.  The default
 configuration (shown here) will only work on insecure sites/devices.
 
-   [snmp_*]
+	[snmp_*]
 	env.version 2
-        env.community public
+	env.community public
 
 In general SNMP is not very secure at all unless you use SNMP version
 3 which supports authentication and privacy (encryption).  But in any
@@ -41,12 +41,12 @@ reports the hrSWRunName column of hrSWRunTable.
 
 =head1 MAGIC MARKERS
 
-  #%# family=snmpauto
-  #%# capabilities=snmpconf
+	#%# family=snmpauto
+	#%# capabilities=snmpconf
 
 =head1 VERSION
 
-  $Id$
+	$Id$
 
 =head1 BUGS
 
@@ -56,7 +56,7 @@ a thing as a non-Windows RDP server?
 
 =head1 AUTHOR
 
-Copyright (C) 2004 Rune Nordbøe Skillingstad
+Copyright (C) 2004 Rune Nordbï¿½e Skillingstad
 
 Documented and updated to use Munin::Plugin::SNMP by Matthew Boyle.
 
@@ -78,12 +78,12 @@ if (defined $ARGV[0] and $ARGV[0] eq 'snmpconf') {
 }
 
 if (defined $ARGV[0] and $ARGV[0] eq "config") {
-    my ($host) = Munin::Plugin::SNMP->config_session();
+	my ($host) = Munin::Plugin::SNMP->config_session();
 
-    print "host_name $host\n" unless $host eq 'localhost';
-    print <<"EOC";
+	print "host_name $host\n" unless $host eq 'localhost';
+	print <<"EOC";
 graph_title Number of RDP users
-graph_args --base 1000 -l 0 
+graph_args --base 1000 -l 0
 graph_vlabel number of RDP users
 graph_scale no
 graph_category system
@@ -92,7 +92,7 @@ users.label users
 users.draw LINE2
 users.info Number of users logged in.
 EOC
-    exit 0;
+	exit 0;
 }
 
 my($session, $error) = Munin::Plugin::SNMP->session();
@@ -100,7 +100,6 @@ die "Failed to create session: $error" unless $session;
 
 my $process_names = $session->get_entries(-columns => [ $oid ]);
 my $user_count = $process_names ? grep /^rdpclip\.exe$/i, values %$process_names
-                                : 'U';
+																: 'U';
 
 print "users.value ", $user_count, "\n";
-
