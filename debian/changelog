@@ -1,3 +1,9 @@
+munin (2.0.34-1) unstable; urgency=medium
+
+  * New upstream bugfix release. (Closes: #856536)
+
+ -- Holger Levsen <holger@debian.org>  Mon, 23 Oct 2017 13:05:25 +0200
+
 munin (2.0.33-4) unstable; urgency=medium
 
   * Add systemd-sysv as alternate dependency to cron | cron-daemon. Thanks to
