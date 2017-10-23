@@ -1,5 +1,33 @@
 -*- text -*-
 
+munin-2.0.34, 2017-10-20
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #804, DH:856536
+
+------------------
+Detailed Changelog
+------------------
+
+Christian Gut (2):
+      Add support for IBM i
+      fix whitespace
+
+Stefan Agner (1):
+      Update lighttpd.rst
+
+Steve Schnepp (1):
+      m/Utils: always use munin_read_storable()
+
+pir1981 (1):
+      Update nginx.rst
+
+
 munin-2.0.33, 2017-03-02
 
 -------
