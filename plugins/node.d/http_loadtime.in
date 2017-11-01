@@ -44,15 +44,13 @@ if [ "$requisites" == "true" ]; then
   wget_opt="$wget_opt --page-requisites"
 fi
 
-time_bin=$(which time)
 
 if [ "$1" = "autoconf" ]; then
     result="yes"
-    command -v "$time_bin" 2>&1 >/dev/null || result=1
     command -v tr        2>&1 >/dev/null || result=1
     command -v wget      2>&1 >/dev/null || result=1
     if [ "$result" != "yes" ]; then
-       echo "no (programs time, wget and tr required)"
+       echo "no (programs wget and tr required)"
        exit 0
     fi
 
@@ -99,7 +97,9 @@ cd "$TEMPO_DIR" || exit 1
 
 for uri in $urls
 do
-    loadtime=$($time_bin --quiet -f "%e" wget $wget_opt "$uri" 2>&1)
+    start=$(date +%s.%N)
+    wget $wget_opt "$uri" 2>&1
+    loadtime=$(echo "$start" "$(date +%s.%N)" | awk '{ print($2 - $1); }')
 
     echo "$(escapeUri "$uri").value $loadtime"
 done
