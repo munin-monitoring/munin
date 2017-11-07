@@ -32,7 +32,12 @@ proc="read write commit open open_confirm open_noattr open_downgrade close setat
 
 if [ "$1" = "autoconf" ]; then
 	if [ -f "$NFS" ]; then
-		echo yes
+		grep -q proc4 "$NFS"
+		if [ $? = 0 ]; then
+			echo yes
+		else
+			echo "no (no proc4 in $NFS)"
+		fi
 		exit 0
 	else
 		echo "no (no $NFS)"
