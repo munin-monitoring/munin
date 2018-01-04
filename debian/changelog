@@ -1,3 +1,9 @@
+munin (2.0.34-3) UNRELEASED; urgency=medium
+
+  * Use https:// URL for Vcs-Git: header in debian/control.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 04 Jan 2018 15:18:54 +0000
+
 munin (2.0.34-2) unstable; urgency=medium
 
   * Partly revert f1f48dee so that directories are again setup correctly
