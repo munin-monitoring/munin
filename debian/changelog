@@ -1,3 +1,10 @@
+munin (2.999.6-6) UNRELEASED; urgency=medium
+
+  * debian/control:
+    - switch Git-Vcs: to https and specify -b debian-experimental.
+
+ -- Holger Levsen <holger@debian.org>  Sat, 06 Jan 2018 00:05:15 +0000
+
 munin (2.999.6-5) experimental; urgency=medium
 
   * Add systemd-sysv as alternate dependency to cron | cron-daemon. Thanks to

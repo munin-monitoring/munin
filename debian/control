@@ -50,7 +50,7 @@ Build-Depends-Indep:
 Build-Depends: debhelper (>=10.2.5~)
 Standards-Version: 4.1.1
 Homepage: http://munin-monitoring.org
-Vcs-Git: git://anonscm.debian.org/collab-maint/munin.git
+Vcs-Git: https://anonscm.debian.org/git/collab-maint/munin.git -b debian-experimental
 Vcs-Browser: https://anonscm.debian.org/git/collab-maint/munin.git
 
 Package: munin-node
