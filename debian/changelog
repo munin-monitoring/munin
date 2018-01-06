@@ -1,4 +1,4 @@
-munin (2.999.6-6) UNRELEASED; urgency=medium
+munin (2.999.6-6) experimental; urgency=medium
 
   * debian/control:
     - switch Git-Vcs: to https and specify -b debian-experimental.
@@ -8,7 +8,7 @@ munin (2.999.6-6) UNRELEASED; urgency=medium
   * debian/munin-plugins-*.triggers: use explicit activate-await triggers for
     to activate the munin-node trigger.
 
- -- Holger Levsen <holger@debian.org>  Sat, 06 Jan 2018 00:05:15 +0000
+ -- Holger Levsen <holger@debian.org>  Sat, 06 Jan 2018 21:48:02 +0000
 
 munin (2.999.6-5) experimental; urgency=medium
 
