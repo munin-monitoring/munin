@@ -3,6 +3,9 @@ munin (2.999.6-6) UNRELEASED; urgency=medium
   * debian/control:
     - switch Git-Vcs: to https and specify -b debian-experimental.
     - Bump Standards-Version to 4.1.3.
+  * debian/munin-node.triggers: use explicit interest-await triggers for
+    perl-major-upgrades and for munin-node (which gets activated by
+    munin-plugin-* trigger activates.)
 
  -- Holger Levsen <holger@debian.org>  Sat, 06 Jan 2018 00:05:15 +0000
 

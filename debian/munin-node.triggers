@@ -1,2 +1,2 @@
-interest munin-plugins
-interest perl-major-upgrade
+interest-await munin-plugins
+interest-await perl-major-upgrade
