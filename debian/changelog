@@ -1,6 +1,8 @@
 munin (2.0.34-3) UNRELEASED; urgency=medium
 
-  * Use https:// URL for Vcs-Git: header in debian/control.
+  * debian/control:
+    - use https:// URL for Vcs-Git: header.
+    - specify -b debian for Vcs-Git:.
 
  -- Holger Levsen <holger@debian.org>  Thu, 04 Jan 2018 15:18:54 +0000
 
