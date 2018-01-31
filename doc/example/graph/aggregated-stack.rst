@@ -137,7 +137,7 @@ by ``munin-update`` and one *virtual* node for the aggregate graphs.
   better recognition of small values.
 
 * 28: Cut off negative values which can arise at arithmetic overflow for data type ``DERIVE``.
-  `See manual of rrdgraph <http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#IDERIVE>`_
+  `See manual of rrdgraph <https://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#IDERIVE>`_
 
 * 29: This directive is the key that opens the door for
   loaning data sources from other nodes and plugins.

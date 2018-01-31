@@ -490,10 +490,10 @@ Data fetch run
  _dev_hda1.value 83
 
 
-.. _cdeftutorial: http://oss.oetiker.ch/rrdtool/tut/cdeftutorial.en.html
+.. _cdeftutorial: https://oss.oetiker.ch/rrdtool/tut/cdeftutorial.en.html
 
-.. _rrdgraph: http://oss.oetiker.ch/rrdtool/doc/rrdgraph_graph.en.html
+.. _rrdgraph: https://oss.oetiker.ch/rrdtool/doc/rrdgraph_graph.en.html
 
-.. _rrdcreate: http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html
+.. _rrdcreate: https://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html
 
 .. _FAQ: http://munin-monitoring.org/wiki/faq
