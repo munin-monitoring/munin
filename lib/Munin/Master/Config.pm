@@ -462,8 +462,8 @@ sub _split_config_line_ok {
 
     if ($host =~ /[^-A-Za-z0-9\.]/) {
 	# Since we're not quite sure what context we're called in we'll report the error message more times rather than fewer.
-	ERROR "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.";
-	croak "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.\n";
+	ERROR "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.";
+	croak "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.\n";
     }
 
     return ($groups,$host,$key);
