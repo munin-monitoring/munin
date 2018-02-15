@@ -9,7 +9,7 @@ addons:
   apt:
     packages:
       - devscripts
-      - libcairo2-dev
+      - libpango1.0-dev
       - libdbd-pg-perl
       - libdbd-sqlite3-perl
       - libdbi-perl
