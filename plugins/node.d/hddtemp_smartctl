@@ -255,13 +255,13 @@ foreach my $drive (@drives) {
   }
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
     print "$drive.value $1\n";
-  } elsif ($output =~ /^(194 Temperature_Celsius.*)/m) {
+  } elsif ($output =~ /^(194 Temperature_(Celsius|Internal).*)/m) {
     my @F = split /\s+/, $1;
     print "$drive.value $F[9]\n";
   } elsif ($output =~ /^(231 Temperature_Celsius.*)/m) {
     my @F = split ' ', $1;
     print "$drive.value $F[9]\n";
-  } elsif ($output =~ /^(190 Airflow_Temperature_Cel.*)/m) {
+  } elsif ($output =~ /^(190 (Airflow_Temperature_Cel|Temperature_Case).*)/m) {
     my @F = split ' ', $1;
     print "$drive.value $F[9]\n";
   } else {
