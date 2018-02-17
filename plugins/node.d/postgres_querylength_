@@ -94,6 +94,7 @@ my $pg = Munin::Plugin::Pgsql->new(
         ]
     ],
     wildcardfilter => " AND datname=?",
+    paramdatabase  => 1,
     configquery    => [
         "VALUES ('query','Oldest query'),('transaction','Oldest transaction')",
         [8.2, "VALUES ('query','Oldest query')"],

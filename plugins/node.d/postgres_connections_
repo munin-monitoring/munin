@@ -129,6 +129,7 @@ my $pg = Munin::Plugin::Pgsql->new(
                 ORDER BY 1" ]
     ],
     wildcardfilter => " AND datname=?",
+    paramdatabase  => 1,
     configquery    => [
         "VALUES ('active','Active'),('waiting','Waiting for lock'),('idle','Idle'),('idletransaction','Idle in transaction'),('unknown','Unknown')",
         [
