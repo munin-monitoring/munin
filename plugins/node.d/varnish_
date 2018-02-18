@@ -944,8 +944,13 @@ sub xml_characters {
 # Note that 'flag' is translated to RRD-equivalents here.
 sub xml_commit_state
 {
-	my $name = $state{'values'}{'name'};
-	my $type = $state{'values'}{'type'};
+	if ($state{'values'}{'name'} =~ /\./) {
+		# since Varnish 5.2 the 'name' field includes a 'type' prefix ("type.name")
+		(my $type, my $name) = split(/\./, $state{'values'}{'name'}, 2);
+	} else {
+		my $name = $state{'values'}{'name'};
+		my $type = $state{'values'}{'type'};
+	}
 	my $ident = $state{'values'}{'ident'};
 
 	foreach my $key (keys %{$state{'values'}}) {
