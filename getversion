@@ -14,9 +14,14 @@
 # * Try to make it up from the directory name (munin-2.0.1 -> 2.0.1)
 #
 # * If we're still looking for a version, just fallback to "unknown".
+#
+# NOTE: please keep this file as portable as possible (more strict than for plugins).
+# Probably unexpected portability issues include:
+# * '$(...)' is not supported by /bin/sh on Solaris
+
 
 current_git_branch() {
-    GB="$(git branch | awk '$1 == "*" {print $2}')"
+    GB=`git branch | awk '$1 == "*" {print $2}'`
     case $GB in
 
 	# git checkout 402c6d6
@@ -37,17 +42,17 @@ current_git_branch() {
 }
 
 generate_version_string() {
-    branch="$(current_git_branch)"
+    branch=`current_git_branch`
     case "${branch}" in
         ""|master|devel|stable-*)
             git describe
             ;;
         *)
-            branch=$(echo $branch | sed -e 's/[^0-9A-Za-z\.\-\_]/_/g' )
+            branch=`echo $branch | sed -e 's/[^0-9A-Za-z\.\-\_]/_/g'`
             # "foo | read VAR" does *not* work
             # workaround stolen from http://www.etalabs.net/sh_tricks.html
             read VERSION COMMITS HASH <<EOF
-$(git describe --long | perl -lne 'print "$1 $2 $3" if m/(.*)-(\d+)-g(\w+)/')
+`git describe --long | perl -lne 'print "$1 $2 $3" if m/(.*)-(\d+)-g(\w+)/'`
 EOF
             # As git describe, we also use the "-g" magic string to denote a git hash
             git log -n 1 --pretty="${VERSION}-${branch}-%ad-c${COMMITS}-g%h" --date=short
@@ -56,14 +61,14 @@ EOF
 }
 
 generate_version_string_from_dir() {
-	basename $(pwd) | grep -e '^munin-' | cut -c7-
+    basename `pwd` | grep -e '^munin-' | cut -c7-
 }
 
 if [ -s "RELEASE" ]; then
     cat RELEASE
-elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+elif [ "`git rev-parse --is-inside-work-tree 2>/dev/null`" = "true" ]; then
     generate_version_string
-elif [ ! -z "$(generate_version_string_from_dir)" ]; then
+elif [ ! -z "`generate_version_string_from_dir`" ]; then
 	generate_version_string_from_dir
 else
     echo "unknown"
