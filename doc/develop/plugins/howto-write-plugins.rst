@@ -126,7 +126,7 @@ There are a couple more things you can add to improve the plugin.  For example M
   graph_info The load average of the machine describes how many processes are in the runqueue (scheduled to run "immediately").
   load.info Average load for the five minutes.
 
-The values of :ref:`graph_args <graph_args>` are passed to the graphing tool (rrd) to instruct it about how to draw the graphs.
+The values of :ref:`graph_args <graph_args>` are passed to the `graphing tool (rrd) <https://oss.oetiker.ch/rrdtool/doc/rrdgraph.en.html>`_ to instruct it about how to draw the graphs.
 
 ``--base`` is to make it scale the graph with a 1000 base (1000=1k 1000k=1M and so on.
 If you give the base as 1024 as you might when measuring bytes then 1024=1k 1024k=1M and so on. Disks are usually measured in units of 1000 due to the industry standard for marketing disks that people have gotten used to).
