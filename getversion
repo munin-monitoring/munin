@@ -18,6 +18,9 @@
 # NOTE: please keep this file as portable as possible (more strict than for plugins).
 # Probably unexpected portability issues include:
 # * '$(...)' is not supported by /bin/sh on Solaris
+#
+# Override shellcheck warnings due to portability constraints
+# shellcheck disable=SC2006
 
 
 current_git_branch() {
@@ -52,8 +55,8 @@ generate_version_string() {
             branch=`echo "$branch" | sed -e 's/[^0-9A-Za-z\.\-\_]/_/g'`
             # "foo | read VAR" does *not* work (variable is changed only in subshell)
             # workaround stolen from http://www.etalabs.net/sh_tricks.html
-            read VERSION COMMITS HASH <<EOF
-`git describe --long | perl -lne 'print "$1 $2 $3" if m/(.*)-(\d+)-g(\w+)/'`
+            read -r VERSION COMMITS <<EOF
+`git describe --long | perl -lne 'print "$1 $2" if m/(.*)-(\d+)-g\w+/'`
 EOF
             # As git describe, we also use the "-g" magic string to denote a git hash
             git log -n 1 --pretty="${VERSION}-${branch}-%ad-c${COMMITS}-g%h" --date=short
