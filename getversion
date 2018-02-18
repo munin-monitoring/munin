@@ -37,19 +37,20 @@ current_git_branch() {
         #   devel
         "(no" ) echo;;
 
-        *     ) echo $GB;;
+        *     ) echo "$GB";;
     esac
 }
 
+
 generate_version_string() {
     branch=`current_git_branch`
-    case "${branch}" in
+    case "$branch" in
         ""|master|devel|stable-*)
             git describe
             ;;
         *)
-            branch=`echo $branch | sed -e 's/[^0-9A-Za-z\.\-\_]/_/g'`
-            # "foo | read VAR" does *not* work
+            branch=`echo "$branch" | sed -e 's/[^0-9A-Za-z\.\-\_]/_/g'`
+            # "foo | read VAR" does *not* work (variable is changed only in subshell)
             # workaround stolen from http://www.etalabs.net/sh_tricks.html
             read VERSION COMMITS HASH <<EOF
 `git describe --long | perl -lne 'print "$1 $2 $3" if m/(.*)-(\d+)-g(\w+)/'`
@@ -60,15 +61,17 @@ EOF
     esac
 }
 
+
 generate_version_string_from_dir() {
-    basename `pwd` | grep -e '^munin-' | cut -c7-
+    basename "`pwd`" | grep -e '^munin-' | cut -c 7-
 }
+
 
 if [ -s "RELEASE" ]; then
     cat RELEASE
 elif [ "`git rev-parse --is-inside-work-tree 2>/dev/null`" = "true" ]; then
     generate_version_string
-elif [ ! -z "`generate_version_string_from_dir`" ]; then
+elif [ -n "`generate_version_string_from_dir`" ]; then
     generate_version_string_from_dir
 else
     echo "unknown"
