@@ -18,6 +18,7 @@ The following environment variables are used by this plugin
  ping_critical       - Critical limit for nagios notification
  packetloss_warning  - Warning limit for nagios notification
  packetloss_critical - Critical limit for nagios notification
+ enable_packetloss_graph - Display the graph of packetlosses (disabled by default)
 
 =head2 CONFIGURATION EXAMPLES
 
@@ -78,8 +79,10 @@ if [ "$1" = "config" ]; then
         echo 'graph_info This graph shows ping RTT statistics.'
         echo "ping.label $host"
         echo "ping.info Ping RTT statistics for $host."
-        echo 'packetloss.label packet loss'
-        echo 'packetloss.graph no'
+        echo 'packetloss.label packet loss (%)'
+        if [ "${enable_packetloss_graph:-0}" = "0" ]; then
+                echo 'packetloss.graph no'
+        fi
         print_warning ping
         print_warning packetloss
         print_critical ping
