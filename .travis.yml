@@ -1,5 +1,6 @@
 language: perl
 perl:
+  - "5.20"
   - "5.18"
   - "5.16"
   - "5.14"
@@ -9,27 +10,27 @@ perl:
 branches:
  only:
   - stable-2.0
-  - devel
   - master
-install: "/bin/true"
-before_install:
- - "cpanm --notest File::Copy::Recursive"
- - "cpanm --notest File::Slurp"
- - "cpanm --notest HTML::Template"
- - "cpanm --notest IO::Scalar"
- - "cpanm --notest IO::Socket::INET6"
- - "cpanm --notest Log::Log4perl"
- - "cpanm --notest Module::Build"
- - "cpanm --notest Net::SNMP"
- - "cpanm --notest Net::Server"
- - "cpanm --notest Net::SSLeay"
- - "cpanm --notest Test::Deep"
- - "cpanm --notest Test::Differences"
- - "cpanm --notest Test::LongString"
- - "cpanm --notest Test::MockModule"
- - "cpanm --notest Test::MockObject::Extends"
- - "cpanm --notest Time::HiRes"
- - sh contrib/install_rrd.sh
+  - travis-test
+addons:
+  apt:
+    packages:
+      - devscripts
+      - libpango1.0-dev
+      - libfile-copy-recursive-perl
+      - libfile-slurp-perl
+      - libhtml-template-perl
+      - libio-socket-inet6-perl
+      - liblog-dispatch-perl
+      - libmodule-build-perl
+      - libnet-server-perl
+      - libnet-snmp-perl
+      - libnet-ssleay-perl
+      - libtest-deep-perl
+      - libtest-differences-perl
+      - libtest-longstring-perl
+      - libtest-mockmodule-perl
+      - libtest-mockobject-perl
 notifications:
   email: false
   irc:
@@ -43,3 +44,15 @@ notifications:
 matrix:
   # we don't need to continue any build when 1 test is failing.
   fast_finish: true
+
+env:
+  - TEST_MEDIUM=1
+
+before_install:
+  cpanm -n Devel::Cover::Report::Coveralls
+
+script:
+  make && make test
+
+# Using the container-based infrastructure
+sudo: false
