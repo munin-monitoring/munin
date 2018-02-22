@@ -593,7 +593,7 @@ B<autoconf>
 
 Tries to find smartctl and outputs value 'yes' for success, 'no' if not.
 
-It's used by B<munin-node-configure> to see wether autoconfiguration is possible.
+It's used by B<munin-node-configure> to see whether autoconfiguration is possible.
 
 =back
 
