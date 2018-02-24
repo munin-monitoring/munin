@@ -108,7 +108,8 @@ $ENV{LC_ALL} = 'C';
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1, simfs => 1 );
 
 my @exclude = qw(none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs);
-my $dfopts  = $ENV{'dfopts'} || "-P -l ";
+my $dfopts  = $ENV{'dfopts'} || "-P -l";
+$dfopts .= ' ';
 my $title = "Disk usage";
 
 if ( $Munin::Plugin::me eq "df_inode" ) {
