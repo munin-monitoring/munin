@@ -27,6 +27,22 @@ The following environment variables are used by this plugin:
 df_entries=$(df -P -l 2>/dev/null | sed -e 1d -e '/\/\//d' -e 's/%//' | sort)
 
 
+# Use the mountpoint instead of the device name for ambiguous virtual devices (tmpfs, ...).
+get_unique_fieldname() {
+    # do not use "local" - we want to be as portable, as possible
+    this_device="$1"
+    this_mountpoint="$2"
+    case "$this_device" in
+        tmpfs|none|udev|simfs)
+            clean_fieldname "$this_mountpoint"
+            ;;
+        *)
+            clean_fieldname "$this_device"
+            ;;
+    esac
+}
+
+
 if [ "$1" = "autoconf" ]; then
     if [ -z "$(get_df_entries)" ] ; then
         echo "no (no mounted filesystems found)"
@@ -43,7 +59,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_category disk'
     echo 'graph_scale no'
     echo "$df_entries" | while read -r dev size used free pct fs; do
-        name=$(clean_fieldname "$dev")
+        name=$(get_unique_fieldname "$dev" "$fs")
         echo "$name.label $fs"
         print_warning "$name"
         print_critical "$name"
@@ -55,5 +71,5 @@ fi
 # output current values
 # shellcheck disable=SC2034
 echo "$df_entries" | while read -r dev size used free pct fs; do
-     echo "$(clean_fieldname "$dev").value $pct"
+     echo "$(get_unique_fieldname "$dev" "$fs").value $pct"
 done
