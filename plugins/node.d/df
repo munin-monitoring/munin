@@ -48,7 +48,8 @@ if [ "$1" = "config" ]; then
         print_warning "$name"
         print_critical "$name"
     done
-    exit 0
+    # exit now if the capability DIRTYCONFIG is missing or disabled
+    if [ "${MUNIN_CAP_DIRTYCONFIG:-0}" != 1 ]; then exit 0; fi
 fi
 
 # output current values
