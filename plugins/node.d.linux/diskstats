@@ -30,7 +30,10 @@ my $plugin_name = $Munin::Plugin::me;
 need_multigraph();
 
 # Handle munin 'autoconf' command
-do_autoconf() if ( $ARGV[0] && $ARGV[0] eq 'autoconf' );
+if ( $ARGV[0] && $ARGV[0] eq 'autoconf' ) {
+    do_autoconf();
+    exit 0;
+}
 
 # Fetch current counter values
 my %cur_diskstats = fetch_device_counters();
@@ -42,6 +45,8 @@ filter_device_list( \%cur_diskstats );
 # This can only be done after getting the device data
 if ( defined $ARGV[0] && $ARGV[0] eq 'config' ) {
     do_config();
+    # keep going on with data output, if "dirty config" is enabled
+    exit 0 unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 );
 }
 
 # Restore data from previous run
@@ -665,15 +670,12 @@ sub do_autoconf {
     else {
         print "no (failed to find disk statistics in sysfs or procfs)\n";
     }
-    exit 0;
 }
 
 sub do_config {
 
     do_config_root();
     do_config_device();
-
-    exit 0;
 }
 
 # do_config_root
