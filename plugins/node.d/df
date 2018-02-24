@@ -20,12 +20,13 @@ The following environment variables are used by this plugin:
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+# shellcheck disable=SC1090
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 print_values () {
     df -P -l 2>/dev/null | sed -e 1d -e '/\/\//d' -e 's/%//' | 
-    while read dev size used free pct fs; do
-	echo "$(clean_fieldname $dev).value $pct"
+    while read -r dev size used free pct fs; do
+        echo "$(clean_fieldname "$dev").value $pct"
     done
 }
 
@@ -46,11 +47,11 @@ if [ "$1" = "config" ]; then
     echo 'graph_category disk'
     echo 'graph_scale no'
     df -P -l  | sed -e 1d -e '/\/\//d' -e 's/%//' | sort |
-    while read dev size used free pct fs; do
-        name=$(clean_fieldname $dev)
+    while read -r dev size used free pct fs; do
+        name=$(clean_fieldname "$dev")
         echo "$name.label $fs"
-        print_warning $name
-        print_critical $name
+        print_warning "$name"
+        print_critical "$name"
     done
     exit 0
 fi
