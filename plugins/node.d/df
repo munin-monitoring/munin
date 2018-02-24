@@ -32,9 +32,9 @@ print_values () {
 
 if [ "$1" = "autoconf" ]; then
     if [ -z "$(print_values)" ] ; then
-	echo no
+        echo no
     else
-	echo yes
+        echo yes
     fi
     exit 0
 fi
@@ -47,10 +47,10 @@ if [ "$1" = "config" ]; then
     echo 'graph_scale no'
     df -P -l  | sed -e 1d -e '/\/\//d' -e 's/%//' | sort |
     while read dev size used free pct fs; do
-	name=$(clean_fieldname $dev)
-	echo "$name.label $fs"
-	print_warning $name
-	print_critical $name
+        name=$(clean_fieldname $dev)
+        echo "$name.label $fs"
+        print_warning $name
+        print_critical $name
     done
     exit 0
 fi
