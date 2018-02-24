@@ -23,17 +23,13 @@ The following environment variables are used by this plugin:
 # shellcheck disable=SC1090
 . "$MUNIN_LIBDIR/plugins/plugin.sh"
 
-print_values () {
-    df -P -l 2>/dev/null | sed -e 1d -e '/\/\//d' -e 's/%//' | 
-    while read -r dev size used free pct fs; do
-        echo "$(clean_fieldname "$dev").value $pct"
-    done
-}
+
+df_entries=$(df -P -l 2>/dev/null | sed -e 1d -e '/\/\//d' -e 's/%//' | sort)
 
 
 if [ "$1" = "autoconf" ]; then
-    if [ -z "$(print_values)" ] ; then
-        echo no
+    if [ -z "$(get_df_entries)" ] ; then
+        echo "no (no mounted filesystems found)"
     else
         echo yes
     fi
@@ -46,8 +42,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_vlabel %'
     echo 'graph_category disk'
     echo 'graph_scale no'
-    df -P -l  | sed -e 1d -e '/\/\//d' -e 's/%//' | sort |
-    while read -r dev size used free pct fs; do
+    echo "$df_entries" | while read -r dev size used free pct fs; do
         name=$(clean_fieldname "$dev")
         echo "$name.label $fs"
         print_warning "$name"
@@ -56,5 +51,8 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-print_values
-
+# output current values
+# shellcheck disable=SC2034
+echo "$df_entries" | while read -r dev size used free pct fs; do
+     echo "$(clean_fieldname "$dev").value $pct"
+done
