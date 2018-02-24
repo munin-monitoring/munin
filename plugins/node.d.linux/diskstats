@@ -47,9 +47,9 @@ if ( defined $ARGV[0] && $ARGV[0] eq 'config' ) {
 # Restore data from previous run
 my ( $prev_time, %prev_diskstats );
 eval {
-	# Using eval, if it breaks while retrieve, $R is still undef.
-	# No need to unlink() it, since it will be overridden anyway.
-	( $prev_time, %prev_diskstats ) = choose_old_state();
+    # Using eval, if it breaks while retrieve, $R is still undef.
+    # No need to unlink() it, since it will be overridden anyway.
+    ( $prev_time, %prev_diskstats ) = choose_old_state();
 };
 
 # Persist state from current run
@@ -839,9 +839,9 @@ sub do_config_device {
         my $pretty_device = $cur_diskstats{$device}->{'pretty_device_name'};
         my $graph_id      = $cur_diskstats{$device}->{'graph_id'};
 
-	# warning levels
-	my $avgrdwait_warning = $ENV{'avgrdwait_warning'} || '0:3';
-	my $avgwrwait_warning = $ENV{'avgwrwait_warning'} || '0:3';
+        # warning levels
+        my $avgrdwait_warning = $ENV{'avgrdwait_warning'} || '0:3';
+        my $avgwrwait_warning = $ENV{'avgwrwait_warning'} || '0:3';
 
         if ( $cur_diskstats{$device}->{'does_latency'} ) {
 
@@ -986,8 +986,8 @@ sub sort_by_dm_last {
     }
 
     return
-	( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @non_dm ),
-	( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @dm ),
+        ( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @non_dm ),
+        ( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @dm ),
     ;
 }
 
