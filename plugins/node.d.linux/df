@@ -216,7 +216,7 @@ END
 
   # Detailed graphs
   foreach my $df (@df_output) {
-    my ($name, $mountpt) = @{$df};
+    my ($name, $mountpt, undef) = @{$df};
     print <<END;
 multigraph df.$name
 graph_title $title for $mountpt in percent
@@ -235,15 +235,21 @@ END
 }
 
 # Summary graph
-my $min=100, my $max=0;
+# Find the smallest and the biggest usage percentage.
+my $min, my $max;
 foreach my $df (@df_output) {
   my (undef, undef, $percent) = @{$df};
-  $min = $percent if $percent < $min;
-  $max = $percent if $percent > $max;
+  $min = $percent if not defined($min) or ($percent < $min);
+  $max = $percent if not defined($max) or ($percent > $max);
 }
+$min = "U" if not defined($min);
+$max = "U" if not defined($max);
+
+# The overview graph contains only min/max of all filtered df entries.
 print "multigraph df\n";
 print "min.value ", $min, "\n";
 print "max.value ", $max, "\n";
+
 # Detailed graphs
 foreach my $df (@df_output) {
   my ($name, undef, $percent) = @{$df};
