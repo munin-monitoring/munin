@@ -661,12 +661,11 @@ sub do_autoconf {
     if ( eval { %stats = parse_diskstats() } && keys %stats ) {
 
         print "yes\n";
-        exit 0;
     }
     else {
-        print "no\n";
-        exit 1;
+        print "no (failed to find disk statistics in sysfs or procfs)\n";
     }
+    exit 0;
 }
 
 sub do_config {
