@@ -752,6 +752,12 @@ sub generate_service_message {
             } else { # child
                 close $w;
                 open(STDIN, "<&", $r);
+                # We want to close stdout before calling the send command. This prevents the
+                # notification program (e.g. "send_nsca") to write irrelevant status messages
+                # to stdout and thus trigger notification emails (e.g. via cron).
+                # See https://github.com/munin-monitoring/munin/issues/382
+                # and https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=291168.
+                close(STDOUT);
                 exec($cmd) or WARN "[WARNING] Failed to exec for contact $c in pid $$";
                 exit;
             }
