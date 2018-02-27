@@ -31,6 +31,19 @@ use Munin::Plugin;
 my @logs = qw/update graph html limits/;
 my $logdir = ($ENV{'logdir'} || $ENV{'MUNIN_LOGDIR'} || '@@LOGDIR@@');
 
+
+sub uses_graph_cron {
+    my $log_file = $_[0];
+    # quick and dirty backport from master
+    # It is implemented properly on master, but this would introduce another dependency.
+    if (system("tail -1 '$log_file' 2>/dev/null | grep -q 'graphing is cgi, do nothing\$'") == 0) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+
 if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
     my $munin_update_location = 
                 "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-update";
@@ -57,14 +70,22 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
           "graph_scale yes\n",
           "graph_vlabel seconds\n",
           "graph_category munin\n";
+    my $print_graph = 1;
     foreach my $log (@logs) {
-        print "$log.label munin $log\n";
-        print "$log.draw AREASTACK\n";
+        if ($log eq "graph") {
+            $print_graph = uses_graph_cron("$logdir/munin-$log.log");
+        }
+        if ($log ne "graph" || $print_graph) {
+            print "$log.label munin $log\n";
+            print "$log.draw AREASTACK\n";
+        }
     }
     print "update.warning 240\n";
     print "update.critical 285\n";
-    print "graph.warning 240\n";
-    print "graph.critical 285\n";
+    if ($print_graph) {
+        print "graph.warning 240\n";
+        print "graph.critical 285\n";
+    }
     exit 0;
 }
 
