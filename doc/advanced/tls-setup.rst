@@ -1,3 +1,5 @@
+:tocdepth: 3
+
 .. _tls-setup:
 
 =========
@@ -6,13 +8,16 @@ TLS Setup
 
 If your Munin installations reside in a hostile network environment, or if you just don't want anyone passing by with a network sniffer to know the CPU load of your Munin nodes, a quick solution is to enable Munin's built-in `Transport Layer Security <https://en.wikipedia.org/wiki/Transport_Layer_Security>`_ (TLS) support. Other tricks involve using :ref:`SSH tunnels <ssh-tunneling>` and key logins, methods "outside of" Munin.
 
-The test setup described below consists of two servers, *Aquarium* and *Laudanum* (the Norwegian names of two of the Roman fortifications outside the village of Asterix the Gaul). *Laudanum* is a Munin master and *Aquarium* is a Munin slave.
-
-
 Requirements
-------------
+============
 
 In order for this to work you need the Perl package ``Net::SSLEay`` available. If you are running Debian or Ubuntu this is available in the package ``libnet-ssleay-perl``.
+
+
+Scenarios
+=========
+
+The test setups described below consist of two servers, *Aquarium* and *Laudanum* (the Norwegian names of two of the Roman fortifications outside the village of Asterix the Gaul). *Laudanum* is a Munin master and *Aquarium* is a Munin slave.
 
 
 Non-paranoid TLS setup
@@ -140,8 +145,12 @@ In munin-node.log, something like will show up (in versions above 1.4.4, the TLS
         Subject Name: /C=NO/ST=Oslo/O=Example/CN=laudanum.example.com/emailAddress=bjorn@example.com\n
         Issuer  Name: /C=NO/ST=Oslo/O=Example/CN=CA master/emailAddress=bjorn@example.com
 
+
+Miscellaneous
+=============
+
 Selective TLS
-'''''''''''''
+-------------
 
 If you want to run munin-node on the Munin master server, you shouldn't need to enable TLS for that connection as one can usually trust localhost connections. Likewise, if some of the nodes are on a trusted network they probably won't need TLS. In Munin, TLS is enabled on a per node basis.
 
