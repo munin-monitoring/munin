@@ -1,4 +1,4 @@
-.. _documentation-index:
+.. _howto-write-plugins:
 
 ===========================
  How to write Munin plugins

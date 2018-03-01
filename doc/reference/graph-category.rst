@@ -304,6 +304,7 @@ retrieval is an important and critical demand here.
 :Examples: login failures, number of pending update packages for OS, number of CVEs
            in the running kernel fixed by the lastest installed
            kernel, firewall counters.
+
 ----
 
 :graph_category: **sensors**
