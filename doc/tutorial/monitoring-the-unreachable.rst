@@ -19,6 +19,7 @@ reach the Munin node or vice versa.
 To enable for Munin monitoring, there are several approaches,
 but mainly either using SSH tunneling or "bouncing" via the in-between server.
 
+.. _ssh-tunneling:
 
 SSH tunneling
 -------------
