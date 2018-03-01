@@ -149,6 +149,20 @@ In munin-node.log, something like will show up (in versions above 1.4.4, the TLS
 Miscellaneous
 =============
 
+Intermediate Certificates / Certificate Chains
+----------------------------------------------
+
+It is common that external Certificate Authorities use a multi-layer certification process, e.g. the root certificate signs an `intermediate certificate <https://en.wikipedia.org/wiki/Public_key_certificate#Intermediate_certificate>`_, which is used for signing the client or server certificates.
+
+In this case you should assemble the TLS related files in the following way:
+
+* ``tls_certificate``:
+    1. the *leaf* certificate (for the client or server)
+* ``tls_ca_certificate``:
+    1. intermediate certificate
+    2. root certificate
+
+
 Selective TLS
 -------------
 
