@@ -20,12 +20,16 @@ Scenarios
 The test setups described below consist of two servers, *Aquarium* and *Laudanum* (the Norwegian names of two of the Roman fortifications outside the village of Asterix the Gaul). *Laudanum* is a Munin master and *Aquarium* is a Munin slave.
 
 
+.. _tls-setup_non-paranoid:
+
 Non-paranoid TLS setup
 ----------------------
 
 This first setup will only provide TLS encrypted communication, not a complete verification of certificate chains. This means that the communication will be encrypted, but that anyone with a certificate, even an invalid one, will be able to talk to the node.
 
 First of all, you must create an `X.509 <https://en.wikipedia.org/wiki/X509>`_ key and certificate pair. That is somewhat outside the scope of this howto (it should be inside the scope, if anyone is willing to include the needed openssl commands and commentary that would be good -janl), but `this link <https://security.ncsa.uiuc.edu/research/grid-howtos/usefulopenssl.php>`_ explains it in detail. On a Debian system, you can install the `ssl-cert package <https://packages.debian.org/sid/ssl-cert>`_, which automatically creates a dummy key/certificate pair, stored as ``/etc/ssl/private/ssl-cert-snakeoil.key`` and ``/etc/ssl/certs/ssl-cert-snakeoil.pem``. Please note that the permissions on the key file must be restrictive, e.g. ``chmod 700``.
+
+Instead of creating your own CA and certificates, you may want to use :ref:`Let's Encrypt <tls-setup_letsencrypt>` instead.
 
 On the Munin master
 '''''''''''''''''''
@@ -182,3 +186,13 @@ The node definitions in :ref:`munin.conf` on *Laudanum* looks like this (``tls d
     use_node_name yes
 
 From the source code, it seems you can even use different certificates for different hosts. This, however, has not been tested for the purpose of this article.
+
+
+.. _tls-setup_letsencrypt:
+
+Let's Encrypt
+-------------
+
+You may want to use certificates from the `Let's Encrypt CA <https://letsencrypt.org/>`_. Technically they work fine. But please note, that you will not be able to restrict access to specific peers. Instead all users of *Let's Encrypt* will be able to connect to your nodes and your nodes will be unable to distinguish between *your* master and *any other* master connecting with a certificate from the CA.
+
+Thus by using certificates from *Let's Encrypt* you are following a :ref:`non-paranoid <tls-setup_non-paranoid>` approach.
