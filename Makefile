@@ -20,6 +20,20 @@ BUILD_SCRIPT = ./Build
 
 default: build
 
+help:
+	@echo "Build targets:"
+	@echo "    build"
+	@echo "    clean"
+	@echo "    install"
+	@echo "    tar"
+	@echo
+	@echo "Test targets:"
+	@echo "    test"
+	@echo "    testcover"
+	@echo "    testpod"
+	@echo "    testpodcoverage"
+	@echo
+
 build: $(BUILD_SCRIPT)
 
 install: $(BUILD_SCRIPT)
