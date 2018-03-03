@@ -25,6 +25,7 @@ help:
 	@echo "Build targets:"
 	@echo "    build"
 	@echo "    clean"
+	@echo "    doc"
 	@echo "    install"
 	@echo "    tar"
 	@echo
@@ -38,6 +39,10 @@ help:
 .PHONY: build
 build: $(BUILD_SCRIPT)
 
+.PHONY: doc
+doc:
+	$(MAKE) -C doc html
+
 .PHONY: install
 install: $(BUILD_SCRIPT)
 	"$(BUILD_SCRIPT)" install --destdir=$(DESTDIR) --verbose
@@ -47,6 +52,7 @@ clean: $(BUILD_SCRIPT)
 	"$(BUILD_SCRIPT)" realclean
 	rm -rf _stage
 	rm -f MANIFEST META.json META.yml
+	$(MAKE) -C doc clean
 
 
 ##############################
