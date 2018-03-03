@@ -1,7 +1,7 @@
 .. _install-index:
 
 ====================
- Munin installation
+ Munin Installation
 ====================
 
 This document explains how to get Munin onto your system, where to get

@@ -1,8 +1,8 @@
 .. _howto-write-plugins:
 
-===========================
- How to write Munin plugins
-===========================
+============================
+ How to write Munin Plugins
+============================
 
 .. index::
    pair: contributing; munin; documentation

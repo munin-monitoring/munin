@@ -1,7 +1,7 @@
 .. _howto-write-snmp-plugins:
 
 =========================
-How To Write SNMP plugins
+How to write SNMP Plugins
 =========================
 
 This HOWTO is not quite done yet.

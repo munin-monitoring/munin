@@ -1,7 +1,7 @@
 .. _initial_configuration:
 
 =======================
- Initial configuration
+ Initial Configuration
 =======================
 
 Node
