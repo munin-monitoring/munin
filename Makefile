@@ -16,10 +16,11 @@ include $(CONFIG)
 # the perl script is used for most perl related activities
 BUILD_SCRIPT = ./Build
 
-.PHONY: default build install clean test testcover testpod testpodcoverage tar
 
+.PHONY: default
 default: build
 
+.PHONY: help
 help:
 	@echo "Build targets:"
 	@echo "    build"
@@ -34,16 +35,19 @@ help:
 	@echo "    testpodcoverage"
 	@echo
 
+.PHONY: build
 build: $(BUILD_SCRIPT)
 
+.PHONY: install
 install: $(BUILD_SCRIPT)
 	"$(BUILD_SCRIPT)" install --destdir=$(DESTDIR) --verbose
 
-
+.PHONY: clean
 clean: $(BUILD_SCRIPT)
 	"$(BUILD_SCRIPT)" realclean
 	rm -rf _stage
 	rm -f MANIFEST META.json META.yml
+
 
 ##############################
 # perl module
@@ -51,26 +55,33 @@ clean: $(BUILD_SCRIPT)
 $(BUILD_SCRIPT): Build.PL
 	$(PERL) Build.PL --destdir=$(DESTDIR) --installdirs=$(INSTALLDIRS) --verbose
 
+
 ######################################################################
 # testing
 
+.PHONY: test
 test: $(BUILD_SCRIPT)
 	"$(BUILD_SCRIPT)" test
 
+.PHONY: testcover
 testcover: $(BUILD_SCRIPT)
 	"$(BUILD_SCRIPT)" testcover
 
+.PHONY: testpod
 testpod: $(BUILD_SCRIPT)
 	"$(BUILD_SCRIPT)" testpod
 
+.PHONY: testpodcoverage
 testpodcoverage: $(BUILD_SCRIPT)
 	"$(BUILD_SCRIPT)" testpodcoverage
+
 
 ######################################################################
 # Rules for the release manager
 
 RELEASE := $(shell $(CURDIR)/getversion)
 
+.PHONY: tar
 tar:
 	git archive --prefix=munin-$(RELEASE)/ --format=tar --output ../munin-$(RELEASE).tar HEAD
 	mkdir -p munin-$(RELEASE)/
