@@ -19,8 +19,8 @@ then run:
 
 This will install munin master, node and plugins.
 
-For more information about requirements , please see the `install
-documentation`_, online or the files in doc/installation/
+For more information about requirements, please see the `install
+documentation`_ (online) or the files in this repository below ``doc/installation/``.
 
 .. _`build requirements`: http://guide.munin-monitoring.org/en/latest/installation/prerequisites.html
 .. _`install documentation`: http://guide.munin-monitoring.org/en/latest/installation/
