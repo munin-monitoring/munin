@@ -20,12 +20,12 @@ expect that you read the Guide prior to asking.
 
 It is regularly updated, as its sources are directly in the munin source
 directory, the last version can always be accessed online at
-`http://munin.readthedocs.org/`__ thanks to ReadTheDoc__.
+`http://guide.munin-monitoring.org/`__ thanks to ReadTheDoc__.
 
 It is specially designed for easy contribution and distribution thanks to
 `Sphinx`__. That aspect will be handled in :ref:`Contributing`.
 
-__ http://munin.readthedocs.org/
+__ http://guide.munin-monitoring.org/
 __ http://readthedocs.org/
 __ http://sphinx-doc.org/
 

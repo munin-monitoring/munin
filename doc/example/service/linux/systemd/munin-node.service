@@ -1,6 +1,6 @@
 [Unit]
 Description=Munin Node
-Documentation=man:munin-node(1) http://munin.readthedocs.org/en/latest/reference/munin-node.html
+Documentation=man:munin-node(1) http://guide.munin-monitoring.org/en/latest/reference/munin-node.html
 
 [Service]
 EnvironmentFile=-/etc/default/munin-node
