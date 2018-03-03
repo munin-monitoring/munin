@@ -18,10 +18,9 @@ BUILD_SCRIPT = ./Build
 
 .PHONY: default build install clean test testcover testpod testpodcoverage tar
 
-default: blib
+default: build
 
-blib: $(BUILD_SCRIPT)
-	"$(BUILD_SCRIPT)"
+build: $(BUILD_SCRIPT)
 
 install: $(BUILD_SCRIPT)
 	"$(BUILD_SCRIPT)" install --destdir=$(DESTDIR) --verbose
