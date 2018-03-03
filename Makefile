@@ -13,42 +13,45 @@ CONFIG = Makefile.config
 include $(DEFAULTS)
 include $(CONFIG)
 
+# the perl script is used for most perl related activities
+BUILD_SCRIPT = ./Build
+
 .PHONY: default build install clean test testcover testpod testpodcoverage tar
 
 default: blib
 
-blib: Build
-	./Build
+blib: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)"
 
-install: Build
-	./Build install --destdir=$(DESTDIR) --verbose
+install: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" install --destdir=$(DESTDIR) --verbose
 
 
-clean: Build
-	./Build realclean
+clean: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" realclean
 	rm -rf _stage
 	rm -f MANIFEST META.json META.yml
 
 ##############################
 # perl module
 
-Build: Build.PL
+$(BUILD_SCRIPT): Build.PL
 	$(PERL) Build.PL --destdir=$(DESTDIR) --installdirs=$(INSTALLDIRS) --verbose
 
 ######################################################################
 # testing
 
-test: Build
-	./Build test
+test: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" test
 
-testcover: Build
-	./Build testcover
+testcover: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" testcover
 
-testpod: Build
-	./Build testpod
+testpod: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" testpod
 
-testpodcoverage: Build
-	./Build testpodcoverage
+testpodcoverage: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" testpodcoverage
 
 ######################################################################
 # Rules for the release manager
