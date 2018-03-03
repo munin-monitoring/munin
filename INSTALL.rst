@@ -11,10 +11,10 @@ then run:
 
 .. code-block:: bash
 
-   perl Build.PL
-   ./Build
-   ./Build test
-   sudo ./Build install
+   make
+   make test
+   # run as root or use something like "sudo"
+   make install
 
 
 This will install munin master, node and plugins.
