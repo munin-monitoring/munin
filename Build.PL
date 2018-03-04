@@ -122,7 +122,7 @@ my $build = Module::Build->new(
         'Net::Server::Fork'      => '0',
         'Parallel::ForkManager'  => '0',
         'Params::Validate'       => '1.08',
-	'Alien::RRDtool'         => '0',
+        'Alien::RRDtool'         => '0',
         'URI'                    => '1.59',
         'XML::Dumper'            => '0',
     },
@@ -303,12 +303,12 @@ if ( $build->install_base ) {
         'MUNIN_PLUGSTATE' => $build->install_path('var') . '/plugin-state' );
 }
 else {
-	if ($build->installdirs eq 'site') {
-		$build->install_path( 'MUNIN_BINDIR' => $Config{installsitebin} );
-	}
-	else {
-		$build->install_path( 'MUNIN_BINDIR' => $Config{installvendorbin} );
-	}
+    if ($build->installdirs eq 'site') {
+        $build->install_path( 'MUNIN_BINDIR' => $Config{installsitebin} );
+    }
+    else {
+        $build->install_path( 'MUNIN_BINDIR' => $Config{installvendorbin} );
+    }
     $build->install_path(
         'MUNIN_RUNDIR' => $build->install_path('var') . '/run/munin' );
     $build->install_path(
