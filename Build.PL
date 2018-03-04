@@ -111,6 +111,7 @@ my $build = Module::Build->new(
         'HTTP::Server::Simple::CGI::PreFork'    => '0',
         'CGI::Cookie'            => '0',
         'IO::Socket::INET6'      => '2.69',
+        'JSON'                   => '0',
         'LWP::UserAgent'         => '6.03',
         'List::Util'             => '0',
         'List::MoreUtils'        => '0.33',
