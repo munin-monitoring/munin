@@ -47,7 +47,7 @@ my $PORT = exists $ENV{'port'} ? $ENV{'port'} : 11211;
 if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 	if ($ret) {
 		print "no ($ret)\n";
-		exit 1;
+		exit 0;
 	} 
 # Todo: we can always connect to a memcache server without any errors so I cannot really
 # find a way to detect the presence of a memcache instance. Maybe a forced write/read/delete
