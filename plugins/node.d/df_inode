@@ -50,7 +50,7 @@ get_unique_fieldname() {
 
 
 if [ "$1" = "autoconf" ]; then
-    if [ -z "$(get_df_entries)" ] ; then
+    if [ -z "$df_entries" ] ; then
         echo "no (no mounted filesystems found)"
     else
         echo yes
