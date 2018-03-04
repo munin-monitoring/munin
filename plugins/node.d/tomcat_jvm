@@ -59,7 +59,10 @@ GPLv2
 =cut
 
 use strict;
+use warnings;
+
 use Munin::Plugin::HTTP;
+use URI::Escape;
 
 my $ret = undef;
 
@@ -74,15 +77,15 @@ my $HOST     = exists $ENV{'host'}     ? $ENV{'host'}     : "127.0.0.1";
 my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
 my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
 
-my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
+my $url = sprintf $URL, uri_escape($USER), uri_escape($PASSWORD), $HOST, $PORT;
 
 if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
     if($ret) {
 	print "no ($ret)\n";
 	exit 0;
     }
-    my $repsonse = $UA->get($url);
-    if($repsonse->is_success and $repsonse->content =~ /<status>.*<\/status>/im) {
+    my $response = $UA->get($url);
+    if($response->is_success and $response->content =~ /<status>.*<\/status>/im) {
 	print "yes\n";
 	exit 0;
     } else {

@@ -68,7 +68,10 @@ tomcat-users.xml example:
 =cut
 
 use strict;
+use warnings;
+
 use Munin::Plugin::HTTP;
+use URI::Escape;
 
 my $ret = undef;
 
@@ -82,35 +85,24 @@ my $PORT     = exists $ENV{'port'}     ? $ENV{'port'}     : exists $ENV{'ports'}
 my $HOST     = exists $ENV{'host'}     ? $ENV{'host'}     : "127.0.0.1";
 my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
 my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
-my $CONNECTOR= exists $ENV{'connector'}? $ENV{'connector'}: "http-".$PORT;
+my $TIMEOUT  = exists $ENV{'timeout'}  ? $ENV{'timeout'}  : 30;
+my $CONNECTOR= $ENV{'connector'};
 
-my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
+my $url = sprintf $URL, uri_escape($USER), uri_escape($PASSWORD), $HOST, $PORT;
 
 if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
     if($ret) {
-	print "no ($ret)\n";
-	exit 0;
+        print "no ($ret)\n";
+        exit 0;
     }
-    my $repsonse = $UA->get($url);
-    if($repsonse->is_success and $repsonse->content =~ /<status>.*<\/status>/im) {
+    my $response = $UA->get($url);
+    if($response->is_success and $response->content =~ /<status>.*<\/status>/im) {
 	print "yes\n";
 	exit 0;
     } else {
-	print "no (no tomcat status)\n";
-	exit 0;
+        print "no (no tomcat status)\n";
+        exit 0;
     }
-}
-
-if(exists $ARGV[0] and $ARGV[0] eq "config") {
-    print "graph_title Tomcat volume\n";
-    print "graph_args --base 1000\n";
-    print "graph_vlabel bytes per \${graph_period}\n";
-    print "graph_category tomcat\n";
-    print "volume.label bytes\n";
-    print "volume.type DERIVE\n";
-    print "volume.max 1000000000\n";
-    print "volume.min 0\n";
-    exit 0;
 }
 
 my $xs = new XML::Simple;
@@ -118,9 +110,32 @@ my $response = $UA->get($url);
 my %options = ( KeyAttr => { connector => 'name' }, ForceArray => 1 );
 my $xml = $xs->XMLin($response->content, %options);
 
-
-if($xml->{'connector'}->{$CONNECTOR}->{'requestInfo'}->[0]->{'bytesSent'}) {
-    print "volume.value " . $xml->{'connector'}->{$CONNECTOR}->{'requestInfo'}->[0]->{'bytesSent'} . "\n";
+my @connectors;
+if(defined $CONNECTOR) {
+    push @connectors, $CONNECTOR;
 } else {
-    print "volume.value U\n";
+    @connectors = keys %{$xml->{'connector'}};
+}
+
+if(exists $ARGV[0] and $ARGV[0] eq "config") {
+    print "graph_title Tomcat volume\n";
+    print "graph_args --base 1000\n";
+    print "graph_vlabel bytes per \${graph_period}\n";
+    print "graph_category tomcat\n";
+    for my $connector (@connectors) {
+        my $clean = clean_fieldname($connector);
+        print "${clean}_volume.label $connector bytes\n";
+        print "${clean}_volume.type DERIVE\n";
+        print "${clean}_volume.max 1000000000\n";
+        print "${clean}_volume.min 0\n";
+    }
+} else {
+    for my $connector (@connectors) {
+        my $clean = clean_fieldname($connector);
+        if(exists $xml->{'connector'}->{$connector}->{'requestInfo'}->[0]->{'bytesSent'}) {
+            print "${clean}_volume.value " . $xml->{'connector'}->{$connector}->{'requestInfo'}->[0]->{'bytesSent'} . "\n";
+        } else {
+            print "${clean}_volume.value U\n";
+        }
+    }
 }

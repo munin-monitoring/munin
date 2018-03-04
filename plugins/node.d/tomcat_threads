@@ -50,7 +50,10 @@ GPLv2
 =cut
 
 use strict;
+use warnings;
+
 use Munin::Plugin::HTTP;
+use URI::Escape;
 
 my $ret = undef;
 
@@ -64,23 +67,37 @@ my $PORT     = exists $ENV{'port'}     ? $ENV{'port'}     : exists $ENV{'ports'}
 my $HOST     = exists $ENV{'host'}     ? $ENV{'host'}     : "127.0.0.1";
 my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
 my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
-my $CONNECTOR= exists $ENV{'connector'}? $ENV{'connector'}: "http-".$PORT;
+my $TIMEOUT  = exists $ENV{'timeout'}  ? $ENV{'timeout'}  : 30;
+my $CONNECTOR= $ENV{'connector'};
 
-my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
+my $url = sprintf $URL, uri_escape($USER), uri_escape($PASSWORD), $HOST, $PORT;
 
 if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
     if($ret) {
-	print "no ($ret)\n";
-	exit 0;
+        print "no ($ret)\n";
+        exit 0;
     }
-    my $repsonse = $UA->get($url);
-    if($repsonse->is_success and $repsonse->content =~ /<status>.*<\/status>/im) {
+    my $response = $UA->get($url);
+    if($response->is_success and $response->content =~ /<status>.*<\/status>/im) {
 	print "yes\n";
 	exit 0;
     } else {
-	print "no (no tomcat status)\n";
-	exit 0;
+        print "no (no tomcat status)\n";
+        exit 0;
     }
+}
+
+my $ua = LWP::UserAgent->new(timeout => $TIMEOUT);
+my $xs = new XML::Simple;
+my $response = $ua->request(HTTP::Request->new('GET',$url));
+my %options = ( KeyAttr => { connector => 'name' }, ForceArray => 1 );
+my $xml = $xs->XMLin($response->content, %options);
+
+my @connectors;
+if(defined $CONNECTOR) {
+    push @connectors, $CONNECTOR;
+} else {
+    @connectors = keys %{$xml->{'connector'}};
 }
 
 if(exists $ARGV[0] and $ARGV[0] eq "config") {
@@ -89,28 +106,38 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
     print "graph_vlabel threads\n";
     print "graph_category tomcat\n";
     print "graph_total total\n";
-    print "graph_order busy idle\n";
-    print "busy.label busy threads\n";
-    print "busy.draw AREA\n";
-    print "idle.label idle threads\n";
-    print "idle.draw STACK\n";
-    exit 0;
-}
+    my @idle;
+    my @busy;
+    my $first = 1;
+    for my $connector (@connectors) {
+        my $clean = clean_fieldname($connector);
+        print "${clean}_busy.label $connector busy threads\n";
+        if($first) {
+            print "${clean}_busy.draw AREA\n";
+            $first = 0;
+        } else {
+            print "${clean}_busy.draw STACK\n";
+        }
+        print "${clean}_idle.label $connector idle threads\n";
+        print "${clean}_idle.draw STACK\n";
 
-my $xs = new XML::Simple;
-my $response = $UA->get($url);
-my %options = ( KeyAttr => { connector => 'name' }, ForceArray => 1 );
-my $xml = $xs->XMLin($response->content, %options);
+        push @busy, "${clean}_busy";
+        push @idle, "${clean}_idle";
+    }
+    print "graph_order " . join(" ", @busy) . " " . join(" ", @idle) . "\n";
 
-if($xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'} =~ /\d+/ &&
-    $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadCount'} =~ /\d+/ ) {
-    print "busy.value " . $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'} . "\n";
-    print "idle.value " .
-	  ($xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadCount'} -
-	  $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'}) . "\n";
-	print "total.value " . $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadCount'} . "\n";
 } else {
-    print "busy.value U\n";
-    print "idle.value U\n";
-    print "total.value U\n";
+    for my $connector (@connectors) {
+        my $clean = clean_fieldname($connector);
+        if(exists $xml->{'connector'}->{$connector}->{'threadInfo'}->[0]->{'currentThreadsBusy'} &&
+            exists $xml->{'connector'}->{$connector}->{'threadInfo'}->[0]->{'currentThreadCount'}) {
+            print "${clean}_busy.value " . $xml->{'connector'}->{$connector}->{'threadInfo'}->[0]->{'currentThreadsBusy'} . "\n";
+            print "${clean}_idle.value " .
+              ($xml->{'connector'}->{$connector}->{'threadInfo'}->[0]->{'currentThreadCount'} -
+              $xml->{'connector'}->{$connector}->{'threadInfo'}->[0]->{'currentThreadsBusy'}) . "\n";
+        } else {
+            print "${clean}_busy.value U\n";
+            print "${clean}_idle.value U\n";
+        }
+    }
 }
