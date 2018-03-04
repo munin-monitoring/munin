@@ -120,6 +120,7 @@ $plugin->add_graphs
    },
   );
 
+
 foreach my $devdir (@devdirs) {
   my $devname = basename($devdir);
 
@@ -141,7 +142,7 @@ foreach my $devdir (@devdirs) {
     my $graphid = clean_fieldname("$devname $name");
     my $path = "$devdir/$name";
 
-    my $denominator = $plugin->graphs->{"hwmon_" . $type}->{denominator};
+    my $denominator = $plugin->{graphs}->{"hwmon_" . $type}->{denominator};
 
     my ($label) = readarray($path . "_label") || (($devname || "") . " $name");
 
@@ -160,7 +161,7 @@ foreach my $devdir (@devdirs) {
     my ($val) = readarray($path . "_input");
     $val /= $denominator if $val;
 
-    $plugin->graphs->{"hwmon_" . $type}->{fields}->{$graphid} =
+    $plugin->{graphs}->{"hwmon_" . $type}->{fields}->{$graphid} =
       {
        label => $label,
        warning  => ($lwarn || $hwarn ) ? "$lwarn:$hwarn" : undef,
