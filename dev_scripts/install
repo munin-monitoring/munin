@@ -1,4 +1,8 @@
 #!/bin/sh
+#
+# prepare a sandbox environment for local tests
+# The result is placed below the directory ./sandbox/
+#
 
 set -e
 set -u
@@ -145,7 +149,15 @@ case ${1:-} in
 			cp -vf $src sandbox/lib/perl5/$dst
 		done
 		;;
-	*)
+	"")
 		make_sandbox
+		;;
+	help)
+		echo "Syntax:  $(basename "$0")  { clean | node | master | debug | lib }"
+		echo
+		;;
+	*)
+		"$0" help >&2
+		exit 1
 		;;
 esac
