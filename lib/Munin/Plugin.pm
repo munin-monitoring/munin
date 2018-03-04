@@ -477,6 +477,9 @@ Read the first line of a file into an array.
 This is extremely helpful when reading data out of /proc or /sys that
 the kernel exposes.
 
+Returns undef if the file does not exist.
+Returns an empty array if the file is empty (or contains only whitespace).
+
 =cut
 
 sub readarray($) {
@@ -484,6 +487,8 @@ sub readarray($) {
 
   open my $FH, "<", $path or return undef;
   my $line = <$FH>;
+  # handle an empty file gracefully
+  $line = "" if not defined($line);
   chomp($line);
   my @row = split(/\s+/, $line);
   close $FH;
