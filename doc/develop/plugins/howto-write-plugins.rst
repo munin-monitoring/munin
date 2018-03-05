@@ -341,7 +341,7 @@ Shell plugin
 
   ...
 
-  . $MUNIN_LIBDIR/plugins/plugin.sh
+  . "$MUNIN_LIBDIR/plugins/plugin.sh"
 
   ...
 
