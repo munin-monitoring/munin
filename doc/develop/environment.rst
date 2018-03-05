@@ -106,7 +106,7 @@ node will still run in the background.
 
 The ``contrib`` directory contains a daemon used for simulating a lot
 of munin nodes.  This step is optional.  First output a number of node
-definition to the munin configuration, and then run the daemon in the
+definitions to the munin configuration, and then run the daemon in the
 background.
 
 .. code-block:: bash
