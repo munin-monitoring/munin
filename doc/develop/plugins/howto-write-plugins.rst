@@ -110,6 +110,7 @@ Place the plugin in ``/etc/munin/plugins``. To test it for real use :ref:`munin-
   graph_vlabel load
   load.label load
 
+Alternatively can also run the plugin in your :ref:`development sandbox <sandbox_plugin_wrapper>`.
 
 Finishing touches
 -----------------
@@ -333,6 +334,8 @@ These regular expressions should be applied to all field names to make them safe
   s/^[^A-Za-z_]/_/
   s/[^A-Za-z0-9_]/_/g
 
+
+.. _develop-shell-plugins:
 
 Shell plugin
 ------------
