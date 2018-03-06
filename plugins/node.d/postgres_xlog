@@ -36,6 +36,16 @@ Example :
   [postgres_pg92_*]
   env.PGPORT 5432
 
+Prior to PostgreSQL version 10, the user this plugin connects to the database
+as requires superuser privileges on the database:
+
+  ALTER ROLE your_nagios_user SUPERUSER;
+
+Since version 10 the user only requires the pg_monitor role:
+
+  ALTER ROLE your_nagios_user NOSUPERUSER;
+  GRANT pg_monitor TO your_nagios_user;
+
 =head1 SEE ALSO
 
 L<Munin::Plugin::Pgsql>
@@ -70,8 +80,10 @@ my $pg = Munin::Plugin::Pgsql->new(
     title      => 'PostgreSQL transaction log',
     info       => 'PostgreSQL transaction log',
     vlabel     => 'Log segments',
-    basequery =>
-        "SELECT count(*) AS segments FROM pg_ls_dir('pg_xlog') t(fn) WHERE fn ~ '^[0-9A-Z]{24}\$'",
+    basequery => [
+        "SELECT count(*) AS segments FROM pg_ls_waldir() WHERE name ~ '^[0-9A-Z]{24}\$'",
+        [ 9.6, "SELECT count(*) AS segments FROM pg_ls_dir('pg_xlog') t(fn) WHERE fn ~ '^[0-9A-Z]{24}\$'", ]
+    ],
     pivotquery  => 1,
     configquery => [
         "VALUES('segments','WAL segments')",
