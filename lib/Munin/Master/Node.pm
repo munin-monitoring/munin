@@ -399,7 +399,7 @@ sub parse_service_config {
         }
 	else {
 	    $errors++;
-	    DEBUG "[DEBUG] Protocol exception: unrecognized line '$line' from $plugin on $nodedesignation.\n";
+	    INFO "[INFO] Protocol exception: unrecognized line '$line' from $plugin on $nodedesignation.\n";
         }
     }
 
@@ -576,7 +576,7 @@ sub parse_service_data {
 	}
         else {
 	    $errors++;
-            DEBUG "[DEBUG] Protocol exception while fetching '$service' from $plugin on $nodedesignation: unrecognized line '$line'";
+            INFO "[INFO] Protocol exception while fetching '$service' from $plugin on $nodedesignation: unrecognized line '$line'";
 	    next;
         }
     }
