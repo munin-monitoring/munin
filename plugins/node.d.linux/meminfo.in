@@ -1044,7 +1044,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Mlocked',
-      'info'  => 'Hlocked'
+      'info'  => 'Mlocked'
     }
   },
   # ----------------------------------------------
