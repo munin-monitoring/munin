@@ -160,6 +160,12 @@ sub handle_request
 
 	# Find the service to display
 	my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
+	if (not defined($sth_url)) {
+		# potential cause: permission problem
+		my $msg = "Failed to access database ($datafilename): " . $DBI::errstr;
+		WARNING "[WARNING] $msg";
+		die $msg;
+	}
 	$sth_url->execute($graph_path);
 	my ($id, $type) = $sth_url->fetchrow_array;
 
