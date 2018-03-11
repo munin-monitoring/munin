@@ -388,7 +388,7 @@ Field name attributes
 :Value: {fieldname} of related field.
 :Type: optional
 :Description: You need this for a "mirrored" graph. Values of the named field will be drawn below the X-axis then (e.g. plugin ``if_`` that shows traffic going in and out as mirrored graph).
-:See also: See the `Best Current Practices for good plugin graphs <http://munin-monitoring.org/wiki/plugin-bcp#Direction>`_ for examples
+:See also: See the :ref:`Best Current Practices for good plugin graphs <plugin-bcp-direction>` for examples
 :Default:
 
 ============
@@ -399,7 +399,7 @@ Field name attributes
 :Value: List of field declarations referencing the data sources from other plugins by their virtual path. (FIXME: Explanation on topic "virtual path" should be added elsewhere to set a link to it here)
 :Type: optional
 :Description: Function for creating stacked graphs.
-:See also: `How do I use fieldname.stack? <http://munin-monitoring.org/wiki/faq#Q:HowdoIusefieldname.stack>`_ and `Stacking example <http://munin-monitoring.org/wiki/MuninConfigurationMasterExampleStack>`_
+:See also: `How do I use fieldname.stack? <http://munin-monitoring.org/wiki/faq#Q:HowdoIusefieldname.stack>`_ and :ref:`Graph aggregation stacking example <example-aggregated-stack>`
 :Default:
 
 ============

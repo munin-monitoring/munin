@@ -81,13 +81,12 @@ Contrib Repository
 -------------------
 
 The `contrib`__ part is even more live than before. It has very successfully
-replaced the old MuninExchange__ site. Now, together with the `Plugin
+replaced the old :ref:`MuninExchange <Munin-Exchange>` site. Now, together with the `Plugin
 Gallery`__ it offer all the useful features the old site offered, and is much
 easier to contribute to. It also ease the integration work, and therefore
 shortens the time it takes for your contributions to be reviewed and merged.
 
 __ https://github.com/munin-monitoring/contrib
-__ http://munin-monitoring.org/wiki/MuninExchangeIsDown
 __ http://gallery.munin-monitoring.org/
 
 .. _mailing-lists:

@@ -38,6 +38,8 @@ To summarize:
  #. Use DERIVE
  #. Use :ref:`${name}.min <fieldname.min>` to avoid negative spikes
 
+.. _plugin-bcp-graphscaling:
+
 Graph scaling
 =============
 
@@ -57,6 +59,8 @@ Choosing a scaler:
 The key is to choose the base that people are used to dealing with the units in.  Of the four points above, what units to use for disk storage is most in doubt: the sale of disks the last 10-15 years with 1K=1000 and the recent addition of ``--si`` options to GNU tools tell us that people are starting to think of disks that way too. But 1024 is ''very'' basic to the design of disks and filesystems on a low level so the 1024 is likely to remain.
 
 In addition, most people want to see network speeds in bits not bytes.  If your readings are in bytes you might multiply the number by 8 yourself to get bits, or you may leave it to Munin (actually rrd).  If the throughput number is reported in ``down.value`` the ``config`` output may specify ``down.cdef down,8,*`` to multiply the down number by 8 (this syntax is known as Reverse Polish Notation).
+
+.. _plugin-bcp-direction:
 
 Direction
 =========

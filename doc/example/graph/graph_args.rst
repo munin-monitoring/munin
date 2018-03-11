@@ -33,7 +33,7 @@ Scale
 Units
 =====
 
-See `Best Current Practices <http://munin-monitoring.org/wiki/plugin-bcp#Graphscaling>`_
+See :ref:`Best Current Practices for good plugin graphs <plugin-bcp-graphscaling>`
 
 .. option:: --base <value>
 
