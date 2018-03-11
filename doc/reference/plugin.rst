@@ -429,6 +429,17 @@ Field name attributes
 
 ============
 
+.. _fieldname.unknown_limit:
+
+:Attribute: **{fieldname}.unknown_limit**
+:Value: positive integer
+:Type: optional
+:Description: Defines the number of *unknown* values to be received successively, before the state of the dataset changes from *ok* to *unknown*. Use a higher value, if you want to tolerate a certain number of non-computable values, before an alarm should be raised. This attribute is available since Munin 3.0.
+:See also: :ref:`Let Munin croak alarm <tutorial-alert>`
+:Default: 3
+
+============
+
 .. _fieldname.warning:
 
 :Attribute: **{fieldname}.warning**
