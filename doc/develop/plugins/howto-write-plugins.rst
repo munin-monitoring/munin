@@ -202,6 +202,8 @@ In perl:
   open(LOAD,"</proc/loadavg") or die "Could not open /proc/loadavg for reading: $!\n";
 
 
+.. _network-interface-plugin:
+
 Network interface plugin
 ========================
 
@@ -297,22 +299,6 @@ Given a full set of info attributes (I've broken the first line to make it pract
 
 Then you end up with a `generated page like this <http://gauc.no-ip.org/munin/phx2.fedoraproject.org/x86-09.phx2.fedoraproject.org/if_wlan0.html>`_.
 
-DERIVE vs. COUNTER
-==================
-
-To avoid spikes in the graph when counters are reset (as opposed to wrapping), use :ref:`${name}.type <fieldname.type>` DERIVE and :ref:`${name}.min <fieldname.min>` 0. Note that this will cause lost data points when the counter wraps, and should therefore not be used with plugins that are expected to wrap more often than be reset (or sampled). An example of this is the Linux ``if_`` plugin on 32bit machines with a busy (100Mbps) network.
-
-The reasons behind this is rooted in the nature of 32 bit two's complement arithmetic and the way such numbers wrap around from huge positive numbers to huge negative numbers when they overflow.  Please refer to these two articles in wikipedia to learn more: `Binary Arithmetic <http://en.wikipedia.org/wiki/Binary_arithmetic>`_ and `Two's complement <http://en.wikipedia.org/wiki/Two%27s_complement>`_.
-
-To summarize:
- #. Use DERIVE
- #. Use :ref:`${name}.min <fieldname.min>` to avoid negative spikes
-
-Graph category
-==============
-
-If the plugin gives the :ref:`graph_category <graph_category>` attribute in its :ref:`config <plugin-config>` output, the graph will be grouped together with other graphs of the same category.  Please consult the `list of well-known categories <http://munin-monitoring.org/wiki/graph_category_list>`_.
-
 .. _validate-fieldnames:
 
 Validate fieldnames
@@ -369,7 +355,7 @@ Perl plugin
 Going on
 ========
 
-The `plugin documentation <http://munin-monitoring.org/wiki/plugins>`_ should have all the information you need.  I suggest the next thing you read about plugins is `Best Practices <http://munin-monitoring.org/wiki/plugin-bcp>`_ which should tell you all you need to know to get nice graphs in as few tries as possible. If planning to write a plugin as a shell script, please read `Shell Plugins <http://munin-monitoring.org/wiki/PluginShell>`_. If your plugin does not work like you think it should, try :ref:`Debugging Plugins <debugging-plugins>`. If you want to get the plugin autoconfigured on install and such take a look at wiki page `PluginConcise <http://munin-monitoring.org/wiki/PluginConcise>`_.
+The `plugin documentation <http://munin-monitoring.org/wiki/plugins>`_ should have all the information you need. I suggest the next thing you read about plugins is :ref:`Best Practices <plugin-bcp>` which should tell you all you need to know to get nice graphs in as few tries as possible. If planning to write a plugin as a shell script, please read `Shell Plugins <http://munin-monitoring.org/wiki/PluginShell>`_. If your plugin does not work like you think it should, try :ref:`Debugging Plugins <debugging-plugins>`. If you want to get the plugin autoconfigured on install and such take a look at wiki page `PluginConcise <http://munin-monitoring.org/wiki/PluginConcise>`_.
 
 See also
 ========
