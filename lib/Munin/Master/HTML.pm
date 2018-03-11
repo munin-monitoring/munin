@@ -30,6 +30,17 @@ sub handle_request
 	if ($path =~ m/static\/(.+)$/) {
 		# Emit the static page
 		my $page = $1;
+		if ($page =~ m#/\.\./#) {
+			# "/../" indicates a traversal up the path. We have to prevent this,
+			# otherwise we may get tricked into delivering arbitrary files.
+			# Since there is no readily available function for determining the
+			# canonical path, we simply refuse malformed requests.
+			# Most webservers (used for proxying) should do canonicalization on their
+			# own, but we cannot rely on this.
+			# Static resource paths should never include parent references, anyway.
+			print "HTTP/1.0 404 Not found\r\n";
+			return;
+		}
 		my ($ext) = ($page =~ m/.*\.([^.]+)$/);
 		my %mime_types = (
 			css => "text/css",
