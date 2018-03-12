@@ -172,7 +172,7 @@ norec=yes owner_ok @@LOGDIR@@ @@USER@@
 norec=yes owner_ok "@@DBDIR@@" "@@USER@@"
 norec=yes perm_ok "@@DBDIR@@" 755
 
-for dir in @@DBDIR@@/datafile @@DBDIR@@/limits @@DBDIR@@/*.stats; do
+for dir in "@@DBDIR@@/datafile" "@@DBDIR@@/limits" "@@DBDIR@@"/*.stats; do
     norec=yes owner_ok "$dir" "@@USER@@"
     norec=yes perm_ok "$dir" 644
 done
