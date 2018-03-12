@@ -15,3 +15,4 @@ Guidelines for developing Munin plugins
    howto-write-plugins.rst
    howto-write-snmp-plugins.rst
    plugin-bcp.rst
+   plugin-concise.rst
