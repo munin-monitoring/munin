@@ -24,6 +24,7 @@ also read :ref:`Part III <install-index>`.
    getting-started.rst
    wildcard-plugins.rst
    snmp.rst
+   remove-spikes.rst
    alert.rst
    nagios.rst
    advanced-features.rst
