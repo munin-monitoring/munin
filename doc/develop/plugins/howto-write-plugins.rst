@@ -355,12 +355,12 @@ Perl plugin
 Going on
 ========
 
-The `plugin documentation <http://munin-monitoring.org/wiki/plugins>`_ should have all the information you need. I suggest the next thing you read about plugins is :ref:`Best Practices <plugin-bcp>` which should tell you all you need to know to get nice graphs in as few tries as possible. If planning to write a plugin as a shell script, please read `Shell Plugins <http://munin-monitoring.org/wiki/PluginShell>`_. If your plugin does not work like you think it should, try :ref:`Debugging Plugins <debugging-plugins>`. If you want to get the plugin autoconfigured on install and such take a look at wiki page `PluginConcise <http://munin-monitoring.org/wiki/PluginConcise>`_.
+The `plugin documentation <http://munin-monitoring.org/wiki/plugins>`_ should have all the information you need. I suggest the next thing you read about plugins is :ref:`Best Practices <plugin-bcp>` which should tell you all you need to know to get nice graphs in as few tries as possible. If planning to write a plugin as a shell script, please read `Shell Plugins <http://munin-monitoring.org/wiki/PluginShell>`_. If your plugin does not work like you think it should, try :ref:`Debugging Plugins <debugging-plugins>`. If you want to get the plugin autoconfigured on install and such take a look at page :ref:`PluginConcise <plugin-concise>`.
 
 See also
 ========
 
- * `Concise guide to plugin authoring <http://munin-monitoring.org/wiki/PluginConcise>`_
+ * :ref:`Concise guide to plugin authoring <plugin-concise>`
  * :ref:`Debugging Plugins <debugging-plugins>`
  * :ref:`Global plugin attributes <plugin_attributes_global>`
  * :ref:`Datasource-specific plugin attributes <plugin_attributes_data>`

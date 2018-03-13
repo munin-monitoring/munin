@@ -7,7 +7,7 @@
 **Tutorials:**
 
 - :ref:`How to write plugins <howto-write-plugins>`
-- `The Concise guide to plugin authoring <http://munin-monitoring.org/wiki/PluginConcise>`_
+- :ref:`The Concise guide to plugin authoring <plugin-concise>`
 - :ref:`How to write SNMP Munin plugins <howto-write-snmp-plugins>`
 
 A munin plugin is a small executable. Usually, it is written in some

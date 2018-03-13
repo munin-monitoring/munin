@@ -55,6 +55,8 @@ Any ``snmp__*`` plugins will be auto configured and installed by ``munin-node-co
 
 Every plugin magic marked with *family=snmpauto* and *capabilities=snmpconf* will be interrogated - when appropriately run by ``munin-node-configure``.
 
+.. _plugin-concise-autoconf:
+
 autoconf
 --------
 

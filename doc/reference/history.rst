@@ -55,7 +55,7 @@ Only if they meet the requirements for `vetted plugins <http://munin-monitoring.
 they can be included in the core plugins collection (distributed as `official` Munin release
 by the Munin developer team). They get tagged with **family auto** then
 as all core collection plugins should have the command
-`autoconf <http://munin-monitoring.org/wiki/PluginConcise#autoconf>`_
+:ref:`autoconf <plugin-concise-autoconf>`
 implemented.
 
 
