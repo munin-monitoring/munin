@@ -142,3 +142,5 @@ ABSOLUTE
 ^^^^^^^^
 
 "is for counters which get reset upon reading. This is used for fast counters which tend to overflow. So instead of reading them normally you reset them after every read to make sure you have a maximum time available before the next overflow. Another usage is for things you count like number of messages since the last update."  (Source: `rrdcreate man page <https://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#IABSOLUTE>`_)
+
+.. note:: When `loaning data <http://munin-monitoring.org/wiki/LoaningData>`_ from other graphs, the ``{fieldname}.type`` must be set to the same data type as the original data. If not, Munin default to searching for gauge files, i.e. files ending with ``-g.rdd``. See :ref:`dbdir <dbdir>` for the details on RRD filenames.
