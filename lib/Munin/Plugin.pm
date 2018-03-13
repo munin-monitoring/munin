@@ -411,8 +411,8 @@ been rotated, and the file position will be at the start of the file.
 If the file is opened OK the function returns a tuple consisting of
 the file handle and a file rotation indicator.  $rotated will be 1 if
 the file has been rotated and 0 otherwise.  Also, if the file was
-rotated a warning is printed (this can be found in the munin-node log
-or seen in the terminal when using munin-run).
+rotated a warning is printed (only in debug mode, this can be found
+in the munin-node log or seen in the terminal when using munin-run).
 
 At this point the plugin can read from the file with <$file_handle> in
 loop as usual until EOF is encountered.
@@ -441,7 +441,7 @@ sub tail_open ($$) {
       die "$me: Could not open input file '$file' for reading: $!\n";
 
     if ($position > $size) {
-	warn "$me: File rotated, starting at start\n";
+	warn "$me: File rotated, starting at start\n" if $DEBUG;
 	$filereset=1;
     } elsif (!seek($FH, $position, 0)) {
 	die "$me: Seek to position $position of '$file' failed: $!\n";
