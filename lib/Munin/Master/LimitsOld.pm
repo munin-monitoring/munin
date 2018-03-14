@@ -388,7 +388,7 @@ sub process_service {
         $value = "unknown";
     }
     elsif ( looks_like_number($value) ) {
-        $value = sprintf "%.2f", $value;
+        $value = sprintf "%.6f", $value;
     }
     else {
         WARNING(  "Expected number, got \""
