@@ -50,7 +50,7 @@ Global attributes
   | Name of the category used to sort the graphs on the generated index web page.
   | Lower case string as we like a consistent view and want to avoid duplicates.
   | No whitespace as this makes the build of Munin Gallery a lot easier.
-:See also: `Well known categories <http://munin-monitoring.org/wiki/graph_category_list>`_, `Plugin Gallery <http://munin-monitoring.org/wiki/PluginGallery>`_
+:See also: :ref:`Well known categories <plugin-graph-category>`, `Plugin Gallery <http://munin-monitoring.org/wiki/PluginGallery>`_
 :Default: 'other'
 
 ============
@@ -87,7 +87,7 @@ Global attributes
   |
   | It's also used for :ref:`loaning data <example-plugin-aggregate>` from other data sources (other plugins), which enables Munin to :ref:`create aggregate or other kinds of combined graphs <aggregate-graphs>`.
 :See also: `Loaning Data <http://munin-monitoring.org/wiki/LoaningData>`_, :ref:`Aggregate Graphs <aggregate-graphs>`
-:Default:
+:Default: None (If not set, the order of the graphs follows the order in which the data sources are read; i.e. the order that the plugin itself provides.)
 
 ============
 
@@ -134,11 +134,11 @@ Global attributes
 .. _graph_title:
 
 :Attribute: **graph_title**
-:Value: string
+:Value: string [a-zA-Z0-9-.]
 :Type: required
 :Description: Sets the title of the graph
 :See also:
-:Default:
+:Default: The plugin's file name
 
 ============
 
@@ -181,10 +181,10 @@ Global attributes
 .. _host_name:
 
 :Attribute: **host_name**
-:Value: string
+:Value: string [a-zA-Z0-9-.]
 :Type: optional
-:Description: Override the host name for which the plugin is run.
-:See also:
+:Description: Fully qualified host name (FQDN). Override the host name for which the plugin is run. Should normally **not** be set in the plugin. It is meant to be used when the munin-node acts as proxy to monitor remote hosts e.g. per SNMP plugins. In these cases you have to add an own entry for the remote host in the Munin master configuration to pick up these additional host names.
+:See also: :ref:`Using SNMP plugins <tutorial-snmp>`
 :Default: Host name as declared in munin.conf.
 
 ============
