@@ -159,3 +159,16 @@ the mailing lists and answer questions.
 
 If you learn something which is not in the documentation, write it up and
 contribute it. If you add features to the code, contribute them.
+
+.. _planet-munin:
+
+Planet Munin
+============
+
+In order to provide some central place to reference munin-related blogs out there, `Planet Munin <http://planet.munin-monitoring.org/>`_ was created.
+
+It aggregates many blogs via RSS, and presents them as just one feed.
+
+To add your blog, just visit us on our :ref:`IRC Channel <irc>`, and ask there.
+
+Note that providing a tagged or a category-filtered feed is the best way to remain on-topic.
