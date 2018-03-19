@@ -102,8 +102,12 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
+# Newer versions of net tools' netstat have fixed the 'active connection
+# openings' string from plural connections to singular. The match hereby is for
+# both cases.
+#
 netstat -s | awk '
-/active connections ope/  { print "active.value " $1 }
+/active connection(s)? ope/  { print "active.value " $1 }
 /passive connection ope/  { print "passive.value " $1 }
 /failed connection/       { print "failed.value " $1 }
 /connection resets/       { print "resets.value " $1 }

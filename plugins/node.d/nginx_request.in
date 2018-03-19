@@ -94,14 +94,13 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
 if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 {
 	print "graph_title Nginx requests\n";
-    print "graph_args --base 1000\n";
+	print "graph_args --base 1000\n";
 	print "graph_category nginx\n";
-    print "graph_vlabel Request per second\n";
-    print "request.label req/sec\n";
-    print "request.type DERIVE\n";
+	print "graph_vlabel Requests per \${graph_period}\n";
+	print "request.type DERIVE\n";
 	print "request.min 0\n";
 	print "request.label requests port $port\n";
-	print "request.draw LINE2\n";
+	print "request.draw LINE\n";
 	
 	exit 0;
 }
@@ -112,7 +111,7 @@ my $ua = LWP::UserAgent->new(timeout => 30,
 my $response = $ua->request(HTTP::Request->new('GET',$URL));
 
 if ($response->content =~ /^\s+(\d+)\s+(\d+)\s+(\d+)/m) {
-    print "request.value $3\n";
+	print "request.value $3\n";
 } else {
-    print "request.value U\n";
+	print "request.value U\n";
 }

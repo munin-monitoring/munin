@@ -27,6 +27,7 @@ License unknown
 =head1 MAGIC MARKERS
 
  #%# family=contrib
+ #%# capabilities=autoconf
 
 =cut
 
@@ -65,6 +66,15 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "posts.min 0\n";
     print "members.label members\n";
     print "members.type GAUGE\n";
+    exit 0;
+}
+
+if($ARGV[0] and $ARGV[0] eq "autoconf") {
+    if(-f $logfile && -d $libdir && -x $lister ) {
+        print "yes\n";
+    } else {
+        print "no\n";
+    }
     exit 0;
 }
 

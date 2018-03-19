@@ -71,7 +71,7 @@ if($arg && $arg eq "config")
   }
   
 my($line);
-@info = processVPaths();
+my @info = processVPaths();
 foreach $line (@info)
   {print "$line";}
   
