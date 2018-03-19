@@ -235,9 +235,9 @@ my %defaults = (
 # %graphs contains the graph definitions, it is indexed on the graph
 # name. The information stored for each graph is used for both showing
 # data source values and for printing the graph configuration. Each
-# graph follows the followingformat:
+# graph follows the following format:
 #
-# $graph{NAME} => {
+# $graphs{NAME} => {
 #     config => {
 #         # The global attributes for this graph
 #         global_attrs => {}
@@ -252,6 +252,8 @@ my %defaults = (
 #         {name => 'NAME', (DATA_SOURCE_ATTRS)},
 #         {...},
 #     ],
+#
+# Note for 'cdef' fields: "%s" is replaced with the original fieldname
 my %graphs = ();
 
 #---------------------------------------------------------------------
@@ -1521,6 +1523,8 @@ $graph_plugins{query_response_time} = {
             data_source_attrs => {
                 draw  => 'LINE2',
                 type => 'DERIVE',
+                # convert microseconds back to the SI unit
+                cdef => '%s,1000000,/',
             },
         },
         # data_sources are populated by sub plugin_query_response_time
@@ -1531,7 +1535,7 @@ $graph_plugins{query_response_time} = {
         config => {
             global_attrs => {
                 title  => 'Query Response Time Total',
-                vlabel  => 'query time (microseconds) per ${graph_period}',
+                vlabel  => 'cumulated query time per ${graph_period}',
             },
             data_source_attrs => {
                 draw  => 'LINE2',
@@ -1781,7 +1785,10 @@ sub config {
 		       clean_fieldname($ds->{name}), $k, ($i ? 'STACK' : 'AREA'));
 	    }
 	    else {
-		printf("%s.%s %s\n", clean_fieldname($ds->{name}), $k, $v);
+                # support simple pattern substitution in cdef ("%s" -> fieldname)
+                my $fieldname = clean_fieldname($ds->{name});
+                $v =~ s/%s/$fieldname/g if (($k eq "cdef") and ($v =~ /%s/));
+                printf("%s.%s %s\n", $fieldname, $k, $v);
 	    }
 	    $i++;
 	}
@@ -2071,6 +2078,7 @@ sub plugin_query_response_time {
         $data->{'query_response_time_count_' . $time} = $row->{'count'};
         push @{$graph_plugins{query_response_time}->{count}->{data_sources}}, {name => 'query_response_time_count_' . $time, label => $time };
         next if $row->{'total'} eq 'TOO LONG';
+        # use microseconds (we use the integer-based DERIVE storage)
         $data->{'query_response_time_total_' . $time} = $row->{'total'} * 1e6;
         push @{$graph_plugins{query_response_time}->{total}->{data_sources}}, {name => 'query_response_time_total_' . $time, label => $time };
     }
