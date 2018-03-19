@@ -21,6 +21,7 @@ Examples of munin and related configuration are gathered here.
    graph/aggregate.rst
    graph/aggregated-stack.rst
    graph/aggregation-combined.rst
+   graph/percent-graph.rst
    tips/multimaster.rst
    transport/ssh.rst
    service/service.rst
