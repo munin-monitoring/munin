@@ -1,8 +1,8 @@
 .. _remove-spikes:
 
-===================
-Howto Remove Spikes
-===================
+====================
+How to remove spikes
+====================
 
 .. index::
    pair: RRD; spikes;

@@ -13,6 +13,7 @@ Contents:
 
    installation/index.rst
    advanced/index.rst
+   howtos/index.rst
    develop/index.rst
    develop/plugins/index.rst
    reference/index.rst
