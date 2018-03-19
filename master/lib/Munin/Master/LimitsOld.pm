@@ -369,29 +369,26 @@ sub process_service {
 		my ($previous_updated_timestamp, $previous_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{previous} || [ ] };
 
 		my $heartbeat = 600; # XXX - $heartbeat is a fixed 10 min (2 runs of 5 min).
-		if (! $field->{type} || $field->{type} eq "GAUGE") {
-			$value = $current_updated_value;
-		} elsif (! defined $current_updated_value || ! defined $previous_updated_value || $current_updated_timestamp == $previous_updated_timestamp) {
-			# No derive computing possible. Report unknown.
+		if (! defined $current_updated_value || $current_updated_value eq "U") {
+			# No value yet. Report unknown.
 			$value = "U";
 		} elsif (time > $current_updated_timestamp + $heartbeat) {
-			# Current value is too old. Report unknown. 
+			# Current value is too old. Report unknown.
 			$value = "U";
-		} elsif ($current_updated_timestamp > $previous_updated_timestamp + $heartbeat) {
-			# Old value is too old. Report unknown. 
+		} elsif (! $field->{type} || $field->{type} eq "GAUGE") {
+			# Non-compute up-to-date value.
+			$value = $current_updated_value;
+		} elsif (! defined $previous_updated_value || $previous_updated_value eq "U") {
+			# No derive computing possible. Report unknown.
 			$value = "U";
-		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
-			# COUNTER never decrease. Report unknown.
-			$value = "U";
-		} elsif ($current_updated_value eq "U") {
-			# The current value is unknown. Report unknown.
+		} elsif ($current_updated_timestamp == $previous_updated_timestamp || $current_updated_timestamp > $previous_updated_timestamp + $heartbeat) {
+			# Old value does not exist or is too old. Report unknown.
 			$value = "U";
 		} elsif ($field->{type} eq "ABSOLUTE") {
-			# The previous value is unimportant, as if ABSOLUTE, the counter is reset anytime the value is read
+			# The previous value is unimportant, as if ABSOLUTE, the counter is reset everytime the value is read
 			$value = $current_updated_value / ($current_updated_timestamp - $previous_updated_timestamp);
-		} elsif ($previous_updated_value eq "U") {
-			# The previous value is unknown.
-			# Report unknown, as we are not ABSOLUTE
+		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
+			# COUNTER never decrease. Report unknown.
 			$value = "U";
 		} else {
 			# Everything is ok for DERIVE/COUNTER
@@ -401,7 +398,7 @@ sub process_service {
 	}
 
         # De-taint.
-        if (!defined $value || $value eq "U") {
+        if ($value eq "U") {
             $value = "unknown";
         }
         else {
