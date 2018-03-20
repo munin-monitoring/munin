@@ -1,10 +1,11 @@
+---
 language: perl
 perl:
   - "5.20"
 branches:
- only:
-  - stable-2.0
-  - master
+  only:
+    - stable-2.0
+    - master
 addons:
   apt:
     packages:
@@ -47,7 +48,7 @@ addons:
 notifications:
   email: false
   irc:
-    on_success: change # no need for spam
+    on_success: change  # no need for spam
     on_failure: always
     channels:
       - "irc.oftc.net#munin"
