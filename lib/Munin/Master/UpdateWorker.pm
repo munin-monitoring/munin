@@ -536,7 +536,7 @@ sub set_spoolfetch_timestamp {
 	DEBUG "[DEBUG] set_spoolfetch_timestamp($timestamp)";
 
 	# Using the last timestamp sended by the server :
-	# -> It can be be different than "now" to be able to process the backlock slowly
+	# -> It can be different than "now" to be able to process the backlock slowly
 	$self->{state}{spoolfetch} = $timestamp;
 }
 

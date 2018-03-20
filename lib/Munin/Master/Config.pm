@@ -281,7 +281,7 @@ sub _extract_group_name_from_definition {
 
 
 sub _concat_config_line {
-    # Canonify and concatenate current prefix and and the config line
+    # Canonify and concatenate current prefix and the config line
     # we're parsing now in a correct manner.
 
     # See also _split_config_line.

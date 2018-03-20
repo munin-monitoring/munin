@@ -149,7 +149,7 @@ $line = <$stats>;
 die "unexpected content found"
   unless $line =~ m/^\+\+\+ Statistics Dump \+\+\+/;
 
-# second line allows to guess format
+# second line allows one to guess format
 $line = <$stats>;
 chomp $line;
 if ($line eq '++ Incoming Requests ++') {

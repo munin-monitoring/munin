@@ -21,7 +21,7 @@ In the FAQ it's explained how to create a percentage graph with two data sources
 
 Of course, an alternative is to create a wildcard version of the plugin; one that gives the numbers and one that gives the ratio(s). This will, however, dump the load on the :ref:`munin-node <munin-node>`.
 
-Creating graphs showing distribution by percentage is often required, while lots of the Munin plugins deal with occurences and hits. For example, the numbers of hits and misses in a reverse proxy are indeed interesting to see the throughput, while the hits/misses ratio is interesting to see how efficient the caching is.
+Creating graphs showing distribution by percentage is often required, while lots of the Munin plugins deal with occurrences and hits. For example, the numbers of hits and misses in a reverse proxy are indeed interesting to see the throughput, while the hits/misses ratio is interesting to see how efficient the caching is.
 
 (Yes, I realise this example was a bad one as it has only two data sources. Bear with me ;-)
 

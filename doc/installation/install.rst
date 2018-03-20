@@ -31,7 +31,7 @@ or install from source-code.
 	is so satisfactory, that even the developers use them instead.
 
 Installing Munin on most relevant operating systems can usually be
-done with with the systems package manager, typical examples being:
+done with the systems package manager, typical examples being:
 
 Installing Munin from a package
 ===============================

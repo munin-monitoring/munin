@@ -5,7 +5,7 @@
 ============================
 
 This example describes how to generate graphs and HTML files dynamically (on demand) via
-`apache <https://httpd.apache.org/>`_.
+`Apache <https://httpd.apache.org/>`_.
 
 
 Virtualhost configuration

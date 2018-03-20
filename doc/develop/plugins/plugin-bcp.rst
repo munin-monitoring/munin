@@ -81,7 +81,7 @@ The first disables normal graphing of inputrate.  The second activates a hack in
 Legends
 =======
 
-As of version 1.2 Munin supports explanatory legends on both the graph and field level.  Many plugins - even the CPU use plugin - should make use of this. The CPU "io wait" number for example will only get larger than 0 if the CPU has nothing else to to in the time interval.  Many (nice) graphs will only be completely clear once a rather obscure man page has been read (or in the Linux case perhaps even the kernel source).  Using the legend possibilities Munin supports will help this.
+As of version 1.2 Munin supports explanatory legends on both the graph and field level.  Many plugins - even the CPU use plugin - should make use of this. The CPU "io wait" number for example will only get larger than 0 if the CPU has nothing else to do in the time interval.  Many (nice) graphs will only be completely clear once a rather obscure man page has been read (or in the Linux case perhaps even the kernel source).  Using the legend possibilities Munin supports will help this.
 
 Graph legends are added by using the :ref:`graph_info <graph_info>` attribute, while field legends use the :ref:`fieldname.info <fieldname.info>` attribute.
 

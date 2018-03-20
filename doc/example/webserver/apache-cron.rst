@@ -4,7 +4,7 @@
  Apache Cron Configuration
 ===========================
 
-This example describes how to use `apache <https://httpd.apache.org/>`_ for delivering graphs and
+This example describes how to use `Apache <https://httpd.apache.org/>`_ for delivering graphs and
 HTML files that were generated via cron.
 
 

@@ -1,12 +1,12 @@
-This is a nice OO plugin framework for python plugins.  There is an
+This is a nice OO plugin framework for Python plugins.  There is an
 example plugin for watching the number of arp entries on a host.
 
 If the project is provided with install Makefile targets, and a
-patches to give the python module a less generic name than "munin" (in
+patches to give the Python module a less generic name than "munin" (in
 Perl I would have called it Munin::Plugin::OO) then we can make it an
 official part of the project.
 
-Needed is also a python version of Munin::Plugin.
+Needed is also a Python version of Munin::Plugin.
 
 Please see https://code.launchpad.net/~msiebuhr/+junk/python-munin for
 the latest and greatest.

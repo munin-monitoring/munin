@@ -5,7 +5,7 @@
 ============================
 
 This example describes how to run a separate :ref:`munin-httpd` process and proxy all requests
-via `apache <https://httpd.apache.org/>`_ to this instance.
+via `Apache <https://httpd.apache.org/>`_ to this instance.
 
 
 Virtualhost configuration

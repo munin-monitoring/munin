@@ -338,7 +338,7 @@ $field_warning or $field_critical values then look for the variables
 "warning" and "critical" and return those values if any.
 
 If the second and/or third arguments are specified then they will be
-used to specify the name of variables giving the the warning and
+used to specify the name of variables giving the warning and
 critical levels.
 
 If no values are found for a threshold then undef is returned.
@@ -498,7 +498,7 @@ sub readarray($) {
 
 =head3 $position = tail_close($file_handle)
 
-Close the the file and return the current position in the file.  This
+Close the file and return the current position in the file.  This
 position can be stored in a state file until the next time the plugin runs.
 
 If the C<close> system call fails, a warning will be printed (which can be

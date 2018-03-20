@@ -50,7 +50,7 @@
 #                 - smartctl path can be passed through "smartpath" environment variable
 #                 - Additional smartctl args can be passed through "smartargs" environment variable
 # v1.7 29/11/2004 - Add suggest capabilities for NetBSD, OpenBSD, FreeBSD and SunOS.
-#                 - Allow to override completely the smartctl arguments with "smartargs"
+#                 - Allow one to override completely the smartctl arguments with "smartargs"
 # v1.8 16/02/2005 - Exit status field now only triggers warnings, not criticals.
 # v1.9 07/07/2005 - Allow to query several drives on the same 3ware card.
 #                 - Correct a bug when '-i' was not listed in smartargs

@@ -137,7 +137,7 @@ sub _do_connect {
 
     # check all the lines until we find one that matches the expected
     # greeting; ignore anything that doesn't look like it as long as
-    # there is output. This allows to accept SSH connections where
+    # there is output. This allows one to accept SSH connections where
     # lastlog or motd is used.
     until(defined($self->{node_name})) {
 	my $greeting = $self->_node_read_single();
