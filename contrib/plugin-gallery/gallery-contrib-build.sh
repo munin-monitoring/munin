@@ -1,12 +1,12 @@
-#!/bin/bash
+#!/bin/sh
 #
-# This script builds a HTML presentation of the perldocs 
+# This script builds a HTML presentation of the perldocs
 # integrated in the Munin plugins collected at github
 # so that users can browse info about available plugins
 #
-# Here we treat the 3rd party plugins contributed 
+# Here we treat the 3rd party plugins contributed
 # via github https://github.com/munin-monitoring/contrib
-# 
+#
 # Plugin authors shall contribute example graphs
 # for their plugins also. Rules are defined here:
 # http://munin-monitoring.org/wiki/PluginGallery
@@ -59,20 +59,20 @@ WORKDIR: $WORKDIR
 "
 
 # Check existence of SVNROOTDIR
-if (! test -d "$SVNROOTDIR") then
+if [ ! -d "$SVNROOTDIR" ]; then
     echo "ERROR: Directory for github download not found! Please create it here: $SVNROOTDIR"
-    exit;
+    exit 1
 fi
 
 echo "Preparations..
 ..cleaning data of the last run"
 
-if (test -d "$WORKDIR") then
+if [ -d "$WORKDIR" ]; then
 
-   echo "..empty workdir"
-   rm -rf $WORKDIR
+   echo "..emptying workdir"
+   rm -rf "$WORKDIR"
 
-   # This method is only relevant, if we 
+   # This method is only relevant, if we
    # use svn or git to update local repo
    # At the time we remove *everything* and extract a fresh zipfile
    #   # Remove all POD generated plugin pages from the last run
@@ -81,66 +81,66 @@ if (test -d "$WORKDIR") then
 fi
 
 echo "..remove existing Gallery pages"
-rm -rf $HTMLDIR/$BRANCH/*.html
+rm -rf "$HTMLDIR/$BRANCH"/*.html
 
 echo "..remove existing zip download file"
-rm $SVNROOTDIR/$BRANCH.zip
+rm "$SVNROOTDIR/$BRANCH.zip"
 
 echo "..get a fresh zip file from github repo"
-wget --no-verbose --output-document=$SVNROOTDIR/$BRANCH.zip https://github.com/munin-monitoring/$REPO/archive/$BRANCH.zip 
-rm -Rf $SVNROOTDIR/$REPO-$BRANCH
-mkdir -p $SVNROOTDIR/$REPO-$BRANCH/plugins
-unzip -q -d $SVNROOTDIR $SVNROOTDIR/$BRANCH.zip $REPO-$BRANCH/plugins/*
+wget --no-verbose --output-document="$SVNROOTDIR/$BRANCH.zip" "https://github.com/munin-monitoring/$REPO/archive/$BRANCH.zip"
+rm -Rf "$SVNROOTDIR/$REPO-$BRANCH"
+mkdir -p "$SVNROOTDIR/$REPO-$BRANCH/plugins"
+unzip -q -d "$SVNROOTDIR $SVNROOTDIR/$BRANCH.zip" "$REPO-$BRANCH"/plugins/*
 
 echo "..cp list of well-known-categories to WORKDIR"
-cp $SCRIPTDIR/well-known-categories.incl $WORKDIR
+cp "$SCRIPTDIR/well-known-categories.incl" "$WORKDIR/"
 
-cd $WORKDIR
+cd "$WORKDIR" || exit 1
 echo "
 Start building the new gallery pages.."
 
 # Find relation between plugins and categories
-grep -iR --exclude-from=$SCRIPTDIR/grep-files-contrib.excl graph_category * | grep -v .svn | sort -u > $SCRIPTDIR/cat-contrib.lst
-awk -F : -f $SCRIPTDIR/split-greplist.awk $SCRIPTDIR/cat-contrib.lst | LC_COLLATE=C sort -u > $SCRIPTDIR/catsorted-contrib.lst
+grep -iR --exclude-from="$SCRIPTDIR/grep-files-contrib.excl" graph_category . | grep -vE "\.(svn|git)/" | sort -u >"$SCRIPTDIR/cat-contrib.lst"
+awk -F : -f "$SCRIPTDIR/split-greplist.awk" "$SCRIPTDIR/cat-contrib.lst" | LC_COLLATE=C sort -u >"$SCRIPTDIR/catsorted-contrib.lst"
 
 # Create categories navigation snippet to integrate in each page
-awk -f $SCRIPTDIR/well-known-categories.incl -f $SCRIPTDIR/prep-catnav-contrib.awk -v scriptdir=$SCRIPTDIR $SCRIPTDIR/catsorted-contrib.lst | sort >$SCRIPTDIR/cat-plugins-contrib.lst
+awk -f "$SCRIPTDIR/well-known-categories.incl" -f "$SCRIPTDIR/prep-catnav-contrib.awk" -v "scriptdir=$SCRIPTDIR" "$SCRIPTDIR/catsorted-contrib.lst" | sort >"$SCRIPTDIR/cat-plugins-contrib.lst"
 
 # Compile template for category pages
-cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav-contrib.html $SCRIPTDIR/static/gallery-cat-footer.html >$SCRIPTDIR/static/prep-index-contrib.html
+cat "$SCRIPTDIR/static/gallery-header.html" "$SCRIPTDIR/static/gallery-cat-header.html" "$SCRIPTDIR/static/gallery-catnav-contrib.html" "$SCRIPTDIR/static/gallery-cat-footer.html" >"$SCRIPTDIR/static/prep-index-contrib.html"
 
 # Create entry page
-cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.html $SCRIPTDIR/static/gallery-catnav-contrib.html $SCRIPTDIR/static/gallery-cat-footer.html $SCRIPTDIR/static/gallery-intro-contrib.html $SCRIPTDIR/static/gallery-footer.html >$HTMLDIR/$REPO/index.html
+cat "$SCRIPTDIR/static/gallery-header.html" "$SCRIPTDIR/static/gallery-cat-header.html" "$SCRIPTDIR/static/gallery-catnav-contrib.html" "$SCRIPTDIR/static/gallery-cat-footer.html" "$SCRIPTDIR/static/gallery-intro-contrib.html" "$SCRIPTDIR/static/gallery-footer.html" >"$HTMLDIR/$REPO/index.html"
 
 # Create Gallery pages for all categories that were explicitly set in the plugin script files
-awk -f $SCRIPTDIR/well-known-categories.incl -f $SCRIPTDIR/print-gallery-contrib.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/catsorted-contrib.lst >$SCRIPTDIR/print-gallery1-contrib.log
+awk -f "$SCRIPTDIR/well-known-categories.incl" -f "$SCRIPTDIR/print-gallery-contrib.awk" -v "scriptdir=$SCRIPTDIR" "workdir=$WORKDIR" "htmldir=$HTMLDIR" "$SCRIPTDIR/catsorted-contrib.lst" >"$SCRIPTDIR/print-gallery1-contrib.log"
 
 # Find the plugins that fell through the sieve..
-find . -type f | grep -v .html | grep -v .svn | grep -v .png | grep -v .txt | grep -v .rst | grep -v .ini | grep -v .conf | grep -v README | grep -v .git | awk '{print substr($0,3)}' |sort > $SCRIPTDIR/all-plugins-contrib.lst
-diff $SCRIPTDIR/cat-plugins-contrib.lst $SCRIPTDIR/all-plugins-contrib.lst | grep '^>' >$SCRIPTDIR/nocat-plugins-contrib.lst
+find . -type f | grep -vE "\.(svn|git)/" | grep -vE "\.(html|png|txt|rst|ini|conf)$" | grep -v README | awk '{print substr($0,3)}' | sort >"$SCRIPTDIR/all-plugins-contrib.lst"
+diff "$SCRIPTDIR/cat-plugins-contrib.lst" "$SCRIPTDIR/all-plugins-contrib.lst" | grep '^>' >"$SCRIPTDIR/nocat-plugins-contrib.lst"
 
 # Push plugins with no category to "other"
-sed -i 's/>/other/g' $SCRIPTDIR/nocat-plugins-contrib.lst
-grep ^other $SCRIPTDIR/catsorted-contrib.lst >>$SCRIPTDIR/nocat-plugins-contrib.lst
-LC_COLLATE=C sort -u $SCRIPTDIR/nocat-plugins-contrib.lst > $SCRIPTDIR/other-plugins-contrib.lst
+sed -i 's/>/other/g' "$SCRIPTDIR/nocat-plugins-contrib.lst"
+grep ^other "$SCRIPTDIR/catsorted-contrib.lst" >>"$SCRIPTDIR/nocat-plugins-contrib.lst"
+LC_COLLATE=C sort -u "$SCRIPTDIR/nocat-plugins-contrib.lst" >"$SCRIPTDIR/other-plugins-contrib.lst"
 
 # Create Gallery pages for category "other"
-awk -f $SCRIPTDIR/well-known-categories.incl -f $SCRIPTDIR/print-gallery-contrib.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/other-plugins-contrib.lst >$SCRIPTDIR/print-gallery2-contrib.log
+awk -f "$SCRIPTDIR/well-known-categories.incl" -f "$SCRIPTDIR/print-gallery-contrib.awk" -v "scriptdir=$SCRIPTDIR" "workdir=$WORKDIR" "htmldir=$HTMLDIR" "$SCRIPTDIR/other-plugins-contrib.lst" >"$SCRIPTDIR/print-gallery2-contrib.log"
 
 # Collect example graphs
-find . -name '*.png' | grep example-graphs |  awk '{print substr($0,3)}' | sort > $SCRIPTDIR/example-graphs-contrib.lst
+find . -name '*.png' | grep example-graphs |  awk '{print substr($0,3)}' | sort >"$SCRIPTDIR/example-graphs-contrib.lst"
 
 # Include example graphs in perldoc pages
-awk -f $SCRIPTDIR/include-graphs-contrib.awk -v workdir=$WORKDIR $SCRIPTDIR/example-graphs-contrib.lst >$SCRIPTDIR/include-graphs-contrib.log
+awk -f "$SCRIPTDIR/include-graphs-contrib.awk" -v "workdir=$WORKDIR" "$SCRIPTDIR/example-graphs-contrib.lst" >"$SCRIPTDIR/include-graphs-contrib.log"
 
 # chown -R $WWWUSER.$WWWGROUP $HTMLDIR
-chmod -R a+rx $HTMLDIR
+chmod -R a+rx "$HTMLDIR"
 
 # Some statistic
 echo "
 STATISTICS
 ----------"
-echo `cat $SCRIPTDIR/nocat-plugins-contrib.lst | wc -l` "plugins without category were assigned to category 'other'"
-echo `grep "output saved" $SCRIPTDIR/print-gallery*-contrib.log | wc -l` "times created perldoc pages with content"
-echo `grep "No documentation" $SCRIPTDIR/print-gallery*-contrib.log | wc -l` "times no perldoc content found"
-echo `cat $SCRIPTDIR/example-graphs-contrib.lst | wc -l` "example graph images illustrate the plugin pages"
+printf "%d plugins without category were assigned to category 'other'\n" "$(wc -l <"$SCRIPTDIR/nocat-plugins-contrib.lst")"
+printf "%d times created perldoc pages with content\n" "$(grep -c "output saved" "$SCRIPTDIR"/print-gallery*-contrib.log)"
+printf "%d times no perldoc content found\n" "$(grep -c "No documentation" "$SCRIPTDIR"/print-gallery*-contrib.log)"
+printf "%d example graph images illustrate the plugin pages\n" "$(wc -l <"$SCRIPTDIR/example-graphs-contrib.lst")"
