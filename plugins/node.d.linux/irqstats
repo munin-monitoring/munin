@@ -168,9 +168,9 @@ EOM
 	if ( $irq->{label} ) {
 	  print "i", $irq->{irq}, '.info Interrupt ', $irq->{irq}, ', for device(s): ', $irq->{label}, "\n"
 	} elsif ( $irq->{irq} =~ /NMI/i ) {
-	  print "i", $irq->{irq}, ".info Nonmaskable interrupt. Either 0 or quite high. If it's normaly 0 then just one NMI will often mark some hardware failure.\n";
+	  print "i", $irq->{irq}, ".info Nonmaskable interrupt. Either 0 or quite high. If it's normally 0 then just one NMI will often mark some hardware failure.\n";
 	} elsif ( $irq->{irq} =~ /LOC/i ) {
-	  print "i", $irq->{irq}, ".info Local (pr. CPU core) APIC timer interrupt.  Until 2.6.21 normaly 250 or 1000 pr second. On modern 'tickless' kernels it more or less reflects how busy the machine is.\n";
+	  print "i", $irq->{irq}, ".info Local (per CPU core) APIC timer interrupt.  Until 2.6.21 normally 250 or 1000 per second. On modern 'tickless' kernels it more or less reflects how busy the machine is.\n";
 	}
 
 	print "i", $irq->{irq}, ".type DERIVE\n";

@@ -19,7 +19,7 @@ Resources
 =========
 
 * Website: http://munin-monitoring.org/
-* Documenation: http://guide.munin-monitoring.org/
+* Documentation: http://guide.munin-monitoring.org/
 * `IRC channel <irc://irc.oftc.net/#munin>`_: ``#munin`` on OFTC
 * Mailing List: https://lists.sourceforge.net/lists/listinfo/munin-users
 * Plugin Gallery: http://gallery.munin-monitoring.org/

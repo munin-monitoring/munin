@@ -90,7 +90,7 @@
 		},
 
 		/**
-		 * Switchs to a specific tab
+		 * Switches to a specific tab
 		 * @param tab DOM element
 		 */
 		goTo: function(tab) {

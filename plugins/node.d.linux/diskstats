@@ -178,7 +178,7 @@ sub subtract_wrapping_numbers {
 
 # calculate_values
 #
-# Calculates all data that get's graphed
+# Calculates all data that gets graphed
 
 sub calculate_values {
     my ( $prev_time, $prev_stats, $cur_stats ) = @_;

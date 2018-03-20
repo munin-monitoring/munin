@@ -209,7 +209,7 @@ if ($line eq '++ Incoming Requests ++') {
            v6 => 0,
           );
 
-    # jump to incoming queries secion
+    # jump to incoming queries section
     while ($line ne '++ Incoming Queries ++') {
         $line = <$stats>;
         chomp $line;

@@ -46,7 +46,7 @@ conflicting infos so we can correct the wrong one.
 
 Still, a very important part is the `FAQ`__ (Frequently Asked Questions), which
 contains many answers to a wide array of questions. It is the only part of the
-documenation in the wiki that is still regularly updated.
+documentation in the wiki that is still regularly updated.
 
 __ http://munin-monitoring.org/wiki/WikiStart
 __ http://munin-monitoring.org/wiki/faq

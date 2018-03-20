@@ -51,7 +51,7 @@ An automated installation will run ``munin-node-configure`` and hereby selects t
 
 Every plugin with a *family=auto* magic marker (``#%# family=auto``) will be interrogated automatically with the ``autoconf`` and perhaps the ``suggest`` methods.  You can change the family list with the ``--families`` option.
 
-Any ``snmp__*`` plugins will be auto configured and installed by ``munin-node-configure --snmp`` with the apropriate arguments.
+Any ``snmp__*`` plugins will be auto configured and installed by ``munin-node-configure --snmp`` with the appropriate arguments.
 
 Every plugin magic marked with *family=snmpauto* and *capabilities=snmpconf* will be interrogated - when appropriately run by ``munin-node-configure``.
 
@@ -123,7 +123,7 @@ Example:
 
 As you see: wildcard plugins are easily recognized by their names ending in _.
 
-A wildcard plugin that has a *capabilites=suggest* magic marker will - after ``autoconf`` - be invoked with ``suggest`` as the sole argument. It then should examine the system and determine which of the similar things it can report on and output a list of these.
+A wildcard plugin that has a *capabilities=suggest* magic marker will - after ``autoconf`` - be invoked with ``suggest`` as the sole argument. It then should examine the system and determine which of the similar things it can report on and output a list of these.
 
 ::
 
@@ -136,7 +136,7 @@ This means that the plugin can be run as ``if_eth0`` and ``if_eth1``. The plugin
 snmpconf
 --------
 
-As stated above a plugin magic marked with *family=snmpauto* and *capabilites=snmpconf* will be invoked with ``snmpconf`` as the sole argument. A SNMP plugin is by definition a wildcard plugin, it may examine any host that supports SNMP. The name convention for a SNMP plugin is examplified by the df plugin: ``snmp__df``.  The hostname goes between the two consecutive underlines (_), and when invoked, the plugin may examine ``$0``, as any wildcard plugin must, to determine the name of the host it is to work with. It may also contain two wildcards as in ``snmp__if_``. Here the index of the network interface appears after the third underline (_) at the end of the string. e.g. ``snmp_foo.example.com_if_1``. 
+As stated above a plugin magic marked with *family=snmpauto* and *capabilities=snmpconf* will be invoked with ``snmpconf`` as the sole argument. A SNMP plugin is by definition a wildcard plugin, it may examine any host that supports SNMP. The name convention for a SNMP plugin is examplified by the df plugin: ``snmp__df``.  The hostname goes between the two consecutive underlines (_), and when invoked, the plugin may examine ``$0``, as any wildcard plugin must, to determine the name of the host it is to work with. It may also contain two wildcards as in ``snmp__if_``. Here the index of the network interface appears after the third underline (_) at the end of the string. e.g. ``snmp_foo.example.com_if_1``.
 
 On the occasion of being run with ``snmpconf`` the plugin shall output one or more of the following:
 

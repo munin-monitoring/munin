@@ -696,7 +696,7 @@ sub do_config_if {
 
 
 sub do_fetch_root {
-    # Construct root graphs fro the if_bytes and if_error spaces
+    # Construct root graphs for the if_bytes and if_error spaces
 
     my $in = 0;
     my $out = 0;

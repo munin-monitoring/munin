@@ -62,7 +62,7 @@ This will provide for HTTP basic authentication.
 =head2 WILDCARD CONFIGURATION
 
 It's possible to use the plugin in a virtual-node capacity, in which
-case the URL will automatically default to the hostname defiend after
+case the URL will automatically default to the hostname defined after
 the second underscore in the plugin name:
 
   [apache_someserver]

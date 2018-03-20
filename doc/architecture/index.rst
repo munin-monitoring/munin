@@ -33,7 +33,7 @@ and the Munin-Master will croak, if values go above or below the given threshold
 
 Here we also generate the graphs, as this is a heavy task that needs some resources.
 Recent versions of Munin use cgi-graphing to generate graphs only
-when the user want's to see them.
+when the user wants to see them.
 
 .. toctree::
    :maxdepth: 2

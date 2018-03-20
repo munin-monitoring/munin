@@ -502,7 +502,7 @@ sub parse_config {
 	    $continuation = '';
 	}
 
-        # This must be handled after continuation hadling otherwise
+        # This must be handled after continuation handling otherwise
 	# empty lines will be ignored in continuation context.
         next if !length($line);
 

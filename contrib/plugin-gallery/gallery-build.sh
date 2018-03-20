@@ -117,7 +117,7 @@ cat $SCRIPTDIR/static/gallery-header.html $SCRIPTDIR/static/gallery-cat-header.h
 # Create Gallery pages for all categories that were explicitly set in the plugin script files
 awk -f $SCRIPTDIR/well-known-categories.incl -f $SCRIPTDIR/print-gallery.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/catsorted.lst >$SCRIPTDIR/print-gallery1.log
 
-# Find the plugins that fell thru the sieve..
+# Find the plugins that fell through the sieve..
 find node.* -name '*.in' | grep -v node.d.debug | sort > $SCRIPTDIR/all-plugins.lst
 diff $SCRIPTDIR/cat-plugins.lst $SCRIPTDIR/all-plugins.lst | grep '^>' >$SCRIPTDIR/nocat-plugins.lst
 

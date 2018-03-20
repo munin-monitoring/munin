@@ -153,7 +153,7 @@ sub munin_getlock {
     DEBUG "[DEBUG] Writing out PID to lock file $lockname";
     print LOCK $$; # we want the pid inside for later use
     if (defined($pid) && length $$ < length $pid) {
-	# Since pid was defined we need to truncate incase len($) < len($pid)
+	# Since pid was defined we need to truncate in case len($) < len($pid)
 	truncate(LOCK, tell(LOCK))
     }
     close LOCK;

@@ -17,7 +17,7 @@ and munin-node is restarted.
 
 The utility :ref:`munin-node-configure` is used by the Munin installation
 procedure to check which plugins are suitable for your node and
-create the links automatically. It can be called everytime when a system
+create the links automatically. It can be called every time when a system
 configuration changes (services, hardware, etc) on the node and it will adjust
 the collection of plugins accordingly.
 
@@ -142,7 +142,7 @@ Inheritance
 
 In the plugin configuration file(s), values are inherited. Values assigned in sections with more specific expressions have higher priority.
 
-This means that values from ``[foo_bar_*]`` have precendence over values from ``[foo_*]``, regardless of order in the plugin config file.
+This means that values from ``[foo_bar_*]`` have precedence over values from ``[foo_*]``, regardless of order in the plugin config file.
 
 Non-conflicting values
 ^^^^^^^^^^^^^^^^^^^^^^

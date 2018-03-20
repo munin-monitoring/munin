@@ -12,7 +12,7 @@ with SNMP agent daemon activated. See na_snmp(8) for details.
 
 =head1 CONFIGURATION
 
-Unfortunately, SNMPv3 is not fully supported on all NetApp equipments.
+Unfortunately, SNMPv3 is not fully supported on all NetApp appliances.
 For this reason, this plugin will use SNMPv2 by default, which is
 insecure because it doesn't encrypt the community string. 
 

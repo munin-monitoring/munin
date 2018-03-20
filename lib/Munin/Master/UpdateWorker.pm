@@ -621,7 +621,7 @@ sub uw_handle_config {
 		my $rrd_file = $self->_create_rrd_file_if_needed($plugin, $ds_name, $ds_config, $first_epoch);
 
 		# Update the RRD file
-		# XXX - Should be handled in a stateful way, as now it is reconstructed everytime
+		# XXX - Should be handled in a stateful way, as now it is reconstructed every time
 		my $dbh = $self->{dbh};
 		my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 		$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
@@ -1314,7 +1314,7 @@ sub _update_rrd_file {
 		# RRDCACHED only takes about 4K worth of commands. If the commands is
 		# too large, we have to break it in smaller calls.
 		#
-		# Note that 32 is just an arbitrary choosed number. It might be tweaked.
+		# Note that 32 is just an arbitrary chosen number. It might be tweaked.
 		#
 		# For simplicity we only call it with 1 update each time, as RRDCACHED
 		# will buffer for us as suggested on the rrd mailing-list.
