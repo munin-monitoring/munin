@@ -617,7 +617,7 @@ sub uw_handle_config {
 		my $ds_config = $fields{$ds_name};
 		my $ds_id = $ds_ids->{$ds_name};
 
-		my $first_epoch = time; # XXX - we should be able to have some delay in the past for spoolfetched plugins
+		my $first_epoch = time - 3600; # XXX - we should be able to have some delay in the past for spoolfetched plugins
 		my $rrd_file = $self->_create_rrd_file_if_needed($plugin, $ds_name, $ds_config, $first_epoch);
 
 		# Update the RRD file
