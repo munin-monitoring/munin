@@ -1,5 +1,230 @@
 -*- text -*-
 
+munin-2.0.35, 2018-03-21
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #710, #382, #301, #923, #586, #864, #881, #891, #857, #888, #310, T#1018, T#1037, T#1276
+
+------------------
+Detailed Changelog
+------------------
+
+Adam Woodbeck (1):
+      Added HP-UX support to processes plugin.
+
+Anders Ossowicki (1):
+      DERIVE does not need a max to avoid false spikes.
+
+Andreas Teuchert (1):
+      snmp__if_multi: Set warning to 75% of interface speed instead of 133%.
+
+Axel Huebl (4):
+      Fix 1350, user agent, auto config
+      Multi-URL and requisites support (with backwards compatible options)
+      Remove Autoconf
+      Review Comments
+
+Bart Coppens (1):
+      Handle negative values in spooled data
+
+Bas Couwenberg (1):
+      Add support for rndc options in bind9_rndc plugin.
+
+Békefi Gábor (1):
+      Correcting mysql_queries plugin random hash ordering.
+
+Chris Butler (1):
+      Add PostgreSQL 10 support to postgres_xlog
+
+Daniel Black (13):
+      add threads running to mysql plugin on connections graph
+      mysql: don't suggest galera graphs if no galera
+      mysql: add data from query response time plugin
+      mysql: graph_period in vlabel and not title
+      mysql: query response time total - useconds
+      mysql: graphs are dynamic and therefore need caching
+      mysql: freeze->nfreeze
+      mysql: plugin_query_response_time - no need for plugin_map
+      mysql: Add user statistics graphs
+      mysql: change default database to information_schema
+      mysql: and grants and examples
+      mysql: user munin for unix_socket auth plugin
+      mysql: add graph binlog_groupcommit
+
+Dmitry Marakasov (7):
+      Whitespace consistency
+      Don't hardcode graph period
+      Remove duplicate label definition
+      Use consistent Nginx spelling among nginx_ plugins
+      Don't use unnecessary bold lines for nginx_* graphs
+      Calculate diskspace/inode usage percent accurately
+      Sort df output
+
+Ed Szynaka (1):
+      Added autoconf to spamstats
+
+Gabriele (1):
+      Fixed setting of warning limit and some minor issues
+
+Herwin Weststrate (1):
+      Typo fix in comments of fw_conntrack
+
+Hiroshi Shirosaki (1):
+      Fix Java committed memory bigger than Max
+
+Holger Levsen (1):
+      fixup perms, broken since >2.999.4
+
+InsanePrawn (1):
+      Update smart_
+
+Iván Montoro (1):
+      Add IPv6 support
+
+Jason Woods (2):
+      Report GAUGE values that are not updated within the heartbeat as Unknown
+      Further improve handling of unknown values and small refactor to make easier to follow
+
+Jean-Louis Dupond (1):
+      haproxy_ng: add SessionRate and adjust title of current sessions value
+
+Jose-Marcio Martins da Cruz (1):
+      Update meminfo.in
+
+K.Cima (3):
+      Fix typo $CDEV -> $CDEF
+      Add --lower-limit, --upper-limit and vlabel
+      Add disk device names for Oracle VM (LDOMs) and Kernel Zones
+
+Kenyon Ralph (1):
+      snmp__if_: handle noSuchInstance
+
+Kim B. Heino (5):
+      apc_nis: add line frequency monitoring
+      vlan_: fix syntax error
+      plugins/squeezebox: match category with munin contrib repo
+      plugins/squeezebox: wired devices are reported as strength 0, should be 100
+      plugins/apc_nis: add missing category
+
+Kjetil Torgrim Homme (1):
+      reduce number of forked processes
+
+Lars Kruse (33):
+      plugin smart_: typofix - https://github.com/vlajos/misspell_fixer
+      plugin smart_: set executable permission
+      plugin smart_: remove emacs mode hints
+      plugin smart_: switch to python3
+      updated travis setup: follow most changes of master
+      travis: import cpanfile from master
+      getversion: backport from master
+      plugin munin_stats: no warning if "graph" updates in CGI mode
+      plugin proc (Linux): use 'clean_fieldname'
+      plugin proc (Linux): suppress error messages for unreadable files
+      Logger: add missing "Carp" import for "confess"
+      postgres plugins: fixed database selection
+      hddtemp_smartctl plugin: add more smartctl labels (190 / 194)
+      varnish plugin: compatibility with Varnish 5.2
+      Plugin http_loadtime: improved quoting, modern command substitution
+      Plugin http_loadtime: time calculation based on "date" instead of "time"
+      Plugin http_loadtime: improve wget calls
+      Plugin http_loadtime: fix redirection order, remove bashisms, switch to sh
+      plugin 'ping_': improve shell quoting; fix shellcheck issues
+      plugin df (generic): unify whitespace
+      plugin df (generic): fix most shellcheck issues
+      plugin df (generic): reduce code duplication
+      plugin df (generic): support DIRTYCONFIG capability
+      plugin df (generic): replace ambiguous device names with mountpoints
+      plugin df_inode (generic): import changes of the "df" plugin
+      iptables-related plugins: use "-w" for consistent results
+      plugins df/df_inode: fix recently broken autoconf
+      plugin memcached_: exitcode zero for "autoconf" response "no"
+      plugin meminfo (Linux): fixed typo ("Hlocked"/"Mlocked")
+      Munin::Plugin: "rotate" event without warning for "tail_open"
+      Limits Notifications: prevent notification executable from writing to STDOUT
+      Limits check: increase log level for limit state changes
+      Plugin "if_" (FreeBSD): mention non-suitability for older systems and fix syntax
+
+Mark Saad (1):
+      The 32bit Warning is not accurate .     On modern FreeBSD systems netstat -i returns int64_t numbers
+
+Mathieu Arnold (2):
+      Fix if_ and if_errcoll_ plugins.
+      Add an if_packets_ to monitor packets going through an interface.
+
+Michael 'PoempelFox' Meier (1):
+      split cache into cache + shmem in linux memory plugin
+
+Michael Niewiara (1):
+      Update nfs plugins: Fixing autoconf to detect if service enabled
+
+Michael Pirogov (1):
+      Fast & ugly fix for PG10 support.
+
+Michael Scherer (1):
+      Add autoconfig support to mailman plugin
+
+Raphaël Droz (1):
+      Keep-up with modern Linux kernel netstat data.
+
+Rick Hansen (1):
+      plugins/postgres: Fix connection stats for PG 9.2-9.4
+
+Steve Schnepp (5):
+      p/snmp__if_: support ifHighSpeed
+      p/snmp__if_: accept interface num with leading 0
+      plugins: fix sum_cdef_tester plugin
+      plugins: fix sum_cdef_tester
+      p/ipmi_sensor_: fix fan thresholds
+
+Stig Sandbeck Mathisen (5):
+      Do not sort smart_ plugin attributes
+      Replace looped cat|perl and cat|egrep|awk with pure perl
+      remove bashism
+      Declare variable before use
+      Exclude btrfs from df_inode plugin
+
+Tobias Kappé (1):
+      Ignore current process when configuring labels for postgres_users plugin.
+
+Vadim Zeitlin (1):
+      Add "ignoreexit" parameter to smart_ plugin.
+
+Viktor Szépe (3):
+      Added graph_category
+      Signal error in http_loadtime
+      Typo in condition
+
+Vlad K (2):
+      Fix netstat active connection openings string
+      Annotate and fix netstat's active connections match.
+
+bovarysme (1):
+      Fix the check_perms_if_paranoid method
+
+duritong (1):
+      select correct avcstats location
+
+lr1980 (1):
+      verbose level = MUNIN_DEBUG
+
+nii_kenichi (1):
+      Typo corrected
+
+rantal (1):
+      Added OldGen graphs, switched used and free bytes (used is on bottom of the graph, free is on top)
+
+shapirus (1):
+      plugins/memory: draw the KSM-sharing value if present
+
+sumpfralle (1):
+      plugin 'psu_': fix config fieldname
+
+
 munin-2.0.34, 2017-10-20
 
 -------
