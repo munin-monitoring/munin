@@ -1070,8 +1070,8 @@ sub _get_rrd_data_source_with_defaults {
 	    min => 'U',
 	    max => 'U',
 
-	    update_rate => 300,
-	    graph_data_size => 'normal',
+	    update_rate => ($config->{update_rate} || 300),
+	    graph_data_size => ($config->{graph_data_size} || "normal"),
     };
     for my $key (keys %$data_source) {
 	    $ds_with_defaults->{$key} = $data_source->{$key};
