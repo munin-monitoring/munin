@@ -1147,13 +1147,18 @@ sub _create_rrd_file {
               "RRA:AVERAGE:0.5:288:450", # 450 days, resolution 1 day
               "RRA:MIN:0.5:288:450",
               "RRA:MAX:0.5:288:450");
-    }
-    elsif ($resolution eq 'huge') {
+    } elsif ($resolution eq 'huge') {
 	$update_rate = 300; # 'huge' means hard coded RRD $update_rate
         push (@args,
               "RRA:AVERAGE:0.5:1:115200",  # resolution 5 minutes, for 400 days
               "RRA:MIN:0.5:1:115200",
               "RRA:MAX:0.5:1:115200");
+    } elsif ($resolution eq 'debug') {
+	$update_rate = 300; # 'debug' means hard coded RRD $update_rate
+        push (@args,
+              "RRA:AVERAGE:0.5:1:42",  # resolution 5 minutes, for 42 steps
+              "RRA:MIN:0.5:1:42",
+              "RRA:MAX:0.5:1:42");
     } elsif ($resolution =~ /^custom (.+)/) {
         # Parsing resolution to achieve computer format as defined on the RFC :
         # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB
