@@ -60,7 +60,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_args --base 1000 -l 0 '
     echo 'graph_period second'
     echo 'graph_vlabel requests / ${graph_period}'
-    echo 'graph_category Other'
+    echo 'graph_category auth'
 
     echo 'requests.label Accounting-Requests'
     echo 'requests.info total sent request packets'
