@@ -84,6 +84,8 @@ tls_ca_certificate     $BASEDIR/t/tls/CA/ca_cert.pem
 tls_verify_certificate yes
 tls_verify_depth       5
 
+graph_data_size debug
+
 # Read node definitions and other configuration
 includedir ${CONFDIR}/munin-conf.d
 EOF
