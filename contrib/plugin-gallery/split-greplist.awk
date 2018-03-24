@@ -2,8 +2,8 @@
 # between plugin and category.
 #
 # INPUT
-# It is fed with grep search for term 'category'
-# in the plugin script files
+# It is fed with grep search for term 'category' or for plugin-specifc strings
+# (e.g. "Munin::Plugin::Pgsql"). in the plugin script files.
 #
 # OUTPUT
 # First Column: string with category
@@ -55,16 +55,21 @@ function GrabAlphaNum(string) {
 {
     plugin = $1
     if (match(plugin, "node.d.debug")) next
+
     # Colon used as field separator, but as it
     # can also be used as separator for subcategories,
     # we have to fetch the whole right side from $0
-    grepstr = substr($0, length($1)+2)
-    if (match(grepstr, "graph_category.*")) {
+    category_line_text = substr($0, length($1)+2)
+
+    if (category_line_text ~ /Munin::Plugin::Pgsql/) {
+      # plugins using the "Munin::Plugin::Pgsql" do not contain an explicit "category" line
+      category = "db"
+    } else if (match(category_line_text, "graph_category.*")) {
       # RSTART is where the pattern starts
-      category = substr(grepstr, RSTART + 15)
-    } else if (match(grepstr, "category.*=>.*")) {
+      category = substr(category_line_text, RSTART + 15)
+    } else if (match(category_line_text, "category.*=>.*")) {
       # RSTART is where the pattern starts
-      category = substr(grepstr, RSTART + 9)
+      category = substr(category_line_text, RSTART + 9)
     } else {
       next
     }

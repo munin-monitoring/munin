@@ -85,7 +85,8 @@ build_target_dir() {
 	# Result: space-separated list of category and plugin_filename sorted by category
 	# Plugins are executable or end with ".in" (for stable-2.0).
 	categories_and_plugins=$(find . -type f "(" -executable -o -name "*.in" ")" -print0 \
-		| xargs -0 grep -i --exclude-from="$SCRIPT_DIR/grep-files.excl" "category" \
+		| xargs -0 grep -i --exclude-from="$SCRIPT_DIR/grep-files.excl" -E \
+			"(category|Munin::Plugin::Pgsql)" \
 		| sort -u \
 		| grep -v "^$" \
 		| awk -F ":" -f "$SCRIPT_DIR/split-greplist.awk" \
