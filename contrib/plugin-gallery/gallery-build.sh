@@ -94,7 +94,7 @@ build_target_dir() {
 	# Create the html snippet for category navigation.
 	echo "$categories_and_plugins" | cut -f 1 -d " " | sort | uniq -c | grep -v "^$" \
 			| while read -r count category; do
-		printf '\t\t<li><a href="%s-index.html" title="%s">%s</a>&nbsp(%d)</li>\n' \
+		printf '\t\t<li><a href="%s-index.html" title="%s">%s (%d)</a></li>\n' \
 				"$category" "$(get_category_description "$category")" \
 				"$category" "$count"
 		done >"$prep_category_navigation_file"
