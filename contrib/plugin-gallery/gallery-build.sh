@@ -91,14 +91,6 @@ build_target_dir() {
 		| awk -F ":" -f "$SCRIPT_DIR/split-greplist.awk" \
 		| LC_COLLATE=C sort -u)
 
-	# Create the html snippet for category navigation.
-	echo "$categories_and_plugins" | cut -f 1 -d " " | sort | uniq -c | grep -v "^$" \
-			| while read -r count category; do
-		printf '\t\t<li><a href="%s-index.html" title="%s">%s (%d)</a></li>\n' \
-				"$category" "$(get_category_description "$category")" \
-				"$category" "$count"
-		done >"$prep_category_navigation_file"
-
 	plugins_with_category=$(echo "$categories_and_plugins" | cut -f 2- -d " " | sort | uniq)
 
 	# Find the plugins that do not belong to any category
@@ -119,6 +111,14 @@ build_target_dir() {
 		} | sort)
 	printf "%d plugins without category were assigned to category 'other'\n" \
 		"$(echo "$categories_and_plugins_with_other" | grep -c "^other ")"
+
+	# Create the html snippet for category navigation.
+	echo "$categories_and_plugins_with_other" | cut -f 1 -d " " | sort | uniq -c | grep -v "^$" \
+			| while read -r count category; do
+		printf '\t\t<li><a href="%s-index.html" title="%s">%s (%d)</a></li>\n' \
+				"$category" "$(get_category_description "$category")" \
+				"$category" "$count"
+		done >"$prep_category_navigation_file"
 
 	# Compile template for category pages
 	cat "$SCRIPT_DIR/static/gallery-header.html" \
