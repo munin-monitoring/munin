@@ -186,7 +186,10 @@ sub do_work {
 
 		$last_timestamp = $node->fetch_service_data($plugin,
 			sub {
-				$self->uw_handle_fetch($plugin, $now, $update_rate, @_);
+				# First argument is the plugin name to be overrided when multigraphing
+				my $plugin_name = shift;
+
+				$self->uw_handle_fetch($plugin_name, $now, $update_rate, @_);
 			}
 		);
 	    } # for @plugins
@@ -578,6 +581,12 @@ sub round_to_granularity {
 sub uw_handle_config {
 	my ($self, $plugin, $now, $data, $last_timestamp) = @_;
 
+	# Protect oneself against multiple, conflicting multigraphs
+	if ($self->{__SEEN_PLUGINS__}{$plugin} ++) {
+		WARN "uw_handle_config: $plugin is already configured, skipping";
+		return $last_timestamp;
+	}
+
 	$self->{dbh}->begin_work();
 
 	# Build FETCH data, just in case of dirty_config.
@@ -651,6 +660,12 @@ sub uw_handle_fetch {
 
 	# timestamp == 0 means "Nothing was updated"
 	my $last_timestamp = 0;
+
+	# Protect oneself against multiple, conflicting multigraphs
+	if ($self->{__SEEN_PLUGINS_FETCH__}{$plugin} ++) {
+		WARN "uw_handle_fetch $plugin is already configured, skipping";
+		return $last_timestamp;
+	}
 
 	my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
 
