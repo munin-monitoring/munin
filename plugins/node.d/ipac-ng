@@ -51,6 +51,7 @@ if [ "$1" = "config" ]; then
         echo "graph_title $TITLE" 
         echo 'graph_args --base 1000'
         echo 'graph_vlabel b/s in (-) / out (+)'
+        echo 'graph_category fw'
         echo 'down.label received'              
         echo 'down.graph no'
         # Divide it by 1500 seconds (5m), to get b/s
