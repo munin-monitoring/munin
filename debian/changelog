@@ -1,6 +1,8 @@
 munin (2.0.35-1) UNRELEASED; urgency=medium
 
   * New upstream version, Closes: #860487 and Closes: #660903 and many others.
+  * Build-Depends-Indep: Switch from default-jdk to openjdk-8-jdk as munin
+    fails to build with java 9.
 
  -- Holger Levsen <holger@debian.org>  Sat, 24 Mar 2018 14:10:52 +0000
 
