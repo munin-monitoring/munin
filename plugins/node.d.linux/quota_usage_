@@ -11,9 +11,12 @@ Needs repquota and root privs
 
 =head1 USAGE
 
-Create Service Link /etc/munin/plugins/quota-usage_<dev>
-for example C<quota-usage_hda3>. Use underscores instead of slashes, for
-example to monitor C</dev/mapper/vol-foo>, name this C<quota-usage_mapper_vol-foo>
+Create Service Link /etc/munin/plugins/quota_usage_<dev>
+for example C<quota_usage_hda3>. Use underscores instead of slashes, for
+example to monitor C</dev/mapper/vol-foo>, name this C<quota_usage_mapper_vol-foo>
+
+For backwards compatibility the prefix C<quota-usage_> is also acceptable
+(instead of C<quota_usage_>).
 
 This plugin uses the soft and hard quota data for warning and critical
 levels respectively.
@@ -39,12 +42,30 @@ GPLv2
 use strict;
 use warnings;
 use Munin::Plugin;
+use File::Spec::Functions qw(splitdir);
 
 # We do some magic to allow device strings with underscore to mean a /
-# So to monitor /dev/mapper/vol-foo use quota-usage_mapper_vol-foo
-my @tmp = split(/_/, $0);
-shift @tmp;
-my $dev = join("/", @tmp);
+# So to monitor /dev/mapper/vol-foo use "quota_usage_mapper_vol-foo" or
+# "quota-usage_mapper_vol-foo". The latter was advertised as the default usage previously, but it
+# is confusing since it does not match the name of the plugin exactly.
+# See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=730030
+my @path_tokens = splitdir($0);
+my $basename = $path_tokens[-1];
+# partial name of the device (it will be prefixed with "/dev/")
+my $dev;
+if ($basename =~ /^quota_usage_(.+)$/) {
+	# The plugin was called with the basename "quota_usage_*".
+	$dev = $1;
+	$dev =~ s#_#/#g;
+} else {
+	# The plugin was called with the basename "quota-usage_*" (or another prefix without an
+	# underscore).
+	# This approach was documented for this plugin. But it conflicts with the common style of
+	# using the exact plugin name (instead of a slight variation) for symlinks.
+	my @tmp = split(/_/, $basename);
+	shift @tmp;
+	$dev = join("/", @tmp);
+}
 my %users;
 
 open (REP, "/usr/sbin/repquota /dev/$dev |") or exit 22;
