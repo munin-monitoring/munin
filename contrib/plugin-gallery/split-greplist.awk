@@ -1,13 +1,13 @@
-# This script tries to find the relation 
+# This script tries to find the relation
 # between plugin and category.
 #
 # INPUT
 # It is fed with grep search for term 'category'
 # in the plugin script files
-# 
+#
 # OUTPUT
-# Left Column: path to plugin file relative to github directory "plugin"
-# Right side: string with category
+# First Column: string with category
+# Second Column: path to plugin file relative to github directory "plugin"
 #
 # ASSUMPTION
 # Category is always only _one_ word
@@ -40,9 +40,9 @@ function GrabAlphaNum(string) {
 
   for (i=1; i<=length(string); i++) {
     lettr = substr(string,i,1);
-    if (match(lettr,"([[:alnum:]]|\-|\_|\:)")) 
+    if (match(lettr,"([[:alnum:]]|-|_|:)"))
       strout = strout lettr
-    else 
+    else
       break;
   }
   return strout;
@@ -55,7 +55,7 @@ BEGIN {}
     plugin = $1
     if (match(plugin, "node.d.debug")) next;
     # Colon used as field separator, but as it
-    # can also be used as separator for subcategories, 
+    # can also be used as separator for subcategories,
     # we have to fetch the whole right side from $0
     grepstr = substr($0, length($1)+2)
     if (match(grepstr, "graph_category.*")) {

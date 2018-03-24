@@ -1,21 +1,15 @@
 #!/bin/sh
 #
-# This script builds a HTML presentation of the perldocs 
+# This script builds a HTML presentation of the perldocs
 # integrated in the Munin plugins collected at github
-# so that users can browse info about available plugins
+# so that users can browse info about available plugins.
 #
-# In this stage we address the plugins from the Munin Distribution 2.0.
-# https://github.com/munin-monitoring/munin/tree/stable-2.0/plugins
-#
-# As these have file endings ".in" we have to maintain
-# a separate build script.
-# 
 # Plugin authors shall contribute example graphs
 # for their plugins also. Rules are defined here:
 # http://munin-monitoring.org/wiki/PluginGallery
 #
-# Author: Gabriele Pohl (contact@dipohl.de)
-# Date: 2014-09-07
+# Copyright 2014-2018 Gabriele Pohl <contact@dipohl.de>
+# Copyright 2018 Lars Kruse <devel@sumpfralle.de>
 #
 # This script is free software; you can redistribute it and/or modify
 # it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE as published
@@ -24,128 +18,219 @@
 #
 # You should have received a copy of the GNU AFFERO GENERAL PUBLIC LICENSE
 # (for example COPYING); If not, see <http://www.gnu.org/licenses/>.
-#
 
-# to set ownership of the Gallery files
-# WWWUSER=gap
-# WWWGROUP=apache
 
-# DocumentRoot of the Gallery
-HTMLDIR=/var/www/html/munin-gallery
+set -eu
 
-# source for which the Gallery should be build
-REPO=munin
-BRANCH=stable-2.0
+if [ $# -ne 1 ]; then
+	echo "Syntax:  $(basename "$0")  HTML_EXPORT_DIR"
+	echo
+	echo "BEWARE: all extra files in this directory will be deleted"
+fi >&2
 
-# SVN cannot clone github branch "stable-2.0"
-# at least I found no way to do it..
-# As a workaround I'll use a zip download.
-SVNROOTDIR=$HTMLDIR/distro/svn
-
-# Directory within DocumentRoot to store pages and images about the plugins
-WORKDIR=$SVNROOTDIR/$REPO-$BRANCH/plugins
+# DocumentRoot of the Gallery (published directly via a webserver)
+# BEWARE: the previous content of this directory is deleted
+TARGET_DIR=$(realpath "$1")
 
 # This directory is for files only needed to build the Gallery
-SCRIPTDIR=/home/gap/projects/munin/github/munin/contrib/plugin-gallery
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
 
-# Start protocol
-echo "
-================================
-Building Munin Plugin Gallery for repo $REPO (branch $BRANCH)
+# List of files or directories to be cleaned up on exit. Simply add more items to the variable.
+TMP_PATH_REMOVAL_LIST=""
+trap 'if [ -n "$TMP_PATH_REMOVAL_LIST" ]; then rm -rf $TMP_PATH_REMOVAL_LIST; fi' EXIT
 
-Your presets:
 
-SVNROOTDIR: $SVNROOTDIR
-HTMLDIR: $HTMLDIR
-WORKDIR: $WORKDIR
-"
+# Download a compressed tar archive from a remote location and extract it into a target directory.
+extract_plugins() {
+	local source_url="$1"
+	local plugin_target_dir="$2"
+	mkdir -p "$plugin_target_dir"
+	wget --quiet --output-document=- "$source_url" \
+		| tar -xz -C "$plugin_target_dir" --wildcards --strip-components=2 --anchored --no-wildcards-match-slash "*/plugins"
+}
 
-# Check existence of SVNROOTDIR
-if [ ! -d "$SVNROOTDIR" ]; then
-    echo "ERROR: Directory for github download not found! Please create it here: $SVNROOTDIR"
-    exit 1
+
+# Retrieve the human-readable description for a category name.
+# The output is empty for an unknown category.
+get_category_description() {
+	local category="$1"
+	echo "$category" | awk -f "$SCRIPT_DIR/well-known-categories.incl" -e '{ print arr[$1]; }'
+}
+
+
+# Generate html export files for all plugins within a repository.
+build_target_dir() {
+	local plugin_dir="$1"
+	local target_dir="$2"
+	# URL path (must start and end with a slash)
+	local publish_path="$3"
+	local collection_name="$4"
+	local plugins_source_url="$5"
+	local intro_file="$6"
+	local categories_and_plugins
+	local plugins_with_category
+	local plugins_without_categories
+	local prep_index_file
+	local prep_category_navigation_file
+	local build_log
+
+	prep_category_navigation_file=$(mktemp)
+	TMP_PATH_REMOVAL_LIST="$TMP_PATH_REMOVAL_LIST $prep_category_navigation_file"
+	prep_index_file=$(mktemp)
+	TMP_PATH_REMOVAL_LIST="$TMP_PATH_REMOVAL_LIST $prep_index_file"
+
+	cd "$plugin_dir"
+	mkdir -p "$target_dir"
+	# Find relation between plugins and categories
+	# Result: space-separated list of category and plugin_filename sorted by category
+	# Plugins are executable or end with ".in" (for stable-2.0).
+	categories_and_plugins=$(find . -type f "(" -executable -o -name "*.in" ")" -print0 \
+		| xargs -0 grep -i --exclude-from="$SCRIPT_DIR/grep-files.excl" "category" \
+		| sort -u \
+		| grep -v "^$" \
+		| awk -F ":" -f "$SCRIPT_DIR/split-greplist.awk" \
+		| LC_COLLATE=C sort -u)
+
+	# Create the html snippet for category navigation.
+	echo "$categories_and_plugins" | cut -f 1 -d " " | sort | uniq -c | grep -v "^$" \
+			| while read -r count category; do
+		printf '\t\t<li><a href="%s-index.html" title="%s">%s</a>&nbsp(%d)</li>\n' \
+				"$category" "$(get_category_description "$category")" \
+				"$category" "$count"
+		done >"$prep_category_navigation_file"
+
+	plugins_with_category=$(echo "$categories_and_plugins" | cut -f 2- -d " " | sort | uniq)
+
+	# Find the plugins that do not belong to any category
+	# TODO: add "-executable"
+	plugins_without_categories=$(find . -type f "(" -executable -o -name "*.in" ")" \
+		| grep -vF "/node.d.debug/" \
+		| sort \
+		| grep -v "^$" \
+		| while read -r fname; do
+			echo "$plugins_with_category" | cut -f 2 -d " " \
+				| grep -qxF "$fname" || echo "$fname"; done)
+
+	# combine the list of explicitly categorized plugins with the implicit list of "other"
+	categories_and_plugins_with_other=$(
+		{
+			echo "$categories_and_plugins";
+			echo "$plugins_without_categories" | sed 's/^/other /';
+		} | sort)
+	printf "%d plugins without category were assigned to category 'other'\n" \
+		"$(echo "$categories_and_plugins_with_other" | grep -c "^other ")"
+
+	# Compile template for category pages
+	cat "$SCRIPT_DIR/static/gallery-header.html" \
+		"$SCRIPT_DIR/static/gallery-cat-header.html" \
+		"$prep_category_navigation_file" \
+		"$SCRIPT_DIR/static/gallery-cat-footer.html" \
+		>"$prep_index_file"
+
+	# Create entry page
+	mkdir -p "$target_dir$publish_path"
+	cat "$SCRIPT_DIR/static/gallery-header.html" \
+		"$SCRIPT_DIR/static/gallery-cat-header.html" \
+		"$prep_category_navigation_file" \
+		"$SCRIPT_DIR/static/gallery-cat-footer.html" \
+		"$SCRIPT_DIR/static/$intro_file" \
+		"$SCRIPT_DIR/static/gallery-footer.html" \
+		>"$target_dir${publish_path}index.html"
+
+	# Create Gallery pages for all categories that were explicitly set in the plugin script files
+	build_log=$(echo "$categories_and_plugins_with_other" | grep -v "^$" \
+		| awk -f "$SCRIPT_DIR/well-known-categories.incl" \
+			-f "$SCRIPT_DIR/print-gallery.awk" \
+			-v "static_dir=$SCRIPT_DIR/static" \
+			-v "target_dir=$target_dir" \
+			-v "plugin_dir=$plugin_dir" \
+			-v "collection_name=$collection_name" \
+			-v "publish_path=$publish_path" \
+			-v "plugins_source_url=$plugins_source_url" \
+			-v "prep_index_file=$prep_index_file")
+	printf "%d times created perldoc pages with content\n" \
+		"$(echo "$build_log" | grep -c "output saved")"
+	printf "%d times no perldoc content found\n" \
+		"$(echo "$build_log" | grep -c "No documentation")"
+}
+
+
+# Copy example graph files and add references to the existing html files.
+publish_example_graphs() {
+	local plugin_dir="$1"
+	local target_dir="$2"
+	local example_graph_files
+	local graph_log
+	local graph_errors
+
+	cd "$plugin_dir"
+	mkdir -p "$target_dir"
+
+	# Collect example graphs
+	example_graph_files=$(find . -type f -name "*.png" | grep -vF "/node.d.debug/" | sort)
+
+	# Include example graphs in perldoc pages
+	graph_log=$(echo "$example_graph_files" | grep -v "^$" \
+		| awk -f "$SCRIPT_DIR/include-graphs.awk" -v "target_dir=$target_dir")
+	printf "%d example graph images illustrate the plugin pages\n" "$(echo "$graph_log" | grep -c "^Plugin:")"
+	# show all errors
+	graph_errors=$(echo "$graph_log" | grep -v "^Plugin:" || true)
+	if [ -n "$graph_errors" ]; then
+		echo "$graph_errors" | sed 's/^/ERROR: /'
+		global_exitcode=1
+	fi
+}
+
+
+# Publish the gallery data for a specific branch.
+publish_branch() {
+	local repo="$1"
+	local branch="$2"
+	local publish_path="$3"
+	local collection_name="$4"
+	local target_dir="$5"
+	local intro_file="$6"
+	local plugin_dir
+
+	plugin_dir=$(mktemp -d)
+	TMP_PATH_REMOVAL_LIST="$TMP_PATH_REMOVAL_LIST $plugin_dir"
+
+	echo "************ $collection_name: $repo / $branch -> $publish_path ************"
+	echo "... retrieving a fresh archive from github repository ..."
+	extract_plugins "https://github.com/munin-monitoring/$repo/archive/$branch.tar.gz" "$plugin_dir"
+
+	echo "... start building the new gallery pages ..."
+	build_target_dir "$plugin_dir" "$target_dir" "$publish_path" "$collection_name" \
+		"https://raw.githubusercontent.com/munin-monitoring/$repo/$branch/plugins" \
+		"$intro_file"
+
+	echo "... publishing example graphs ..."
+	publish_example_graphs "$plugin_dir" "$target_dir$publish_path"
+
+	# fix permissions of fresh html files (they are created with 600)
+	find "$target_dir" -type f -name "*.html" -print0 | \
+		xargs --null --no-run-if-empty chmod 644
+	chmod 755 "$target_dir"
+}
+
+
+# Directory within DocumentRoot to store pages and images about the plugins
+work_dir=$(mktemp -d)
+TMP_PATH_REMOVAL_LIST="$TMP_PATH_REMOVAL_LIST $work_dir"
+
+
+# override this value anywhere if a non-zero exitcode of the script is suitable
+global_exitcode=0
+
+if ! perldoc -V >/dev/null; then
+	echo >&2 "ERROR: Missing 'perldoc' for gallery build"
+	exit 1
 fi
 
-echo "Preparations..
-..cleaning data of the last run"
+publish_branch "munin"   "stable-2.0" "/"         "Core (2.x)"     "$work_dir" "gallery-intro.html"
+publish_branch "munin"   "master"     "/devel/"   "Core (pre 3.0)" "$work_dir" "gallery-intro.html"
+publish_branch "contrib" "master"     "/contrib/" "3rd-Party"      "$work_dir" "gallery-intro-contrib.html"
+rsync -ax --delete "$SCRIPT_DIR/www/static" "$work_dir/" "$TARGET_DIR/"
 
-if [ -d "$WORKDIR" ]; then
-
-   echo "..emptying workdir"
-   rm -rf "$WORKDIR"
-
-   # This method is only relevant, if we
-   # use svn or git to update local repo
-   # At the time we remove *everything* and extract a fresh zipfile
-   #   # Remove all POD generated plugin pages from the last run
-   #   find $WORKDIR -name *.html -exec rm {} \;
-
-fi
-
-echo "..remove existing Gallery pages"
-rm -rf "$HTMLDIR"/*.html
-
-echo "..remove existing zip download file"
-rm "$SVNROOTDIR/$BRANCH.zip"
-
-echo "..get a fresh zip file from github repo"
-wget --no-verbose --output-document="$SVNROOTDIR/$BRANCH.zip" "https://github.com/munin-monitoring/$REPO/archive/$BRANCH.zip"
-rm -Rf "$SVNROOTDIR/$REPO-$BRANCH"
-mkdir -p "$SVNROOTDIR/$REPO-$BRANCH/plugins"
-unzip -q -d "$SVNROOTDIR" "$SVNROOTDIR/$BRANCH.zip" "$REPO-$BRANCH"/plugins/*
-
-echo "..cp list of well-known-categories to WORKDIR"
-cp "$SCRIPTDIR/well-known-categories.incl" "$WORKDIR/"
-
-cd "$WORKDIR" || exit 1
-echo "
-Start building the new gallery pages.."
-
-# Find relation between plugins and categories
-grep -iR --exclude-from="$SCRIPTDIR/grep-files.excl" category node.* | grep -v .svn | sort -u >"$SCRIPTDIR/cat.lst"
-awk -F : -f "$SCRIPTDIR/split-greplist.awk" "$SCRIPTDIR/cat.lst" | LC_COLLATE=C sort -u >"$SCRIPTDIR/catsorted.lst"
-
-# Create categories navigation snippet to integrate in each page
-awk -f "$SCRIPTDIR/well-known-categories.incl" -f "$SCRIPTDIR/prep-catnav.awk" -v "scriptdir=$SCRIPTDIR" "$SCRIPTDIR/catsorted.lst" | sort >"$SCRIPTDIR/cat-plugins.lst"
-
-# Compile template for category pages
-cat "$SCRIPTDIR/static/gallery-header.html" "$SCRIPTDIR/static/gallery-cat-header.html" "$SCRIPTDIR/static/gallery-catnav.html" "$SCRIPTDIR/static/gallery-cat-footer.html" >"$SCRIPTDIR/static/prep-index.html"
-
-# Create entry page
-cat "$SCRIPTDIR/static/gallery-header.html" "$SCRIPTDIR/static/gallery-cat-header.html" "$SCRIPTDIR/static/gallery-catnav.html" "$SCRIPTDIR/static/gallery-cat-footer.html" "$SCRIPTDIR/static/gallery-intro.html" "$SCRIPTDIR/static/gallery-footer.html" >"$HTMLDIR/index.html"
-
-# Create Gallery pages for all categories that were explicitly set in the plugin script files
-awk -f "$SCRIPTDIR/well-known-categories.incl" -f "$SCRIPTDIR/print-gallery.awk" -v "scriptdir=$SCRIPTDIR" "workdir=$WORKDIR" "htmldir=$HTMLDIR" "$SCRIPTDIR/catsorted.lst" >"$SCRIPTDIR/print-gallery1.log"
-
-# Find the plugins that fell through the sieve ...
-find node.* -name '*.in' | grep -v node.d.debug | sort >"$SCRIPTDIR/all-plugins.lst"
-diff "$SCRIPTDIR/cat-plugins.lst" "$SCRIPTDIR/all-plugins.lst" | grep '^>' >"$SCRIPTDIR/nocat-plugins.lst"
-
-# Push plugins with no category to "other"
-sed -i 's/>/other/g' "$SCRIPTDIR/nocat-plugins.lst"
-grep ^other "$SCRIPTDIR/catsorted.lst" >>"$SCRIPTDIR/nocat-plugins.lst"
-LC_COLLATE=C sort -u "$SCRIPTDIR/nocat-plugins.lst" >"$SCRIPTDIR/other-plugins.lst"
-
-# Create Gallery pages for category "other"
-awk -f "$SCRIPTDIR/well-known-categories.incl" -f "$SCRIPTDIR/print-gallery.awk" -v "scriptdir=$SCRIPTDIR" "workdir=$WORKDIR" "htmldir=$HTMLDIR" "$SCRIPTDIR/other-plugins.lst" >"$SCRIPTDIR/print-gallery2.log"
-
-# Collect example graphs
-find node.* -name '*.png' | grep -v node.d.debug | sort >"$SCRIPTDIR/example-graphs.lst"
-
-# Include example graphs in perldoc pages
-awk -f "$SCRIPTDIR/include-graphs.awk" -v "workdir=$WORKDIR" "$SCRIPTDIR/example-graphs.lst" >"$SCRIPTDIR/include-graphs.log"
-
-# chown -R $WWWUSER.$WWWGROUP $HTMLDIR
-chmod -R a+rx "$HTMLDIR"
-
-# Some statistic
-echo "
-STATISTICS
-----------"
-printf "%d plugins without category were assigned to category 'other'\n" "$(wc -l <"$SCRIPTDIR/nocat-plugins.lst")"
-printf "%d times created perldoc pages with content\n" "$(grep -c "output saved" "$SCRIPTDIR"/print-gallery?.log)"
-printf "%d times no perldoc content found\n" "$(grep -c "No documentation" "$SCRIPTDIR"/print-gallery?.log)"
-printf "%d example graph images illustrate the plugin pages\n" "$(wc -l <"$SCRIPTDIR/example-graphs.lst")"
-
-# End protocol
-echo "================================"
+# maybe exit with error (e.g. useful for running via 'chronic')
+exit "$global_exitcode"

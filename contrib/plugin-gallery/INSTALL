@@ -5,31 +5,34 @@ HOW TO SETUP
 -----------------------
 
 This build process requires perl-doc, otherwise the scripts will fail silently.
+Additionally rsync is used.
 
 
-1. Directory of the build process
----------------------------------
+1. Building the gallery
+-----------------------
 
-The SCRIPTDIR contains all necessary scripts and will be used for storing build fragments.
+Checkout the munin repository.
+Only the data below contrib/plugin-gallery is required.
 
-  SCRIPTDIR="/some/path/gallery-workdir"
-  mkdir -p "$SCRIPTDIR"
-  cd contrib/plugin-gallery # Every command is relative to the contrib/plugin-gallery directory
-  find . -maxdepth 1 -type f -exec cp '{}' "$SCRIPTDIR/" \;
-  cp -r static "$SCRIPTDIR/"
-  perl -i.orig -lnpe "s,^SCRIPTDIR=.*,SCRIPTDIR=$SCRIPTDIR," "$SCRIPTDIR/gallery-build.sh" "$SCRIPTDIR/gallery-contrib-build.sh"
+The gallery is created as a static HTML export.
+You may want to run the script "gallery-build.sh" regularly.
+
+Simply run "gallery-build.sh" with a target directory of your choice.
+BEWARE: the previous content of the target directory is removed.
+
+The script retrieves the current state of the remote repositories while building the gallery.
+The local checkout directory is only used for the build scripts. Thus you will rarely need to
+update it.
 
 
 2. Webserver DocumentRoot
 -------------------------
 
-The HTMLDIR will contain generated html files. Its content will be published by your webserver.
-
-  HTMLDIR="/some/path/gallery-html"
-  perl -i.orig -lnpe "s,^HTMLDIR=.*,HTMLDIR=$HTMLDIR," "$SCRIPTDIR/gallery-build.sh" "$SCRIPTDIR/gallery-contrib-build.sh"
-  mkdir -p "$HTMLDIR/distro/svn" "$HTMLDIR/contrib/svn"
-  cp -r www/static "$HTMLDIR/"
-
+The "gallery-build.sh" script requires only a single parameter: the target directory of the build
+process.
+You need to configure your webserver to publish this directory.
+Take care for file permissions: the directory needs to be accessible by the user running the
+webserver.
 
 Setup a vhost for the gallery in your webservers configuration, e.g. for Apache2:
 
@@ -45,20 +48,15 @@ Media links within the templates are absolute (e.g. /static/...) - thus you need
 (vhost) for the munin gallery.
 
 
-3. Ownership of webserver files
--------------------------------
-
-If you want to set another ownership for the webserver files
-run the build process under user root, and set variable 
-WWWUSER and WWWGROUP in gallery-build.sh and 
-gallery-contrib-build.sh accordingly.
-
-4. Setup a daily cronjob
+3. Setup a daily cronjob
 ------------------------
 
 Place a file with content like this under /etc/cron.d/ 
 
 ------ 8< ------
 # Create fresh build of the Munin Plugin Gallery
-10 22 * * * gap /home/gap/projects/munin/github/munin/contrib/plugin-gallery/gallery-build.sh
+10 22 * * *   johndoe   chronic /home/johndoe/projects/munin/contrib/plugin-gallery/gallery-build.sh /home/johndoe/gallery-html
 ------ >8 ------
+
+"chronic" (from "moreutils") is useful here: it will suppress output, as long as the script exited
+successfully.

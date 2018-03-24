@@ -1,2 +1,20 @@
-meminfo.in
+# list of exclude patterns (for grep) for ignoring non-plugin files
+
+# Lines starting with "#" are not really comments, but they should never match a filename.
+
+# plugin-related files
+*.conf
+*.html
+*.ini
+*.md
+*.png
+*.rst
+*.txt
+
+# unsuitable plugins from the munin repository (TODO: why?)
 hp2000_.in
+meminfo.in
+
+# unsuitable plugins from the contrib repository (TODO: why?)
+ceph-osd-info
+shoutcast2_multi
