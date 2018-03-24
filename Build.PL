@@ -101,7 +101,7 @@ my $build = Module::Build->new(
     release_status     => $release_status,
     dist_author        => 'The Munin Project <project@munin-monitoring.org>',
     dist_abstract      => 'networked resource monitoring tool with plugins',
-    license            => 'GPL2',
+    license            => 'gpl2',
     configure_requires => { 'Module::Build' => '0.21', },
     requires           => {
         'perl'                   => '5.10.0',
