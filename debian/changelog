@@ -1,3 +1,9 @@
+munin (2.0.35-1) UNRELEASED; urgency=medium
+
+  * New upstream version, Closes: #860487 and Closes: #660903 and many others.
+
+ -- Holger Levsen <holger@debian.org>  Sat, 24 Mar 2018 14:10:52 +0000
+
 munin (2.0.34-3) unstable; urgency=medium
 
   * debian/munin-node.triggers: use an explicit interest-await trigger for
