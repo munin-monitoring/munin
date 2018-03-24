@@ -4,6 +4,8 @@
 #
 # - change directory to basedir
 
+unset LC_CTYPE LANG
+
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 BASEDIR="$(cd "$FINDBIN/.." && pwd -P)"
 
