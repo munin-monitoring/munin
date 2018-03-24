@@ -13,6 +13,9 @@
 # Category is always only _one_ word
 # @plugin-authors: Use underscore to substitute blanks
 #
+# Testing:
+#    find plugins -type f -executable | xargs grep -H category | awk -F : -f THIS_FILE
+#
 # Author: Gabriele Pohl (contact@dipohl.de)
 # Date: 2014-09-07
 #
@@ -40,7 +43,7 @@ function GrabAlphaNum(string) {
 
   for (i=1; i<=length(string); i++) {
     lettr = substr(string,i,1);
-    if (match(lettr,"([[:alnum:]]|-|_|:)"))
+    if (match(lettr, "([[:alnum:]]|_|:|-)"))
       strout = strout lettr
     else
       break;
@@ -49,33 +52,24 @@ function GrabAlphaNum(string) {
 }
 
 
-BEGIN {}
-
 {
     plugin = $1
-    if (match(plugin, "node.d.debug")) next;
+    if (match(plugin, "node.d.debug")) next
     # Colon used as field separator, but as it
     # can also be used as separator for subcategories,
     # we have to fetch the whole right side from $0
     grepstr = substr($0, length($1)+2)
     if (match(grepstr, "graph_category.*")) {
       # RSTART is where the pattern starts
-      category = substr(grepstr,RSTART+15)
-      category = Trim(category)
-      category = GrabAlphaNum(category)
-      if (length(category) < 1) category = "other"
-      printf("%s %s\n", tolower(category), plugin)
+      category = substr(grepstr, RSTART + 15)
+    } else if (match(grepstr, "category.*=>.*")) {
+      # RSTART is where the pattern starts
+      category = substr(grepstr, RSTART + 9)
+    } else {
       next
     }
-    if (match(grepstr, "category.*=>.*")) {
-      # RSTART is where the pattern starts
-      category = substr(grepstr,RSTART+9)
-      category = Trim(category)
-      category = GrabAlphaNum(category)
-      if (length(category) < 1) category = "other"
-      printf("%s %s\n", tolower(category), plugin)
-    }
+    category = Trim(category)
+    category = GrabAlphaNum(category)
+    if (length(category) < 1) category = "other"
+    printf("%s %s\n", tolower(category), plugin)
 }
-
-END {}
-
