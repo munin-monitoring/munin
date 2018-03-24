@@ -32,7 +32,8 @@ BEGIN {
 	arr["search"] = 	"All kinds of measurement around search engines."
 	arr["security"] = 	"Number of pending update packages for OS, .."
 	arr["sensors"] =	"Sensor measurements of device and environment like temperature, power, devices health state, humidity, noise, vibration"
-	arr["streaming"] = 	".."
+	arr["spamfilter"] = 	"Spam fighters at work"
+	arr["streaming"] = 	"Streaming of media"
 	arr["system"] = 	"General operating system metrics like CPU speed and load, interrupts, uptime, logged in users"
 	arr["time"] =		"Time synchronization"
 	arr["spamfilter"] =	"Spam fighters at work"
@@ -41,5 +42,5 @@ BEGIN {
 	arr["voip"] = 		"Voice over IP servers"
 	arr["webserver"] = 	"All kinds of webserver measurements and also for related components"
 	arr["wiki"] = 		"wiki applications"
-	arr["wireless"] = 	".."
+	arr["wireless"] = 	"Wireless connections or related events and conditions"
 }
