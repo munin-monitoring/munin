@@ -26,7 +26,7 @@ LISTEN, but these were not (often) observed on my firewall.
 
 TOTAL is the total number of tracked connections.
 
-ASSURED and UNREPLIED connections are complimentary subsets of
+ASSURED and UNREPLIED connections are complementary subsets of
 ESTABLISHED.
 
 ASSURED is after ACK is seen after SYN_RECV.  Therefore ASSURED is

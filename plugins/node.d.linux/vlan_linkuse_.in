@@ -29,7 +29,7 @@ my %contraries = ("dpt" => "spt", "spt" => "dpt");
 my %in_octets = ();
 my %out_octets = ();
 
-open (IN, "/sbin/iptables -v -x -L $INTERFACE-in |") or 
+open (IN, "/sbin/iptables -v -x -w -L $INTERFACE-in |") or
 	die "Could not run iptables: $!\n";
 while (<IN>)
 {
@@ -60,7 +60,7 @@ while (<IN>)
 close IN;
 die "Error running iptables. Dying\n" if $?;
 
-open (IN, "/sbin/iptables -v -x -L $INTERFACE-out |") or 
+open (IN, "/sbin/iptables -v -x -w -L $INTERFACE-out |") or
 	die "Could not run iptables: $!\n";
 while (<IN>)
 {

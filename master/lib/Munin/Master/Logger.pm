@@ -61,6 +61,7 @@ use base qw(Exporter);
 use strict;
 use warnings;
 
+use Carp qw(confess);
 use English qw(-no_match_vars);
 use File::Basename qw(basename);
 use Log::Log4perl qw(:easy);

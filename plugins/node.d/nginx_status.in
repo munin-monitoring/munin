@@ -63,6 +63,11 @@ my $ret = undef;
 if (! eval "require LWP::UserAgent;"){
 	$ret = "LWP::UserAgent not found";
 }
+if ($0 =~ /^nginx6_/) {
+        if (! eval "require Net::INET6Glue::INET_is_INET6;"){
+                $ret = "Net::INET6Glue::INET_is_INET6 not found";
+        }
+}
 
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://localhost/nginx_status";
 
@@ -86,26 +91,26 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 }
 
 if ( exists $ARGV[0] and $ARGV[0] eq "config" ) {
-    print "graph_title NGINX status\n";
+    print "graph_title Nginx status\n";
     print "graph_args --base 1000\n";
     print "graph_category nginx\n";
     print "graph_vlabel Connections\n";
 
     print "total.label Active connections\n";
     print "total.info  Active connections\n";
-    print "total.draw LINE2\n";
+    print "total.draw LINE\n";
 
     print "reading.label Reading\n";
     print "reading.info  Reading\n";
-    print "reading.draw LINE2\n";
+    print "reading.draw LINE\n";
 
     print "writing.label Writing\n";
     print "writing.info  Writing\n";
-    print "writing.draw LINE2\n";
+    print "writing.draw LINE\n";
 
     print "waiting.label Waiting\n";
     print "waiting.info  Waiting\n";
-    print "waiting.draw LINE2\n";
+    print "waiting.draw LINE\n";
 
     exit 0;
 }

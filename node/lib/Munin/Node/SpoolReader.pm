@@ -148,7 +148,7 @@ sub _cat_multigraph_file
                 next;
             }
 
-            if (m/^(\w+)\.value\s+(?:N:)?([0-9.]+|U)$/) {
+            if (m/^(\w+)\.value\s+(?:N:)?(-?[0-9.]+|U)$/) {
                 $_ = "$1.value $epoch:$2";
             }
 

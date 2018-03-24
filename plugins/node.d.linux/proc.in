@@ -115,7 +115,6 @@ my @procuser = split(/\|/, $ENV{'procuser'});
 my @procaspect = exists $ENV{'procaspect'} ? split(/\|/, $ENV{'procaspect'}) : ('cpu', 'memory', 'ctxt_switches', 'threads', 'processes', 'io');
 my @proctitlec;
 my @procuniq;
-my %useruid = ();
 
 #my $procname = exists $ENV{'procname'} ? $ENV{'procname'} : "init";
 
@@ -292,6 +291,16 @@ my %ASPECTS = (
     }
 );
 
+# Open file and return contents.  If called in scalar context, return
+# as one string.  If called in list context, return array of lines.
+sub slurp {
+    my $file = shift;
+    open(my $fh, "<", $file) or return;
+    my @content = <$fh>;
+    close($fh);
+    return wantarray ? @content : join("", @content);
+}
+
 # Populate %procstats with values.
 sub populate_stats
 {
@@ -319,38 +328,36 @@ sub populate_stats
         $procstats{$procuniq[$i]}{"read_bytes"} = 0;
         $procstats{$procuniq[$i]}{"write_bytes"} = 0;
         $procstats{$procuniq[$i]}{"cancelled_write_bytes"} = 0;
+        my $procuid = getpwnam($procuser[$i]); # may return undef
 
-        STATLINE: foreach my $line(`grep -h \\\($procname[$i]\\\) /proc/[0-9]*/stat`) {
-            $line =~ /^(\d+)/;
-            my $cmdline = `cat /proc/$1/cmdline | @@PERL@@ -F\"\\0\" -lane '\$s = join(\" \", \@F); print \$s;'`;
-            my $cmduid = `cat /proc/$1/status | egrep '^Uid:' | awk '{ print \$2 }'`;
-            chomp($cmduid);
+    STATLINE:
+        foreach my $line(`fgrep -h '($procname[$i])' /proc/[0-9]*/stat`) {
+            my ($pid) = $line =~ /^(\d+)/;
 
-            if ( $cmdline !~ /.*$procargs[$i].*/ ) {
-                next STATLINE;
-            }
-            if ( length($procuser[$i]) > 0 ) {
-                if ( $cmduid ne $useruid{$procuser[$i]} ) {
-                    next STATLINE;
-                }
-            }
+            my $cmdline = slurp("/proc/$pid/cmdline") or next STATLINE;
+            $cmdline =~ tr{\0}{ };
 
-            if ($line =~ /^(\d+) \((.*)\) (.) \-?\d+ \-?\d+ \-?\d+ \-?\d+ \-?\d+ \d+ \d+ \d+ \d+ \d+ (\d+) (\d+) \d+ \d+ \-?\d+ \d+ (\d+) \-?\d+ \d+ (\d+) (\d+)/) {
-                $procstats{$procuniq[$i]}{"utime"} += $4;
-                $procstats{$procuniq[$i]}{"stime"} += $5;
-                $procstats{$procuniq[$i]}{"threads"} += $6;
-                $procstats{$procuniq[$i]}{"vsize"} += $7;
-                $procstats{$procuniq[$i]}{"rss"} += $8;
+            my $cmduid = (lstat("/proc/$pid"))[4];
+
+            next STATLINE if $procargs[$i] and $cmdline !~ /$procargs[$i]/;
+            next STATLINE if defined $procuid and $cmduid != $procuid;
+
+            if ($line =~ /^\d+ \(.*\) . \-?\d+ \-?\d+ \-?\d+ \-?\d+ \-?\d+ \d+ \d+ \d+ \d+ \d+ (\d+) (\d+) \d+ \d+ \-?\d+ \d+ (\d+) \-?\d+ \d+ (\d+) (\d+)/) {
+                $procstats{$procuniq[$i]}{"utime"} += $1;
+                $procstats{$procuniq[$i]}{"stime"} += $2;
+                $procstats{$procuniq[$i]}{"threads"} += $3;
+                $procstats{$procuniq[$i]}{"vsize"} += $4;
+                $procstats{$procuniq[$i]}{"rss"} += $5;
                 $procstats{$procuniq[$i]}{"processes"} += 1;
-                foreach my $line(`cat /proc/$1/status`){
-                    if ($line =~ /^Vm(.*):\s+(\d+) kB$/){
-                        $procstats{$procuniq[$i]}{"Vm$1"} += ($2*1024);
+                foreach my $line (slurp("/proc/$pid/status")){
+                    if ($line =~ /^(Vm.*):\s+(\d+) kB$/){
+                        $procstats{$procuniq[$i]}{$1} += ($2*1024);
                     }
-                    if ($line =~ /^(.*)_ctxt_switches:\s+(\d+)$/){
-                        $procstats{$procuniq[$i]}{"$1_ctxt_switches"} += $2;
+                    if ($line =~ /^(.*_ctxt_switches):\s+(\d+)$/){
+                        $procstats{$procuniq[$i]}{$1} += $2;
                     }
                 }
-                foreach my $line(`cat /proc/$1/io`){
+                foreach my $line (slurp("/proc/$pid/io")){
                     if ( $line =~ /^(.*):\s+(\d+)$/ ) {
                         $procstats{$procuniq[$i]}{$1} += $2;
                     }
@@ -530,16 +537,14 @@ sub set_run
     my $i = 0;
     foreach(@procname) {
         $proctitlec[$i] = "$procname[$i]";
-        $procuniq[$i] = "$procname[$i]";
+        $procuniq[$i] = clean_fieldname("$procname[$i]");
         if (length($procargs[$i]) > 0 ) {
             $proctitlec[$i] = "$proctitlec[$i] $procargs[$i]";
-            $procuniq[$i] = $procuniq[$i]."_".$procargs[$i];
+            $procuniq[$i] = $procuniq[$i]."_".clean_fieldname($procargs[$i]);
         }
         if (length($procuser[$i]) > 0 ) {
             $proctitlec[$i] = "$proctitlec[$i] by $procuser[$i]";
-            $procuniq[$i] = $procuniq[$i]."___".$procuser[$i];
-            $useruid{$procuser[$i]} = `getent passwd $procuser[$i] | cut -d : -f 3`;
-            chomp($useruid{$procuser[$i]});
+            $procuniq[$i] = $procuniq[$i]."___".clean_fieldname($procuser[$i]);
         }
         $i++;
     }

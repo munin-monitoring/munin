@@ -19,7 +19,7 @@
 INTERFACE=${0##*if_errcoll_}
 
 if [ "$1" = "autoconf" ]; then
-	if [ -x /usr/bin/netstat ]; then
+	if [ -x /sbin/ifconfig -o -x /usr/bin/netstat ]; then
 		echo yes
 		exit 0
 	else
@@ -29,8 +29,12 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 if [ "$1" = "suggest" ]; then
-	if [ -x /usr/bin/netstat ]; then
-		netstat -i -b -n | sed -n -e '/^faith/d' -e '/^lo[0-9]/d' -e '/^pflog/d' -e '/<Link#[0-9]*>/s/\** .*//p'
+	if [ -x /sbin/ifconfig ]
+	then
+		ifconfig -l | sed -Ee 's/[[:<:]](pfsync|faith|pf(log|sync)|lo|plip|carp|enc|fwe)[^ ]*//g' | xargs -n 1 echo
+		exit 0
+	elif [ -x /usr/bin/netstat ]; then
+		netstat -i -b -n | sed -n -e '/^faith/d' -e '/^lo[0-9]/d' -e '/^pf(log|sync)/d' -e '/<Link#[0-9]*>/s/\** .*//p'
 		exit 0
 	else
 		exit 1
@@ -59,9 +63,19 @@ fi;
 		print "ierrors.value", $5;
 		print "oerrors.value", $8;
 		print "collisions.value", $10;
-	} else {
+	} else if (NF == 11) {
+		if ($4 ~ /:/) {
+			print "ierrors.value", $6;
+			print "oerrors.value", $9;
+			print "collisions.value", $11;
+		} else {
+			print "ierrors.value", $5;
+			print "oerrors.value", $9;
+			print "collisions.value", $11;
+		}
+	} else { # NF == 12
 		print "ierrors.value", $6;
-		print "oerrors.value", $9;
-		print "collisions.value", $11;
+		print "oerrors.value", $10;
+		print "collisions.value", $12;
 	}
 }'

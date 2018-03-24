@@ -618,7 +618,7 @@ sub do_config_if {
     if (defined ($speed = $snmpinfoX->{$if}->{ifHighSpeed}) and $speed) {
       # Speed in 1,000,000 bits per second
       $speed = $speed * 1000000;
-      $warn = $speed / 75 * 100;
+      $warn = $speed * 75 / 100;
 
       my $textspeed = scaleNumber($speed,'bps','',
 				  'The interface speed is %.1f%s%s.');
@@ -626,7 +626,7 @@ sub do_config_if {
       $extrainfo .= ' '.$textspeed if $textspeed;
     } elsif (defined ($speed = $snmpinfo->{$if}->{ifSpeed}) and $speed) {
         # Speed in bits pr. second
-	$warn = $speed*100/75;
+	$warn = $speed/100*75;
 
 	my $textspeed = scaleNumber($speed,'bps','',
 				    'The interface speed is %.1f%s%s.');
