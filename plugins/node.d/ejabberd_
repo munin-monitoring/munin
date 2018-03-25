@@ -99,11 +99,22 @@ There is no way to configure the path to ejabberdctl.
 =cut
 
 # configurable environment variables
+# list of days (space-separated) for the graph "usersindays"
 days=${days:-}
+# list of client statuses (space-separated) for the graph "statuses"
 statuses=${statuses:-}
+# statically configured list of vhosts provided by the ejabberd server
+vhosts=${vhosts:-}
+# location of ejabberd configuration file for parsing the configured vhosts
+# (empty: search in default locations)
+configfile=${configfile:-}
 
 
 EJCTL=$(which ejabberdctl 2>/dev/null)
+# get ejabberd PID
+# in GNU/Linux Debian Lenny release the pidof command can be executed only by root
+#EJPID=$(pidof -s /usr/lib/erlang/erts-5.6.3/bin/beam.smp)
+EJPID=$(ps -ef | awk '/ejabberd/ && /\/bin\/beam(.smp)?/ {print $2}')
 SUPPORTED_MODES="connections users registrations statuses memory threads usersindays uptime"
 
 
@@ -123,32 +134,93 @@ if [ "$1" = "suggest" ]; then
     exit 0
 fi
 
-# trying to autodetect running vhosts.
-if [ -z "$vhosts" ]; then
-    if [ -z "$configfile" ]; then
-	for CFGPATH in /etc/ejabberd /etc/ejabber /usr/local/ejabberd/etc; do
-            if [ -f "$CFGPATH/ejabberd.cfg" ]; then
-		configfile=$CFGPATH/ejabberd.cfg
+
+# Try to parse a yaml based configuration file for ejabberd. We just hope for a non-cluttered
+# format - otherwise our stupid parser will fail. See below for acceptable format examples.
+parse_vhosts_from_config_yaml() {
+    local filename="$1"
+    local vhosts
+    # try to parse a single-line yaml list, e.g.:
+    #   hosts: ["foo.example.org", 'bar.example.com']
+    vhosts=$(grep -E "^hosts:\s*\[" "$filename" \
+        | sed -E 's/^.*\[(.+)].*$/\1/' \
+        | tr "," "\n" \
+        | sed -E 's/^.*["'\''](.+)["'\''].*$/\1/')
+    if [ -z "$vhosts" ]; then
+        # try to parse a multi-line yaml list, e.g.:
+        #    hosts:
+        #      - "foo.example.org"
+        #      - 'bar.example.com'
+        vhosts=$(grep -vE '^(\s*#|$)' "$filename" \
+            | sed -n '/^hosts:$/,/^\w/p;' \
+            | grep "^\s*-" \
+            | sed -E 's/^.+["'\''](.*)["'\'']\s*$/\1/')
+    fi
+    echo "$vhosts"
+}
+
+
+# Try to parse the old ejabberd configuration format (*.cfg).
+# Output one vhost per line.
+parse_vhosts_from_config_cfg() {
+    local filename="$1"
+    awk '/^\s*{hosts/ {gsub( /\{\s?hosts\s?,|[\",\[\]]|\}\s?.|localhost/ ,""); print;}' "$filename"
+}
+
+
+# Search for the configuration file and parse its vhosts definition.
+# Either a yaml file or a cfg file will be parsed automatically.
+# The function will either fail (returning an errorcode) or output the vhosts (one per line).
+parse_vhosts_from_config() {
+    local cfg_dir
+    local cfg_file
+    local vhosts
+    if [ -n "$configfile" ]; then
+        # a specific filename was configured
+        if [ ! -f "$configfile" ]; then
+            echo "The filename defined in the 'configfile' setting does not exist: $configfile" >&2
+            return 1
+        fi
+    else
+        # search in default locations
+        for cfg_dir in /etc/ejabberd /etc/ejabber /usr/local/ejabberd/etc; do
+            for cfg_file in ejabberd.cfg ejabberd.yml; do
+                if [ -f "$cfg_dir/$cfg_file" ]; then
+                    configfile=$cfg_dir/$cfg_file
+                    break
+                fi
+            done
+            if [ -n "$configfile" ]; then
+                break
             fi
-	done
+        done
     fi
     if [ -z "$configfile" ]; then
-        echo "Unable to find ejabberd.cfg. Exiting." >&2
-        exit 1
+        echo "Unable to find ejabberd config file. Maybe specify 'configfile' setting." >&2
+        return 1
+    else
+        # we found a config (or its location was specified)
+        if echo "$configfile" | grep -qi "\.cfg$"; then
+            vhosts=$(parse_vhosts_from_config_cfg "$configfile")
+        else
+            vhosts=$(parse_vhosts_from_config_yaml "$configfile")
+        fi
+        if [ -z "$vhosts" ]; then
+            echo "Failed to parse vhosts from configuration file: $configfile" >&2
+            echo "Maybe you want to either simplify the format of the configuration (for our" \
+                "stupid parser) or specify the 'vhosts' environment variable directly." >&2
+            return 1
+        else
+            echo "$vhosts"
+        fi
     fi
-    # you have to have all of vhosts defined on one line in $EJCFG or in plugins-conf.d/munin-node config file
-    vhosts=$(awk '/^\s*{hosts/ {gsub( /\{\s?hosts\s?,|[\",\[\]]|\}\s?.|localhost/ ,""); print;}' "$EJCFG")
-fi
+}
 
-# get ejabberd PID
-# in GNU/Linux Debian Lenny release the pidof command can be executed only by root
-#EJPID=$(pidof -s /usr/lib/erlang/erts-5.6.3/bin/beam.smp)
-EJPID=$(ps -ef | awk '/ejabberd/ && /\/bin\/beam(.smp)?/ {print $2}')
 
+# the vhosts can be defined via environment or parsed
 if [ -z "$vhosts" ]; then
-    echo "No vhosts to sample." >&2
-    echo "Please set env.vhosts in plugins-conf.d/munin-node." >&2
-    exit 1
+    # exit in case of failure (error messages were emitted before)
+    vhosts=$(parse_vhosts_from_config) || exit 1
 fi
 
 MODE=$(basename "$0" | sed 's/^ejabberd_//g')
