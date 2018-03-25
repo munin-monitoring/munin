@@ -36,7 +36,7 @@ proc="access close commit create delegpurge delegreturn getattr getfh link lock 
 	savefh secinfo setattr setcltid setcltidconf verify write rellockowner"
 
 if [ "$1" = "autoconf" ]; then
-	if [ -f "$NFSD" ]; then
+	if [ -f "$NFSD" ] && grep -sq proc4ops "$NFSD"; then
 		echo yes
 		exit 0
 	else
