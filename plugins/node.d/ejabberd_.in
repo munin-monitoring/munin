@@ -104,9 +104,9 @@ set -eu
 
 # configurable environment variables
 # list of days (space-separated) for the graph "usersindays"
-days=${days:-}
+days=${days:-"1 7 30"}
 # list of client statuses (space-separated) for the graph "statuses"
-statuses=${statuses:-}
+statuses=${statuses:-"available away chat xa"}
 # statically configured list of vhosts provided by the ejabberd server
 vhosts=${vhosts:-}
 # location of ejabberd configuration file for parsing the configured vhosts
