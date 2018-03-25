@@ -98,6 +98,9 @@ There is no way to configure the path to ejabberdctl.
 
 =cut
 
+set -eu
+
+
 # configurable environment variables
 # list of days (space-separated) for the graph "usersindays"
 days=${days:-}
@@ -118,7 +121,7 @@ EJPID=$(ps -ef | awk '/ejabberd/ && /\/bin\/beam(.smp)?/ {print $2}')
 SUPPORTED_MODES="connections users registrations statuses memory threads usersindays uptime"
 
 
-if [ "$1" = "autoconf" ]; then
+if [ "${1:-}" = "autoconf" ]; then
     if [ -n "$EJCTL" ] && [ -x "$EJCTL" ]; then
         echo yes
     else
@@ -127,7 +130,7 @@ if [ "$1" = "autoconf" ]; then
     exit 0
 fi
 
-if [ "$1" = "suggest" ]; then
+if [ "${1:-}" = "suggest" ]; then
     for mode in $SUPPORTED_MODES; do
         echo "$mode"
     done
@@ -230,7 +233,7 @@ if ! echo "$SUPPORTED_MODES" | grep -qwF "$MODE"; then
     exit 1
 fi
 
-if [ "$1" = "config" ]; then
+if [ "${1:-}" = "config" ]; then
     if [ "$MODE" = "memory" ]; then
         echo 'graph_args --base 1024 -l 0'
         echo 'graph_scale yes'
