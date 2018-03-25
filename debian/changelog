@@ -1,6 +1,10 @@
 munin (2.0.35-1) UNRELEASED; urgency=medium
 
-  * New upstream version, Closes: #860487 and Closes: #660903 and many others.
+  * New upstream version fixing various issues:
+    - plugin http_loadtime: Closes: #798258, #862794, #886517
+    - plugin netstat: Closes: #861851
+    - plugin nfsd4: Closes: #833740
+    - plugin psu_: Closes: #860487
   * Build-Depends-Indep: Switch from default-jdk to openjdk-8-jdk as munin
     fails to build with java 9.
   * debian/Makefile.config: define JC without path containing default-java.
