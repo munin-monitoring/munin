@@ -1,6 +1,6 @@
 munin (2.0.35-1) UNRELEASED; urgency=medium
 
-  * New upstream version fixing various issues:
+  * New upstream version fixing various issues, including bugs in:
     - plugin http_loadtime: Closes: #798258, #862794, #886517
     - plugin netstat: Closes: #861851
     - plugin nfsd4: Closes: #833740
