@@ -1,5 +1,44 @@
 -*- text -*-
 
+munin-2.0.36, 2018-03-25
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #939, D#894017
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (7):
+      Plugin acpi (Linux): various improvements
+      Plugin ejabberd_: unify indentation
+      Plugin ejabberd_: fixed shellcheck issues
+      Plugin ejabberd_: implement configuration file parsing for yaml format
+      Plugin ejabberd_: enable strict shell behaviour
+      Plugin ejabberd_: defined reasonable defaults
+      Plugin ejabberd_: use 'clean_fieldname' instead of custom function
+
+Steve Schnepp (1):
+      p/munin_stats: should not emit graph.value on CGI
+
+Zenon Mousmoulas (1):
+      Simplify spooled value regex
+
+dipohl (1):
+      doc: add example plugin graphs (from master branch)
+
+y-ken (4):
+      Add support for MySQL 5.5/5.6
+      mysql_innodb_insert_buf compatibility problem fixed for MySQL 5.5/5.6
+      fixed indent
+      add verified version for mysql_ plugin
+
+
 munin-2.0.35, 2018-03-21
 
 -------
