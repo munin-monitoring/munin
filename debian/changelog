@@ -8,6 +8,7 @@ munin (2.0.35-1) UNRELEASED; urgency=medium
   * Build-Depends-Indep: switch from default-jdk to openjdk-8-jdk as munin
     fails to build with java 9.
   * debian/Makefile.config: define JC without path containing default-java.
+  * debian/changelog: drop trailing whitespaces, thanks lintian.
 
  -- Holger Levsen <holger@debian.org>  Sat, 24 Mar 2018 14:10:52 +0000
 
@@ -63,8 +64,8 @@ munin (2.0.33-2) unstable; urgency=medium
   * Drop unnecessary "Testsuite:autopkgtest" header from debian/control,
     thanks lintian.
   * Drop obsolete dependency on dh-systemd, nowadays taken care of by
-    debhelper. 
-  * Switch Vcs-Browser URL to https and use /git/ not /gitweb/ as well. 
+    debhelper.
+  * Switch Vcs-Browser URL to https and use /git/ not /gitweb/ as well.
   * Drop deprecated upstart files for munin, munin-node and munin-async.
   * debian/(munin|munin-node|munin-async).postinst: drop legacy code dealing
     with pre-Jessie releases.
@@ -75,7 +76,7 @@ munin (2.0.33-2) unstable; urgency=medium
 
 munin (2.0.33-1) unstable; urgency=medium
 
-  * New upstream release. (Closes: #856536) 
+  * New upstream release. (Closes: #856536)
 
  -- Holger Levsen <holger@debian.org>  Fri, 03 Mar 2017 23:44:55 +0100
 
@@ -157,7 +158,7 @@ munin (2.0.26-1) unstable; urgency=medium
   * Imported new upstream release 2.0.26
   * Bump standards-version to 3.9.8, no changes necessary.
   * Fix spelling error in debian/changelog, thanks lintian.
-  * Fix "FTBFS with '.' removed from perl's @INC": add patch from 
+  * Fix "FTBFS with '.' removed from perl's @INC": add patch from
     Dominic Hargreaves to call perl with "-I.". (Closes: #835206)
   * Bump debian/compat to 9 and require debhelper >= 9.
   * Drop debian/patches/0001-http_loadtime-plugin-Fix-several-bugs.patch as it
@@ -309,7 +310,7 @@ munin (2.0.17-2) unstable; urgency=low
   * munin-async.init:
     - provide LSB status command.
     - fix $SCRIPTNAME.
-    - rm pid file on stop. 
+    - rm pid file on stop.
     Thanks to Daniel Black for the patch. (Closes: #720280)
   * munin-node.cron.d: use munin-run to run plugins. (Closes: #720275)
   * Provide examples how to configure munin for nginx, thanks to Daniel
@@ -343,7 +344,7 @@ munin (2.0.16-3) unstable; urgency=low
 
 munin (2.0.16-2) unstable; urgency=low
 
-  * plugins/df: ignore devtmpfs. Cherry picked ab42e8b as efe4526 from 
+  * plugins/df: ignore devtmpfs. Cherry picked ab42e8b as efe4526 from
     upcoming 2.0.17. (Closes: #710899)
   * Add libcgi-fast-perl as alternative suggests. (Closes: #711272)
 
@@ -536,10 +537,10 @@ munin (2.0.6-2) unstable; urgency=low
 munin (2.0.6-1) unstable; urgency=high
 
   * New upstream release 2.0.6, switching back to cron graphing (as it better
-    for small setups) and besides that only containing bugfixes, but many of 
+    for small setups) and besides that only containing bugfixes, but many of
     them. See the upstream ChangeLog for the full list.
-    - munin-node: more secure state file handling, introducing a new plugin 
-      state directory root, owned by uid 0. Then each plugin runs in its own 
+    - munin-node: more secure state file handling, introducing a new plugin
+      state directory root, owned by uid 0. Then each plugin runs in its own
       UID plugin state directory, owned by the said UID. (Closes: #684075),
       (Closes: #679897), closes CVE-2012-3512.
       So all properly written plugins will use
@@ -559,7 +560,7 @@ munin (2.0.6-1) unstable; urgency=high
   * munin-node.postinst: don't create /var/lib/munin/plugin-state anymore as
     munin-node now uses /var/lib/munin-nodes/plugin-state and subdirs and
     handles creation by itself.
-  * debian/rules: workaround bug in upstream Makefile targets to move 
+  * debian/rules: workaround bug in upstream Makefile targets to move
     /var/lib/async from munin-node package to munin-async.
   * debian/control:
     - make munin-async depend on munin-node for now.
@@ -574,15 +575,15 @@ munin (2.0.6-1) unstable; urgency=high
 munin (2.0.5-1) unstable; urgency=low
 
   [ Holger Levsen ]
-  * New upstream versions, fixing lots of bugs (including a regression in 
+  * New upstream versions, fixing lots of bugs (including a regression in
     munin-cgi-graph preventing it from caching at all (Closes: #683064))
     and adding documentation and manpages.  See upstream ChangeLog for the
-    full list. 
-  * Remove workaround  concerning java-plugins (667493) in debian/rules 
+    full list.
+  * Remove workaround  concerning java-plugins (667493) in debian/rules
     as upstream has fixed this in e7e29c4 in 2.0.3.
-  * munin-async.init: 
+  * munin-async.init:
     - run munin-async as munin-async user (Closes: #684171)
-    - use stop function from munin-node.init to make it actually stop it 
+    - use stop function from munin-node.init to make it actually stop it
       (Closes: #684170). In the future we should replace both initscripts with
       saner rewrites.
 
@@ -606,11 +607,11 @@ munin (2.0.2-1) unstable; urgency=low
 
 munin (2.0.1-1) unstable; urgency=low
 
-  * New upstream version. 
-  * Update URL to upstream webpage in debian/copyright. (Closes: #676366) 
+  * New upstream version.
+  * Update URL to upstream webpage in debian/copyright. (Closes: #676366)
   * Make munin-node depend on munin-plugins-core unconditionally and recommend
     munin-plugins-extra. (Closes: #677189)
-  * debian/munin-node.postinst: chmod 775 /var/lib/munin/plugin-state 
+  * debian/munin-node.postinst: chmod 775 /var/lib/munin/plugin-state
     (Closes: #675593)
 
  -- Holger Levsen <holger@debian.org>  Thu, 21 Jun 2012 00:29:37 +0200
@@ -630,16 +631,16 @@ munin (2.0.0-1) unstable; urgency=medium
 
 munin (2.0~rc6-3) unstable; urgency=low
 
-  * Make munin-node depend on munin-plugins-core | munin-plugins. 
-    (Closes: #673124) 
-  * munin-node.logroate: create munin-node.log owned by root. 
-    (Closes: #606216) 
+  * Make munin-node depend on munin-plugins-core | munin-plugins.
+    (Closes: #673124)
+  * munin-node.logroate: create munin-node.log owned by root.
+    (Closes: #606216)
 
  -- Holger Levsen <holger@debian.org>  Thu, 17 May 2012 13:23:57 +0200
 
 munin (2.0~rc6-2) unstable; urgency=low
 
-  * munin.postinst: Fix typo breaking the chgrp of $cgitempdir. 
+  * munin.postinst: Fix typo breaking the chgrp of $cgitempdir.
 
  -- Holger Levsen <holger@debian.org>  Mon, 14 May 2012 10:02:22 +0200
 
@@ -649,9 +650,9 @@ munin (2.0~rc6-1) unstable; urgency=low
   * New upstream release candidate, quoting the upstream Changelog:
     - Many bugfixes in munin-cgi-graph:
       - if url parameters are not valid, send HTTP 404 instead of 500
-      - move the generation of png via cgi under /var/lib/munin/cgi-tmp/ 
+      - move the generation of png via cgi under /var/lib/munin/cgi-tmp/
         (Closes:  #668536)
-      - don't cache URL with parameters anymore, and don't keep uncached URLs 
+      - don't cache URL with parameters anymore, and don't keep uncached URLs
         (Closes: #668667)
       - validate url characters (Closes: #668666)
       - add a max setting for cgi image size. (Closes: #670811)
@@ -673,7 +674,7 @@ munin (2.0~rc6-1) unstable; urgency=low
 munin (2.0~rc5-3) unstable; urgency=low
 
   * Create /var/lib/munin/plugin-state in munin-node.postinst if it doesnt
-    exist. (Closes: #668975) 
+    exist. (Closes: #668975)
 
  -- Holger Levsen <holger@debian.org>  Mon, 16 Apr 2012 12:33:08 +0200
 
@@ -695,7 +696,7 @@ munin (2.0~rc5-1) unstable; urgency=low
      - Start RRD just before first update. To avoid a very costly 1st update.
      - Emit the hosts in a sorted order, instead of somewhat random.
      - Do not emit png list if file handle is not defined. (Closes: #666759)
-     - Add old option of --force-root, but with a new name. more explicit 
+     - Add old option of --force-root, but with a new name. more explicit
        (Closes:  #601371)
      - We dont generate the png list when using cgi html.
      - Remove warning when asking "list" w/o a hostname (LP: #907952)
@@ -710,7 +711,7 @@ munin (2.0~rc5-1) unstable; urgency=low
     for all these years. If I'm wrong here, I'd be glad to be corrected.
 
   [ Steve Schnepp ]
-  * plugin.conf: run fail2ban plugin as root. (Closes: #610825) 
+  * plugin.conf: run fail2ban plugin as root. (Closes: #610825)
   * move jmx_ to munin-plugins-java (Closes: #667493)
 
  -- Holger Levsen <holger@debian.org>  Sun, 25 Mar 2012 18:46:36 +0200
@@ -721,14 +722,14 @@ munin (2.0~rc4-1) unstable; urgency=low
     - Fix issue that CGI HTML doesn't refresh itself
     - Fixed plugins to use the default draw style
     - Various plugins fixes (Closes: #663965, #595697, #648891)
-  * also from upstream: munin-node: Removed the 5s per-line timeout. 
+  * also from upstream: munin-node: Removed the 5s per-line timeout.
     (Closes: #663970)
 
  -- Holger Levsen <holger@debian.org>  Sat, 24 Mar 2012 14:03:28 +0100
 
 munin (2.0~rc2-1) unstable; urgency=low
 
-  * This is not yet munin 2.0, but almost! Install at your own risk and have 
+  * This is not yet munin 2.0, but almost! Install at your own risk and have
     fun! Also, please give feedback to munin-users@lists.sourceforge.net or
     if you prefer IRC, go to #munin on OFTC.
   * Quoting from /usr/share/doc/munin/Announce-2.0:
@@ -736,15 +737,15 @@ munin (2.0~rc2-1) unstable; urgency=low
     * Even better scalability through:
       - Large performance improvements on almost all munin's components:
       - Full CGI integration.  It is for graphing as  well for html, if needed.
-        It is also completely compatible with FastCGI, that only compiles once 
+        It is also completely compatible with FastCGI, that only compiles once
         per run.
       - Binary state data files.  This has enabled a really fast startup and
         storing of state files. Quite useful in munin limits that does need to
         access to the rrd files.
-      - Complete integration with rrdcached.  Starting with RRD 1.4, there is 
+      - Complete integration with rrdcached.  Starting with RRD 1.4, there is
         an update daemon. It enables batched updates, and therefore reduce the
         IO down. Even with 1000+ files to update every 5 min.
-      - Spoolfetch uses _node_read_fast() now : 3MiB is now read in 2 s instead 
+      - Spoolfetch uses _node_read_fast() now : 3MiB is now read in 2 s instead
         of 7 min.
     * Complete IPv6 integration: (Closes: #592214, Closes: #558800, Closes:
       #567551)
@@ -756,8 +757,8 @@ munin (2.0~rc2-1) unstable; urgency=low
     * IRC ( #munin @ OFTC ) has become a real support channel, mostly aimed at
       trunk.
     * Full details in http://munin-monitoring.org/browser/tags/2.0-rc2/ChangeLog
-      or in /usr/share/doc/munin/changelog.gz on this system. (Closes: #610528, 
-      Closes: #644960, Closes: #576009, Closes: #474193, #660224, #609900, 
+      or in /usr/share/doc/munin/changelog.gz on this system. (Closes: #610528,
+      Closes: #644960, Closes: #576009, Closes: #474193, #660224, #609900,
       Closes: #582786, #591455)
     * This release has been prepared through six uploads to experimental and
       several users running it on their installations.
@@ -770,23 +771,23 @@ munin (2.0~rc2-1) unstable; urgency=low
   * Added support for async polling in munin-master, add new package
     munin-async.
   * Enable vectorized multiple-time updates. Speeds updates up when using
-    async polling. An 1s polling rate is now possible w/o much overhead, since 
+    async polling. An 1s polling rate is now possible w/o much overhead, since
     munin-update only runs every 5 min.
-    - ability to keep more data (for zooming resolution mainly) 
-    - ability to run (some) plugins more and/or less often than every 
+    - ability to keep more data (for zooming resolution mainly)
+    - ability to run (some) plugins more and/or less often than every
       5 minutes
-    - support of async polling, so munin-update can run less often than 
+    - support of async polling, so munin-update can run less often than
       the usual 5 min. Useful if you have too much nodes and it takes
       more than 5 min to gather all the data.
     - Closes: #464880
   * Add new binary package: munin-plugins, containing the plugins previously
     included in the munin-node package. This enables us to:
     - have alternate munin-node packages in future.
-    - be able to build a make-dh-perl like package building system 
+    - be able to build a make-dh-perl like package building system
       for 3rd party plugins.
-  * Move POD files to package munin-doc. 
+  * Move POD files to package munin-doc.
     - fixed duplicates (Closes: #661265)
-  * Move Munin::Plugins and plugins.sh into munin-common to be able to 
+  * Move Munin::Plugins and plugins.sh into munin-common to be able to
     install munin-plugins-extra without munin-plugins-core.
   * debian/control changes:
     - munin-async isn't recommended anymore as it will needlessly launch a
@@ -796,22 +797,22 @@ munin (2.0~rc2-1) unstable; urgency=low
       It enables decoupling munin, munin-node & munin-plugin-* versions.
 
   [ Holger Levsen ]
-  * Merge changes from 1.4.4-1 until 1.4.7-1 into this branch and merge 
+  * Merge changes from 1.4.4-1 until 1.4.7-1 into this branch and merge
     debian/changelog in preparation for uploading to experimental.
-  * Move packaging to 
+  * Move packaging to
     svn://munin.projects.linpro.no/munin/branches/debian/wheezy
   * Include large parts of upstreams Announce-2.0 in debian/changelog.
-  * Update to munin 2.0beta6, which has a rewrite of the timeout handling 
+  * Update to munin 2.0beta6, which has a rewrite of the timeout handling
     code. The default node timeout is now 1 min. Also various bugfixes were
     made.
   * Update maintainer address to packaging@munin-monitoring.org.
   * chmod 755 debian/ostype_helper in debian/rules. (Closes: #651449)
-    Thanks Christoph Biedl. 
+    Thanks Christoph Biedl.
   * Improve description of munin.init.
-  * debian/control: 
+  * debian/control:
     - Rename munin-plugins to munin-plugins-core and make it
-      provide/break/replace munin-plugins (<<1.999.4548-3~). 
-    - munin-java-plugins and munin-common should neither suggest munin nor 
+      provide/break/replace munin-plugins (<<1.999.4548-3~).
+    - munin-java-plugins and munin-common should neither suggest munin nor
       munin-node.
     - rename munin-java-plugins to munin-plugins-java and make it replace and
       break munin-java-plugins (<<1.999.4548-3~).
@@ -819,12 +820,12 @@ munin (2.0~rc2-1) unstable; urgency=low
       repo when using debcheckout.
     - Add quilt to build-depends.
   * debian/rules: support changes in debian/control.
-  * munin.postrm: remove /var/log/munin/munin-cgi-html.log* on purge. 
-  * Add munin-async.postrm to delete the munin-async user on purge. 
-  * munin-async.postinst: set homedirectory to /var/lib/munin-async. 
-  * Move munin-doc to section doc. 
+  * munin.postrm: remove /var/log/munin/munin-cgi-html.log* on purge.
+  * Add munin-async.postrm to delete the munin-async user on purge.
+  * munin-async.postinst: set homedirectory to /var/lib/munin-async.
+  * Move munin-doc to section doc.
   * Drop debian/patches/101-dash-bash-fw_conntrack.patch as this was fixed
-    upstream properly to also fix network lag problems on big firewalls with 
+    upstream properly to also fix network lag problems on big firewalls with
     the plugins fw_conntrack and fw_forwarded_local. (Closes: #565565)
   * Provide lintian-overrides for munin and munin-doc as the manpages for
     their binaries have been moved to the munin-doc package.
@@ -855,19 +856,19 @@ munin (1.4.6-3) unstable; urgency=low
   * Add Steve Schnepp to uploaders.
   * Remove Tore Anderson, Dagfinn Ilmari Mannsaker, Loic Dachary and Matthias
     Schmitz from uploaders. Thanks for all your work!
-  * munin/postrm: only delete /etc/apache2/conf.d/munin on purge. 
-    (Closes: #653596) - Sadly the fix will only be effective the next time 
-    munin is upgraded... 
+  * munin/postrm: only delete /etc/apache2/conf.d/munin on purge.
+    (Closes: #653596) - Sadly the fix will only be effective the next time
+    munin is upgraded...
 
  -- Holger Levsen <holger@debian.org>  Sat, 14 Jan 2012 17:01:09 +0000
 
 munin (1.4.6-2) unstable; urgency=high
 
   * Add logrotate rule for /var/log/munin/munin-cgi-graph.log. Thanks to
-    Jerome Warnier for the patch. (Closes: #647302) 
+    Jerome Warnier for the patch. (Closes: #647302)
   * Register an interest in the perl-major-upgrade trigger, and
     recompile rules and restart munin-node when perl is upgraded to a new
-    major version. Thanks to Dominic Hargreaves for this nice new feature. 
+    major version. Thanks to Dominic Hargreaves for this nice new feature.
     (Closes: #626346)
 
  -- Holger Levsen <holger@debian.org>  Sat, 19 Nov 2011 13:13:32 +0000
@@ -876,20 +877,20 @@ munin (1.4.6-1) unstable; urgency=low
 
   * New upstream release (Closes: #639745), closing several bugs
     in munin:
-    - "munin-limits hangs when more than one contact is used" 
+    - "munin-limits hangs when more than one contact is used"
        (Closes: #553528)
-    - cgi/fastcgi: Use GMT time zone in Last-Modified header 
+    - cgi/fastcgi: Use GMT time zone in Last-Modified header
       (Closes: #601200)
     - include patch to fix empty list of plugins (Closes: #609241)
     and in munin-node:
     - bind9_rndc plugin: version number gate fails (Closes: #573750)
     - bind9 plugin: doesn't work at all (Closes: #612108)
     - cidr_allow does not assume implicit /32 (Closes: #592842)
-   ↝- make slapd_ autoconf work, support anonymous bind, and env.server 
+   ↝- make slapd_ autoconf work, support anonymous bind, and env.server
       variable (Closes: #596026)
     - exim munin does weird things (Closes: #601505)
     - Use selective tls per node in munin master (Closes: #615226)
-    - IPv6 functionality (Closes: #567551) in ip_ plugin assumes /bin/sh 
+    - IPv6 functionality (Closes: #567551) in ip_ plugin assumes /bin/sh
       being bash (Closes: #613029)
     Also drop debian/patches/102-snort-bashism.patch as this is included
     upstream now.
@@ -897,16 +898,16 @@ munin (1.4.6-1) unstable; urgency=low
     /etc/apache2/conf.d/munin on new installations, not on upgrades.
     (Closes: #619399)
   * Bump standards-version to 3.9.1, no changes necessary.
-  * Split uploaders field in debian/control in multiple lines. 
-  * Add build-arch and build-indep targets to debian/rules. 
+  * Split uploaders field in debian/control in multiple lines.
+  * Add build-arch and build-indep targets to debian/rules.
 
  -- Holger Levsen <holger@debian.org>  Tue, 30 Aug 2011 19:55:52 +0200
 
 munin (1.4.5-3) unstable; urgency=low
 
   [ Tom Feiner ]
-  * Added patch 101-dash-bash-fw_conntrack.patch, fixing fw_conntrack 
-    plugin which reports incorrect values for total.warning 
+  * Added patch 101-dash-bash-fw_conntrack.patch, fixing fw_conntrack
+    plugin which reports incorrect values for total.warning
     and total.critical (Closes: #594695)
   * Added patch 102-snort-bashism.patch fixing snort_* config bashism.
     Thanks to Gerald Turner for the patch (Closes: #595899).
@@ -949,11 +950,11 @@ munin (1.4.5-1) unstable; urgency=low
 munin (1.4.4-1) unstable; urgency=low
 
   * New upstream release. Mainly bugfixes. Including fixes for:
-    - node does not read files in plugin configuration directory in 
+    - node does not read files in plugin configuration directory in
       alphabetical order (Closes: #564098)
-    - munin-cgi-graph: Error "Premature end of script headers: 
+    - munin-cgi-graph: Error "Premature end of script headers:
       munin-cgi-graph" in in webserver logs (Closes: #570545)
-    - munin-node: diskstats plugin forces width to 450 (Closes: #569541) 
+    - munin-node: diskstats plugin forces width to 450 (Closes: #569541)
     - Problems when using localised munin (Closes: #566821)
     - munin-node: tomcat_* plugins don't work (Closes: #543523)
     - df_abs: multiple excludes in config file don't work (Closes: #567666)
@@ -962,21 +963,21 @@ munin (1.4.4-1) unstable; urgency=low
       variable (Closes: #568793)
     - mail_eximstats fails if there is no current state (Closes: #569496)
     - exim_mailstats doesn't count Completed properly (Closes: #569621)
-    - munin: graphs are created with different sizes and distance 
+    - munin: graphs are created with different sizes and distance
       of the columns (Closes: #566293)
-    - Add the tcp plugin to track TCP connection states to 
+    - Add the tcp plugin to track TCP connection states to
       munin-plugins-extra (Closes: #563160)
-    - New mysql plugin does not function with default configuration 
+    - New mysql plugin does not function with default configuration
       (Closes: #569047). Thanks to Michael Shuler spotting this!
 
   * Suggest logtail in munin-node instead of munin-plugins-extra, as amavis
     plugin is now part of munin-node.
-  * Bump standards-version to 3.8.4, no changes necessary. 
+  * Bump standards-version to 3.8.4, no changes necessary.
   * Remove default limits for the cpu plugin (Closes: #564239)
-  * Fix amavis default configuration (Closes: #567923) 
+  * Fix amavis default configuration (Closes: #567923)
   * Add default configuration for exim_mailstats for logdir,logname.
   * Extend default configuration for df to df*.
-  * Place NEWS file only in munin,munin-node packages (Closes: #567844) 
+  * Place NEWS file only in munin,munin-node packages (Closes: #567844)
 
  -- Tom Feiner <feiner.tom@gmail.com>  Fri, 26 Feb 2010 17:45:45 +0200
 
@@ -988,7 +989,7 @@ munin (1.4.3-2) unstable; urgency=low
 
   [ Tom Feiner ]
   * Update watch file.
-  * Add patch from munin ticket #828, to suppress "occasional" unknown 
+  * Add patch from munin ticket #828, to suppress "occasional" unknown
     states to avoid alerts. Thanks to Steve Wilson for the patch!
   * Remove asterisks from NEWS.Debian and rewrite as non bulleted list, as
     advised by the developers reference.
@@ -1007,7 +1008,7 @@ munin (1.4.3-1) unstable; urgency=low
 munin (1.4.2-2) unstable; urgency=low
 
   * Fix lintian warnings regarding DejaVuSans.ttf.
-  * /etc/munin/apache.conf uses <IfModule mod_expires>, 
+  * /etc/munin/apache.conf uses <IfModule mod_expires>,
     should use <IfModule mod_expires.c>. (Closes: #561984)
   * Fix group for exim_mailqueue plugin. Closes: #562097).
 
@@ -1016,15 +1017,15 @@ munin (1.4.2-2) unstable; urgency=low
 munin (1.4.2-1) unstable; urgency=low
 
   * New upstream release. Mainly bugfixes.
-  * includes fix for SQL Syntax Error inside postgres_querylength_ 
+  * includes fix for SQL Syntax Error inside postgres_querylength_
      (Closes: #559426)
   * Add debugfs to df exclude list in default plugin configuration.
   * Change default group for plugin exim_mailqueue from Debian-exim to adm.
     (Closes: #559674)
-  * Include upstream fix which didn't make it into 1.4.2 for empty 
+  * Include upstream fix which didn't make it into 1.4.2 for empty
     /etc/munin/munin-conf.d/ directory causing munin-cron to spew warnings to
     cron. (Closes: #559624)
-  * Add patch 101-GraphOld-typo-r3235.patch to fix a typo in munin 
+  * Add patch 101-GraphOld-typo-r3235.patch to fix a typo in munin
     1.4.2 which stop some graphs from being graphed.
   * Remove 100-VeraMono-DejaVuSansMono-replacement.patch as it's not
     needed anymore.
@@ -1052,9 +1053,9 @@ munin (1.4.0-2) unstable; urgency=low
 
   [ Tom Feiner ]
   * Improve short description of munin-common and munin-java-plugins.
-  * Move default-jdk from Build-Depends to Build-Depends-Indep. 
+  * Move default-jdk from Build-Depends to Build-Depends-Indep.
   * Change the order of Depends for munin-java-plugins to put a non-virtual
-    package first. 
+    package first.
 
   [ Stig Sandbeck Mathisen ]
   * Update munin-node plugin configuration for postfix. (Closes: #559165)
@@ -1071,7 +1072,7 @@ munin (1.4.0-2) unstable; urgency=low
 munin (1.4.0-1) unstable; urgency=low
 
   * Initial upload of munin 1.4.0 to Debian unstable. (Closes: #535691)
-    New features include: 
+    New features include:
     - Better scalability (multigraph support)
     - Better security through TLS (SSL)
     - Better looking HTML templates
@@ -1083,8 +1084,8 @@ munin (1.4.0-1) unstable; urgency=low
   * Move htmldir to /var/cache/munin/www. (Closes: #553555)
     If you are upgrading, read NEWS.Debian.
     Theres still work to be done implementing debconf presenting an option
-    where to install the htmldir, and possibly support more webservers by 
-    default. 
+    where to install the htmldir, and possibly support more webservers by
+    default.
   * Add new binary package: munin-common, which contains code shared by
     munin and munin-node. Added depends on munin-common to munin,
     munin-node.
@@ -1099,7 +1100,7 @@ munin (1.4.0-1) unstable; urgency=low
     required by the new mysql_ plugin.
   * Add suggests to ruby for munin-node.
   * Update new manpages names for munin-node.manpages.
-  * Change the use of VeraMono.ttf in munin-graph to the 
+  * Change the use of VeraMono.ttf in munin-graph to the
     equivalent font provided by a Debian package. (Closes: #548508)
   * munin.conf has a "includedir" directive now, to include config file
     snipplets. (Closes: #425416)
@@ -1114,9 +1115,9 @@ munin (1.4.0-1) unstable; urgency=low
   * munin-graph now checks if in cgi-mode and thus munin-cron doesn't need to
     be modified anymore for cgi-mode. (Closes: #498842)
   * Add default postgres_* configuration to plugins.conf.
-  * Add Announce-1.4.0, UPGRADING to the package documents. 
+  * Add Announce-1.4.0, UPGRADING to the package documents.
   * Add build/resources/apache-cgi.conf to munin.docs.
-  * 1.4.0 contains the fix for squid_traffic bytes from cache too 
+  * 1.4.0 contains the fix for squid_traffic bytes from cache too
     low. (Closes: #557385)
   * munin-node: improve ignore_file in /etc/munin/munin-node.conf.
     (Closes: #546149)
@@ -1125,14 +1126,14 @@ munin (1.4.0-1) unstable; urgency=low
 
   [ Holger Levsen ]
   * Update homepage field in debian/control.
-  * Improve debian/changelog. 
+  * Improve debian/changelog.
 
  -- Tom Feiner <feiner.tom@gmail.com>  Sun, 29 Nov 2009 22:41:11 +0200
 
 munin (1.2.6-17) unstable; urgency=low
 
   [ Holger Levsen ]
-  * Adding Tom to uploaders. 
+  * Adding Tom to uploaders.
   * Apply patch by Tom Feiner to not make the automatic plugin detection fail
     if one plugin has an error. (Closes: #539886)
 
@@ -1144,7 +1145,7 @@ munin (1.2.6-17) unstable; urgency=low
 munin (1.2.6-16) unstable; urgency=low
 
   [ Holger Levsen ]
-  * Bump standards-version to 3.8.3, no changes necessary. 
+  * Bump standards-version to 3.8.3, no changes necessary.
 
   [ Tom Feiner ]
   * Add python to munin-plugins-extra suggests, as ipmi_sensor_ needs it.
@@ -1153,7 +1154,7 @@ munin (1.2.6-16) unstable; urgency=low
   * Add suggests to libnet-telnet-perl for munin-plugins-extra as the
     asterisk plugins needs it. (Closes: #532955)
   * Changed mysql* plugins options to use /etc/mysql/debian.cnf
-    exclusively. /etc/my.cnf /etc/mysql/my.cnf /usr/etc/my.cnf 
+    exclusively. /etc/my.cnf /etc/mysql/my.cnf /usr/etc/my.cnf
     ~/.my.cnf (including /root/.my.cnf) mysql configuration files
     will now be ignored. (Closes: #408452)
 
@@ -1163,10 +1164,10 @@ munin (1.2.6-15) unstable; urgency=low
 
   [ Matthias Schmitz ]
   * Add the linux_diskstats_ plugin from Michael Renner. (Closes: #522561)
-  * Provide an ipmi_sensor_ plugin. (Closes: #503936) 
+  * Provide an ipmi_sensor_ plugin. (Closes: #503936)
   * postfix_mailstats: Don't fall back to a logfile we already determined not
     to exist. Thanks to Ulrik Haugen and Niels Thykier! (Closes: #532876)
-  * dhcpd3: Set Debian specific path to configuration and lease file. 
+  * dhcpd3: Set Debian specific path to configuration and lease file.
     Thanks to Tom Feiner! (Closes: #543979)
   * hddtemp_smartctl: Add capability to detect scsi/sata disks. Thanks to
     Thorsten Gunkel for bug report and patch! (Closes: #497400)
@@ -1190,11 +1191,11 @@ munin (1.2.6-14) unstable; urgency=low
     "setsid" (Closes: #533467)
 
   [ Holger Levsen ]
-  * Apply patch by Brian De Wolf (taken from trunk r2352) to fix gaps in 
-    graphs of the cpu plugin due to changes in the way the kernel reports 
+  * Apply patch by Brian De Wolf (taken from trunk r2352) to fix gaps in
+    graphs of the cpu plugin due to changes in the way the kernel reports
     cpu usage. (Closes: #535575)
-  * Once again remove the 'autoconf' magic marker from the postgres_space 
-    plugin, which was reintroduced when fixing #518790. 
+  * Once again remove the 'autoconf' magic marker from the postgres_space
+    plugin, which was reintroduced when fixing #518790.
     (Closes: #503294, #503403)
   * Restart munin-node after initialising plugins. (Closes: #543613)
 
@@ -1226,18 +1227,18 @@ munin (1.2.6-12) unstable; urgency=low
   * Fix bashisms in several plugins in munin-plugins-extra, thanks to
     Raphael Geissert for the bug and the patch. (Closes: #530147)
   * Fix hardcode upsname in nut_misc and nut_volts plugins, thanks to Joey
-    Hess for the bug and Stig Sandbeck Mathisen for the patch. 
+    Hess for the bug and Stig Sandbeck Mathisen for the patch.
     (Closes: #521355)
-  * munin.postinst and munin-node.postinst: workaround bug in xen-tools 
-    (#531021) by creating the munin group if it doesn't exist. 
+  * munin.postinst and munin-node.postinst: workaround bug in xen-tools
+    (#531021) by creating the munin group if it doesn't exist.
     (Closes: #501189)
   * Add patch to linux cpu plugin to output correct graph if HZ value != 100,
     thanks to Valentin Vidic for the patch. (Closes: #500226)
   * Add patch to acpi plugin to call acpi without -B as requiered by acpi in
     lenny and newer, thanks to Joey Hess. (Closes: #523239)
   * Include ejabberd plugin in munin-plugins-extra. Thanks to Christian Dröge
-    for the plugin. (Closes: #505684) 
-  * Include various plugins for asterisk in munin-plugins-extra. Thanks to 
+    for the plugin. (Closes: #505684)
+  * Include various plugins for asterisk in munin-plugins-extra. Thanks to
     Rodolphe Quiedeville and Jan Prunk for the plugins. (Closes: #510307)
 
  -- Holger Levsen <holger@debian.org>  Fri, 29 May 2009 14:31:23 +0200
@@ -1248,7 +1249,7 @@ munin (1.2.6-11) unstable; urgency=low
   * Activate 460-netstat-regex.patch (Closes: #526688)
 
   [ Matthias Schmitz ]
-  * Add munin(8) manpage. (Closes: #517952) 
+  * Add munin(8) manpage. (Closes: #517952)
 
   [ Holger Levsen ]
   * node/munin-run.in: fix typo in manpage. (Closes: #514559)
@@ -1260,20 +1261,20 @@ munin (1.2.6-11) unstable; urgency=low
   * Bump debhelper compat level to 5, use versioned build-depends on
     debhelper, add ${misc:Depends} to binary packages depends.
   * Fix typo in apache plugins. (Closes: #519642)
-  * Fix typo in if plugins. (Closes: #523765) 
+  * Fix typo in if plugins. (Closes: #523765)
   * Apply patch from http://munin.projects.linpro.no/ticket/627 to support
     bind 9.5 (and 9.3) in the bind9_rdnc plugin. (Closes: #522868)
-    Thanks to K.Kano for the patch and Thorsten Tüllmann for filing the bug in 
+    Thanks to K.Kano for the patch and Thorsten Tüllmann for filing the bug in
     the Debian BTS.
 
  -- Holger Levsen <holger@debian.org>  Thu, 28 May 2009 20:42:05 +0200
 
 munin (1.2.6-10) unstable; urgency=low
 
-  * munin-html: create needed directories if they don't exist. Normally this 
-    is done in munin-graph, but that's not used in cgi mode. Thanks to Peter 
+  * munin-html: create needed directories if they don't exist. Normally this
+    is done in munin-graph, but that's not used in cgi mode. Thanks to Peter
     Palfrader for the bugreport with patch! (Closes: #514634)
-  * node.d.linux/netstat.in: fix regex to only match openened connections, 
+  * node.d.linux/netstat.in: fix regex to only match openened connections,
     thanks to  Paul Slootman for 460-netstat-regex.patch. (Closes: #507069)
 
  -- Holger Levsen <holger@debian.org>  Sat, 28 Feb 2009 19:54:14 +0100
@@ -1281,16 +1282,16 @@ munin (1.2.6-10) unstable; urgency=low
 munin (1.2.6-9) unstable; urgency=low
 
   [ Matthias Schmitz ]
-  * 420-munin-limits.excessive-notifications.patch: Make the number of state 
-    transitions (from or to unknown) configurable before a notification will 
-    be send, now set to 3. Thanks to Steve Wilson for the patch. 
+  * 420-munin-limits.excessive-notifications.patch: Make the number of state
+    transitions (from or to unknown) configurable before a notification will
+    be send, now set to 3. Thanks to Steve Wilson for the patch.
     (Closes: #501214)
   * Add a stderr/stdout redirection to iostat plugin. (Closes: #512407)
-  * munin-cgi-graph: better check of semget() return value. 
+  * munin-cgi-graph: better check of semget() return value.
     Thanks to Rafał Kupka! (Closes: #512572)
 
   [ Holger Levsen ]
-  * apc_nis plugin: Set line_volt.max to 300 (instead of 200) to correctly 
+  * apc_nis plugin: Set line_volt.max to 300 (instead of 200) to correctly
     deal with 220V installations. Thanks to Tim Bagot for reporting this!
     (Closes: #511781)
 
@@ -1305,13 +1306,13 @@ munin (1.2.6-8) unstable; urgency=low
   * With rrdtool >= 1.3 the column alignment in the graph legend only works
     with a monospace font. Remove fix path to legend font in munin-graph and
     substitute it with fontconfig name 'monospace'. (Closes: #499033)
-  * Remove the 'autoconf' magic marker from the postgres_* plugins. 
+  * Remove the 'autoconf' magic marker from the postgres_* plugins.
     (Closes: #503294, #503403)
 
   [ Holger Levsen ]
   * munin-node.postinst: only execute $TMPFILE if munin-node-configure (which
     creates it) exited without errors. (Closes: #503913)
-  * node/munin-node.conf.pod: fix error from pod2man spotted by lintian. 
+  * node/munin-node.conf.pod: fix error from pod2man spotted by lintian.
 
  -- Holger Levsen <holger@debian.org>  Sat, 08 Nov 2008 14:31:13 +0000
 
@@ -1329,18 +1330,18 @@ munin (1.2.6-6) unstable; urgency=low
   [ Matthias Schmitz ]
   * Since version 1.3.x rrdtool / librrds uses libpango which needs its input
     utf8 encoded. Because all munin plugins are latin1 munin-graph now encodes
-    the strings into utf8 before feeding them to librrds. (Closes: #494547) 
-    Also mention the need for latin-1 encoded plugins in 
+    the strings into utf8 before feeding them to librrds. (Closes: #494547)
+    Also mention the need for latin-1 encoded plugins in
     munin-node.README.Debian.
   * Included postgresql plugins. (Closes: #320079) Add libdbd-pg-perl
     to munin-node suggests.
   * Make munin-node suggests of smartmontools versioned to >=5.37-6~bpo40+1
     because this version contains fixes for CCISS controllers needed by
-    plugin hddtemp_smartctl, to help backporters. (Closes: #488357) 
+    plugin hddtemp_smartctl, to help backporters. (Closes: #488357)
 
   [ Holger Levsen ]
   * Add libnet-netmask-perl to munin-plugins-extra suggests. (Closes: #494095)
-  * Add trivial patch from Guido Günther to munin-run to allow colons in 
+  * Add trivial patch from Guido Günther to munin-run to allow colons in
     plugin names, to enable support for IPv6 addresses. (Closes: #499391)
 
  -- Holger Levsen <holger@debian.org>  Fri, 19 Sep 2008 15:29:38 +0000
@@ -1372,21 +1373,21 @@ munin (1.2.6-4) unstable; urgency=medium
   * Install munin-node gracefully (ie. inside a chroot, where port 4949 is
     bound to another munin-node already) : munin-node.postinst: don't exit
     postinst with error if just munin-node-configure fails. debian/rules: use
-    dh_installinit with --error-handler=true. (Closes: #491130) 
+    dh_installinit with --error-handler=true. (Closes: #491130)
   * munin-node: if_ and if_err_ plugins: add msh|venet|veth to the regex of
     detected interfaces. (Closes: #489505)
   * munin-node: postfix_mailqueue plugin: use postconf to detect postfix's
-    spooldir. (Closes: #383397) 
+    spooldir. (Closes: #383397)
   * munin-plugins-extra: include vserver plugins (Closes: #489737), thanks to
     Micah Anderson for maintaining them. Make them use /bin/bash instead of
     /bin/sh as they don't work with dash yet.
   * munin-node: depend on gawk. (Closes: #491559)
   * munin-node: add versioned dependency on lsb-base. (Closes: #469311)
-  * munin-node-configure: don't treat empty suggests as errors. 
+  * munin-node-configure: don't treat empty suggests as errors.
     (Closes: #491475, #489502)
   * munin-node: sensors plugin: don't output errors on autoconf and suggest if
     no sensors binary is installed. (Closes: #491473)
-  * munin-plugins-extra: fix typo in courier plugin. (Closes: #491463)  
+  * munin-plugins-extra: fix typo in courier plugin. (Closes: #491463)
 
  -- Holger Levsen <holger@debian.org>  Thu, 17 Jul 2008 16:33:05 +0000
 
@@ -1403,7 +1404,7 @@ munin (1.2.6-3) unstable; urgency=low
  -- Matthias Schmitz <matthias@sigxcpu.org>  Mon, 07 Jul 2008 13:31:32 +0200
 
 munin (1.2.6-2) unstable; urgency=low
-  
+
   [ Matthias Schmitz ]
   * Fix the exim detection in exim_mailqueue with the patch from Damyan
     Ivanov, thanks! Closes: #486865
@@ -1421,18 +1422,18 @@ munin (1.2.6-2) unstable; urgency=low
   * Set default logfile to mail.conf for postfix_mailvolume in plugins.conf
     since Debian's postfix logs there. In the plugin postfix_mailstats this
     issue was already fixed upstream. Closes: #461302
-  * Added detection of slashes in plugin ip_'s suggest mode. 
+  * Added detection of slashes in plugin ip_'s suggest mode.
     Closes: #464881, #411643, #402881
   * Included plugin 'openvpn'. Closes: #354447
-  * Build the binary package 'munin-plugins-extra' with user contributed 
+  * Build the binary package 'munin-plugins-extra' with user contributed
     plugins (again) by default. Though previously this package was called
-    'munin-plugins-contrib'. It was renamed to avoid confusion about the term 
+    'munin-plugins-contrib'. It was renamed to avoid confusion about the term
     'contrib' which is used in Debian with a different meaning.
 
   [ Holger Levsen ]
   * Bump Standards-Version to 3.8.0, add Homepage and Vcs-* pseudo-headers.
   * Add README.source and convert it to svn-buildpackage. Thanks to Patrick
-    Winnertz for help on this and writing the pbuilder part of README.source.   
+    Winnertz for help on this and writing the pbuilder part of README.source.
   * Add error checking to postinst, so the postinst (and with it dpkg) doesn't
     fail if munin-node-configure fails, for example if /proc is not mounted.
   * Provide entry about the munin-plugins-extra package in NEWS file.
@@ -1444,7 +1445,7 @@ munin (1.2.6-2) unstable; urgency=low
     wasn't build on default anymore.)
   * Adjust the default path for the mail logfile as suggested in #296533.
     (Same here, bug was closed in the BTS when this binary package wasn't
-    build on default anymore.) 
+    build on default anymore.)
 
  -- Matthias Schmitz <matthias@sigxcpu.org>  Tue, 01 Jul 2008 19:06:20 +0200
 
@@ -1477,11 +1478,11 @@ munin (1.2.6-1) unstable; urgency=low
 munin (1.2.5-2) unstable; urgency=low
 
   * apply patch that reads the default file, closes: #370347
-  
+
   * control: add Loic Dachary (OuoU) <loic@debian.org> to Uploaders
-  
+
   * control: standard version 3.7.2
-  
+
  -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 07 Aug 2007 14:54:11 +0000
 
 munin (1.2.5-1) unstable; urgency=low
@@ -1548,7 +1549,7 @@ munin (1.2.4-1) unstable; urgency=low
         1.2.3 has been merged into the upstream tree.
 
  -- Tore Anderson <tore@debian.org>  Tue, 13 Dec 2005 18:21:59 +0100
-  
+
 munin (1.2.3-3) unstable; urgency=medium
 
   * debian/munin.preinst (removed), debian/munin.postinst, debian/munin.postrm,
@@ -1600,7 +1601,7 @@ munin (1.2.3-2) unstable; urgency=low
       - Made the munin package depend on librrds-perl in versions 1.2 or above.
 
  -- Tore Anderson <tore@debian.org>  Wed, 31 Aug 2005 09:11:47 +0200
- 
+
 munin (1.2.3-1) unstable; urgency=medium
 
   * New upstream release, targeted at Sarge.
@@ -1630,10 +1631,10 @@ munin (1.2.2-3) unstable; urgency=high
       - Fix mis-merge of the optional user patch, restoring per-plugin
         group setting. Thanks to Andras Korn for reporting and
         Robert Loomans for patch (Closes: #299589).
-  
+
   * node/munin-node.in, node/munin-run.in:
       - Allow root for the per-plugin group directive.
-  
+
   * Fix autoconf for the linux/nfs* plugins.
 
  -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>  Wed, 16 Mar 2005 20:45:15 +0100
@@ -2055,7 +2056,7 @@ lrrd (0.9.7-2) unstable; urgency=low
   * Use Net::Domain instead of /bin/hostname when generating server.conf,
     to ensure the hostname matches the client's, closes: #203960.
   * Do not determine the hostname and domain during build.
- 
+
  -- Tore Anderson <tore@linpro.no>  Sat, 09 Aug 2003 23:09:21 +0200
 
 lrrd (0.9.7-1) unstable; urgency=low
@@ -2081,7 +2082,7 @@ lrrd (0.9.7-1) unstable; urgency=low
   * Standards-Version 3.6.0, no changes required.
 
  -- Tore Anderson <tore@linpro.no>  Mon, 14 Jul 2003 20:39:18 +0200
- 
+
 lrrd (0.9.6-1) unstable; urgency=low
 
   * Initial release, closes: #169079.
