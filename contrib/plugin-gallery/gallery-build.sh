@@ -173,6 +173,11 @@ publish_example_graphs() {
 	# Include example graphs in perldoc pages
 	graph_log=$(echo "$example_graph_files" | grep -v "^$" \
 		| awk -f "$SCRIPT_DIR/include-graphs.awk" -v "target_dir=$target_dir")
+	# copy images
+	echo "$example_graph_files" | while read -r fname; do
+		mkdir -p "$target_dir/$(dirname "$fname")"
+		cp "$fname" "$target_dir/$fname"
+	done
 	printf "%d example graph images illustrate the plugin pages\n" "$(echo "$graph_log" | grep -c "^Plugin:")"
 	# show all errors
 	graph_errors=$(echo "$graph_log" | grep -v "^Plugin:" || true)
