@@ -83,12 +83,14 @@ build_target_dir() {
 	mkdir -p "$target_dir"
 	# Find relation between plugins and categories
 	# Result: space-separated list of category and plugin_filename sorted by category
+	# The plugin names need to start with their top level directory ("./" is removed).
 	# Plugins are executable or end with ".in" (for stable-2.0).
 	categories_and_plugins=$(find . -type f "(" -executable -o -name "*.in" ")" -print0 \
 		| xargs -0 grep -i --exclude-from="$SCRIPT_DIR/grep-files.excl" -E \
 			"(category|Munin::Plugin::Pgsql)" \
 		| sort -u \
 		| grep -v "^$" \
+		| sed 's#^\./##' \
 		| awk -F ":" -f "$SCRIPT_DIR/split-greplist.awk" \
 		| LC_COLLATE=C sort -u)
 
@@ -100,6 +102,7 @@ build_target_dir() {
 		| grep -vF "/node.d.debug/" \
 		| sort \
 		| grep -v "^$" \
+		| sed 's#^\./##' \
 		| while read -r fname; do
 			echo "$plugins_with_category" | cut -f 2 -d " " \
 				| grep -qxF "$fname" || echo "$fname"; done)

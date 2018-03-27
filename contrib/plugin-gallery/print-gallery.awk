@@ -2,7 +2,7 @@
 #
 # Input:
 #   First Column: category
-#   Second Column: plugin filename
+#   Second Column: plugin filename (BEWARE: without a leading "./")
 # The input lines are sorted by category.
 #
 # Author: Gabriele Pohl (contact@dipohl.de)
