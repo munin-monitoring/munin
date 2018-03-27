@@ -238,8 +238,8 @@ if ! perldoc -V >/dev/null; then
 	exit 1
 fi
 
-publish_branch "munin"   "stable-2.0" "/"         "Core (2.x)"     "$work_dir" "gallery-intro.html"
-publish_branch "munin"   "master"     "/devel/"   "Core (pre 3.0)" "$work_dir" "gallery-intro.html"
+publish_branch "munin"   "stable-2.0" "/"         "Core - 2.x"     "$work_dir" "gallery-intro.html"
+publish_branch "munin"   "master"     "/devel/"   "Core - pre 3.0" "$work_dir" "gallery-intro.html"
 publish_branch "contrib" "master"     "/contrib/" "3rd-Party"      "$work_dir" "gallery-intro-contrib.html"
 rsync -ax --delete "$SCRIPT_DIR/www/static" "$work_dir/" "$TARGET_DIR/"
 
