@@ -1,5 +1,6 @@
 munin (2.999.6-7) UNRELEASED; urgency=medium
 
+  * munin-plugis-core: add suggests to time. Closes: #862794
   * debian/changelog: drop trailing whitespaces, thanks lintian.
 
  -- Holger Levsen <holger@debian.org>  Sun, 25 Mar 2018 11:25:15 +0000

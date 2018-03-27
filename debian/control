@@ -99,6 +99,7 @@ Suggests:
  conntrack,
  smartmontools,
  net-tools,
+ time,
  libfile-readbackwards-perl,
  libnet-netmask-perl,
  libxml-simple-perl,
