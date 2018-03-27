@@ -9,6 +9,7 @@ munin (2.0.36-1) UNRELEASED; urgency=medium
   * Build-Depends-Indep: switch from default-jdk to openjdk-8-jdk as munin
     fails to build with java 9.
   * debian/Makefile.config: define JC without path containing default-java.
+  * munin-plugis-core: add suggests to time. Closes: #862794
   * debian/changelog: drop trailing whitespaces, thanks lintian.
 
  -- Holger Levsen <holger@debian.org>  Sat, 24 Mar 2018 14:10:52 +0000
