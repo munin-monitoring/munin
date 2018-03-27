@@ -45,6 +45,8 @@ Munin-Node
 
 The node is a small agent running on each monitored host. We can have
 agent-less monitoring but this is a special case that will be addressed later.
+On machines without native support for Perl scripting you can use `munin-c <https://github.com/munin-monitoring/munin-c>`_,
+which is a C rewrite of munin node components. (Look for the details in the :ref:`munin-c chapter <munin-c>`.)
 
 Note that an usual setup involves having a node running also on the master
 host, in order to munin to monitor itself.
