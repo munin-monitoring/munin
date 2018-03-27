@@ -70,6 +70,7 @@ case $1 in
 graph_title Perdition Connections
 graph_vlabel Number of Connections
 graph_total Total
+graph_category mail
 connection.label connections
 disconnected.label disconnections
 imap.label IMAP Auths

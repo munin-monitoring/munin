@@ -11,7 +11,7 @@ apache - Munin multigraph plugin to monitor Apache statistics.
 This plugin will produce multiple graphs showing:
 
  - the number of accesses to Apache servers;
- - the number of apache processes running on the machine;
+ - the number of Apache processes running on the machine;
  - the volume of data sent from Apache servers.
 
 =head1 APPLICABLE SYSTEMS
@@ -62,7 +62,7 @@ This will provide for HTTP basic authentication.
 =head2 WILDCARD CONFIGURATION
 
 It's possible to use the plugin in a virtual-node capacity, in which
-case the URL will automatically default to the hostname defiend after
+case the URL will automatically default to the hostname defined after
 the second underscore in the plugin name:
 
   [apache_someserver]
@@ -147,10 +147,10 @@ while (my ($port, $response) = each(%responses)) {
     if ($response->content =~ /^Total Accesses:/im ) {
       next;
     } else {
-      $plugin->{autoconf} = "no (ExtendedStatus option for apache mod_status is missing on port $port)";
+      $plugin->{autoconf} = "no (ExtendedStatus option for Apache mod_status is missing on port $port)";
     }
   } elsif ($response->code == 404) {
-    $plugin->{autoconf} = "no (apache server-status not found. check if mod_status is enabled)\n";
+    $plugin->{autoconf} = "no (Apache server-status not found. check if mod_status is enabled)\n";
   } else {
     $plugin->{autoconf} = "no (Port $port: ". $response->message .")\n";
   }

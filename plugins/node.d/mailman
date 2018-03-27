@@ -60,6 +60,7 @@ else
 if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Mailman usage\n";
     print "graph_args --base 1000\n";
+    print "graph_category mailinglist\n";
     print "posts.label posts per minute\n";
     print "posts.type DERIVE\n";
     print "posts.min 0\n";

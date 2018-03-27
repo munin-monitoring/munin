@@ -1,7 +1,7 @@
 .. _initial_configuration:
 
 =======================
- Initial configuration
+ Initial Configuration
 =======================
 
 Node
@@ -71,16 +71,3 @@ Add some nodes to CONFDIR/munin.conf
 
 [node3.example.com]
   address 2001:db8::de:caf:bad
-
-Configure web server
-====================
-
-On the master, you need to configure a web server.
-
-If you have installed "munin" through distribution
-packages, a webserver may have been configured for you already.
-
-If you installed from source, there is a minimal configuration example
-in the "resources" directory in the source tarball.
-
-For a more complex example, see :ref:`example-webserver-apache`

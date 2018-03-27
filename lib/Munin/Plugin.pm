@@ -338,7 +338,7 @@ $field_warning or $field_critical values then look for the variables
 "warning" and "critical" and return those values if any.
 
 If the second and/or third arguments are specified then they will be
-used to specify the name of variables giving the the warning and
+used to specify the name of variables giving the warning and
 critical levels.
 
 If no values are found for a threshold then undef is returned.
@@ -411,8 +411,8 @@ been rotated, and the file position will be at the start of the file.
 If the file is opened OK the function returns a tuple consisting of
 the file handle and a file rotation indicator.  $rotated will be 1 if
 the file has been rotated and 0 otherwise.  Also, if the file was
-rotated a warning is printed (this can be found in the munin-node log
-or seen in the terminal when using munin-run).
+rotated a warning is printed (only in debug mode, this can be found
+in the munin-node log or seen in the terminal when using munin-run).
 
 At this point the plugin can read from the file with <$file_handle> in
 loop as usual until EOF is encountered.
@@ -441,7 +441,7 @@ sub tail_open ($$) {
       die "$me: Could not open input file '$file' for reading: $!\n";
 
     if ($position > $size) {
-	warn "$me: File rotated, starting at start\n";
+	warn "$me: File rotated, starting at start\n" if $DEBUG;
 	$filereset=1;
     } elsif (!seek($FH, $position, 0)) {
 	die "$me: Seek to position $position of '$file' failed: $!\n";
@@ -477,6 +477,9 @@ Read the first line of a file into an array.
 This is extremely helpful when reading data out of /proc or /sys that
 the kernel exposes.
 
+Returns undef if the file does not exist.
+Returns an empty array if the file is empty (or contains only whitespace).
+
 =cut
 
 sub readarray($) {
@@ -484,6 +487,8 @@ sub readarray($) {
 
   open my $FH, "<", $path or return undef;
   my $line = <$FH>;
+  # handle an empty file gracefully
+  $line = "" if not defined($line);
   chomp($line);
   my @row = split(/\s+/, $line);
   close $FH;
@@ -493,7 +498,7 @@ sub readarray($) {
 
 =head3 $position = tail_close($file_handle)
 
-Close the the file and return the current position in the file.  This
+Close the file and return the current position in the file.  This
 position can be stored in a state file until the next time the plugin runs.
 
 If the C<close> system call fails, a warning will be printed (which can be

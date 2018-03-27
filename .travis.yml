@@ -1,14 +1,16 @@
+---
 language: perl
 perl:
   - "5.20"
 branches:
- only:
-  - stable-2.0
-  - master
+  only:
+    - stable-2.0
+    - master
 addons:
   apt:
     packages:
       - devscripts
+      - libpango1.0-dev
       - libdbd-pg-perl
       - libdbd-sqlite3-perl
       - libdbi-perl
@@ -46,7 +48,7 @@ addons:
 notifications:
   email: false
   irc:
-    on_success: change # no need for spam
+    on_success: change  # no need for spam
     on_failure: always
     channels:
       - "irc.oftc.net#munin"

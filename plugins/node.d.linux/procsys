@@ -6,7 +6,7 @@ procsys - Plugin to monitor kernel sysctl data
 
 =head1 INTERPRETATION
 
-The pluign will create multiple graphs for:
+The plugin will create multiple graphs for:
 
 =over 4
 

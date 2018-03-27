@@ -64,7 +64,7 @@ FILES
 
 :ref:`/etc/munin/munin-node.conf <munin-node.conf>`
 
-:ref:`/etc/munin/plugins/* <plugindir>`
+:ref:`/etc/munin/plugins/* <servicedir>`
 
 :ref:`/etc/munin/plugin-conf.d/* <pluginconfdir>`
 

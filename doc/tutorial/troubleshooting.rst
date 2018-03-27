@@ -223,7 +223,7 @@ If one of these steps does not work, something is probably wrong with the plugin
 
  #. Does Munin (:ref:`munin-cron` and its children) write values into RRD files? Hint: ``rrdtool fetch [rrd file] AVERAGE``
 
- #. Does the plugin use legal field names?  See `Notes on Field names <http://munin-monitoring.org/wiki/notes_on_datasource_names>`_.
+ #. Does the plugin use legal field names?  See :ref:`Notes on Field names <notes-on-fieldnames>`.
 
  #. In case you `loan data <http://munin-monitoring.org/wiki/LoaningData>`_ from other graphs, check that the `fieldname.type <http://munin-monitoring.org/wiki/fieldname.type>`_ is set properly. See `Munin file names <http://munin-monitoring.org/wiki/MuninFileNames>`_ for a quick reference on what any error messages in the logs might indicate.
 

@@ -59,6 +59,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "host_name $ENV{FQDN}\n";
     print "graph_title ircd status\n";
     print "graph_order clients channels servers\n";
+    print "graph_category chat\n";
     print "graph_args -l 0\n";
     print "clients.label clients\n";
     print "clients.draw LINE2\n";

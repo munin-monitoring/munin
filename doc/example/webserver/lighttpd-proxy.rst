@@ -1,11 +1,11 @@
-.. _example-webserver-lighttpd:
+.. _example-webserver-lighttpd-proxy:
 
-========================
- lighttpd configuration
-========================
+==============================
+ lighttpd Proxy Configuration
+==============================
 
-This example describes how to set use lighttpd in front of
-munin-httpd.
+This example describes how to use `lighttpd <http://lighttpd.org>`_ in front of :ref:`munin-httpd`.
+
 
 Webserver configuration
 =======================

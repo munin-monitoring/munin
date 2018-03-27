@@ -13,7 +13,7 @@ This is used to control how the generated graph looks, and how values are interp
 
 You can override plugin defaults on Munin master via your own settings on plugin level in :ref:`munin.conf`.
 
-See `rrdgraph man page <http://oss.oetiker.ch/rrdtool/doc/rrdgraph.en.html>`_ for more details.
+See `rrdgraph man page <https://oss.oetiker.ch/rrdtool/doc/rrdgraph.en.html>`_ for more details.
 
 Scale
 =====
@@ -33,7 +33,7 @@ Scale
 Units
 =====
 
-See `Best Current Practices <http://munin-monitoring.org/wiki/plugin-bcp#Graphscaling>`_
+See :ref:`Best Current Practices for good plugin graphs <plugin-bcp-graphscaling>`
 
 .. option:: --base <value>
 

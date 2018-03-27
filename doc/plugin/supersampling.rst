@@ -84,7 +84,7 @@ lines, with monotonically increasing epoch.
   itself does also mandates integers. We can easily imagine that with
   another database as back-end, an extension could be hacked together.
 
-.. _rrdtool: http://oss.oetiker.ch/rrdtool/doc/rrdtool.en.html
+.. _rrdtool: https://oss.oetiker.ch/rrdtool/doc/rrdtool.en.html
 
 Compatibility with 1.4
 ======================

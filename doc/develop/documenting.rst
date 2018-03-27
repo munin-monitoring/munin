@@ -81,5 +81,5 @@ Guide`_.
        <http://sphinx-doc.org/rest.html>`_ for help on the syntax.
 
 .. _GitHub: https://github.com/
-.. _Munin Guide: https://munin.readthedocs.org/
+.. _Munin Guide: https://guide.munin-monitoring.org/
 .. _wiki: http://munin-monitoring.org/wiki/

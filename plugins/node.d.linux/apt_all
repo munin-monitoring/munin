@@ -13,7 +13,8 @@ graphs.
 
 =head1 CONFIGURATION
 
-No configuration needed
+[apt_all]
+env.MUNIN_APT_RELEASES = stable,testing,unstable
 
 =head1 MAGIC MARKERS
 
@@ -34,7 +35,7 @@ $ENV{'LC_ALL'}="C";
 my $aptcache = '/var/cache/apt';
 my $dpkgstatus = '/var/lib/dpkg/status';
 # Releases to monitor
-my @releases = ("stable", "testing", "unstable");
+my @releases = split(",", ($ENV{MUNIN_APT_RELEASES} || "stable,testing,unstable"));
 
 # Print the apt state, regenerating the state cache if necessary
 sub print_state() {

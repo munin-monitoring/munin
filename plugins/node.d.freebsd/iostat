@@ -13,7 +13,7 @@
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
 #
-# Magick markers (optional - used by munin-config and som installation
+# Magic markers (optional - used by munin-config and some installation
 # scripts):
 #%# family=auto
 #%# capabilities=autoconf

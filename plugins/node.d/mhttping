@@ -117,6 +117,7 @@ close (RESULTSDIR) ;
 
 print "graph_title Web ping times\n" ;
 print "graph_vlabel response time (sec)\n" ;
+print "graph_category network\n" ;
 
 
 for $file (@results) {
@@ -204,5 +205,3 @@ for $site ( keys(%url) ) {
 } # end for $site
 
 } # end sub do_run()
-
-

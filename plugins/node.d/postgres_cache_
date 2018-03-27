@@ -74,6 +74,7 @@ my $pg = Munin::Plugin::Pgsql->new(
     vlabel   => 'Buffers / second',
     basequery =>
         "SELECT sum(blks_read) AS blks_read,sum(blks_hit) AS blks_hit FROM pg_stat_database %%FILTER%%",
+    paramdatabase  => 1,
     pivotquery     => 1,
     wildcardfilter => " WHERE datname=?",
     configquery    => [

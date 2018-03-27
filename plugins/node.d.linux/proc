@@ -65,7 +65,7 @@ If the process name (in env.procname) contains any characters other than
 [a-zA-Z_], they will be internally replaced by underscores ('_'). This is
 normally not a problem, unless you are setting warning/critical levels.
 
-For example, let's say you have have Plex Media Server running and you want
+For example, let's say you have Plex Media Server running and you want
 to monitor how many processes it has running. The name that shows up in /proc
 is 'Plex Media Serv' (truncated, without the 'er' at the end), the internal
 field becomes: 'Plex_Media_Serv'.

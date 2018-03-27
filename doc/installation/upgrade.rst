@@ -1,7 +1,7 @@
 .. _upgrade:
 
 ===============
- Upgrade notes
+ Upgrade Notes
 ===============
 
 Upgrading Munin from 2.0.x to 2.1.x

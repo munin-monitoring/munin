@@ -1,11 +1,12 @@
-.. _example-webserver-apache:
+.. _example-webserver-apache-proxy:
 
-==================================
- Apache virtualhost configuration
-==================================
+============================
+ Apache Proxy Configuration
+============================
 
-This example describes how to set up munin on a separate virtual host
-using apache httpd. It proxies all requests to :ref:`munin-httpd`
+This example describes how to run a separate :ref:`munin-httpd` process and proxy all requests
+via `Apache <https://httpd.apache.org/>`_ to this instance.
+
 
 Virtualhost configuration
 =========================
@@ -13,7 +14,7 @@ Virtualhost configuration
 Add a new virtualhost, using the following example:
 
 .. index::
-   triple: munin-httpd; apache httpd configuration; example
+   triple: munin-httpd; apache configuration; example
 
 ::
 
@@ -28,6 +29,7 @@ Add a new virtualhost, using the following example:
      ErrorLog  /var/log/apache2/munin.example.org-error.log
      CustomLog /var/log/apache2/munin.example.org-access.log combined
 
+     # serve static files directly
      RewriteEngine On
      RewriteRule ^/(.*\.html)$ /srv/www/munin.example.org/$1          [L]
 

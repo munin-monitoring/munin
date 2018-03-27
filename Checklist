@@ -65,7 +65,7 @@ This is a pre-release checklist for the maintainer.
    1. make a sha256sum : sha256sum munin-version.tar.gz > munin-version.tar.gz.sha256sum
       and sign it using gpg.
    2. Upload the tar.gz on sourceforge.net
-   3. Create a news on sf annoucing it
+   3. Create a news on sf announcing it
    4. Update our front page
    5. Create a new release on freshmeat.net 
    6. Send an email to the ML 

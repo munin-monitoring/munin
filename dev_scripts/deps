@@ -1,5 +1,5 @@
 #! /bin/sh
-# debian
+# Debian
 
 # Running munin
 apt-get install -y $(

@@ -97,6 +97,7 @@ my $pg = Munin::Plugin::Pgsql->new(
         ],
     ],
     wildcardfilter => "AND database=(SELECT oid FROM pg_database WHERE datname=?)",
+    paramdatabase  => 1,
     configquery    => [
         "VALUES
          ('accesssharelock','AccessShareLock','Used by read only queries'),

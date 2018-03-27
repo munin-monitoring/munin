@@ -42,7 +42,7 @@ Command line scripts
 * :ref:`munindoc` outputs plugin documentation.
 * :ref:`munin-run` runs a plugin with the same environment as if run from :ref:`munin-node`. Very
   useful for debugging.
-* :ref:`munin-async` is a command line utility, known as an "asyncronous proxy node".
+* :ref:`munin-async` is a command line utility, known as an "asynchronous proxy node".
   :ref:`munin-update` can connect via ssh and run :ref:`munin-async` this to retrieve data from the
   munin async spool without waiting for the node to run plugins.
 

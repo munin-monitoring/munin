@@ -11,7 +11,7 @@
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
 #
-# Magick markers (optional):
+# Magic markers (optional):
 #%# family=legacy
 #%# capabilities=autoconf
 

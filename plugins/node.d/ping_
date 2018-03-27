@@ -18,6 +18,7 @@ The following environment variables are used by this plugin
  ping_critical       - Critical limit for nagios notification
  packetloss_warning  - Warning limit for nagios notification
  packetloss_critical - Critical limit for nagios notification
+ enable_packetloss_graph - Display the graph of packetlosses (disabled by default)
 
 =head2 CONFIGURATION EXAMPLES
 
@@ -53,7 +54,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+# shellcheck disable=SC1090
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 case $0 in
     *ping6_*)
@@ -71,15 +73,17 @@ esac
 host=${host:-${file_host:-www.google.com}}
 
 if [ "$1" = "config" ]; then
-        echo graph_title $V ping times to $host
+        echo "graph_title $V ping times to $host"
         echo 'graph_args --base 1000 -l 0'
         echo 'graph_vlabel roundtrip time (seconds)'
         echo 'graph_category network'
         echo 'graph_info This graph shows ping RTT statistics.'
         echo "ping.label $host"
         echo "ping.info Ping RTT statistics for $host."
-        echo 'packetloss.label packet loss'
-        echo 'packetloss.graph no'
+        echo 'packetloss.label packet loss (%)'
+        if [ "${enable_packetloss_graph:-0}" = "0" ]; then
+                echo 'packetloss.graph no'
+        fi
         print_warning ping
         print_warning packetloss
         print_critical ping
@@ -88,4 +92,6 @@ if [ "$1" = "config" ]; then
 fi
 
 
-${ping:-$PING} ${ping_args:-'-c 2'} ${host} ${ping_args2} | perl -n -e 'print "ping.value ", $1 / 1000, "\n" if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@; print "packetloss.value $1\n" if /(\d+)% packet loss/;'
+# shellcheck disable=SC2086
+"${ping:-$PING}" ${ping_args:-'-c 2'} "${host}" ${ping_args2:-} \
+	| perl -n -e 'print "ping.value ", $1 / 1000, "\n" if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@; print "packetloss.value $1\n" if /(\d+)% packet loss/;'

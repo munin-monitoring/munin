@@ -33,7 +33,7 @@ Ideas
 -----
 
 - Some thoughts about `Tags <http://munin-monitoring.org/wiki/Tags>`_
-- Some thoughts about `basic module API for plugins written in perl, python and ruby <http://munin-monitoring.org/wiki/PluginFramework>`_
+- Some thoughts about `basic module API for plugins written in Perl, Python and Ruby <http://munin-monitoring.org/wiki/PluginFramework>`_
 
 Snippets
 --------
@@ -51,7 +51,7 @@ and then a ``fetch $plugin``.
 
 Some plugins do a lot of work to gather their numbers.  Quite a few of these
 need to do the same amount of work for the value fetching and printing
-as for the the ``config`` output.
+as for the ``config`` output.
 
 We could halve the execution time if ``munin-update`` detects that
 ``config $plugin`` produces .value and from that deducts that the

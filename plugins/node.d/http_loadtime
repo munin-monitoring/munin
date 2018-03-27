@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 : << =cut
 
@@ -38,30 +38,33 @@ GPLv2
 target=${target:-"http://localhost/"}
 requisites=${requisites:-"false"}
 
-urls=`echo $target | tr "," "\n"`
-wget_opt="--user-agent \"Munin - http_loadtime\" --no-cache -q"
-if [ "$requisites" == "true" ]; then
-  wget_opt="$wget_opt --page-requisites"
-fi
+urls=$(echo "$target" | tr "," "\n")
 
-time_bin=`which time`
+
+request_url() {
+    wget --user-agent "Munin - http_loadtime" --no-cache --quiet --output-document=/dev/null "$@" 2>/dev/null
+}
+
+
+escapeUri() {
+    echo "$1" | sed 's/[:/.-]/_/g'
+}
+
 
 if [ "$1" = "autoconf" ]; then
     result="yes"
-    command -v $time_bin 2>&1 >/dev/null || result=1
-    command -v tr        2>&1 >/dev/null || result=1
-    command -v wget      2>&1 >/dev/null || result=1
+    command -v tr   >/dev/null 2>&1 || result=1
+    command -v wget >/dev/null 2>&1 || result=1
     if [ "$result" != "yes" ]; then
-       echo "no (programs time, wget and tr required)"
-           exit 0
+       echo "no (programs wget and tr required)"
+       exit 0
     fi
 
     # check if urls respond
     #
     for uri in $urls
     do
-        wget --spider $uri $wget_opt
-        if [ "$?" != "0" ]; then
+        if ! request_url --spider "$uri"; then
             echo "no (Cannot run wget against \"$uri\")"
             exit 0
         fi
@@ -71,9 +74,6 @@ if [ "$1" = "autoconf" ]; then
     exit 0
 fi
 
-function escapeUri {
-    echo "$1" | tr ":" "_" | tr "/" "_" | tr "." "_" | tr "-" "_"
-}
 
 if [ "$1" = "config" ]; then
     echo "graph_title HTTP loadtime of a page"
@@ -83,25 +83,24 @@ if [ "$1" = "config" ]; then
     echo "graph_info This graph shows the load time in seconds"
     for uri in $urls
     do
-        uri_short=`echo ${uri:0:30}`
-        if [ "$uri_short" != "$uri" ]; then uri_short=$uri_short"..."; fi
-        echo $(escapeUri $uri)".label $uri_short"
-        echo $(escapeUri $uri)".info page load time"
+        uri_short=$(echo "$uri" | cut -c 1-30)
+        if [ "$uri_short" != "$uri" ]; then uri_short="${uri_short}..."; fi
+        echo "$(escapeUri "$uri").label $uri_short"
+        echo "$(escapeUri "$uri").info page load time"
     done
     exit 0
 fi
 
-TEMPO_DIR=$(mktemp -dt munin_http_loadtime.XXXXXX) || exit 1
-
-trap "rm -rf $TEMPO_DIR" EXIT
-
-cd $TEMPO_DIR || exit 1
 
 for uri in $urls
 do
-    loadtime=`$time_bin --quiet -f "%e" wget $wget_opt $uri 2>&1`
+    start=$(date +%s.%N)
+    if [ "$requisites" = "true" ]; then
+        request_url --page-requisites "$uri"
+    else
+        request_url "$uri"
+    fi
+    loadtime=$(echo "$start" "$(date +%s.%N)" | awk '{ print($2 - $1); }')
 
-    echo `escapeUri $uri`".value $loadtime"
+    echo "$(escapeUri "$uri").value $loadtime"
 done
-
-cd -

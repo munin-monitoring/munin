@@ -109,7 +109,7 @@ Datatypes
 GAUGE
 ^^^^^
 
-"is for things like temperatures or number of people in a room or the value of a RedHat share." (Source: `rrdcreate man page <http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#IGAUGE>`_)
+"is for things like temperatures or number of people in a room or the value of a RedHat share." (Source: `rrdcreate man page <https://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#IGAUGE>`_)
 
 If a plugin author does not declare datatype explicitly, GAUGE is the default datatype.
 
@@ -118,13 +118,13 @@ If a plugin author does not declare datatype explicitly, GAUGE is the default da
 COUNTER
 ^^^^^^^
 
-"is for continuous incrementing counters like the ifInOctets counter in a router. The COUNTER data source assumes that the counter never decreases, except when a counter overflows. The update function takes the overflow into account. The counter is stored as a per-second rate. When the counter overflows, RRDtool checks if the overflow happened at the 32bit or 64bit border and acts accordingly by adding an appropriate value to the result." (Source: `rrdcreate man page <http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#ICOUNTER>`_)
+"is for continuous incrementing counters like the ifInOctets counter in a router. The COUNTER data source assumes that the counter never decreases, except when a counter overflows. The update function takes the overflow into account. The counter is stored as a per-second rate. When the counter overflows, RRDtool checks if the overflow happened at the 32bit or 64bit border and acts accordingly by adding an appropriate value to the result." (Source: `rrdcreate man page <https://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#ICOUNTER>`_)
 
 .. Note::
 
   on COUNTER vs DERIVE
 
-  by Don Baarda <don.baarda@baesystems.com> from `http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html <http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#IDDERIVE>`_
+  by Don Baarda <don.baarda@baesystems.com> from `https://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html <https://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#IDDERIVE>`_
 
   If you cannot tolerate ever mistaking the occasional counter reset for a legitimate counter wrap, and would prefer "Unknowns" for all legitimate counter wraps and resets, always use DERIVE with min=0. Otherwise, using COUNTER with a suitable max will return correct values for all legitimate counter wraps, mark some counter resets as "Unknown", but can mistake some counter resets for a legitimate counter wrap.
 
@@ -134,11 +134,13 @@ COUNTER
 
 DERIVE
 ^^^^^^
-"will store the derivative of the line going from the last to the current value of the data source. This can be useful for gauges, for example, to measure the rate of people entering or leaving a room. Internally, derive works exactly like COUNTER but without overflow checks. So if your counter does not reset at 32 or 64 bit you might want to use DERIVE and combine it with a MIN value of 0." (Source: `rrdcreate man page <http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#IDERIVE>`_)
+"will store the derivative of the line going from the last to the current value of the data source. This can be useful for gauges, for example, to measure the rate of people entering or leaving a room. Internally, derive works exactly like COUNTER but without overflow checks. So if your counter does not reset at 32 or 64 bit you might want to use DERIVE and combine it with a MIN value of 0." (Source: `rrdcreate man page <https://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#IDERIVE>`_)
 
 .. _datatype_absolute:
 
 ABSOLUTE
 ^^^^^^^^
 
-"is for counters which get reset upon reading. This is used for fast counters which tend to overflow. So instead of reading them normally you reset them after every read to make sure you have a maximum time available before the next overflow. Another usage is for things you count like number of messages since the last update."  (Source: `rrdcreate man page <http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#IABSOLUTE>`_)
+"is for counters which get reset upon reading. This is used for fast counters which tend to overflow. So instead of reading them normally you reset them after every read to make sure you have a maximum time available before the next overflow. Another usage is for things you count like number of messages since the last update."  (Source: `rrdcreate man page <https://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html#IABSOLUTE>`_)
+
+.. note:: When `loaning data <http://munin-monitoring.org/wiki/LoaningData>`_ from other graphs, the ``{fieldname}.type`` must be set to the same data type as the original data. If not, Munin default to searching for gauge files, i.e. files ending with ``-g.rdd``. See :ref:`dbdir <dbdir>` for the details on RRD filenames.

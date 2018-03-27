@@ -95,17 +95,6 @@ my $pg = Munin::Plugin::Pgsql->new(
                 ON tmp.mstate=tmp2.mstate
                 ORDER BY 1;
 		" ],
-            [ 9.4, "SELECT tmp.state,COALESCE(count,0) FROM
-                 (VALUES ('active'),('waiting'),('idle'),('idletransaction'),('unknown')) AS tmp(state)
-                LEFT JOIN
-                 (SELECT CASE WHEN waiting THEN 'waiting' WHEN query='<IDLE>' THEN 'idle' WHEN query='<IDLE> in transaction' THEN 'idletransaction' WHEN query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END AS state,
-                 count(*) AS count
-                 FROM pg_stat_activity WHERE pid != pg_backend_pid() %%FILTER%%
-                 GROUP BY CASE WHEN waiting THEN 'waiting' WHEN query='<IDLE>' THEN 'idle' WHEN query='<IDLE> in transaction' THEN 'idletransaction' WHEN query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END
-                 ) AS tmp2
-                ON tmp.state=tmp2.state
-                ORDER BY 1
-                " ],
             [ 9.1, "SELECT tmp.state,COALESCE(count,0) FROM
                  (VALUES ('active'),('waiting'),('idle'),('idletransaction'),('unknown')) AS tmp(state)
 	        LEFT JOIN
@@ -129,6 +118,7 @@ my $pg = Munin::Plugin::Pgsql->new(
                 ORDER BY 1" ]
     ],
     wildcardfilter => " AND datname=?",
+    paramdatabase  => 1,
     configquery    => [
         "VALUES ('active','Active'),('waiting','Waiting for lock'),('idle','Idle'),('idletransaction','Idle in transaction'),('unknown','Unknown')",
         [

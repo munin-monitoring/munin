@@ -45,6 +45,7 @@ if [ "$1" = "config" ]; then
 
     echo 'graph_title Folding@Home Working Units submited'
     echo 'graph_args -l 0 --base 1000'
+    echo 'graph_category htc'
     echo 'graph_vlabel WU done'
     echo 'wu.label WU'
     echo 'wu.type GAUGE'

@@ -99,3 +99,8 @@ Munin does redefine some system environment vars :
 ``LC_ALL`` & ``LANG``
 	This is redefined to ease the work of plugin authors. It enables a
 	standard output when parsing common commands output.
+
+See also
+========
+
+ * :ref:`Environment variables in plugin configuration <plugin-conf.d>`
