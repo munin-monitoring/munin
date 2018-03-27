@@ -114,7 +114,7 @@ build_target_dir() {
 		{
 			echo "$categories_and_plugins";
 			echo "$plugins_without_categories" | sed 's/^/other /';
-		} | sort --version-sort)
+		} | sort --version-sort | uniq)
 	printf "%d plugins without category were assigned to category 'other'\n" \
 		"$(echo "$categories_and_plugins_with_other" | grep -c "^other ")"
 
