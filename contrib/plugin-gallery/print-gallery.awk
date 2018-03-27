@@ -19,7 +19,7 @@
 
 BEGIN {
   previous_category = ""
-  previous_node = ""
+  previous_node_dir = ""
   first_node = "true"
   # Template will get filled with category and category description (%s)
   header = "\t<h2>Category :: %s (" collection_name ")</h2>\n<p><big><em>%s</em></big></p>\t<ul class=\"groupview\">\n"
@@ -36,9 +36,9 @@ BEGIN {
   pluginpath = $2
 
   # Split path into directory and plugin name
-  if (match(pluginpath,"/")) {
-    nodedir = substr(pluginpath,1,RSTART-1)
-    plugin = substr(pluginpath,RSTART+1)
+  if (match(pluginpath, "/")) {
+    node_dir = substr(pluginpath, 1, RSTART - 1)
+    plugin = substr(pluginpath, RSTART + 1)
     if (match(pluginpath, "\\.in$")) {
       # cut off extension ".in" (for stable-2.0 branch)
       plugin = substr(plugin, 1, length(plugin) - 3)
@@ -47,7 +47,7 @@ BEGIN {
 
   # Next category
   if (category != previous_category) {
-    previous_node = ""
+    previous_node_dir = ""
     # finish file of last category
     if (FNR != 1) {
       printf nodefooter "</ul>\n" >> fname
@@ -57,37 +57,37 @@ BEGIN {
     fname = target_dir publish_path category "-index.html"
     system("mkdir -p '" target_dir publish_path "'")
     system("cp '" prep_index_file "' '" fname "'")
-    printf(header,category,arr[category]) >> fname
+    printf(header, category, arr[category]) >> fname
     previous_category = category
     first_node = "true"
   }
 
   # Next node
-  if (nodedir != previous_node) {
+  if (node_dir != previous_node_dir) {
     # finish section of last node
     if (first_node == "false") {
       printf nodefooter >> fname
     }
     # start section of this node
-    printf(nodeheader,nodedir) >> fname
+    printf(nodeheader, node_dir) >> fname
     first_node = "false"
-    previous_node = nodedir
+    previous_node_dir = node_dir
   }
 
   # Print plugin info
-  printf(tmplplugin,pluginpath,nodedir,plugin,plugin) >> fname
-  docfilename = target_dir publish_path nodedir "/" plugin ".html"
+  printf(tmplplugin, pluginpath, node_dir, plugin, plugin) >> fname
+  docfilename = target_dir publish_path node_dir "/" plugin ".html"
   cmd = "test -f " docfilename
   rc = system(cmd)
   if (rc != 0) {
-    this_dirname = gensub("/?[^/]*/?$", "", 1, target_dir publish_path nodedir "/" plugin)
+    this_dirname = gensub("/?[^/]*/?$", "", 1, target_dir publish_path node_dir "/" plugin)
     if (this_dirname != "") system("mkdir -p '" this_dirname "'")
     cmd = "perldoc -o html -d " docfilename " " plugin_dir "/" pluginpath " 2>&1"
     result = system(cmd)
 
     # On error put "Oops" page in place
     if (result > 0) {
-      cmd = "cp '" static_dir "/leer.html' '" target_dir publish_path nodedir "/" plugin ".html'"
+      cmd = "cp '" static_dir "/leer.html' '" target_dir publish_path node_dir "/" plugin ".html'"
     } else {
       # Add stylesheet to head
       cmd = "sed -i 's#</head>#<link rel=\"stylesheet\" href=\"/static/css/style-doc.css\" /></head>#g' " docfilename
