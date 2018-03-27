@@ -27,6 +27,19 @@ BEGIN {
   nodeheader = "\t\t<li ><span class=\"domain\">%s</span>\n\t\t<ul>\n"
   nodefooter = "\t\t</ul>\n\t\t</li>\n"
   tmplplugin = "\t\t\t<li><span class=\"host\"><a href=\"" plugins_source_url "/%s\" title=\"Download\" class=\"download\"><img src=\"/static/img/download.gif\" alt=\"Download\"></a></span>&nbsp;<span class=\"host\"><a href=\"" publish_path "%s/%s.html\" title=\"Info\">%s</a></span></li>\n"
+
+  # translation table for common plugin directory names
+  node_dir_map["node.d"] = "All Platforms"
+  node_dir_map["node.d.aix"] = "Platform AIX"
+  node_dir_map["node.d.cygwin"] = "Platform Cygwin"
+  node_dir_map["node.d.darwin"] = "Platform Darwin / MacOS"
+  node_dir_map["node.d.freebsd"] = "Platform FreeBSD"
+  node_dir_map["node.d.hp-ux"] = "Platform HP-UX"
+  node_dir_map["node.d.java"] = "Platform Java"
+  node_dir_map["node.d.linux"] = "Platform Linux"
+  node_dir_map["node.d.netbsd"] = "Platform NetBSD"
+  node_dir_map["node.d.openbsd"] = "Platform OpenBSD"
+  node_dir_map["node.d.sunos"] = "Platform SunOS / Solaris"
 }
 
 {
@@ -69,7 +82,12 @@ BEGIN {
       printf nodefooter >> fname
     }
     # start section of this node
-    printf(nodeheader, node_dir) >> fname
+    if (node_dir_map[node_dir] != "") {
+      platform = node_dir_map[node_dir]
+    } else {
+      platform = node_dir
+    }
+    printf(nodeheader, platform) >> fname
     first_node = "false"
     previous_node_dir = node_dir
   }
