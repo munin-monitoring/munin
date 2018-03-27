@@ -88,11 +88,11 @@ build_target_dir() {
 	categories_and_plugins=$(find . -type f "(" -executable -o -name "*.in" ")" -print0 \
 		| xargs -0 grep -i --exclude-from="$SCRIPT_DIR/grep-files.excl" -E \
 			"(category|Munin::Plugin::Pgsql)" \
-		| sort -u \
+		| sort \
 		| grep -v "^$" \
 		| sed 's#^\./##' \
 		| awk -F ":" -f "$SCRIPT_DIR/split-greplist.awk" \
-		| LC_COLLATE=C sort -u)
+		| LC_COLLATE=C sort)
 
 	plugins_with_category=$(echo "$categories_and_plugins" | cut -f 2- -d " " | sort | uniq)
 
@@ -108,11 +108,13 @@ build_target_dir() {
 				| grep -qxF "$fname" || echo "$fname"; done)
 
 	# combine the list of explicitly categorized plugins with the implicit list of "other"
+	# Use "--version-sort" for proper sorting of "node.d.*/*" files (in master). Otherwise
+	# the "sub categories" (based on parent directory names) are interleaved.
 	categories_and_plugins_with_other=$(
 		{
 			echo "$categories_and_plugins";
 			echo "$plugins_without_categories" | sed 's/^/other /';
-		} | sort)
+		} | sort --version-sort)
 	printf "%d plugins without category were assigned to category 'other'\n" \
 		"$(echo "$categories_and_plugins_with_other" | grep -c "^other ")"
 
