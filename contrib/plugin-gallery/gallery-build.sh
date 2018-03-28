@@ -92,14 +92,14 @@ build_target_dir() {
 		| grep -v "^$" \
 		| sed 's#^\./##' \
 		| awk -F ":" -f "$SCRIPT_DIR/split-greplist.awk" \
-		| LC_COLLATE=C sort)
+		| LC_COLLATE=C sort | uniq)
 
 	plugins_with_category=$(echo "$categories_and_plugins" | cut -f 2- -d " " | sort | uniq)
 
 	# Find the plugins that do not belong to any category
 	# Use the dummy operation "grep --exclude-from=? ." for filtering unwanted files.
 	plugins_without_categories=$(find . -type f "(" -executable -o -name "*.in" ")" -print0 \
-		| xargs -0 grep --exclude-from="$SCRIPT_DIR/grep-files.excl" . \
+		| xargs -0 grep -l --exclude-from="$SCRIPT_DIR/grep-files.excl" . \
 		| grep -vF "/node.d.debug/" \
 		| sort \
 		| grep -v "^$" \
