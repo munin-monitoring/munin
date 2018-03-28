@@ -14,6 +14,10 @@
 # unsuitable plugins from the munin repository (TODO: why?)
 hp2000_.in
 meminfo.in
+# the asterisk 1.4 plugin directory contains some irrelevant files
+TEMPLATE
+can-install.pl
+get_fax_stats.pl
 
 # unsuitable plugins from the contrib repository (TODO: why?)
 ceph-osd-info

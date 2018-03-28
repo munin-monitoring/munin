@@ -97,8 +97,9 @@ build_target_dir() {
 	plugins_with_category=$(echo "$categories_and_plugins" | cut -f 2- -d " " | sort | uniq)
 
 	# Find the plugins that do not belong to any category
-	# TODO: add "-executable"
-	plugins_without_categories=$(find . -type f "(" -executable -o -name "*.in" ")" \
+	# Use the dummy operation "grep --exclude-from=? ." for filtering unwanted files.
+	plugins_without_categories=$(find . -type f "(" -executable -o -name "*.in" ")" -print0 \
+		| xargs -0 grep --exclude-from="$SCRIPT_DIR/grep-files.excl" . \
 		| grep -vF "/node.d.debug/" \
 		| sort \
 		| grep -v "^$" \
