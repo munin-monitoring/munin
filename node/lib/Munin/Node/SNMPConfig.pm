@@ -23,6 +23,7 @@ sub new
 
     my $version  = $opts{version} || '2c';
     my $port     = $opts{port}    || 161;
+    my $domain   = $opts{domain}  || 'udp';
 
     if ($version eq '3') {
         # Privacy
@@ -58,6 +59,7 @@ sub new
         hosts     => $hosts,
         port      => $port,
         version   => $version,
+        domain    => $domain,
         sec_args  => \%sec_args,
     );
 
@@ -88,6 +90,7 @@ sub _probe_single_host
 		-hostname  => $host,
         -port      => $self->{port},
         -version   => $self->{version},
+        -domain    => $self->{domain},
 
         %{$self->{sec_args}},
 
@@ -294,6 +297,12 @@ The SNMP version to use.  Default is '2c'.
 =item community
 
 The community string to use for SNMP version 1 or 2c.  Default is 'public'.
+
+=item domain
+
+The Transport Domain to use for exchanging SNMP messages. The default
+is UDP/IPv4. Possible values: 'udp', 'udp4', 'udp/ipv4'; 'udp6',
+'udp/ipv6'; 'tcp', 'tcp4', 'tcp/ipv4'; 'tcp6', 'tcp/ipv6'.
 
 =item username
 
