@@ -248,9 +248,9 @@ Plugins shipped with munin-node are placed in the directory for available Munin 
 
 
 Running a Munin plugin interactively
-------------------------------------
+====================================
 
-A munin plugin is often run with other privileges and with a set of environment variables. To run a plugin with the correct set of variables, use the :ref:`munin-run` command. It takes a plugins service link name as the first argument and any plugin argument as the next.
+A munin plugin is often run with modified privileges and with a set of environment variables. To run a plugin within its configured environment, use the :ref:`munin-run` command. It takes a plugins service link name as the first argument and any plugin argument as the next.
 
 Example (with long lines broken):
 
