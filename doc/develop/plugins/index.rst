@@ -17,3 +17,4 @@ Guidelines for developing Munin plugins
    plugin-bcp.rst
    plugin-concise.rst
    plugin-gallery.rst
+   advanced-topics.rst
