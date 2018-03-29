@@ -8,7 +8,7 @@ munin (2.0.37-1) UNRELEASED; urgency=medium
     - plugin nfsd4: Closes: #833740
     - plugin psu_: Closes: #860487
   * Build-Depends-Indep: switch from default-jdk to openjdk-8-jdk as munin
-    fails to build with java 9.
+    fails to build with java 9. Closes: #873993
   * debian/Makefile.config: define JC without path containing default-java.
   * munin-plugis-core:
     - add suggests to time. Closes: #862794
