@@ -172,10 +172,13 @@ When using `/bin/sh` as the interpreter, a feature set similar to busybox's `ash
 The availability of the following tools can be assumed:
 
   * all the goodies within `coreutils <https://www.gnu.org/software/coreutils>`_
-  * `sed <https://www.gnu.org/software/sed>`_
   * awk (e.g. `gawk <https://www.gnu.org/software/gawk>`_)
 
-    * you should stick to the POSIX set of features (verify via `POSIXLY_CORRECT=1; export POSIXLY_CORRECT`)
+    * it is recommended to stick to the POSIX set of features (verify via `POSIXLY_CORRECT=1; export POSIXLY_CORRECT`)
+
+  * `find <https://www.gnu.org/software/findutils>`_
+  * `grep <https://www.gnu.org/software/grep>`_
+  * `sed <https://www.gnu.org/software/sed>`_
 
 In order to avoid external tools (e.g. `bc` or `dc`), the shell's arithmetic substition (e.g. `a=$((b + 3))`) should be used for integer operations and `awk` (e.g. `awk '{print $1/1000}'`) for non-trivial calculations.
 
