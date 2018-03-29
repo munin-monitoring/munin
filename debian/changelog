@@ -1,5 +1,6 @@
-munin (2.0.36-1) UNRELEASED; urgency=medium
+munin (2.0.37-1) UNRELEASED; urgency=medium
 
+  * New upstream version 2.0.37.
   * New upstream version 2.0.36, Closes: #894017.
   * New upstream version 2.0.35, fixing various issues, including bugs in:
     - plugin http_loadtime: Closes: #798258, #862794, #886517
