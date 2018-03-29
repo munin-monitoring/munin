@@ -59,7 +59,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_scale no'
 	echo 'graph_total total'
 	echo 'graph_vlabel Jenkins Builds results summary'
-	echo 'graph_category jenkins'
+	echo 'graph_category devel'
 	draw=AREA
 	for STATE in success unstable failure ; do
 		echo "jenkins_builds_results_all_${STATE}.label ${PREFIX} ${STATE}"
