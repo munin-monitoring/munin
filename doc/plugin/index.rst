@@ -37,4 +37,3 @@ See Also
 
 * :ref:`How to use Munin plugins <plugin-use>`.
 * :ref:`How to write your own Munin plugins <plugin-writing>`.
-* :ref:`Tips on Writing Munin Plugins <plugin-writing-tips>`.
