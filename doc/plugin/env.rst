@@ -32,13 +32,15 @@ Munin related
 	"1", "Master is able to consume ``value`` lines right after reading the configuration from a plugin."
 
 ``MUNIN_CAP_MULTIGRAPH``
-  Defines if the master is able to understand the ``multigraph`` keyword.
+  Indicates whether the master is able to understand the :ref:`multigraph <plugin-protocol-multigraph>` keyword.
 
 .. csv-table:: Values
 	:header: "Value", "Description"
 
 	"0", "Master does not understand the ``multigraph`` keyword."
 	"1", "Master does understand the ``multigraph`` keyword."
+
+.. _plugin-env-MUNIN_PLUGSTATE:
 
 ``MUNIN_PLUGSTATE``
   Defines the directory that a plugin must use if it wants to store
@@ -50,6 +52,8 @@ Munin related
 
   Only the plugins that execute themselves as the same user can exchange data,
   for obvious security reasons.
+
+.. _plugin-env-MUNIN_STATEFILE:
 
 ``MUNIN_STATEFILE``
   Defines a file that the plugin must use if it wants to store
