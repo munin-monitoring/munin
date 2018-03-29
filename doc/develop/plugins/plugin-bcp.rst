@@ -154,3 +154,32 @@ or directory, you can use `File::Temp <https://metacpan.org/pod/File::Temp>`_.
   use File::Temp qw/ tempfile /;
   my ($fh, $filename) = tempfile();
 
+
+Portability
+===========
+
+Plugins should run on a wide variety of platforms.
+
+Shell Plugins
+-------------
+
+Please prefer `/bin/sh` over `/bin/bash` (or other shells) if you do not need advanced features (e.g. arrays).
+This allows such plugins to run on embedded platforms and some \*BSD systems that do not contain advanced shells by default.
+When using `/bin/sh` as the interpreter, a feature set similar to busybox's `ash` or Debian's `dash` can be expected (i.e. use `shellcheck -s dash PLUGIN` for code quality checks).
+
+The availability of the following tools can be assumed:
+
+  * all the goodies within `coreutils <https://www.gnu.org/software/coreutils>`_
+  * `sed <https://www.gnu.org/software/sed>`_
+  * awk (e.g. `gawk <https://www.gnu.org/software/gawk>`_)
+
+    * you should stick to the POSIX set of features (verify via `POSIXLY_CORRECT=1; export POSIXLY_CORRECT`)
+
+In order to avoid external tools (e.g. `bc` or `dc`), the shell's arithmetic substition (e.g. `a=$((b + 3))`) should be used for integer operations and `awk` (e.g. `awk '{print $1/1000}'`) for non-trivial calculations.
+
+Python Plugins
+--------------
+
+Python2 is approaching its end-of-life in 2020 and Python3 was released 2008. Thus new plugins should be written in Python3 only.
+
+Core modules (included in CPython) should be prefered over external modules, whenever possible (e.g. use `urllib <https://docs.python.org/3/library/urllib>`_ instead of `requests <http://python-requests.org>`_).
