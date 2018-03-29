@@ -200,7 +200,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Memory usage by cashes and buffers',
       'vtitle'   => 'bytes',
-      'category' => 'cache',
+      'category' => 'memory',
       'total'    => 'Total'
     },
     'fields' => [qw(cached:AREASTACK:- buffers:AREASTACK:- cached_swap:AREASTACK:- nfs_unstable:AREASTACK:- writeback_fuse:AREASTACK:- bounce:AREASTACK:-)]
@@ -213,7 +213,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Active/Inactive memory',
       'vtitle'   => 'bytes',
-      'category' => 'active_inactive'
+      'category' => 'memory'
     },
     'fields' => [qw(active_file:AREA:FF444488 active_anon:STACK:44FF4488 active:LINE1:000000 inactive_file:AREA:4444FF88 inactive_anon:STACK:FFFF4499 inactive:LINE1:FFFFFF)]
   },
@@ -225,7 +225,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'mmap',
       'vtitle'   => 'bytes',
-      'category' => 'direct_map'
+      'category' => 'memory'
     },
     'fields' => [qw(direct_map_4k:LINE1:- direct_map_2m:LINE1:- direct_map_4m:LINE1:- direct_map_1g:LINE1:- mapped:LINE1:- mmap_copy:LINE1:-)]
   },
@@ -237,7 +237,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Kernel memory',
       'vtitle'   => 'bytes',
-      'category' => 'kernel',
+      'category' => 'memory',
       'total'    => 'Total'
     },
     'fields' => [qw(kernel_stack:AREASTACK:- slab:AREASTACK:- qlists:LINE1:-)]
@@ -250,7 +250,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Low and high memory',
       'vtitle'   => 'bytes',
-      'category' => 'low_and_high'
+      'category' => 'memory'
     },
     'fields' => [qw(low_used:AREASTACK:- low_free:AREASTACK:CCFFCCCC high_used:AREASTACK:- high_free:AREASTACK:FFFFCCCC low_total:LINE1:- high_total:LINE1:- l_h_total:LINE1:000000)]
   },
@@ -262,7 +262,7 @@ my $graphs_source =
       'args'     => '--base 1000 ',
       'title'    => 'HugePages count',
       'vtitle'   => 'count',
-      'category' => 'hugepages'
+      'category' => 'memory'
     },
     'fields' => [qw(huge_pages_total:LINE1:000000 huge_pages_free:AREASTACK:- huge_pages_rsvd:AREASTACK:- huge_pages_surp:AREASTACK:-)]
   },
@@ -274,7 +274,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'HugePages size',
       'vtitle'   => 'bytes',
-      'category' => 'hugepages'
+      'category' => 'memory'
     },
     'fields' => [qw(huge_page_size:LINE1:00FF00 huge_pages_total_size:LINE1:000000 huge_pages_free_size:AREASTACK:- huge_pages_rsvd_size:AREASTACK:- huge_pages_surp_size:AREASTACK:-)]
   },
@@ -298,7 +298,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Vmalloc',
       'vtitle'   => 'bytes',
-      'category' => 'total'
+      'category' => 'memory'
     },
     'fields' => [qw(vmalloc_used:AREASTACK:- vmalloc_free:AREASTACK:FFFFCCCC vmalloc_total:LINE1:000000 vmalloc_chunk:LINE1:-)]
   },
@@ -310,7 +310,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Vmalloc allocates',
       'vtitle'   => 'bytes',
-      'category' => 'allocates',
+      'category' => 'memory',
       'total'    => 'Total'
     },
     'fields' => []
@@ -335,7 +335,7 @@ my $graphs_source =
       'args'     => '--base 1000 ',
       'title'    => 'Slab objects',
       'vtitle'   => 'count',
-      'category' => 'objects'
+      'category' => 'memory'
     },
     'fields' => [qw(active_objects:AREASTACK:- inactive_objects:AREASTACK:FFFFCCCC total_objects:LINE1:000000)]
   },
@@ -347,7 +347,7 @@ my $graphs_source =
       'args'     => '--base 1000 ',
       'title'    => 'Slabs',
       'vtitle'   => 'count',
-      'category' => 'objects'
+      'category' => 'memory'
     },
     'fields' => [qw(active_slabs:AREASTACK:- inactive_slabs:AREASTACK:FFFFCCCC shared_slabs:LINE1:- total_slabs:LINE1:000000)]
   },
@@ -359,7 +359,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Reclaim',
       'vtitle'   => 'bytes',
-      'category' => 'reclaim',
+      'category' => 'memory',
       'total'    => 'Total',
     },
     'fields' => [qw(slab_reclaimable:AREA:- slab_unreclaimable:STACK:-)]
@@ -373,7 +373,7 @@ my $graphs_source =
       'title'    => "Slabs sizes of groups",
       'vtitle'   => 'bytes',
       'total'    => 'Total',
-      'category' => 'groups_size'
+      'category' => 'memory'
     },
     'fields' => []
   },
@@ -397,7 +397,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Writeback',
       'vtitle'   => 'bytes',
-      'category' => 'writeback'
+      'category' => 'memory'
     },
     'fields' => [qw(dirty:LINE1:- writeback:LINE1:-)]
   },
@@ -409,7 +409,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'First candidates to swap out',
       'vtitle'   => 'bytes',
-      'category' => 'candidates'
+      'category' => 'memory'
     },
     'fields' => [qw(inactive_file:AREASTACK:- inactive_anon:AREASTACK:- anon_pages:AREASTACK:- inactive:LINE1:-)]
   },
