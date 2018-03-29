@@ -992,25 +992,25 @@ sub munin_get_bool
     my $field  = shift;
     my $default = shift;
 
-    my $ans = munin_get ($hash, $field, $default);
-    return if not defined $ans;
+    my $answer = munin_get ($hash, $field, $default);
+    return if not defined $answer;
 
-    if ($ans =~ /^yes$/i or
-        $ans =~ /^true$/i or
-        $ans =~ /^on$/i or
-        $ans =~ /^enable$/i or
-        $ans =~ /^enabled$/i
+    if ($answer =~ /^yes$/i or
+        $answer =~ /^true$/i or
+        $answer =~ /^on$/i or
+        $answer =~ /^enable$/i or
+        $answer =~ /^enabled$/i
        ) {
 	return 1;
-    } elsif ($ans =~ /^no$/i or
-        $ans =~ /^false$/i or
-        $ans =~ /^off$/i or
-        $ans =~ /^disable$/i or
-        $ans =~ /^disabled$/i
+    } elsif ($answer =~ /^no$/i or
+        $answer =~ /^false$/i or
+        $answer =~ /^off$/i or
+        $answer =~ /^disable$/i or
+        $answer =~ /^disabled$/i
       ) {
 	return 0;
-    } elsif ($ans !~ /\D/) {
-	return $ans;
+    } elsif ($answer !~ /\D/) {
+	return $answer;
     } else {
 	return $default;
     }

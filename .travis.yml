@@ -9,6 +9,7 @@ branches:
 addons:
   apt:
     packages:
+      - codespell
       - devscripts
       - libpango1.0-dev
       - libdbd-pg-perl
@@ -66,7 +67,9 @@ before_install:
   cpanm -n Devel::Cover::Report::Coveralls
 
 script:
-  perl Build.PL && ./Build build && cover -test -report coveralls
+  # check for potential spelling mistakes
+  - codespell --quiet-level=3 --skip=ChangeLog,Announce-2.0,*.js,memory,jmx_,jmx_tomcat_dbpools,netstat_multi,munin_node_os.t
+  - perl Build.PL && ./Build build && cover -test -report coveralls
 
 # Using the container-based infrastructure
 sudo: false

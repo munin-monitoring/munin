@@ -1520,15 +1520,15 @@ sub load_vmallocinfo
   my $file = "/proc/vmallocinfo";
   my $result = {};
   open (FH, '<', $file) or die "$! $file \n";
-  my @splitted = ();
+  my @tokens = ();
   my $name = '';
   for my $line (<FH>)
   {
     chomp $line;
-    @splitted =  split(/\s+/, $line);
-    $name     = (split(/\+/ , $splitted[2]))[0];
+    @tokens =  split(/\s+/, $line);
+    $name     = (split(/\+/ , $tokens[2]))[0];
     $result->{$name}  = 0 unless (exists($result->{$name}));
-    $result->{$name} += $splitted[1];
+    $result->{$name} += $tokens[1];
 
     my $field_name = sprintf("vi_%s", clean_fieldname($name));
     append_field         ($field_name, 'vmallocinfo', $name, $name, $name);

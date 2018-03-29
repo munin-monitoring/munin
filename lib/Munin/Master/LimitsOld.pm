@@ -699,9 +699,9 @@ sub generate_service_message {
 
         $always_send = validate_severities($always_send);
 
-        foreach my $cas ( @{$always_send} ) {
-	    if(defined($stats{$cas})) {
-		$obsess += scalar @{$stats{$cas}};
+        foreach my $status_level ( @{$always_send} ) {
+	    if(defined($stats{$status_level})) {
+		$obsess += scalar @{$stats{$status_level}};
 	    }
 	}
         if (!$hash->{'state_changed'} and !$obsess) {

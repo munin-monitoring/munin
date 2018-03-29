@@ -405,8 +405,8 @@ sub proc_graph
     foreach( sort keys %{$g} )
     {
         my $name = $_;
-        my @spects = split(/\./,$name);
-        my $aspect = $spects[0];
+        my @name_tokens = split(/\./, $name);
+        my $aspect = $name_tokens[0];
         my $graphkey = $name;
 
         if ( $name =~ /BACKEND/ )
