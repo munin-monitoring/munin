@@ -22,6 +22,15 @@ Munin related
   Contains the IP of the connecting master. If using ``munin-run``, it is equal
   to the ``"-"`` string.
 
+``MUNIN_CAP_DIRTYCONFIG``
+  Indicates whether the master is able to understand the :ref:`dirtyconfig protocol <plugin-protocol-dirtyconfig>`.
+
+.. csv-table:: Values
+	:header: "Value", "Description"
+
+	"0", "Master does not understand ``value`` lines that are returned within a ``config`` response."
+	"1", "Master is able to consume ``value`` lines right after reading the configuration from a plugin."
+
 ``MUNIN_CAP_MULTIGRAPH``
   Defines if the master is able to understand the ``multigraph`` keyword.
 
