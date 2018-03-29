@@ -59,6 +59,24 @@ or directory, you can use `File::Temp <https://metacpan.org/pod/File::Temp>`_.
   my ($fh, $filename) = tempfile();
 
 
+Storing the Plugin's State
+==========================
+
+Very few plugins need to access state information from previous executions of this plugin itself.
+The :ref:`munin-node` prepares the necessary environment for this task. This includes a separate
+writable directory that is owned by the user running the plugin and a file that is unique for each
+:ref:`master <master-index>` that is requesting data from this plugin. These two storage locations
+serve different purposes and are accessible via environment variables:
+
+* :ref:`MUNIN_PLUGSTATE <plugin-env-MUNIN_PLUGSTATE>`: directory to be used for storing files that should be accessed by other plugins
+* :ref:`MUNIN_STATEFILE <plugin-env-MUNIN_STATEFILE>`: single state file to be used by a plugin that wants to track its state from the last time it was requested by the same master
+
+.. note::
+
+  The datatype :ref:`DERIVE <datatype_derive>` is an elegant alternative to using a state file for
+  tracking the *rate of change* of a given numeric value.
+
+
 Portability
 ===========
 
