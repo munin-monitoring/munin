@@ -87,7 +87,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
         print "graph_title Users on " . ${sysname} . " (" . ${target} . ")\n";
         print "graph_args --base 1000\n";
         print "graph_vlabel Active users\n";
-        print "graph_category Nomadix\n";
+        print "graph_category wireless\n";
         print 'graph_info This graph shows the amount of users in AAA state "Valid" connected to ' . ${target} . ".\n";
         print "valid.label Valid users\n";
         print "valid.type GAUGE\n";
