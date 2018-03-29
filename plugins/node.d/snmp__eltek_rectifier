@@ -467,7 +467,7 @@ sub emit_config {
     my ( $graph, $values ) = @_;
 
     say "graph_title ".( $title{$graph} || "Untitled /$graph/");
-    say "graph_category Rectifier";
+    say "graph_category sensors";
     say process_oids( "graph_vlabel " . $vlabel{$graph}, $values );
     say process_oids( "graph_info "   . $info{$graph},   $values );
 
