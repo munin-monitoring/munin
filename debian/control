@@ -1,7 +1,7 @@
 Source: munin
 Section: net
 Priority: optional
-Maintainer: Munin Debian Maintainers <packaging@munin-monitoring.org>
+Maintainer: Munin Debian Maintainers <team+munin@tracker.debian.org>
 Uploaders: Holger Levsen <holger@debian.org>,
  Stig Sandbeck Mathisen <ssm@debian.org>,
  Tom Feiner <feiner.tom@gmail.com>,
