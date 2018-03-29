@@ -84,7 +84,7 @@ if [ "$1" = "config" ]; then
 		echo "alerts.critical $critical"
 	fi
         echo 'alerts.info The number of alerts per second'
-        echo 'graph_category Snort'
+        echo 'graph_category security'
 
         exit 0
 fi

@@ -84,7 +84,7 @@ if [ "$1" = "config" ]; then
 		echo "traffic.critical $critical"
 	fi
         echo 'traffic.info Traffic in Mbites per second'
-        echo 'graph_category Snort'
+        echo 'graph_category security'
 
         exit 0
 fi
