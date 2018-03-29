@@ -74,11 +74,11 @@ CACHEAGE = 120
 CONFIG = '/etc/munin/ipmi'
 
 
-
 def normalize_sensor(name):
     name = name.lower().replace("-", "M").replace("+", "P")
     name = re.sub("[^a-z0-9A-Z]", "_", name)
     return name
+
 
 def parse_data(data):
     """
@@ -113,13 +113,14 @@ def parse_data(data):
             if not idm:
                 continue
             identifier = idm.group(1).strip()
-            cur_sensor = {"id" : idm.group(2)}
+            cur_sensor = {"id": idm.group(2)}
             sensors[identifier] = cur_sensor
         if not cur_sensor:
             continue
         label, data = line.split(":", 1)
         cur_sensor[label.strip().lower()] = data.strip()
     return sensors
+
 
 def get_sensor_names():
     try:
@@ -140,6 +141,7 @@ def get_sensor_names():
             lst.append(columns[0])
     return sensors
 
+
 def get_sensors():
     cache_filename = join(CACHEDIR, CACHEFILE)
     try:
@@ -156,7 +158,8 @@ def get_sensors():
                 return
         else:
             try:
-                p = Popen(["ipmitool", "-I", "open", "sensor", "get", "--"] + SENSORS, shell=False, stdout=PIPE)
+                p = Popen(["ipmitool", "-I", "open", "sensor", "get", "--"] + SENSORS,
+                          shell=False, stdout=PIPE)
             except OSError:
                 return
         data = p.stdout.read()
@@ -169,6 +172,7 @@ def get_sensors():
         data = open(cache_filename).read()
     return parse_data(data)
 
+
 def query_unit(arg):
     m = re.search('_u_(.*)$', arg)
     if not m:
@@ -177,36 +181,31 @@ def query_unit(arg):
 
 
 UNITS_TO_SENSORS = {
-    'volts' : { 'title' : "Voltages",
-                'args' : '--base 1000',
-                'vlabel' : 'Volts',
-                'info' : "This graph shows the voltages as reported by IPMI",
-                'sensors' : [ 'Voltage 2', ],
-                },
-    'degrees_c' : { 'title' : "Temperature",
-                'args' : '--base 1000 -l 0',
-                'vlabel' : 'Degrees C',
-                'info' : "This graph shows the temperatures as reported by IPMI",
-                'sensors' : [ 'Ambient Temp', ],
-                },
-    'rpm' : { 'title' : "RPMs",
-                'args' : '--base 1000 -l 0',
-                'vlabel' : 'RPM',
-                'info' : "This graph shows the RPMs as reported by IPMI",
-                'sensors' : ['FAN 1 RPM', 'FAN 2 RPM', 'FAN 3 RPM', 'FAN 4 RPM',],
-                },
-    'amps' : { 'title' : "Amperes",
-                'args' : '--base 1000',
-                'vlabel' : 'Amperes',
-                'info' : "This graph shows the amperes as reported by IPMI",
-                'sensors' : ['Current 2'],
-                },
-    'watts' : { 'title' : "Watts",
-                'args' : '--base 1000',
-                'vlabel' : 'Watts',
-                'info' : "This graph shows the watts as reported by IPMI",
-                'sensors' : ['System Level',],
-                },
+    'volts': {'title': "Voltages",
+              'args': '--base 1000',
+              'vlabel': 'Volts',
+              'info': "This graph shows the voltages as reported by IPMI",
+              'sensors': ['Voltage 2']},
+    'degrees_c': {'title': "Temperature",
+                  'args': '--base 1000 -l 0',
+                  'vlabel': 'Degrees C',
+                  'info': "This graph shows the temperatures as reported by IPMI",
+                  'sensors': ['Ambient Temp']},
+    'rpm': {'title': "RPMs",
+            'args': '--base 1000 -l 0',
+            'vlabel': 'RPM',
+            'info': "This graph shows the RPMs as reported by IPMI",
+            'sensors': ['FAN 1 RPM', 'FAN 2 RPM', 'FAN 3 RPM', 'FAN 4 RPM']},
+    'amps': {'title': "Amperes",
+             'args': '--base 1000',
+             'vlabel': 'Amperes',
+             'info': "This graph shows the amperes as reported by IPMI",
+             'sensors': ['Current 2']},
+    'watts': {'title': "Watts",
+              'args': '--base 1000',
+              'vlabel': 'Watts',
+              'info': "This graph shows the watts as reported by IPMI",
+              'sensors': ['System Level']},
 }
 
 
@@ -222,6 +221,7 @@ if access(CONFIG, R_OK):
             continue
         sensor_list = [s.strip() for s in sensors.split(',') if s.strip()]
         UNITS_TO_SENSORS[unit]['sensors'] = sensor_list
+
 
 SENSORS = []
 for v in UNITS_TO_SENSORS.values():
@@ -252,7 +252,7 @@ def config_unit(unit):
         if 'unc+' in assertions:
             warn_u = values['Upper Non-Critical'].replace("na", "")
 
-        #TODO add 'fans'
+        # TODO add 'fans'
         if unit == 'rpm':
             warn = "%s:%s" % (warn_u, warn_l)
             crit = "%s:%s" % (crit_u, crit_l)
@@ -266,10 +266,10 @@ def config_unit(unit):
             print("%s.critical %s" % (nname, crit))
 
 
-
 def config():
     unit = query_unit(sys.argv[0])
     config_unit(unit)
+
 
 def report_unit(unit):
     info = UNITS_TO_SENSORS[unit]
@@ -284,12 +284,14 @@ def report():
     unit = query_unit(sys.argv[0])
     report_unit(unit)
 
+
 def autoconf():
     data = get_sensors()
     if data:
         print("yes")
     else:
         print("no (no ipmitool output)")
+
 
 def suggest():
     names = get_sensor_names()
@@ -305,10 +307,11 @@ def debug():
     print(SENSORS)
     data = get_sensors()
     for key, value in data.items():
-        print("%s : %s (%s - %s) [%s - %s] %s" % (key, value['sensor reading'],
-                                                  value['lower non-critical'], value['upper non-critical'],
-                                                  value['lower critical'], value['upper critical'],
-                                                  value['assertions enabled'],))
+        print("%s : %s (%s - %s) [%s - %s] %s"
+              % (key, value['sensor reading'], value['lower non-critical'],
+                 value['upper non-critical'], value['lower critical'],
+                 value['upper critical'], value['assertions enabled'],))
+
 
 def main():
     if len(sys.argv) > 1:
@@ -325,6 +328,7 @@ def main():
         debug()
     else:
         report()
+
 
 if __name__ == "__main__":
     main()
