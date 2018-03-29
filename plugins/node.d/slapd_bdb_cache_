@@ -124,7 +124,7 @@ if ($arg && $arg eq "config") {
 if ($config) {
     print <<EOF;
 graph_title Requested pages found in cache $title
-graph_category OpenLDAP
+graph_category auth
 graph_info Pages found in cache (indexes)
 EOF
     if ($measure eq "pages") {
