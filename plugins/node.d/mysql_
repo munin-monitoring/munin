@@ -1760,11 +1760,7 @@ sub config {
     while (my ($k, $v) = each %conf) {
 	print "graph_$k $v\n";
     }
-    if ($graph_name =~ /wsrep_/) {
-      print "graph_category galera\n";
-    } else {
-      print "graph_category mysql\n";
-    }
+    print "graph_category db\n";
 
     my $i = 0;
     for my $ds (@{$graph->{data_sources}}) {
