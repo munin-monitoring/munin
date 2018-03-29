@@ -95,6 +95,8 @@ Legal characters
 
 The legal characters in a field name are documented in :ref:`Notes on field names <notes-on-fieldnames>`
 
+.. _plugin-bcp-documentation:
+
 Documentation
 =============
 
