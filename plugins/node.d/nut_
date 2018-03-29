@@ -1,0 +1,94 @@
+#!/bin/bash
+# This script is intended for use with Munin to monitor
+# UPS Load, Battery Charge, Input and Output Voltages
+# querying data from NUT (www.networkupstools.org), tested under Ubuntu Linux
+# v. 1.1, 12/16/2007
+# (c) Alex Yanchenko (yanchenko{at}gmail.com), 2007
+# Distributed under GPL v.3 (http://www.gnu.org/licenses/gpl-3.0.txt)
+#
+# The plugin can utilize automatic configuration,
+# here are the basic steps (require root privileges):
+# 1. Copy it as /usr/share/munin/plugins/nut_
+# 2. Make executable: "chmod 755 /usr/share/munin/plugins/nut_"
+# 3. Run "munin-node-configure --shell", you should see smth like
+# "ln -s /usr/share/munin/plugins/nut_ /etc/munin/plugins/nut_apc_AT_localhost"
+# with "apc@localhost" been UPS configured in upsmon.conf (see NUT docs).
+# Note that "@" is replaced with "_AT_".
+# Multiple UPS monitoring is supported as well.
+# 4. Run the proposed command to create a link.
+# 5. To verify, run "munin-node-configure", you should notice the "nut_" record
+#
+# Plugin                     | Used | Suggestions
+# ------                     | ---- | -----------
+# nut_                       | yes  | apc_AT_localhost
+#
+# 6. Restart munin: "/etc/init.d/munin-node restart"
+# 7. Hold on for 5 minutes at most and watch the graph appear.
+# 8. Customize voltage warning that are commented out for now.
+#
+#%# family=contrib
+#%# capabilities=autoconf suggest
+
+function FETCH_DATA() {
+# UPS address, fetched from file name
+UPS=$(basename $0 | sed 's|^nut_||g' | sed 's|_AT_|@|g')
+
+# Save data into variables
+model=$(upsc $UPS | grep ups.model: | cut -d" " -f2)
+in=$(upsc $UPS | grep input.voltage: | cut -d" " -f2)
+out=$(upsc $UPS | grep output.voltage: | cut -d" " -f2)
+ofr=$(upsc $UPS | grep output.frequency: | cut -d" " -f2)
+load=$(upsc $UPS | grep ups.load: | cut -d" " -f2)
+charge=$(upsc $UPS | grep battery.charge: | cut -d" " -f2)
+}
+
+# Munin routines 
+case "$1" in
+	autoconf)
+		grep ^MONITOR < /etc/nut/upsmon.conf &> /dev/null
+        	if [[ "$?" = "0" ]]; then
+                	echo yes
+	                exit 0
+        	else
+                	echo "no (NUT not installed or no UPS info available in /etc/nut/upsmon.conf)"
+	                exit 1
+        	fi
+		;;
+	config)
+		FETCH_DATA
+cat << EOM
+graph_title UPS: $model - $UPS
+graph_category sensors
+graph_info The graph shows UPS info monitored by NUT.
+graph_args --base 1000 --lower-limit 0
+in.label Input Voltage (v)
+in.warning 190:260
+out.label Output Voltage (v)
+out.critical 208:253
+ofr.label Output Frequency (Hz)
+ofr.critical 48:52
+charge.label Battery Charge (%)
+charge.colour 00aaaa
+load.label UPS Load (%)
+load.colour ff0000
+EOM
+		exit 0
+		;;
+	suggest)
+		grep ^MONITOR < /etc/nut/upsmon.conf | cut -d" " -f2 | sed 's|@|_AT_|g'
+		exit 0
+		;;
+	*)	
+		
+		FETCH_DATA
+		# Print data for Munin
+cat << EOM
+in.value $in
+out.value $out
+ofr.value $ofr
+charge.value $charge
+load.value $load
+EOM
+		exit 0
+		;;
+esac
