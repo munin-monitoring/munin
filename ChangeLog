@@ -1,3 +1,283 @@
+munin-2.999.7, 2018--17
+
+-------
+Summary
+-------
+
+That release is the 7th beta of the 3.0 series. It is versioned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versioning or 3.0b7
+
+This is a continuation of the SQL & on-the-fly rewrite.
+
+This also means that several features don't work still, such as spoolfetching
+or vectorfetching. They'll come in the next versions.
+
+------------------
+Detailed Changelog
+------------------
+
+Alan (1):
+      Edited for consistency in capitalization
+
+Alexandre SIMON (1):
+      Change http to httpS for oss.oetiker.ch (rrdtool) web site
+
+Baptiste Jonglez (1):
+      doc: Document how to specify a custom SSH port for munin-async
+
+Bart Coppens (1):
+      Handle negative values in spooled data
+
+Bas Couwenberg (1):
+      Add support for rndc options in bind9_rndc plugin.
+
+Brian De Wolf (2):
+      Auto-detect connectors in Perl tomcat plugins
+      URI escape in tomcat plugins
+
+Chris Butler (1):
+      Add PostgreSQL 10 support to postgres_xlog
+
+Holger Levsen (1):
+      fixup perms, broken since >2.999.4
+
+Janne Savikko (1):
+      Config.pm: fix anchor in URL in error message
+
+K.Cima (3):
+      Fix typo $CDEV -> $CDEF
+      Add --lower-limit, --upper-limit and vlabel
+      Add disk device names for Oracle VM (LDOMs) and Kernel Zones
+
+Kenyon Ralph (2):
+      ntp_kernel plugins: convert ntpq output to seconds
+      troubleshooting doc: remove nonexistent --stdout option
+
+Kim B. Heino (4):
+      plugins/squeezebox: match category with munin contrib repo
+      plugins/squeezebox: wired devices are reported as strength 0, should be 100
+      plugins/apc_nis: add missing category
+      plugins/bind9_rndc: use matching "dns" category as in other dns servers
+
+Lars Kruse (125):
+      gallery: add some setup notes
+      Plugin http_loadtime: improved quoting, modern command substitution
+      Plugin http_loadtime: time calculation based on "date" instead of "time"
+      Plugin http_loadtime: improve wget calls
+      Plugin http_loadtime: fix redirection order, remove bashisms, switch to sh
+      travis: add 'libcairo2-dev' dependency for Alien::RRDtool
+      travis: depend on 'libpango1.0-dev' instead of 'libcairo2-dev' for Alien::RRDtool
+      postgres plugins: fixed database selection
+      hddtemp_smartctl plugin: add more smartctl labels (190 / 194)
+      postfix_mailsts plugin: add 'milter-reject' event
+      requirements: reduce version dependency on Params::Validate to 1.08
+      doc: add link to rrdgraph documentation for "graph_args"
+      varnish plugin: compatibility with Varnish 5.2
+      plugin 'ping_': graph for packetloss can be enabled
+      plugin 'ping_': improve shell quoting; fix shellcheck issues
+      Limits check: increase log level for limit state changes
+      plugin df (linux): handle "dfopts" by adding whitespace
+      plugin df (linux): fix "include_re" for multiple values
+      plugin df (linux): min/max should be "U", if no filesystem matched
+      plugin diskstats (linux): change behaviour of 'graph_width' parameter
+      plugin diskstats (linux): unified whitespace
+      plugin diskstats (linux): fix autoconf exitcode in case of "no"
+      plugin diskstats (linux): support "DIRTYCONFIG" capability
+      plugin df (generic): unify whitespace
+      plugin df (generic): fix most shellcheck issues
+      plugin df (generic): reduce code duplication
+      plugin df (generic): support DIRTYCONFIG capability
+      plugin df (generic): replace ambiguous device names with mountpoints
+      plugin df_inode (generic): import changes of the "df" plugin
+      unifying whitespace in Munin::Master::Graph
+      iptables-related plugins: use "-w" for consistent results
+      remove unmaintained mysql_* plugins ("mysql_" remains)
+      Limits Notifications: prevent notification executable from writing to STDOUT
+      doc: import "TLS Setup" from old wiki
+      doc: restructure "tls-setup" documentation
+      doc: add 'intermediate certificate' handling to 'tls-setup'
+      doc: explain specifics of letsencrypt for munin
+      doc: fix sphinx warnings
+      gitignore: omit temporary vi files
+      doc: organized and added webserver configuration examples
+      doc: reduce details of table of contents
+      doc: update copyright year; unify whitespace
+      Makefile: improve readability with 'Build' vs. 'build'
+      doc: change domain name from "munin.readthedocs.org" to "guide.munin-monitoring.org"
+      INSTALL: changed to Makefile-based process
+      README: added introduction and more resources
+      INSTALL: formatting and clearer references
+      dev_scripts: remove 'run-debug-node' (duplicate of 'run_debug_node')
+      plugins df/df_inode: fix recently broken autoconf
+      Munin::Plugin: 'readarray' handles empty files gracefully
+      plugin hwmon (Linux): proper access to 'graphs' field
+      plugin memcached_: exitcode zero for "autoconf" response "no"
+      Build.PL: mention "JSON" requirement
+      Build.PL: unify whitespace
+      Build.PL: change license from "GPL2" to "gpl_2"
+      Makefile: rename 'blib' to 'build'
+      Makefile: add 'help' target
+      Makefile: distribute 'PHONY' next to the targets
+      Makefile: add 'doc' target (for sphinx documentation)
+      dev_scripts: add comments and 'help' to 'install'
+      doc: typo
+      doc: add quotes for sourcing of shell helpers
+      doc: mention 2.999 for munin-httpd deployment
+      Master::Node: upgrade "Protocol exception" log message from DEBUG to INFO
+      Master::Graph: log messages on database access errors
+      plugin meminfo (Linux): fixed typo ("Hlocked"/"Mlocked")
+      munin-check: fix quoting issues; make shellcheck-clean
+      munin-check: more quoting for placeholders
+      munin-check: unify whitespace
+      Munin::Plugin: "rotate" event without warning for "tail_open"
+      Limits: remove arbitrary precision limit for warning/critical
+      plugin mysql_: use SI unit for query_processing_time values
+      Plugin "if_" (FreeBSD): mention non-suitability for older systems and fix syntax
+      fix various spelling mistakes in documentation and comments
+      fix spelling confusions in code
+      enable automated spelling checks via "codespell"
+      gallery-build: fix shellcheck issues
+      gallery-contrib-build: fix shellcheck issues
+      CONTRIBUTING: improve wording (suggested by 'proselint')
+      python plugin module: fix PEP8 issues; python2/3 compatibility
+      documentation: improve formatting
+      travis: fix style issues (reported by yamllint)
+      plugin-gallery: restructure build scripts
+      Plugin if_packets_ (FreeBSD): add executable flag
+      plugin-gallery: improve rendering of plugin count per category
+      plugin-gallery: simplify category parser
+      plugin-gallery: fix count of 'other' plugins
+      plugin-gallery: manual 'category' override for postgresql plugins
+      plugin-gallery: add missing 'spamfilter' category
+      plugins freeradius_*: change category from 'other' to 'auth'
+      plugins: add missing categories
+      doc: mention the list of well-known categories in 'howto'
+      Plugin ejabberd_: unify indentation
+      Plugin ejabberd_: fixed shellcheck issues
+      Plugin ejabberd_: implement configuration file parsing for yaml format
+      Plugin ejabberd_: enable strict shell behaviour
+      Plugin ejabberd_: defined reasonable defaults
+      Plugin ejabberd_: use 'clean_fieldname' instead of custom function
+      Plugin nfsd4: distinguish between NFS3 and NFS4
+      Plugin nfsd4: fix shellcheck issues
+      plugin-gallery: copy example graph files
+      plugin-gallery: organize properly into sub-categories
+      plugin-gallery: prevent interleaved sub-categories
+      plugin-gallery: formatting
+      plugin-gallery: prevent duplicates in category listing
+      plugin-gallery: repository names without braces
+      plugin-gallery: use map for the most common plugin directory names
+      move debug plugin 'sincos' to debug plugin directory
+      plugin-gallery: updated statistics; well-known-categories link updated
+      plugin-gallery: really filter unwanted files
+      plugin-gallery: fix file exclusion, remove duplicates
+      plugin-gallery: improve category name detection
+      plugin ipmi_sensor_: fix flake8 warnings
+      plugin smart_: fix flake8 warnings
+      doc: move "writing-tips" to "best practices"
+      doc: add hints regarding the portability of plugins
+      add settings for flake8 (python code style checks)
+      plugin threads (Linux): use "find" instead of globbing; handle zero threads
+      doc: add 'grep' and 'find' to the list of available tools for plugins
+      doc: plugin-concise: improve (and move up) 'run interactively' section
+      doc: add "advanced topics" for plugins
+      doc: mention MUNIN_CAP_DIRTYCONFIG for plugin environment
+      doc: improve wording and add links to plugin environment
+      doc: explain the storing of state for plugins
+      doc: reorder Alias lines for apache2 config (cron-based)
+
+Mark Saad (1):
+      On modern FreeBSD systems netstat -i returns int64_t numbers
+
+Night1 (2):
+      Fixing zoom
+      Update nginx.rst
+
+Olivier Mehani (1):
+      [apt_all] Make @releases configurable
+
+Raphaël Droz (1):
+      Keep-up with modern Linux kernel netstat data.
+
+Rick Hansen (1):
+      plugins/postgres: Fix connection stats for PG 9.2-9.4
+
+Robert (1):
+      Fix argument size too big in threads plugin when there are too many processes.
+
+Steve Schnepp (24):
+      travis: use debs instead of cpan
+      travis: only use CPAN deb
+      travis: fix typo
+      travis: Build.PL version to match the native ones
+      Update INSTALL
+      use Perl instead of sed
+      Start from a fresh plugin dump
+      gallery: remove the @include in awk
+      m/node: use trigger based callbacks
+      dev_scripts: use $XDG_RUNTIME_DIR for sandbox
+      node: trigger is common to all queries
+      add debug
+      dev_scripts: handle XDG_RUNTIME_DIR not set
+      UpdateWorker: create RRD with 1h less
+      Use the default in the munin.conf
+      suuport graph_data_size debug
+      use the debug size
+      adding a Dockerfile
+      avoid using local LANG
+      fix bug in tmp file handling
+      fix Dockerfile
+      use the default WAL settings for the DB
+      using MEMORY based journaling for DB
+      support multigraph in regular fetch
+
+Stig Sandbeck Mathisen (2):
+      Remove broken external link in documentation
+      Update snmp option documentation to match implementation
+
+Zenon Mousmoulas (1):
+      Simplify spooled value regex
+
+bovarysme (1):
+      Fix the check_perms_if_paranoid method
+
+cgzones (1):
+      switch to python3
+
+dipohl (21):
+      Utils: Fix error in gallery build scripts.
+      Plugin-Gallery: New Intro Page for 3rd-party collection
+      Intro-Page: Links should point to Munin Gallery Instance
+      Plugin-Gallery: Build script for core collection     Use branch stable-2.0     and a small fix for one of the contrib build scripts
+      Plugin-Gallery build script: Fix error in link to plugins raw file on github     branch master -> branch stable-2.0
+      Plugin-Gallery build scripts: download zip and build from scratch     script logic simplified and added protocol output too
+      Plugin-Gallery: Show well-known-categories description     as link title on left side navigation     and as heading on category pages
+      DOC: list of well-known categories and explain their role for Munin     Plugin Gallery
+      doc: move "best current practice" to Munin-Guide
+      doc:change wiki links to local refs
+      doc: move "Concise guide to plugin authoring" to Munin-Guide
+      doc: change wiki links to local refs
+      doc: move "Howto Remove Spikes" to Munin-Guide
+      doc: move "Notes on RRD file name nomenclature" to Munin-Guide
+      doc: change wiki links to local refs and     various small improvements to plugin attribute reference
+      doc: move wiki pages "Planet" and "Configuration priority" to Munin-Guide
+      doc: new chapter for various how-tos and     remove wiki page "rrdcached"
+      doc: move wiki page "PercentGraphHowto" to Munin Guide
+      doc: content from wiki pages moved to Munin Guide
+      doc: move wiki page "munin-c" to Munin Guide
+      doc: move wiki page PluginGallery to Munin Guide
+
+klemens (1):
+      spelling fixes
+
+rantal (1):
+      Added OldGen graphs, reversed used/free bytes
+
+sumpfralle (1):
+      plugin 'psu_': fix config fieldname
+
+
 munin-2.999.6, 2017-01-17
 
 -------
