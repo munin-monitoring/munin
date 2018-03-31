@@ -26,13 +26,13 @@ Add a new virtualhost, using the following example:
 
        DocumentRoot /var/www
 
-       Alias /munin /var/cache/munin/www
-       <Directory /var/cache/munin/www>
+       Alias /munin/static/ /etc/munin/static/
+       <Directory /etc/munin/static>
            Require all granted
        </Directory>
 
-       Alias /munin/static/ /etc/munin/static/
-       <Directory /etc/munin/static>
+       Alias /munin /var/cache/munin/www
+       <Directory /var/cache/munin/www>
            Require all granted
        </Directory>
 
