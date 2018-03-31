@@ -33,6 +33,16 @@ make_sandbox() {
 		sandbox/etc/munin-conf.d
 		sandbox/etc/plugin-conf.d
 		sandbox/etc/plugins
+EOF
+
+	XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-}
+	if [ ! -z $XDG_RUNTIME_DIR ] && [ -r "$XDG_RUNTIME_DIR" ]
+	then
+		mkdir -p "$XDG_RUNTIME_DIR/munin-sandbox-var"
+		[ -e "$XDG_RUNTIME_DIR/munin-sandbox-var" ] && ln -sv "$XDG_RUNTIME_DIR/munin-sandbox-var" sandbox/var
+	fi
+
+	xargs mkdir -p -v <<EOF
 		sandbox/var/log
 		sandbox/var/lib
 		sandbox/var/run
@@ -77,6 +87,8 @@ tls_certificate        $BASEDIR/t/tls/master_cert.pem
 tls_ca_certificate     $BASEDIR/t/tls/CA/ca_cert.pem
 tls_verify_certificate yes
 tls_verify_depth       5
+
+graph_data_size debug
 
 # Read node definitions and other configuration
 includedir ${CONFDIR}/munin-conf.d

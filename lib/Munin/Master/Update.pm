@@ -78,7 +78,7 @@ sub get_dbh {
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
 	$dbh->do("PRAGMA synchronous = NORMAL");
-	$dbh->do("PRAGMA journal_mode = WAL");
+	$dbh->do("PRAGMA journal_mode = MEMORY");
 
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
