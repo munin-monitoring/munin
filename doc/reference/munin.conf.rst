@@ -11,12 +11,21 @@
 DESCRIPTION
 ===========
 
-This is the configuration file for the munin master. It is used by
-:ref:`munin-update` and :ref:`munin-limits`
+This is the configuration file for the munin master. It is used by :ref:`munin-update`, :ref:`munin-limits` and :ref:`munin-httpd`.
+
+Location in packages is usually ``/etc/munin/`` while if compiled from source it is often found in ``/etc/opt/munin/``.
+
+The structure is:
+
+#. One general/global section
+#. Zero or more group section(s)
+#. One or more host section(s)
+
+Group and host sections are defined by declaring the group or host name in brackets. Everything under a section definition belongs to that section, until a new group or host section is defined.
 
 .. note::
 
-        All global directives have to be defined in the first section of the file!
+        As **the global section** is not defined through brackets, it **must be found prior to any group or host sections**.
         It will not work if you place them in later sections of the config file.
         We recommend to use the delivered munin.conf file and adapt it to your needs.
 
@@ -31,22 +40,26 @@ otherwise.
 
 .. option:: dbdir <path>
 
-   The directory where munin stores its database files. 
-   Default: ``/var/lib/munin``
+   The directory where munin stores its database files (Default: ``/var/lib/munin``).
+   It must be writable for the user running :ref:`munin-cron`.
+   RRD files are placed in subdirectories *$dbdir/$domain/*
+
+.. option:: htmldir <path>
+
+   The directory shown by :ref:`munin-httpd`. It must be writable for the user running :ref:`munin-httpd`.
 
 .. option:: logdir <path>
 
-   The directory where munin stores its logfiles. 
-   Default: ``/var/log/munin``
+   The directory where munin stores its logfiles (Default: ``/var/log/munin``).
+   It must be writable by the user running munin-cron.
 
 .. option:: rundir <path>
 
-   Directory for files tracking munin's current running state.
-   Default: ``/var/run/munin``
+   Directory for files tracking munin's current running state. Default: ``/var/run/munin``
 
 .. option:: tmpldir <path>
 
-   Directories for templates used by :ref:`munin-httpd` to generate HTML pages. 
+   Directories for templates used by :ref:`munin-httpd` to generate HTML pages.
    Default ``/etc/munin/templates``
 
 .. option:: staticdir <path>
@@ -61,6 +74,14 @@ otherwise.
 
    (Exactly one) directory to include all files from.
    Default ``/etc/munin/plugin-conf.d/``
+
+.. option:: staticdir <path>
+
+   Where to look for the static www files
+
+.. option:: cgitmpdir <path>
+
+   Temporary cgi files reside here. The directory has to be writable by the cgi user (usually nobody or :ref:`munin-httpd`).
 
 .. option:: fork <yes|no>
 
@@ -101,23 +122,23 @@ otherwise.
 
    Munin HTML templates use this variable to decide whether to use dynamic
    ("lazy") loading of images with javascript so that images are loaded as they
-   are scrolled in view. This prevents excessive load on the web server. 
+   are scrolled in view. This prevents excessive load on the web server.
    Default is 0 (off).
 
 .. option:: max_graph_jobs 6
 
-   Available since Munin 1.4.0. Maximum number of parallel processes used by 
-   `munin-graph <http://guide.munin-monitoring.org/en/stable-2.0/reference/munin-graph.html#munin-graph>`_ 
+   Available since Munin 1.4.0. Maximum number of parallel processes used by
+   `munin-graph <http://guide.munin-monitoring.org/en/stable-2.0/reference/munin-graph.html#munin-graph>`_
    when calling `rrdgraph <https://oss.oetiker.ch/rrdtool/doc/rrdgraph.en.html>`_.
-   The optimal number is very hard to guess and depends on the number of cores of CPU, the I/O bandwidth available, 
-   if you have SCSI or (S)ATA disks and so on. You will need to experiment. Set on the command line with the ``-n n`` option. 
+   The optimal number is very hard to guess and depends on the number of cores of CPU, the I/O bandwidth available,
+   if you have SCSI or (S)ATA disks and so on. You will need to experiment. Set on the command line with the ``-n n`` option.
    Set to 0 for no forking.
 
 .. option:: munin_cgi_graph_jobs 6
 
    munin-cgi-graph is invoked by the web server up to very many times at the
    same time.  This is not optimal since it results in high CPU and memory
-   consumption to the degree that the system can thrash.  Again the default is 6.  
+   consumption to the degree that the system can thrash.  Again the default is 6.
    Most likely the optimal number for ``max_cgi_graph_jobs`` is the same as ``max_graph_jobs``.
 
 .. option:: cgiurl_graph /munin-cgi/munin-cgi-graph
@@ -126,20 +147,20 @@ otherwise.
 
 .. option:: max_size_x 4000
 
-   The max width of images in pixel. Default is 4000. 
+   The max width of images in pixel. Default is 4000.
    Do not make it too large otherwise RRD might use all RAM to generate the images.
 
 .. option:: max_size_y 4000
 
-   The max height of images in pixel. Default is 4000. 
+   The max height of images in pixel. Default is 4000.
    Do not make it too large otherwise RRD might use all RAM to generate the images.
 
 .. option:: html_strategy cron
 
-   In Munin stable 2.0 HTML files are normally generated by munin-html, no matter if the files are used or not. 
-   You can change this to on-demand generation by following the 
+   In Munin stable 2.0 HTML files are normally generated by munin-html, no matter if the files are used or not.
+   You can change this to on-demand generation by following the
    `instructions in the wiki <http://munin-monitoring.org/wiki/MuninConfigurationMasterCGI>`_
-.. note:: 
+.. note::
   - moving to CGI for HTML means you cannot have graph generated by cron.
   - cgi html has some bugs, mostly you still have to launch munin-html by hand
 
@@ -220,7 +241,7 @@ otherwise.
 
 .. option:: domain_order <domain1> <domain2> ..
 
-   Change the order of domains/groups. Default: Alphabetically sorted 
+   Change the order of domains/groups. Default: Alphabetically sorted
 
 .. index::
    pair: example; munin.conf
@@ -320,6 +341,20 @@ These directives follow a node definition and are of the form "plugin.directive 
 Using these directives you can override various directives for a plugin, such as its contacts, and
 can also be used to create graphs containing data from other plugins.
 
+.. option:: graph_height <value>
+
+   The graph height for a specific service. Default is 200.
+
+   Affects: :ref:`munin-httpd`.
+
+.. option:: graph_width <value>
+
+   The graph width for a specific service. Default is 400.
+
+   Affects: :ref:`munin-httpd`.
+
+For a complete list see the reference of :ref:`global plugin attributes <plugin_attributes_global>`.
+
 .. _master-conf-field-directives:
 
 FIELD DIRECTIVES
@@ -330,27 +365,24 @@ These directives follow a node definition and are of the form "plugin.field <val
 Using these directives you can override values originally set by plugins on the nodes, such as
 warning and critical levels or graph names.
 
-.. option:: graph_height <value>
-
-   The graph height for a specific service. Default is 175. Affects:
-   :ref:`munin-httpd`.
-
-.. option:: graph_width <value>
-
-   The graph width for a specific service. Default is 400. Affects:
-   :ref:`munin-httpd`.
-
 .. option:: warning <value>
 
    The value at which munin-limits will mark the service as being in a warning state. Value can be a
    single number to specify a limit that must be passed or they can be a comma separated pair of
-   numbers defining a valid range of values. Affects: :ref:`munin-limits`.
+   numbers defining a valid range of values.
+
+   Affects: :ref:`munin-limits`.
 
 .. option:: critical <value>
 
    The value at which munin-limits will mark the service as being in a critical state. Value can be
    a single number to specify a limit that must be passed or they can be a comma separated pair of
-   numbers defining a valid range of values Affects: :ref:`munin-limits`.
+   numbers defining a valid range of values.
+
+   Affects: :ref:`munin-limits`.
+
+For a complete list see the reference of :ref:`plugin data source attributes <plugin_attributes_data>`.
+
 
 EXAMPLES
 ========
