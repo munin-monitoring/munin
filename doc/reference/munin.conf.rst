@@ -187,15 +187,18 @@ otherwise.
    RRD updates are per default, performed directly on the rrd files.
    To reduce IO and enable the use of the rrdcached, uncomment it and set it to the location of the socket that rrdcached uses.
 
-.. option:: graph_data_size <normal|huge>
+.. _graph_data_size:
+
+.. option:: graph_data_size <normal|huge|custom>
 
    This directive sets the resolution of the RRD files that are
    created by :ref:`munin-update`.
 
    Default is "normal".
 
-   "huge" saves the complete data with 5 minute resolution for 400
-   days.
+   "huge" saves the complete data with 5 minute resolution for 400 days.
+
+   With "custom" you can define your own resolution. See :ref:`the instruction on custom RRD sizing <custom-rrd-sizing>` for the details.
 
    Changing this directive has no effect on existing graphs
 
