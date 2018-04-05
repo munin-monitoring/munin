@@ -17,7 +17,7 @@ and munin-node is restarted.
 
 The utility :ref:`munin-node-configure` is used by the Munin installation
 procedure to check which plugins are suitable for your node and
-create the links automatically. It can be called everytime when a system
+create the links automatically. It can be called every time when a system
 configuration changes (services, hardware, etc) on the node and it will adjust
 the collection of plugins accordingly.
 
@@ -47,7 +47,7 @@ plugins overitten by distribution updates.
 Configuring
 ===========
 
-/etc/munin/plugin-conf.d (sometimes /etc/opt/munin/plugin-conf.d) is where plugin configuration files
+``/etc/munin/plugin-conf.d`` (sometimes ``/etc/opt/munin/plugin-conf.d``) is where plugin configuration files
 are stored.
 
 To make sure that plugin configurations are updated with software updates
@@ -136,6 +136,57 @@ Plugin configuration is optional.
 
 .. index::
    pair: plugin; testing
+
+Inheritance
+-----------
+
+In the plugin configuration file(s), values are inherited. Values assigned in sections with more specific expressions have higher priority.
+
+This means that values from ``[foo_bar_*]`` have precedence over values from ``[foo_*]``, regardless of order in the plugin config file.
+
+Non-conflicting values
+^^^^^^^^^^^^^^^^^^^^^^
+
+Consider the following example for a plugin called ``dummy_foo_gazonk``:
+
+::
+
+  [dummy_*]
+  env.test1 foo
+
+  [dummy_foo_*]
+  env.test2 baz
+
+
+In this case, the resulting environment values are:
+
+::
+
+  test1 = foo
+  test2 = baz
+
+Conflicting values
+^^^^^^^^^^^^^^^^^^
+
+Another example for the plugin called ``dummy_foo_gazonk``:
+
+::
+
+  [dummy_*]
+  env.test1 foo
+
+  [dummy_foo_*]
+  env.test1 bar
+  env.test2 baz
+
+
+As the more specific ``env.test1`` has priority, these are the result values:
+
+::
+
+  test1 = bar
+  test2 = baz
+
 
 Testing
 =======

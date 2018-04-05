@@ -1,8 +1,8 @@
 #! /bin/sh
-# debian
+# Debian
 
 # Running munin
-apt-get install $(
+apt-get install -y $(
 cat <<EOF
   libdbd-pg-perl
   libdbd-sqlite3-perl
@@ -44,5 +44,12 @@ cat <<EOF
   python-sphinx
   rrdtool
   sqlite3
+  wget
 EOF
+)
+
+(
+	cd /tmp
+	wget http://ftp.de.debian.org/debian/pool/main/libh/libhttp-server-simple-cgi-prefork-perl/libhttp-server-simple-cgi-prefork-perl_6-1_all.deb
+	dpkg -i libhttp-server-simple-cgi-prefork-perl_6-1_all.deb
 )

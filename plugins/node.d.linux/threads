@@ -45,4 +45,8 @@ fi
 # be read.  It isn't entirely portable, but GNU grep should be a given on
 # Linux.  Sadly awk has no such equivalent option or we could skip grep
 # altogether
-grep -s '^Threads' /proc/[0-9]*/status | awk '{ sum += $2; } END { print "threads.value", sum; }'
+find /proc/ -mindepth 2 -maxdepth 2 -type f -name status -print0 \
+    | xargs -0 --no-run-if-empty --max-args=1000 grep -sh '^Threads:' \
+    | awk 'BEGIN { sum = 0; }
+           { sum += $2; }
+           END { print "threads.value", sum; }'

@@ -1,4 +1,0 @@
-#! /bin/sh
-
-contrib/munin-node-debug --debug --dump "$@" > sandbox/etc/munin-conf.d/node.debug.conf
-contrib/munin-node-debug --debug "$@"

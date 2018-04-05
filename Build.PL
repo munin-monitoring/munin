@@ -101,28 +101,29 @@ my $build = Module::Build->new(
     release_status     => $release_status,
     dist_author        => 'The Munin Project <project@munin-monitoring.org>',
     dist_abstract      => 'networked resource monitoring tool with plugins',
-    license            => 'GPL2',
+    license            => 'gpl_2',
     configure_requires => { 'Module::Build' => '0.21', },
     requires           => {
         'perl'                   => '5.10.0',
-        'DBD::SQLite'            => '1.42',
-        'DBI'                    => '1.631',
+        'DBD::SQLite'            => '1.35',
+        'DBI'                    => '1.616',
         'HTML::Template::Pro'    => '0',
         'HTTP::Server::Simple::CGI::PreFork'    => '0',
         'CGI::Cookie'            => '0',
         'IO::Socket::INET6'      => '2.69',
-        'LWP::UserAgent'         => '6.06',
+        'JSON'                   => '0',
+        'LWP::UserAgent'         => '6.03',
         'List::Util'             => '0',
         'List::MoreUtils'        => '0.33',
-        'Log::Dispatch'          => '2.41',
-        'Net::SNMP'              => 'v6.0.1',
-        'Net::SSLeay'            => '1.65',
+        'Log::Dispatch'          => '2.29',
+        'Net::SNMP'              => '6.0.1',
+        'Net::SSLeay'            => '1.42',
         'Net::Server::Daemonize' => '0.06',
         'Net::Server::Fork'      => '0',
         'Parallel::ForkManager'  => '0',
-        'Params::Validate'       => '1.13',
+        'Params::Validate'       => '1.08',
         'Alien::RRDtool'         => '0',
-        'URI'                    => '1.64',
+        'URI'                    => '1.59',
         'XML::Dumper'            => '0',
     },
     PL_files => {
@@ -302,12 +303,12 @@ if ( $build->install_base ) {
         'MUNIN_PLUGSTATE' => $build->install_path('var') . '/plugin-state' );
 }
 else {
-	if ($build->installdirs eq 'site') {
-		$build->install_path( 'MUNIN_BINDIR' => $Config{installsitebin} );
-	}
-	else {
-		$build->install_path( 'MUNIN_BINDIR' => $Config{installvendorbin} );
-	}
+    if ($build->installdirs eq 'site') {
+        $build->install_path( 'MUNIN_BINDIR' => $Config{installsitebin} );
+    }
+    else {
+        $build->install_path( 'MUNIN_BINDIR' => $Config{installvendorbin} );
+    }
     $build->install_path(
         'MUNIN_RUNDIR' => $build->install_path('var') . '/run/munin' );
     $build->install_path(

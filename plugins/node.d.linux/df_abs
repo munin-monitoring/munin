@@ -12,7 +12,7 @@ The following configuration parameters are used by this plugin
 
  [df_abs]
   env.exclude     - space separated list of file system types to exclude
-  env.exclude_re  - space separated regex list of devices or mount points to exlcude
+  env.exclude_re  - space separated regex list of devices or mount points to exclude
   env.warning     - Warning percentage
   env.critical    - Critical percentage
   env.total       - Enable/Disable graph total [on|off]

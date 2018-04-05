@@ -1,19 +1,299 @@
+munin-2.999.7, 2018--17
+
+-------
+Summary
+-------
+
+That release is the 7th beta of the 3.0 series. It is versioned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versioning or 3.0b7
+
+This is a continuation of the SQL & on-the-fly rewrite.
+
+This also means that several features don't work still, such as spoolfetching
+or vectorfetching. They'll come in the next versions.
+
+------------------
+Detailed Changelog
+------------------
+
+Alan (1):
+      Edited for consistency in capitalization
+
+Alexandre SIMON (1):
+      Change http to httpS for oss.oetiker.ch (rrdtool) web site
+
+Baptiste Jonglez (1):
+      doc: Document how to specify a custom SSH port for munin-async
+
+Bart Coppens (1):
+      Handle negative values in spooled data
+
+Bas Couwenberg (1):
+      Add support for rndc options in bind9_rndc plugin.
+
+Brian De Wolf (2):
+      Auto-detect connectors in Perl tomcat plugins
+      URI escape in tomcat plugins
+
+Chris Butler (1):
+      Add PostgreSQL 10 support to postgres_xlog
+
+Holger Levsen (1):
+      fixup perms, broken since >2.999.4
+
+Janne Savikko (1):
+      Config.pm: fix anchor in URL in error message
+
+K.Cima (3):
+      Fix typo $CDEV -> $CDEF
+      Add --lower-limit, --upper-limit and vlabel
+      Add disk device names for Oracle VM (LDOMs) and Kernel Zones
+
+Kenyon Ralph (2):
+      ntp_kernel plugins: convert ntpq output to seconds
+      troubleshooting doc: remove nonexistent --stdout option
+
+Kim B. Heino (4):
+      plugins/squeezebox: match category with munin contrib repo
+      plugins/squeezebox: wired devices are reported as strength 0, should be 100
+      plugins/apc_nis: add missing category
+      plugins/bind9_rndc: use matching "dns" category as in other dns servers
+
+Lars Kruse (125):
+      gallery: add some setup notes
+      Plugin http_loadtime: improved quoting, modern command substitution
+      Plugin http_loadtime: time calculation based on "date" instead of "time"
+      Plugin http_loadtime: improve wget calls
+      Plugin http_loadtime: fix redirection order, remove bashisms, switch to sh
+      travis: add 'libcairo2-dev' dependency for Alien::RRDtool
+      travis: depend on 'libpango1.0-dev' instead of 'libcairo2-dev' for Alien::RRDtool
+      postgres plugins: fixed database selection
+      hddtemp_smartctl plugin: add more smartctl labels (190 / 194)
+      postfix_mailsts plugin: add 'milter-reject' event
+      requirements: reduce version dependency on Params::Validate to 1.08
+      doc: add link to rrdgraph documentation for "graph_args"
+      varnish plugin: compatibility with Varnish 5.2
+      plugin 'ping_': graph for packetloss can be enabled
+      plugin 'ping_': improve shell quoting; fix shellcheck issues
+      Limits check: increase log level for limit state changes
+      plugin df (linux): handle "dfopts" by adding whitespace
+      plugin df (linux): fix "include_re" for multiple values
+      plugin df (linux): min/max should be "U", if no filesystem matched
+      plugin diskstats (linux): change behaviour of 'graph_width' parameter
+      plugin diskstats (linux): unified whitespace
+      plugin diskstats (linux): fix autoconf exitcode in case of "no"
+      plugin diskstats (linux): support "DIRTYCONFIG" capability
+      plugin df (generic): unify whitespace
+      plugin df (generic): fix most shellcheck issues
+      plugin df (generic): reduce code duplication
+      plugin df (generic): support DIRTYCONFIG capability
+      plugin df (generic): replace ambiguous device names with mountpoints
+      plugin df_inode (generic): import changes of the "df" plugin
+      unifying whitespace in Munin::Master::Graph
+      iptables-related plugins: use "-w" for consistent results
+      remove unmaintained mysql_* plugins ("mysql_" remains)
+      Limits Notifications: prevent notification executable from writing to STDOUT
+      doc: import "TLS Setup" from old wiki
+      doc: restructure "tls-setup" documentation
+      doc: add 'intermediate certificate' handling to 'tls-setup'
+      doc: explain specifics of letsencrypt for munin
+      doc: fix sphinx warnings
+      gitignore: omit temporary vi files
+      doc: organized and added webserver configuration examples
+      doc: reduce details of table of contents
+      doc: update copyright year; unify whitespace
+      Makefile: improve readability with 'Build' vs. 'build'
+      doc: change domain name from "munin.readthedocs.org" to "guide.munin-monitoring.org"
+      INSTALL: changed to Makefile-based process
+      README: added introduction and more resources
+      INSTALL: formatting and clearer references
+      dev_scripts: remove 'run-debug-node' (duplicate of 'run_debug_node')
+      plugins df/df_inode: fix recently broken autoconf
+      Munin::Plugin: 'readarray' handles empty files gracefully
+      plugin hwmon (Linux): proper access to 'graphs' field
+      plugin memcached_: exitcode zero for "autoconf" response "no"
+      Build.PL: mention "JSON" requirement
+      Build.PL: unify whitespace
+      Build.PL: change license from "GPL2" to "gpl_2"
+      Makefile: rename 'blib' to 'build'
+      Makefile: add 'help' target
+      Makefile: distribute 'PHONY' next to the targets
+      Makefile: add 'doc' target (for sphinx documentation)
+      dev_scripts: add comments and 'help' to 'install'
+      doc: typo
+      doc: add quotes for sourcing of shell helpers
+      doc: mention 2.999 for munin-httpd deployment
+      Master::Node: upgrade "Protocol exception" log message from DEBUG to INFO
+      Master::Graph: log messages on database access errors
+      plugin meminfo (Linux): fixed typo ("Hlocked"/"Mlocked")
+      munin-check: fix quoting issues; make shellcheck-clean
+      munin-check: more quoting for placeholders
+      munin-check: unify whitespace
+      Munin::Plugin: "rotate" event without warning for "tail_open"
+      Limits: remove arbitrary precision limit for warning/critical
+      plugin mysql_: use SI unit for query_processing_time values
+      Plugin "if_" (FreeBSD): mention non-suitability for older systems and fix syntax
+      fix various spelling mistakes in documentation and comments
+      fix spelling confusions in code
+      enable automated spelling checks via "codespell"
+      gallery-build: fix shellcheck issues
+      gallery-contrib-build: fix shellcheck issues
+      CONTRIBUTING: improve wording (suggested by 'proselint')
+      python plugin module: fix PEP8 issues; python2/3 compatibility
+      documentation: improve formatting
+      travis: fix style issues (reported by yamllint)
+      plugin-gallery: restructure build scripts
+      Plugin if_packets_ (FreeBSD): add executable flag
+      plugin-gallery: improve rendering of plugin count per category
+      plugin-gallery: simplify category parser
+      plugin-gallery: fix count of 'other' plugins
+      plugin-gallery: manual 'category' override for postgresql plugins
+      plugin-gallery: add missing 'spamfilter' category
+      plugins freeradius_*: change category from 'other' to 'auth'
+      plugins: add missing categories
+      doc: mention the list of well-known categories in 'howto'
+      Plugin ejabberd_: unify indentation
+      Plugin ejabberd_: fixed shellcheck issues
+      Plugin ejabberd_: implement configuration file parsing for yaml format
+      Plugin ejabberd_: enable strict shell behaviour
+      Plugin ejabberd_: defined reasonable defaults
+      Plugin ejabberd_: use 'clean_fieldname' instead of custom function
+      Plugin nfsd4: distinguish between NFS3 and NFS4
+      Plugin nfsd4: fix shellcheck issues
+      plugin-gallery: copy example graph files
+      plugin-gallery: organize properly into sub-categories
+      plugin-gallery: prevent interleaved sub-categories
+      plugin-gallery: formatting
+      plugin-gallery: prevent duplicates in category listing
+      plugin-gallery: repository names without braces
+      plugin-gallery: use map for the most common plugin directory names
+      move debug plugin 'sincos' to debug plugin directory
+      plugin-gallery: updated statistics; well-known-categories link updated
+      plugin-gallery: really filter unwanted files
+      plugin-gallery: fix file exclusion, remove duplicates
+      plugin-gallery: improve category name detection
+      plugin ipmi_sensor_: fix flake8 warnings
+      plugin smart_: fix flake8 warnings
+      doc: move "writing-tips" to "best practices"
+      doc: add hints regarding the portability of plugins
+      add settings for flake8 (python code style checks)
+      plugin threads (Linux): use "find" instead of globbing; handle zero threads
+      doc: add 'grep' and 'find' to the list of available tools for plugins
+      doc: plugin-concise: improve (and move up) 'run interactively' section
+      doc: add "advanced topics" for plugins
+      doc: mention MUNIN_CAP_DIRTYCONFIG for plugin environment
+      doc: improve wording and add links to plugin environment
+      doc: explain the storing of state for plugins
+      doc: reorder Alias lines for apache2 config (cron-based)
+
+Mark Saad (1):
+      On modern FreeBSD systems netstat -i returns int64_t numbers
+
+Night1 (2):
+      Fixing zoom
+      Update nginx.rst
+
+Olivier Mehani (1):
+      [apt_all] Make @releases configurable
+
+Raphaël Droz (1):
+      Keep-up with modern Linux kernel netstat data.
+
+Rick Hansen (1):
+      plugins/postgres: Fix connection stats for PG 9.2-9.4
+
+Robert (1):
+      Fix argument size too big in threads plugin when there are too many processes.
+
+Steve Schnepp (24):
+      travis: use debs instead of cpan
+      travis: only use CPAN deb
+      travis: fix typo
+      travis: Build.PL version to match the native ones
+      Update INSTALL
+      use Perl instead of sed
+      Start from a fresh plugin dump
+      gallery: remove the @include in awk
+      m/node: use trigger based callbacks
+      dev_scripts: use $XDG_RUNTIME_DIR for sandbox
+      node: trigger is common to all queries
+      add debug
+      dev_scripts: handle XDG_RUNTIME_DIR not set
+      UpdateWorker: create RRD with 1h less
+      Use the default in the munin.conf
+      suuport graph_data_size debug
+      use the debug size
+      adding a Dockerfile
+      avoid using local LANG
+      fix bug in tmp file handling
+      fix Dockerfile
+      use the default WAL settings for the DB
+      using MEMORY based journaling for DB
+      support multigraph in regular fetch
+
+Stig Sandbeck Mathisen (2):
+      Remove broken external link in documentation
+      Update snmp option documentation to match implementation
+
+Zenon Mousmoulas (1):
+      Simplify spooled value regex
+
+bovarysme (1):
+      Fix the check_perms_if_paranoid method
+
+cgzones (1):
+      switch to python3
+
+dipohl (21):
+      Utils: Fix error in gallery build scripts.
+      Plugin-Gallery: New Intro Page for 3rd-party collection
+      Intro-Page: Links should point to Munin Gallery Instance
+      Plugin-Gallery: Build script for core collection     Use branch stable-2.0     and a small fix for one of the contrib build scripts
+      Plugin-Gallery build script: Fix error in link to plugins raw file on github     branch master -> branch stable-2.0
+      Plugin-Gallery build scripts: download zip and build from scratch     script logic simplified and added protocol output too
+      Plugin-Gallery: Show well-known-categories description     as link title on left side navigation     and as heading on category pages
+      DOC: list of well-known categories and explain their role for Munin     Plugin Gallery
+      doc: move "best current practice" to Munin-Guide
+      doc:change wiki links to local refs
+      doc: move "Concise guide to plugin authoring" to Munin-Guide
+      doc: change wiki links to local refs
+      doc: move "Howto Remove Spikes" to Munin-Guide
+      doc: move "Notes on RRD file name nomenclature" to Munin-Guide
+      doc: change wiki links to local refs and     various small improvements to plugin attribute reference
+      doc: move wiki pages "Planet" and "Configuration priority" to Munin-Guide
+      doc: new chapter for various how-tos and     remove wiki page "rrdcached"
+      doc: move wiki page "PercentGraphHowto" to Munin Guide
+      doc: content from wiki pages moved to Munin Guide
+      doc: move wiki page "munin-c" to Munin Guide
+      doc: move wiki page PluginGallery to Munin Guide
+
+klemens (1):
+      spelling fixes
+
+rantal (1):
+      Added OldGen graphs, reversed used/free bytes
+
+sumpfralle (1):
+      plugin 'psu_': fix config fieldname
+
+
 munin-2.999.6, 2017-01-17
 
 -------
 Summary
 -------
 
-That release is the 6th beta of the 3.0 series. It is versionned 2.999.x so
+That release is the 6th beta of the 3.0 series. It is versioned 2.999.x so
 numeric only sorting works, as we do have distro that rely on that. Packagers
-can use that versionning or 3.0b6
+can use that versioning or 3.0b6
 
 It contains a rewrite of munin-update to directly handle the SQL metadata on
 the fly, and not to delegate it to later. It therefore means that RRD and SQL
 are updated from the worker processes themselves, and that it scales much
 better.
 
-Also, there is a provision for a persistant DB, which can open the way for a
+Also, there is a provision for a persistent DB, which can open the way for a
 real DB such a PG instead of SQLite. This lays also the basis of horizontal
 scaling.
 
@@ -94,7 +374,7 @@ Steve Schnepp (91):
       Revert "update: prepare_cached instead of prepare"
       update: per node txn
       Revert "update: per node txn"
-      update: use a sane SQLite config for persistant DB
+      update: use a sane SQLite config for persistent DB
       update: Use the callback for data fetching
       update: updating the state in SQL
       update: retrieve the ds_id from the node_id
@@ -106,7 +386,7 @@ Steve Schnepp (91):
       u: add a default value for parse_update_rate
       u: reduce the process name clutter
       u: fix is_fresh_enough()
-      u: use cached prepared statments
+      u: use cached prepared statements
       debug: sort the nodes
       debug: adding a -v to have virtual hosts
       u: create rrd files
@@ -122,7 +402,7 @@ Steve Schnepp (91):
       dev_scripts: adding run_debug_node
       g: use RRDs instead of forking()
       doc: adding howto-write-snmp-plugins
-      doc: fix versionning, since the source page is old
+      doc: fix versioning, since the source page is old
       debug: adding top level groups
       u: recursively create the groups
       t: remove obsolete tests
@@ -139,9 +419,9 @@ munin-2.999.5, 2016-12-31
 Summary
 -------
 
-That release is the 5th beta of the 3.0 series. It is versionned 2.999.x so
+That release is the 5th beta of the 3.0 series. It is versioned 2.999.x so
 numeric only sorting works, as we do have distro that rely on that. Packagers
-can use that versionning or 3.0b5
+can use that versioning or 3.0b5
 
 It contains various bugfixes.
 
@@ -190,9 +470,9 @@ munin-2.999.4, 2016-12-04
 Summary
 -------
 
-That release is the 4rd beta of the 3.0 series. It is versionned 2.999.x so
+That release is the 4rd beta of the 3.0 series. It is versioned 2.999.x so
 numeric only sorting works, as we do have distro that rely on that. Packagers
-can use that versionning or 3.0b4
+can use that versioning or 3.0b4
 
 It contains various bugfixes.
 
@@ -298,9 +578,9 @@ munin-2.999.3, 2016-09-04
 Summary
 -------
 
-That release is the 3nd beta of the 3.0 series. It is versionned 2.999.x so
+That release is the 3nd beta of the 3.0 series. It is versioned 2.999.x so
 numeric only sorting works, as we do have distro that rely on that. Packagers
-can use that versionning or 3.0b3
+can use that versioning or 3.0b3
 
 It contains various bugfixes.
 
@@ -365,7 +645,7 @@ Quentin Stoeckel (49):
       ui/Toolbar: fix timerange Absolute component position on mobiles
       ui/tabindex: Fix tabindex on graphs & tabs
       ui/sparklines: Respect graph_ext parameter instead of hardcoded .png value
-      ui/overview: Don't fetch back the cookie on each each occurence
+      ui/overview: Don't fetch back the cookie on each each occurrence
       ui/js: Fix Absolute elements position from fixed parents
       doc/alert: Add documentation about plugin field
       ui/js: Fix wrong graph extension when using Graph.refresh()
@@ -442,9 +722,9 @@ munin-2.999.2, 2016-01-10
 Summary
 -------
 
-That release is the 2nd beta of the 3.0 series. It is versionned 2.999.x so
+That release is the 2nd beta of the 3.0 series. It is versioned 2.999.x so
 numeric only sorting works, as we do have distro that rely on that. Packagers
-can use that versionning or 3.0b2
+can use that versioning or 3.0b2
 
 It contains an updated UI.
 
@@ -532,9 +812,9 @@ munin-2.999.1, 2015-10-14
 Summary
 -------
 
-That release is the 1rst beta of the 3.0 series. It is versionned 2.999.x so
+That release is the 1rst beta of the 3.0 series. It is versioned 2.999.x so
 numeric only sorting works, as we do have distro that rely on that. Packagers
-can use that versionning or 3.0b1
+can use that versioning or 3.0b1
 
 It mostly consists of fixes.
 
@@ -579,7 +859,7 @@ Stig Sandbeck Mathisen (7):
       Add missing dependency on List::Util to Build.PL
 
 Trygve Vea (1):
-      Erronous config in example
+      Erroneous config in example
 
 nii_kenichi (1):
       Typo corrected
@@ -591,7 +871,7 @@ munin-2.99.3, 2015-09-15
 Summary
 -------
 
-That release is the 3nd alpha of the 3.0 series. It is versionned 2.99.x so
+That release is the 3nd alpha of the 3.0 series. It is versioned 2.99.x so
 numeric only sorting works, as we do have distro that rely on that.
 
 It mostly consists of fixes.
@@ -663,7 +943,7 @@ Stig Sandbeck Mathisen (23):
 
 mcarton (2):
       Fix spelling mistake in munin-update SYNOPSIS
-      Fix markdown formating
+      Fix markdown formatting
 
 
 munin-2.99.2, 2015-08-18
@@ -672,7 +952,7 @@ munin-2.99.2, 2015-08-18
 Summary
 -------
 
-That release is the 2nd alpha of the 3.0 series. It is versionned 2.99.x so
+That release is the 2nd alpha of the 3.0 series. It is versioned 2.99.x so
 numeric only sorting works.
 
 It mostly consists of fixes, code removal and adding a meaningful test suite.
@@ -770,7 +1050,7 @@ munin-2.99.1, 2015-05-11
 Summary
 -------
 
-That release is the first alpha of the 3.0 series. It is versionned 2.99.x so
+That release is the first alpha of the 3.0 series. It is versioned 2.99.x so
 numeric only sorting works.
 
 It mostly features a whole new UI, that should be much more "responsive",
@@ -867,11 +1147,11 @@ Quentin Stoeckel (3):
 
 Steve Schnepp (18):
       doc: little rewordings
-      doc: little formating
-      doc: little formating
-      doc: little formating
-      doc: little formating
-      doc: little formating
+      doc: little formatting
+      doc: little formatting
+      doc: little formatting
+      doc: little formatting
+      doc: little formatting
       doc: fix typo in reference
       Revert "doc: fix typo in reference"
       doc: fix some references
@@ -1268,7 +1548,7 @@ Steve Schnepp (61):
       graph cat
       cgi: have a munin-http that unifies everything
       cgi: the $cgi->header doesn't understand status
-      cs: remove the specfic munin-api
+      cs: remove the specific munin-api
       cgi: remove the CGI.
       master: adding munin-httpd
       build: remove obsolete scripts
@@ -1450,7 +1730,7 @@ Daniel Black (62):
       Populate service_title from graph_title
       Subgraphs is just a column of services
       graph_info is just a column of services
-      fetch multiple service infomation all in one go
+      fetch multiple service information all in one go
       syntax fixes
       needed no space in sed -i.orig to work
       Corrent perl err: Found = in conditional, should be ==
@@ -1536,7 +1816,7 @@ Gabriele Pohl (57):
       Better link to Epel (thanks to fenris02)
       Move wiki page to Munin-Guide     http://munin-monitoring.org/wiki/protocol-dirty-config
       protocol.rst moved to architecture chapter
-      Started new chapter "Advanced"     and move protcol beneath "Architecture"     added some references and links also
+      Started new chapter "Advanced"     and move protocol beneath "Architecture"     added some references and links also
       Reserve Chapter "Advanced" to really advanced topics     Moved "How to write plugins" back to plugins chapter
       Added api-index
       Added more links to wiki pages     Pages should be moved to the Guide or deleted in the wiki
@@ -1644,7 +1924,7 @@ Steve Schnepp (180):
       doc: adding a very rough architecture diagram
       doc: adding a blurb on a standard install
       doc: adding the tuto for a node
-      doc: fix table formating
+      doc: fix table formatting
       node: Only spoolfetch send 5 samples per service
       asyncd: Use SyncDictFile for plugin_rates
       asyncd: just use the SpoolWriter META-DATA
@@ -1654,7 +1934,7 @@ Steve Schnepp (180):
       doc: rewording the architecture
       cgi/html: fix CGI for perl 5.20
       ChangeLog: 2.0.22
-      doc: Add the refernce to github
+      doc: Add the reference to github
       m/update: fix "not a reference at /../Utils.pm"
       ChangeLog: 2.0.23
       guide: Adding some precision on the various docs
@@ -2478,7 +2758,7 @@ diSabler (1):
 
 dipohl (10):
       list the different sorts of docs
-      docs: Add a section about wich sort of documentation to place in Munin's Wiki
+      docs: Add a section about which sort of documentation to place in Munin's Wiki
       docs: Outline sections
       docs: Moved one more section from Munin-Wiki page to here (http://munin-monitoring.org/wiki/MuninNomenclature)
       docs: more sections to move wiki content to here
@@ -2486,7 +2766,7 @@ dipohl (10):
       docs: a further rename
       docs: Rename this to "Munin Guide" as we have further documentations areas and need a less general term
       docs: Add page about Multigraph Plugins
-      docs: Add page about Multigraph Protocoll
+      docs: Add page about Multigraph Protocol
 
 elmuerte (2):
       Update dynazoom.html
@@ -2978,7 +3258,7 @@ Matthias Schmitz:
       Substitute some @@ vars in generate files.
 
 Steve Schnepp:
-      plugins/open_files: fix overrided used.warn/crit
+      plugins/open_files: fix overridden used.warn/crit
       node/asyncd: fix a crash case
       node/asynd: avoid wake up each second
       master: fix unexpected "warning limit" lines
@@ -3095,7 +3375,7 @@ Bugfix & perf release.
 - Enhanced perf for munin-html
 - Relaxed the timeout for munin-node
   2.0.12 fixed the timeout code. But it had a nasty side-effect as the timeout
-  setting is shared for global timeout and plugin timout. This version
+  setting is shared for global timeout and plugin timeout. This version
   decouples both by introducing a new global_timeout munin-node.conf variable
   that defaults to 15 min.
 
@@ -3733,7 +4013,7 @@ Summary :
 * Emit the hosts in a sorted order, instead of somewhat random.
 * Do not emit png list if file handle is not defined. (D: Closes #666759)
 * Add old option of --force-root, but with a new name. more explicit (D: Closes #601371)
-* We dont generate the png list when using cgi html.
+* We don't generate the png list when using cgi html.
 * Remove warning when asking "list" w/o a hostname (U: Closes #907952)
 * Many bug fixes (Closes #967, #1210) (D: Closes #583189, #568511, #475078, #666759)
 
@@ -4083,8 +4363,8 @@ munin 1.4.4, r3276,3379, 2010-2-26
 * snmp__if_multi: Add env.ifTypeOnly filtering, fix multiple buglets
 * mailman: Corrected incorrect use of $MUNIN_PLUGSTATE in mailman plugin
 * amavis: Change amavis mktempfile function to run with backticks instead of 
-  $(command) as it doesnt work correctly piping to sed
-* exim_mailstats: exim_mailstats doesnt count Completed properly. 
+  $(command) as it doesn't work correctly piping to sed
+* exim_mailstats: exim_mailstats doesn't count Completed properly. 
   Thanks to Wakko Warner for noticing this in http://bugs.debian.org/569621
 * Deprecated tomcat plugins: Fix in to work properly when only one connector
   is available http://bugs.debian.org/543523
@@ -4114,7 +4394,7 @@ munin 1.4.3, r3232:3274, 2009-12-30
   Make lpstat path configurable and search for it in likely places if
   it's not set. Patch from Lupe - thanks! Closes #826.
 * dhcpd3: Only emit .max if the .max is valid.  Document a bug from
-  the trac - adresses but doe not close #829.  Patches for a complete
+  the trac - addresses but doe not close #829.  Patches for a complete
   fix welcome.
 * More specific test for watermark feature (1.2.13 required)
 * Make 0755 default permissions for $DBDIR and make consistent in
@@ -4409,7 +4689,7 @@ munin (1.4.0-beta, r2982:3032, 2009-11-21)
 * Catch problems if someone forgot a "address <IP>" or "update no" -
   and make it plain in the error message.
 * Use_node_name should default to "no". Closes #757
-* Clearify munin_set_var_loc error message so we know what value is
+* Clarify munin_set_var_loc error message so we know what value is
   set illegaly
 * munin-node: Improve error reporting during startup by sort of
   merging it with _run_service().  move the eval to the very top of
@@ -4449,7 +4729,7 @@ munin (1.4.0-alpha2, r2899:2981, 2009-11-13)
 * HTML: Border on graphs in critical and warning state for nodeview.
   Comparison views (hopefully) to follow
 * M::M::Utils: End the pod section with =cut, so that the last line, 
-  # vim: syntax=perl ts=8 wont slip into the man page
+  # vim: syntax=perl ts=8 won't slip into the man page
 * M::M::ProcessManager: documentation typo fix
 * bind9_rndc: reinstate @@PERL@@ substitution marker, which broke in r2958
 * Get the BIND logfile's size before rndc is run, rather than taking a
@@ -4592,7 +4872,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * New plugin for Squeezebox Duo: squeezebox_
 * Add plugin for connected PostgreSQL users.
 * Cosmetic changes in munin-cron script to make it more failure obvious
-  and and clearify the ordering
+  and and clarify the ordering
 * Minimal modularization of munin-html, munin-graph and munin-limits - now 
   half suited to include in munin-fastcgi-graph if we want to
 * Turns out that the // (and //=) operator is new to perl so remove all use
@@ -4638,7 +4918,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
   Many thanks!
 * New plugin: openvpn.in from debian, and POD it gently
 * Added the ability to customize the install location for the jmx java
-  library. As most distributions wont want it in the default munin libdir
+  library. As most distributions won't want it in the default munin libdir
 * munin-node-configure needs pass the list of plugin names through to
   apply_wildcards() too.  part of #718.  thanks to knan for the report.
 * Munin-node: Clean up man-pages, and try and standardise common information
@@ -4705,7 +4985,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
   http://bugs.debian.org/495003
 * linux/if_*: Added support for msh interfaces
 * linux: Changed df.in and df_inode.in to have nagios compatible graph
-  title, nagios doesnt like special chars in graph titles. (The same
+  title, nagios doesn't like special chars in graph titles. (The same
   patch from debian bug http://bugs.debian.org/472239)
 * add minimal ruby infrastructure
 * Added NetApp plugins from Guillaume Blairon
@@ -4892,7 +5172,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
   extensions to work.
 * munin_get_loc: Fix premature exit - patch by Joe Damato
 * This may fix the double legend headers bug
-* Clearify the autoconf "no" from linux/swap
+* Clarify the autoconf "no" from linux/swap
 * Remove max field from samba config - patch by Kozik
 * linux/iostat: Introduce environment variable SHOW_NUMBERED to show
   sda<n> in environments where this is wanted
@@ -4942,7 +5222,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * node.d/dhcpd3: Parse "include" statements, patch by Walter Huf
 * smart_: Update Nico Stranskys email address
 * SuSE cron.d/munin mentioned munin-nagios, a obsoleted part of munin.
-* Clearify the purpose of DESTDIR
+* Clarify the purpose of DESTDIR
 * plugin qmail-qstat now uses a single pipe to generate all output
 * new plugin: qmailqstat contributed by Nils Breunese
 * Add an eval to $DF to expand the string to arguments.
@@ -4992,8 +5272,8 @@ munin (1.3.4, r1277:1560, 8/3/2008)
  * hddtemp_smartctl: now works with recent kernels and 3ware controllers
  * apt_all: apt_all lacked some graph metadata, fixes #478
  * ircu: more robust and more useful (fixes #517, thanks to Zhenech)
- * Clearify apache-cgi foo
- * linux/irqstats: Fix unitialized message (#497)
+ * Clarify apache-cgi foo
+ * linux/irqstats: Fix uninitialized message (#497)
  * munin-cgi-graph: Path error in unlocking (#507),
      - SysV semaphore locking, thanks to Fox for patch (closes #499)
  * loggrep: Support foreign hostnames
@@ -5122,7 +5402,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
  * style.css: Fixes too wide link issue.
  * Add getversion command to add SVN revision to unversioned svn checkouts
  * Remove redundant munin_graph plugin - see munin_stats
- * linux/if_ plugin: Clearify the 32 bit issue with fast interfaces
+ * linux/if_ plugin: Clarify the 32 bit issue with fast interfaces
  * linux/irqstats plugin: Incorporate magic markers in pod
  * node.d/multips plugin: Document, use clean_fieldname to remove bugs,
    add useful .info information about processes watched.
@@ -5144,7 +5424,7 @@ munin (1.3.3, r910-r1236)
   * sunos memory: Make autoconf'able
   * Bring the goodness og @@GOODSH@@ to the generic plugins
   * node.d/df and df_inode plugins: Rewrite like the last 20 years of shell
-	enhancments happened
+	enhancements happened
   * munin monitoring plugins: Make them auto-installing
   * ntp_ and ntp_states plugins: Insert graph_category, make them "auto"
 	 and invent category "time" as well
@@ -5220,7 +5500,7 @@ munin (1.3.3, r910-r1236)
   * Add a possibly helpful readme file to dists/sunos
   * Contrib: (updated) hack to generate pages of each-service-on-every-host
   * Munin.pm: Fix uninitialized value problem in lock reading code.
-  * linux/irqstats plugin: Fix bug related to different /proc/interupts
+  * linux/irqstats plugin: Fix bug related to different /proc/interrupts
 	format on Sparc hardware (trac #436)
   * Added init script for Solaris in resources directory
   * Add uptime plugin for solaris (trac #419)
@@ -5422,7 +5702,7 @@ munin (1.3.2)
     (Deb#302220).
   * Docs: Added man page for munin-node-configure-snmp.
   * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
-  * Docs: Fixed erronous cgiurl docs (SF#1159722).
+  * Docs: Fixed erroneous cgiurl docs (SF#1159722).
   * Installation: Create CIGdir if nonexistent.
 
 munin (1.3.1)
@@ -5758,7 +6038,7 @@ munin (1.0.0pre4)
 
 munin (1.0.0pre3)
 
-  * Munin-graph had a perl 5.005_03 compatabilty problem, which slipped
+  * Munin-graph had a perl 5.005_03 compatibility problem, which slipped
     through to version pre2.
   * Added mkdir to install-man target. (SF#888545)
   * Added better logging of plugin failures in the node. (SF#881045)

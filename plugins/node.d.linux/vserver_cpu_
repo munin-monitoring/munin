@@ -86,7 +86,7 @@ use /proc less often (100 times more overhead than talking to the
 kernel directly) i.e. use something like pagesize=\`perl -MPOSIX -e
 'print POSIX::sysconf(_SC_PAGESIZE), "\n";'\`
 
-(Accoding to many using /proc is a feature not a bug - Nicoali
+(According to many using /proc is a feature not a bug - Nicolai
 Langfeldt 2009-12-23)
 
 =back

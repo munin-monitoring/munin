@@ -26,14 +26,14 @@ The master is responsible for all central Munin-related tasks.
 
 
 It regularly connects to the various nodes, and then :ref:`synchronously <protocol-index>`
-asks for the various metrics configuration and values and stores the data in `RRD <http://oss.oetiker.ch/rrdtool/>` files.
+asks for the various metrics configuration and values and stores the data in `RRD <https://oss.oetiker.ch/rrdtool/>` files.
 
 On the fly the values are checked against limits (that you may set)
 and the Munin-Master will croak, if values go above or below the given thresholds.
 
 Here we also generate the graphs, as this is a heavy task that needs some resources.
 Recent versions of Munin use cgi-graphing to generate graphs only
-when the user want's to see them.
+when the user wants to see them.
 
 .. toctree::
    :maxdepth: 2
@@ -45,6 +45,8 @@ Munin-Node
 
 The node is a small agent running on each monitored host. We can have
 agent-less monitoring but this is a special case that will be addressed later.
+On machines without native support for Perl scripting you can use `munin-c <https://github.com/munin-monitoring/munin-c>`_,
+which is a C rewrite of munin node components. (Look for the details in the :ref:`munin-c chapter <munin-c>`.)
 
 Note that an usual setup involves having a node running also on the master
 host, in order to munin to monitor itself.

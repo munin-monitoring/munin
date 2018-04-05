@@ -35,6 +35,7 @@ if [ "$1" = "config" ]; then
 
     echo 'graph_title Folding@Home'
     echo 'graph_args -l 0 --base 1000'
+    echo 'graph_category htc'
     echo 'graph_vlabel % finished'
     echo 'done.label done folding'
     echo 'done.type GAUGE'

@@ -38,7 +38,7 @@ Unknownl LICENSE
 =cut
 
 # If run with the "autoconf"-parameter, give our opinion on whether we
-# should be run on this system or not. This is optinal, and only used by
+# should be run on this system or not. This is optional, and only used by
 # munin-config. In the case of this plugin, we should most probably
 # always be included.
 

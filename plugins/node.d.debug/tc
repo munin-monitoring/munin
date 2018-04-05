@@ -67,7 +67,7 @@ while(<TC>) {
     if(/^qdisc/) {
         my (undef, $type, $name, undef, $dev) = split(/ /);
 
-        # Most linux boxes will have qdiscs, but they'll all be pfifo_fast.  If
+        # Most Linux boxes will have qdiscs, but they'll all be pfifo_fast.  If
         # we see one that isn't, it implies someone configured tc and would be
         # interested in our graphs.
         $autoconf = "yes"

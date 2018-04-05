@@ -137,7 +137,7 @@ sub _do_connect {
 
     # check all the lines until we find one that matches the expected
     # greeting; ignore anything that doesn't look like it as long as
-    # there is output. This allows to accept SSH connections where
+    # there is output. This allows one to accept SSH connections where
     # lastlog or motd is used.
     until(defined($self->{node_name})) {
 	my $greeting = $self->_node_read_single();
@@ -399,7 +399,7 @@ sub parse_service_config {
         }
 	else {
 	    $errors++;
-	    DEBUG "[DEBUG] Protocol exception: unrecognized line '$line' from $plugin on $nodedesignation.\n";
+	    INFO "[INFO] Protocol exception: unrecognized line '$line' from $plugin on $nodedesignation.\n";
         }
     }
 
@@ -457,13 +457,19 @@ sub fetch_service_config {
 }
 
 sub spoolfetch {
-    my ($self, $timestamp) = @_;
+    my ($self, $timestamp, $uw_handle_config) = @_;
 
     DEBUG "[DEBUG] Fetching spooled services since $timestamp (" . localtime($timestamp) . ")";
     $self->_node_write_single("spoolfetch $timestamp\n");
 
     # The whole stuff in one fell swoop.
-    my $lines = $self->_node_read();
+    my $now = time;
+    my $last_timestamp = $timestamp;
+    my $callback = sub {
+	    my ($plugin, $data) = @_;
+	    $last_timestamp = $uw_handle_config->($self, $plugin, $now, $data, $last_timestamp)
+    };
+    my $lines = $self->_node_read($callback);
 
     # using the multigraph parsing. 
     # Using "__root__" as a special plugin name. 
@@ -576,7 +582,7 @@ sub parse_service_data {
 	}
         else {
 	    $errors++;
-            DEBUG "[DEBUG] Protocol exception while fetching '$service' from $plugin on $nodedesignation: unrecognized line '$line'";
+            INFO "[INFO] Protocol exception while fetching '$service' from $plugin on $nodedesignation: unrecognized line '$line'";
 	    next;
         }
     }
@@ -597,7 +603,11 @@ sub fetch_service_data {
 
     $self->_node_write_single("fetch $plugin\n");
 
-    my $lines = $self->_node_read_fast();
+    my $callback = sub {
+	    my ($plugin, $data) = @_;
+	    return $uw_handle_data->($plugin, $data)
+    };
+    my $lines = $self->_node_read($callback);
     
     my $elapsed = tv_interval($t0);
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
@@ -661,29 +671,28 @@ sub _node_write_single {
 
 sub _node_read_single {
     my ($self) = @_;
-    my $res = undef;
 
-    my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
-      if ($self->{tls} && $self->{tls}->session_started()) {
-          $res = $self->{tls}->read();
-      }
-      else {
+    my $res;
+    my $tls = $self->{tls};
+    if ($tls && $tls->session_started()) {
+        $res = $tls->read();
+    } else {
           $res = readline $self->{reader};
-      }
-      # Remove \r *and* \n. Normally only one, since we read line per line.
-      $res =~ tr/\x{d}\x{a}//d if defined $res;
-      return 1;
-    });
-    if ($timed_out) {
-        LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.
-	    ".  Terminating process.";
     }
+
     if (!defined($res)) {
 	# Probable socket not open.  Why are we here again then?
-	# aren't we supposed to be in "do in session"?
 	LOGCROAK "[FATAL] Socket read from ".$self->{host}." failed.  Terminating process.";
     }
+
+    # Remove \r *and* \n
+    # Normally only one, since we read line per line.
+    # .. It has to be done in reverse order as we remove \n first, then \r.
+    $res =~ s/\n$// if defined $res;
+    $res =~ s/\r$// if defined $res;
+
     DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\"." if $debug;
+
     return $res;
 }
 
@@ -720,16 +729,37 @@ sub _node_read_fast {
 }
 
 sub _node_read {
-    my ($self) = @_;
+    my ($self, $callback) = @_;
+
+    my $current_plugin;
     my @array = ();
 
-    my $line = $self->_node_read_single();
-    while($line ne ".") {
+    while(my $line = $self->_node_read_single()) {
+	last if $line eq ".";
         push @array, $line;
-        $line = $self->_node_read_single();
+
+	# The trigger is always "multigraph ..."
+	# We do callback the callback if defined
+	if ($callback && $line =~ m/^multigaph (\S)+/) {
+		my $new_plugin = $1;
+
+		# Callback is called with ($plugin, $data) to flush the previous plugins
+		# ... if there's already a plugin
+		$callback->($current_plugin, \@array) if $current_plugin;
+
+		# Handled the old one. Moving to the new one.
+		$current_plugin = $new_plugin;
+		@array = ();
+	}
     }
 
-    DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
+    # Handle the multigaph one last time
+    if ($callback && $current_plugin) {
+	$callback->($current_plugin, \@array);
+	@array = ();
+    }
+
+    # Return the remaining @array
     return \@array;
 }
 

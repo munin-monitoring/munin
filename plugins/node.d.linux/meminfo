@@ -8,7 +8,7 @@ meminfo - Plugin to monitor memory usage.
 
 Do not enable this plugin unless you need it.  It alone produces
 significantly more data than any normal munin-node in sum.  Therefore
-it is not autimatically enabled.
+it is not automatically enabled.
 
 =head1 APPLICABLE SYSTEMS
 
@@ -16,8 +16,8 @@ All Linux systems
 
 =head1 INTERPRETATION
 
-This plugin show many graphs (on my pc ~90 graphs with total ~750
-values).  Graph splitted to 8 groups, every group has child graphs:
+This plugin shows many graphs (on my pc ~90 graphs with total ~750
+values).  Graphs are split to 8 groups, every group has sub graphs:
 
   Application groups memory usage                  - show applications groups memory using by group (env.) [env.applications_group]
     Group `groupName1` applications memory usage     v
@@ -1043,7 +1043,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Mlocked',
-      'info'  => 'Hlocked'
+      'info'  => 'Mlocked'
     }
   },
   # ----------------------------------------------
@@ -1520,15 +1520,15 @@ sub load_vmallocinfo
   my $file = "/proc/vmallocinfo";
   my $result = {};
   open (FH, '<', $file) or die "$! $file \n";
-  my @splitted = ();
+  my @tokens = ();
   my $name = '';
   for my $line (<FH>)
   {
     chomp $line;
-    @splitted =  split(/\s+/, $line);
-    $name     = (split(/\+/ , $splitted[2]))[0];
+    @tokens =  split(/\s+/, $line);
+    $name     = (split(/\+/ , $tokens[2]))[0];
     $result->{$name}  = 0 unless (exists($result->{$name}));
-    $result->{$name} += $splitted[1];
+    $result->{$name} += $tokens[1];
 
     my $field_name = sprintf("vi_%s", clean_fieldname($name));
     append_field         ($field_name, 'vmallocinfo', $name, $name, $name);
@@ -1756,7 +1756,7 @@ sub load_appinfo
         }
       }
     }
-    # not runned applications detect and show
+    # detect and show applications that are not currently running
     my $dummy_app_data = {};
     for my $app (keys %{$storage->{'applications'}{'single'}})
     {

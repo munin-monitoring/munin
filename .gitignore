@@ -26,8 +26,9 @@ script/munin-cron
 /sandbox/
 local/
 
-# IDE files
+# editor files
 .idea/
+.*.sw[op]
 
 # CSS SASS files
 *.sass-cache*

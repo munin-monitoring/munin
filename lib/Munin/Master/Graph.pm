@@ -160,6 +160,12 @@ sub handle_request
 
 	# Find the service to display
 	my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
+	if (not defined($sth_url)) {
+		# potential cause: permission problem
+		my $msg = "Failed to access database ($datafilename): " . $DBI::errstr;
+		WARNING "[WARNING] $msg";
+		die $msg;
+	}
 	$sth_url->execute($graph_path);
 	my ($id, $type) = $sth_url->fetchrow_array;
 
@@ -181,7 +187,7 @@ sub handle_request
 
 	DEBUG "found node=$id, type=$type";
 
-	# Here's the most common case : only plain plugins
+	# Here's the most common case: only plain plugins
 	my $sth;
 
 	$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = ?");
@@ -231,12 +237,12 @@ sub handle_request
 			ne.value,
 			sm.value as sum,
 			st.value as stack,
-                        (
-                                select hn.id
-                                from ds hn
-                                JOIN ds_attr hn_attr ON hn.service_id = ds.service_id AND hn_attr.value = ds.name and hn_attr.name = 'negative'
-                                where hn.service_id = ds.service_id
-                        ) as negative_id,
+			(
+				select hn.id
+				from ds hn
+				JOIN ds_attr hn_attr ON hn.service_id = ds.service_id AND hn_attr.value = ds.name and hn_attr.name = 'negative'
+				where hn.service_id = ds.service_id
+			) as negative_id,
 			rl.value as last_epoch,
 			'dummy' as dummy
 		FROM ds
@@ -297,12 +303,12 @@ sub handle_request
 		# Note that we do *NOT* provide any defaults for those
 		# $_rrdXXXX vars. Defaults will be done by munin-update.
 		#
-		# This will :
+		# This will:
 		# 	- have only 1 reference on default values
 		# 	- reduce the size of the CGI part, which is good for
 		# 	  security (& sometimes performances)
 
-		# Fields inherit this field from their plugin, if not overrided
+		# Fields inherit this field from their plugin, if not overridden
 		$_printf = $graph_printf unless defined $_printf;
 		$_printf .= "%s";
 
@@ -313,7 +319,7 @@ sub handle_request
 
 		# Handle .sum
 		if ($_sum) {
-			# .sum is just a alias + cdef shortcut, an exemple is :
+			# .sum is just a alias + cdef shortcut, an example is:
 			#
 			# inputtotal.sum \
 			#            ups-5a:snmp_ups_ups-5a_current.inputcurrent \
@@ -372,7 +378,7 @@ sub handle_request
 
 		# Handle an eventual cdef
 		if ($_rrdcdef) {
-			# Populate the CDEF dictionnary, to be able to swosh it at the end.
+			# Populate the CDEF dictionary, to be able to swosh it at the end.
 			# As it will enable to solve inter-field CDEFs.
 			$rrd_cdefs{$_rrdname}->{_rrdcdef} = $_rrdcdef;
 			$rrd_cdefs{$_rrdname}->{real_rrdname} = $real_rrdname;
@@ -531,16 +537,16 @@ sub handle_request
 		'--font', "TITLE:$font_size_title:Sans",
 		'--font', "DEFAULT:$font_size_default",
 		'--font', "LEGEND:$font_size_legend",
-                # Colors coordinated with CSS.
-                '--color', 'BACK#F0F0F0',   # Area around the graph
-                '--color', 'FRAME#F0F0F0',  # Line around legend spot
-                '--color', 'CANVAS#FFFFFF', # Graph background, max contrast
-                '--color', 'FONT#666666',   # Some kind of gray
-                '--color', 'AXIS#CFD6F8',   # And axis like html boxes
-                '--color', 'ARROW#CFD6F8',  # And arrow, ditto.
+		# Colors coordinated with CSS.
+		'--color', 'BACK#F0F0F0',   # Area around the graph
+		'--color', 'FRAME#F0F0F0',  # Line around legend spot
+		'--color', 'CANVAS#FFFFFF', # Graph background, max contrast
+		'--color', 'FONT#666666',   # Some kind of gray
+		'--color', 'AXIS#CFD6F8',   # And axis like html boxes
+		'--color', 'ARROW#CFD6F8',  # And arrow, ditto.
 
-                '--width', $width,
-                '--height', $height,
+		'--width', $width,
+		'--height', $height,
 
 		"--border", "0",
 	);
@@ -721,7 +727,7 @@ sub RRDs_graph_or_dump {
 		# Ignore the arg
 	}
 	# Now we have to fetch the textual values
-        DEBUG "[DEBUG] \n\nrrdtool xport '" . join("' \\\n\t'", @xport) . "'\n";
+	DEBUG "[DEBUG] \n\nrrdtool xport '" . join("' \\\n\t'", @xport) . "'\n";
 	my ($start, $end, $step, $nb_vars, $columns, $values) = RRDs::xport(@xport);
 	if ($fileext eq "CSV") {
 		print $out_fh '"epoch", "' . join('", "', @{ $columns } ) . "\"\n";

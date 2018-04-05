@@ -50,7 +50,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000'
 	echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'
 	echo 'graph_category network'
-	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is shown in bits per second, not bytes. IMPORTANT: Since the data source for this plugin use 32bit counters, this plugin is really unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps. This means that this plugin is unsuitable for most production environments."
+	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is shown in bits per second, not bytes. IMPORTANT: On older BSD systems the data source for this plugin uses 32bit counters, this plugin is really unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps. This means that this plugin is unsuitable for old production environments."
 	echo 'rbytes.label received'
         echo 'rbytes.type DERIVE'
         echo 'rbytes.graph no'

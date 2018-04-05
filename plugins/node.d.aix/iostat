@@ -14,7 +14,7 @@ No configuration
 
 This version of iostat will report back the amount of I/O on a per
 disk basis.  It includes the vpaths in it's report.  The I/O for a
-vpath is the sum of the reads/writes of all the hdisks assosciated
+vpath is the sum of the reads/writes of all the hdisks associated
 with it.  It uses /usr/bin/iostat.
 
 =head2 RESTRICTIONS

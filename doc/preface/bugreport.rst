@@ -106,7 +106,7 @@ The following items should be contained in every bug report:
 - Anything you did at all differently from the installation instructions.
 
 - The Munin version. If you run a prepackaged version, such as RPMs, say so,
-  including any subversion the package might have. If you are talking about a
+  including any Subversion the package might have. If you are talking about a
   Git snapshot, mention that, including the commit hash.
 
 - If your version is older than 2.0.x we will almost certainly tell you to

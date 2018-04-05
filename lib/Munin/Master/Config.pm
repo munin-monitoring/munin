@@ -281,7 +281,7 @@ sub _extract_group_name_from_definition {
 
 
 sub _concat_config_line {
-    # Canonify and concatenate current prefix and and the config line
+    # Canonify and concatenate current prefix and the config line
     # we're parsing now in a correct manner.
 
     # See also _split_config_line.
@@ -462,8 +462,8 @@ sub _split_config_line_ok {
 
     if ($host =~ /[^-A-Za-z0-9\.]/) {
 	# Since we're not quite sure what context we're called in we'll report the error message more times rather than fewer.
-	ERROR "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.";
-	croak "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.\n";
+	ERROR "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.";
+	croak "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.\n";
     }
 
     return ($groups,$host,$key);
@@ -502,7 +502,7 @@ sub parse_config {
 	    $continuation = '';
 	}
 
-        # This must be handled after continuation hadling otherwise
+        # This must be handled after continuation handling otherwise
 	# empty lines will be ignored in continuation context.
         next if !length($line);
 

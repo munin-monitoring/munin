@@ -14,18 +14,18 @@ Munin Guide
 
 These are the pages you are currently reading. It is aimed at the first read.
 The chapters are designed as a walk-through of Munin's components in a very guided
-manner. Its read constitutes the **basis** of every documention available.
+manner. Its read constitutes the **basis** of every documentation available.
 Specially when asking live (IRC_, mailing-lists_) channels, users there will
 expect that you read the Guide prior to asking.
 
 It is regularly updated, as its sources are directly in the munin source
 directory, the last version can always be accessed online at
-`http://munin.readthedocs.org/`__ thanks to ReadTheDoc__.
+`http://guide.munin-monitoring.org/`__ thanks to ReadTheDoc__.
 
 It is specially designed for easy contribution and distribution thanks to
 `Sphinx`__. That aspect will be handled in :ref:`Contributing`.
 
-__ http://munin.readthedocs.org/
+__ http://guide.munin-monitoring.org/
 __ http://readthedocs.org/
 __ http://sphinx-doc.org/
 
@@ -46,7 +46,7 @@ conflicting infos so we can correct the wrong one.
 
 Still, a very important part is the `FAQ`__ (Frequently Asked Questions), which
 contains many answers to a wide array of questions. It is the only part of the
-documenation in the wiki that is still regularly updated.
+documentation in the wiki that is still regularly updated.
 
 __ http://munin-monitoring.org/wiki/WikiStart
 __ http://munin-monitoring.org/wiki/faq
@@ -81,13 +81,12 @@ Contrib Repository
 -------------------
 
 The `contrib`__ part is even more live than before. It has very successfully
-replaced the old MuninExchange__ site. Now, together with the `Plugin
+replaced the old :ref:`MuninExchange <Munin-Exchange>` site. Now, together with the `Plugin
 Gallery`__ it offer all the useful features the old site offered, and is much
 easier to contribute to. It also ease the integration work, and therefore
 shortens the time it takes for your contributions to be reviewed and merged.
 
 __ https://github.com/munin-monitoring/contrib
-__ http://munin-monitoring.org/wiki/MuninExchangeIsDown
 __ http://gallery.munin-monitoring.org/
 
 .. _mailing-lists:
@@ -140,7 +139,7 @@ lives, families and jobs to deal with also.
 
 You are more than welcome to just hang out, and while we don't mind
 the occational intrusion of the real world into the flow, keep it
-mostly on topic, and dont paste random links unless they are *really*
+mostly on topic, and don't paste random links unless they are *really*
 spectacular and intelligent.
 
 Note that ``m-r-b`` is our beloved ``munin-relay-bot`` that bridges the
@@ -160,3 +159,16 @@ the mailing lists and answer questions.
 
 If you learn something which is not in the documentation, write it up and
 contribute it. If you add features to the code, contribute them.
+
+.. _planet-munin:
+
+Planet Munin
+============
+
+In order to provide some central place to reference munin-related blogs out there, `Planet Munin <http://planet.munin-monitoring.org/>`_ was created.
+
+It aggregates many blogs via RSS, and presents them as just one feed.
+
+To add your blog, just visit us on our :ref:`IRC Channel <irc>`, and ask there.
+
+Note that providing a tagged or a category-filtered feed is the best way to remain on-topic.

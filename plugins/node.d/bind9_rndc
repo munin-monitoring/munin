@@ -12,6 +12,7 @@ The following environment variables are used by this plugin
 
   [bind9_rndc]
     env.rndc		/usr/sbin/rndc
+    env.rndc_options
     env.querystats      /var/run/named.stats
 
 The user/group that runs the plugin must have read access to the stats
@@ -63,6 +64,7 @@ License not documented.
 use strict;
 
 my $rndc = defined($ENV{rndc}) ? $ENV{rndc} : '/usr/sbin/rndc';
+my $rndc_options = defined($ENV{rndc_options}) ? $ENV{rndc_options} : '';
 my $querystats = $ENV{querystats} || '/var/run/named.stats';
 my %IN;
 my %QUERIES;
@@ -70,7 +72,7 @@ my %IP;
 
 # attempt to create log file if it doesn't exist
 if ( ! -r $querystats ) {
-    system("$rndc stats");
+    system("$rndc $rndc_options stats");
 }
 
 # open the log file, and get its size
@@ -78,7 +80,7 @@ open(my $stats, '<', $querystats) or die "$0: $querystats: $!\n";
 my $size = (stat $stats)[7];
 
 # call rdnc and go directly to the correct offset
-system("$rndc stats");
+system("$rndc $rndc_options stats");
 seek($stats , $size, 0);
 
 # We want the last block like this in the file (bind 9.early)
@@ -147,7 +149,7 @@ $line = <$stats>;
 die "unexpected content found"
   unless $line =~ m/^\+\+\+ Statistics Dump \+\+\+/;
 
-# second line allows to guess format
+# second line allows one to guess format
 $line = <$stats>;
 chomp $line;
 if ($line eq '++ Incoming Requests ++') {
@@ -207,7 +209,7 @@ if ($line eq '++ Incoming Requests ++') {
            v6 => 0,
           );
 
-    # jump to incoming queries secion
+    # jump to incoming queries section
     while ($line ne '++ Incoming Queries ++') {
         $line = <$stats>;
         chomp $line;
@@ -298,7 +300,7 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
     print "multigraph bind9_rndc\n";
     print "graph_title DNS Queries by status\n";
     print "graph_vlabel queries / \${graph_period}\n";
-    print "graph_category BIND\n";
+    print "graph_category dns\n";
     print "graph_order ";
     print "query_$_ " for sort keys %IN;
     print "\n";
@@ -317,7 +319,7 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
     print "multigraph bind9_query_types\n";
     print "graph_title DNS Queries by type\n";
     print "graph_vlabel queries / \${graph_period}\n";
-    print "graph_category BIND\n";
+    print "graph_category dns\n";
     print "graph_args --base 1000 -l 0\n";
     print "graph_order query_A query_AAAA query_PTR query_SOA query_MX query_SRV ";
     print             "query_TXT query_NS query_SPF query_A6 query_AXFR query_CNAME ";
@@ -339,7 +341,7 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
     print "multigraph bind9_query_protocols\n";
     print "graph_title DNS Queries by protocol\n";
     print "graph_vlabel queries / \${graph_period}\n";
-    print "graph_category BIND\n";
+    print "graph_category dns\n";
     print "graph_args --base 1000 -l 0\n";
     print "graph_order v4 v6\n";
 

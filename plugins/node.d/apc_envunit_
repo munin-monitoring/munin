@@ -98,6 +98,7 @@ fi
 if [ "$1" = "config" ]; then
   echo "graph_title Environmental units (${NAME} probes)"
   echo "graph_vlabel ${LABEL}"
+  echo "graph_category sensors"
   for m in ${UNITS} ; do
     mm=`echo ${m} | tr '-' '_'`
     echo "${mm}_${LETTER}1.label $m ${NAME} #1"

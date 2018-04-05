@@ -5,7 +5,7 @@
 # In the interest of keeping this Makefile simple, it does not attempt to provide the flexibility
 # provided by using Build.PL directly. (See perldoc Module::Build).
 
-# Defaults/paths. Allows $(CONFIG) to be overrided by
+# Defaults/paths. Allows $(CONFIG) to be overridden by
 # make command line
 DEFAULTS = Makefile.config
 CONFIG = Makefile.config
@@ -13,48 +13,81 @@ CONFIG = Makefile.config
 include $(DEFAULTS)
 include $(CONFIG)
 
-.PHONY: default build install clean test testcover testpod testpodcoverage tar
-
-default: blib
-
-blib: Build
-	./Build
-
-install: Build
-	./Build install --destdir=$(DESTDIR) --verbose
+# the perl script is used for most perl related activities
+BUILD_SCRIPT = ./Build
 
 
-clean: Build
-	./Build realclean
+.PHONY: default
+default: build
+
+.PHONY: help
+help:
+	@echo "Build targets:"
+	@echo "    build"
+	@echo "    clean"
+	@echo "    doc"
+	@echo "    install"
+	@echo "    tar"
+	@echo
+	@echo "Test targets:"
+	@echo "    test"
+	@echo "    testcover"
+	@echo "    testpod"
+	@echo "    testpodcoverage"
+	@echo
+
+.PHONY: build
+build: $(BUILD_SCRIPT)
+
+.PHONY: doc
+doc:
+	$(MAKE) -C doc html
+
+.PHONY: install
+install: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" install --destdir=$(DESTDIR) --verbose
+
+.PHONY: clean
+clean: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" realclean
 	rm -rf _stage
 	rm -f MANIFEST META.json META.yml
+	$(MAKE) -C doc clean
+
 
 ##############################
 # perl module
 
-Build: Build.PL
+$(BUILD_SCRIPT): Build.PL
 	$(PERL) Build.PL --destdir=$(DESTDIR) --installdirs=$(INSTALLDIRS) --verbose
+
 
 ######################################################################
 # testing
 
-test: Build
-	./Build test
+.PHONY: test
+test: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" test
 
-testcover: Build
-	./Build testcover
+.PHONY: testcover
+testcover: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" testcover
 
-testpod: Build
-	./Build testpod
+.PHONY: testpod
+testpod: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" testpod
 
-testpodcoverage: Build
-	./Build testpodcoverage
+.PHONY: testpodcoverage
+testpodcoverage: $(BUILD_SCRIPT)
+	"$(BUILD_SCRIPT)" testpodcoverage
+
 
 ######################################################################
 # Rules for the release manager
 
 RELEASE := $(shell $(CURDIR)/getversion)
 
+.PHONY: tar
 tar:
 	git archive --prefix=munin-$(RELEASE)/ --format=tar --output ../munin-$(RELEASE).tar HEAD
 	mkdir -p munin-$(RELEASE)/

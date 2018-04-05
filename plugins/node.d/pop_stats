@@ -33,6 +33,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
 	print "graph_title POP logon stats\n";
 	print "graph_args --base 1000\n";
 	print "graph_vlabel logons / \${graph_period}\n";
+	print "graph_category mail\n";
 	print "logon.label logons\n";
 	print "logon.type DERIVE\n";
 	print "logon.min 0\n";

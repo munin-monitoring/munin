@@ -10,9 +10,11 @@ sbhr@sbhr.dk
 12/12 2008
 """
 
-def getOptionOrDefault(option, default=None):
+
+def getOptionOrDefault(option, default=None):  # noqa: N802
     from os import environ
     return environ.setdefault(option, default)
+
 
 class DataSource(object):
     """Represents a single data source.
@@ -21,14 +23,14 @@ class DataSource(object):
     transparently by the Plugin-class."""
 
     __slots__ = ['label', 'cdef', 'draw', 'graph', 'info', 'extinfo', 'max',
-            'min', 'negative', 'type', 'warning', 'critical', 'colour',
-            'skipdraw', 'sum', 'stack', 'line', 'value']
+                 'min', 'negative', 'type', 'warning', 'critical', 'colour',
+                 'skipdraw', 'sum', 'stack', 'line', 'value']
 
     # Allowed draw modes
-    _draw_modes = ['AREA', 'STACK', \
-            'LINE1', 'LINE2', 'LINE3', \
-            'LINESTACK1', 'LINESTACK2', 'LINESTACK3', \
-            'AREASTACK']
+    _draw_modes = ['AREA', 'STACK',
+                   'LINE1', 'LINE2', 'LINE3',
+                   'LINESTACK1', 'LINESTACK2', 'LINESTACK3',
+                   'AREASTACK']
 
     def get_config(self):
         if hasattr(self, "draw"):
@@ -51,6 +53,7 @@ class DataSource(object):
             return self.value(data_source_name)
 
         return self.value
+
 
 class Plugin(object):
     """Facilitates OO creation of Munin plugins.
@@ -75,9 +78,7 @@ class Plugin(object):
     """
 
     def __init__(self, title, vlabel,
-            category="misc", info="",
-            args="",
-            scale=True):
+                 category="misc", info="", args="", scale=True):
         """Sets up the plugin; title, vertical label, category -- all things
         that are global for the plugin.
         """
@@ -96,9 +97,9 @@ class Plugin(object):
         assert type(category) is str
 
     def __getitem__(self, key):
-        if not key in self._values:
-            self._values[ key ] = DataSource()
-        return self._values[ key ]
+        if key not in self._values:
+            self._values[key] = DataSource()
+        return self._values[key]
 
     def __setitem__(self, key, value):
         self._values[key] = value
@@ -117,7 +118,7 @@ class Plugin(object):
         for prefix, line in self._values.items():
             value = line.get_value(prefix)
             assert type(value) is int
-            print "%s.value %s" % (prefix, value)
+            print("%s.value %s" % (prefix, value))
 
     def _print_config(self):
         """Print the output needed for setting up the graph - i.e. when the
@@ -125,11 +126,11 @@ class Plugin(object):
         # Print graph_-variables
 
         for prop in ['title', 'category', 'vlabel', 'info', 'args', 'draw']:
-            if not prop in self.__dict__:
+            if prop not in self.__dict__:
                 continue
-            if not self.__dict__[ prop ]:
+            if not self.__dict__[prop]:
                 continue
-            print "graph_%s %s" % (prop, self.__dict__[ prop ])
+            print("graph_%s %s" % (prop, self.__dict__[prop]))
 
         # Print setup for individual lines
         for prefix, line in self._values.items():
@@ -138,7 +139,7 @@ class Plugin(object):
             assert "label" in line.get_config().keys(), "No 'label' defined."
 
             for attr, value in line.get_config().items():
-                print "%s.%s %s" % (prefix, attr, value)
+                print("%s.%s %s" % (prefix, attr, value))
 
     def _print_autoconf(self):
         """Running autoconf-mode."""
@@ -151,16 +152,16 @@ class Plugin(object):
                 aconf = self.autoconf
 
         if bool(aconf):
-            print "YES"
+            print("YES")
         else:
-            print "NO"
+            print("NO")
 
     def run(self, force_mode=None):
         """Run the plugin and "do the right thing"^(TM)."""
 
         mode = force_mode
 
-        if mode == None:
+        if mode is None:
             import sys
             if len(sys.argv) == 2:
                 mode = sys.argv[1]

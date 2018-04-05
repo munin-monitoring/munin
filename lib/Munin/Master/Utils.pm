@@ -153,7 +153,7 @@ sub munin_getlock {
     DEBUG "[DEBUG] Writing out PID to lock file $lockname";
     print LOCK $$; # we want the pid inside for later use
     if (defined($pid) && length $$ < length $pid) {
-	# Since pid was defined we need to truncate incase len($) < len($pid)
+	# Since pid was defined we need to truncate in case len($) < len($pid)
 	truncate(LOCK, tell(LOCK))
     }
     close LOCK;
@@ -837,7 +837,7 @@ sub munin_readconfig_part {
     	my @stat = stat($filename);
 	if ($config_parts->{$what}{timestamp} < $stat[9]) {
 	    # could use _raw if we wanted to read non-storable fallback
-	    $config_parts->{$what}{config} = undef; # Unalloc RAM for old config, since it will be overriden anyway.
+	    $config_parts->{$what}{config} = undef; # Unalloc RAM for old config, since it will be overridden anyway.
 	    $part = munin_readconfig_storable($filename);
 	    $config_parts->{$what}{timestamp} = $stat[9];
 	    $doupdate = 1;
@@ -992,25 +992,25 @@ sub munin_get_bool
     my $field  = shift;
     my $default = shift;
 
-    my $ans = munin_get ($hash, $field, $default);
-    return if not defined $ans;
+    my $answer = munin_get ($hash, $field, $default);
+    return if not defined $answer;
 
-    if ($ans =~ /^yes$/i or
-        $ans =~ /^true$/i or
-        $ans =~ /^on$/i or
-        $ans =~ /^enable$/i or
-        $ans =~ /^enabled$/i
+    if ($answer =~ /^yes$/i or
+        $answer =~ /^true$/i or
+        $answer =~ /^on$/i or
+        $answer =~ /^enable$/i or
+        $answer =~ /^enabled$/i
        ) {
 	return 1;
-    } elsif ($ans =~ /^no$/i or
-        $ans =~ /^false$/i or
-        $ans =~ /^off$/i or
-        $ans =~ /^disable$/i or
-        $ans =~ /^disabled$/i
+    } elsif ($answer =~ /^no$/i or
+        $answer =~ /^false$/i or
+        $answer =~ /^off$/i or
+        $answer =~ /^disable$/i or
+        $answer =~ /^disabled$/i
       ) {
 	return 0;
-    } elsif ($ans !~ /\D/) {
-	return $ans;
+    } elsif ($answer !~ /\D/) {
+	return $answer;
     } else {
 	return $default;
     }

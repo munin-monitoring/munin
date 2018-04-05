@@ -1,65 +1,62 @@
 HOW TO SETUP
 ------------
 
-1. Directory of the build process
----------------------------------
+0. Install requirements
+-----------------------
 
-Create a directory (outside from webserver access)
-for the scripts, temporary files and logs of the build process.
-Set variable SCRIPTDIR in gallery-build.sh to this PATH
-and put all the files and also the directory 'static'
-from this directory thereto
+This build process requires perl-doc, otherwise the scripts will fail silently.
+Additionally rsync is used.
+
+
+1. Building the gallery
+-----------------------
+
+Checkout the munin repository.
+Only the data below contrib/plugin-gallery is required.
+
+The gallery is created as a static HTML export.
+You may want to run the script "gallery-build.sh" regularly.
+
+Simply run "gallery-build.sh" with a target directory of your choice.
+BEWARE: the previous content of the target directory is removed.
+
+The script retrieves the current state of the remote repositories while building the gallery.
+The local checkout directory is only used for the build scripts. Thus you will rarely need to
+update it.
+
 
 2. Webserver DocumentRoot
 -------------------------
 
-Create a directory to put the webfiles to.
-Set variable HTMLDIR in gallery-build.sh to this PATH.
-Create a subdirectory 'distro' and a subdirectory 'contrib' therin.
-Under each of these also create a subdirectory 'svn'.
-Put the directory 'static' from the subdirectory 'www' into HTMLDIR
+The "gallery-build.sh" script requires only a single parameter: the target directory of the build
+process.
+You need to configure your webserver to publish this directory.
+Take care for file permissions: the directory needs to be accessible by the user running the
+webserver.
 
-So HTMLDIR should initially have this structure:
+Setup a vhost for the gallery in your webservers configuration, e.g. for Apache2:
 
-.
-./contrib
-./contrib/svn
-./distro
-./distro/svn
-./static
-./static/css
-./static/css/_response.scss	(optionnal, CSS source)
-./static/css/style-doc.css
-./static/css/style-doc.scss	(optionnal, CSS source)
-./static/css/style.css
-./static/css/style.scss		(optionnal, CSS source)
-./static/img
-./static/img/download.gif
-./static/img/favicon.ico
-./static/img/glyphicons-208-remove-2-white.png
-./static/img/glyphicons-390-new-window-alt-white.png
-./static/img/logo-h-neg.png
-./static/img/logo-h-neg.svg
-./static/js
-./static/js/jquery-1.8.3.js
-./static/js/script.js
+  <VirtualHost *>
+      ServerName munin-gallery.example.org
+      DocumentRoot /some/path/gallery-html
+      <Directory /some/path/gallery-html>
+          Require all granted
+      </Directory>
+  </VirtualHost>
 
-Setup vhost for the gallery in your webservers configuration.
+Media links within the templates are absolute (e.g. /static/...) - thus you need a separate domain
+(vhost) for the munin gallery.
 
-3. Ownership of webserver files
--------------------------------
 
-If you want to set another ownership for the webserver files
-run the build process under user root, and set variable 
-WWWUSER and WWWGROUP in gallery-build.sh and 
-gallery-contrib-build.sh accordingly.
-
-4. Setup a daily cronjob
+3. Setup a daily cronjob
 ------------------------
 
 Place a file with content like this under /etc/cron.d/ 
 
 ------ 8< ------
 # Create fresh build of the Munin Plugin Gallery
-10 22 * * * gap /home/gap/projects/munin/github/munin/contrib/plugin-gallery/gallery-build.sh
+10 22 * * *   johndoe   chronic /home/johndoe/projects/munin/contrib/plugin-gallery/gallery-build.sh /home/johndoe/gallery-html
 ------ >8 ------
+
+"chronic" (from "moreutils") is useful here: it will suppress output, as long as the script exited
+successfully.

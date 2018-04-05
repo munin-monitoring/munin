@@ -52,9 +52,9 @@ This is the default configuration:
 
 =head1 INTERPRETATION
 
-The plugin shows "probable spam", "surley spam" and "virus".  If your
+The plugin shows "probable spam", "surely spam" and "virus".  If your
 "probable spam" raises you may need to tune your spam configuration to
-classify more spam as "surley spam" and so be able to eliminate it.
+classify more spam as "surely spam" and so be able to eliminate it.
 
 =head1 MAGIC MARKERS
 

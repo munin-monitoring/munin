@@ -10,7 +10,7 @@
 # run 'make' in the source directory.  Modify it to suit your needs.
 
 # DESTDIR is meant only for use when making Munin packages.  Unless
-# you're doing packaging do NOT set it. 
+# you're doing packaging do NOT set it.
 # DESTDIR is empty during building, and optionally set to point to
 # a shadow tree during make install.
 
@@ -48,8 +48,8 @@ STATEDIR   = $(DESTDIR)/var/run/munin
 # The perl interpreter to use
 PERL       := $(shell which perl)
 
-# The python interpreter to use (used by some plugins)
-PYTHON     := /usr/bin/env python
+# The Python interpreter to use (used by some plugins)
+PYTHON     := /usr/bin/env python3
 
 # The ruby interpreter to use (used by some plugins)
 RUBY       := /usr/bin/env ruby

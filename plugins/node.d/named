@@ -145,6 +145,7 @@ case $1 in
 	cat <<'EOF'
 graph_title BIND DNS Query statistics
 graph_vlabel Queries / ${graph_period}
+graph_category dns
 graph_scale no
 queries.label Queries
 queries.type DERIVE

@@ -74,6 +74,7 @@ $plugin->add_graphs
    {
     title => "Voltages",
     vlabel => "Volt",
+    category => "sensors",
     args => "--base 1000 --logarithmic",
     denominator => 1000, # milliVolt -> Volt
     fields => {}
@@ -82,6 +83,7 @@ $plugin->add_graphs
    {
     title => "Fans speed",
     vlabel => "RPM",
+    category => "sensors",
     args => "--base 1000 -l 0",
     denominator => 1,
     fields => {}
@@ -90,6 +92,7 @@ $plugin->add_graphs
    {
     title => "Temperatures",
     vlabel => "Degrees Celsius",
+    category => "sensors",
     args => "--base 1000 -l 0",
     denominator => 1000, # milliCelsius -> Celsius
     fields => {}
@@ -98,6 +101,7 @@ $plugin->add_graphs
    {
     title => "Currents",
     vlabel => "A",
+    category => "sensors",
     args => "--base 1000 -l 0",
     denominator => 1000, # milliAmperes -> Amperes
     fields => {}
@@ -106,6 +110,7 @@ $plugin->add_graphs
    {
     title => "Power",
     vlabel => "W",
+    category => "sensors",
     args => "--base 1000 -l 0",
     denominator => 1000000, # microWatts -> Watts
     fields => {}
@@ -114,11 +119,13 @@ $plugin->add_graphs
    {
     title => "Humidity",
     vlabel => "%",
+    category => "sensors",
     args => "--base 1000 -l 0 -u 100",
     denominator => 1,
     fields => {}
    },
   );
+
 
 foreach my $devdir (@devdirs) {
   my $devname = basename($devdir);
@@ -141,7 +148,7 @@ foreach my $devdir (@devdirs) {
     my $graphid = clean_fieldname("$devname $name");
     my $path = "$devdir/$name";
 
-    my $denominator = $plugin->graphs->{"hwmon_" . $type}->{denominator};
+    my $denominator = $plugin->{graphs}->{"hwmon_" . $type}->{denominator};
 
     my ($label) = readarray($path . "_label") || (($devname || "") . " $name");
 
@@ -160,7 +167,7 @@ foreach my $devdir (@devdirs) {
     my ($val) = readarray($path . "_input");
     $val /= $denominator if $val;
 
-    $plugin->graphs->{"hwmon_" . $type}->{fields}->{$graphid} =
+    $plugin->{graphs}->{"hwmon_" . $type}->{fields}->{$graphid} =
       {
        label => $label,
        warning  => ($lwarn || $hwarn ) ? "$lwarn:$hwarn" : undef,

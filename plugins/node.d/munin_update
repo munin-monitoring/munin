@@ -12,7 +12,7 @@ Munin master servers.
 
 =head1 CONFIGURATION
 
-Normaly needs no configuration.  You may configure it with the
+Normally needs no configuration.  You may configure it with the
 following parameter:
 
   [munin*]

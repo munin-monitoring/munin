@@ -14,7 +14,7 @@ No configuration
 =head2 DESCRIPTION
 
 This will report back the number of processes currently running on a
-server.  By defualt it will report back the total number of processes
+server.  By default it will report back the total number of processes
 running (global).  Optionally you can edit the script and add items to
 look for to the "lookFor" array.  These should be simple things that
 can be grep'd for.

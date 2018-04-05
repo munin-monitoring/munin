@@ -270,7 +270,7 @@ sub handle_request
 
 		my $sth_cat;
 		if ($category eq 'other') {
-			# account for those that explictly mention 'other' as category
+			# account for those that explicitly mention 'other' as category
 			$sth_cat = $dbh->prepare_cached(
 				"SELECT DISTINCT s.name, s.service_title FROM service s
 				LEFT JOIN service_categories sc ON s.id = sc.id

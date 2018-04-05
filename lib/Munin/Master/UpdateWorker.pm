@@ -186,7 +186,10 @@ sub do_work {
 
 		$last_timestamp = $node->fetch_service_data($plugin,
 			sub {
-				$self->uw_handle_fetch($plugin, $now, $update_rate, @_);
+				# First argument is the plugin name to be overrided when multigraphing
+				my $plugin_name = shift;
+
+				$self->uw_handle_fetch($plugin_name, $now, $update_rate, @_);
 			}
 		);
 	    } # for @plugins
@@ -536,7 +539,7 @@ sub set_spoolfetch_timestamp {
 	DEBUG "[DEBUG] set_spoolfetch_timestamp($timestamp)";
 
 	# Using the last timestamp sended by the server :
-	# -> It can be be different than "now" to be able to process the backlock slowly
+	# -> It can be different than "now" to be able to process the backlock slowly
 	$self->{state}{spoolfetch} = $timestamp;
 }
 
@@ -578,6 +581,12 @@ sub round_to_granularity {
 sub uw_handle_config {
 	my ($self, $plugin, $now, $data, $last_timestamp) = @_;
 
+	# Protect oneself against multiple, conflicting multigraphs
+	if ($self->{__SEEN_PLUGINS__}{$plugin} ++) {
+		WARN "uw_handle_config: $plugin is already configured, skipping";
+		return $last_timestamp;
+	}
+
 	$self->{dbh}->begin_work();
 
 	# Build FETCH data, just in case of dirty_config.
@@ -617,11 +626,11 @@ sub uw_handle_config {
 		my $ds_config = $fields{$ds_name};
 		my $ds_id = $ds_ids->{$ds_name};
 
-		my $first_epoch = time; # XXX - we should be able to have some delay in the past for spoolfetched plugins
+		my $first_epoch = time - 3600; # XXX - we should be able to have some delay in the past for spoolfetched plugins
 		my $rrd_file = $self->_create_rrd_file_if_needed($plugin, $ds_name, $ds_config, $first_epoch);
 
 		# Update the RRD file
-		# XXX - Should be handled in a stateful way, as now it is reconstructed everytime
+		# XXX - Should be handled in a stateful way, as now it is reconstructed every time
 		my $dbh = $self->{dbh};
 		my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 		$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
@@ -652,6 +661,12 @@ sub uw_handle_fetch {
 	# timestamp == 0 means "Nothing was updated"
 	my $last_timestamp = 0;
 
+	# Protect oneself against multiple, conflicting multigraphs
+	if ($self->{__SEEN_PLUGINS_FETCH__}{$plugin} ++) {
+		WARN "uw_handle_fetch $plugin is already configured, skipping";
+		return $last_timestamp;
+	}
+
 	my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
 
 	# Process all the data in-order
@@ -674,6 +689,7 @@ sub uw_handle_fetch {
 
 		# Update all data-driven components: State, RRD, Graphite
 		my $ds_id = $self->_db_state_update($plugin, $field, $when, $value);
+	        DEBUG "[DEBUG] ds_id($plugin, $field, $when, $value) = $ds_id";
 
 		my ($rrd_file, $rrd_field);
 		{
@@ -699,6 +715,7 @@ sub uw_handle_fetch {
 			"value" => [ $value, ],
 			"when" => [ $when, ],
 		};
+		DEBUG "[DEBUG] self->_update_rrd_file($rrd_file, $field, $ds_values";
 		$self->_update_rrd_file($rrd_file, $field, $ds_values);
 
 	}
@@ -1068,8 +1085,8 @@ sub _get_rrd_data_source_with_defaults {
 	    min => 'U',
 	    max => 'U',
 
-	    update_rate => 300,
-	    graph_data_size => 'normal',
+	    update_rate => ($config->{update_rate} || 300),
+	    graph_data_size => ($config->{graph_data_size} || "normal"),
     };
     for my $key (keys %$data_source) {
 	    $ds_with_defaults->{$key} = $data_source->{$key};
@@ -1145,13 +1162,18 @@ sub _create_rrd_file {
               "RRA:AVERAGE:0.5:288:450", # 450 days, resolution 1 day
               "RRA:MIN:0.5:288:450",
               "RRA:MAX:0.5:288:450");
-    }
-    elsif ($resolution eq 'huge') {
+    } elsif ($resolution eq 'huge') {
 	$update_rate = 300; # 'huge' means hard coded RRD $update_rate
         push (@args,
               "RRA:AVERAGE:0.5:1:115200",  # resolution 5 minutes, for 400 days
               "RRA:MIN:0.5:1:115200",
               "RRA:MAX:0.5:1:115200");
+    } elsif ($resolution eq 'debug') {
+	$update_rate = 300; # 'debug' means hard coded RRD $update_rate
+        push (@args,
+              "RRA:AVERAGE:0.5:1:42",  # resolution 5 minutes, for 42 steps
+              "RRA:MIN:0.5:1:42",
+              "RRA:MAX:0.5:1:42");
     } elsif ($resolution =~ /^custom (.+)/) {
         # Parsing resolution to achieve computer format as defined on the RFC :
         # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB
@@ -1314,7 +1336,7 @@ sub _update_rrd_file {
 		# RRDCACHED only takes about 4K worth of commands. If the commands is
 		# too large, we have to break it in smaller calls.
 		#
-		# Note that 32 is just an arbitrary choosed number. It might be tweaked.
+		# Note that 32 is just an arbitrary chosen number. It might be tweaked.
 		#
 		# For simplicity we only call it with 1 update each time, as RRDCACHED
 		# will buffer for us as suggested on the rrd mailing-list.

@@ -77,6 +77,7 @@ my $pg = Munin::Plugin::Pgsql->new(
                      UNION ALL
                     SELECT 'rollback',sum(pg_stat_get_db_xact_rollback(oid)) FROM pg_database %%FILTER%%",
     wildcardfilter => "WHERE datname=?",
+    paramdatabase  => 1,
     configquery    => [
         "VALUES ('commit','Committed transactions'),('rollback','Rolled back transactions')",
         [

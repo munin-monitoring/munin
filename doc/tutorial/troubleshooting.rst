@@ -78,7 +78,7 @@ Debugging Plugins
 Which plugins are enabled on the node?
 --------------------------------------
 
-Does :ref:`munin-node` recognize any plugins? Try issuing the command ``list`` (beeing connected to the agent) and a (long) list of plugins should show.
+Does :ref:`munin-node` recognize any plugins? Try issuing the command ``list`` (being connected to the agent) and a (long) list of plugins should show.
 
 ::
 
@@ -205,7 +205,7 @@ Run :ref:`munin-update` as user ``munin`` on the Munin master machine.
 ::
 
   # su -s /bin/bash munin
-  $ /usr/share/munin/munin-update --debug --nofork --stdout --host foo.example.com --service df
+  $ /usr/share/munin/munin-update --debug --nofork --host foo.example.com --service df
 
 You should get a line like this:
 
@@ -223,7 +223,7 @@ If one of these steps does not work, something is probably wrong with the plugin
 
  #. Does Munin (:ref:`munin-cron` and its children) write values into RRD files? Hint: ``rrdtool fetch [rrd file] AVERAGE``
 
- #. Does the plugin use legal field names?  See `Notes on Field names <http://munin-monitoring.org/wiki/notes_on_datasource_names>`_.
+ #. Does the plugin use legal field names?  See :ref:`Notes on Field names <notes-on-fieldnames>`.
 
  #. In case you `loan data <http://munin-monitoring.org/wiki/LoaningData>`_ from other graphs, check that the `fieldname.type <http://munin-monitoring.org/wiki/fieldname.type>`_ is set properly. See `Munin file names <http://munin-monitoring.org/wiki/MuninFileNames>`_ for a quick reference on what any error messages in the logs might indicate.
 
@@ -277,12 +277,12 @@ The graphs are empty
 Other mumbo-jumbo
 -----------------
 
- * Run the different stages in :ref:`munin-cron` manually, using ``--debug``, ``--nofork``, ``--stdout``, something like this:
+ * Run the different stages in :ref:`munin-cron` manually, using ``--debug``, ``--nofork``, something like this:
 
 ::
 
   # su - munin -c "/usr/lib/munin/munin-update \
-      --debug --nofork --stdout \
+      --debug --nofork \
       --host foo.example.com \
       --service df"
 

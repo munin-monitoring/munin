@@ -16,10 +16,13 @@ use Storable qw(nfreeze thaw);
 my $poll_interval = 300;
 
 # Graph width defaults to 400 in Munin 1.4
-my $graph_width = $ENV{'graph_width'} ? $ENV{'graph_width'} : 400;
+my $default_graph_width = 400;
 
-# Should lables be trimmed to fit graph width?
-my $trim_labels = $ENV{'trim_labels'};
+# unspecified/empty: use munin's default graph width
+# zero: calculate the graph width depending on the length of the disk labels
+# non-zero: specify the fixed graph width; long device labels may get trimmed
+my $graph_width = $ENV{'graph_width'};
+$graph_width = undef if (defined($graph_width) and ($graph_width eq ''));
 
 my $plugin_name = $Munin::Plugin::me;
 
@@ -27,7 +30,10 @@ my $plugin_name = $Munin::Plugin::me;
 need_multigraph();
 
 # Handle munin 'autoconf' command
-do_autoconf() if ( $ARGV[0] && $ARGV[0] eq 'autoconf' );
+if ( $ARGV[0] && $ARGV[0] eq 'autoconf' ) {
+    do_autoconf();
+    exit 0;
+}
 
 # Fetch current counter values
 my %cur_diskstats = fetch_device_counters();
@@ -39,14 +45,16 @@ filter_device_list( \%cur_diskstats );
 # This can only be done after getting the device data
 if ( defined $ARGV[0] && $ARGV[0] eq 'config' ) {
     do_config();
+    # keep going on with data output, if "dirty config" is enabled
+    exit 0 unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 );
 }
 
 # Restore data from previous run
 my ( $prev_time, %prev_diskstats );
 eval {
-	# Using eval, if it breaks while retrieve, $R is still undef.
-	# No need to unlink() it, since it will be overriden anyway.
-	( $prev_time, %prev_diskstats ) = choose_old_state();
+    # Using eval, if it breaks while retrieve, $R is still undef.
+    # No need to unlink() it, since it will be overridden anyway.
+    ( $prev_time, %prev_diskstats ) = choose_old_state();
 };
 
 # Persist state from current run
@@ -170,7 +178,7 @@ sub subtract_wrapping_numbers {
 
 # calculate_values
 #
-# Calculates all data that get's graphed
+# Calculates all data that gets graphed
 
 sub calculate_values {
     my ( $prev_time, $prev_stats, $cur_stats ) = @_;
@@ -462,8 +470,8 @@ sub parse_diskstats {
         ( $devstat{'short_pretty_device_name'} ) =
           $pretty_device =~ m#/?([^/]+)$#;
 
-        if ($trim_labels) {
-
+        if (defined($graph_width) and ($graph_width != 0)) {
+            # a specific graph width was requested
             $devstat{'pretty_device_name'} =
               trim_label( 'pos', $devstat{'pretty_device_name'} );
             $devstat{'short_pretty_device_name'} =
@@ -658,11 +666,9 @@ sub do_autoconf {
     if ( eval { %stats = parse_diskstats() } && keys %stats ) {
 
         print "yes\n";
-        exit 0;
     }
     else {
-        print "no\n";
-        exit 1;
+        print "no (failed to find disk statistics in sysfs or procfs)\n";
     }
 }
 
@@ -670,8 +676,6 @@ sub do_config {
 
     do_config_root();
     do_config_device();
-
-    exit 0;
 }
 
 # do_config_root
@@ -680,14 +684,17 @@ sub do_config {
 
 sub do_config_root {
 
-    my $config_graph_width = $graph_width;
+    my $extra_graph_settings = "";
 
     my @sorted_devices = sort_by_dm_last( keys %cur_diskstats );
 
-    # If we don't trim labels, we have to find the correct graph width to
-    # accommodate all labels
-    unless ($trim_labels) {
-
+    # Determine a suitable graph width, if trimming is disabled and
+    # graph_width is not specified (i.e. is zero).
+    if (not defined($graph_width)) {
+        # use munin's default behaviour for the graph width
+        # Thus we do not need additional "graph" parameters.
+    } elsif (defined($graph_width) and ($graph_width == 0)) {
+        # calculate a suitable graph width and enforce it
         my @short_labels =
           map { $cur_diskstats{$_}->{'short_pretty_device_name'} }
           keys %cur_diskstats;
@@ -699,10 +706,14 @@ sub do_config_root {
           find_required_graph_width( 'posneg', @short_labels );
         my $graph_width_long = find_required_graph_width( 'pos', @long_labels );
 
-        $config_graph_width =
+        my $minimum_graph_width =
             $graph_width_short > $graph_width_long
           ? $graph_width_short
           : $graph_width_long;
+        $extra_graph_settings .= "graph_width $minimum_graph_width\n";
+    } else {
+        # the width of the graph was specified explicitly
+        $extra_graph_settings .= "graph_width $graph_width\n";
     }
 
     # Print config for latency
@@ -713,8 +724,7 @@ graph_title Disk latency per device
 graph_args --base 1000
 graph_vlabel Average IO Wait (seconds)
 graph_category disk
-graph_width $config_graph_width
-
+$extra_graph_settings
 EOF
 
     for my $device (@sorted_devices) {
@@ -739,9 +749,8 @@ graph_title Utilization per device
 graph_args --base 1000 --lower-limit 0 --upper-limit 100 --rigid
 graph_vlabel % busy
 graph_category disk
-graph_width $config_graph_width
 graph_scale no
-
+$extra_graph_settings
 EOF
 
     for my $device (@sorted_devices) {
@@ -766,9 +775,8 @@ graph_title Throughput per device
 graph_args --base 1024
 graph_vlabel Bytes/\${graph_period} read (-) / write (+)
 graph_category disk
-graph_width $config_graph_width
 graph_info This graph shows averaged throughput for the given disk in bytes.  Higher throughput is usually linked with higher service time/latency (separate graph).  The graph base is 1024 yielding Kibi- and Mebi-bytes.
-
+$extra_graph_settings
 EOF
 
     for my $device (@sorted_devices) {
@@ -797,8 +805,7 @@ graph_title Disk IOs per device
 graph_args --base 1000
 graph_vlabel IOs/\${graph_period} read (-) / write (+) 
 graph_category disk
-graph_width $config_graph_width
-
+$extra_graph_settings
 EOF
 
     for my $device (@sorted_devices) {
@@ -833,9 +840,9 @@ sub do_config_device {
         my $pretty_device = $cur_diskstats{$device}->{'pretty_device_name'};
         my $graph_id      = $cur_diskstats{$device}->{'graph_id'};
 
-	# warning levels
-	my $avgrdwait_warning = $ENV{'avgrdwait_warning'} || '0:3';
-	my $avgwrwait_warning = $ENV{'avgwrwait_warning'} || '0:3';
+        # warning levels
+        my $avgrdwait_warning = $ENV{'avgrdwait_warning'} || '0:3';
+        my $avgwrwait_warning = $ENV{'avgwrwait_warning'} || '0:3';
 
         if ( $cur_diskstats{$device}->{'does_latency'} ) {
 
@@ -980,8 +987,8 @@ sub sort_by_dm_last {
     }
 
     return
-	( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @non_dm ),
-	( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @dm ),
+        ( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @non_dm ),
+        ( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @dm ),
     ;
 }
 
@@ -1069,6 +1076,7 @@ sub calculate_pixels {
           $graph_border_width;
     }
     elsif ( $mode eq 'available_characters' ) {
+        # this mode is only used if "graph_width" is non-zero
         $return_data =
           abs( ( $graph_width + $graph_border_width ) / $pixels_per_character )
           - $padding_characters - $data_characters;
@@ -1098,11 +1106,10 @@ sub find_required_graph_width {
 
     my $required_graph_width =
       calculate_pixels( 'required_width', $type, $longest_label_length );
-    return $graph_width if ( $required_graph_width <= $graph_width );
+    return $default_graph_width if ( $required_graph_width <= $default_graph_width );
 
     # Return sufficient graph_width in 50 pixel increments
-    return $graph_width +
-      ( ceil( ( $required_graph_width - $graph_width ) / 50 ) * 50 );
+    return ceil( $required_graph_width / 50 ) * 50;
 }
 
 # trim_label
@@ -1176,14 +1183,24 @@ further information).
 
 =head2 Graph width and labels
 
-This plugin will increase the graph_width dynamically to accommodate
-longer-than-normal device names. You can disable this behavior by
-setting the B<trim_labels> environment variable. Additionally, you can
-specify a fixed graph_width for the graphs.
+Device name labels tend to grow in length. Thus this plugin implements
+(optional) dynamic resizing based on the the B<graph_width> environment
+variable:
+* (default) B<graph_width> is empty/undefined:
+  Munin uses the default width (globally configurable) for the graph.
+  Long names can make at it a bit harder to read the columns. This
+  should work well for different munin themes on different devices.
+* B<graph_width> is non-zero:
+  The graphs will be fixed at the given B<graph_width>.
+  Device label names are truncated, if necessary.  The custom graph
+  width may break the visualization for some themes on some devices.
+* B<graph_width> is zero:
+  The graph width is determined automatically based on the length of
+  device name labels.  The custom graph width may break the
+  visualization for some themes on some devices.
 
   [diskstats]
     # Set graph_width to 450, device names which are longer get trimmed
-    env.trim_labels yes
     env.graph_width 450
 
 

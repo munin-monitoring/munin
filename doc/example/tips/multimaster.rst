@@ -21,7 +21,7 @@ nodes.
 Before going that road, you should make sure to check other options
 first, like changing the number of update threads, and having rrdcached.
 
-An other option you might consider, is using munin-async. It requires
+Another option you might consider, is using munin-async. It requires
 modifications on all nodes, so it might not be an option, but I felt
 compeled to mention it. If you can't easily have shared nfs, or if you
 might have connectivity issues between master and some node, async would
@@ -33,7 +33,7 @@ to have **all** nodes in groups.
 Overview
 ========
 
-Munin-Master runs differents scripts via the cron script (munin-cron).
+Munin-Master runs different scripts via the cron script (munin-cron).
 
 ``munin-update``
 	is the only part actually connecting to the nodes. It gathers

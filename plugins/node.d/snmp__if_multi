@@ -47,7 +47,7 @@ It may show something like this:
   IF-MIB::ifType.123 = INTEGER: l2vlan(135)
 
 propVirtual or l2vlan is usually used for VLAN interfaces.  Tunnel
-would normaly be for VPNs.  A minor horde of different interface types
+would normally be for VPNs.  A minor horde of different interface types
 are supposted, please see IANAifType-MIB (on your system or find with
 Google) for a full list.
 
@@ -696,7 +696,7 @@ sub do_config_if {
 
 
 sub do_fetch_root {
-    # Construct root graphs fro the if_bytes and if_error spaces
+    # Construct root graphs for the if_bytes and if_error spaces
 
     my $in = 0;
     my $out = 0;

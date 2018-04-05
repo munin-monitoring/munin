@@ -36,7 +36,7 @@ proc="access close commit create delegpurge delegreturn getattr getfh link lock 
 	savefh secinfo setattr setcltid setcltidconf verify write rellockowner"
 
 if [ "$1" = "autoconf" ]; then
-	if [ -f "$NFSD" ]; then
+	if [ -f "$NFSD" ] && grep -sq proc4ops "$NFSD"; then
 		echo yes
 		exit 0
 	else
@@ -54,6 +54,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title NFSv4 Server'
 	echo 'graph_args --base 1000 -l 0'
+	# shellcheck disable=SC2016
 	echo 'graph_vlabel requests / ${graph_period}'
 	echo 'graph_total total'
 	echo 'graph_category NFS'
@@ -61,12 +62,12 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-i=6;
+i=6
 
 for a in $proc; do
 	echo -n "$a.value "
-	grep proc4ops $NFSD \
-		| cut -f $i -d ' ' \
+	grep proc4ops "$NFSD" \
+		| cut -f "$i" -d ' ' \
 		| awk '{print $1}'
-	i=$(expr $i + 1)
+	i=$((i + 1))
 done

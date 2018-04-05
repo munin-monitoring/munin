@@ -37,8 +37,6 @@ To send email alerts directly from Munin use a command such as this:
 
  contact.email.command mail -s "Munin-notification for ${var:group} :: ${var:host}" your@email.address.here
 
-For an example with explanation please look at
-`Munin alert email notification <http://blog.edseek.com/archives/2006/07/13/munin-alert-email-notification/>`_
 
 Syslog Alert
 ------------
@@ -268,7 +266,7 @@ The ``${var:value}`` variables get the correct values from munin-limits prior to
 
 Then, the ``${var:*range}`` variables are set from {fieldname}.warning and {fieldname}.critical.
 
-Based on those, ``{fieldname}.label`` occurences where warning or critical levels are breached
+Based on those, ``{fieldname}.label`` occurrences where warning or critical levels are breached
 or unknown are summarized into the ``${var:*fields}`` variables.
 
 .. _alert_variables_example_usage:

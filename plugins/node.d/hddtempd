@@ -72,6 +72,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
         print "graph_title HDD temperature\n";
 	print "graph_args --base 1000 -l 0\n";
 	print "graph_vlabel Degrees $scale\n";
+	print "graph_category sensors\n";
 
 	my @data = get_data();
 

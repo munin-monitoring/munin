@@ -45,7 +45,7 @@ tomcat-users.xml example:
 
 =head1 AUTHOR
 
-Rune Nordbøe Skillingstad <runesk@linpro.no>
+Rune NordbÃ¸e Skillingstad <runesk@linpro.no>
 
 =head1 LICENSE
 
@@ -59,7 +59,10 @@ GPLv2
 =cut
 
 use strict;
+use warnings;
+
 use Munin::Plugin::HTTP;
+use URI::Escape;
 
 my $ret = undef;
 
@@ -74,15 +77,15 @@ my $HOST     = exists $ENV{'host'}     ? $ENV{'host'}     : "127.0.0.1";
 my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
 my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
 
-my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
+my $url = sprintf $URL, uri_escape($USER), uri_escape($PASSWORD), $HOST, $PORT;
 
 if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
     if($ret) {
 	print "no ($ret)\n";
 	exit 0;
     }
-    my $repsonse = $UA->get($url);
-    if($repsonse->is_success and $repsonse->content =~ /<status>.*<\/status>/im) {
+    my $response = $UA->get($url);
+    if($response->is_success and $response->content =~ /<status>.*<\/status>/im) {
 	print "yes\n";
 	exit 0;
     } else {
@@ -96,13 +99,17 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
     print "graph_args --base 1024 -l 0\n";
     print "graph_vlabel Bytes\n";
     print "graph_category tomcat\n";
-    print "graph_order free used max\n";
+    print "graph_order used free max OldGenUsed OldGenMax\n";
     print "free.label free bytes\n";
-    print "free.draw AREA\n";
+    print "free.draw STACK\n";
     print "used.label used bytes \n";
-    print "used.draw STACK\n";
+    print "used.draw AREA\n";
     print "max.label maximum bytes\n";
     print "max.draw LINE2\n";
+    print "OldGenUsed.label Old Gen used bytes\n";
+    print "OldGenUsed.draw LINE1\n";
+    print "OldGenMax.label Old Gen max bytes\n";
+    print "OldGenMax.draw LINE2\n";
     exit 0;
 }
 
@@ -122,4 +129,13 @@ if($xml->{'jvm'}->{'memory'}->{'free'} &&
     print "free.value U\n";
     print "used.value U\n";
     print "max.value U\n";
+}
+
+if( $xml->{'jvm'}->{'memorypool'}->{'PS Old Gen'}->{'usageUsed'} &&
+    $xml->{'jvm'}->{'memorypool'}->{'PS Old Gen'}->{'usageMax'}) {
+    print "OldGenUsed.value " . $xml->{'jvm'}->{'memorypool'}->{'PS Old Gen'}->{'usageUsed'} . "\n";
+    print "OldGenMax.value " . $xml->{'jvm'}->{'memorypool'}->{'PS Old Gen'}->{'usageMax'} . "\n";
+} else {
+    print "OldGenUsed.value U\n";
+    print "OldGenMax.value U\n";
 }

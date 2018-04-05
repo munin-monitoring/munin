@@ -167,6 +167,8 @@ A deeper hierarchy can be specified by using a list of groups, separated with ";
 ``[site1;customer2;production;mail.customer2.example.org]``.
 
 
+.. _master-conf-node-directives:
+
 NODE DIRECTIVES
 ---------------
 
@@ -223,6 +225,8 @@ only to that node.
 
    If you make a virtual node which borrow data from real nodes for aggregate graphs, set this to
    "no" for that node.
+
+.. _master-conf-plugin-directives:
 
 PLUGIN DIRECTIVES
 -----------------

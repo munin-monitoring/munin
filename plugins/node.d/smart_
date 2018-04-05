@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Wildcard-plugin to monitor S.M.A.R.T attribute values through smartctl,
 # which is part of smartmontools package:
@@ -17,7 +17,8 @@
 # Parameters
 #       smartpath     - Specify path to smartctl program (Default: /usr/sbin/smartctl)
 #       smartargs     - Override '-a' argument passed to smartctl with '-A -i'+smartargs
-#       ignorestandby - Ignore the standby state of the drive and perform SMART query. Default: False
+#       ignorestandby - Ignore the standby state of the drive and perform SMART query.
+#                       Default: False
 #       ignoreexit    - Bits in smartctl exit code to ignore, e.g. 64. Default: 0
 #
 # Parameters can be specified on a per-drive basis, eg:
@@ -50,7 +51,7 @@
 #                 - smartctl path can be passed through "smartpath" environment variable
 #                 - Additional smartctl args can be passed through "smartargs" environment variable
 # v1.7 29/11/2004 - Add suggest capabilities for NetBSD, OpenBSD, FreeBSD and SunOS.
-#                 - Allow to override completely the smartctl arguments with "smartargs"
+#                 - Allow one to override completely the smartctl arguments with "smartargs"
 # v1.8 16/02/2005 - Exit status field now only triggers warnings, not criticals.
 # v1.9 07/07/2005 - Allow to query several drives on the same 3ware card.
 #                 - Correct a bug when '-i' was not listed in smartargs
@@ -84,346 +85,395 @@
 #
 #
 # Magic markers
-#%# capabilities=autoconf suggest
-#%# family=auto
+#  #%# capabilities=autoconf suggest
+#  #%# family=auto
 
-import os, sys, string, pickle
+import os
+import sys
+import string
+import pickle
 from math import log
 
 # Increase verbosity (True/False) -> use munin-run --pidebug
-verbose=True if os.getenv('MUNIN_DEBUG') == '1' else False
+verbose = True if os.getenv('MUNIN_DEBUG') == '1' else False
 
-## You may edit the following 3 variables
+# You may edit the following 3 variables
 # Suppress SMART warnings (True/False)
-report_warnings=True
+report_warnings = True
 # You may not modify anything below this line
 
-plugin_version="2.2"
-statefiledir=os.environ['MUNIN_PLUGSTATE']
+plugin_version = "2.2"
+statefiledir = os.environ['MUNIN_PLUGSTATE']
+
 
 def verboselog(s):
-    global plugin_name
-    sys.stderr.write(plugin_name+': '+s+'\n')
+    if verbose:
+        sys.stderr.write('{}: {}\n'.format(plugin_name, s))
 
-if not verbose :
-    verboselog = lambda s: None
 
 def read_values(hard_drive):
-    global smart_values, emptyoutput
-    try :
+    global emptyoutput
+    try:
         verboselog('Reading S.M.A.R.T values')
-        os.putenv('LC_ALL','C')
-        device='/dev/'+hard_drive
+        os.putenv('LC_ALL', 'C')
+        device = '/dev/' + hard_drive
         if not os.path.exists(device):
-            device='/dev/disk/by-id/'+hard_drive
-        smart_output=os.popen(os.getenv('smartpath','/usr/sbin/smartctl')+' '+os.getenv('smartargs','-a')+(os.getenv('ignorestandby',False) and ' ' or ' -n standby ')+'-A -i '+device)
-        read_values=0
-        lastline=None
-        for l in smart_output :
-            lastline=l
-            if l[:-1]=='' :
-                read_values=0
-            elif l[:13]=='Device Model:' or l[:7]=='Device:' :
-                model_list=string.split(string.split(l,':')[1])
-                try: model_list.remove('Version')
-                except : None
-                model=string.join(model_list)
-            if read_values==1 :
-                smart_attribute=string.split(l)
-                smart_values[string.replace(smart_attribute[1],'-','_')]={"value":smart_attribute[3],"threshold":smart_attribute[5]}
-            elif l[:18]=="ID# ATTRIBUTE_NAME" :
+            device = '/dev/disk/by-id/' + hard_drive
+        smart_output = (os.popen(os.getenv('smartpath', '/usr/sbin/smartctl') + ' '
+                        + os.getenv('smartargs', '-a')
+                        + (os.getenv('ignorestandby', False) and ' ' or ' -n standby ')
+                        + '-A -i ' + device))
+        read_values = 0
+        lastline = None
+        for l in smart_output:
+            lastline = l
+            if l[:-1] == '':
+                read_values = 0
+            elif l[:13] == 'Device Model:' or l[:7] == 'Device:':
+                model_list = l.split(':')[1].split()
+                try:
+                    model_list.remove('Version')
+                except ValueError:
+                    pass
+                model = ''.join(model_list)
+            if read_values == 1:
+                smart_attribute = l.split()
+                smart_values[smart_attribute[1].replace('-', '_')] = {
+                    "value": smart_attribute[3], "threshold": smart_attribute[5]}
+            elif l[:18] == "ID# ATTRIBUTE_NAME":
                 # Start reading the Attributes block
-                read_values=1
-        exit_status=smart_output.close()
-        if exit_status!=None :
+                read_values = 1
+        exit_status = smart_output.close()
+        if exit_status is not None:
             # smartctl exit code is a bitmask, check man page.
-            num_exit_status=int(exit_status/256) # Python convention
-            num_exit_status=num_exit_status & ~int(os.getenv('ignoreexit',0)) # Allow to turn off warnings for some bits
-        else :
-            num_exit_status=0
-        if num_exit_status!=0 :
-            if int(log(num_exit_status,2))<=2 :  # bit code
-                verboselog('smartctl cannot access S.M.A.R.T values on drive '+hard_drive+'. Command exited with code '+str(num_exit_status)+' (bit '+str(int(log(num_exit_status,2)))+')')
+            num_exit_status = int(exit_status/256)  # Python convention
+            # Allow to turn off warnings for some bits
+            num_exit_status = num_exit_status & ~int(os.getenv('ignoreexit', 0))
+        else:
+            num_exit_status = 0
+        if num_exit_status != 0:
+            if int(log(num_exit_status, 2)) <= 2:  # bit code
+                verboselog('smartctl cannot access S.M.A.R.T values on drive {}. Command exited '
+                           'with code {} (bit {})'
+                           .format(hard_drive, num_exit_status, int(log(num_exit_status, 2))))
                 verboselog(lastline[:-1])
-            else :
-                verboselog('smartctl exited with code '+str(num_exit_status)+' (bit '+str(int(log(num_exit_status,2)))+'). '+hard_drive+' may be FAILING RIGHT NOW!')
-    except :
-        verboselog('Cannot access S.M.A.R.T values! Check user rights or proper smartmontools installation/arguments.')
+            else:
+                verboselog('smartctl exited with code {} (bit {}). {} may be FAILING RIGHT NOW!'
+                           .format(num_exit_status, int(log(num_exit_status, 2)), hard_drive))
+    except Exception as exc:
+        verboselog('Cannot access S.M.A.R.T values ({})! Check user rights or proper '
+                   'smartmontools installation/arguments.'.format(exc))
         sys.exit(1)
-    if smart_values=={} :
+    if smart_values == {}:
         verboselog('Can\'t find any S.M.A.R.T values in smartctl output!')
-        emptyoutput=True
-        #sys.exit(1)
-    else : emptyoutput=False
-    smart_values["smartctl_exit_status"]={"value":str(num_exit_status),"threshold":"1"}
-    try : smart_values["model"]=model
+        emptyoutput = True
+        # sys.exit(1)
+    else:
+        emptyoutput = False
+    smart_values["smartctl_exit_status"] = {"value": str(num_exit_status), "threshold": "1"}
+    try:
+        smart_values["model"] = model
     # For some reason we may have no value for "model"
-    except : smart_values["model"]="unknown"
-    return(exit_status)
+    except NameError:
+        smart_values["model"] = "unknown"
+    return exit_status
 
-def open_state_file(hard_drive,mode) :
-    global statefiledir
-    return open(statefiledir+'/smart-'+string.join(hard_drive,"-")+'.state',mode)
 
-def update_state_file(hard_drive) :
+def open_state_file(hard_drive, mode):
+    return open(statefiledir+'/smart-'+'-'.join(hard_drive)+'.state', mode)
+
+
+def update_state_file(hard_drive):
     try:
         verboselog('Saving statefile')
-        pickle.dump(smart_values,open_state_file(hard_drive,"w"))
-    except :
-        verboselog('Error trying to save state file! Check access rights')
+        pickle.dump(smart_values, open_state_file(hard_drive, "wb"))
+    except Exception as exc:
+        verboselog('Error trying to save state file ({})! Check access rights'.format(exc))
 
-def print_plugin_values(hard_drive) :
-    global emptyoutput, smart_values
+
+def print_plugin_values(hard_drive):
     if not emptyoutput:
         verboselog('Printing S.M.A.R.T values')
-        for key in smart_values.keys() :
-            if key=="model" : continue
+        for key in smart_values.keys():
+            if key == "model":
+                continue
             print(key+".value "+smart_values[key]["value"])
     else:
-        print_unknown_from_statefile(hard_drive,smart_values)
+        print_unknown_from_statefile(hard_drive)
 
-def print_config(hard_drive) :
-    global report_warnings, smart_values, statefiledir
-    if os.path.exists(statefiledir+'/smart-'+string.join(hard_drive,"-")+'.state'):
-        try :
-            verboselog('Try to recall previous S.M.A.R.T attributes for '+string.join(hard_drive,","))
-            smart_values_state=pickle.load(open_state_file(hard_drive,"r"))
-        except :
-            verboselog('Error opening existing state file!')
+
+def print_config(hard_drive):
+    if os.path.exists(statefiledir+'/smart-'+'-'.join(hard_drive)+'.state'):
+        try:
+            verboselog('Try to recall previous S.M.A.R.T attributes for '+','.join(hard_drive))
+            smart_values_state = pickle.load(open_state_file(hard_drive, "rb"))
+        except Exception as exc:
+            verboselog('Error opening existing state file ({})!'.format(exc))
             sys.exit(1)
-    else :
+    else:
         verboselog('No state file, reading S.M.A.R.T values for the first time')
         read_values(hard_drive[0])
-        pickle.dump(smart_values,open_state_file(hard_drive,"w"))
-        smart_values_state=smart_values
+        pickle.dump(smart_values, open_state_file(hard_drive, "wb"))
+        smart_values_state = smart_values
 
     verboselog('Printing configuration')
-    print('graph_title S.M.A.R.T values for drive '+string.join(hard_drive,","))
+    print('graph_title S.M.A.R.T values for drive '+','.join(hard_drive))
     print('graph_vlabel Attribute S.M.A.R.T value')
     print('graph_args --base 1000 --lower-limit 0')
     print('graph_category disk')
-    print('graph_info This graph shows the value of all S.M.A.R.T attributes of drive '+string.join(hard_drive,",")+' ('+smart_values_state['model']+'). smartctl_exit_status is the return value of smartctl. A non-zero return value indicates an error, a potential error, or a fault on the drive.')
-    attributes=smart_values_state.keys()
-    for key in attributes :
-        if key in ['smartctl_exit_status','model'] : continue
-        print(key+'.label '+key)
-        if report_warnings: print(key+'.critical '+smart_values_state[key]["threshold"]+':')
+    print('graph_info This graph shows the value of all S.M.A.R.T attributes of drive {} ({}). '
+          'smartctl_exit_status is the return value of smartctl. A non-zero return value '
+          'indicates an error, a potential error, or a fault on the drive.'
+          .format(','.join(hard_drive), smart_values_state['model']))
+    attributes = smart_values_state.keys()
+    for key in attributes:
+        if key in ['smartctl_exit_status', 'model']:
+            continue
+        print('{}.label {}'.format(key, key))
+        if report_warnings:
+            print('{}.critical {}:'.format(key, smart_values_state[key]["threshold"]))
     print('smartctl_exit_status.label smartctl_exit_status')
-    if report_warnings: print('smartctl_exit_status.warning '+smart_values_state['smartctl_exit_status']["threshold"])
+    if report_warnings:
+        print('smartctl_exit_status.warning '
+              + smart_values_state['smartctl_exit_status']["threshold"])
 
-def print_unknown_from_statefile(hard_drive,smart_values) :
-    global statefiledir
-    if os.path.exists(statefiledir+'/smart-'+string.join(hard_drive,"-")+'.state'):
-        try :
-            verboselog('Failed to get S.M.A.R.T values from drive. Try to recall previous S.M.A.R.T attributes for '+string.join(hard_drive,","))
-            smart_values_state=pickle.load(open_state_file(hard_drive,"r"))
-        except :
-            verboselog('Error opening existing state file!')
+
+def print_unknown_from_statefile(hard_drive):
+    if os.path.exists(statefiledir + '/smart-' + '-'.join(hard_drive) + '.state'):
+        try:
+            verboselog('Failed to get S.M.A.R.T values from drive. Try to recall previous '
+                       'S.M.A.R.T attributes for '+','.join(hard_drive))
+            smart_values_state = pickle.load(open_state_file(hard_drive, "rb"))
+        except Exception as exc:
+            verboselog('Error opening existing state file ({})!'.format(exc))
             sys.exit(1)
-    else :
+    else:
         verboselog('No state file, reading S.M.A.R.T values for the first time')
         sys.exit(1)
 
     verboselog('Printing unknown values for all attributes in state file')
-    attributes=smart_values_state.keys()
-    for key in attributes :
-        if key=='model' : continue
+    attributes = smart_values_state.keys()
+    for key in attributes:
+        if key == 'model':
+            continue
         print(key+'.value U')
 
-def get_hard_drive_name() :
-    global plugin_name
-    try :
-        name=[plugin_name[plugin_name.index('_')+1:]]
-        if os.uname()[0]=="SunOS" :
-            try :
+
+def get_hard_drive_name():
+    try:
+        name = [plugin_name[plugin_name.index('_')+1:]]
+        if os.uname()[0] == "SunOS":
+            try:
                 # if hard_drive name starts with "rdsk" or "rmt", try to reconstruct the path
-                if name[0][0:4]=="rdsk":
-                    name[0]=os.path.join("rdsk",name[0][4:])
-                elif name[0][0:3]=="rmt":
-                    name[0]=os.path.join("rmt",name[0][3:])
-            except :
-                verboselog('Failed to find SunOS hard_drive')
-        if (not os.path.exists('/dev/'+name[0])) and (not os.path.exists('/dev/disk/by-id/'+name[0])):
+                if name[0][0:4] == "rdsk":
+                    name[0] = os.path.join("rdsk", name[0][4:])
+                elif name[0][0:3] == "rmt":
+                    name[0] = os.path.join("rmt", name[0][3:])
+            except Exception as exc:
+                verboselog('Failed to find SunOS hard_drive: {}'.format(exc))
+        if ((not os.path.exists('/dev/' + name[0]))
+                and (not os.path.exists('/dev/disk/by-id/' + name[0]))):
             # For 3ware cards, we have to set multiple plugins for the same hard drive name.
             # Let's see if we find a '-' in the drive name.
-            if name[0].find('-')!=-1:
+            if name[0].find('-') != -1:
                 # Put the drive name and it's number in a list
-                name=[name[0][:string.rindex(name[0],'-')],name[0][string.rindex(name[0],'-')+1:]]
+                name = [name[0][:name[0].rindex('-')], name[0][name[0].rindex('-')+1:]]
         # Chech that the drive exists in /dev
-        if (not os.path.exists('/dev/'+name[0])) and (not os.path.exists('/dev/disk/by-id/'+name[0])):
-            verboselog('/dev/(disk/by-id/)?'+name[0]+' not found!')
+        if ((not os.path.exists('/dev/' + name[0]))
+                and (not os.path.exists('/dev/disk/by-id/' + name[0]))):
+            verboselog('/dev/(disk/by-id/)?' + name[0] + ' not found!')
             sys.exit(1)
-        return(name)
-    except :
-        verboselog('No S.M.A.R.T device name found in plugin\'s symlink!')
+        return name
+    except Exception as exc:
+        verboselog('No S.M.A.R.T device name found in plugin\'s symlink ({})!'.format(exc))
         sys.exit(1)
 
-def find_smart_drives() :
-    global emptyoutput
+
+def find_smart_drives():
     # Try to autodetect Linux, *BSD, SunOS drives. Don't try to autodetect drives on a 3Ware card.
-    drives=[]
-    if os.uname()[0]=="Linux" :
+    drives = []
+    if os.uname()[0] == "Linux":
         if os.path.exists('/sys/block/'):
             # Running 2.6
-            try :
-                for drive in os.listdir('/sys/block/') :
-                    if drive[:2] in ['md','fd','lo','ra','dm'] : continue # Ignore MD, Floppy, loop , RAM and LVM devices.
-                    try :
-                        verboselog('Trying '+drive+'...')
-                        exit_status=read_values(drive)
-                        if (exit_status==None or int(log(int(exit_status/256),2))>2) and not emptyoutput:
+            try:
+                for drive in os.listdir('/sys/block/'):
+                    if drive[:2] in ['md', 'fd', 'lo', 'ra', 'dm']:
+                        continue  # Ignore MD, Floppy, loop , RAM and LVM devices.
+                    try:
+                        verboselog('Trying {} ...'.format(drive))
+                        exit_status = read_values(drive)
+                        if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
+                                and not emptyoutput):
                             drives.append(drive)
-                    except :
+                    except Exception:
                         continue
-            except :
+            except Exception:
                 verboselog('Failed to list devices in /sys/block')
-        else :
+        else:
             verboselog('Not running linux2.6, failing back to /proc/partitions')
-            try :
-                partitions=open('/proc/partitions','r')
-                L=partitions.readlines()
-                for l in L :
-                    words=string.split(l)
-                    if len(words)==0 or words[0][0] not in string.digits : continue
-                    if words[0] in ['1','9','58','254'] : continue # Ignore RAM, md, LVM and LVM2 devices
-                    if words[-1][-1] not in string.digits :
-                        try :
+            try:
+                partitions = open('/proc/partitions', 'r')
+                lines = partitions.readlines()
+                for l in lines:
+                    words = l.split()
+                    if len(words) == 0 or words[0][0] not in string.digits:
+                        continue
+                    if words[0] in ['1', '9', '58', '254']:
+                        # Ignore RAM, md, LVM and LVM2 devices
+                        continue
+                    if words[-1][-1] not in string.digits:
+                        try:
                             verboselog('Trying '+words[-1]+'...')
-                            exit_status=read_values(words[-1])
-                            if (exit_status==None or int(log(int(exit_status/256),2))>2) and not emptyoutput:
+                            exit_status = read_values(words[-1])
+                            if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
+                                    and not emptyoutput):
                                 drives.append(words[-1])
-                        except :
+                        except Exception:
                             continue
                 verboselog('Found drives in /proc/partitions ! '+str(drives))
-            except :
-                verboselog('Failed to list devices in /proc/partitions')
-    elif os.uname()[0]=="OpenBSD" :
-        try :
-            sysctl_kerndisks=os.popen('sysctl hw.disknames')
-            kerndisks=string.strip(sysctl_kerndisks.readline())
-            for drive in string.split(kerndisks[string.rindex(kerndisks,'=')+1:],',') :
-                if drive[:2] in ['md','cd','fd'] : continue # Ignore Memory Disks, CD-ROM drives and Floppy
-                try :
+            except Exception as exc:
+                verboselog('Failed to list devices in /proc/partitions: {}'.format(exc))
+    elif os.uname()[0] == "OpenBSD":
+        try:
+            sysctl_kerndisks = os.popen('sysctl hw.disknames')
+            kerndisks = sysctl_kerndisks.readline().strip()
+            for drive in kerndisks[kerndisks.rindex('=')+1:].split(','):
+                if drive[:2] in ['md', 'cd', 'fd']:
+                    # Ignore Memory Disks, CD-ROM drives and Floppy
+                    continue
+                try:
                     verboselog('Trying '+drive+'c...')
-                    exit_status=read_values(drive+'c')
-                    if (exit_status==None or int(log(int(exit_status/256),2))>2) and not emptyoutput:
+                    exit_status = read_values(drive+'c')
+                    if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
+                            and not emptyoutput):
                         drives.append(drive+'c')
-                except :
+                except Exception:
                     continue
-        except :
-            verboselog('Failed to list OpenBSD disks')
-    elif os.uname()[0]=="FreeBSD" :
-        try :
-            sysctl_kerndisks=os.popen('sysctl kern.disks')
-            kerndisks=string.strip(sysctl_kerndisks.readline())
-            for drive in string.split(kerndisks)[1:] :
-                if drive[:2] in ['md','cd','fd'] : continue # Ignore Memory Disks, CD-ROM drives and Floppy
-                try :
+        except Exception as exc:
+            verboselog('Failed to list OpenBSD disks: {}'.format(exc))
+    elif os.uname()[0] == "FreeBSD":
+        try:
+            sysctl_kerndisks = os.popen('sysctl kern.disks')
+            kerndisks = sysctl_kerndisks.readline().strip()
+            for drive in kerndisks.split()[1:]:
+                if drive[:2] in ['md', 'cd', 'fd']:
+                    # Ignore Memory Disks, CD-ROM drives and Floppy
+                    continue
+                try:
                     verboselog('Trying '+drive+'...')
-                    exit_status=read_values(drive)
-                    if (exit_status==None or int(log(int(exit_status/256),2))>2) and not emptyoutput:
+                    exit_status = read_values(drive)
+                    if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
+                            and not emptyoutput):
                         drives.append(drive)
-                except :
+                except Exception:
                     continue
-        except :
-            verboselog('Failed to list FreeBSD disks')
-    elif os.uname()[0]=="Darwin" :
-        try :
+        except Exception as exc:
+            verboselog('Failed to list FreeBSD disks: {}'.format(exc))
+    elif os.uname()[0] == "Darwin":
+        try:
             from glob import glob
-            for drivepath in glob('/dev/disk[0-9]') :
-                try :
-                    drive=os.path.basename(drivepath)
+            for drivepath in glob('/dev/disk[0-9]'):
+                try:
+                    drive = os.path.basename(drivepath)
                     verboselog('Trying '+drive+'...')
-                    exit_status=read_values(drive)
-                    if (exit_status==None or int(log(int(exit_status/256),2))>2) and not emptyoutput:
+                    exit_status = read_values(drive)
+                    if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
+                            and not emptyoutput):
                         drives.append(drive)
-                except :
+                except Exception:
                     continue
-        except :
-            verboselog('Failed to list Darwin disks')
-    elif os.uname()[0]=="NetBSD" :
-        try :
-            sysctl_kerndisks=os.popen('sysctl hw.disknames')
-            kerndisks=string.strip(sysctl_kerndisks.readline())
-            for drive in string.split(kerndisks)[2:] :
-                if drive[:2] in ['md','cd','fd'] : continue # Ignore Memory Disks, CD-ROM drives and Floppy
-                try :
-                    verboselog('Trying '+drive+'c...')
-                    exit_status=read_values(drive+'c')
-                    if (exit_status==None or int(log(int(exit_status/256),2))>2) and not emptyoutput:
-                        drives.append(drive+'c')
-                except :
+        except Exception as exc:
+            verboselog('Failed to list Darwin disks: {}'.format(exc))
+    elif os.uname()[0] == "NetBSD":
+        try:
+            sysctl_kerndisks = os.popen('sysctl hw.disknames')
+            kerndisks = sysctl_kerndisks.readline().strip()
+            for drive in kerndisks.split()[2:]:
+                if drive[:2] in ['md', 'cd', 'fd']:
+                    # Ignore Memory Disks, CD-ROM drives and Floppy
                     continue
-        except :
-            verboselog('Failed to list NetBSD disks')
-    elif os.uname()[0]=="SunOS" :
-        try :
+                try:
+                    verboselog('Trying {} ...'.format(drive))
+                    exit_status = read_values(drive + 'c')
+                    if ((exit_status is None or int(log(int(exit_status / 256), 2)) > 2)
+                            and not emptyoutput):
+                        drives.append(drive + 'c')
+                except Exception:
+                    continue
+        except Exception as exc:
+            verboselog('Failed to list NetBSD disks: {}'.format(exc))
+    elif os.uname()[0] == "SunOS":
+        try:
             from glob import glob
-            for drivepath in glob('/dev/rdsk/*s2') :
-                try :
-                    drive=os.path.basename(drivepath)
-                    verboselog('Trying rdsk'+drive+'...')
-                    exit_status=read_values('rdsk'+drive)
-                    if (exit_status==None or int(log(int(exit_status/256),2))>2) and not emptyoutput:
-                        drives.append('rdsk'+drive)
-                except :
+            for drivepath in glob('/dev/rdsk/*s2'):
+                try:
+                    drive = os.path.basename(drivepath)
+                    verboselog('Trying rdsk {} ...'.format(drive))
+                    exit_status = read_values('rdsk' + drive)
+                    if ((exit_status is None or int(log(int(exit_status / 256), 2)) > 2)
+                            and not emptyoutput):
+                        drives.append('rdsk' + drive)
+                except Exception:
                     continue
-            for drivepath in glob('/dev/rmt/*') :
-                try :
-                    drive=os.path.basename(drivepath)
-                    verboselog('Trying rmt'+drive+'...')
-                    exit_status=read_values('rmt'+drive)
-                    if (exit_status==None or int(log(int(exit_status/256),2))>2) and not emptyoutput:
-                        drives.append('rmt'+drive)
-                except :
+            for drivepath in glob('/dev/rmt/*'):
+                try:
+                    drive = os.path.basename(drivepath)
+                    verboselog('Trying rmt {} ...'.format(drive))
+                    exit_status = read_values('rmt' + drive)
+                    if ((exit_status is None or int(log(int(exit_status / 256), 2)) > 2)
+                            and not emptyoutput):
+                        drives.append('rmt' + drive)
+                except Exception:
                     continue
-        except :
+        except Exception:
             verboselog('Failed to list SunOS disks')
-    return(drives)
+    return drives
 
-### Main part ###
 
-smart_values={}
-emptyoutput=False
-plugin_name=list(os.path.split(sys.argv[0]))[1]
-verboselog('plugins\' UID: '+str(os.geteuid())+' / plugins\' GID: '+str(os.getegid()))
+""" Main part """
+
+smart_values = {}
+emptyoutput = False
+plugin_name = list(os.path.split(sys.argv[0]))[1]
+verboselog('plugins\' UID: ' + str(os.geteuid()) + ' / plugins\' GID: ' + str(os.getegid()))
 
 # Parse arguments
-if len(sys.argv)>1 :
-    if sys.argv[1]=="config" :
-        hard_drive=get_hard_drive_name()
+if len(sys.argv) > 1:
+    if sys.argv[1] == "config":
+        hard_drive = get_hard_drive_name()
         print_config(hard_drive)
         sys.exit(0)
-    elif sys.argv[1]=="autoconf" :
-        if os.path.exists(os.getenv('smartpath','/usr/sbin/smartctl')) :
+    elif sys.argv[1] == "autoconf":
+        if os.path.exists(os.getenv('smartpath', '/usr/sbin/smartctl')):
             if not find_smart_drives():
                 print('no (no drives accessible)')
-            else :
+            else:
                 print('yes')
             sys.exit(0)
-        else :
+        else:
             print('no (smartmontools not found)')
             sys.exit(0)
-    elif sys.argv[1]=="suggest" :
-        for drive in find_smart_drives() :
+    elif sys.argv[1] == "suggest":
+        for drive in find_smart_drives():
             print(drive)
         sys.exit(0)
-    elif sys.argv[1]=="version" :
+    elif sys.argv[1] == "version":
         print('smart_ Munin plugin, version '+plugin_version)
         sys.exit(0)
-    elif sys.argv[1]!="" :
+    elif sys.argv[1] != "":
         verboselog('unknown argument "'+sys.argv[1]+'"')
         sys.exit(1)
 
 # No argument given, doing the real job:
-hard_drive=get_hard_drive_name()
+hard_drive = get_hard_drive_name()
 read_values(hard_drive[0])
-if not emptyoutput: update_state_file(hard_drive)
+if not emptyoutput:
+    update_state_file(hard_drive)
 print_plugin_values(hard_drive)
 sys.exit(0)
 
 
-### The following is the smart_ plugin documentation, intended to be used with munindoc
+# The following is the smart_ plugin documentation, intended to be used with munindoc
 """
 =head1 NAME
 

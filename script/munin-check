@@ -21,10 +21,10 @@
 function usage() {
     echo "Usage: munin-check [options]
 Options:
-   -h|--help		Show this help.
-   -v|--verbose		Be verbose.
-   -f|--fix-permissions Fix the permissions of the munin dirs and files.
-   			Needs superuser rights.
+   -h|--help             Show this help.
+   -v|--verbose          Be verbose.
+   -f|--fix-permissions  Fix the permissions of the munin dirs and files.
+                         Needs superuser rights.
 
 Please don't use this script if you are using 'graph_strategy cgi'!
 It doesn't care about the right permissions for www-data yet...
@@ -34,6 +34,7 @@ It doesn't care about the right permissions for www-data yet...
 # Get options from the command line
 TEMP=$(getopt -o fhv --long fix-permissions,help,verbose -n 'munin-check' -- "$@")
 
+# shellcheck disable=SC2181
 if [[ $? -ne 0 ]]; then
     echo "Terminating..." >&2
     exit 1
@@ -42,16 +43,26 @@ fi
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
 
+PLEASE_FIXME="false"
 VERBOSE="false"
 while :; do
     case "$1" in
-	-h|--help) usage ; exit 0; shift ;;
-	-v|--verbose) VERBOSE="true"; shift;;
-	-f|--fix-permissions) PLEASE_FIXME="true" ;  shift ;;
-	--) shift ; break ;;
-	*) echo "Internal error!" ; exit 1 ;;
+        -h|--help) usage ; exit 0; shift ;;
+        -v|--verbose) VERBOSE="true"; shift;;
+        -f|--fix-permissions) PLEASE_FIXME="true" ;  shift ;;
+        --) shift ; break ;;
+        *) echo "Internal error!" ; exit 1 ;;
     esac
 done
+
+
+function msg_info() {
+    local message="$1"
+    if [ "$VERBOSE" = "true" ]; then
+        echo "$message"
+    fi
+}
+
 
 ####
 # sets owner to "@@USER@@"
@@ -60,45 +71,46 @@ function fix_owner() {
     fix_owner=$1; shift
 
     if [[ $(id -u) -eq 0 ]]; then
-	# -R is wrong, in case we're not recursing, and if we are
-	# recursing then fix_owner will be called again.  OK, that's
-	# slower, but still more correct.
-	chown $fix_owner $fix_object;
+        msg_info "# $fix_object : Fixing owner ($fix_owner)"
+        # -R is wrong, in case we're not recursing, and if we are
+        # recursing then fix_owner will be called again.  OK, that's
+        # slower, but still more correct.
+        chown "$fix_owner" "$fix_object"
     else
-	echo "Fixing the permissions needs superuser rights. You should run \"munin-check -f\" as root."
-	exit 0;
+        echo "Fixing the permissions needs superuser rights. You should run \"munin-check -f\" as root."
+        exit 0
     fi
 }
 
+
 ####
 # check if "@@USER@@" is owner, if PLEASE_FIXME set it calls fix_owner()
-
 function owner_ok() {
     object=$1; shift || exit 1
     correctowner=$1; shift || exit 1
 
-    owner=$(ls -ld $object | awk '{print $3}')
+    owner=$(stat --format %U "$object")
     if [[ "$owner" != "$correctowner" ]]; then
-	echo "# $object : Wrong owner ($owner != $correctowner)";
-	if [[ "$PLEASE_FIXME" == "true" ]]; then
-	    fix_owner $object $correctowner
-	fi
+        echo "# $object : Wrong owner ($owner != $correctowner)"
+        if [[ "$PLEASE_FIXME" == "true" ]]; then
+            fix_owner "$object" "$correctowner"
+        fi
     fi
 
     if [[ -d $object ]]; then
-	if [[ -n "$norec" ]]; then
-	    # The $norec variable cuts off recursion
-	    return 0
-	fi
+        if [[ -n "$norec" ]]; then
+            # The $norec variable cuts off recursion
+            return 0
+        fi
 
-	case $object in
-	    "lost+found") return 0;;
-	esac
+        case $object in
+            "lost+found") return 0;;
+        esac
 
-	# ... and then dive into it
-	for subobject in $object/*; do
-		owner_ok $subobject $correctowner
-	done
+        # ... and then dive into it
+        for subobject in "$object"/*; do
+            owner_ok "$subobject" "$correctowner"
+        done
     fi
 }
 
@@ -107,64 +119,68 @@ function perm_ok(){
     object=$1; shift || exit 1
     correctperm=$1; shift || exit 1
 
-    perm=$(perl -e 'printf "%o\n", 07777 & (stat $ARGV[0])[2]' $object)
+    perm=$(perl -e 'printf "%o\n", 07777 & (stat $ARGV[0])[2]' "$object")
     if [[ $perm -ne $correctperm ]]; then
-	echo "# $object : Wrong permissions ($perm != $correctperm)";
-	if [[ "$PLEASE_FIXME" == "true" ]]; then
-	    chmod $correctperm $object
-	fi
+        echo "# $object : Wrong permissions ($perm != $correctperm)"
+        if [[ "$PLEASE_FIXME" == "true" ]]; then
+            msg_info "# $object : Fixing permission ($correctperm)"
+            chmod "$correctperm" "$object"
+        fi
     fi
 
     if [[ -d $object ]]; then
-	# check the owner of the dir ...
+        # check the owner of the dir ...
 
-	if [[ -n "$norec" ]]; then
-	    # The $norec variable cuts off recursion
-	    return 0
-	fi
+        if [[ -n "$norec" ]]; then
+            # The $norec variable cuts off recursion
+            return 0
+        fi
 
-	case $object in
-	    "lost+found") return 0;;
-	esac
+        case $object in
+            "lost+found") return 0;;
+        esac
 
-	# ... and then dive into it
-	for subobject in $object/*; do
-	    perm_ok $subobject $correctperm
-	done
+        # ... and then dive into it
+        for subobject in "$object"/*; do
+            perm_ok "$subobject" "$correctperm"
+        done
     fi
 }
+
 
 ####
 # main
 
+# allow recursion by default (can be overridden below for each function call)
+norec=
 echo "check @@HTMLDIR@@"
-owner_ok @@HTMLDIR@@ @@USER@@
+owner_ok "@@HTMLDIR@@" "@@USER@@"
 
-for dir in @@DBDIR@@/*; do
+for dir in "@@DBDIR@@"/*; do
     # Do not check the plugin-state directory
     case $dir in
-	*/plugin-state)
-	    continue;;
+        */plugin-state)
+            continue;;
     esac
     echo "check $dir"
-    owner_ok $dir @@USER@@
+    owner_ok "$dir" "@@USER@@"
 done
 
 echo "check miscellaneous"
 norec=yes owner_ok @@LOGDIR@@ @@USER@@
 
-norec=yes owner_ok @@DBDIR@@ @@USER@@
-norec=yes perm_ok @@DBDIR@@ 755
+norec=yes owner_ok "@@DBDIR@@" "@@USER@@"
+norec=yes perm_ok "@@DBDIR@@" 755
 
-for dir in @@DBDIR@@/datafile @@DBDIR@@/limits @@DBDIR@@/*.stats; do
-    norec=yes owner_ok $dir @@USER@@
-    norec=yes perm_ok $dir 644
+for dir in "@@DBDIR@@/datafile" "@@DBDIR@@/limits" "@@DBDIR@@"/*.stats; do
+    norec=yes owner_ok "$dir" "@@USER@@"
+    norec=yes perm_ok "$dir" 644
 done
 
-norec=yes owner_ok @@PLUGSTATE@@ @@PLUGINUSER@@
-norec=yes perm_ok @@PLUGSTATE@@ 775
+norec=yes owner_ok "@@PLUGSTATE@@" "@@PLUGINUSER@@"
+norec=yes perm_ok "@@PLUGSTATE@@" 775
 
-norec=yes perm_ok @@CONFDIR@@/plugin-conf.d 755
+norec=yes perm_ok "@@CONFDIR@@/plugin-conf.d" 755
 
 echo "Check done.  Please note that this script only checks most things,"
 echo "not all things."

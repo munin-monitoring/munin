@@ -1,18 +1,55 @@
+---
 language: perl
 perl:
   - "5.20"
 branches:
- only:
-  - stable-2.0
-  - master
+  only:
+    - stable-2.0
+    - master
 addons:
   apt:
     packages:
+      - codespell
       - devscripts
+      - libpango1.0-dev
+      - libdbd-pg-perl
+      - libdbd-sqlite3-perl
+      - libdbi-perl
+      - libdevel-cover-perl
+      - libfile-copy-recursive-perl
+      - libfile-readbackwards-perl
+      - libfile-slurp-perl
+      - libhtml-template-perl
+      - libhtml-template-pro-perl
+      - libhttp-server-simple-perl
+      - libio-socket-inet6-perl
+      - libio-stringy-perl
+      - liblist-moreutils-perl
+      - liblog-dispatch-perl
+      - libmodule-build-perl
+      - libnet-dns-perl
+      - libnet-ip-perl
+      - libnet-server-perl
+      - libnet-snmp-perl
+      - libnet-ssleay-perl
+      - libparams-validate-perl
+      - librrds-perl
+      - libtest-class-perl
+      - libtest-deep-perl
+      - libtest-differences-perl
+      - libtest-longstring-perl
+      - libtest-mockmodule-perl
+      - libtest-mockobject-perl
+      - libtest-perl-critic-perl
+      - liburi-perl
+      - libwww-perl
+      - libxml-dumper-perl
+      - libxml-libxml-perl
+      - libxml-parser-perl
 notifications:
   email: false
   irc:
-    on_success: change # no need for spam
+    on_success: change  # no need for spam
     on_failure: always
     channels:
       - "irc.oftc.net#munin"
@@ -30,7 +67,9 @@ before_install:
   cpanm -n Devel::Cover::Report::Coveralls
 
 script:
-  perl Build.PL && ./Build build && cover -test -report coveralls
+  # check for potential spelling mistakes
+  - codespell --quiet-level=3 --skip=ChangeLog,Announce-2.0,*.js,memory,jmx_,jmx_tomcat_dbpools,netstat_multi,munin_node_os.t
+  - perl Build.PL && ./Build build && cover -test -report coveralls
 
 # Using the container-based infrastructure
 sudo: false

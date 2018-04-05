@@ -388,7 +388,7 @@ sub process_service {
         $value = "unknown";
     }
     elsif ( looks_like_number($value) ) {
-        $value = sprintf "%.2f", $value;
+        $value = sprintf "%.6f", $value;
     }
     else {
         WARNING(  "Expected number, got \""
@@ -699,15 +699,15 @@ sub generate_service_message {
 
         $always_send = validate_severities($always_send);
 
-        foreach my $cas ( @{$always_send} ) {
-	    if(defined($stats{$cas})) {
-		$obsess += scalar @{$stats{$cas}};
+        foreach my $status_level ( @{$always_send} ) {
+	    if(defined($stats{$status_level})) {
+		$obsess += scalar @{$stats{$status_level}};
 	    }
 	}
         if (!$hash->{'state_changed'} and !$obsess) {
             next;    # No need to send notification
         }
-        DEBUG "[DEBUG] state has changed, notifying $c";
+        INFO("[INFO] state has changed, notifying $c");
         my $precmd = munin_get($contactobj, "command", undef);
         if(!defined $precmd) {
             WARN("[WARNING] Missing command option for contact $c; skipping");
@@ -764,6 +764,12 @@ sub generate_service_message {
             } else { # child
                 close $w;
                 open(STDIN, "<&", $r);
+                # We want to close stdout before calling the send command. This prevents the
+                # notification program (e.g. "send_nsca") to write irrelevant status messages
+                # to stdout and thus trigger notification emails (e.g. via cron).
+                # See https://github.com/munin-monitoring/munin/issues/382
+                # and https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=291168.
+                close(STDOUT);
                 exec($cmd) or WARN "[WARNING] Failed to exec for contact $c in pid $$";
                 exit;
             }

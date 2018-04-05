@@ -98,6 +98,21 @@ my %aspects = (
                 'label' => 'Invalid SYN cookies received',
                 'min' => 0,
                 'info' => 'Invalid SYN cookies received'
+            },
+	    # v3.1 (946cedccbd)
+            # 'TcpExt_TCPReqQFullDoCookies' => {
+            #     'type' => 'DERIVE',
+            #     'draw' => 'LINE1',
+            #     'label' => 'Syncookies replies to client',
+            #     'min' => 0,
+            # },
+	    # v3.1 (946cedccbd)
+            'TcpExt_TCPReqQFullDrop' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'label' => 'Dropped syncookies requests',
+                'min' => 0,
+                'info' => 'number of times a SYN request was dropped because syncookies were not enabled'
             }
         }
     },
@@ -267,6 +282,13 @@ my %aspects = (
                 'min' => 0,
                 'label' => 'Embryonic resets',
                 'info' => 'Resets received for embryonic SYN_RECV sockets',
+            },
+	    # < 2.6.12
+            'TcpExt_RcvPruned' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Receives pruned'
             }
         }
     },
@@ -303,7 +325,40 @@ my %aspects = (
                 'min' => 0,
                 'label' => 'Timestamp reorder',
                 'info' => 'Reordering using timestamps',
+            },
+	    # v3.6 (a6df1ae9)
+            'TcpExt_TCPOFOQueue' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'OFO queue',
+                'info' => 'Number of packets queued in OFO queue',
+            },
+	    # v3.6 (a6df1ae9)
+            'TcpExt_TCPOFODrop' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'OFO drop',
+                'info' => 'packets meant to be queued in OFO but dropped because socket rcvbuf limit hit',
+            },
+	    # v3.6 (a6df1ae9)
+            'TcpExt_TCPOFOMerge' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'OFO packets merged',
+                'info' => 'OFO packets merged with other packets',
+            },
+	    # < 2.6.12
+            'TcpExt_OfoPruned' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'OFO packets pruned',
+                'info' => '',
             }
+
         }
     },
     'TCPSACKFACK' => {
@@ -390,11 +445,12 @@ my %aspects = (
         'vlabel' => 'connections per second',
         'width' => 600,
         'values' => {
-            'TcpExt_TCPAbortOnSyn' => {
+	    # v3.6 (0c24604b)
+            'TcpExt_TCPSYNChallenge' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
-                'label' => 'Abort on SYN',
+                'label' => 'RFC 5691 challenge ACK',
             },
             'TcpExt_TCPAbortOnData' => {
                 'type' => 'DERIVE',
@@ -500,7 +556,74 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Timeouts in loss state',
-            }
+            },
+	    # v3.4 (09e9b813)
+            'TcpExt_TCPRetransFail' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'failed tcp_retransmit_skb()',
+            },
+	    # v3.6 (783237e8)
+            # 'TcpExt_TCPFastOpenActive' => {
+            #     'type' => 'DERIVE',
+            #     'draw' => 'LINE1',
+            #     'min' => 0,
+            #     'label' => 'Number of active Fast Open (SYN/data)',
+            # },
+	    # v3.7 (104671636)
+            # 'TcpExt_TCPFastOpenPasive' => {
+            #     'type' => 'DERIVE',
+            #     'draw' => 'LINE1',
+            #     'min' => 0,
+            #     'label' => 'Number of passive Fast Open (SYN/data)',
+            # },
+	    # v3.7 (1046716)
+            'TcpExt_TCPFastOpenPassiveFail' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Fast Open received (SYN/data) passive failed',
+                'info' => 'Number of failed passive Fast Open (SYN/data)',
+            },
+	    # v3.10 (6ba8a3b19)
+            # 'TcpExt_TCPLossProbes' => {
+            #     'type' => 'DERIVE',
+            #     'draw' => 'LINE1',
+            #     'min' => 0,
+            #     'label' => 'Total tail loss probes',
+            #     'info' => 'Total tail loss probes',
+            # },
+	    # v3.10 (9b717a8d)
+            'TcpExt_TCPLossProbeRecovery' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Necesary tail loss probes'
+            },
+	    # v3.15 (f19c29e3e)
+            'TcpExt_TCPSynRetrans' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'SYN and SYN/ACK retransmits',
+                'info' => 'Number of SYN and SYN/ACK retransmits to break down retransmissions into SYN, fast-retransmits, timeout retransmits, etc',
+            },
+	    # v3.15 (f19c29e3e)
+            'TcpExt_TCPFastOpenActiveFail' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Fast Open attempts (SYN/data) failed',
+                'info' => 'Fast Open attempts (SYN/data) failed because the remote does not accept it or the attempts timed out',
+            },
+	    # v3.15 (f19c29e3e)
+            # 'TcpExt_TCPOrigDataSent' => {
+            #     'type' => 'DERIVE',
+            #     'draw' => 'LINE1',
+            #     'min' => 0,
+            #     'label' => 'outgoing packets with original data'
+            # }
         }
     },
     'TCPPAWS' => {
@@ -653,6 +776,22 @@ my %aspects = (
                 'min' => 0,
                 'label' => 'Direct copy from backlog',
                 'info' => 'Packets directly received from backlog',
+            },
+	    # v2.6.34 (6cce09f87)
+            'TcpExt_TCPBacklogDrop' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Dropped from backlog',
+                'info' => 'Packets dropped due to backlog queue being full',
+            },
+	    # v2.6.34 (6cce09f87)
+            'TcpExt_TCPMinTTLDrop' => {
+                'type' => 'DERIVE',
+                'draw' => 'LINE1',
+                'min' => 0,
+                'label' => 'Dropped due to TTL being too short',
+                'info' => 'RFC 5082 minimum TTL restriction',
             },
             'TcpExt_TCPDirectCopyFromPrequeue' => {
                 'type' => 'DERIVE',
