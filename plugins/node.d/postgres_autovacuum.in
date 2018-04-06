@@ -65,8 +65,8 @@ my $pg = Munin::Plugin::Pgsql->new(
         "SELECT 'active', count(*) FROM pg_stat_activity WHERE query LIKE 'autovacuum: %'",
         [
             9.1,
-            "SELECT 'active', count(*) FROM pg_stat_activity WHERE current_query LIKE 'autovacuum: %'"
-        ]
+            "SELECT 'active', count(*) FROM pg_stat_activity WHERE current_query LIKE 'autovacuum: %'",
+        ],
     ],
     configquery => [ "VALUES('active','Active workers')", [ 8.1, "SELECT 'active','Active workers'" ] ],
 );

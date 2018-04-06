@@ -69,7 +69,7 @@ my $pg = Munin::Plugin::Pgsql->new(
     stack       => 1,
     graphtype   => 'DERIVE',
     graphperiod => 'minute',
-    graphmin    => 0
+    graphmin    => 0,
 );
 
 $pg->Process();
