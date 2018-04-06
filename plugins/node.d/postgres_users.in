@@ -79,4 +79,3 @@ my $pg = Munin::Plugin::Pgsql->new(
 );
 
 $pg->Process();
-
