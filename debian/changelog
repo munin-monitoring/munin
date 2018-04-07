@@ -1,6 +1,7 @@
 munin (2.999.7-1) UNRELEASED; urgency=medium
 
-  * New upstream beta release.
+  * New upstream beta release:
+    - drop debug_sincos from munin-plugins-extra.
   * munin-plugis-core: add suggests to time. Closes: #862794
   * Switch maintainer address to team+munin@tracker.debian.org.
   * Drop Tom Feiner, Steve Schnepp and Matthias Schmitz from Uploaders, thanks

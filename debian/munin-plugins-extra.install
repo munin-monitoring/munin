@@ -4,7 +4,6 @@ usr/share/munin/plugins/buddyinfo
 usr/share/munin/plugins/cmc_tc_sensor_
 usr/share/munin/plugins/cps_
 usr/share/munin/plugins/cupsys_pages
-usr/share/munin/plugins/debug_sincos
 usr/share/munin/plugins/df_abs
 usr/share/munin/plugins/dhcpd3
 usr/share/munin/plugins/digitemp_
