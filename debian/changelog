@@ -1,4 +1,4 @@
-munin (2.999.7-1) UNRELEASED; urgency=medium
+munin (2.999.7-1) experimental; urgency=medium
 
   * New upstream beta release:
     - drop debug_sincos from munin-plugins-extra.
@@ -6,10 +6,10 @@ munin (2.999.7-1) UNRELEASED; urgency=medium
   * Switch maintainer address to team+munin@tracker.debian.org.
   * Drop Tom Feiner, Steve Schnepp and Matthias Schmitz from Uploaders, thanks
     for all your work, Tom, Steve & Matthias!
-  * debian/changelog: drop trailing whitespaces, thanks lintian.
   * Bump Standards-Version: to 4.1.4, no changes needed.
+  * debian/changelog: drop trailing whitespaces, thanks lintian.
 
- -- Holger Levsen <holger@debian.org>  Sun, 25 Mar 2018 11:25:15 +0000
+ -- Holger Levsen <holger@debian.org>  Sat, 07 Apr 2018 16:45:48 +0000
 
 munin (2.999.6-6) experimental; urgency=medium
 
