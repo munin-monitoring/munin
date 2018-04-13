@@ -69,8 +69,8 @@ my $pg = Munin::Plugin::Pgsql->new(
            ('buffers_clean','Buffers cleaned', 'Buffers cleaned by background bgwriter runs'),
            ('buffers_backend', 'Buffers by backend', 'Buffers written by backends and not the bgwriter'),
            ('buffers_alloc', 'Buffers allocated', 'Buffers allocated globally')",
-    graphtype => 'DERIVE'
+    graphtype => 'DERIVE',
+    graphmin => 0,
 );
 
 $pg->Process();
-

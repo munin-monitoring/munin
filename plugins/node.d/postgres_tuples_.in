@@ -82,19 +82,18 @@ my $pg = Munin::Plugin::Pgsql->new(
         [
             8.2,
             "VALUES ('seqread','Tuples sequentally read'), ('idxfetch','Tuples index fetched'), ('inserted','Tuples inserted'),"
-                . " ('updated','Tuples updated'),('deleted','Tuples deleted')"
+                . " ('updated','Tuples updated'),('deleted','Tuples deleted')",
         ], [
             8.1,
             "SELECT 'seqread','Tuples sequentially read' UNION ALL SELECT 'idxfetch','Tuples index fetched' UNION ALL "
                 . "SELECT 'inserted','Tuples inserted' UNION ALL SELECT 'updated','Tuples updated' UNION ALL "
-                . "SELECT 'deleted','Tuples deleted'"
+                . "SELECT 'deleted','Tuples deleted'",
         ],
     ],
     suggestquery =>
         "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' ORDER BY 1 LIMIT 10",
     graphtype => 'DERIVE',
+    graphmin => 0,
 );
 
 $pg->Process();
-exit(0);
-
