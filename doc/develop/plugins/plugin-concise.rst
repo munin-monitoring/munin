@@ -106,6 +106,8 @@ In particular plugins written in Perl, Python and the like **SHOULD** not requir
 
 If the plugin is to be distributed with Munin the **SHOULDs** above are **MUSTs**.
 
+.. _plugin-concise-suggest:
+
 suggest
 -------
 

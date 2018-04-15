@@ -18,3 +18,4 @@ Guidelines for developing Munin plugins
    plugin-concise.rst
    plugin-gallery.rst
    advanced-topics.rst
+   requirements-vetted.rst
