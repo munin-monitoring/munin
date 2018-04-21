@@ -107,6 +107,11 @@ Does :ref:`munin-node` recognize any plugins? Try issuing the command ``list`` (
   list
   open_inodes irqstats if_eth0 df uptime [...]
 
+.. note::
+
+  Some plugins require specific capabilities (most notably: :ref:`multigraph <plugin-multigraphing>`). These plugins do not show up in the list, unless the client announces this capability. For example type ``cap multigraph`` before ``list`` in order to also find multigraph plugins in the list.
+
+
 Check a particular plugin
 -------------------------
 
