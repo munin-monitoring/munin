@@ -70,6 +70,23 @@ E.g. if the masters node tree has the following entry:
 
  If the connection test fails, check the :ref:`allow directive <initial_configuration>` in :ref:`munin-node.conf` and make sure any firewalls allow contact on destination port 4949.
 
+Check the Logs
+==============
+
+Munin's log files (typically below ``/var/log/munin/``) are a good source of information while debugging problems.
+
+Log files of a :ref:`munin-node`:
+
+ * ``munin-node.log`` and ``munin-node-configure.log``: configuration issues and connection messages
+
+Log files of a :ref:`munin master <master-index>`:
+
+ * ``munin-cgi-graph.log`` and ``munin-graph.log``: issues with generating graphs
+ * ``munin-cgi-html.log`` and ``munin-html.log``: issues with generating html content
+ * ``munin-update.log``: fetch configuration and values from a remote :ref:`munin-node`
+ * ``munin-limits.log``: generated alarms due to specified :ref:`warning <fieldname.warning>`/:ref:`critical <fieldname.critical>` thresholds
+
+
 .. _debugging-plugins:
 
 Debugging Plugins
