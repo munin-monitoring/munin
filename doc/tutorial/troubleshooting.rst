@@ -127,7 +127,7 @@ Restart :ref:`munin-node`, as it only reads the plugin list upon start. (Good to
 
   /etc/init.d/munin-node restart
 
-Call :ref:`munin-run` on the monitored host to see whether the plugin runs through . 
+Call :ref:`munin-run` on the monitored host to see whether the plugin runs through. 
 
 Try with and without the ``config`` plugin argument. Both runs should not emit any error message. 
 
@@ -295,6 +295,20 @@ The graphs are empty
  * The plugin's output shows GAUGE values, but were declared as COUNTER or DERIVE in the plugin's config. (GAUGE is default data type in Munin)
  * The files to be updated by Munin are owned by root or another user account
  * The local user browser cache may be corrupt, especially if "most" graphs are displayed correctly and "some" graphs are blank. In Firefox (or your browser of choice) go to tools and clear recent history, then check to see if the graphs are now properly displayed.
+
+A plugin's graph is missing
+---------------------------
+
+Check the following conditions if there is no graph produced for plugin:
+
+ * the plugin file (or a symlink to it) is placed in the plugin directory (typically: ``/etc/munin/plugins``)
+ * the executable permission of the plugin file is set
+ * :ref:`munin-node` was restarted after the plugin was added
+ * user/group is configured for the plugin (if necessary)
+ * the plugin works as expected locally via :ref:`munin-run`
+ * the :ref:`munin master <master-index>` supports all capabilities required by the plugin (e.g. type ``cap multigraph`` before ``list`` in an interactive ``nc``/``telnet`` session)
+ * no related error messages for this plugin appear in ``/var/log/munin/munin-update.log`` (on the :ref:`munin master <master-index>`)
+ * an rrd file is created on the :ref:`munin master <master-index>` (e.g. below ``/var/lib/munin``)
 
 Other mumbo-jumbo
 -----------------
