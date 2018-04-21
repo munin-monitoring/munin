@@ -336,7 +336,7 @@ build-doc-stamp:
 
 build-man: build-man-stamp Makefile Makefile.config
 
-build-man-stamp:
+build-man-stamp: infiles
 	touch build-man-stamp
 	mkdir -p build/doc
 	for f in $(MAN8); do \
