@@ -29,6 +29,12 @@ override_dh_auto_install:
 	rm -r debian/tmp/etc/munin/static/fonts
 	ln -s ../../../../usr/share/fonts-materialdesignicons-webfont/fonts \
 		debian/tmp/etc/munin/static/fonts
+	# replace embedded copy of "libjs-jquery" with symlink
+	rm debian/tmp/etc/munin/static/js/jquery-1.8.3.js
+	ln -s ../../../../usr/share/javascript/jquery/jquery.js \
+		debian/tmp/etc/munin/static/js/jquery.js
+	sed -i 's#/js/jquery-1\.8\.3\.js#/js/jquery.js#' \
+		debian/tmp/etc/munin/templates/partial/head.tmpl
 
 override_dh_install:
 	dh_install --fail-missing
