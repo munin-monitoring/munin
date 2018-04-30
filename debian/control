@@ -121,7 +121,7 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  munin-common,
 Recommends:
- python,
+ python3,
  ruby | ruby-interpreter,
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)

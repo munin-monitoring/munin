@@ -4,6 +4,8 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * munin-node: include manpage for "munin-doc"
   * replace embedded copies of "fonts-materialdesignicons-webfont" and
     "libjs-jquery" with dependencies and symlinks
+  * munin-plugins-extra: replace Suggest for "python" with "python3"
+    (since all relevant plugins switched from python2 to python3)
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 30 Apr 2018 02:29:38 +0200
 
