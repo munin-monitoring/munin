@@ -22,6 +22,13 @@ override_dh_auto_install:
 	sed -i -e '/^log_file/clog_file Sys::Syslog' debian/tmp/etc/munin/munin-node.conf
 	sed -i -e '/^pid_file/cpid_file /run/munin-node.pid' debian/tmp/etc/munin/munin-node.conf
 	mv debian/tmp/etc/munin/munin.conf.sample debian/tmp/etc/munin/munin.conf
+	# replace embedded copies of "fonts-materialdesignicons-webfont" with symlinks
+	rm debian/tmp/etc/munin/static/css/materialdesignicons.css
+	ln -s ../../../../usr/share/fonts-materialdesignicons-webfont/css/materialdesignicons.css \
+		debian/tmp/etc/munin/static/css/materialdesignicons.css
+	rm -r debian/tmp/etc/munin/static/fonts
+	ln -s ../../../../usr/share/fonts-materialdesignicons-webfont/fonts \
+		debian/tmp/etc/munin/static/fonts
 
 override_dh_install:
 	dh_install --fail-missing
