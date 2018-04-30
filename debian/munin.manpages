@@ -1,4 +1,5 @@
 doc/_build/man/munin.conf.5
 doc/_build/man/munin-cron.1
+doc/_build/man/munin-httpd.1
 doc/_build/man/munin-limits.1
 doc/_build/man/munin-update.1

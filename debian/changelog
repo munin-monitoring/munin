@@ -1,3 +1,10 @@
+munin (2.999.7-3) UNRELEASED; urgency=medium
+
+  * munin: include manpage for "munin-httpd"
+  * munin-node: include manpage for "munin-doc"
+
+ -- Lars Kruse <devel@sumpfralle.de>  Mon, 30 Apr 2018 02:29:38 +0200
+
 munin (2.999.7-2) experimental; urgency=medium
 
   * d/control:
