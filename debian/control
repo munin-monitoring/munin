@@ -244,6 +244,7 @@ Section: perl
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  liblog-dispatch-perl,
+ libparams-validate-perl,
 Recommends:
  libnet-ssleay-perl,
 Replaces: munin-common (<< 2.999.1-1~),
