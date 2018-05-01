@@ -96,7 +96,7 @@ Example file ``/etc/munin/plugin-conf.d/snmp_communities``:
 
 
 Always provide your community name unquoted. In fact, if you
-do quote it, it will tread the quote as part of the community name,
+do quote it, it will treat the quote as part of the community name,
 and that will usually not work. Just note that any prefix or trailing
 white space is stripped out, so you **cannot** currently configure a
 community name with a prefix or trailing white space.
