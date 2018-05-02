@@ -1,0 +1,65 @@
+#!/bin/sh
+# kFreeBSD do not accept scripts as interpreters, using #!/bin/sh and sourcing.
+if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
+    set "$0" "$@"; INIT_D_SCRIPT_SOURCED=true . /lib/init/init-d-script
+fi
+### BEGIN INIT INFO
+# Provides:          munin-rrdcached
+# Required-Start:    $local_fs $network $remote_fs $syslog
+# Required-Stop:     $local_fs $network $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Munin RRD-Cache
+# Description:       Networked resource monitoring tool.
+#                    The munin master runs an RRD Cache daemon for
+#                    the various parts of munin.
+### END INIT INFO
+
+DESC="munin (rrdcached)"
+NAME="munin-rrdcached"
+DAEMON=/usr/bin/rrdcached
+DAEMON_ARGS="\
+  -p /run/munin/rrdcached.pid \
+  -w 1800 -z 1800 -f 3600 \
+  -B -b /var/lib/munin \
+  -j /var/spool/munin/update \
+  -m 0600 -l /run/munin/update.sock \
+  -m 0660 -P FLUSH -l /run/munin/flush.sock"
+PIDFILE=/run/munin/rrdcached.pid
+USER=munin
+START_ARGS="--user $USER --chuid $USER"
+STOP_ARGS="--user $USER"
+
+# allow reload via SIGUSR1
+alias do_reload=do_reload_sigusr1
+
+
+do_start_prepare() {
+	mkdir -p /run/munin
+	chown munin. /run/munin
+}
+
+
+# difference compared to "do_start_cmd": remove "--name" parameter
+do_start_cmd_override() {
+	start-stop-daemon --start --quiet ${PIDFILE:+--pidfile ${PIDFILE}} \
+		$START_ARGS --startas $DAEMON --exec $DAEMON --test > /dev/null || return 1
+	start-stop-daemon --start --quiet ${PIDFILE:+--pidfile ${PIDFILE}} \
+		$START_ARGS --startas $DAEMON --exec $DAEMON -- $DAEMON_ARGS || return 2
+}
+
+# difference compared to "do_stop_cmd": remove "--name" parameter
+do_stop_cmd_override() {
+	local RETVAL
+	start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 \
+		$STOP_ARGS \
+		${PIDFILE:+--pidfile ${PIDFILE}} --exec $DAEMON
+	RETVAL="$?"
+	[ "$RETVAL" = 2 ] && return 2
+	start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 \
+		$STOP_ARGS \
+		${PIDFILE:+--pidfile ${PIDFILE}} --exec $DAEMON
+	[ "$?" = 2 ] && return 2
+	rm -f "$PIDFILE"
+	return "$RETVAL"
+}

@@ -9,6 +9,7 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * libmunin-perl: add missing dependency "libparams-validate-perl"
     (Closes: #900775)
   * sysvrc-init script for munin-httpd: fixed path of executable
+  * simplify init script for munin (rrdcached) via "init-d-script"
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 30 Apr 2018 02:29:38 +0200
 
