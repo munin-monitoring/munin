@@ -105,6 +105,7 @@ my $smartctl;
 if (exists $ENV{smartctl}) {
    $smartctl = $ENV{smartctl};
    if (defined $ARGV[0] and $ARGV[0] eq 'autoconf') {
+      # The real "autoconf" section follows later. But here we need to check for requirements, too.
       if (! -e $smartctl) {
 	 print "no (Predefined smartctl ($smartctl) does not exist)\n";
 	 exit 0;
@@ -113,6 +114,7 @@ if (exists $ENV{smartctl}) {
 	 exit 0;
       }
    } else {
+      # immediate failure is allowed outside of "autoconf"
       die "$smartctl does not exist\n" unless (-e $smartctl);
       die "$smartctl is not executable\n" unless (-x $smartctl);
    }
@@ -125,6 +127,12 @@ if (exists $ENV{smartctl}) {
 	my $dir = shift @dirs;
 	my $path = $dir.'/smartctl';
 	$smartctl = $path if -x $path;
+    }
+    if (defined $ARGV[0] and $ARGV[0] eq 'autoconf') {
+        print "no ('smartctl' executable not found)\n";
+        exit 0;
+    } else {
+        die "'smartctl' executable not found\n" unless ($smartctl);
     }
 }
 
