@@ -32,6 +32,7 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     (Closes: #873993)
   * remove references to missing documentation (munin-doc.* and munin-faq.*)
     from "munin-node" (removed by upstream)
+  * improve README.PluginConfiguration (for "munin-node")
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
