@@ -17,6 +17,7 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * remove obsolete patch "0001-fixup-2.999.6-release"
   * remove references to missing documentation (munin-doc.* and munin-faq.*)
     from "munin-node" (removed by upstream)
+  * improve README.PluginConfiguration (for "munin-node")
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 30 Apr 2018 02:29:38 +0200
 
