@@ -5,7 +5,7 @@ if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
 fi
 ### BEGIN INIT INFO
 # Provides:          munin-rrdcached
-# Required-Start:    $local_fs $network $remote_fs $syslog
+# Required-Start:    $local_fs $network $remote_fs $syslog munin-tmpfiles
 # Required-Stop:     $local_fs $network $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
@@ -32,12 +32,6 @@ STOP_ARGS="--user $USER"
 
 # allow reload via SIGUSR1
 alias do_reload=do_reload_sigusr1
-
-
-do_start_prepare() {
-	mkdir -p /run/munin
-	chown munin. /run/munin
-}
 
 
 # difference compared to "do_start_cmd": remove "--name" parameter

@@ -1,0 +1,32 @@
+#!/bin/sh
+# kFreeBSD do not accept scripts as interpreters, using #!/bin/sh and sourcing.
+if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
+    set "$0" "$@"; INIT_D_SCRIPT_SOURCED=true . /lib/init/init-d-script
+fi
+### BEGIN INIT INFO
+# Provides:          munin-tmpfiles
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Munin Temporary Files
+# Description:       Networked resource monitoring tool.
+#                    Create directories required for Munin's cron jobs
+#                    and munin-rrdcached.
+### END INIT INFO
+
+DESC="munin (tmpfiles)"
+NAME="munin-tmpfiles"
+# it is not used directly - just as an indicator for the package being installed
+DAEMON="/usr/bin/munin-update"
+
+
+# keep in sync with debian/munin.tmpfile (systemd-only)
+do_start_cmd_override() {
+	mkdir --mode=0755 -p /run/munin
+	chown munin.munin /run/munin
+}
+
+
+# nothing to be done
+do_stop_cmd_override() { true; }

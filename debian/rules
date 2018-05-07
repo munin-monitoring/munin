@@ -42,6 +42,7 @@ override_dh_installinit:
 	dh_installinit --package=munin-node
 	dh_installinit --name=munin-httpd
 	dh_installinit --name=munin-rrdcached
+	dh_installinit --name=munin-tmpfiles
 
 override_dh_installdocs:
 	dh_installdocs --link-doc=munin-common
