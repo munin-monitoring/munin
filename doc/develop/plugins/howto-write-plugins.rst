@@ -354,6 +354,26 @@ Perl plugin
   ...
 
 
+Python plugin
+-------------
+
+::
+
+  ...
+
+  def clean_fieldname(text):
+      if text == "root":
+          return "_root"
+      else:
+          return re.sub(r"(^[^A-Za-z_]|[^A-Za-z0-9_])", "_", text)
+
+  ...
+
+  fieldname = clean_fieldname(label)
+
+  ...
+
+
 Going on
 ========
 
