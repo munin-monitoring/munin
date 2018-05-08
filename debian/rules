@@ -41,6 +41,7 @@ override_dh_install:
 
 # Override to add several init scripts
 override_dh_installinit:
+	dh_installinit --package=munin-async
 	dh_installinit --package=munin-node
 	dh_installinit --name=munin-httpd
 	dh_installinit --name=munin-rrdcached
