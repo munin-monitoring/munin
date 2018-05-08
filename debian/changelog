@@ -19,6 +19,7 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
     from "munin-node" (removed by upstream)
   * improve README.PluginConfiguration (for "munin-node")
   * create /run/munin also for non-systemd systems
+  * increase compatibility level from 10 to 11
 
  -- Lars Kruse <devel@sumpfralle.de>  Tue, 08 May 2018 04:08:12 +0200
 

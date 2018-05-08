@@ -8,6 +8,6 @@ Abstract: The Munin documentation contains extensive information about the
 Section: System/Monitoring
 
 Format: HTML
-Index: /usr/share/doc/munin-doc/html/index.html
-Files: /usr/share/doc/munin-doc/html/*.html
-       /usr/share/doc/munin-doc/html/*/*.html
+Index: /usr/share/doc/munin-common/html/index.html
+Files: /usr/share/doc/munin-common/html/*.html
+       /usr/share/doc/munin-common/html/*/*.html

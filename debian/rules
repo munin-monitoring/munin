@@ -7,7 +7,7 @@ LAST_CHANGE=$(shell dpkg-parsechangelog -S Date)
 BUILD_DATE=$(shell LC_ALL=C date -u "+%B %d, %Y" -d "$(LAST_CHANGE)")
 
 %:
-	dh $@ --with systemd
+	dh $@
 
 override_dh_auto_build:
 	# ./getversion reads RELEASE if it exists
@@ -36,7 +36,6 @@ override_dh_auto_install:
 	sed -i 's#/js/jquery-1\.8\.3\.js#/js/jquery.js#' \
 		debian/tmp/etc/munin/templates/partial/head.tmpl
 
-# Override to add several init scripts
 override_dh_installinit:
 	dh_installinit --package=munin-async
 	dh_installinit --package=munin-node
@@ -44,17 +43,23 @@ override_dh_installinit:
 	dh_installinit --name=munin-rrdcached
 	dh_installinit --name=munin-tmpfiles
 
+override_dh_installsystemd:
+	dh_installsystemd --package=munin
+	dh_installsystemd --package=munin-async
+	dh_installsystemd --package=munin-node
+	dh_installsystemd --name=munin-httpd
+	dh_installsystemd --name=munin-rrdcached
+
 override_dh_installdocs:
-	dh_installdocs --link-doc=munin-common
+	dh_installdocs --link-doc=munin-common --doc-main-package=munin-common -p munin-doc
+	dh_installdocs --link-doc=munin-common --remaining
 	@ # Use the packaged javascript libraries
-	if [ -d debian/munin-doc ]; then \
-		rm -f debian/munin-doc/usr/share/doc/munin-doc/html/_static/jquery.js; \
-		ln -s /usr/share/javascript/jquery/jquery.js \
-			debian/munin-doc/usr/share/doc/munin-doc/html/_static/jquery.js; \
-		rm -f debian/munin-doc/usr/share/doc/munin-doc/html/_static/underscore.js; \
-		ln -s /usr/share/javascript/underscore/underscore.js \
-			debian/munin-doc/usr/share/doc/munin-doc/html/_static/underscore.js; \
-	fi
+	rm debian/munin-doc/usr/share/doc/munin-common/html/_static/jquery.js; \
+	ln -s /usr/share/javascript/jquery/jquery.js \
+		debian/munin-doc/usr/share/doc/munin-common/html/_static/jquery.js; \
+	rm debian/munin-doc/usr/share/doc/munin-common/html/_static/underscore.js; \
+	ln -s /usr/share/javascript/underscore/underscore.js \
+		debian/munin-doc/usr/share/doc/munin-common/html/_static/underscore.js; \
 
 override_dh_missing:
 	dh_missing --fail-missing
