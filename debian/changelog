@@ -12,6 +12,7 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * simplify init script for munin (rrdcached) via "init-d-script"
   * simplify init script for munin-httpd via "init-d-script"
   * simplify init script for munin-async via "init-d-script"
+  * simplify init script for munin-node via "init-d-script"
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 30 Apr 2018 02:29:38 +0200
 
