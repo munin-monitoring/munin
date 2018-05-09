@@ -1,0 +1,45 @@
+munin-async requires a separate spool directory (/var/spool/munin/async)
+instead of the commonly used one (/var/spool/munin), since it runs as
+a different user (munin-async) and thus could not write to the directory
+owned by the munin user.
+
+--- a/script/munin-async
++++ b/script/munin-async
+@@ -34,7 +34,7 @@ use Munin::Common::Utils qw( is_valid_ho
+ # Disable buffering
+ $| = 1;
+ 
+-my $SPOOLDIR = $Munin::Common::Defaults::MUNIN_SPOOLDIR;
++my $SPOOLDIR = $Munin::Common::Defaults::MUNIN_SPOOLDIR . "/async";
+ my $hostname;
+ my $overridehost;
+ 
+@@ -162,7 +162,7 @@ munin-async - A program to replay spoole
+ munin-async [options]
+ 
+  Options:
+-     -s --spooldir <spooldir>   Directory for spooled data [@@SPOOLDIR@@]
++     -s --spooldir <spooldir>   Directory for spooled data [@@SPOOLDIR@@/async]
+      --hostname <hostname>      Overrides the hostname [`hostname`]
+      --cleanup                  Clean up the spooldir after interactive session completes
+      --cleanupandexit           Clean up the spooldir and exit (non-interactive)
+--- a/script/munin-asyncd
++++ b/script/munin-asyncd
+@@ -34,7 +34,7 @@ use Munin::Common::Logger;
+ 
+ my $host = "localhost:4949";
+ my $metahostname;
+-my $SPOOLDIR = $Munin::Common::Defaults::MUNIN_SPOOLDIR;
++my $SPOOLDIR = $Munin::Common::Defaults::MUNIN_SPOOLDIR . "/async";
+ my $intervalsize = 86400;
+ my $timeout = 3600;
+ my $minrate;
+@@ -355,7 +355,7 @@ munin-asyncd [options]
+ 
+  Options:
+         --host <hostname:port>  Connect to this munin-node [localhost:4949]
+-     -s --spooldir <spooldir>   Store the spooled data in this dir [@@SPOOLDIR@@]
++     -s --spooldir <spooldir>   Store the spooled data in this dir [@@SPOOLDIR@@/async]
+      -i --interval <seconds>    Override default interval size of one day [86400]
+         --update-rate <seconds> Override default update_rate [300]
+         --timeout <seconds>     Wake up at least this number of seconds. [3600]
