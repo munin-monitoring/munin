@@ -1,0 +1,2 @@
+# debian/munin.tmpfiles offers the same functionality as debian/munin.munin-tmpfiles.init
+omitted-systemd-service-for-init.d-script munin-tmpfiles

@@ -327,9 +327,9 @@ Replaces: munin-plugins-core (<< 2.999.1-1~),
  munin-doc (<<2.999.6-5)
 Breaks: munin-plugins-core (<< 2.999.1-1~),
  munin-doc (<<2.999.6-5)
-Description: perl bindings for Postgresql munin plugins
+Description: perl bindings for PostgreSQL munin plugins
  The Munin::Plugin::Pgsql perl module used by various munin plugins
- for monitoring Postgresql database servers.
+ for monitoring PostgreSQL database servers.
 
 Package: munin
 Architecture: all
