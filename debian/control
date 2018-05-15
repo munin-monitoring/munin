@@ -109,6 +109,10 @@ Suggests:
 Replaces: munin-plugins-extra (<< 2.999.1-1~)
 Breaks: munin-plugins-extra (<< 2.999.1-1~)
 Description: network-wide graphing framework (plugins for node)
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains the official plugins for the Munin node,
  capable of extracting common values such as cpu usage, network usage,
  load average, and so on.
@@ -126,6 +130,10 @@ Recommends:
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: community contributed plugins for munin node
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains community contributed plugins for the Munin
  node.
 
@@ -140,6 +148,10 @@ Replaces: munin-plugins-core (<< 2.999.1-1~),
 Breaks: munin-plugins-core (<< 2.999.1-1~),
  munin-plugins-extra (<<2.999.6-5)
 Description: munin plugins for monitoring web servers
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains munin plugins for monitoring web servers using
  http.
 
@@ -154,6 +166,10 @@ Replaces: munin-plugins-core (<< 2.999.1-1~),
 Breaks: munin-plugins-core (<< 2.999.1-1~),
  munin-plugins-extra (<<2.999.6-5)
 Description: munin plugins for monitoring MySQL
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains munin plugins for monitoring MySQL servers.
 
 Package: munin-plugins-pgsql
@@ -164,6 +180,10 @@ Depends: ${perl:Depends}, ${misc:Depends},
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring PostgreSQL
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains munin plugins for monitoring PostgreSQL
  servers.
 
@@ -175,6 +195,10 @@ Depends: ${perl:Depends}, ${misc:Depends},
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring remote devices with SNMP
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains munin plugins for monitoring remote devices
  with SNMP.
 
@@ -184,6 +208,10 @@ Depends: ${perl:Depends}, ${misc:Depends},
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring LDAP servers
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains munin plugins for monitoring LDAP servers.
 
 Package: munin-plugins-irc
@@ -193,6 +221,10 @@ Depends: ${perl:Depends}, ${misc:Depends},
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring IRC servers
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains munin plugin for monitoring IRC servers.
 
 Package: munin-plugins-dns
@@ -201,6 +233,10 @@ Depends: ${perl:Depends}, ${misc:Depends}, bind9utils
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring DNS servers
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains munin plugins for monitoring DNS servers.
 
 Package: munin-plugins-mail
@@ -210,6 +246,10 @@ Depends: ${perl:Depends}, ${misc:Depends},
 Replaces: munin-plugins-core (<< 2.999.1-1~), munin-plugins-extra (<< 2.99.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~), munin-plugins-extra (<< 2.99.1-1~)
 Description: munin plugins for monitoring mail servers
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains munin plugins for monitoring mail servers.
 
 Package: munin-plugins-time
@@ -218,6 +258,10 @@ Depends: ${perl:Depends}, ${misc:Depends},
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring NTP servers and synchronization
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains munin plugins for monitoring time servers and
  synchronization. Plugins can monitor local and remote NTP servers.
 
@@ -228,6 +272,10 @@ Depends: ${perl:Depends}, ${misc:Depends},
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring network traffic
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains munin plugins for monitoring network traffic
  and usage.  Common tools used is netfilter/iptables, snort.
 
@@ -236,6 +284,10 @@ Architecture: all
 Depends: ${misc:Depends},
  munin-common,
 Description: munin plugins for monitoring the Jenkins CI server
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
  This package contains munin plugins for monitoring a local Jenkins CI
  server.
 
@@ -252,6 +304,11 @@ Replaces: munin-common (<< 2.999.1-1~),
 Breaks: munin-common (<< 2.999.1-1~),
  munin-doc (<<2.999.6-5)
 Description: common perl modules for munin
+ Munin is a highly flexible and powerful solution used to create
+ graphs of virtually everything imaginable throughout your network,
+ while still maintaining a rattling ease of installation and
+ configuration.
+ .
  The Munin and Munin::Common perl modules, used by munin master and
  node.
 
@@ -264,6 +321,11 @@ Replaces: munin (<< 2.999.1-1~),
 Breaks: munin (<< 2.999.1-1~),
  munin-doc (<<2.999.6-5)
 Description: perl modules for munin master
+ Munin is a highly flexible and powerful solution used to create
+ graphs of virtually everything imaginable throughout your network,
+ while still maintaining a rattling ease of installation and
+ configuration.
+ .
  The Munin::Master perl module, used by munin master.
 
 Package: libmunin-node-perl
@@ -275,6 +337,11 @@ Replaces: munin-node (<< 2.999.1-1~),
 Breaks: munin-node (<< 2.999.1-1~),
  munin-doc (<<2.999.6-5)
 Description: perl module Munin::Node
+ Munin is a highly flexible and powerful solution used to create
+ graphs of virtually everything imaginable throughout your network,
+ while still maintaining a rattling ease of installation and
+ configuration.
+ .
  The Munin::Node perl module, used by munin-node.
 
 Package: libmunin-plugin-perl
@@ -287,6 +354,11 @@ Replaces: munin-common (<< 2.999.1-1~),
 Breaks: munin-common (<< 2.999.1-1~),
  munin-doc (<<2.999.6-5)
 Description: perl bindings for munin plugins
+ Munin is a highly flexible and powerful solution used to create
+ graphs of virtually everything imaginable throughout your network,
+ while still maintaining a rattling ease of installation and
+ configuration.
+ .
  The Munin::Plugin and Munin::Plugin::Framework perl modules used by
  various munin plugins.
 
@@ -301,6 +373,11 @@ Replaces: munin-plugins-core (<< 2.999.1-1~),
 Breaks: munin-plugins-core (<< 2.999.1-1~),
  munin-doc (<<2.999.6-5)
 Description: perl bindings for HTTP munin plugins
+ Munin is a highly flexible and powerful solution used to create
+ graphs of virtually everything imaginable throughout your network,
+ while still maintaining a rattling ease of installation and
+ configuration.
+ .
  The Munin::Plugin::HTTP perl module for munin plugins.
 
 Package: libmunin-plugin-snmp-perl
@@ -314,6 +391,11 @@ Replaces: munin-plugins-core (<< 2.999.1-1~),
 Breaks: munin-plugins-core (<< 2.999.1-1~),
  munin-doc (<<2.999.6-5)
 Description: perl bindings for SNMP munin plugins
+ Munin is a highly flexible and powerful solution used to create
+ graphs of virtually everything imaginable throughout your network,
+ while still maintaining a rattling ease of installation and
+ configuration.
+ .
  The Munin::Plugin::SNMP perl module used by various SNMP munin
  plugins.
 
@@ -328,6 +410,11 @@ Replaces: munin-plugins-core (<< 2.999.1-1~),
 Breaks: munin-plugins-core (<< 2.999.1-1~),
  munin-doc (<<2.999.6-5)
 Description: perl bindings for PostgreSQL munin plugins
+ Munin is a highly flexible and powerful solution used to create
+ graphs of virtually everything imaginable throughout your network,
+ while still maintaining a rattling ease of installation and
+ configuration.
+ .
  The Munin::Plugin::Pgsql perl module used by various munin plugins
  for monitoring PostgreSQL database servers.
 
@@ -390,6 +477,11 @@ Package: munin-common
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
 Description: network-wide graphing framework (common)
+ Munin is a highly flexible and powerful solution used to create
+ graphs of virtually everything imaginable throughout your network,
+ while still maintaining a rattling ease of installation and
+ configuration.
+ .
  This package contains the common perl modules that are used by both
  munin and munin-node.
 

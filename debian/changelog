@@ -22,6 +22,7 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * increase compatibility level from 10 to 11
   * patch: use separate spool directory for munin-async
   * fix spelling mistake in NEWS, thanks lintian
+  * extend package descriptions (satisfying lintian's info level)
 
  -- Lars Kruse <devel@sumpfralle.de>  Tue, 08 May 2018 04:08:12 +0200
 
