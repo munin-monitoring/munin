@@ -508,7 +508,7 @@ Description: network-wide graphing framework (async master/client)
 Package: munin-doc
 Section: doc
 Architecture: all
-Depends: ${misc:Depends}, munin-common, libjs-underscore, libjs-jquery
+Depends: ${misc:Depends}, libjs-underscore, libjs-jquery
 Description: network-wide graphing framework (documentation)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still

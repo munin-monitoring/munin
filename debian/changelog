@@ -23,6 +23,7 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * patch: use separate spool directory for munin-async
   * fix spelling mistake in NEWS, thanks lintian
   * extend package descriptions (satisfying lintian's info level)
+  * munin-doc: remove obsolete Depends on munin-common
 
  -- Lars Kruse <devel@sumpfralle.de>  Tue, 08 May 2018 04:08:12 +0200
 
