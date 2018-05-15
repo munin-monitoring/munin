@@ -24,8 +24,10 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * fix spelling mistake in NEWS, thanks lintian
   * extend package descriptions (satisfying lintian's info level)
   * munin-doc: remove obsolete Depends on munin-common
+  * patch module documentation for Munin::Master::LimitsOld
+    (thanks lintian)
 
- -- Lars Kruse <devel@sumpfralle.de>  Tue, 08 May 2018 04:08:12 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Tue, 15 May 2018 22:07:09 +0200
 
 munin (2.999.7-2) experimental; urgency=medium
 

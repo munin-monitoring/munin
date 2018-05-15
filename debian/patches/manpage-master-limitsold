@@ -1,0 +1,16 @@
+add a minimal header to the module documentation
+
+this fixes a lintian warning regarding an improper manpage
+
+--- a/lib/Munin/Master/LimitsOld.pm
++++ b/lib/Munin/Master/LimitsOld.pm
+@@ -1,5 +1,9 @@
+ package Munin::Master::LimitsOld;
+ 
++=head1 NAME
++
++Munin::Master::LimitsOld - Process collected values and thresholds
++
+ =begin comment
+ 
+ This is Munin::Master::LimitsOld, a minimal package shell to make
