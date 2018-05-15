@@ -5,7 +5,7 @@ munin (2.0.6-1) unstable; urgency=medium
 
     If you're upgrading and using (fast)cgi graphing ("graph_strategy cgi"
     in munin.conf) you will need to modify both your /etc/munin/munin.conf
-    as well as the webserver configuration due to changed cgi pathes to
+    as well as the webserver configuration due to changed cgi paths to
     enable secure setups.
     See http://munin-monitoring.org/wiki/CgiHowto2 for more information.
 
