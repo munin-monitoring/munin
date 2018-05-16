@@ -24,6 +24,16 @@ The Munin master contains the following command line programs:
 * :ref:`munin-limits` to check for any off-limit values. Usually run by :ref:`munin-cron`.
 * :ref:`munin-httpd` runs the munin master web interface.
 
+Munin 2.0 contains the following additional command line programs:
+
+* :ref:`munin-graph` to create graphs from data contained in rrd-files. Usually run by
+  :ref:`munin-cron` unless :option:`graph_strategy` is set to "cgi" in :ref:`munin.conf`.
+* :ref:`munin-cgi-graph` is used to provide graph images on demand (if :option:`graph_strategy` is set to "cgi").
+* :ref:`munin-html` to draw html-pages on an Munin installation. Usually run by :ref:`munin-cron`
+  unless :option:`html_strategy` is set to "cgi" in :ref:`munin.conf`.
+* :ref:`munin-cgi-html` is used to provide HTML pages on demand (if :option:`graph_strategy` is set to "cgi").
+
+
 Munin node
 ==========
 
