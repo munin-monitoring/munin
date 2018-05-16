@@ -26,6 +26,8 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * munin-doc: remove obsolete Depends on munin-common
   * patch module documentation for Munin::Master::LimitsOld
     (thanks lintian)
+  * munin-async: create spool directory only in postinst
+    (before: inconsistently via dirs + postinst)
 
  -- Lars Kruse <devel@sumpfralle.de>  Tue, 15 May 2018 22:07:09 +0200
 
