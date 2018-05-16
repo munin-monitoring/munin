@@ -17,6 +17,10 @@ if [ "$1" = "purge" ]; then
     rm -f /var/log/munin-node/munin-node.log*
     rm -f /var/log/munin-node/munin-node-configure.log*
 
+    if getent passwd munin-node >/dev/null; then
+        userdel munin-node
+    fi
+
     delete_dir_if_empty /var/lib/munin-node
     delete_dir_if_empty /var/log/munin-node
     delete_dir_if_empty /etc/munin/plugin-conf.d

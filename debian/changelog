@@ -28,8 +28,9 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
     (thanks lintian)
   * munin-async: create spool directory only in postinst
     (before: inconsistently via dirs + postinst)
+  * munin and munin-node: remove users after purge
 
- -- Lars Kruse <devel@sumpfralle.de>  Tue, 15 May 2018 22:07:09 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Wed, 16 May 2018 21:25:55 +0200
 
 munin (2.999.7-2) experimental; urgency=medium
 

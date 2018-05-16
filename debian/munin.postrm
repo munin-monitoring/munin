@@ -25,9 +25,19 @@ purge_dirs() {
     rm -rf /var/log/munin
 }
 
+del_munin_users() {
+    if getent passwd munin-httpd >/dev/null; then
+        userdel munin-httpd
+    fi
+    if getent passwd munin >/dev/null; then
+        userdel munin
+    fi
+}
+
 case "$1" in
     purge)
         purge_dirs
+        del_munin_users
     ;;
     remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
     ;;
