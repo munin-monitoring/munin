@@ -31,6 +31,7 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * munin and munin-node: remove users after purge
   * munin-plugins-extra: remove outdated alternate dependency on
     "ruby-interpreter" (thanks piuparts)
+  * copyright: remove outdated reference to previously embedded fonts
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 21 May 2018 17:41:08 +0200
 
