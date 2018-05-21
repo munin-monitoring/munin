@@ -126,7 +126,7 @@ Depends: ${perl:Depends}, ${misc:Depends},
  munin-common,
 Recommends:
  python3,
- ruby | ruby-interpreter,
+ ruby,
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: community contributed plugins for munin node

@@ -29,8 +29,10 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * munin-async: create spool directory only in postinst
     (before: inconsistently via dirs + postinst)
   * munin and munin-node: remove users after purge
+  * munin-plugins-extra: remove outdated alternate dependency on
+    "ruby-interpreter" (thanks piuparts)
 
- -- Lars Kruse <devel@sumpfralle.de>  Wed, 16 May 2018 21:25:55 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Mon, 21 May 2018 17:41:08 +0200
 
 munin (2.999.7-2) experimental; urgency=medium
 
