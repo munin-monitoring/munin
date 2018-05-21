@@ -28,8 +28,8 @@
 # host  Host of the memcache daemon
 # port  Port of the memcache daemon
 #
-# Author: Robin H. Johnson <robbat2@gentoo.org>
-# Edited for suggest/instance names: Daniel Black <daniel.black@openquery.com.au> - 2014-08-26
+# Copyright (C) 2014 Daniel Black <daniel.black@openquery.com.au>
+# Copyright (C) 2009 Robin H. Johnson <robbat2@gentoo.org>
 #
 # Slightly based on the original version by Joshua Thijssen
 # <jthijssen@noxlogic.nl>

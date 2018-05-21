@@ -44,8 +44,10 @@ None known
 
 =head1 AUTHOR
 
-Copyright (C) 2000-2009 Torstein Svendsen, Henrik Grindal Bakken,
-Jimmy Olsen, Nicolai Langfeldt and others.
+  Copyright (C) 2006-2009 Nicolai Langfeldt
+  Copyright (C) 2004-2005,2011 Jimmy Olsen
+  Copyright (C) Henrik Grindal
+  Copyright (C) Torstein Svendsen
 
 Torstein Svendsen recalls originally writing this with Henrik Grindal
 Bakken to create MRTG graphs of exims mailqueues for Linpros client

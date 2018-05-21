@@ -1459,7 +1459,10 @@ FIX
 
 =head1 COPYING
 
-Copyright (C) 2002-2009  Jimmy Olsen, et al.
+  Copyright (C) 2010-2018 Steve Schnepp
+  Copyright (C) 2009-2013 Nicolai Langfeldt
+  Copyright (C) 2009 Kjell-Magne Øierud
+  Copyright (C) 2002-2009 Jimmy Olsen
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

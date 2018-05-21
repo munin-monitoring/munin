@@ -59,7 +59,9 @@ None known.
 
 =head1 AUTHOR
 
-Copyright (C) 2000-2009 by various authors.
+  Copyright (C) 2008-2009 Nicolai Langfeldt
+  Copyright (C) 2006 Andreas Schuldei
+  Copyright (C) Sébastien Barbereau
 
 Original Nagios plugin: Sébastien Barbereau.
 

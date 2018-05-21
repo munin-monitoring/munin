@@ -3,7 +3,10 @@
 # with a layout as old DOS defraggers
 #
 # Idea borrowed from seekwatcher [http://oss.oracle.com/~mason/seekwatcher/]
-# Copyright (C) 2010 - Steve Schnepp - GPL
+#
+# Copyright (C) 2010 Steve Schnepp
+#
+# License: GPL
 
 use strict;
 use warnings;

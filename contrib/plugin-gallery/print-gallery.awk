@@ -5,8 +5,8 @@
 #   Second Column: plugin filename (BEWARE: without a leading "./")
 # The input lines are sorted by category.
 #
-# Author: Gabriele Pohl (contact@dipohl.de)
-# Date: 2014-08-23
+# Copyright 2018 Lars Kruse <devel@sumpfralle.de>
+# Copyright 2014-2017 Gabriele Pohl <contact@dipohl.de>
 #
 # This script is free software; you can redistribute it and/or modify
 # it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE as published

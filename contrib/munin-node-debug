@@ -4,7 +4,9 @@
 # - emulate a HUGE network to stress the munin-master server
 # - serve as a basis for protocol debugging 
 #
-# Copyright (C) 2010 Steve Schnepp under the GPLv2
+# Copyright (C) 2010 Steve Schnepp
+#
+# License: GPLv2
 
 use strict;
 use warnings;

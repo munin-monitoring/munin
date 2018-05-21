@@ -49,9 +49,9 @@ None known.
 
 =head1 AUTHOR
 
-Copyright (C) 2004 Jimmy Olsen, Dagfinn Ilmari Mannsaaker
-
-Documented and updated to use Munin::Plugin::SNMP by Matthew Boyle.
+  Copyright (C) 2010 Matthew Boyle
+  Copyright (C) 2004-2005 Dagfinn Ilmari Mannsåker
+  Copyright (C) 2004 Jimmy Olsen
 
 =head1 LICENSE
 

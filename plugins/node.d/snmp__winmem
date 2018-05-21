@@ -48,7 +48,8 @@ None known.
 
 =head1 AUTHOR
 
-Copyright (C) 2004-2006 Jimmy Olsen, Dagfinn Ilmari Mannsaaker
+  Copyright (C) 2004-2005 Dagfinn Ilmari Mannsåker
+  Copyright (C) 2004 Jimmy Olsen
 
 Documented and updated to use Munin::Plugin::SNMP by Matthew Boyle.
 

@@ -106,9 +106,10 @@ number of shared memory pages
 
 =back
 
-=head1 AUTHORS
+=head1 AUTHOR
 
-Copyright (C) 2006-2008 Holger Levsen, Micah Anderson
+  Copyright (C) 2006-2008 Holger Levsen
+  Copyright (C) 2006-2008 Micah Anderson
 
 =head1 LICENSE
 

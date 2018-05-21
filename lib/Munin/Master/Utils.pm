@@ -1527,7 +1527,10 @@ Returns:
 
 =head1 COPYING
 
-Copyright (C) 2003-2007 Jimmy Olsen, Audun Ytterdal
+Copyright (C) 2010-2014 Steve Schnepp
+Copyright (C) 2003-2011 Jimmy Olsen
+Copyright (C) 2006-2010 Nicolai Langfeldt
+Copyright (C) Audun Ytterdal
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
