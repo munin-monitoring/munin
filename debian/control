@@ -77,7 +77,7 @@ Suggests:
  libdbd-mysql-perl,
  libnet-dns-perl,
  python,
- ruby | ruby-interpreter,
+ ruby,
  time,
 Description: network-wide graphing framework (plugins for node)
  Munin is a highly flexible and powerful solution used to create graphs of

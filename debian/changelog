@@ -34,6 +34,8 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     from "munin-node" (removed by upstream)
   * improve README.PluginConfiguration (for "munin-node")
   * increase compatibility level from 10 to 11
+  * munin-plugins-extra: remove outdated alternate dependency on
+    "ruby-interpreter" (thanks piuparts)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
