@@ -1,26 +1,47 @@
 #!/usr/bin/perl -w
 
-# Copyright Bjorn Ruberg <bjorn@ruberg.no>
-# Licenced under GPL v2
-#
-# TODO:
-# - Check for OpenLDAP version
+=head1 NAME
 
-# We use one script for all monitoring.
-# This script may be symlinked with several names, all
-# performing different functions:
-# slapd_statistics_bytes
-# slapd_statistics_pdu
-# slapd_statistics_referrals
-# slapd_statistics_entries
-# slapd_connections
-# slapd_waiters
-# slapd_operations
-# slapd_operations_diff
+slapd_ - Plugin for monitoring LDAP servers
+
+=head1 APPLICABLE SYSTEMS
+
+Any system that can communicate with a slapd service.
+
+=head1 CONFIGURATION
+
+Create a symlink to this script and place it below /etc/munin/plugins.
+
+The name of the symlink determines the detail to be monitored:
+
+- slapd_statistics_bytes
+- slapd_statistics_pdu
+- slapd_statistics_referrals
+- slapd_statistics_entries
+- slapd_connections
+- slapd_waiters
+- slapd_operations
+- slapd_operations_diff
+
+=head1 AUTHOR
+
+Copyright Bjorn Ruberg <bjorn@ruberg.no>
+
+=head1 LICENSE
+
+Licenced under GPL v2
+
+=head1 TODO
+
+- Check for OpenLDAP version
+
+=head1 MAGIC MARKERS
 
 # Magic markers
 #%# family=auto
 #%# capabilities=autoconf suggest
+
+=cut
 
 use strict;
 
