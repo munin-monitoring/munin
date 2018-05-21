@@ -1137,7 +1137,7 @@ Aborting.
 sub print_version_and_exit {
     print qq{munin version $Munin::Common::Defaults::MUNIN_VERSION.
 
-Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Tore Andersson, Kjell-Magne Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
+Copyright (C) 2002-2018 Contributors of Munin
 
 This is free software released under the GNU General Public
 License. There is NO warranty; not even for MERCHANTABILITY or FITNESS
