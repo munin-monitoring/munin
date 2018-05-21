@@ -84,6 +84,7 @@ The plugin measures the uptime of the system in days.
 =head1 AUTHOR
 
 Copyright (C) 2013 Diego Elio Pettenò
+
 Rewritten from multiple plugins, integrating work by:
 
  - Ragnar Wisløff

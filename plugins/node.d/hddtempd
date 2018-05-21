@@ -1,48 +1,66 @@
 #!/usr/bin/perl -w
-#
-# Munin plugin to monitor hdd temperature from a hddtemp daemon.
-#
-# This plugin is an alternative to the hddtemp_smartctl, which is the 
-# preferred one.
-#
-# Author: Stein Magnus Jodal <jodal at users.sourceforge.net>
-#
-# Depends on `hddtemp` <http://coredump.free.fr/linux/hddtemp.php> by
-# Emmanuel Varagnat <coredump@free.fr> running as a daemon.
-#
-# If fetching temp from another machine, remember to bind hddtempd to the right
-# interface. Loopback only is default.
-#
-# Parameters understood:
-#
-# 	host   - Change which host to graph (default localhost)
-# 	port   - Change which port to connect to (default 7634)
-# 	scale  - C for Celsius, F for Fahrenheit (default C)
-#
-# This plugin is based on the apt plugin.
-#
-#
-# Usage: place in /etc/munin/node.d/ (or link it there using ln -s)
-#
-# Parameters understood:
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-#
-# v1.2 2004-06-07
-#  - Renamed to hddtempd
-#  - Now more generic, not only localhost
-# v1.1 2004-05-23
-#  - Fixed support for multiple disks
-# v1.0 2004-05-17
-#  - Initial version
-#
-#
-# Magic markers - optional - used by installation scripts and
-# munin-config:
-#
+
+=head1 NAME
+
+hddtempd - Plugin to monitor hdd temperature from a hddtemp daemon.
+
+
+=head1 APPLICABLE SYSTEMS
+
+This plugin is an alternative to the hddtemp_smartctl, which is the
+preferred one.
+
+Depends on `hddtemp` <http://coredump.free.fr/linux/hddtemp.php> by
+Emmanuel Varagnat <coredump@free.fr> running as a daemon.
+
+
+=head1 USAGE
+
+If fetching temp from another machine, remember to bind hddtempd to the right
+interface. Loopback only is default.
+
+Parameters understood:
+	config   (required)
+	autoconf (optional - used by munin-config)
+
+
+=head1 CONFIGURATION
+
+Parameters understood:
+
+	host   - Change which host to graph (default localhost)
+	port   - Change which port to connect to (default 7634)
+	scale  - C for Celsius, F for Fahrenheit (default C)
+
+Usage: place in /etc/munin/node.d/ (or link it there using ln -s)
+
+
+=head1 CHANGELOG
+
+v1.2 2004-06-07
+ - Renamed to hddtempd
+ - Now more generic, not only localhost
+
+v1.1 2004-05-23
+ - Fixed support for multiple disks
+
+v1.0 2004-05-17
+ - Initial version
+
+
+=head1 COPYING
+
+Copyright 2004 Stein Magnus Jodal <jodal@users.sourceforge.net>
+
+This plugin is based on the apt plugin.
+
+
+=head1 MAGIC MARKERS
+
 #%# family=contrib
 #%# capabilities=autoconf
+
+=cut
 
 use strict;
 use IO::Socket::INET;
