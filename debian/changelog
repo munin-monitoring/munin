@@ -32,6 +32,7 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * munin-plugins-extra: remove outdated alternate dependency on
     "ruby-interpreter" (thanks piuparts)
   * copyright: remove outdated reference to previously embedded fonts
+  * move source.lintian-overrides to source/lintian-overrides
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 21 May 2018 17:41:08 +0200
 
