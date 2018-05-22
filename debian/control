@@ -18,7 +18,6 @@ Build-Depends-Indep:
  libio-stringy-perl,
  liblist-moreutils-perl,
  liblog-dispatch-perl,
- libmodule-build-perl,
  libnet-dns-perl,
  libnet-ip-perl,
  libnet-server-perl,
@@ -44,7 +43,7 @@ Build-Depends-Indep:
  python,
  python3-sphinx,
  ruby,
-Build-Depends: debhelper (>=10.2.5~)
+Build-Depends: debhelper (>=10.2.5~), libmodule-build-perl
 Standards-Version: 4.1.4
 Homepage: http://munin-monitoring.org
 Vcs-Git: https://salsa.debian.org/debian/munin -b debian-experimental

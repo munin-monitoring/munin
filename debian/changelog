@@ -33,6 +33,8 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
     "ruby-interpreter" (thanks piuparts)
   * copyright: remove outdated reference to previously embedded fonts
   * move source.lintian-overrides to source/lintian-overrides
+  * move "libmodule-build-perl" from "Build-Depends-Indep" to "Build-Depends"
+    (thanks lintian: libmodule-build-perl-needs-to-be-in-build-depends)
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 21 May 2018 17:41:08 +0200
 
