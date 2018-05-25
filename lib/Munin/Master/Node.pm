@@ -36,7 +36,7 @@ sub new {
         reader  => undef,
         pid     => undef,
         writer  => undef,
-        master_capabilities => "multigraph dirtyconfig",
+        master_capabilities => "multigraph",
         io_timeout => 120,
 	configref => $configref,
     };
