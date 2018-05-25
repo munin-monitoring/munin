@@ -441,9 +441,16 @@ sub fetch_service_config {
 
 	my $last_timestamp = 0;
 	for my $line (@$lines) {
+		DEBUG "handle '$line'";
 		if ($line =~ m{\A multigraph \s+ (.+) }xms) {
+			if (@$lines_block) {
+				# Flush the previous block
+				$last_timestamp = $uw_handle_config->($local_service_name, $now, $lines_block, $last_timestamp);
+				$lines_block = [];
+			}
+			# Now we are in the new block
 			$local_service_name = $1;
-			$last_timestamp = $uw_handle_config->($local_service_name, $now, $lines_block, $last_timestamp);
+
 			next;
 		}
 
