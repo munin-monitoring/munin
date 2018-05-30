@@ -1,6 +1,9 @@
 munin (2.0.37-2) UNRELEASED; urgency=medium
 
-  * Bump Standards-Version: to 4.1.4, no changes needed.
+  * d/control:
+    - switch packaging to salsa.debian.org. Thanks to the alioth admins for
+      providing such a nice service so long!
+    - bump Standards-Version to 4.1.4, no changes needed.
 
  -- Holger Levsen <holger@debian.org>  Thu, 05 Apr 2018 17:47:11 +0000
 
