@@ -3016,6 +3016,31 @@ leeclemens (1):
 tsaavik (1):
       dynazoom: added logo and backlink
 
+munin-2.0.29, 2016-12-31
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: D:847649, D:849383
+
+------------------
+Detailed Changelog
+------------------
+
+Artur Smet (1):
+      Add queries for PostgreSQL 9.4
+
+Peter J. Holzer (1):
+      p/postgres_querylength_: don't stack times
+
+Vincas Dargis (1):
+      Update postgres_connections_ for PostgreSQL 9.6
+
+
+
 munin-2.0.28, 2016-12-04
 
 -------
