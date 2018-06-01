@@ -3016,6 +3016,24 @@ leeclemens (1):
 tsaavik (1):
       dynazoom: added logo and backlink
 
+munin-2.0.32, 2017-03-01
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #802, DH:856455
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      cgi: handle the empty string in CGI arguments
+
+
 munin-2.0.31, 2017-02-25
 
 -------
