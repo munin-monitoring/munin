@@ -1971,6 +1971,7 @@ sub append_formula_field
   my ($field_name, $formula, $label, $info) = @_[0..4];
   unless (exists($fields_source->{$field_name}))
   {
+    $name = "$formula" unless defined $name && $name ne '';
     $fields_source->{$field_name} =
     {
       'src'   => { 'calculated' => $formula },

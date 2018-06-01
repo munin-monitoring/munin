@@ -37,7 +37,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_scale no'
 	echo 'graph_info This graph shows disk usage on the machine.'
 	mfs=0
-	/bin/df -P $EXCLUDEDFS | tail -n +2 | grep -v '^/sys' | grep -v "//" | while read i; do
+	/bin/df -P $EXCLUDEDFS | tail -n +2 | sort | grep -v '^/sys' | grep -v "//" | while read i; do
 		case $i in
 		mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
 		*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
@@ -51,11 +51,11 @@ if [ "$1" = "config" ]; then
 fi
 
 mfs=0
-/bin/df -P $EXCLUDEDFS | tail -n +2 | grep -v '^/sys' | grep -v "//" | while read i; do
+/bin/df -P $EXCLUDEDFS | tail -n +2 | sort | grep -v '^/sys' | grep -v "//" | while read i; do
 	case $i in
 	mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
 	*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
 	esac
 	echo -n "$name.value "
-	echo $i | awk '{ print $5 }' | cut -f1 -d%
+	echo $i | awk '{ if ($2 == 0) print 0; else printf("%.2f\n", 100.0 * ($2 - $4) / $2); }'
 done
