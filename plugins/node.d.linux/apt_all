@@ -13,8 +13,37 @@ graphs.
 
 =head1 CONFIGURATION
 
+You can add some extra options to the apt call, in order to override
+your /etc/apt.conf defaults.
+
 [apt_all]
 env.MUNIN_APT_RELEASES = stable,testing,unstable
+env.options -o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false
+
+Note that apt is called with no extra options by default, so it fully honors
+your /etc/apt.conf defaults.
+
+=head1 USAGE
+
+This plugin needs a cronjob that runs apt-get update every hour or so
+
+Example conjob
+
+ /etc/cron.d/munin-plugin-apt
+ 53  * * * *	root	apt-get update > /dev/null 2>&1
+ 23 08 * * * 	root	apt-get update > /dev/null
+
+Remember to randomize when these cronjobs are run on your servers
+
+This plugin can also be called with the argument "update", which will
+run apt-get update
+
+ update <maxinterval> <probability>
+
+ Updates the APT database randomly, guaranteeing there
+ won't be more than <maxinterval> seconds between each
+ update.  Otherwise, there is a a 1 in <probability>
+ chance that an update will occur.
 
 =head1 MAGIC MARKERS
 
@@ -104,7 +133,8 @@ sub update_state() {
 	open(STATE, ">$statefile")
 		or die("Couldn't open state file $statefile for writing.");
 	foreach my $release (@releases) {
-	    my $apt="apt-get -u dist-upgrade --print-uris --yes -t $release |";
+	    my $options = $ENV{options} || "";
+	    my $apt="apt-get $options -u dist-upgrade --print-uris --yes -t $release |";
 	    open (APT, "$apt") or exit 22;
 
 	    my @pending = ();

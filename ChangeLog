@@ -3016,6 +3016,47 @@ leeclemens (1):
 tsaavik (1):
       dynazoom: added logo and backlink
 
+munin-2.0.26, 2016-09-09
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: D:761190, GH:426
+
+------------------
+Detailed Changelog
+------------------
+
+Bjørn Forsman (1):
+      multips: reject 'autoconf' unless $names is set
+
+Gabriele (1):
+      p/snmp_if: fix warning on receive
+
+Jason Woods (4):
+      Fix fofields always having the same entries as ofields. fofields now contains only entries that had a state change to OK (fo = fixed ok)
+      Fix ofields previous state detection not working correctly
+      Fix broken limits     - Inheritance of warning/critical now works correctly and does not break subsequent limits     - Aliased graph fields now obey limits assigned to them
+      Fix get_limit returning [undef, undef] instead of undef when no warning or critical defined
+
+Julien Pivotto (1):
+      Fix #1468: backport http_loadtime from devel
+
+Ken-ichi Mito (1):
+      fix https://github.com/munin-monitoring/munin/issues/426 (Numbers are crazy in diskstats plugin after reboot)
+
+Kenyon Ralph (1):
+      fix typo in graph_title
+
+Steve Schnepp (2):
+      p/apt_all: Be able to override /etc/apt.conf
+      p/apt_all: add some comment about default options
+
+
+
 munin-2.0.25, 2014-11-24
 
 -------
