@@ -3016,6 +3016,45 @@ leeclemens (1):
 tsaavik (1):
       dynazoom: added logo and backlink
 
+munin-2.0.28, 2016-12-04
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Dr. Nagy Elemér Károly (1):
+      Visible graph titles => Ctrl-F works in browsers.
+
+IWAI, Masaharu (1):
+      autodetect the node encoding
+
+Kim B. Heino (3):
+      if_: /sys/class/net/ reports speed 0 for some devices
+      if_, if_err_: add more virtual devices like gre0 and bond0.99 to skip list
+      if_: check for non-empty and >0 before reporting speed (thanks to ssm)
+
+Lars Kruse (1):
+      plugin munin_stats: fix message typo
+
+Mark H. Wood (1):
+      Replace trivial use of Netcat with our own gadget to test for an open port.
+
+Stig Sandbeck Mathisen (1):
+      Add configuration for ssh master-node transport
+
+Tomohiro Hosaka (1):
+      s/IMGWEEKSUM/IMGYEARSUM/
+
+sstj (1):
+      Fix "Use of uninitialized value in numeric eq (==)" warning
+
+
 munin-2.0.27, 2016-10-31
 
 -------
