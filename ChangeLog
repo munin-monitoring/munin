@@ -3016,6 +3016,25 @@ leeclemens (1):
 tsaavik (1):
       dynazoom: added logo and backlink
 
+munin-2.0.37, 2018-03-28
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      p/munin_stats: fields are configurable
+
+dipohl (1):
+      doc: add example graphs
+
+
 munin-2.0.36, 2018-03-25
 
 -------

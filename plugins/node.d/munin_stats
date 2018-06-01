@@ -31,6 +31,9 @@ use Munin::Plugin;
 my @logs = qw/update graph html limits/;
 my $logdir = ($ENV{'logdir'} || $ENV{'MUNIN_LOGDIR'} || '/var/log/munin');
 
+if ($ENV{'fields'}) {
+	@logs = split(/ +/, $ENV{'fields'});
+}
 
 sub uses_graph_cron {
     my $log_file = $_[0];
@@ -74,21 +77,14 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
           "graph_scale yes\n",
           "graph_vlabel seconds\n",
           "graph_category munin\n";
-    my $print_graph = 1;
     foreach my $log (@logs) {
-        if ($log eq "graph") {
-            $print_graph = uses_graph_cron("$logdir/munin-$log.log");
-        }
-        if ($log ne "graph" || $print_graph) {
-            print "$log.label munin $log\n";
-            print "$log.draw AREASTACK\n";
-        }
-    }
-    print "update.warning 240\n";
-    print "update.critical 285\n";
-    if ($print_graph) {
-        print "graph.warning 240\n";
-        print "graph.critical 285\n";
+        print "$log.label munin $log\n";
+	print "$log.draw AREASTACK\n";
+
+	next unless $log eq "update" || $log eq "graph";
+
+	print "$log.warning 240\n";
+        print "$log.critical 285\n";
     }
     exit 0;
 }
@@ -98,8 +94,6 @@ foreach my $log (@logs) {
     my $time = 'U';
 
     if (! -r $logfile) {
-        next if $log eq "graph"; # Should not emit *anything* on graph
-
         print "$log.extinfo Can't open $logfile for reading\n";
         print "$log.value $time\n";
         next;
