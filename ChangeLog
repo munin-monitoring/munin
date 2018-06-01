@@ -3016,6 +3016,28 @@ leeclemens (1):
 tsaavik (1):
       dynazoom: added logo and backlink
 
+munin-2.0.30, 2017-01-18
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: GH:745, GH:771, GH:783
+
+------------------
+Detailed Changelog
+------------------
+
+Kenyon Ralph (2):
+      Revert "if_: check for non-empty and >0 before reporting speed (thanks to ssm)"
+      plugins/linux/meminfo: correct typo
+
+Yu Watanabe (1):
+      Revert "munin_stats plugin: only graph munin-graph if graph_strategy=cron"
+
+
 munin-2.0.29, 2016-12-31
 
 -------
