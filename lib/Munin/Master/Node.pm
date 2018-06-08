@@ -620,7 +620,7 @@ sub fetch_service_data {
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
     DEBUG "[DEBUG] data: $elapsed sec for '$plugin' on $nodedesignation";
 
-    return $uw_handle_data->($lines);
+    return $uw_handle_data->($plugin, $lines);
 }
 
 sub quit {
