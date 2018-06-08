@@ -431,7 +431,7 @@ sub fetch_service_config {
 	my $elapsed = tv_interval($t0);
 
 	my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-	DEBUG "[DEBUG] config: $elapsed sec for '$service' on $nodedesignation";
+	DEBUG "[DEBUG] config: $elapsed sec for '$service' on $nodedesignation, read ". (scalar @$lines) . " lines" ;
 
 	$service = $self->_sanitise_plugin_name($service);
 
@@ -742,6 +742,7 @@ sub _node_read {
     my @array = ();
 
     while(my $line = $self->_node_read_single()) {
+	DEBUG "_node_read(): $line";
 	last if $line eq ".";
         push @array, $line;
 
