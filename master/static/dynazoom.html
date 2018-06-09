@@ -96,10 +96,10 @@ var scale = refreshImg();
 
 function refreshImg() {
 	image.src = form.cgiurl_graph.value + "/"
-		+ form.plugin_name.value 
+		+ form.plugin_name.value
 		+ "-pinpoint=" + parseInt(form.start_epoch.value) + "," + parseInt(form.stop_epoch.value)
 		+ ".png"
-		+ "?" 
+		+ "?"
 		+ "&lower_limit=" + form.lower_limit.value
 		+ "&upper_limit=" + form.upper_limit.value
 		+ "&size_x=" + form.size_x.value
@@ -156,7 +156,7 @@ function startZoom(mouseMouveEvent) {
 
 	// Show the div
 	divOverlay.style.visibility = 'visible';
-	divOverlay.style.backgroundColor = '#555'; 
+	divOverlay.style.backgroundColor = '#555';
 
 	// Initial show
 	divOverlay.style.left = mouseMouveEvent.pageX;
@@ -171,7 +171,7 @@ function startZoom(mouseMouveEvent) {
 }
 
 function endZoom(event) {
-	divOverlay.style.backgroundColor = '#000'; 
+	divOverlay.style.backgroundColor = '#000';
 	image.onmousemove = undefined;
 	divOverlay.onmousemove = undefined;
 	divOverlay.onclick = doZoom;
@@ -229,13 +229,13 @@ divOverlay.onclick = image.onclick = click;
 var clickCounter = 1;
 function click(event) {
 	switch ((clickCounter++) % 3) {
-		case 0: 
+		case 0:
 			clearZoom(event);
 			break;
-		case 1: 
+		case 1:
 			startZoom(event);
 			break;
-		case 2: 
+		case 2:
 			endZoom(event);
 			break;			
 	}
@@ -244,11 +244,11 @@ function click(event) {
 </script>
 
 <style>
-#overlayDiv { 
-	opacity: .55; 
-	filter: alpha(opacity=55); 
-	background-color:#EEE; 
-	position: absolute; 
+#overlayDiv {
+	opacity: .55;
+	filter: alpha(opacity=55);
+	background-color:#EEE;
+	position: absolute;
 	z-index: 2;
 }
 </style>
