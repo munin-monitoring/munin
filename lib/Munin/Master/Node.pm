@@ -610,11 +610,7 @@ sub fetch_service_data {
 
     $self->_node_write_single("fetch $plugin\n");
 
-    my $callback = sub {
-	    my ($plugin, $data) = @_;
-	    return $uw_handle_data->($plugin, $data)
-    };
-    my $lines = $self->_node_read($callback);
+    my $lines = $self->_node_read($uw_handle_data);
     
     my $elapsed = tv_interval($t0);
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
