@@ -740,16 +740,23 @@ sub _node_read {
     while(my $line = $self->_node_read_single()) {
 	DEBUG "_node_read(): $line";
 	last if $line eq ".";
-        push @array, $line;
 
 	# The trigger is always "multigraph ..."
 	# We do callback the callback if defined
-	if ($callback && $line =~ m/^multigaph (\S)+/) {
+	unless ($callback && $line =~ m{\A multigraph \s+ (.+) }xms) {
+		# Regular line
+		push @array, $line;
+	} else {
 		my $new_plugin = $1;
+
+		use Data::Dumper;
 
 		# Callback is called with ($plugin, $data) to flush the previous plugins
 		# ... if there's already a plugin
-		$callback->($current_plugin, \@array) if $current_plugin;
+		if ($current_plugin) {
+			DEBUG "callback->($current_plugin, " . Dumper(\@array) . ")";
+			$callback->($current_plugin, \@array);
+		}
 
 		# Handled the old one. Moving to the new one.
 		$current_plugin = $new_plugin;
@@ -757,7 +764,7 @@ sub _node_read {
 	}
     }
 
-    # Handle the multigaph one last time
+    # Handle the multigraph one last time
     if ($callback && $current_plugin) {
 	$callback->($current_plugin, \@array);
 	@array = ();
