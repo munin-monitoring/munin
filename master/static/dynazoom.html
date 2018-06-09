@@ -1,11 +1,26 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-	<script language="JavaScript" src="formatdate.js"></script>
-	<script language="JavaScript" src="querystring.js"></script>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+	<title>Munin: dynamic graph zoom</title>
+	<script src="formatdate.js" type="text/javascript"></script>
+	<script src="querystring.js" type="text/javascript"></script>
+
+	<style type="text/css">
+	#overlayDiv {
+		opacity: .55;
+		filter: alpha(opacity=55);
+		background-color:#EEE;
+		position: absolute;
+		z-index: 2;
+	}
+	</style>
 </head>
 <body>
 	
 <div style="position:relative;">
-	<img id="image" />
+	<img id="image" src="" alt="Dynamically zoomable graph" />
 <div id="overlayDiv" />
 
 </div>
@@ -25,7 +40,7 @@
 </tr>
 </table>
 
-<form name="myNewForm" id="myNewForm">
+<form id="myNewForm" action="">
 <table>
 	<!-- Plugin Name : "domain/hostname" -->
 	<tr>
@@ -62,14 +77,15 @@
 		</td>
 	</tr>
 </table>
-	<input type=hidden name="cgiurl_graph" />
-	<input type=submit />
-	<input type=button name="btnZoomOut" value="Zoom Out x2" />
+<p>
+	<input type="hidden" name="cgiurl_graph" />
+	<input type="submit" />
+	<input type="button" name="btnZoomOut" value="Zoom Out x2" />
+</p>
 </form>
 
-</body>
-
-<script>
+<script type="text/javascript">
+//<![CDATA[
 
 // Insert values in the form
 var qs = new Querystring();
@@ -241,15 +257,7 @@ function click(event) {
 	}
 }
 
+//]]>
 </script>
-
-<style>
-#overlayDiv {
-	opacity: .55;
-	filter: alpha(opacity=55);
-	background-color:#EEE;
-	position: absolute;
-	z-index: 2;
-}
-</style>
-
+</body>
+</html>
