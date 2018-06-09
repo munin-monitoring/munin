@@ -7,6 +7,7 @@
 <h2>Problem Overview</h2>
 <div class="problem" id="critical">
 <h3>Critical</h3>
+<TMPL_IF NAME="CRITICAL">
 <table>
 <TMPL_LOOP NAME="CRITICAL">
 	<tr>
@@ -19,7 +20,6 @@
 				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
 				<TMPL_IF NAME="URL"></a></TMPL_IF>
 			</span><br />
-			</a>
 			<a href="<TMPL_VAR NAME="URL">">
 				  <img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="i"
 				   <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 
@@ -36,7 +36,6 @@
 				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
 				<TMPL_IF NAME="URL"></a></TMPL_IF>
 			</span><br />
-			</a>
 			<a href="<TMPL_VAR NAME="URL">">
 				  <img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="i"
 				   <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> 
@@ -47,9 +46,11 @@
 	</tr>
 </TMPL_LOOP>
 </table>
+</TMPL_IF>
 </div>
 <div class="problem" id="warning">
 <h3>Warning</h3>
+<TMPL_IF NAME="WARNING">
 <table>
 <TMPL_LOOP NAME="WARNING">
 	<tr>
@@ -62,7 +63,6 @@
 				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
 				<TMPL_IF NAME="URL"></a></TMPL_IF>
 			</span><br />
-			</a>
 			<a href="<TMPL_VAR NAME="URL">">
 				  <img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="i"
 				   <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 
@@ -79,7 +79,6 @@
 				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
 				<TMPL_IF NAME="URL"></a></TMPL_IF>
 			</span><br />
-			</a>
 			<a href="<TMPL_VAR NAME="URL">">
 				  <img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="i"
 				   <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> 
@@ -90,9 +89,11 @@
 	</tr>
 </TMPL_LOOP>
 </table>
+</TMPL_IF>
 </div>
 <div class="problem" id="unknown">
 <h3>Unknown</h3>
+<TMPL_IF NAME="UNKNOWN">
 <table>
 <TMPL_LOOP NAME="UNKNOWN">
 	<tr>
@@ -105,7 +106,6 @@
 				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
 				<TMPL_IF NAME="URL"></a></TMPL_IF>
 			</span><br />
-			</a>
 			<a href="<TMPL_VAR NAME="URL">">
 				  <img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="i"
 				   <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 
@@ -122,7 +122,6 @@
 				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
 				<TMPL_IF NAME="URL"></a></TMPL_IF>
 			</span><br />
-			</a>
 			<a href="<TMPL_VAR NAME="URL">">
 				  <img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class="i"
 				   <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> 
@@ -133,6 +132,7 @@
 	</tr>
 </TMPL_LOOP>
 </table>
+</TMPL_IF>
 </div>
 </div>
 </div>
