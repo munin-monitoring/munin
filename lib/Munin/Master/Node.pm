@@ -431,7 +431,7 @@ sub fetch_service_config {
 	my $elapsed = tv_interval($t0);
 
 	my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-	DEBUG "[DEBUG] config: $elapsed sec for '$service' on $nodedesignation, read ". (scalar @$lines) . " lines" ;
+	INFO "config: $elapsed sec for '$service' on $nodedesignation, read ". (scalar @$lines) . " lines" ;
 
 	$service = $self->_sanitise_plugin_name($service);
 
@@ -618,7 +618,7 @@ sub fetch_service_data {
     
     my $elapsed = tv_interval($t0);
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-    DEBUG "[DEBUG] data: $elapsed sec for '$plugin' on $nodedesignation";
+    INFO "data: $elapsed sec for '$plugin' on $nodedesignation";
 
     return $uw_handle_data->($plugin, $lines);
 }
@@ -630,7 +630,7 @@ sub quit {
     $self->_node_write_single("quit \n");
     my $elapsed = tv_interval($t0);
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-    DEBUG "[DEBUG] quit: $elapsed sec on $nodedesignation";
+    INFO "quit: $elapsed sec on $nodedesignation";
 
     return 1;
 }
