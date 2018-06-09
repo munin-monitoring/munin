@@ -36,7 +36,7 @@ sub new {
         reader  => undef,
         pid     => undef,
         writer  => undef,
-        master_capabilities => "multigraph dirtyconfig",
+        master_capabilities => "multigraph",
         io_timeout => 120,
 	configref => $configref,
     };
@@ -431,7 +431,7 @@ sub fetch_service_config {
 	my $elapsed = tv_interval($t0);
 
 	my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-	DEBUG "[DEBUG] config: $elapsed sec for '$service' on $nodedesignation";
+	INFO "config: $elapsed sec for '$service' on $nodedesignation, read ". (scalar @$lines) . " lines" ;
 
 	$service = $self->_sanitise_plugin_name($service);
 
@@ -441,9 +441,16 @@ sub fetch_service_config {
 
 	my $last_timestamp = 0;
 	for my $line (@$lines) {
+		DEBUG "handle '$line'";
 		if ($line =~ m{\A multigraph \s+ (.+) }xms) {
+			if (@$lines_block) {
+				# Flush the previous block
+				$last_timestamp = $uw_handle_config->($local_service_name, $now, $lines_block, $last_timestamp);
+				$lines_block = [];
+			}
+			# Now we are in the new block
 			$local_service_name = $1;
-			$last_timestamp = $uw_handle_config->($local_service_name, $now, $lines_block, $last_timestamp);
+
 			next;
 		}
 
@@ -603,17 +610,13 @@ sub fetch_service_data {
 
     $self->_node_write_single("fetch $plugin\n");
 
-    my $callback = sub {
-	    my ($plugin, $data) = @_;
-	    return $uw_handle_data->($plugin, $data)
-    };
-    my $lines = $self->_node_read($callback);
+    my $lines = $self->_node_read($uw_handle_data);
     
     my $elapsed = tv_interval($t0);
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-    DEBUG "[DEBUG] data: $elapsed sec for '$plugin' on $nodedesignation";
+    INFO "data: $elapsed sec for '$plugin' on $nodedesignation";
 
-    return $uw_handle_data->($lines);
+    return $uw_handle_data->($plugin, $lines);
 }
 
 sub quit {
@@ -623,7 +626,7 @@ sub quit {
     $self->_node_write_single("quit \n");
     my $elapsed = tv_interval($t0);
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-    DEBUG "[DEBUG] quit: $elapsed sec on $nodedesignation";
+    INFO "quit: $elapsed sec on $nodedesignation";
 
     return 1;
 }
@@ -735,17 +738,25 @@ sub _node_read {
     my @array = ();
 
     while(my $line = $self->_node_read_single()) {
+	DEBUG "_node_read(): $line";
 	last if $line eq ".";
-        push @array, $line;
 
 	# The trigger is always "multigraph ..."
 	# We do callback the callback if defined
-	if ($callback && $line =~ m/^multigaph (\S)+/) {
+	unless ($callback && $line =~ m{\A multigraph \s+ (.+) }xms) {
+		# Regular line
+		push @array, $line;
+	} else {
 		my $new_plugin = $1;
+
+		use Data::Dumper;
 
 		# Callback is called with ($plugin, $data) to flush the previous plugins
 		# ... if there's already a plugin
-		$callback->($current_plugin, \@array) if $current_plugin;
+		if ($current_plugin) {
+			DEBUG "callback->($current_plugin, " . Dumper(\@array) . ")";
+			$callback->($current_plugin, \@array);
+		}
 
 		# Handled the old one. Moving to the new one.
 		$current_plugin = $new_plugin;
@@ -753,7 +764,7 @@ sub _node_read {
 	}
     }
 
-    # Handle the multigaph one last time
+    # Handle the multigraph one last time
     if ($callback && $current_plugin) {
 	$callback->($current_plugin, \@array);
 	@array = ();
