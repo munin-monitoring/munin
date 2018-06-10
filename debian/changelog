@@ -1,5 +1,6 @@
-munin (2.999.7-3) UNRELEASED; urgency=medium
+munin (2.999.8-1) UNRELEASED; urgency=medium
 
+  * New upstream beta release
   * munin: include manpage for "munin-httpd"
   * munin-node: include manpage for "munin-doc"
   * replace embedded copies of "fonts-materialdesignicons-webfont" and
@@ -38,7 +39,7 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * munin-httpd: allow FETCH access to rrdcached socket.
     Thanks to Lucas Nussbaum! (Closes: #900780)
 
- -- Lars Kruse <devel@sumpfralle.de>  Mon, 21 May 2018 17:41:08 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Sun, 10 Jun 2018 15:28:06 +0200
 
 munin (2.999.7-2) experimental; urgency=medium
 
