@@ -27,6 +27,9 @@ Linux
 * munin-node systemd service :download:`/etc/systemd/system/munin-node.service
   <linux/systemd/munin-node.service>`
 
+* munin-httpd systemd service :download:`/etc/systemd/system/munin-httpd.service
+  <linux/systemd/munin-httpd.service>`
+
 * munin-node upstart job :download:`/etc/init/munin-node.conf
   <linux/upstart/munin-node.conf>`
 
