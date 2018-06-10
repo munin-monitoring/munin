@@ -38,6 +38,8 @@ munin (2.999.8-1) UNRELEASED; urgency=medium
     (thanks lintian: libmodule-build-perl-needs-to-be-in-build-depends)
   * munin-httpd: allow FETCH access to rrdcached socket.
     Thanks to Lucas Nussbaum! (Closes: #900780)
+  * plugin dhcpd3: adjust default leases and config files locations.
+    (Closes: #863534)
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 10 Jun 2018 15:28:06 +0200
 
