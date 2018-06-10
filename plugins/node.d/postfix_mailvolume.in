@@ -57,6 +57,7 @@ my $pos = undef;
 # the volume that was actually delivered
 my $volume_delivered = 0;
 my %volumes_per_queue_id = ();
+my $serialized_volumes_queue;
 my %expired_queue_ids = ();
 # Discard old queue IDs after a while (otherwise the state storage grows infinitely). We need to
 # store the IDs long enough for the gap between two delivery attempts. Thus multiple hours are
@@ -83,19 +84,19 @@ sub parseLogfile {
                 $volumes_per_queue_id{$1} = {timestamp => time};
             }
             # probably it is the same value as before
-            $volumes_per_queue_id{$1}{size} = $2;
+            $volumes_per_queue_id{$1}->{size} = $2;
         } elsif ($line =~ / ([0-9A-F]+): to=.*, status=sent /) {
             # The "sent" line is repeated for every successful delivery for each recipient.
             if (exists($volumes_per_queue_id{$1})) {
-                $volume_delivered += $volumes_per_queue_id{$1}{size};
-                $volumes_per_queue_id{$1}{timestamp} = time;
+                $volume_delivered += $volumes_per_queue_id{$1}->{size};
+                $volumes_per_queue_id{$1}->{timestamp} = time;
             }
         }
     }
     # remove all expired queue IDs
     my @expired_queue_ids;
     for my $key (keys %volumes_per_queue_id) {
-        if (time > $volumes_per_queue_id{$key}{timestamp} + queue_id_expiry) {
+        if (time > $volumes_per_queue_id{$key}->{timestamp} + queue_id_expiry) {
             push @expired_queue_ids, $key;
         }
     }
@@ -147,7 +148,8 @@ if (! -f $logfile) {
     exit 1;
 }
 
-($pos, $volume_delivered, %volumes_per_queue_id) = restore_state();
+# load the stored data
+($pos, $volume_delivered, $serialized_volumes_queue) = restore_state();
 
 
 if (!defined($volume_delivered)) {
@@ -161,11 +163,20 @@ if (!defined($volume_delivered)) {
     $volume_delivered = 0;
     %volumes_per_queue_id = ();
 } else {
+    # decode the serialized hash
+    # source format: "$id1=$size1:$timestamp1 $id2=$size2:$timestamp2 ..."
+    for my $queue_item_descriptor (split(/ /, $serialized_volumes_queue)) {
+        (my $queue_item_id, my $queue_item_content) = split(/=/, $queue_item_descriptor);
+        (my $size, my $timestamp) = split(/:/, $queue_item_content);
+        $volumes_per_queue_id{$queue_item_id} = { size => int($size), timestamp => int($timestamp) };
+    }
     $pos = parseLogfile ($logfile, $pos);
 }
 
 print "volume.value $volume_delivered\n";
 
-save_state($pos, $volume_delivered, %volumes_per_queue_id);
+# serialize the hash to a string (see "source format" above)
+$serialized_volumes_queue = join(" ", map { sprintf("%s=%s", $_, sprintf("%d:%d", $volumes_per_queue_id{$_}->{size}, $volumes_per_queue_id{$_}->{timestamp})) } keys %volumes_per_queue_id);
+save_state($pos, $volume_delivered, $serialized_volumes_queue);
 
 # vim:syntax=perl
