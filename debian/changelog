@@ -35,6 +35,8 @@ munin (2.999.7-3) UNRELEASED; urgency=medium
   * move source.lintian-overrides to source/lintian-overrides
   * move "libmodule-build-perl" from "Build-Depends-Indep" to "Build-Depends"
     (thanks lintian: libmodule-build-perl-needs-to-be-in-build-depends)
+  * munin-httpd: allow FETCH access to rrdcached socket.
+    Thanks to Lucas Nussbaum! (Closes: #900780)
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 21 May 2018 17:41:08 +0200
 

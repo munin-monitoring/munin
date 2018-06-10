@@ -12,7 +12,7 @@ ExecStart=/usr/bin/rrdcached -g \
   -B -b /var/lib/munin \
   -j /var/spool/munin/update \
   -m 0600 -l /run/munin/update.sock \
-  -m 0660 -P FLUSH -l /run/munin/flush.sock
+  -m 0660 -P FETCH,FLUSH -l /run/munin/flush.sock
 PrivateDevices=true
 PrivateNetwork=true
 PrivateTmp=true
