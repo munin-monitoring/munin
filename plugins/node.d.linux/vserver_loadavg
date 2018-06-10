@@ -122,7 +122,7 @@ if [ "$1" = "config" ]; then
 	# graph information for the main table
 	echo 'graph_info Shows 5-minute load average per vserver.'
         # Graph category. Defaults to 'other'
-	echo 'graph_category vserver'
+	echo 'graph_category virtualization'
 	for xid in $XIDS ; do
 	# Specify the vservers
 		LABEL=`cat /proc/virtual/$xid/$NAMELOC |grep NodeName |cut -f2`

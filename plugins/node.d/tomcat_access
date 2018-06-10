@@ -92,7 +92,7 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Tomcat accesses\n";
     print "graph_args --base 1000\n";
     print "graph_vlabel accesses / \${graph_period}\n";
-    print "graph_category tomcat\n";
+    print "graph_category appserver\n";
     print "accesses.label Accesses\n";
     print "accesses.type DERIVE\n";
     print "accesses.max 1000000\n";
@@ -116,7 +116,7 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Tomcat accesses\n";
     print "graph_args --base 1000\n";
     print "graph_vlabel accesses / \${graph_period}\n";
-    print "graph_category tomcat\n";
+    print "graph_category appserver\n";
     for my $connector (@connectors) {
         my $clean = clean_fieldname($connector);
         print "${clean}_accesses.label $connector Accesses\n";

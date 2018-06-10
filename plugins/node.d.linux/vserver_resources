@@ -286,7 +286,7 @@ if [ "$1" = "config" ]; then
 	    exit 1
 	    ;;
     esac
-    echo 'graph_category vserver'
+    echo 'graph_category virtualization'
 
     
     # do not assume we are on i386 where pagesize is 4096...

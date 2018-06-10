@@ -98,7 +98,7 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Tomcat JVM memory\n";
     print "graph_args --base 1024 -l 0\n";
     print "graph_vlabel Bytes\n";
-    print "graph_category tomcat\n";
+    print "graph_category appserver\n";
     print "graph_order used free max OldGenUsed OldGenMax\n";
     print "free.label free bytes\n";
     print "free.draw STACK\n";
