@@ -1,0 +1,18 @@
+[Unit]
+Description=Munin networked resource monitoring
+Documentation=man:munin http://guide.munin-monitoring.org/en/latest/reference/munin.html
+
+[Service]
+Type=simple
+Restart=always
+User=munin
+ExecStart=/usr/bin/munin-httpd
+PrivateDevices=true
+PrivateNetwork=false
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+ReadOnlyPaths=/var/lib/munin
+
+[Install]
+WantedBy=multi-user.target

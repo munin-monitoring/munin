@@ -16,8 +16,9 @@ If transport layer security and authentication is desired, place a
 webserver with those features as a reverse proxy in front of
 munin-httpd.
 
-munin-httpd replaces the FastCGI scripts munin-cgi-graph and
-munin-cgi-html.
+munin-httpd was introduced after the 2.0.x release series.
+It replaces the FastCGI scripts munin-cgi-graph and
+munin-cgi-html, that were used in munin 2.0.
 
 OPTIONS
 =======

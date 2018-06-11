@@ -34,12 +34,12 @@ Plugin::SNMP module.
 
 =head1 AUTHOR
 
-(C) Copyright 2006-2009.  Written by Espen Braastad, Linpro AS for OSL
-(2006) Further modified by Erik Inge Bolsø, Linpro AS for OSL (2007)
+  Copyright (C) 2007 Erik Inge Bolsø, Linpro AS
+  Copyright (C) 2006-2009 Espen Braastad, Linpro AS
 
 =head1 LICENSE
 
-GPLv2.
+GPLv2
 
 =head1 MAGIC MARKERS
 

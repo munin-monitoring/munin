@@ -82,14 +82,13 @@ my $pg = Munin::Plugin::Pgsql->new(
     vlabel     => 'Log segments',
     basequery => [
         "SELECT count(*) AS segments FROM pg_ls_waldir() WHERE name ~ '^[0-9A-Z]{24}\$'",
-        [ 9.6, "SELECT count(*) AS segments FROM pg_ls_dir('pg_xlog') t(fn) WHERE fn ~ '^[0-9A-Z]{24}\$'", ]
+        [ 9.6, "SELECT count(*) AS segments FROM pg_ls_dir('pg_xlog') t(fn) WHERE fn ~ '^[0-9A-Z]{24}\$'", ],
     ],
     pivotquery  => 1,
     configquery => [
         "VALUES('segments','WAL segments')",
-        [8.1, "SELECT 'segments','WAL segments'"]
-    ]
+        [8.1, "SELECT 'segments','WAL segments'"],
+    ],
 );
 
 $pg->Process();
-

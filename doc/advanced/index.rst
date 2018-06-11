@@ -9,3 +9,4 @@
 
    tls-setup.rst
    network.rst
+   custom-rrd-sizing.rst

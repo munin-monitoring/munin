@@ -90,9 +90,7 @@ my $pg = Munin::Plugin::Pgsql->new(
     graphdraw => 'AREA',
     stack     => 1,
     base      => 1024,
-    graphmin  => $graphmin
+    graphmin  => $graphmin,
 );
 
 $pg->Process();
-exit(0);
-

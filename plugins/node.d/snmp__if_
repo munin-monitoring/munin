@@ -75,9 +75,9 @@ around.
 
 =head1 AUTHOR
 
-Copyright (C) 2004-2009 Jimmy Olsen, Daginn Ilmari Mannsaaker.
-Documentation, porting to Munin::Plugin::SNMP and further grooming by
-Nicolai Langfeldt.
+  Copyright (C) 2006-2009 Nicolai Langfeldt
+  Copyright (C) 2004-2005 Dagfinn Ilmari Mannsåker
+  Copyright (C) 2004 Jimmy Olsen
 
 Initial SNMPv3 support by "Confusedhacker".
 

@@ -115,7 +115,7 @@ my $pg = Munin::Plugin::Pgsql->new(
                  GROUP BY CASE WHEN current_query='<IDLE>' THEN 'idle' WHEN current_query='<IDLE> in transaction' THEN 'idletransaction' WHEN current_query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END
                  ) AS tmp2
                 ON tmp.state=tmp2.state
-                ORDER BY 1" ]
+                ORDER BY 1" ],
     ],
     wildcardfilter => " AND datname=?",
     paramdatabase  => 1,
@@ -123,14 +123,13 @@ my $pg = Munin::Plugin::Pgsql->new(
         "VALUES ('active','Active'),('waiting','Waiting for lock'),('idle','Idle'),('idletransaction','Idle in transaction'),('unknown','Unknown')",
         [
             8.1,
-            "SELECT 'active','Active' UNION ALL SELECT 'idle','Idle' UNION ALL SELECT 'idletransaction','Idle in transaction' UNION ALL SELECT 'unknown','Unknown'"
-        ]
+            "SELECT 'active','Active' UNION ALL SELECT 'idle','Idle' UNION ALL SELECT 'idletransaction','Idle in transaction' UNION ALL SELECT 'unknown','Unknown'",
+        ],
     ],
     suggestquery =>
         "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1 LIMIT 10",
     graphdraw => 'AREA',
-    stack => 1
+    stack => 1,
 );
 
 $pg->Process();
-

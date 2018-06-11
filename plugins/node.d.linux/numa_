@@ -26,9 +26,9 @@ Remote and foreign access takes more time than local access.
 
 Hugepages have separate counters and aren't included in these graphs.
 
-=head1 AUTHORS
+=head1 AUTHOR
 
-Copyright (C) 2014 Daniel Black - Open Query
+  Copyright (C) 2014 Daniel Black, Open Query
 
 =head1 LICENSE
 

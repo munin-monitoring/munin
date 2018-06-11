@@ -3,7 +3,9 @@
 # Merge munin db (datafile{,.storable} / limits) for multi-update masters
 # environment
 #
-# (c) GPL - Adrien "ze" Urban
+# Copyright (c) 2012 Adrien "ze" Urban
+#
+# License: GPL
 
 use warnings;
 use strict;

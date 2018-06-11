@@ -82,16 +82,15 @@ my $pg = Munin::Plugin::Pgsql->new(
         "VALUES ('commit','Committed transactions'),('rollback','Rolled back transactions')",
         [
             8.1,
-            "SELECT 'commit','Committed transactions' UNION ALL SELECT 'rollback','Rolled back transactions'"
-        ]
+            "SELECT 'commit','Committed transactions' UNION ALL SELECT 'rollback','Rolled back transactions'",
+        ],
     ],
     suggestquery =>
         "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1 LIMIT 10",
     stack     => 1,
     graphmin  => 0,
     graphdraw => 'AREA',
-    graphtype => 'DERIVE'
+    graphtype => 'DERIVE',
 );
 
 $pg->Process();
-

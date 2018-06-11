@@ -2,7 +2,9 @@
 #
 # Plugin to monitor various statistics exported by a UPS.
 #
-# Written by Andras Korn in 2005. Licensed under the GPL.
+# Copyright 2005 Andras Korn
+#
+# License: GPL
 #
 # usage: ups_upsid_function
 #

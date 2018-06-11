@@ -93,7 +93,7 @@ my $pg = Munin::Plugin::Pgsql->new(
               FROM pg_locks WHERE database IS NOT NULL %%FILTER%%
               GROUP BY lower(mode)
              ) AS tmp2
-           ON tmp.mode=tmp2.mode ORDER BY 1"
+           ON tmp.mode=tmp2.mode ORDER BY 1",
         ],
     ],
     wildcardfilter => "AND database=(SELECT oid FROM pg_database WHERE datname=?)",
@@ -116,8 +116,8 @@ my $pg = Munin::Plugin::Pgsql->new(
             SELECT 'sharelock','ShareLock','Used by CREATE INDEX queries' UNION ALL
             SELECT 'sharerowexclusivelock','ShareRowExclusiveLock','Only issued explicitly from applications' UNION ALL
             SELECT 'exclusivelock','ExclusiveLock','Infrequently issued on system tables, or by applications' UNION ALL
-            SELECT 'accessexclusivelock','AccessExclusiveLock','Used by ALTER TABLE, DROP TABLE, TRUNCATE, REINDEX, CLUSTER and VACUUM FULL queries'"
-        ]
+            SELECT 'accessexclusivelock','AccessExclusiveLock','Used by ALTER TABLE, DROP TABLE, TRUNCATE, REINDEX, CLUSTER and VACUUM FULL queries'",
+        ],
     ],
     suggestquery => "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1 LIMIT 10",
     graphdraw    => 'AREA',
@@ -125,5 +125,3 @@ my $pg = Munin::Plugin::Pgsql->new(
 );
 
 $pg->Process();
-exit(0);
-

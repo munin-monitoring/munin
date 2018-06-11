@@ -1,6 +1,9 @@
 #! /usr/bin/perl
 # RRD update perf testing
-# (c) GPL - Steve Schnepp <steve.schnepp@pwkf.org>
+#
+# Copyright (c) 2011 Steve Schnepp <steve.schnepp@pwkf.org>
+#
+# License: GPL
 
 use strict;
 use warnings;

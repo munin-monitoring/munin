@@ -1,7 +1,11 @@
 #!/usr/bin/perl -T
 #
-# Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
-#    Nicolai Langfeldt
+# Copyright (C) 2006-2010 Nicolai Langfeldt
+# Copyright (C) 2009-2010 Matthew Boyle
+# Copyright (C) 2009 Kjell-Magne Øierud
+# Copyright (C) 2004-2006 Tore Anderson
+# Copyright (C) 2002-2007 Jimmy Olsen
+# Copyright (C) 2002-2004 Audun Ytterdal
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License

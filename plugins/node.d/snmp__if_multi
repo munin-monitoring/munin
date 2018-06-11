@@ -118,16 +118,12 @@ around.
 
 =head1 AUTHOR
 
-Copyright (C) 2004-2010 Jimmy Olsen, Dagfinn Ilmari Mannsaaker,
-Nicolai Langfeldt, Redpill Linpro AS and others.
+  Copyright (C) 2006-2010 Nicolai Langfeldt
+  Copyright (C) 2004-2005 Dagfinn Ilmari Mannsåker
+  Copyright (C) 2004 Jimmy Olsen
 
-Original snmp__if_ plugin: Copyright (C) 2004-2009 Jimmy Olsen, Dagfinn
-Ilmari Mannsaaker.
-
-Initial SNMPv3 support by "Confusedhacker".
-
-Documentation, porting to Munin::Plugin::SNMP and
-further grooming by Nicolai Langfeldt.
+Based on the original snmp__if_ plugin written by Jimmy Olsen and
+Dagfinn Ilmari Mannsåker.
 
 Reworked to snmp__if_multi by Nicolai Langfeldt.
 

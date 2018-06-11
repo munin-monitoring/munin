@@ -86,8 +86,8 @@ filesystems.
 
 =head1 AUTHOR
 
-Copyright (C) 2013 Diego Elio Pettenò
-Based on the original plugin by Ingvar Hagelund
+  Copyright (C) 2013 Diego Elio Pettenò
+  Copyright (C) 2006 Ingvar Hagelund
 
 =head1 LICENSE
 

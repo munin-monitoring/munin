@@ -16,7 +16,8 @@ The following environment variables are used
 
 =encoding UTF-8
 
-Copyright (C) 2011 Erik Inge Bolsø, Redpill Linpro AS for OSL
+  Copyright (C) 2011 Erik Inge Bolsø, Redpill Linpro AS
+  Copyright (C) 2004 Jimmy Olsen
 
 Based on snmp__df (C) 2004 Jimmy Olsen 
 

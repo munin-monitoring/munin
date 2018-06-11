@@ -15,6 +15,15 @@ A plugin is activated when a symbolic link is created in the ``servicedir``
 (usually /etc/munin/plugins/ for a package installation of Munin)
 and munin-node is restarted.
 
+.. code-block:: bash
+
+  # activating a simple plugin
+  ln -s /usr/share/munin/plugins/cpu /etc/munin/plugins/
+  # activating a wildcard plugin
+  ln -s /usr/share/munin/plugins/if_ /etc/munin/plugins/if_eth0
+  # restart munin-node with your distribution's tools (e.g. systemctl or service)
+  service munin-node restart
+
 The utility :ref:`munin-node-configure` is used by the Munin installation
 procedure to check which plugins are suitable for your node and
 create the links automatically. It can be called every time when a system

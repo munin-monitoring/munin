@@ -41,11 +41,13 @@ underscore:
   env.host someserver
   env.port 3128
 
-=head1 AUTHORS
+=head1 AUTHOR
 
-Copyright (C) 2013 Diego Elio Pettenò
-Copyright (C) 2004 Jimmy Olsen, Audun Ytterdal, Tore Anderson
-Copyright (C) 2008 Bjorn Ruberg
+  Copyright (C) 2013 Diego Elio Pettenò
+  Copyright (C) 2008 Bjorn Ruberg
+  Copyright (C) 2004 Audun Ytterdal
+  Copyright (C) 2004 Jimmy Olsen
+  Copyright (C) 2004 Tore Anderson
 
 =head1 LICENSE
 

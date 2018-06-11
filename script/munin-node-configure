@@ -1,7 +1,5 @@
 #!/usr/bin/perl
 #
-# Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.
-#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; version 2 dated June,
@@ -672,20 +670,13 @@ not this works with any particular device, we do not know.
 
 This is munin-node-configure (munin-node) v@@VERSION@@.
 
+=head1 AUTHOR
 
-=head1 AUTHORS
+  Copyright (C) 2009-2010 Matthew Boyle
+  Copyright (C) 2006 Nicolai Langfeldt
+  Copyright (C) 2003-2005 Jimmy Olsen
 
-Jimmy Olsen, Nicolai Langfeldt, Matthew Boyle
-
-=head1 BUGS
-
-Please see L<http://munin-monitoring.org/report/1>.
-
-=head1 COPYRIGHT
-
-Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.
-
-Copyright (C) 2009-2010 Matthew Boyle
+=head1 LICENSE
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

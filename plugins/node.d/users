@@ -32,10 +32,8 @@ Only tested extensively on Linux.
 
 =head1 AUTHOR
 
-Copyright (C) 2004-2008.
-
-Original version by Michael Kaiser tools (at) micha (dot) de.
-Modified and made more generic by Nicolai Langfeldt, 2006
+  Copyright (C) 2006-2008 Nicolai Langfeldt
+  Copyright (C) 2004 Michael Kaiser
 
 =head1 LICENSE
 

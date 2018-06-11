@@ -11,13 +11,15 @@ Plugins
 -------
 
 Decide which plugins to use. The munin node runs all plugins present
-in CONFDIR/plugins/
+in CONFDIR/plugins/ (usually /etc/munin/plugins).
 
 The quick auto-plug-and-play solution:
 
 .. code-block:: bash
 
  munin-node-configure --shell --families=contrib,auto | sh -x
+
+See :ref:`plugin-use` for more details.
 
 Access
 ------

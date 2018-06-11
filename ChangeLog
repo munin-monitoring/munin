@@ -1,4 +1,72 @@
-munin-2.999.7, 2018--17
+munin-2.999.8, 2018-06-10
+
+-------
+Summary
+-------
+
+That release is the 8th beta of the 3.0 series. It is versioned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that. Packagers
+can use that versioning or 3.0b7
+
+This is a continuation of the SQL & on-the-fly rewrite.
+
+This is mostly a bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Dmitry Marakasov (5):
+      Specify minimum value for tuples
+      Specify minimal value for postgres scans
+      Specify minimal value for bgwriter
+      Speficy minimal value for PostgreSQL checkpoints
+      Specify minimal value for postgresql buffer cache
+
+Lars Kruse (18):
+      plugins postgres_*: unify commas in arrays and hashes
+      plugins postgres_*: unify end of plugin
+      doc: mention log files for troubleshooting
+      doc: mention capabilities for interactive 'list' command
+      doc: add list of troubleshooting checks for plugin graphs
+      doc: more details and examples for plugin configuration
+      doc: fix typo
+      plugin hddtemp_smartctl: handle missing 'smartctl' gracefully
+      doc: add Python example for "clean_fieldname"
+      doc: update setting 'latex_show_urls'
+      Makefile: replace directory placeholder with configured locations
+      restore documentation for munin-2.0-only programs
+      COPYRIGHT: remove outdated reference to Bitstream Vera
+      version information (--version): update and simplify
+      Plugin slapd_: add documentation header
+      Plugin hddtempd: format doc header
+      Plugin smart_: remove duplicate documentation
+      unify and simplify copyright descriptions
+
+Steve Schnepp (9):
+      master: dirtyconfig is not supported anymore
+      dev_scripts: fix creation of sandbox/var/lib
+      master: fix handling of multigraph config
+      master: adding some debug info
+      master: fix rrd
+      master: timings promoted to INFO
+      master: API has been changed for callback
+      master: fix multigraph handling
+      doc: add example for munin-httpd service
+
+Tomohiro Hosaka (1):
+      Do not set database=undef when paramdatabase.
+
+dipohl (6):
+      recent changes
+      merge older changes
+      doc: Add info from wiki page munin.conf and merge info for stable 2.0 and 2.999
+      doc: move content from wiki "munin.conf" to the Guide
+      doc: Move wiki page "format-graph_data_size" to Munin Guide
+      doc: Move page "requirements-vetted" from wiki to the Guide
+
+
+munin-2.999.7, 2018-03-31
 
 -------
 Summary

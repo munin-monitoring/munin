@@ -20,6 +20,8 @@ If you have a GitHub_ account, you can even edit the pages online and
 send a pull request to contribute your work to the official Munin
 repository.
 
+.. _plugin-documentation:
+
 Plugin Documentation
 ====================
 

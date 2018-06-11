@@ -201,8 +201,8 @@ latex_logo = '../web/static/img/logo-h.png'
 # If true, show page references after internal links.
 latex_show_pagerefs = False
 
-# If true, show URL addresses after external links.
-latex_show_urls = False
+# Control whether to display URL addresses (no/footnote/inline)
+#latex_show_urls = 'no'
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
@@ -235,6 +235,32 @@ man_pages = [
      'munin-cron',
      'Munin cron script',
      ['Audun Ytterdal',
+      'Jimmy Olsen'],
+     1),
+    ('reference/munin-cgi-graph',
+     'munin-cgi-graph',
+     'Munin CGI grapher',
+     ['Steve Schnepp'],
+     1),
+    ('reference/munin-cgi-html',
+     'munin-cgi-html',
+     'Munin CGI HTML generator',
+     ['Steve Schnepp'],
+     1),
+    ('reference/munin-graph',
+     'munin-graph',
+     'Create graphs from RRD files',
+      ['Audun Ytterdal',
+       'Jimmy Olsen',
+       'Nicolai Langfeldt',
+       'Steve Schnepp'],
+     1),
+    ('reference/munin-html',
+     'munin-html',
+     'Create HTML pages',
+     ['Knut Haugen',
+      'Steve Schnepp',
+      'Audun Ytterdal',
       'Jimmy Olsen'],
      1),
     ('reference/munin-httpd',

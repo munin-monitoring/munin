@@ -16,8 +16,8 @@
 # Testing:
 #    find plugins -type f -executable | xargs grep -H category | awk -F : -f THIS_FILE
 #
-# Author: Gabriele Pohl (contact@dipohl.de)
-# Date: 2014-09-07
+# Copyright 2018 Lars Kruse <devel@sumpfralle.de>
+# Copyright 2014 Gabriele Pohl <contact@dipohl.de>
 #
 # This script is free software; you can redistribute it and/or modify
 # it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE as published

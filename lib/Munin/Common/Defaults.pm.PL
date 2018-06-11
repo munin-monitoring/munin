@@ -98,6 +98,18 @@ sub export_to_environment {
     return;
 }
 
+sub print_as_sed_substitutions {
+    my ($class) = @_;
+
+    my %defaults = %{ $class->get_defaults() };
+    while ( my ( $k, $v ) = each %defaults ) {
+        $k =~ /MUNIN_(.*)/;
+        print("s#@@" . $1 . "@@#$v#;");
+    }
+
+    return;
+}
+
 1;
 
 __END__
@@ -130,6 +142,14 @@ Returns all the package variables as key value pairs in a hash.
   $class = $class->export_to_environment()
 
 Export all the package variables to the environment.
+
+=item B<print_as_sed_substitutions>
+
+  $class->print_as_sed_substitutions()
+
+Output an expression suitable for "sed". This expression can be used to
+substitude placeholders (e.g. "@@SPOOLDIR") in munin's source files
+during an installation procedure.
 
 =back
 

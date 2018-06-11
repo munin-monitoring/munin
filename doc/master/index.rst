@@ -37,6 +37,25 @@ The following components are part of munin-master:
      "crit". Munin is commonly used in combination with Nagios, which
      is then configured as a contact.
 
+Additionally munin 2.0 contains two more components:
+
+.. hlist::
+
+   * :ref:`munin-graph` is run by :ref:`munin-cron`. It generates
+     static graphs in PNG format.  It is not needed if
+     :ref:`munin-httpd` is used.
+
+   * :ref:`munin-cgi-graph` is run by a web server, and generates
+     graphs on request.
+
+   * :ref:`munin-html` is run by :ref:`munin-cron`. It generates
+     static HTML pages.  It is not needed if :ref:`munin-httpd` is
+     used.
+
+   * :ref:`munin-cgi-html` is run by a web server, and generates HTML
+     pages on request.
+
+
 Configuration
 =============
 

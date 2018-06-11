@@ -44,8 +44,8 @@ such as those used by LVM and so on.
 
 =head1 AUTHOR
 
-(C) 2004 Per Buer.  Documentation and some modifications by Nicolai
-Langfeldt.
+  Copyright (C) 2007-2011 Nicolai Langfeldt
+  Copyright (C) 2004 Per Buer
 
 =head1 LICENSE
 
