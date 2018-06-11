@@ -1,7 +1,7 @@
 ---
 language: perl
-perl:
-  - "5.20"
+### perl:
+###   - "5.20"
 branches:
   only:
     - stable-2.0
