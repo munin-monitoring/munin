@@ -111,7 +111,7 @@ sub _create_workers {
     #       the global throughtput
     @hosts = shuffle(@hosts);
 
-    if (%{$config->{limit_hosts}}) {
+    if (defined $config->{limit_hosts} && %{$config->{limit_hosts}}) {
         @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts
     }
 
