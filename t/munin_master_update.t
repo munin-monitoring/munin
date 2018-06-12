@@ -14,6 +14,9 @@ my $config = $globconfig->{'config'};
 
 ok($config->parse_config_from_file("t/config/munin.conf"));
 
+my $update = Munin::Master::Update->new();
+$update->run();
+
 done_testing();
 
 1;
