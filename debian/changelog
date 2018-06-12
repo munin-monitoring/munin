@@ -1,4 +1,4 @@
-munin (2.999.8-1) UNRELEASED; urgency=medium
+munin (2.999.8-1) experimental; urgency=medium
 
   [ Lars Kruse ]
   * New upstream beta release
@@ -45,7 +45,7 @@ munin (2.999.8-1) UNRELEASED; urgency=medium
   [ Holger Levsen ]
   * Depend on debhelper 11.
 
- -- Lars Kruse <devel@sumpfralle.de>  Sun, 10 Jun 2018 15:28:06 +0200
+ -- Holger Levsen <holger@debian.org>  Tue, 12 Jun 2018 10:07:24 +0000
 
 munin (2.999.7-2) experimental; urgency=medium
 
