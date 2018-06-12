@@ -1,5 +1,6 @@
 munin (2.999.8-1) UNRELEASED; urgency=medium
 
+  [ Lars Kruse ]
   * New upstream beta release
   * munin: include manpage for "munin-httpd"
   * munin-node: include manpage for "munin-doc"
@@ -40,6 +41,9 @@ munin (2.999.8-1) UNRELEASED; urgency=medium
     Thanks to Lucas Nussbaum! (Closes: #900780)
   * plugin dhcpd3: adjust default leases and config files locations.
     (Closes: #863534)
+
+  [ Holger Levsen ]
+  * Depend on debhelper 11.
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 10 Jun 2018 15:28:06 +0200
 
