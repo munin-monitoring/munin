@@ -648,7 +648,8 @@ sub do_config_if {
 
     print "graph_title $alias traffic\n";
     print "graph_order recv send\n";
-    print "graph_args --base 1000\n";
+    if ($speed) { print "graph_args --base 1000 --rigid --lower-limit -$speed --upper-limit $speed\n"; }
+    else { print "graph_args --base 1000\n"; }
     print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
     print "graph_category network\n";
     print "graph_info This graph shows traffic for the \"$alias\" network interface.$extrainfo\n";
