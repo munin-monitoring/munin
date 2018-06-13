@@ -28,6 +28,4 @@ if [ "$1" = "purge" ]; then
     delete_dir_if_empty /etc/munin
 fi
 
-dpkg-maintscript-helper rm_conffile /etc/logrotate.d/munin-node 2.999.1-1~ -- "$@"
-
 #DEBHELPER#
