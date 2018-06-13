@@ -1,0 +1,43 @@
+Description: fix various small issues with Makefile for java plugins
+Author: Lars Kruse <devel@sumpfralle.de>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Makefile.javaplugin
++++ b/Makefile.javaplugin
+@@ -10,8 +10,11 @@ JAVA_INSTALL=install-plugins-java
+ JAVA_PLUGINS=plugins/node.d.java/*
+ endif
+ 
++INSTALL          ?= install
++
++BUILD_DIR        ?= build
+ JAVA_SRCDIR      := plugins/javalib
+-JAVA_DSTDIR      := _stage/plugins/javalib
++JAVA_DSTDIR      := $(BUILD_DIR)/plugins/javalib
+ 
+ JAVA_FILES       := $(wildcard plugins/javalib/org/munin/plugin/jmx/*.java)
+ JAVA_CLASSES     := $(patsubst %.java,%.class,$(JAVA_FILES))
+@@ -19,7 +22,7 @@ JAVA_CLASSES     := $(patsubst %.java,%.
+ JC     := javac
+ JFLAGS  = -g -sourcepath $(JAVA_SRCDIR) -d $(JAVA_DSTDIR)
+ 
+-.PHONY: build-java
++.PHONY: build-plugins-java
+ 
+ build-plugins-java: $(JAVA_DSTDIR)/munin-jmx-plugins.jar
+ 
+@@ -30,11 +33,11 @@ $(JAVA_DSTDIR)/org/munin/plugin/jmx: $(J
+ 	mkdir -p $(JAVA_DSTDIR)
+ 	$(JC) $(JFLAGS) $^
+ 
+-install-plugins-java: _stage/plugins/javalib/munin-jmx-plugins.jar
++install-plugins-java: $(BUILD_DIR)/plugins/javalib/munin-jmx-plugins.jar
+ 	mkdir -p $(JAVALIBDIR)
+-	$(INSTALL) -m 0644 _stage/plugins/javalib/munin-jmx-plugins.jar $(JAVALIBDIR)/
++	$(INSTALL) -m 0644 $(BUILD_DIR)/plugins/javalib/munin-jmx-plugins.jar $(JAVALIBDIR)/
+ 	mkdir -p $(LIBDIR)/plugins
+-	for p in _stage/plugins/node.d.java/*; do               \
++	for p in $(BUILD_DIR)/plugins/node.d.java/*; do               \
+ 	    if test -f "$$p" ; then                            \
+ 		echo Installing $$p;                           \
+ 		$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;     \

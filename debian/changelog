@@ -4,8 +4,10 @@ munin (2.999.8-2) UNRELEASED; urgency=medium
   * munin and munin-node: use separate maintscript files
   * convert old doc directories (before "link-doc") to symlinks
     (Closes: #881713)
+  * Add missing package "munin-plugins-java".
+    (it was provided by the munin 2.0 package before)
 
- -- Lars Kruse <devel@sumpfralle.de>  Wed, 13 Jun 2018 03:10:39 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Tue, 19 Jun 2018 00:50:22 +0200
 
 munin (2.999.8-1) experimental; urgency=medium
 

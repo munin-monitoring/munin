@@ -5,6 +5,7 @@ Maintainer: Munin Debian Maintainers <team+munin@tracker.debian.org>
 Uploaders: Holger Levsen <holger@debian.org>,
  Stig Sandbeck Mathisen <ssm@debian.org>,
 Build-Depends-Indep:
+ default-jdk-headless,
  devscripts,
  libdbd-pg-perl,
  libdbd-sqlite3-perl,
@@ -135,6 +136,21 @@ Description: community contributed plugins for munin node
  .
  This package contains community contributed plugins for the Munin
  node.
+
+Package: munin-plugins-java
+Architecture: all
+Depends: ${misc:Depends},
+ munin-common,
+ default-jre-headless,
+Replaces: munin-plugins-core (<< 2.999.1-1~)
+Breaks: munin-plugins-core (<< 2.999.1-1~)
+Description: community contributed plugins for munin node
+ Munin plugins collect details of a host or its environment.
+ The munin-node daemon provides access to the plugin to local or remote
+ munin master instances.
+ .
+ This package contains munin plugins for monitoring JAVA-related
+ services.
 
 Package: munin-plugins-http
 Architecture: all
