@@ -1,3 +1,4 @@
 rm_conffile /etc/logrotate.d/munin 2.999.1-1~
 rm_conffile /etc/munin/apache.conf 2.999.1-1~
 rm_conffile /etc/munin/apache24.conf 2.999.1-1~
+dir_to_symlink /usr/share/doc/munin munin-common 2.999.1-1~
