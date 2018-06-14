@@ -312,6 +312,9 @@ sub handle_request
 		$_printf = $graph_printf unless defined $_printf;
 		$_printf .= "%s";
 
+		# The label is the fieldname if not present
+		$_label = $_rrdname unless $_label;
+
 		DEBUG "rrdname: $_rrdname";
 
 		# rrdtool fails on unescaped colons found in its input data
