@@ -57,9 +57,6 @@ sub run {
 
         $self->{workers} = $self->_create_workers();
         $self->_run_workers();
-
-	# I wonder if the following should really be done with timing. - janl
-        $self->_write_new_service_configs();
     });
 }
 
