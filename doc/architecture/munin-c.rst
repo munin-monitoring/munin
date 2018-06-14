@@ -33,7 +33,7 @@ Limits
 * You lose flexibility as it is compiled code
    - plugin modification is not that easy
    - you have to create and distribute binaries
-   - you have to care about portability accross architectures.
+   - you have to care about portability across architectures.
 * Not all the features are implemented
    - root uid is not supported. All plugins are run with a single user, usually nobody.
    - no socket is opened. Everything runs from inetd.
