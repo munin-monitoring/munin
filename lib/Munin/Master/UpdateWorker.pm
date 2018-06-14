@@ -396,11 +396,26 @@ sub _db_service {
 	}
 
 	# Handle the fields
+
+	# Remove the ds_attr rows
+	{
+		my $sth_del_attr = $dbh->prepare_cached('DELETE FROM ds_attr WHERE id IN (SELECT id FROM ds WHERE service_id = ?)');
+		$sth_del_attr->execute($service_id);
+	}
+
 	my %ds_ids;
 	for my $field_name (keys %$fields) {
 		my $_field_attrs = $fields->{$field_name};
+
+
 		my $ds_id = $self->_db_ds_update($service_id, $field_name, $_field_attrs);
 		$ds_ids{$field_name} = $ds_id;
+	}
+
+	# Purge the ds that have no attributes, as they are not relevant anymore
+	{
+		my $sth_del_ds = $dbh->prepare_cached('DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)');
+		$sth_del_ds->execute($service_id);
 	}
 
 	$self->_db_url("service", $service_id, $plugin, "node", $node_id);
@@ -439,10 +454,6 @@ sub _db_ds_update {
 		$sth_ds->execute($service_id, $field_name);
 		$ds_id = _get_last_insert_id($dbh);
 	}
-
-	# Remove the ds rows
-	my $sth_del_attr = $dbh->prepare_cached('DELETE FROM ds_attr WHERE id = ?');
-	$sth_del_attr->execute($ds_id);
 
 	# Reinsert the other rows
 	my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
