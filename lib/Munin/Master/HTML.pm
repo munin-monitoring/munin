@@ -108,7 +108,7 @@ sub handle_request
 	# Ok, now SQL is needed to go further
         use DBI;
 	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
-        my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+        my $dbh = DBI->connect("dbi:Pg:dbname=munin","","") or die $DBI::errstr;
 
 	my $comparison;
 	my $template_filename;
@@ -837,7 +837,7 @@ sub get_param
 	# Ok, now SQL is needed to go further
         use DBI;
 	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
-        my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+        my $dbh = DBI->connect("dbi:Pg:dbname=munin","","") or die $DBI::errstr;
 
 	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
 

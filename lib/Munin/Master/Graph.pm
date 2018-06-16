@@ -154,7 +154,7 @@ sub handle_request
 	use DBI;
 	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 	# Note that we reconnect for _each_ request. This is to avoid old data when the DB "rotates"
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	my $dbh = DBI->connect("dbi:Pg:dbname=munin","","") or die $DBI::errstr;
 
 	DEBUG "($graph_path, $time, $start, $end, $format)\n";
 
