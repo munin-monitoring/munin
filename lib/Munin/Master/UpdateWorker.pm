@@ -279,7 +279,7 @@ sub _db_mkgrp {
 		my $sth_grp = $dbh->prepare_cached('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
 		my $path = "";
 		$sth_grp->execute($grp_name, $p_id, $path);
-		$grp_id = _get_last_insert_id($dbh);
+		$grp_id = _get_last_insert_id($dbh, "grp");
 	} else {
 		# Nothing to do, the grp doesn't need any updates anyway.
 		# Removal of grp is *unsupported* yet.
@@ -292,8 +292,8 @@ sub _db_mkgrp {
 
 # This should go in a generic DB.pm
 sub _get_last_insert_id {
-	my ($dbh) = @_;
-	return $dbh->last_insert_id("", "", "", "");
+	my ($dbh, $tablename) = @_;
+	return $dbh->last_insert_id("", "", $tablename, "");
 }
 
 sub _db_node {
@@ -312,7 +312,7 @@ sub _db_node {
 		my $sth_node = $dbh->prepare_cached('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 		my $path = "";
 		$sth_node->execute($grp_id, $node_name, $path);
-		$node_id = _get_last_insert_id($dbh);
+		$node_id = _get_last_insert_id($dbh, "node");
 	} else {
 		# Nothing to do, the node doesn't need any updates anyway.
 		# Removal of nodes is *unsupported* yet.
@@ -343,7 +343,7 @@ sub _db_service {
 		# Doesn't exist yet, create it
 		my $sth_service = $dbh->prepare_cached("INSERT INTO service (node_id, name) VALUES (?, ?)");
 		$sth_service->execute($node_id, $plugin);
-		$service_id = _get_last_insert_id($dbh);
+		$service_id = _get_last_insert_id($dbh, "service");
 	}
 
 	DEBUG "_db_service.service_id:$service_id";
@@ -452,7 +452,7 @@ sub _db_ds_update {
 		# Doesn't exist yet, create it
 		my $sth_ds = $dbh->prepare_cached("INSERT INTO ds (service_id, name) VALUES (?, ?)");
 		$sth_ds->execute($service_id, $field_name);
-		$ds_id = _get_last_insert_id($dbh);
+		$ds_id = _get_last_insert_id($dbh, "ds");
 	}
 
 	# Reinsert the other rows

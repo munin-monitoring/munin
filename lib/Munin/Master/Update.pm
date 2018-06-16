@@ -75,10 +75,13 @@ sub get_dbh {
 
 	# Not being able to open the DB connection seems FATAL to me. Better
 	# die loudly than injecting some misguided data
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	my $dbh = DBI->connect("dbi:Pg:dbname=munin","","") or die $DBI::errstr;
+	{
+		$dbh->{RaiseError} = 1;
+		use Carp;
+		$dbh->{HandleError} = sub { confess(shift) };
+	 }
 
-	$dbh->do("PRAGMA synchronous = NORMAL");
-	$dbh->do("PRAGMA journal_mode = MEMORY");
 
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
@@ -393,19 +396,19 @@ sub _db_init {
 
 	# Create DB
 	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id SERIAL PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS r_g_grp ON grp (p_id, name)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS node (id SERIAL PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_node_attr ON node_attr (id, name)");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_n_grp ON node (grp_id)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service (id SERIAL PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_service_n_n ON service (node_id, name)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
+	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id SERIAL PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
 		type VARCHAR DEFAULT 'GAUGE',
 		ordr INTEGER DEFAULT 0,
 		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
@@ -425,6 +428,11 @@ sub _db_init {
 		alarm VARCHAR, num_unknowns INTEGER
 		)");
 	$dbh_state->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
+
+	# Initialise the grp _root_ node if not present
+	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
+		$dbh->do("INSERT INTO grp (id) VALUES (0);");
+	}
 }
 
 sub _db_params_update {
