@@ -180,7 +180,7 @@ mysql_version() {
 # InnoDB free bytes for MySQL 5.1 and newer
 innodb_free_new() {
     t=$($MEXEC "SELECT count(*) FROM tables WHERE ENGINE = 'InnoDB';")
-    if [ "$t" ">" "0" ]; then
+    if [ "$t" -gt "0" ]; then
 	$MEXEC "SELECT data_free FROM tables WHERE ENGINE = 'InnoDB' LIMIT 1;"
     else
 	echo >&2 "$0: Error: No visible tables use InnoDB"
@@ -198,7 +198,8 @@ innodb_free_old() {
 # InnoDB free bytes wrapper
 innodb_free() {
     ver=$(mysql_version)
-    if [ "$ver" ">" "5.0" ]; then
+    major_version=$(echo "$ver" | cut -f 1 -d ".")
+    if [ "$major_version" -ge "5" ]; then
 		case $ver in
 			5.0.*|5.1.?|5.1.1?|5.1.2[0123])
 				innodb_free_old
