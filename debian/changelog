@@ -6,8 +6,9 @@ munin (2.999.8-2) UNRELEASED; urgency=medium
     (Closes: #881713)
   * Add missing package "munin-plugins-java".
     (it was provided by the munin 2.0 package before)
+  * d/rules: use $(MAKE) instead of "make"
 
- -- Lars Kruse <devel@sumpfralle.de>  Tue, 19 Jun 2018 00:50:22 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Wed, 20 Jun 2018 23:38:52 +0200
 
 munin (2.999.8-1) experimental; urgency=medium
 

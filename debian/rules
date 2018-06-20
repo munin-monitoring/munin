@@ -14,8 +14,8 @@ override_dh_auto_build:
 	dpkg-parsechangelog | sed -n 's/^Version: //p' > RELEASE
 	dh_auto_build -- $(MAKEOPTS)
 	# build java plugin files
-	make -f Makefile.config -f Makefile.javaplugin build-plugins-java
-	make -C doc html man SPHINXOPTS="-D today=\"$(BUILD_DATE)\""
+	$(MAKE) -f Makefile.config -f Makefile.javaplugin build-plugins-java
+	$(MAKE) -C doc html man SPHINXOPTS="-D today=\"$(BUILD_DATE)\""
 
 override_dh_auto_install:
 	dh_auto_install
@@ -38,7 +38,7 @@ override_dh_auto_install:
 	sed -i 's#/js/jquery-1\.8\.3\.js#/js/jquery.js#' \
 		debian/tmp/etc/munin/templates/partial/head.tmpl
 	# java plugins
-	make -f Makefile.javaplugin install-plugins-java \
+	$(MAKE) -f Makefile.javaplugin install-plugins-java \
 		LIBDIR=debian/munin-plugins-java/usr/share/munin \
 		JAVALIBDIR=debian/munin-plugins-java/usr/share/munin
 
