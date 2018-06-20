@@ -31,12 +31,15 @@ proc="getattr setattr lookup access readlink read write create mkdir symlink mkn
 
 if [ "$1" = "autoconf" ]; then
 	if [ -f "$NFS" ]; then
-		echo yes
-		exit 0
+		if grep -q proc3 "$NFS"; then
+			echo "yes"
+		else
+			echo "no (no proc3 in $NFS)"
+		fi
 	else
-		echo no
-		exit 0
+		echo "no (no $NFS)"
 	fi
+	exit 0
 fi
 
 if [ "$1" = "config" ]; then

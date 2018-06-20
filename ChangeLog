@@ -3084,6 +3084,545 @@ leeclemens (1):
 tsaavik (1):
       dynazoom: added logo and backlink
 
+munin-2.0.37, 2018-03-28
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      p/munin_stats: fields are configurable
+
+dipohl (1):
+      doc: add example graphs
+
+
+munin-2.0.36, 2018-03-25
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #939, D#894017
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (7):
+      Plugin acpi (Linux): various improvements
+      Plugin ejabberd_: unify indentation
+      Plugin ejabberd_: fixed shellcheck issues
+      Plugin ejabberd_: implement configuration file parsing for yaml format
+      Plugin ejabberd_: enable strict shell behaviour
+      Plugin ejabberd_: defined reasonable defaults
+      Plugin ejabberd_: use 'clean_fieldname' instead of custom function
+
+Steve Schnepp (1):
+      p/munin_stats: should not emit graph.value on CGI
+
+Zenon Mousmoulas (1):
+      Simplify spooled value regex
+
+dipohl (1):
+      doc: add example plugin graphs (from master branch)
+
+y-ken (4):
+      Add support for MySQL 5.5/5.6
+      mysql_innodb_insert_buf compatibility problem fixed for MySQL 5.5/5.6
+      fixed indent
+      add verified version for mysql_ plugin
+
+
+munin-2.0.35, 2018-03-21
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #710, #382, #301, #923, #586, #864, #881, #891, #857, #888, #310, T#1018, T#1037, T#1276
+
+------------------
+Detailed Changelog
+------------------
+
+Adam Woodbeck (1):
+      Added HP-UX support to processes plugin.
+
+Anders Ossowicki (1):
+      DERIVE does not need a max to avoid false spikes.
+
+Andreas Teuchert (1):
+      snmp__if_multi: Set warning to 75% of interface speed instead of 133%.
+
+Axel Huebl (4):
+      Fix 1350, user agent, auto config
+      Multi-URL and requisites support (with backwards compatible options)
+      Remove Autoconf
+      Review Comments
+
+Bart Coppens (1):
+      Handle negative values in spooled data
+
+Bas Couwenberg (1):
+      Add support for rndc options in bind9_rndc plugin.
+
+Békefi Gábor (1):
+      Correcting mysql_queries plugin random hash ordering.
+
+Chris Butler (1):
+      Add PostgreSQL 10 support to postgres_xlog
+
+Daniel Black (13):
+      add threads running to mysql plugin on connections graph
+      mysql: don't suggest galera graphs if no galera
+      mysql: add data from query response time plugin
+      mysql: graph_period in vlabel and not title
+      mysql: query response time total - useconds
+      mysql: graphs are dynamic and therefore need caching
+      mysql: freeze->nfreeze
+      mysql: plugin_query_response_time - no need for plugin_map
+      mysql: Add user statistics graphs
+      mysql: change default database to information_schema
+      mysql: and grants and examples
+      mysql: user munin for unix_socket auth plugin
+      mysql: add graph binlog_groupcommit
+
+Dmitry Marakasov (7):
+      Whitespace consistency
+      Don't hardcode graph period
+      Remove duplicate label definition
+      Use consistent Nginx spelling among nginx_ plugins
+      Don't use unnecessary bold lines for nginx_* graphs
+      Calculate diskspace/inode usage percent accurately
+      Sort df output
+
+Ed Szynaka (1):
+      Added autoconf to spamstats
+
+Gabriele (1):
+      Fixed setting of warning limit and some minor issues
+
+Herwin Weststrate (1):
+      Typo fix in comments of fw_conntrack
+
+Hiroshi Shirosaki (1):
+      Fix Java committed memory bigger than Max
+
+Holger Levsen (1):
+      fixup perms, broken since >2.999.4
+
+InsanePrawn (1):
+      Update smart_
+
+Iván Montoro (1):
+      Add IPv6 support
+
+Jason Woods (2):
+      Report GAUGE values that are not updated within the heartbeat as Unknown
+      Further improve handling of unknown values and small refactor to make easier to follow
+
+Jean-Louis Dupond (1):
+      haproxy_ng: add SessionRate and adjust title of current sessions value
+
+Jose-Marcio Martins da Cruz (1):
+      Update meminfo.in
+
+K.Cima (3):
+      Fix typo $CDEV -> $CDEF
+      Add --lower-limit, --upper-limit and vlabel
+      Add disk device names for Oracle VM (LDOMs) and Kernel Zones
+
+Kenyon Ralph (1):
+      snmp__if_: handle noSuchInstance
+
+Kim B. Heino (5):
+      apc_nis: add line frequency monitoring
+      vlan_: fix syntax error
+      plugins/squeezebox: match category with munin contrib repo
+      plugins/squeezebox: wired devices are reported as strength 0, should be 100
+      plugins/apc_nis: add missing category
+
+Kjetil Torgrim Homme (1):
+      reduce number of forked processes
+
+Lars Kruse (33):
+      plugin smart_: typofix - https://github.com/vlajos/misspell_fixer
+      plugin smart_: set executable permission
+      plugin smart_: remove emacs mode hints
+      plugin smart_: switch to python3
+      updated travis setup: follow most changes of master
+      travis: import cpanfile from master
+      getversion: backport from master
+      plugin munin_stats: no warning if "graph" updates in CGI mode
+      plugin proc (Linux): use 'clean_fieldname'
+      plugin proc (Linux): suppress error messages for unreadable files
+      Logger: add missing "Carp" import for "confess"
+      postgres plugins: fixed database selection
+      hddtemp_smartctl plugin: add more smartctl labels (190 / 194)
+      varnish plugin: compatibility with Varnish 5.2
+      Plugin http_loadtime: improved quoting, modern command substitution
+      Plugin http_loadtime: time calculation based on "date" instead of "time"
+      Plugin http_loadtime: improve wget calls
+      Plugin http_loadtime: fix redirection order, remove bashisms, switch to sh
+      plugin 'ping_': improve shell quoting; fix shellcheck issues
+      plugin df (generic): unify whitespace
+      plugin df (generic): fix most shellcheck issues
+      plugin df (generic): reduce code duplication
+      plugin df (generic): support DIRTYCONFIG capability
+      plugin df (generic): replace ambiguous device names with mountpoints
+      plugin df_inode (generic): import changes of the "df" plugin
+      iptables-related plugins: use "-w" for consistent results
+      plugins df/df_inode: fix recently broken autoconf
+      plugin memcached_: exitcode zero for "autoconf" response "no"
+      plugin meminfo (Linux): fixed typo ("Hlocked"/"Mlocked")
+      Munin::Plugin: "rotate" event without warning for "tail_open"
+      Limits Notifications: prevent notification executable from writing to STDOUT
+      Limits check: increase log level for limit state changes
+      Plugin "if_" (FreeBSD): mention non-suitability for older systems and fix syntax
+
+Mark Saad (1):
+      The 32bit Warning is not accurate .     On modern FreeBSD systems netstat -i returns int64_t numbers
+
+Mathieu Arnold (2):
+      Fix if_ and if_errcoll_ plugins.
+      Add an if_packets_ to monitor packets going through an interface.
+
+Michael 'PoempelFox' Meier (1):
+      split cache into cache + shmem in linux memory plugin
+
+Michael Niewiara (1):
+      Update nfs plugins: Fixing autoconf to detect if service enabled
+
+Michael Pirogov (1):
+      Fast & ugly fix for PG10 support.
+
+Michael Scherer (1):
+      Add autoconfig support to mailman plugin
+
+Raphaël Droz (1):
+      Keep-up with modern Linux kernel netstat data.
+
+Rick Hansen (1):
+      plugins/postgres: Fix connection stats for PG 9.2-9.4
+
+Steve Schnepp (5):
+      p/snmp__if_: support ifHighSpeed
+      p/snmp__if_: accept interface num with leading 0
+      plugins: fix sum_cdef_tester plugin
+      plugins: fix sum_cdef_tester
+      p/ipmi_sensor_: fix fan thresholds
+
+Stig Sandbeck Mathisen (5):
+      Do not sort smart_ plugin attributes
+      Replace looped cat|perl and cat|egrep|awk with pure perl
+      remove bashism
+      Declare variable before use
+      Exclude btrfs from df_inode plugin
+
+Tobias Kappé (1):
+      Ignore current process when configuring labels for postgres_users plugin.
+
+Vadim Zeitlin (1):
+      Add "ignoreexit" parameter to smart_ plugin.
+
+Viktor Szépe (3):
+      Added graph_category
+      Signal error in http_loadtime
+      Typo in condition
+
+Vlad K (2):
+      Fix netstat active connection openings string
+      Annotate and fix netstat's active connections match.
+
+bovarysme (1):
+      Fix the check_perms_if_paranoid method
+
+duritong (1):
+      select correct avcstats location
+
+lr1980 (1):
+      verbose level = MUNIN_DEBUG
+
+nii_kenichi (1):
+      Typo corrected
+
+rantal (1):
+      Added OldGen graphs, switched used and free bytes (used is on bottom of the graph, free is on top)
+
+shapirus (1):
+      plugins/memory: draw the KSM-sharing value if present
+
+sumpfralle (1):
+      plugin 'psu_': fix config fieldname
+
+
+munin-2.0.34, 2017-10-20
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #804, DH:856536
+
+------------------
+Detailed Changelog
+------------------
+
+Christian Gut (2):
+      Add support for IBM i
+      fix whitespace
+
+Stefan Agner (1):
+      Update lighttpd.rst
+
+Steve Schnepp (1):
+      m/Utils: always use munin_read_storable()
+
+pir1981 (1):
+      Update nginx.rst
+
+
+munin-2.0.33, 2017-03-02
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #804, DH:856536
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      cgi: use Scalar::Util::looks_like_number
+
+munin-2.0.32, 2017-03-01
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #802, DH:856455
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      cgi: handle the empty string in CGI arguments
+
+
+munin-2.0.31, 2017-02-25
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: GH:607
+
+------------------
+Detailed Changelog
+------------------
+
+Kenyon Ralph (1):
+      ntp_kernel plugins: convert ntpq output to seconds
+
+
+munin-2.0.30.1, 2017-02-25
+
+-------
+Summary
+-------
+
+Security release.
+
+Closes: GH:721, D:855705, CVE-2017-6188
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      Fix wrong parameter expansion in CGI
+
+
+munin-2.0.30, 2017-01-18
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: GH:745, GH:771, GH:783
+
+------------------
+Detailed Changelog
+------------------
+
+Kenyon Ralph (2):
+      Revert "if_: check for non-empty and >0 before reporting speed (thanks to ssm)"
+      plugins/linux/meminfo: correct typo
+
+Yu Watanabe (1):
+      Revert "munin_stats plugin: only graph munin-graph if graph_strategy=cron"
+
+
+munin-2.0.29, 2016-12-31
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: D:847649, D:849383
+
+------------------
+Detailed Changelog
+------------------
+
+Artur Smet (1):
+      Add queries for PostgreSQL 9.4
+
+Peter J. Holzer (1):
+      p/postgres_querylength_: don't stack times
+
+Vincas Dargis (1):
+      Update postgres_connections_ for PostgreSQL 9.6
+
+
+
+munin-2.0.28, 2016-12-04
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Dr. Nagy Elemér Károly (1):
+      Visible graph titles => Ctrl-F works in browsers.
+
+IWAI, Masaharu (1):
+      autodetect the node encoding
+
+Kim B. Heino (3):
+      if_: /sys/class/net/ reports speed 0 for some devices
+      if_, if_err_: add more virtual devices like gre0 and bond0.99 to skip list
+      if_: check for non-empty and >0 before reporting speed (thanks to ssm)
+
+Lars Kruse (1):
+      plugin munin_stats: fix message typo
+
+Mark H. Wood (1):
+      Replace trivial use of Netcat with our own gadget to test for an open port.
+
+Stig Sandbeck Mathisen (1):
+      Add configuration for ssh master-node transport
+
+Tomohiro Hosaka (1):
+      s/IMGWEEKSUM/IMGYEARSUM/
+
+sstj (1):
+      Fix "Use of uninitialized value in numeric eq (==)" warning
+
+
+munin-2.0.27, 2016-10-31
+
+-------
+Summary
+-------
+
+Bugfix release. For Halloween =)
+
+Closes:  D:767032, D:768553, D:825136, D:834194, GH:690, GH:714
+
+------------------
+Detailed Changelog
+------------------
+
+Andreas Maus (1):
+      slapd_bdb_cache - autoconf fails when database dir is valid
+
+Holger Levsen (1):
+      munin_stats plugin: only graph munin-graph if graph_strategy=cron
+
+Kenyon Ralph (1):
+      plugins/node.d/ntp_states: fix "outlier" state spelling for recent versions of NTP
+
+Steinar H. Gunderson (1):
+      Update acpi plugin to use the /sys interface.
+
+dipohl (1):
+      Return smartctl exit code and warning message
+
+
+munin-2.0.26, 2016-09-09
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: D:761190, GH:426
+
+------------------
+Detailed Changelog
+------------------
+
+Bjørn Forsman (1):
+      multips: reject 'autoconf' unless $names is set
+
+Gabriele (1):
+      p/snmp_if: fix warning on receive
+
+Jason Woods (4):
+      Fix fofields always having the same entries as ofields. fofields now contains only entries that had a state change to OK (fo = fixed ok)
+      Fix ofields previous state detection not working correctly
+      Fix broken limits     - Inheritance of warning/critical now works correctly and does not break subsequent limits     - Aliased graph fields now obey limits assigned to them
+      Fix get_limit returning [undef, undef] instead of undef when no warning or critical defined
+
+Julien Pivotto (1):
+      Fix #1468: backport http_loadtime from devel
+
+Ken-ichi Mito (1):
+      fix https://github.com/munin-monitoring/munin/issues/426 (Numbers are crazy in diskstats plugin after reboot)
+
+Kenyon Ralph (1):
+      fix typo in graph_title
+
+Steve Schnepp (2):
+      p/apt_all: Be able to override /etc/apt.conf
+      p/apt_all: add some comment about default options
+
+
+
 munin-2.0.25, 2014-11-24
 
 -------
