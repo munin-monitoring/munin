@@ -7,6 +7,9 @@ munin (2.999.8-2) UNRELEASED; urgency=medium
   * Add missing package "munin-plugins-java".
     (it was provided by the munin 2.0 package before)
   * d/rules: use $(MAKE) instead of "make"
+  * autopkgtest: update embedded "sharness" from 0.3 to 1.0
+    (Thanks to Christian Göttsche:
+     https://github.com/munin-monitoring/munin/issues/844)
 
  -- Lars Kruse <devel@sumpfralle.de>  Wed, 20 Jun 2018 23:38:52 +0200
 
