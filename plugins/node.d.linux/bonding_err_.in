@@ -47,10 +47,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 EOF
 
 # Source plugin library functions
-. $MUNIN_LIBDIR/plugins/plugin.sh
+# shellcheck disable=SC1090
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 PROCDIR="/proc/net/bonding"
-MYSELF=$(basename $0)
+MYSELF=$(basename "$0")
 FILENAME="bonding_err_"
 BONDINGIF=$(echo "$MYSELF" | sed "s/^$FILENAME//")
 
@@ -70,7 +71,7 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 if [ "$1" = "suggest" ]; then
-  ls -1 ${PROCDIR}
+  ls -1 "$PROCDIR"
   exit 0
 fi
 
