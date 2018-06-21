@@ -4,6 +4,8 @@ munin (2.0.37-3) UNRELEASED; urgency=low
   * explicitly fail on erroneous OSTYPE detection
     (this may help with analyzing #839233)
   * use /run/munin/ instead of /var/run/munin/ (Closes: #790009)
+  * munin-node.service: create /var/log/munin, if missing
+    (Closes: #808988, Thanks Alejandro Suarez)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
