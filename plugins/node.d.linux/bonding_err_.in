@@ -53,6 +53,12 @@ PROCDIR="/proc/net/bonding"
 MYSELF=$(basename $0)
 FILENAME="bonding_err_"
 
+
+get_bonding_interface_names() {
+    grep "^Slave Interface:" "${PROCDIR}/${BONDINGIF}" | awk '{print $3}'
+}
+
+
 if [ "$1" = "autoconf" ]; then
   if [ -d "${PROCDIR}" ]; then
     echo "yes"
@@ -76,7 +82,7 @@ if [ "$1" = "config" ]; then
     echo "graph_title Bonding interface errors for $BONDINGIF"
     echo "graph_category Network"
     echo "graph_args --base 1000 -l 0"
-    grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
+    get_bonding_interface_names | while read -r if; do
       fieldname=$(clean_fieldname "$if")
       echo "if_${fieldname}.label ${if}"
       echo "if_${fieldname}.type DERIVE"
@@ -93,7 +99,7 @@ if [ "$MYSELF" = "$FILENAME" ]; then
 fi
 
 BONDINGIF=$(echo $MYSELF | sed "s/^$FILENAME//")
-grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
+get_bonding_interface_names | while read -r if; do
   fieldname=$(clean_fieldname "$if")
   echo -n "if_${fieldname}.value "
   sed "0,/^Slave Interface: ${if}/d; /^\$/,\$d" "${PROCDIR}/${BONDINGIF}" \
