@@ -83,9 +83,9 @@ if [ "$1" = "config" ]; then
     echo "graph_title Bonding interface errors for $BONDINGIF"
     echo "graph_category Network"
     echo "graph_args --base 1000 -l 0"
-    get_bonding_interface_names | while read -r if; do
-      fieldname=$(clean_fieldname "$if")
-      echo "if_${fieldname}.label ${if}"
+    get_bonding_interface_names | while read -r if_name; do
+      fieldname=$(clean_fieldname "$if_name")
+      echo "if_${fieldname}.label $if_name"
       echo "if_${fieldname}.type DERIVE"
       echo "if_${fieldname}.min 0"
       echo "if_${fieldname}.warning 0"
@@ -93,10 +93,10 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-get_bonding_interface_names | while read -r if; do
-  fieldname=$(clean_fieldname "$if")
+get_bonding_interface_names | while read -r if_name; do
+  fieldname=$(clean_fieldname "$if_name")
   echo -n "if_${fieldname}.value "
-  sed "0,/^Slave Interface: ${if}/d; /^\$/,\$d" "${PROCDIR}/${BONDINGIF}" \
+  sed "0,/^Slave Interface: ${if_name}/d; /^\$/,\$d" "${PROCDIR}/${BONDINGIF}" \
     | grep "Link Failure Count:" \
     | cut -d " " -f 4
 done
