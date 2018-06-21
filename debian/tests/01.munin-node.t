@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 test_description="munin-node"
 
 . ./sharness.sh
