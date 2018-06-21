@@ -11,7 +11,6 @@ test_expect_success "munin-node-configure" "
 test_expect_success "munin-node running?" "
   pgrep -u root munin-node
 "
-EOF
 
 test_expect_success "munin node listening?" "
   echo quit | nc localhost 4949

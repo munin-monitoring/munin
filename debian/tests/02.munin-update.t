@@ -5,11 +5,11 @@ test_description="munin-update"
 . ./sharness.sh
 
 test_expect_success "munin-update" "
-  runuser munin /usr/share/munin/munin-update
+  runuser -u munin /usr/bin/munin-update
 "
 
 test_expect_success "munin-limits" "
-  runuser munin /usr/share/munin/munin-limits
+  runuser -u munin /usr/bin/munin-limits
 "
 
 test_done

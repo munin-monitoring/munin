@@ -10,6 +10,7 @@ munin (2.999.8-2) UNRELEASED; urgency=medium
   * autopkgtest: update embedded "sharness" from 0.3 to 1.0
     (Thanks to Christian Göttsche:
      https://github.com/munin-monitoring/munin/issues/844)
+  * autopkgtest: adjust paths and calling parameters
 
  -- Lars Kruse <devel@sumpfralle.de>  Wed, 20 Jun 2018 23:38:52 +0200
 
