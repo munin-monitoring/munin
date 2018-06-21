@@ -6,6 +6,7 @@ munin (2.0.37-3) UNRELEASED; urgency=low
   * use /run/munin/ instead of /var/run/munin/ (Closes: #790009)
   * munin-node.service: create /var/log/munin, if missing
     (Closes: #808988, Thanks Alejandro Suarez)
+  * remove outdated cached files (Closes: #700298)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
