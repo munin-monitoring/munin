@@ -33,6 +33,17 @@ override_dh_auto_install:
 	$(MAKE) install-node-prime $(MAKEOPTS) \
 		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
 		DESTDIR=$(CURDIR)/debian/munin-node
+	# Do not install the program manpages in the munin-doc tree
+	# Instead: remove them here and rely on dh_installman.
+	# We cannot split the MANDIR target for manpages and module documentation. Thus the
+	# separation has to be done manually.
+	rm -f debian/munin-doc/usr/share/man/man1/munin-node.1p \
+		debian/munin-doc/usr/share/man/man1/munin-node-configure.1p \
+		debian/munin-doc/usr/share/man/man1/munin-run.1p \
+		debian/munin-doc/usr/share/man/man1/munindoc.1p
+	rmdir debian/munin-doc/usr/share/man/man1
+	# we do not expect other manpages in munin-doc (except for perl module documentation)
+	[ -z "$(shell find debian/munin-doc/usr/share/man/ -type f | grep -v 'man3/')" ]
 
 	# workaround bug in upstream Makefile
 	mkdir -p $(CURDIR)/debian/munin-async/var/lib

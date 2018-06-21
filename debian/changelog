@@ -7,6 +7,8 @@ munin (2.0.37-3) UNRELEASED; urgency=low
   * munin-node.service: create /var/log/munin, if missing
     (Closes: #808988, Thanks Alejandro Suarez)
   * remove outdated cached files (Closes: #700298)
+  * move program and file manpages from munin-doc to their respective
+    packages (Closes: 896440)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
