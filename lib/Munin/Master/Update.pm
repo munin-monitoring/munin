@@ -50,7 +50,7 @@ sub run {
 
 	# Create the DB, using a local block to close the DB cnx
 	{
-		my $dbh = $self->get_dbh();
+		my $dbh = get_dbh();
 		$self->_db_init($dbh, $dbh);
 		$config_old = $self->_db_params_update($dbh, $config);
 	}
@@ -64,8 +64,6 @@ sub run {
 }
 
 sub get_dbh {
-	my ($self) = @_;
-
 	use DBI;
 	my $datafilename = $ENV{MUNIN_DBURL} || "$config->{dbdir}/datafile.sqlite";
 	# Note that we should reconnect for _each_ update part, as sharing a $dbh when forking()
