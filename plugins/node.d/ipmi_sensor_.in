@@ -235,16 +235,16 @@ for v in UNITS_TO_SENSORS.values():
 def config_unit(unit):
     info = UNITS_TO_SENSORS[unit]
     data = get_sensors()
-    print "graph_title IPMI Sensors:", info['title']
-    print "graph_args", info['args']
-    print "graph_vlabel", info['vlabel']
-    print "graph_category sensors"
-    print "graph_info", info['info']
+    print("graph_title IPMI Sensors:", info['title'])
+    print("graph_args", info['args'])
+    print("graph_vlabel", info['vlabel'])
+    print("graph_category sensors")
+    print("graph_info", info['info'])
     for lbl in info['sensors']:
         values = data[lbl]
         nname = normalize_sensor(lbl)
         
-        print "%s.label %s" % (nname, lbl)
+        print("%s.label %s" % (nname, lbl))
         assertions = values['assertions enabled'].split()
         warn_l = warn_u = crit_l = crit_u = ""
         if 'lcr-' in assertions:
@@ -265,9 +265,9 @@ def config_unit(unit):
             crit = "%s:%s" % (crit_l,crit_u)
 
         if warn!=":":
-            print "%s.warning %s" % (nname, warn)
+            print("%s.warning %s" % (nname, warn))
         if crit!=":":
-            print "%s.critical %s" % (nname, crit)
+            print("%s.critical %s" % (nname, crit))
         
         
 
@@ -281,7 +281,7 @@ def report_unit(unit):
     for lbl in info['sensors']:
         nname = normalize_sensor(lbl)
         value = data[lbl]["sensor reading"].split()[0]
-        print "%s.value %s" % (nname, value)
+        print("%s.value %s" % (nname, value))
     
 
 def report():
@@ -291,9 +291,10 @@ def report():
 def autoconf():
     data = get_sensors()
     if data:
-        print "yes"
+        print("yes")
     else:
-        print "no (no ipmitool output)"
+        print("no (no ipmitool output)")
+
 
 def suggest():
     names = get_sensor_names()
@@ -302,17 +303,18 @@ def suggest():
         for key, sensors in names.items():
             f.write("%s = %s\n" % (key, ",".join(sensors)))
     for key in names.keys():
-        print "u_%s" % key
+        print("u_%s" % key)
 
 
 def debug():
-    print SENSORS
+    print(SENSORS)
     data = get_sensors()
     for key, value in data.items():
-        print "%s : %s (%s - %s) [%s - %s] %s" % (key, value['sensor reading'],
-                                                  value['lower non-critical'], value['upper non-critical'],
+        print("%s : %s (%s - %s) [%s - %s] %s" % (key, value['sensor reading'],
+                                                  value['lower non-critical'],
+                                                  value['upper non-critical'],
                                                   value['lower critical'], value['upper critical'],
-                                                  value['assertions enabled'],)
+                                                  value['assertions enabled']))
 
 def main():
     if len(sys.argv)>1:
