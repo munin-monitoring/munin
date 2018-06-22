@@ -269,8 +269,14 @@ sub _db_mkgrp {
 	my $grp_name = $group->{group_name};
 
 	# Create the group if needed
-	my $sth_grp_id = $dbh->prepare_cached("SELECT id FROM grp WHERE name = ? AND p_id = ?");
-	$sth_grp_id->execute($grp_name, $p_id);
+	my $sth_grp_id;
+	if (defined $p_id) {
+		$sth_grp_id = $dbh->prepare_cached("SELECT id FROM grp WHERE name = ? AND p_id = ?");
+		$sth_grp_id->execute($grp_name, $p_id);
+	} else {
+		$sth_grp_id = $dbh->prepare_cached("SELECT id FROM grp WHERE name = ? AND p_id IS NULL");
+		$sth_grp_id->execute($grp_name);
+	}
 	my ($grp_id) = $sth_grp_id->fetchrow_array();
 	$sth_grp_id->finish();
 
