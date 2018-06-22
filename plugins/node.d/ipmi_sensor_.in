@@ -129,7 +129,7 @@ def get_sensor_names():
         p = Popen(["ipmitool", "-I", "open", "sensor"], shell=False, stdout=PIPE)
     except OSError:
         return
-    data = p.stdout.readlines()
+    data = p.stdout.read().decode().splitlines()
 
     units = {}
     for k, u in UNITS_TO_SENSORS.items():
@@ -164,7 +164,7 @@ def get_sensors():
                           shell=False, stdout=PIPE)
             except OSError:
                 return
-        data = p.stdout.read()
+        data = p.stdout.read().decode()
         try:
             with open(cache_filename, "w") as f:
                 f.write(data)
@@ -247,7 +247,10 @@ def config_unit(unit):
     print("graph_category sensors")
     print("graph_info", info['info'])
     for lbl in info['sensors']:
-        values = data[lbl]
+        try:
+            values = data[lbl]
+        except KeyError:
+            continue
         nname = normalize_sensor(lbl)
 
         print("%s.label %s" % (nname, lbl))
@@ -286,7 +289,10 @@ def report_unit(unit):
     data = get_sensors()
     for lbl in info['sensors']:
         nname = normalize_sensor(lbl)
-        value = data[lbl]["sensor reading"].split()[0]
+        try:
+            value = data[lbl]["sensor reading"].split()[0]
+        except KeyError:
+            continue
         print("%s.value %s" % (nname, value))
 
 
