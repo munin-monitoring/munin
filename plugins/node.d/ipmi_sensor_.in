@@ -174,7 +174,9 @@ def get_sensors():
 def query_unit(arg):
     m = re.search( '_u_(.*)$', arg)
     if not m:
-        raise RuntimeError("Could not figure which unit you want based on executable name")
+        sys.stderr.write("Could not determine which unit you want based on executable name. "
+                         "Acceptable values: {}\n".format(" / ".join(get_sensor_names())))
+        sys.exit(1)
     return m.group(1)
 
 
