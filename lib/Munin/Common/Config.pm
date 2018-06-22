@@ -31,6 +31,10 @@ my %legal = map { $_ => 1 } qw(
 	create_args
 	critical
 	dbdir
+	dburl
+	dbdriver
+	dbuser
+	dbpasswd
 	domain_order
 	draw
 	drawstyle
