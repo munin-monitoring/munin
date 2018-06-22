@@ -151,12 +151,12 @@ def get_sensors():
     curtime = time()
 
     if curtime-mtime>CACHEAGE:
-	if not SENSORS:
+        if not SENSORS:
             try:
-            	p = Popen(["ipmitool","-I","open","sensor"], shell=False, stdout=PIPE)
+                p = Popen(["ipmitool","-I","open","sensor"], shell=False, stdout=PIPE)
             except OSError:
                 return
-	else:
+        else:
             try:
                 p = Popen(["ipmitool","-I","open","sensor", "get", "--"] + SENSORS, shell=False, stdout=PIPE)
             except OSError:
