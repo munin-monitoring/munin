@@ -64,7 +64,6 @@ sub run {
 }
 
 sub get_dbh {
-	use DBI;
 	my $datafilename = $ENV{MUNIN_DBURL} || "$config->{dbdir}/datafile.sqlite";
 	# Note that we should reconnect for _each_ update part, as sharing a $dbh when forking()
 	# will bring unhappiness
@@ -73,6 +72,7 @@ sub get_dbh {
 
 	# Not being able to open the DB connection seems FATAL to me. Better
 	# die loudly than injecting some misguided data
+	use DBI;
 	my $dbh = DBI->connect("dbi:Pg:dbname=munin","","") or die $DBI::errstr;
 	{
 		$dbh->{RaiseError} = 1;
