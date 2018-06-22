@@ -118,8 +118,9 @@ def parse_data( data ):
             sensors[id] = cur_sensor
         if not cur_sensor:
             continue
-        label, data = line.split(":", 1)
-        cur_sensor[label.strip().lower()] = data.strip()
+        if ":" in line:
+            label, data = line.split(":", 1)
+            cur_sensor[label.strip().lower()] = data.strip()
     return sensors
 
 def get_sensor_names():
