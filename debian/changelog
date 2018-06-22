@@ -15,6 +15,8 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     confusion (Closes: #700025, #783499)
   * add /etc/munin/plugin-conf.d/README explaining order of processing
     of config files (Closes: #767200)
+  * add separate plugin configuration file for "spamstats" plugin
+    (Closes: #831464)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
