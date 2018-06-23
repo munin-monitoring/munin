@@ -151,10 +151,9 @@ sub handle_request
 	$time = "pinpoint" if $time =~ m/^pinpoint/;
 
 	# Ok, now SQL is needed to go further
-	use DBI;
-	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 	# Note that we reconnect for _each_ request. This is to avoid old data when the DB "rotates"
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	use Munin::Master::Update;
+	my $dbh = Munin::Master::Update::get_dbh();
 
 	DEBUG "($graph_path, $time, $start, $end, $format)\n";
 
@@ -162,7 +161,7 @@ sub handle_request
 	my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
 	if (not defined($sth_url)) {
 		# potential cause: permission problem
-		my $msg = "Failed to access database ($datafilename): " . $DBI::errstr;
+		my $msg = "Failed to access database: " . $DBI::errstr;
 		WARNING "[WARNING] $msg";
 		die $msg;
 	}
