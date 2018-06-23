@@ -12,6 +12,7 @@ The following configuration parameters are used by this plugin:
 
  [ntp_states]
   env.lowercase - Lowercase hostnames after lookup
+  env.show_syspeer_stratum - Display the stratum of the system peer, field sys_peer_stratum
 
 Set the variable env.lowercase to anything to lowercase hostnames.
 
@@ -19,6 +20,7 @@ Set the variable env.lowercase to anything to lowercase hostnames.
 
  [ntp_states]
   env.lowercase <undefined>
+  env.show_syspeer_stratum <undefined>
 
 =head1 AUTHORS
 
@@ -56,9 +58,11 @@ my %stateval = (
                  "outlier"   => 4,
                  "candidate" => 5,
                  "sys.peer"  => 6,
-                 "pps.peer"  => 7
+                 "pps.peer"  => 7,
+                 "insane"    => 8
                );
 my %peers_condition;
+my $syspeer_stratum_value = 15;
 my $resolver = Net::DNS::Resolver->new;
 $resolver->tcp_timeout(5);
 $resolver->udp_timeout(5);
@@ -90,7 +94,18 @@ sub make_hash {
                                 $condition_str = "falsetick";
                         }
 
-                        $peers_condition{$peer_addr} = $stateval{$condition_str};
+                        # save the sys.peer's stratum if configured to graph it
+                        if ($condition_str eq "sys.peer" and exists $ENV{"show_syspeer_stratum"}) {
+                                chomp(my $stratum = `ntpq -n -c "readvar $assid stratum"`);
+                                $stratum =~ s/\s//g;
+                                ($syspeer_stratum_value) = ($stratum =~ m/stratum=(.*)/);
+                        }
+
+                        if (exists $stateval{$condition_str}) {
+                          $peers_condition{$peer_addr} = $stateval{$condition_str};
+                        } else {
+                          $peers_condition{$peer_addr} = 9;
+                        }
                 }
         }
 }
@@ -144,14 +159,18 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf") {
 &make_hash;
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
-        print "graph_title NTP states\n";
-        print "graph_args --base 1000 --vertical-label state --lower-limit 0\n";
-        print "graph_category time\n";
-        print "graph_info These are graphs of the states of this system's NTP peers. The states translate as follows: 0=reject, 1=falsetick, 2=excess, 3=backup, 4=outiyer, 5=candidate, 6=system peer, 7=PPS peer. See http://www.eecis.udel.edu/~mills/ntp/html/decode.html for more information on the meaning of these conditions.\n";
+        print "graph_info These are graphs of the states of this system's NTP peers. The states translate as follows: 0=reject, 1=falsetick, 2=excess, 3=backup, 4=outlyer, 5=candidate, 6=system peer, 7=PPS peer. See http://www.eecis.udel.edu/~mills/ntp/html/decode.html for more information on the meaning of these conditions. If show_syspeer_stratum is specified, the sys.peer stratum is also graphed.\n";
 
         foreach my $addr (keys %peers_condition) {
                 my ($fieldname, $hostname) = &make_names($addr);
                 print "$fieldname.label $hostname\n";
+        }
+
+        # print config for the sys.peer's stratum if configured to graph it
+        if (exists $ENV{"show_syspeer_stratum"}) {
+            print "sys_peer_stratum.label sys.peer stratum\n";
+            print "sys_peer_stratum.draw LINE1\n";
+            print "sys_peer_stratum.colour 000000\n";
         }
 
         exit 0;
@@ -160,6 +179,10 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 foreach my $addr (keys %peers_condition) {
         my ($fieldname, $hostname) = &make_names($addr);
         print "$fieldname.value ", $peers_condition{$addr}, "\n";
+}
+# include the sys.peer's stratum if configured to graph it
+if (exists $ENV{"show_syspeer_stratum"} ) {
+    print "sys_peer_stratum.value ", $syspeer_stratum_value, "\n";
 }
 
 exit 0;
