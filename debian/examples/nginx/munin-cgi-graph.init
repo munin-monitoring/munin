@@ -21,8 +21,8 @@
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 NAME=munin-cgi-graph
-PID_FILE="/var/run/munin/$NAME.pid"
-SOCK_FILE="/var/run/munin/$NAME.socket"
+PID_FILE="/run/munin/$NAME.pid"
+SOCK_FILE="/run/munin/$NAME.socket"
 CGI_SCRIPT="/usr/lib/munin/cgi/$NAME"
 DAEMON=/usr/bin/spawn-fcgi
 DAEMON_OPTS="-s $SOCK_FILE -U www-data -u munin -g munin -P $PID_FILE -- $CGI_SCRIPT"
