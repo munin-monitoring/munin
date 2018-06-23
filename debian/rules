@@ -82,6 +82,8 @@ override_dh_auto_install:
 	# Install debian provided plugin configuration
 	install -D -m0644 debian/plugins.conf \
 		$(CURDIR)/debian/munin-node/etc/munin/plugin-conf.d/munin-node
+	install -D -m0644 debian/plugins.README \
+		$(CURDIR)/debian/munin-node/etc/munin/plugin-conf.d/README
 
 	# Move plugins not marked "auto" "manual" or "snmpauto" to the
 	# "munin-plugins-extra" package.

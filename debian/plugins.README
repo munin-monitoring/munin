@@ -1,0 +1,13 @@
+# Plugin configuration files below /etc/munin/plugins.d/ are processed in
+# alphabetical order. The last files processed can override earlier
+# configuration directives.
+#
+# You are advised to add local customization of plugin configurations to a
+# separate file ("zzz-FOO") in order to guarantee the expected order of
+# processing.
+#
+# Source:
+#    http://guide.munin-monitoring.org/en/latest/plugin/use.html#configuring
+#
+# Please note: this README file is also parsed. Thus please avoid confusing
+# yourself and do not add valid configuration directives here.
