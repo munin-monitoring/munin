@@ -58,10 +58,6 @@ override_dh_auto_install:
 		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
 		DESTDIR=$(CURDIR)/debian/munin-plugins-java
 
-	# Install apache configuration
-	install -D -m0644 debian/munin.apache.conf \
-		$(CURDIR)/debian/munin/etc/munin/apache.conf
-
 	# Install apache 2.4 configuration
 	install -D -m0644 debian/munin.apache24.conf \
 		$(CURDIR)/debian/munin/etc/munin/apache24.conf

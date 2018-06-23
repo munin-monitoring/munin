@@ -32,22 +32,6 @@ initperms() {
 apache_install() {
 	# if you add more webservers here, don't forget to also remove them in postrm
         webserver=apache2
-        webserver_init_script="/etc/init.d/$webserver"
-        if [ -d /etc/$webserver/conf.d ] && [ ! -e /etc/$webserver/conf.d/munin ]; then
-		if [ -z "$prevver" ] ; then
-			# only create link on new installs
-	                ln -s ../../munin/apache.conf /etc/$webserver/conf.d/munin
-		fi
-		if [ -f $webserver_init_script ];then
-			if [ -x $webserver_init_script ]; then
-				invoke-rc.d $webserver reload 3>/dev/null || true
-			else
-				echo "munin: $webserver_init_script is not executable."\
-				     "Could not reload $webserver"
-			fi
-		fi
-        fi
-
 	# installing configuration for Apache 2.4
 	# link config to conf-available
 	if [ -d /etc/$webserver/conf-available ] && [ ! -e /etc/$webserver/conf-available/munin.conf ]; then
@@ -67,7 +51,7 @@ case "$1" in
 	configure)
 		if [ -z "$2" ] ; then
 			initperms
-			apache_install $@
+			apache_install "$@"
 		fi
 		;;
 	abort-upgrade|abort-deconfigure|abort-remove)
