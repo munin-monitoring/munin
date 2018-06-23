@@ -126,9 +126,6 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 # Not ready to be installed yet
 # $(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
 
-# ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
-# GENERIC ONES
-
 install-node-plugins: install-plugins-prime
 
 # Some HP-UX plugins needs *.adv support files in LIBDIR
@@ -148,6 +145,8 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	$(CHMOD) 0755 $(PLUGSTATE)
 	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
 
+	@# Process the OS specific plugins at the end. Otherwise they would be overridden by the
+	@# generic ones.
 	for p in build/plugins/node.d/* build/plugins/node.d.$(OSTYPE)/* ; do \
 	    if test -f "$$p" ; then                            \
 		echo Installing $$p;                           \
