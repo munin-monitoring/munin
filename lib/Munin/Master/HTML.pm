@@ -106,9 +106,8 @@ sub handle_request
 	$path =~ s,/$,,;
 
 	# Ok, now SQL is needed to go further
-        use DBI;
-	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
-        my $dbh = DBI->connect("dbi:Pg:dbname=munin","","") or die $DBI::errstr;
+	use Munin::Master::Update;
+	my $dbh = Munin::Master::Update::get_dbh();
 
 	my $comparison;
 	my $template_filename;
