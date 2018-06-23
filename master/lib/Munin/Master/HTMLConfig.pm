@@ -502,11 +502,11 @@ sub generate_service_templates {
 	my $start_year = $epoch_now - (3600 * 24 * 400);
 	my $size_x = 800;
 	my $size_y = 400;
-	my $common_url = "$root_path/static/dynazoom.html?cgiurl_graph=$config->{'cgiurl_graph'}&plugin_name=$path&size_x=$size_x&size_y=$size_y";
-	$srv{zoomday} = "$common_url&start_epoch=$start_day&stop_epoch=$epoch_now";
-	$srv{zoomweek} = "$common_url&start_epoch=$start_week&stop_epoch=$epoch_now";
-	$srv{zoommonth} = "$common_url&start_epoch=$start_month&stop_epoch=$epoch_now";
-	$srv{zoomyear} = "$common_url&start_epoch=$start_year&stop_epoch=$epoch_now";
+	my $common_url = "$root_path/static/dynazoom.html?cgiurl_graph=$config->{'cgiurl_graph'}&amp;plugin_name=$path&amp;size_x=$size_x&amp;size_y=$size_y";
+	$srv{zoomday} = "$common_url&amp;start_epoch=$start_day&amp;stop_epoch=$epoch_now";
+	$srv{zoomweek} = "$common_url&amp;start_epoch=$start_week&amp;stop_epoch=$epoch_now";
+	$srv{zoommonth} = "$common_url&amp;start_epoch=$start_month&amp;stop_epoch=$epoch_now";
+	$srv{zoomyear} = "$common_url&amp;start_epoch=$start_year&amp;stop_epoch=$epoch_now";
     }
 
 	for my $scale (@times) {
