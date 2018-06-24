@@ -15,9 +15,16 @@ add_munin_async_user() {
 	fi
 }
 
+initperms() {
+	chown munin-async:munin-async /var/lib/munin-async
+}
+
 case "$1" in
 	configure)
 		add_munin_async_user
+		if [ -z "$2" ]; then
+			initperms
+		fi
 		;;
 	abort-upgrade|abort-deconfigure|abort-remove)
 		:

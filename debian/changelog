@@ -19,6 +19,9 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     (Closes: #831464)
   * plugin dhcpd3: adjust default leases and config file locations
     (Closes: #863534)
+  * Revert more of f1f48dee so that directories are again setup correctly on
+    initial installations of munin-node and munin-async.
+    Thanks Stefano Rivera! (Closes: #885454)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
