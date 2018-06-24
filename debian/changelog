@@ -1,6 +1,8 @@
 munin (2.0.37-3) UNRELEASED; urgency=low
 
   * fix trivial spelling mistakes below debian/ (thanks "codespell")
+  * explicitly fail on erroneous OSTYPE detection
+    (this may help with analyzing #839233)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
