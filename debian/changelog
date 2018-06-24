@@ -30,6 +30,8 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     munin package (group "adm" instead of "www-data")
   * adjust javac compile version to currently packaged Java versions
     (Closes: #873993)
+  * remove references to missing documentation (munin-doc.* and munin-faq.*)
+    from "munin-node" (removed by upstream)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
