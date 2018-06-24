@@ -7,7 +7,7 @@ or other sensitive information, the directory is not world readable.
 
 A plugin configuration file contain one or more sections.  Each section starts
 with a label (between '[' and ']'), and contains an optional "user" statement,
-an optional "grop" statement, and zero or more lines beginning with "env.":
+an optional "group" statement, and zero or more lines beginning with "env.":
 
 Example:
 

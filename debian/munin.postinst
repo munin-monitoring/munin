@@ -30,7 +30,7 @@ initperms() {
 }
 
 apache_install() {
-	# if you add more webservers here, dont forget to also remove them in postrm
+	# if you add more webservers here, don't forget to also remove them in postrm
         webserver=apache2
         webserver_init_script="/etc/init.d/$webserver"
         if [ -d /etc/$webserver/conf.d ] && [ ! -e /etc/$webserver/conf.d/munin ]; then

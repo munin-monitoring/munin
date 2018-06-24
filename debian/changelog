@@ -1,3 +1,9 @@
+munin (2.0.37-3) UNRELEASED; urgency=low
+
+  * fix trivial spelling mistakes below debian/ (thanks "codespell")
+
+ -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
+
 munin (2.0.37-2) unstable; urgency=medium
 
   * d/control:
@@ -463,8 +469,8 @@ munin (2.0.9-2) experimental; urgency=low
 
   * Include the changes from 2.0.6-2 as actually uploaded to sid - and not as
     proposed in #694790.
-  * For 2.0.9-2 this effectly means stop using quilt (all patches have been
-    removed anyway, see 2.0.6-2 changelog) and a different (=the actual)
+  * For 2.0.9-2 this effectively means stop using quilt (all patches have
+    been removed anyway, see 2.0.6-2 changelog) and a different (=the actual)
     debian/changelog entry for 2.0.6-2. So this upload is basically a no-op.
   * Which actually means that 2.0.9-2 equals 2.0.9 plus 099cc00f, which was
     added in 2.0.6-2.
@@ -688,7 +694,7 @@ munin (2.0~rc6-1) unstable; urgency=low
 
 munin (2.0~rc5-3) unstable; urgency=low
 
-  * Create /var/lib/munin/plugin-state in munin-node.postinst if it doesnt
+  * Create /var/lib/munin/plugin-state in munin-node.postinst if it does not
     exist. (Closes: #668975)
 
  -- Holger Levsen <holger@debian.org>  Mon, 16 Apr 2012 12:33:08 +0200
@@ -706,14 +712,14 @@ munin (2.0~rc5-1) unstable; urgency=low
   [ Holger Levsen ]
   * New upstream release candidate, quoting the upstream Changelog:
      - Adding the current action to the command line. Useful for debugging.
-     - Adding a new URL param full_size_mode to enable predictible IMG sizes
+     - Adding a new URL param full_size_mode to enable predictable IMG sizes
      - Enable sparklines with the url param "only_graph"
      - Start RRD just before first update. To avoid a very costly 1st update.
      - Emit the hosts in a sorted order, instead of somewhat random.
      - Do not emit png list if file handle is not defined. (Closes: #666759)
      - Add old option of --force-root, but with a new name. more explicit
        (Closes:  #601371)
-     - We dont generate the png list when using cgi html.
+     - We do not generate the png list when using cgi html.
      - Remove warning when asking "list" w/o a hostname (LP: #907952)
      - Many bug fixes (trac: Closes #967, #1210) (Closes: #583189, #568511,
        Closes: #475078)
@@ -1098,7 +1104,7 @@ munin (1.4.0-1) unstable; urgency=low
   * Remove 62 patches that have been merged in trunk.
   * Move htmldir to /var/cache/munin/www. (Closes: #553555)
     If you are upgrading, read NEWS.Debian.
-    Theres still work to be done implementing debconf presenting an option
+    There is still work to be done implementing debconf presenting an option
     where to install the htmldir, and possibly support more webservers by
     default.
   * Add new binary package: munin-common, which contains code shared by
@@ -1230,7 +1236,8 @@ munin (1.2.6-13) unstable; urgency=low
 
   [ Matthias Schmitz ]
   * Add suggest to hdparm as need by hddtemp_smartctl (Closes: #531714)
-  * Catch unitialized values and munindoc'ify postgres_space_ (Closes: #518790)
+  * Catch uninitialized values and munindoc'ify postgres_space_
+    (Closes: #518790)
 
   [ Holger Levsen ]
   * Bump Standards-version to 3.8.2.
@@ -1249,7 +1256,7 @@ munin (1.2.6-12) unstable; urgency=low
     (Closes: #501189)
   * Add patch to linux cpu plugin to output correct graph if HZ value != 100,
     thanks to Valentin Vidic for the patch. (Closes: #500226)
-  * Add patch to acpi plugin to call acpi without -B as requiered by acpi in
+  * Add patch to acpi plugin to call acpi without -B as required by acpi in
     lenny and newer, thanks to Joey Hess. (Closes: #523239)
   * Include ejabberd plugin in munin-plugins-extra. Thanks to Christian Dröge
     for the plugin. (Closes: #505684)
@@ -1289,7 +1296,7 @@ munin (1.2.6-10) unstable; urgency=low
   * munin-html: create needed directories if they don't exist. Normally this
     is done in munin-graph, but that's not used in cgi mode. Thanks to Peter
     Palfrader for the bugreport with patch! (Closes: #514634)
-  * node.d.linux/netstat.in: fix regex to only match openened connections,
+  * node.d.linux/netstat.in: fix regex to only match opened connections,
     thanks to  Paul Slootman for 460-netstat-regex.patch. (Closes: #507069)
 
  -- Holger Levsen <holger@debian.org>  Sat, 28 Feb 2009 19:54:14 +0100
@@ -1483,7 +1490,7 @@ munin (1.2.6-1) unstable; urgency=low
   * Fix formatting errors in debian/NEWS.
   * Bump standards version to 3.7.3, no changes needed.
   * Remove versioned dependencies/suggests on python, perl-modules and
-    debhelper as they are all fullfilled even in oldstable.
+    debhelper as they are all fulfilled even in oldstable.
   * Update debian/copyright to reflect that munin is under the GPL2.
   * debian/rules: Don't ignore failures in the clean target.
   * Move debhelper and quilt to Build-Depends:.
@@ -1608,7 +1615,7 @@ munin (1.2.3-2) unstable; urgency=low
   * server/munin-graph.in:
       - Gave up waiting for the new upstream release, and applied Robert
         Loomans' patch to make Munin support RRDtool 1.2, closes: #324605,
-        closes: #325280.  Thanks, Robert!  Note that this breaks compability
+        closes: #325280.  Thanks, Robert!  Note that this breaks compatibility
         with RRDtool 1.0.  Sarge users should wait for the new upstream release
         which will support both RRDtool 1.0 and 1.2.
 
@@ -1752,7 +1759,7 @@ munin (1.2.0-1) unstable; urgency=low
         file, closes: #291849.
       - Plugin linux/fw_forwarded_local now correctly reports 0 instead of
         NaN in some situations, closes: #284673.
-      - Plugin linux/iostat now ingores devices that have had no I/O operations
+      - Plugin linux/iostat now ignores devices that have had no I/O operations
         whatsoever and thus are assumed to be unused, closes: #267195.
       - New plugin: linux/forks. Closes: #225638.
       - New plugin: linux/uptime. Closes: #283622.
@@ -1797,7 +1804,7 @@ munin (1.2.0-1) unstable; urgency=low
   * server/munin-limits.in:
       - Change lock file directory to match that of munin-update, munin-graph,
         and munin-html (grabbed from upstream CVS).
-      - Fix a string comparsions where the "==" operator was used instead of
+      - Fix a string comparisons where the "==" operator was used instead of
         "eq" (grabbed from upstream CVS).
 
   * debian/munin.postinst:
@@ -1842,7 +1849,7 @@ munin (1.0.3-1) unstable; urgency=low
 
 munin (1.0.2-1) unstable; urgency=low
 
-  * New upstream release, fixing the follwing:
+  * New upstream release, fixing the following:
     - munin-graph spews uninitialized value in concatenation [precedence
       error], thanks to Don Armstrong (Closes: #267185).
   * Run the hddtemp plugins as root, write access to the device isn't
@@ -1960,7 +1967,7 @@ lrrd (0.9.9r5-1) unstable; urgency=low
         sort-of closes: #214277.
       - Relaxes the paranoia regarding the plugins' ownership and permission
         modes somewhat, closes: #214186, #216401.
-      - Further impovements to the error-handling logic in lrrd-server, which
+      - Further improvements to the error-handling logic in lrrd-server, which
         hopefully closes: #215739, #222674, #222821.
       - Removed the spurious use of Config::General in lrrd-client,
         closes: #216176.
@@ -1980,7 +1987,7 @@ lrrd (0.9.9r5-1) unstable; urgency=low
       - Polished slightly.
 
   * debian/lrrd-client.dirs:
-      - Removed unecessary entry /var/run/lrrd, which is installed from the
+      - Removed unnecessary entry /var/run/lrrd, which is installed from the
         Makefile.
 
   * debian/lrrd-client.init:
