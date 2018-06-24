@@ -50,7 +50,7 @@ start() {
 	log_daemon_msg "Starting Munin-Node"
 	mkdir -p /run/munin /var/log/munin
 	chown munin:root /run/munin
-	chown munin:www-data /var/log/munin
+	chown munin:adm /var/log/munin
 	chmod 0755 /run/munin
 	chmod 0755 /var/log/munin
 	if pidofproc -p $PIDFILE $DAEMON >/dev/null; then
