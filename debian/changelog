@@ -41,6 +41,7 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     (Thanks to Christian Göttsche:
      https://github.com/munin-monitoring/munin/issues/844)
   * autopkgtest: remove unused old test "munin-master"
+  * enable upstream tests during package build
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
