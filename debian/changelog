@@ -1,5 +1,9 @@
 munin (2.0.37-3) UNRELEASED; urgency=low
 
+  * mysql plugins: switch the "mysqluser" from "debian-sys-maint" to "root"
+    in the plugin configuration.
+    See munin-node.NEWS entry for details.
+    (Closes: #862238, #864845)
   * fix trivial spelling mistakes below debian/ (thanks "codespell")
   * explicitly fail on erroneous OSTYPE detection
     (this may help with analyzing #839233)
