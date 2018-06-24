@@ -84,5 +84,5 @@ Notes
 Issues
 ======
 
-* If a human readable config value isn't a multiple of :ref:`update_rate <update_rate>`, no graph should be emitted, so the user is immediatly alerted of his misconfiguration.
+* If a human readable config value isn't a multiple of :ref:`update_rate <update_rate>`, no graph should be emitted, so the user is immediately alerted of his misconfiguration.
 * The first number always represent the full resolution: :ref:`update_rate <update_rate>`.

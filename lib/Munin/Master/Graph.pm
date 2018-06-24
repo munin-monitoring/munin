@@ -37,8 +37,6 @@ use Munin::Common::Logger;
 use File::Basename;
 use Data::Dumper;
 
-Munin::Common::Logger::configure( level => 'debug', output => 'screen');
-
 # Hash of available palettes
 my %PALETTE;
 # Array of actuall colours to use

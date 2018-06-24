@@ -154,7 +154,7 @@ sub do_work {
 
 	    for my $plugin (@plugins) {
 		DEBUG "[DEBUG] for my $plugin (@plugins)";
-		if (%{$config->{limit_services}}) {
+		if (defined $config->{limit_services} && %{$config->{limit_services}}) {
 		    next unless $config->{limit_services}{$plugin};
 		}
 

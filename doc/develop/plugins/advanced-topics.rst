@@ -107,4 +107,4 @@ Python Plugins
 
 Python2 is approaching its end-of-life in 2020 and Python3 was released 2008. Thus new plugins should be written in Python3 only.
 
-Core modules (included in CPython) should be prefered over external modules, whenever possible (e.g. use `urllib <https://docs.python.org/3/library/urllib>`_ instead of `requests <http://python-requests.org>`_).
+Core modules (included in CPython) should be preferred over external modules, whenever possible (e.g. use `urllib <https://docs.python.org/3/library/urllib>`_ instead of `requests <http://python-requests.org>`_).

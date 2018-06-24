@@ -56,18 +56,16 @@ sub run {
 	}
 
         $self->{workers} = $self->_create_workers();
-        $self->_run_workers();
-
-	# I wonder if the following should really be done with timing. - janl
-        $self->_write_new_service_configs();
+        my $nb_workers = $self->_run_workers();
+	return $nb_workers;
     });
 }
 
 sub get_dbh {
-	my $datafilename = $ENV{MUNIN_DBURL} || "$config->{dburl}" || "$config->{dbdir}/datafile.sqlite";
-	my $db_driver = $ENV{MUNIN_DBDRIVER} || "$config->{dbdriver}";
-	my $db_user = $ENV{MUNIN_DBUSER} || "$config->{dbuser}";
-	my $db_passwd = $ENV{MUNIN_DBPASSWD} || "$config->{dbpasswd}";
+	my $datafilename = $ENV{MUNIN_DBURL} || $config->{dburl} || "$config->{dbdir}/datafile.sqlite";
+	my $db_driver = $ENV{MUNIN_DBDRIVER} || $config->{dbdriver};
+	my $db_user = $ENV{MUNIN_DBUSER} || $config->{dbuser};
+	my $db_passwd = $ENV{MUNIN_DBPASSWD} || $config->{dbpasswd};
 	# Note that we should reconnect for _each_ update part, as sharing a $dbh when forking()
 	# will bring unhappiness
 	#
@@ -111,7 +109,7 @@ sub _create_workers {
     #       the global throughtput
     @hosts = shuffle(@hosts);
 
-    if (%{$config->{limit_hosts}}) {
+    if (defined $config->{limit_hosts} && %{$config->{limit_hosts}}) {
         @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts
     }
 
@@ -164,8 +162,10 @@ sub _run_workers {
 
 	my $pm = Parallel::ForkManager->new($max_processes);
 
+	my $nb_workers = 0;
 	WORKER_LOOP:
 	for my $worker (@{$self->{workers}}) {
+		$nb_workers ++;
 		my $worker_pid = $pm->start();
 		next WORKER_LOOP if $worker_pid;
 
@@ -200,6 +200,9 @@ sub _run_workers {
 	}
 
 	$pm->wait_all_children;
+
+	# Everything worked, return the number of workers
+	return $nb_workers;
 }
 
 sub _create_self_aware_worker_result_handler {

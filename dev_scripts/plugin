@@ -6,7 +6,7 @@
 # If the plugin is given as a filepath (containing a slash), it is symlinked into the sandbox and
 # removed after being executed.
 #
-# The plugin can be executed with its orginal name (via "run") or in a symlink configuration
+# The plugin can be executed with its original name (via "run") or in a symlink configuration
 # (via "run_as").
 #
 # Capabilities can be enabled via environment variables:

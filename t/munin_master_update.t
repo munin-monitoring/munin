@@ -3,6 +3,36 @@ use warnings;
 
 use lib qw(t/lib);
 
-use Munin::Master::Update::Tests;
 
-Test::Class->runtests;
+use Test::More;
+
+require_ok( 'Munin::Master::Update' );
+require_ok( 'Munin::Master::Config' );
+
+# Launch node-debug
+my $pid_debug_node = 0;
+unless (($pid_debug_node = fork())) {
+	exec("contrib/munin-node-debug", "--debug");
+}
+
+# Wait for the node to start
+sleep(5);
+
+my $config = Munin::Master::Config->instance()->{"config"};
+$config->parse_config_from_file("t/config/munin.conf");
+
+Munin::Common::Logger::configure(
+	"output" => "screen",
+	"level" => "debug",
+);
+
+
+my $update = Munin::Master::Update->new();
+ok($update->run() == 3);
+
+kill('TERM', $pid_debug_node);
+wait();
+
+done_testing();
+
+1;
