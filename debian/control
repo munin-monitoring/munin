@@ -5,7 +5,7 @@ Maintainer: Munin Debian Maintainers <team+munin@tracker.debian.org>
 Uploaders: Holger Levsen <holger@debian.org>, 
  Stig Sandbeck Mathisen <ssm@debian.org>
 Build-Depends-Indep:
- openjdk-8-jdk,
+ default-jdk,
  html2text,
  htmldoc,
  perl,
