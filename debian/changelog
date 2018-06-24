@@ -10,6 +10,7 @@ munin (2.0.37-3) UNRELEASED; urgency=low
   * move program and file manpages from munin-doc to their respective
     packages (Closes: 896440)
   * munin: add missing manpage for "munin-graph" (Closes: #693402)
+  * munin-node: add missing manpage for "munin-sched"
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
