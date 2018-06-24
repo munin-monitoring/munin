@@ -40,6 +40,7 @@ munin (2.0.37-3) UNRELEASED; urgency=low
   * autopkgtest: update embedded "sharness" from 0.3 to 1.0
     (Thanks to Christian Göttsche:
      https://github.com/munin-monitoring/munin/issues/844)
+  * autopkgtest: remove unused old test "munin-master"
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
