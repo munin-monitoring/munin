@@ -1,6 +1,8 @@
 #! /usr/bin/make -f
 
 export DH_VERBOSE=1
+# Build.PL relies on the munin modules to be found locally
+export PERL5LIB=.
 
 MAKEOPTS = CONFIG=debian/Makefile.config INSTALL_PLUGINS="auto manual snmpauto contrib"
 
@@ -8,7 +10,7 @@ MAKEOPTS = CONFIG=debian/Makefile.config INSTALL_PLUGINS="auto manual snmpauto c
 	# --no-parallel was introduced with debhelper compat level 10
 	# (else it would fail to build) - this will probably also
 	# "fix"  #839233
-	dh $@ --with systemd --no-parallel
+	dh $@ --no-parallel
 
 override_dh_auto_build:
 	# ./getversion reads RELEASE if it exists

@@ -10,7 +10,7 @@ Build-Depends-Indep:
  htmldoc,
  perl,
 Build-Depends:
- debhelper (>=10.2.5~),
+ debhelper (>=11),
  libmodule-build-perl,
 Standards-Version: 4.1.4
 Homepage: http://munin-monitoring.org
