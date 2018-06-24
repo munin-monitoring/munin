@@ -9,13 +9,29 @@ use Test::More;
 require_ok( 'Munin::Master::Update' );
 require_ok( 'Munin::Master::Config' );
 
-my $globconfig = Munin::Master::Config->instance();
-my $config = $globconfig->{'config'};
+# Launch node-debug
+my $pid_debug_node = 0;
+unless (($pid_debug_node = fork())) {
+	exec("contrib/munin-node-debug", "--debug");
+}
 
-ok($config->parse_config_from_file("t/config/munin.conf"));
+# Wait for the node to start
+sleep(5);
+
+my $config = Munin::Master::Config->instance()->{"config"};
+$config->parse_config_from_file("t/config/munin.conf");
+
+Munin::Common::Logger::configure(
+	"output" => "screen",
+	"level" => "debug",
+);
+
 
 my $update = Munin::Master::Update->new();
-$update->run();
+ok($update->run() == 3);
+
+kill('TERM', $pid_debug_node);
+wait();
 
 done_testing();
 
