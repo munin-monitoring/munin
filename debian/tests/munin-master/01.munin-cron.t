@@ -2,7 +2,7 @@
 
 test_description="munin run (cron strategy)"
 
-. ./sharness.sh
+. debian/tests/sharness.sh
 
 setup() {
     temp_conf_file=$(mktemp /etc/munin/munin-conf.d/autopkgtest.XXXXXXXX.conf)

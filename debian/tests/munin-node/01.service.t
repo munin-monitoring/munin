@@ -1,8 +1,11 @@
 #!/bin/sh
+#
+# verify that munin-node can be started and stopped
+#
 
 test_description="munin-node service"
 
-. ./sharness.sh
+. debian/tests/sharness.sh
 
 test_expect_success "status (should be started by default)" "
   service munin-node status
