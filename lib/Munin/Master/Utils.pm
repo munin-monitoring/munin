@@ -938,6 +938,10 @@ sub munin_get_keypath {
 	    if (defined $i->{'#%#parent'}{graph_title} or defined $i->{graph_title}) {
 		$name =~ s/-/_/g; # can't handle dashes in service or below
 		unshift(@service,$name);
+	    } elsif (defined $i->{'#%#parent'}{address}) {
+		# I am host and my parent is host. Join by '-'.
+		$host = 1;
+		unshift(@service,$name);
 	    } else {
 		$host = 1;
 		unshift(@group,$name);
