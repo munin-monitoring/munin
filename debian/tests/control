@@ -1,11 +1,11 @@
 # systemd: collect graphs, generate html and png files
 Test-Command: prove -v debian/tests/munin-master/*.t
-Depends: munin, munin-node, daemontools
+Depends: munin, munin-node, daemontools, apache2, curl, file
 Restrictions: needs-root breaks-testbed isolation-container
 
 # sysvinit-core: collect graphs, generate html and png files
 Test-Command: debian/tests/run-with-sysvinit prove -v debian/tests/munin-master/*.t
-Depends: munin, munin-node, daemontools
+Depends: munin, munin-node, daemontools, apache2, curl, file
 Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 
 # systemd: run the node; access plugins

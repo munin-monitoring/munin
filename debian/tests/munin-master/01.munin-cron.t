@@ -35,4 +35,8 @@ test_expect_success "munin-html" "
   setuidgid munin /usr/share/munin/munin-html
 "
 
+test_expect_success "munin-cron" "
+  setuidgid munin /usr/bin/munin-cron
+"
+
 test_done
