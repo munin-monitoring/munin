@@ -17,3 +17,8 @@ Restrictions: needs-root breaks-testbed isolation-container
 Test-Command: debian/tests/run-with-sysvinit prove -v debian/tests/munin-node/*.t
 Depends: munin-node, netcat-openbsd
 Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
+
+# verify that all binary packages can be installed at the same (without conflicts)
+Test-Command: true
+Depends: @
+Restrictions: breaks-testbed
