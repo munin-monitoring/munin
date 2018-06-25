@@ -237,7 +237,7 @@ sub handle_request
 			(
 				select hn.id
 				from ds hn
-				JOIN ds_attr hn_attr ON hn.service_id = ds.service_id AND hn_attr.value = ds.name and hn_attr.name = 'negative'
+				JOIN ds_attr hn_attr ON hn_attr.id = hn.id AND hn_attr.value = ds.name and hn_attr.name = 'negative'
 				where hn.service_id = ds.service_id
 			) as negative_id,
 			rl.value as last_epoch,
