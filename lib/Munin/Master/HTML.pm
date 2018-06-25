@@ -797,7 +797,7 @@ sub _get_params_fields {
 
 	my $sth_ds = $dbh->prepare_cached("
 		SELECT ds.name, ds.warning, ds.critical,
-		a_g.value, a_l.value, IFNULL(a_t.value, 'GAUGE'), a_w.value, a_c.value, a_i.value
+		a_g.value, a_l.value, a_t.value, a_w.value, a_c.value, a_i.value
 		FROM ds
 		LEFT JOIN ds_attr a_g ON ds.id = a_g.id AND a_g.name = 'graph'
 		LEFT JOIN ds_attr a_l ON ds.id = a_l.id AND a_l.name = 'label'
@@ -813,6 +813,9 @@ sub _get_params_fields {
 	while (my ($_ds_name, $_ds_s_warn, $_ds_s_crit, $_ds_graph, $_ds_label, $_ds_type, $_ds_warn, $_ds_crit, $_ds_info) =
 			$sth_ds->fetchrow_array) {
 		next if $_ds_graph && $_ds_graph eq 'no';
+
+		# GAUGE by default
+		$_ds_type = 'GAUGE' unless defined $_ds_type;
 
 		push @fields, {
 			FIELD => $_ds_name,
