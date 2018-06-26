@@ -9,11 +9,17 @@ samba - Plugin to monitor number of files held open by the CIFS clients
 
 =head1 CONFIGURATION
 
-This plugin uses the following configuration variables
+This plugin uses the following configuration variables:
 
  [samba]
-  env.smbstatus      - Path to "smbstatus" executable
-  env.ignoreipcshare - Set this variable to ignore IPC$ when counting shares.
+  env.smbstatus /usr/bin/smbstatus
+  env.ignoreipcshare 1
+
+Environment variables:
+
+ * smbstatus: path to "smbstatus" executable
+   (default: search PATH and fall back to /usr/bin/smbstatus)
+ * ignoreipcshare: set this variable to any non-empty value to ignore IPC$ when counting shares.
 
 =head1 AUTHOR
 
