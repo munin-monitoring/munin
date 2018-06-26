@@ -12,8 +12,11 @@ samba - Plugin to monitor number of files held open by the CIFS clients
 This plugin uses the following configuration variables:
 
  [samba]
+  user root
   env.smbstatus /usr/bin/smbstatus
   env.ignoreipcshare 1
+
+Usually "smbstatus" requires to be run as root (see "user root" above).
 
 Environment variables:
 
@@ -36,17 +39,20 @@ GPLv2
 
 =cut
 
-SMBSTATUS=${smbstatus:-`which smbstatus`}
+SMBSTATUS=${smbstatus:-$(which smbstatus)}
 SMBSTATUS=${SMBSTATUS:-/usr/bin/smbstatus}
 
 if [ "$1" = "autoconf" ]; then
-	if [ -x $SMBSTATUS ]; then
-		echo yes
-		exit 0
+	if [ -x "$SMBSTATUS" ]; then
+		if "$SMBSTATUS" -V >/dev/null 2>&1; then
+			echo 'yes'
+		else
+			echo "no (failed to run $SMBSTATUS - maybe need to run as 'root'?)"
+		fi
 	else
-		echo no '(smbstatus not found)'
-		exit 0
+		echo 'no (smbstatus not found)'
 	fi
+	exit 0
 fi
 
 if [ "$1" = "config" ]; then
