@@ -381,7 +381,7 @@ sub process_service {
 			# Old value does not exist or is too old. Report unknown.
 			$value = "U";
 		} elsif ($field->{type} eq "ABSOLUTE") {
-			# The previous value is unimportant, as if ABSOLUTE, the counter is reset everytime the value is read
+			# The previous value is unimportant, as if ABSOLUTE, the counter is reset every time the value is read
 			$value = $current_updated_value / ($current_updated_timestamp - $previous_updated_timestamp);
 		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
 			# COUNTER never decrease. Report unknown.
