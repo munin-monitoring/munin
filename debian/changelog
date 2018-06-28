@@ -1,6 +1,7 @@
-munin (2.999.8-2) UNRELEASED; urgency=medium
+munin (2.999.9-1) UNRELEASED; urgency=medium
 
   [ Lars Kruse ]
+  * New upstream beta release
   * munin and munin-node: use separate maintscript files
   * convert old doc directories (before "link-doc") to symlinks
     (Closes: #881713)
@@ -14,7 +15,7 @@ munin (2.999.8-2) UNRELEASED; urgency=medium
   * d/tests: use "set -eu" in test scripts
     (Thanks, Christian Göttsche)
 
- -- Lars Kruse <devel@sumpfralle.de>  Wed, 20 Jun 2018 23:38:52 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Thu, 28 Jun 2018 05:06:39 +0200
 
 munin (2.999.8-1) experimental; urgency=medium
 
