@@ -1,6 +1,8 @@
 #! /bin/sh
 # Debian
 
+set -eu
+
 # Running munin
 apt-get install -y $(
 cat <<EOF
@@ -41,7 +43,7 @@ cat <<EOF
   libxml-libxml-perl
   libxml-parser-perl
 
-  python-sphinx
+  python3-sphinx
   rrdtool
   sqlite3
   wget
