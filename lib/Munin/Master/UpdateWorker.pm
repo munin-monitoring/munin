@@ -775,6 +775,7 @@ sub _disconnect_carbon_server {
 }
 
 sub _update_carbon_server {
+	# uncoverable subroutine
 	my ($self, $nested_service_config, $nested_service_data) = @_;
 
 	my $metric_path;
