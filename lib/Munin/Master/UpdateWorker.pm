@@ -50,6 +50,8 @@ sub new {
     $self->{worker} = $worker;
     weaken($self->{worker});
 
+    DEBUG "created $self";
+
     return $self;
 }
 
@@ -513,18 +515,6 @@ sub _db_state_update {
 }
 
 
-sub get_global_service_value {
-	my ($service_config, $service, $conf_field_name, $default) = @_;
-	foreach my $array (@{$service_config->{global}{$service}}) {
-		my ($field_name, $field_value) = @$array;
-		if ($field_name eq $conf_field_name) {
-			return $field_value;
-		}
-	}
-
-	return $default;
-}
-
 sub is_fresh_enough {
 	my ($self, $update_rate, $last_timestamp, $now) = @_;
 
@@ -761,180 +751,6 @@ sub uw_override_with_conf {
     }
 
     return $service_config;
-}
-
-
-sub _compare_and_act_on_config_changes {
-    my ($self, $nested_service_config) = @_;
-
-    # Kjellm: Why do we need to tune RRD files after upgrade?
-    # Shouldn't we create a upgrade script or something instead?
-    #
-    # janl: Upgrade script sucks.  This way it's inline in munin and
-    #  no need to remember anything or anything.
-
-    my $just_upgraded = 0;
-
-    my $old_config = Munin::Master::Config->instance()->{oldconfig};
-
-    if (not defined $old_config->{version}
-        or ($old_config->{version}
-            ne $Munin::Common::Defaults::MUNIN_VERSION)) {
-        $just_upgraded = 1;
-    }
-
-    for my $service (keys %{$nested_service_config->{data_source}}) {
-
-        my $service_config = $nested_service_config->{data_source}{$service};
-
-	for my $data_source (keys %{$service_config}) {
-	    my $old_data_source = $data_source;
-	    my $ds_config = $service_config->{$data_source};
-
-	    my $group = $self->{host}{group}{group_name};
-	    my $host = $self->{host}{host_name};
-
-	    my $old_host_config = $old_config->{groups}{$group}{hosts}{$host};
-	    my $old_ds_config = undef;
-
-	    if ($old_host_config) {
-		$old_ds_config =
-		    $old_host_config->get_canned_ds_config($service,
-							   $data_source);
-	    }
-
-	    if (defined($old_ds_config)
-		and %$old_ds_config
-		and defined($ds_config->{oldname})
-		and $ds_config->{oldname}) {
-
-		$old_data_source = $ds_config->{oldname};
-		$old_ds_config =
-		    $old_host_config->get_canned_ds_config($service,
-							   $old_data_source);
-	    }
-
-	    if (defined($old_ds_config)
-		and %$old_ds_config
-		and not $self->_ds_config_eq($old_ds_config, $ds_config)) {
-		$self->_ensure_filename($service,
-					$old_data_source, $data_source,
-					$old_ds_config, $ds_config)
-		    and $self->_ensure_tuning($service, $data_source,
-					      $ds_config);
-		# _ensure_filename prints helpful warnings in the log
-	    } elsif ($just_upgraded) {
-		$self->_ensure_tuning($service, $data_source,
-				      $ds_config);
-	    }
-	}
-    }
-}
-
-
-sub _ds_config_eq {
-    my ($self, $old_ds_config, $ds_config) = @_;
-
-    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
-    $old_ds_config = $self->_get_rrd_data_source_with_defaults($old_ds_config);
-
-    # We only compare keys that are autotuned to avoid needless RRD tuning,
-    # since RRD tuning is bad for perf (flush rrdcached)
-    for my $key (keys %$rrd_tune_flags) {
-	my $old_value = $old_ds_config->{$key};
-	my $value = $ds_config->{$key};
-
-        # if both keys undefined, look no further
-        next unless (defined($old_value) || defined($value));
-
-	# so, at least one of the 2 is defined
-
-	# False if the $old_value is not defined
-	return 0 unless (defined($old_value));
-
-	# if something isn't the same, return false
-        return 0 if (! defined $value || $old_value ne $value);
-    }
-
-    # Nothing different found, it has to be equal.
-    return 1;
-}
-
-
-sub _ensure_filename {
-    my ($self, $service, $old_data_source, $data_source,
-        $old_ds_config, $ds_config) = @_;
-
-    my $rrd_file = $self->_get_rrd_file_name($service, $data_source,
-                                             $ds_config);
-    my $old_rrd_file = $self->_get_rrd_file_name($service, $old_data_source,
-                                                 $old_ds_config);
-
-    my $hostspec = $self->{node}{host}.'/'.$self->{node}{address}.':'.
-	$self->{node}{port};
-
-    if ($rrd_file ne $old_rrd_file) {
-        if (-f $old_rrd_file and -f $rrd_file) {
-            my $host = $self->{host}{host_name};
-            WARN "[WARNING]: $hostspec $service $data_source config change "
-		. "suggests moving '$old_rrd_file' to '$rrd_file' "
-		. "but both exist; manually merge the data "
-                . "or remove whichever file you care less about.\n";
-	    return '';
-        } elsif (-f $old_rrd_file) {
-            INFO "[INFO]: Config update, changing name of '$old_rrd_file'"
-                   . " to '$rrd_file' on $hostspec ";
-            unless (rename ($old_rrd_file, $rrd_file)) {
-                ERROR "[ERROR]: Could not rename '$old_rrd_file' to"
-		    . " '$rrd_file' for $hostspec: $!\n";
-                return '';
-            }
-        }
-    }
-
-    return 1;
-}
-
-
-sub _ensure_tuning {
-    my ( $self, $service, $data_source, $ds_config ) = @_;
-    my $fqn = sprintf( "%s:%s", $self->{ID}, $service );
-
-    my $success = 1;
-
-    my $rrd_file
-        = $self->_get_rrd_file_name( $service, $data_source, $ds_config );
-
-    return unless -f $rrd_file;
-
-    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
-
-    for my $rrd_prop ( keys %$rrd_tune_flags ) {
-        RRDs::tune( $rrd_file, $rrd_tune_flags->{$rrd_prop},
-            "42:$ds_config->{$rrd_prop}" );
-        if ( RRDs::error() ) {
-            $success = 0;
-            ERROR(
-                sprintf(
-                    "fqn=%s, ds=%s, Tuning %s to %s failed: %s\n",
-                    $fqn,      $data_source,
-                    $rrd_prop, $ds_config->{$rrd_prop},
-                    RRDs::error()
-                )
-            );
-        }
-        else {
-            INFO(
-                sprintf(
-                    "fqn=%s, ds=%s, Tuning %s to %s\n",
-                    $fqn,      $data_source,
-                    $rrd_prop, $ds_config->{$rrd_prop}
-                )
-            );
-        }
-    }
-
-    return $success;
 }
 
 sub _connect_carbon_server {
