@@ -11,21 +11,54 @@ Debian-specific information regarding Munin
     On the master system point your browser to http://localhost/munin - to
     customize edit /etc/munin/apache.conf if you are using apache2.
 
-    On the nodes, /etc/munin/munin-node.conf needs to be edited to allow 
-    access from the master node. 
+    On the nodes, /etc/munin/munin-node.conf needs to be edited to allow
+    access from the master node. Restart munin-node after any configuration
+    change.
 
-    Plugins reside in /usr/share/munin/plugins/, their usage is activated 
-    by linking them to /etc/munin/plugins/. Plugin configuration is best 
-    done in /etc/munin/plugin-conf.d/
+    Plugins reside in /usr/share/munin/plugins/, their usage is activated
+    by linking them to /etc/munin/plugins/ (restart munin-node afterwards).
+    Plugin configuration is best done in /etc/munin/plugin-conf.d/
 
     Further reading: http://guide.munin-monitoring.org/
 
+
+  Allow non-local access to web interface
+  ---------------------------------------
+
+    By default access to the munin web interface is restricted to
+    local requests.
+    If you need to access the web interface remotely, you should replace
+    all occurrences of "Require local" with "Require all granted" in
+    /etc/apache2/conf-enabled/munin.conf and restart apache2.
+
+
+  Performance considerations: generate visualization on-demand or via cron
+  ------------------------------------------------------------------------
+
+    By default munin generates its HTML output and its graphs periodically
+    (via cron). This is suitable for small installations.
+
+    If performance is an issue (e.g. if one master is collecting data from
+    dozens or hundreds of nodes), the visualization can also be configured
+    to be generated on demand.
+    The following steps are required for this change:
+      * set "html_strategy" and/or "graph_strategy" to "cgi"
+        (see /etc/munin/munin.conf and /etc/munin/munin-conf.d/)
+      * adjust the apache configuration for munin
+        (see the end of /etc/apache2/conf-enabled/munin.conf)
+      * enable one of the CGI handlers for apache:
+          * cgi: "a2enmod cgid"
+          * fcgid: "apt install libapache2-mod-fcgid && a2enmod fcgid"
+      * restart apache2 and visit http://localhost/munin/
+
+
   Find the upstream source
   ------------------------
-    This Debian package uses the upstream tarball located here:
-    http://sourceforge.net/projects/munin/ .
 
-    It also uses quilt to apply some debian specific patches located in 
+    This Debian package uses the upstream tarball located here:
+      http://downloads.munin-monitoring.org/
+
+    It also uses quilt to apply some debian specific patches located in
     ./debian/patches/
 
 
@@ -35,10 +68,10 @@ Debian-specific information regarding Munin
     We've got a mailing list.  You'll find subscription information at
     <http://lists.sourceforge.net/lists/listinfo/munin-users>.  All feedback
     are welcome.
-    
+
     If you feel like sending us things that can't be represented in binary (for
     example beautiful people fluent in assembly, bacillus anthracis, cash,
     explosives, and so on), take contact off-list, and we'll find a way of
     arranging the logistics.
-  
+
  Enjoy!  :-)
