@@ -45,6 +45,7 @@ cat <<EOF
 
   python3-sphinx
   rrdtool
+  rrdcached
   sqlite3
   wget
 EOF
