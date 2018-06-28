@@ -43,6 +43,8 @@ munin (2.0.37-3) UNRELEASED; urgency=low
   * autopkgtest: remove unused old test "munin-master"
   * enable upstream tests during package build
   * Remove upstreamed patch for Java version
+  * apache configuration: improved documentation and simplified switching
+    between "html_strategy cron" and "html_strategy cgi"
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
