@@ -15,6 +15,27 @@ get_mime_type() {
 }
 
 
+configure_apache2_for_strategy() {
+    local apache2_conf="/etc/apache2/conf-enabled/munin.conf"
+
+    # remove strategy-specific setting from apache configuration
+    sed -i '/^\(Script\)\?Alias \/munin /d' "$apache2_conf"
+
+    if [ "$MUNIN_TEST_CGI_ENABLED" = "1" ]; then
+        echo "ScriptAlias /munin /usr/lib/munin/cgi/munin-cgi-html" >>"$apache2_conf"
+        a2enmod cgid
+        service apache2 restart
+    else
+        echo "Alias /munin /var/cache/munin/www" >>"$apache2_conf"
+        a2dismod cgid
+        service apache2 restart
+    fi
+}
+
+
+configure_apache2_for_strategy
+
+
 test_expect_success "main site: mime type" '
   [ "$(get_munin_url "/" | get_mime_type)" = "text/xml" ]
 '
