@@ -364,6 +364,7 @@ sub process_service {
             $old_state, $old_num_unknowns) = $sth_state->fetchrow_array;
 
         $old_state ||= 'ok';
+        $old_num_unknowns ||= 0;
 
 		my $heartbeat = 600; # XXX - $heartbeat is a fixed 10 min (2 runs of 5 min).
 		if (! defined $current_updated_value || $current_updated_value eq "U") {
@@ -439,43 +440,26 @@ sub process_service {
             my $num_unknowns;
 
             if ($old_state ne "unknown") {
-                # Assume that the state changed - see some exceptions below.
-                $hash->{'state_changed'} = 1;
-            }
-            else {
+                # The user may want to ignore a few unknown values before
+                # they should be reported. Thus we need to track the number
+                # of recently received unknown values before we admit that
+                # the value is really "unknown". Thus we may want to postpone
+                # a "change" notification until we reach the limit.
+                if ($old_num_unknowns >= $unknown_limit) {
+                    # The limit is reached - we should report "unknown".
+                    $hash->{'state_changed'} = 1;
+                } else {
+                    # Don't change the state to UNKNOWN yet.
+                    $hash->{'state_changed'} = 0;
+                    $state = $old_state;
+                    $extinfo = $field->{"extinfo"} || "";
+                    # Increment the number of UNKNOWN values seen.
+                    $num_unknowns = $old_num_unknowns + 1;
+                }
+            } else {
                 $hash->{'state_changed'} = 0;
             }
 
-            # The user may want to ignore a few unknown values before
-            # they should be reported. Thus we need to track the number
-            # of recently received unknown values. And we may want to
-            # postpone a "change" notification until we reach the limit.
-            if ($unknown_limit > 1) {
-                if ($old_state ne "unknown") {
-                    # The last sample reported a different state.
-                    if ($old_num_unknowns) {
-                        # One or more previous values were also "unknown".
-                        if ($old_num_unknowns < $unknown_limit) {
-                            # Don't change the state to UNKNOWN yet.
-                            $hash->{'state_changed'} = 0;
-                            $state = $old_state;
-                            $extinfo = $field->{"extinfo"};
-
-                            # Increment the number of UNKNOWN values seen.
-                            $num_unknowns = $old_num_unknowns + 1;
-                        }
-                    } else {
-                        # The previous values were not reported as unknown.
-                        $hash->{'state_changed'} = 0;
-                        $state = $old_state;
-                        $extinfo = $field->{"extinfo"};
-
-                        # Start counting the number of consecutive UNKNOWN
-                        # values seen.
-                        $num_unknowns = 1;
-                    }
-                }
-            }
 
             if ($state eq "unknown") {
                 $hash->{'worst'} = "UNKNOWN" if $hash->{"worst"} eq "OK";
