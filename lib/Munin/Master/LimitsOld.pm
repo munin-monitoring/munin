@@ -358,11 +358,13 @@ sub process_service {
 
         DEBUG "[DEBUG] processing field: " . join('::', @$fpath);
         DEBUG "[DEBUG] field: " . munin_dumpconfig_as_str($field);
-	my $value;
-    	{
-		my $rrd_filename = munin_get_rrd_filename($field, $path);
-		my ($current_updated_timestamp, $current_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{current} || [ ] };
-		my ($previous_updated_timestamp, $previous_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{previous} || [ ] };
+        my $value;
+        $sth_state->execute($ds_id, "ds");
+        my ($current_updated_timestamp, $current_updated_value,
+            $previous_updated_timestamp, $previous_updated_value,
+            $old_alarm, $old_num_unknowns) = $sth_state->fetchrow_array;
+
+        $oldstate = $old_alarm || 'ok';
 
 		my $heartbeat = 600; # XXX - $heartbeat is a fixed 10 min (2 runs of 5 min).
 		if (! defined $current_updated_value || $current_updated_value eq "U") {
@@ -391,7 +393,6 @@ sub process_service {
 			# compute the value per timeunit
 			$value = ($current_updated_value - $previous_updated_value) / ($current_updated_timestamp - $previous_updated_timestamp);
 		}
-	}
 
     # De-taint.
     if ( !defined $value || $value eq "U" ) {
