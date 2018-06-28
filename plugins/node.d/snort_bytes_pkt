@@ -84,7 +84,7 @@ if [ "$1" = "config" ]; then
 		echo "bytes_pkt.critical $critical"
 	fi
         echo 'bytes_pkt.info Average size per packet'
-        echo 'graph_category Snort'
+        echo 'graph_category security'
 
         exit 0
 fi

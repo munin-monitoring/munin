@@ -38,6 +38,9 @@ if ( $ARGV[0] && $ARGV[0] eq 'autoconf' ) {
 # Fetch current counter values
 my %cur_diskstats = fetch_device_counters();
 
+# Fetch uptime to detect system reboot
+my ($uptime) = fetch_uptime();
+
 # Weed out unwanted devices
 filter_device_list( \%cur_diskstats );
 
@@ -72,6 +75,20 @@ exit 0;
 ########
 # SUBS #
 ########
+
+# fetch_uptime
+#
+# read /proc/uptime and return it
+
+sub fetch_uptime {
+    open my $FH, "<", '/proc/uptime' or return undef;
+    my $line = <$FH>;
+    chomp($line);
+    my @row = split(/\s+/, $line);
+    close $FH;
+
+    return @row;
+}
 
 # generate_multigraph_data
 #
@@ -186,6 +203,17 @@ sub calculate_values {
     my $bytes_per_sector = 512;
 
     my $interval = time() - $prev_time;
+
+    if ($uptime < $interval) {
+        # system has rebooted
+
+        $interval = $uptime;
+
+        # all values will be zero at system reboot
+        for my $entry ( keys %$prev_stats ) {
+            $prev_stats->{$entry} = 0;
+        }
+    }
 
     my $read_ios  = subtract_wrapping_numbers($cur_stats->{'rd_ios'}, $prev_stats->{'rd_ios'});
     my $write_ios = subtract_wrapping_numbers($cur_stats->{'wr_ios'}, $prev_stats->{'wr_ios'});

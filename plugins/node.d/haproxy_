@@ -66,7 +66,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 	print "graph_title HAProxy statistics for $clusterid\n";
 	print "graph_args --base 1000 -l 0\n";
 	print "graph_vlabel connections per \${graph_period}\n";
-	print "graph_category haproxy\n";
+	print "graph_category loadbalancer\n";
 	my $fieldnum = 0;
 	while ($content =~ /\n([^,]+),([^,]+),[^,]+,[^,]+,[^,]+,[^,]+,[^,]*,([^,]+),[^,]+,[^,]+,[^,]*,[^,]+,/g) {
 		next if $2 eq "BACKEND";

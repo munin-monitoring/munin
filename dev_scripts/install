@@ -26,8 +26,10 @@ clean_sandbox() {
 
 make_sandbox() {
 	banner BUILD
-	perl Build.PL --install_base "${BASEDIR}/sandbox" --debug
-	./Build install
+	perl Build.PL --install_base "${BASEDIR}/sandbox"
+	# Without this repetition of "--install_base", the wrong path (~/perl5/) would be written
+	# to _build/runtime_params and be used for munin module installation.
+	./Build --install_base "${BASEDIR}/sandbox" install
 
 	xargs mkdir -p -v <<EOF
 		sandbox/etc/munin-conf.d

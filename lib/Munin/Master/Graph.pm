@@ -37,8 +37,6 @@ use Munin::Common::Logger;
 use File::Basename;
 use Data::Dumper;
 
-Munin::Common::Logger::configure( level => 'debug', output => 'screen');
-
 # Hash of available palettes
 my %PALETTE;
 # Array of actuall colours to use
@@ -151,10 +149,9 @@ sub handle_request
 	$time = "pinpoint" if $time =~ m/^pinpoint/;
 
 	# Ok, now SQL is needed to go further
-	use DBI;
-	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 	# Note that we reconnect for _each_ request. This is to avoid old data when the DB "rotates"
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	use Munin::Master::Update;
+	my $dbh = Munin::Master::Update::get_dbh();
 
 	DEBUG "($graph_path, $time, $start, $end, $format)\n";
 
@@ -162,7 +159,7 @@ sub handle_request
 	my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
 	if (not defined($sth_url)) {
 		# potential cause: permission problem
-		my $msg = "Failed to access database ($datafilename): " . $DBI::errstr;
+		my $msg = "Failed to access database: " . $DBI::errstr;
 		WARNING "[WARNING] $msg";
 		die $msg;
 	}
@@ -240,7 +237,7 @@ sub handle_request
 			(
 				select hn.id
 				from ds hn
-				JOIN ds_attr hn_attr ON hn.service_id = ds.service_id AND hn_attr.value = ds.name and hn_attr.name = 'negative'
+				JOIN ds_attr hn_attr ON hn_attr.id = hn.id AND hn_attr.value = ds.name and hn_attr.name = 'negative'
 				where hn.service_id = ds.service_id
 			) as negative_id,
 			rl.value as last_epoch,
@@ -311,6 +308,9 @@ sub handle_request
 		# Fields inherit this field from their plugin, if not overridden
 		$_printf = $graph_printf unless defined $_printf;
 		$_printf .= "%s";
+
+		# The label is the fieldname if not present
+		$_label = $_rrdname unless $_label;
 
 		DEBUG "rrdname: $_rrdname";
 

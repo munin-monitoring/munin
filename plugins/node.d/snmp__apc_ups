@@ -463,7 +463,7 @@ sub emit_config {
 
     say "graph_title ".( $title{$graph} || "Untitled /$graph/");
     say process_oids( "graph_vlabel " . $vlabel{$graph}, $values );
-    say "graph_category UPS";
+    say "graph_category sensors";
     say process_oids( "graph_info " . $info{$graph}, $values );
 
     foreach my $label (keys %{ $label{$graph} } ) {

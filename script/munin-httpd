@@ -61,5 +61,7 @@ sub handle_request
 
 package main;
 
+$ENV{PATH} = '/usr/bin:/bin';
+
 # start the server on port 4948
 Munin::Master::Http->new(4948)->run(prefork => 1, max_servers => 10);

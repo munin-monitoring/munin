@@ -85,7 +85,7 @@ if [ "$1" = "config" ]; then
 		echo "pattmatch.critical $critical"
 	fi
         echo 'pattmatch.info The percent of data received that Snort processes in pattern matching'
-        echo 'graph_category Snort'
+        echo 'graph_category security'
 
         exit 0
 fi

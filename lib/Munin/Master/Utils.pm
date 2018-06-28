@@ -30,7 +30,6 @@ our (@ISA, @EXPORT);
 	   'munin_runlock',
 	   'munin_getlock',
 	   'munin_readconfig_raw',
-	   'munin_readconfig_storable',
 	   'munin_writeconfig',
 	   'munin_writeconfig_storable',
 	   'munin_read_storable',
@@ -186,22 +185,6 @@ sub munin_overwrite {
     return ($configfile);
 }
 
-sub munin_readconfig_storable {
-    my ($file) = @_;
-
-    my $part = undef;
-    $file ||= $configfile;
-
-    # try to read storable version
-    if ((-r $file) && open (my $CFG_STORABLE, '<', $file)) { 
-        DEBUG "[DEBUG] munin_readconfig: found Storable version of $file, using it";
-        $part = Storable::fd_retrieve($CFG_STORABLE); 
-        close ($CFG_STORABLE); 
-    }
-
-    return $part; 
-}
-
 sub munin_readconfig_raw {
     my ($conf, $missingok) = @_;
 
@@ -209,7 +192,7 @@ sub munin_readconfig_raw {
 
     $conf ||= $configfile;
     # try first to read storable version
-    $part = munin_readconfig_storable("$conf.storable");
+    $part = munin_read_storable("$conf.storable");
     if (!defined $part) {
         if (! -r $conf and ! $missingok) {
             WARN "munin_readconfig: cannot open '$conf'";
@@ -827,7 +810,7 @@ sub munin_readconfig_part {
 		exit(1);
 	}
 	# missing ok, return last value if we have one, copy config if not
-	if (undef eq $config_parts->{$what}{config}) {
+	unless (defined $config_parts->{$what}{config}) {
 		# well, not if we shouldn't include the config
 		if ($config_parts->{$what}{include_base}) {
 			$doupdate = 1;
@@ -837,8 +820,8 @@ sub munin_readconfig_part {
     	my @stat = stat($filename);
 	if ($config_parts->{$what}{timestamp} < $stat[9]) {
 	    # could use _raw if we wanted to read non-storable fallback
-	    $config_parts->{$what}{config} = undef; # Unalloc RAM for old config, since it will be overridden anyway.
-	    $part = munin_readconfig_storable($filename);
+	    $config_parts->{$what}{config} = undef; # Unalloc RAM for old config, since it will be overriden anyway.
+	    $part = munin_read_storable($filename);
 	    $config_parts->{$what}{timestamp} = $stat[9];
 	    $doupdate = 1;
 	}

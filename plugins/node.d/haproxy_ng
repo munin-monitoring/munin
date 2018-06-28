@@ -64,7 +64,7 @@ my @field_parameters = ('graph', 'min', 'max', 'draw', 'cdef', 'warning', 'colou
 my %aspects = (
     'Bandwidth' => {
         'title' => 'Bandwidth usage',
-        'category' => 'HAProxy',
+        'category' => 'loadbalancer',
         'vlabel' => 'per second',
         'values' => {
             'bin' => {
@@ -84,7 +84,7 @@ my %aspects = (
     },
     'Sessions' => {
         'title' => 'Sessions',
-        'category' => 'HAProxy',
+        'category' => 'loadbalancer',
         'vlabel' => 'current',
         'values' => {
             'scur' => {
@@ -98,7 +98,7 @@ my %aspects = (
     },
     'SessionRate' => {
         'title' => 'SessionRate',
-        'category' => 'HAProxy',
+        'category' => 'loadbalancer',
         'vlabel' => 'current',
         'values' => {
             'stot' => {
@@ -112,7 +112,7 @@ my %aspects = (
     },
     'Uptime' => {
         'title' => 'Uptime',
-        'category' => 'HAProxy',
+        'category' => 'loadbalancer',
         'vlabel' => 'seconds',
         'values' => {
             'lastchg' => {
@@ -126,7 +126,7 @@ my %aspects = (
     },
     'Active' => {
         'title' => 'Active Servers',
-        'category' => 'HAProxy',
+        'category' => 'loadbalancer',
         'vlabel' => 'servers',
         'values' => {
             'act' => {
@@ -140,7 +140,7 @@ my %aspects = (
     },
     'ErrorReq' => {
         'title' => 'Request errors',
-        'category' => 'HAProxy',
+        'category' => 'loadbalancer',
         'vlabel' => 'per second',
         'values' => {
             'ereq' => {
@@ -154,7 +154,7 @@ my %aspects = (
     },
     'ErrorResp' => {
         'title' => 'Response errors',
-        'category' => 'HAProxy',
+        'category' => 'loadbalancer',
         'vlabel' => 'per second',
         'values' => {
             'eresp' => {

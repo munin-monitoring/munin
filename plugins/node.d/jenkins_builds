@@ -60,7 +60,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_scale no'
 	echo 'graph_total total'
 	echo 'graph_vlabel Jenkins Builds per category in the last 24h'
-	echo 'graph_category jenkins'
+	echo 'graph_category devel'
 	draw=AREA
 	for PREFIX in $JOB_PREFIXES ; do
 		echo "jenkins_builds_$PREFIX.label $PREFIX builds"

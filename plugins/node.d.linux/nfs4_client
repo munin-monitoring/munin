@@ -31,12 +31,15 @@ proc="read write commit open open_confirm open_noattr open_downgrade close setat
 
 if [ "$1" = "autoconf" ]; then
 	if [ -f "$NFS" ]; then
-		echo yes
-		exit 0
+		if grep -q proc4 "$NFS"; then
+			echo "yes"
+		else
+			echo "no (no proc4 in $NFS)"
+		fi
 	else
 		echo "no (no $NFS)"
-		exit 0
 	fi
+	exit 0
 fi
 
 if [ "$1" = "config" ]; then
@@ -45,7 +48,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel requests / ${graph_period}'
 	echo 'graph_total total'
-	echo 'graph_category NFS'
+	echo 'graph_category fs'
 	for a in $proc ; do echo "$a.label $a" ; echo "$a.type DERIVE"; echo "$a.min 0"; done
 	exit 0
 fi

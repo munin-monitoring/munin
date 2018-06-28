@@ -1105,7 +1105,7 @@ sub get_config
 	}
 	my %values = %{$ASPECTS{$graph}{'values'}};
 
-	print "graph_category Varnish\n";
+	print "graph_category loadbalancer\n";
 	foreach my $field (@graph_parameters) {
 		print_if_exist(\%ASPECTS,$graph,$field,"graph_$field");
 	}

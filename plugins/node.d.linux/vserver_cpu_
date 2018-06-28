@@ -198,7 +198,7 @@ if [ $debug ] ; then
 fi
 
 if [ "$1" = "config" ]; then
-	echo 'graph_category vserver'
+	echo 'graph_category virtualization'
 	echo 'graph_args --base 1000'
 	if [ "$MODE" == "cpu" ] ; then
 		echo 'graph_title Vserver cpu usage'

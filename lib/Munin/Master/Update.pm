@@ -50,24 +50,22 @@ sub run {
 
 	# Create the DB, using a local block to close the DB cnx
 	{
-		my $dbh = $self->get_dbh();
+		my $dbh = get_dbh();
 		$self->_db_init($dbh, $dbh);
 		$config_old = $self->_db_params_update($dbh, $config);
 	}
 
         $self->{workers} = $self->_create_workers();
-        $self->_run_workers();
-
-	# I wonder if the following should really be done with timing. - janl
-        $self->_write_new_service_configs();
+        my $nb_workers = $self->_run_workers();
+	return $nb_workers;
     });
 }
 
 sub get_dbh {
-	my ($self) = @_;
-
-	use DBI;
-	my $datafilename = $ENV{MUNIN_DBURL} || "$config->{dbdir}/datafile.sqlite";
+	my $datafilename = $ENV{MUNIN_DBURL} || $config->{dburl} || "$config->{dbdir}/datafile.sqlite";
+	my $db_driver = $ENV{MUNIN_DBDRIVER} || $config->{dbdriver};
+	my $db_user = $ENV{MUNIN_DBUSER} || $config->{dbuser};
+	my $db_passwd = $ENV{MUNIN_DBPASSWD} || $config->{dbpasswd};
 	# Note that we should reconnect for _each_ update part, as sharing a $dbh when forking()
 	# will bring unhappiness
 	#
@@ -75,10 +73,14 @@ sub get_dbh {
 
 	# Not being able to open the DB connection seems FATAL to me. Better
 	# die loudly than injecting some misguided data
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	use DBI;
+	my $dbh = DBI->connect("dbi:$db_driver:dbname=$datafilename", $db_user, $db_passwd) or die $DBI::errstr;
+	{
+		$dbh->{RaiseError} = 1;
+		use Carp;
+		$dbh->{HandleError} = sub { confess(shift) };
+	 }
 
-	$dbh->do("PRAGMA synchronous = NORMAL");
-	$dbh->do("PRAGMA journal_mode = MEMORY");
 
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
@@ -107,7 +109,7 @@ sub _create_workers {
     #       the global throughtput
     @hosts = shuffle(@hosts);
 
-    if (%{$config->{limit_hosts}}) {
+    if (defined $config->{limit_hosts} && %{$config->{limit_hosts}}) {
         @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts
     }
 
@@ -160,8 +162,10 @@ sub _run_workers {
 
 	my $pm = Parallel::ForkManager->new($max_processes);
 
+	my $nb_workers = 0;
 	WORKER_LOOP:
 	for my $worker (@{$self->{workers}}) {
+		$nb_workers ++;
 		my $worker_pid = $pm->start();
 		next WORKER_LOOP if $worker_pid;
 
@@ -196,6 +200,9 @@ sub _run_workers {
 	}
 
 	$pm->wait_all_children;
+
+	# Everything worked, return the number of workers
+	return $nb_workers;
 }
 
 sub _create_self_aware_worker_result_handler {
@@ -391,21 +398,25 @@ sub _dump_groups_into_sql {
 sub _db_init {
 	my ($self, $dbh, $dbh_state) = @_;
 
+	my $db_serial_type = "INTEGER";
+	my $db_driver = $ENV{MUNIN_DBDRIVER} || "$config->{dbdriver}";
+	$db_serial_type = "SERIAL" if $db_driver eq "Pg";
+
 	# Create DB
 	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id $db_serial_type PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS r_g_grp ON grp (p_id, name)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS node (id $db_serial_type PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_node_attr ON node_attr (id, name)");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_n_grp ON node (grp_id)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service (id $db_serial_type PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_service_n_n ON service (node_id, name)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
+	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id $db_serial_type PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
 		type VARCHAR DEFAULT 'GAUGE',
 		ordr INTEGER DEFAULT 0,
 		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
@@ -425,6 +436,11 @@ sub _db_init {
 		alarm VARCHAR, num_unknowns INTEGER
 		)");
 	$dbh_state->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
+
+	# Initialise the grp _root_ node if not present
+	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
+		$dbh->do("INSERT INTO grp (id) VALUES (0);");
+	}
 }
 
 sub _db_params_update {

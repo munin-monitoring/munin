@@ -47,7 +47,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Samba status'
 	echo 'graph_args -l 0'
 	echo 'graph_vlabel number'
-	echo 'graph_category samba'
+	echo 'graph_category fs'
 	echo 'proc.label processes'
 	echo 'lock.label locked files'
 	echo 'share.label Open shares'

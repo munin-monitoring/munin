@@ -66,7 +66,7 @@ if (defined $ARGV[0] && $ARGV[0] ne '') {
     elsif ($ARGV[0] eq 'config') {
         print "graph_title PostgreSQL replication lag\n";
         print "graph_vlabel Lag (kb xlog)\n";
-        print "graph_category PostgreSQL\n";
+        print "graph_category db\n";
         print "graph_info PostgreSQL streaming replication lag\n";
         print "graph_args --base 1024\n";
         print "receive.label Receive delay\n";

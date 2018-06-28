@@ -36,13 +36,16 @@ proc="access close commit create delegpurge delegreturn getattr getfh link lock 
 	savefh secinfo setattr setcltid setcltidconf verify write rellockowner"
 
 if [ "$1" = "autoconf" ]; then
-	if [ -f "$NFSD" ] && grep -sq proc4ops "$NFSD"; then
-		echo yes
-		exit 0
+	if [ -f "$NFSD" ]; then
+		if grep -q proc4ops "$NFSD"; then
+			echo "yes"
+		else
+			echo "no (no proc4ops in $NFSD)"
+		fi
 	else
 		echo "no (no $NFSD)"
-		exit 0
 	fi
+	exit 0
 fi
 
 if [ ! -f "$NFSD" ] ; then
@@ -57,7 +60,7 @@ if [ "$1" = "config" ]; then
 	# shellcheck disable=SC2016
 	echo 'graph_vlabel requests / ${graph_period}'
 	echo 'graph_total total'
-	echo 'graph_category NFS'
+	echo 'graph_category fs'
 	for a in $proc ; do echo "$a.label $a" ; echo "$a.type DERIVE"; echo "$a.min 0"; done
 	exit 0
 fi

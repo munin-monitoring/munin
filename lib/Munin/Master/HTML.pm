@@ -30,6 +30,17 @@ sub handle_request
 	if ($path =~ m/static\/(.+)$/) {
 		# Emit the static page
 		my $page = $1;
+		if ($page =~ m#/\.\./#) {
+			# "/../" indicates a traversal up the path. We have to prevent this,
+			# otherwise we may get tricked into delivering arbitrary files.
+			# Since there is no readily available function for determining the
+			# canonical path, we simply refuse malformed requests.
+			# Most webservers (used for proxying) should do canonicalization on their
+			# own, but we cannot rely on this.
+			# Static resource paths should never include parent references, anyway.
+			print "HTTP/1.0 404 Not found\r\n";
+			return;
+		}
 		my ($ext) = ($page =~ m/.*\.([^.]+)$/);
 		my %mime_types = (
 			css => "text/css",
@@ -95,9 +106,8 @@ sub handle_request
 	$path =~ s,/$,,;
 
 	# Ok, now SQL is needed to go further
-        use DBI;
-	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
-        my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	use Munin::Master::Update;
+	my $dbh = Munin::Master::Update::get_dbh();
 
 	my $comparison;
 	my $template_filename;
@@ -787,7 +797,7 @@ sub _get_params_fields {
 
 	my $sth_ds = $dbh->prepare_cached("
 		SELECT ds.name, ds.warning, ds.critical,
-		a_g.value, a_l.value, IFNULL(a_t.value, 'GAUGE'), a_w.value, a_c.value, a_i.value
+		a_g.value, a_l.value, a_t.value, a_w.value, a_c.value, a_i.value
 		FROM ds
 		LEFT JOIN ds_attr a_g ON ds.id = a_g.id AND a_g.name = 'graph'
 		LEFT JOIN ds_attr a_l ON ds.id = a_l.id AND a_l.name = 'label'
@@ -803,6 +813,9 @@ sub _get_params_fields {
 	while (my ($_ds_name, $_ds_s_warn, $_ds_s_crit, $_ds_graph, $_ds_label, $_ds_type, $_ds_warn, $_ds_crit, $_ds_info) =
 			$sth_ds->fetchrow_array) {
 		next if $_ds_graph && $_ds_graph eq 'no';
+
+		# GAUGE by default
+		$_ds_type = 'GAUGE' unless defined $_ds_type;
 
 		push @fields, {
 			FIELD => $_ds_name,
@@ -826,7 +839,7 @@ sub get_param
 	# Ok, now SQL is needed to go further
         use DBI;
 	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
-        my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+        my $dbh = DBI->connect("dbi:Pg:dbname=munin","","") or die $DBI::errstr;
 
 	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
 

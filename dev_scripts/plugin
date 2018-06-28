@@ -1,0 +1,109 @@
+#!/bin/sh
+#
+# Run a plugin within the sandbox environment.
+# The plugin can be given as a relative name (containing no slash), if the plugin within the
+# sandbox should be used.
+# If the plugin is given as a filepath (containing a slash), it is symlinked into the sandbox and
+# removed after being executed.
+#
+# The plugin can be executed with its original name (via "run") or in a symlink configuration
+# (via "run_as").
+#
+# Capabilities can be enabled via environment variables:
+#   export MUNIN_CAP_MULTIGRAPH=1
+#   export MUNIN_CAP_DIRTYCONFIG=1
+#
+
+set -eu
+
+
+STARTPATH=$(pwd)
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+. "${FINDBIN}/common.sh"
+
+if [ ! -d "$SANDBOX" ]; then
+    echo >&2 "Directory '$SANDBOX' does not exist - maybe you need to run '$FINDBIN/install' before"
+    exit 1
+fi
+
+
+# Run a plugin from within or outside the sandbox.
+# Optionally a symlink configuration may be used.
+# Parameters:
+#     wanted_plugin_name: the flat basename to be used for executing the plugin
+#     wanted_plugin_path: the path of the plugin (external plugins) or its name (in the sandbox)
+#     [optional]: all other parameters are handed over to the plugin (e.g. "config" or "suggest")
+# The 'wanted_plugin_name' is temporarily created as a symlink within the sandbox
+# (below etc/plugins/). Afterwards the previous state is restored.
+run_plugin() {
+    local wanted_plugin_name="$1"
+    local wanted_plugin_path="$2"
+    shift 2
+    local plugin_name
+    local symlink_filename
+    local abs_wanted_plugin_path
+    if echo "$wanted_plugin_path" | grep -q /; then
+        # An external plugin (outside of the sandbox) was specified with its path.
+        abs_wanted_plugin_path=$(cd "$STARTPATH"; realpath "$wanted_plugin_path")
+    elif [ "$wanted_plugin_name" != "$wanted_plugin_path" ]; then
+        # An internal plugin (within the sandbox) should be run as a different name
+        # (symlink configuration).
+        abs_wanted_plugin_path="$SANDBOX/share/plugins/$wanted_plugin_path"
+    else
+        abs_wanted_plugin_path=
+    fi
+    # A symlink is required for external plugins and for a symlink-configured plugin.
+    if [ -n "$abs_wanted_plugin_path" ]; then
+        symlink_filename="$CONFDIR/plugins/$wanted_plugin_name"
+        # move a potential previous file away
+        mv "$symlink_filename" "$symlink_filename~" 2>/dev/null || true
+        trap "mv '$symlink_filename~' '$symlink_filename' 2>/dev/null || true" EXIT
+        ln -s "$abs_wanted_plugin_path" "$symlink_filename"
+        "$BASEDIR/dev_scripts/run" munin-run "$wanted_plugin_name" "$@"
+        # restore the previous file or at least remove the fresh symlink
+        mv "$symlink_filename~" "$symlink_filename" 2>/dev/null || rm -f "$symlink_filename"
+        trap "" EXIT
+    else
+        "$BASEDIR/dev_scripts/run" munin-run "$wanted_plugin_name" "$@"
+    fi
+}
+
+
+if [ $# -ge 1 ]; then
+    ACTION=$1
+    shift
+else
+    ACTION="help"
+fi
+
+case "$ACTION" in
+    run)
+        if [ $# -lt 1 ]; then
+            echo >&2 "Missing parameter: NAME_OR_PATH"
+            exit 1
+        fi
+        run_plugin "$(basename "$1")" "$@"
+        ;;
+    run_as)
+        if [ $# -lt 2 ]; then
+            echo >&2 "Missing parameter: RUN_AS_NAME SOURCE_NAME_OR_PATH"
+            exit 1
+        fi
+	if echo "$1" | grep -q /; then
+            echo >&2 "Invalid parameter: RUN_AS_NAME must be a relative name (e.g. 'if_eth0')"
+            exit 1
+        fi
+        run_plugin "$@"
+        ;;
+    help)
+        echo "Syntax:  $(basename "$0")  { run | run_as | help }"
+	echo
+	echo "    run     NAME_OR_PATH  [ARGS]"
+	echo "    run_as  RUN_AS_NAME  SOURCE_NAME_OR_PATH  [ARGS]"
+        echo
+        ;;
+    *)
+        "$0" help >&2
+        exit 1
+        ;;
+esac

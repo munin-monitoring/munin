@@ -85,7 +85,7 @@ if [ "$1" = "config" ]; then
 		echo "pktsec.critical $critical"
 	fi
         echo 'pktsec.info The number of packets per second'
-        echo 'graph_category Snort'
+        echo 'graph_category security'
 
         exit 0
 fi

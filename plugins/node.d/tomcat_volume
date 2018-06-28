@@ -121,7 +121,7 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Tomcat volume\n";
     print "graph_args --base 1000\n";
     print "graph_vlabel bytes per \${graph_period}\n";
-    print "graph_category tomcat\n";
+    print "graph_category appserver\n";
     for my $connector (@connectors) {
         my $clean = clean_fieldname($connector);
         print "${clean}_volume.label $connector bytes\n";

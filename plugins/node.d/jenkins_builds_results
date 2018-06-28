@@ -60,7 +60,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_scale no'
 	echo 'graph_total total'
 	echo 'graph_vlabel Jenkins Builds results per category'
-	echo 'graph_category jenkins'
+	echo 'graph_category devel'
 	draw=AREA
 	for PREFIX in $JOB_PREFIXES ; do
 		for STATE in success unstable failure ; do

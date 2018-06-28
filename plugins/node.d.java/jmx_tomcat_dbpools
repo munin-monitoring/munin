@@ -86,7 +86,7 @@ sub config() {
     print "graph_title Tomcat database pool overview\n";
     print "graph_vlabel current connections\n";
     print "graph_info Shows the number of connections used for every pool in a Tomcat instance\n";
-    print "graph_category tomcat\n";
+    print "graph_category appserver\n";
 
     while(my $line = <CMD>) {
         chomp($line);

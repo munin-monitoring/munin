@@ -154,7 +154,7 @@ sub do_work {
 
 	    for my $plugin (@plugins) {
 		DEBUG "[DEBUG] for my $plugin (@plugins)";
-		if (%{$config->{limit_services}}) {
+		if (defined $config->{limit_services} && %{$config->{limit_services}}) {
 		    next unless $config->{limit_services}{$plugin};
 		}
 
@@ -269,8 +269,14 @@ sub _db_mkgrp {
 	my $grp_name = $group->{group_name};
 
 	# Create the group if needed
-	my $sth_grp_id = $dbh->prepare_cached("SELECT id FROM grp WHERE name = ? AND p_id = ?");
-	$sth_grp_id->execute($grp_name, $p_id);
+	my $sth_grp_id;
+	if (defined $p_id) {
+		$sth_grp_id = $dbh->prepare_cached("SELECT id FROM grp WHERE name = ? AND p_id = ?");
+		$sth_grp_id->execute($grp_name, $p_id);
+	} else {
+		$sth_grp_id = $dbh->prepare_cached("SELECT id FROM grp WHERE name = ? AND p_id IS NULL");
+		$sth_grp_id->execute($grp_name);
+	}
 	my ($grp_id) = $sth_grp_id->fetchrow_array();
 	$sth_grp_id->finish();
 
@@ -279,7 +285,7 @@ sub _db_mkgrp {
 		my $sth_grp = $dbh->prepare_cached('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
 		my $path = "";
 		$sth_grp->execute($grp_name, $p_id, $path);
-		$grp_id = _get_last_insert_id($dbh);
+		$grp_id = _get_last_insert_id($dbh, "grp");
 	} else {
 		# Nothing to do, the grp doesn't need any updates anyway.
 		# Removal of grp is *unsupported* yet.
@@ -292,8 +298,8 @@ sub _db_mkgrp {
 
 # This should go in a generic DB.pm
 sub _get_last_insert_id {
-	my ($dbh) = @_;
-	return $dbh->last_insert_id("", "", "", "");
+	my ($dbh, $tablename) = @_;
+	return $dbh->last_insert_id("", "", $tablename, "");
 }
 
 sub _db_node {
@@ -312,7 +318,7 @@ sub _db_node {
 		my $sth_node = $dbh->prepare_cached('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 		my $path = "";
 		$sth_node->execute($grp_id, $node_name, $path);
-		$node_id = _get_last_insert_id($dbh);
+		$node_id = _get_last_insert_id($dbh, "node");
 	} else {
 		# Nothing to do, the node doesn't need any updates anyway.
 		# Removal of nodes is *unsupported* yet.
@@ -343,7 +349,7 @@ sub _db_service {
 		# Doesn't exist yet, create it
 		my $sth_service = $dbh->prepare_cached("INSERT INTO service (node_id, name) VALUES (?, ?)");
 		$sth_service->execute($node_id, $plugin);
-		$service_id = _get_last_insert_id($dbh);
+		$service_id = _get_last_insert_id($dbh, "service");
 	}
 
 	DEBUG "_db_service.service_id:$service_id";
@@ -396,11 +402,26 @@ sub _db_service {
 	}
 
 	# Handle the fields
+
+	# Remove the ds_attr rows
+	{
+		my $sth_del_attr = $dbh->prepare_cached('DELETE FROM ds_attr WHERE id IN (SELECT id FROM ds WHERE service_id = ?)');
+		$sth_del_attr->execute($service_id);
+	}
+
 	my %ds_ids;
 	for my $field_name (keys %$fields) {
 		my $_field_attrs = $fields->{$field_name};
+
+
 		my $ds_id = $self->_db_ds_update($service_id, $field_name, $_field_attrs);
 		$ds_ids{$field_name} = $ds_id;
+	}
+
+	# Purge the ds that have no attributes, as they are not relevant anymore
+	{
+		my $sth_del_ds = $dbh->prepare_cached('DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)');
+		$sth_del_ds->execute($service_id);
 	}
 
 	$self->_db_url("service", $service_id, $plugin, "node", $node_id);
@@ -437,12 +458,8 @@ sub _db_ds_update {
 		# Doesn't exist yet, create it
 		my $sth_ds = $dbh->prepare_cached("INSERT INTO ds (service_id, name) VALUES (?, ?)");
 		$sth_ds->execute($service_id, $field_name);
-		$ds_id = _get_last_insert_id($dbh);
+		$ds_id = _get_last_insert_id($dbh, "ds");
 	}
-
-	# Remove the ds rows
-	my $sth_del_attr = $dbh->prepare_cached('DELETE FROM ds_attr WHERE id = ?');
-	$sth_del_attr->execute($ds_id);
 
 	# Reinsert the other rows
 	my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
