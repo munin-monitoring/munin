@@ -7,6 +7,8 @@ branches:
     - stable-2.0
     - master
 addons:
+  hosts:
+    - testing.acme.com
   apt:
     packages:
       - codespell

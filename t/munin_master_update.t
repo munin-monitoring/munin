@@ -28,7 +28,7 @@ Munin::Common::Logger::configure(
 
 
 my $update = Munin::Master::Update->new();
-ok($update->run() == 4);
+ok($update->run() == 5);
 
 kill('TERM', $pid_debug_node);
 wait();
