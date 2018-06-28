@@ -1,6 +1,7 @@
 #!/bin/sh
 
-set -eu
+# "sharness" (v1.0) currently fails with "-u"
+set -e
 
 test_description="munin-node"
 
