@@ -345,7 +345,6 @@ sub process_service {
         my $field   = munin_get_node($hash, [$fname]);
         next if (!defined $field or ref($field) ne "HASH");
         my $fpath   = munin_get_node_loc($field);
-        my $oldstate = 'ok';
 
         my ($warn, $crit, $unknown_limit) = get_limits($field);
 
@@ -362,9 +361,9 @@ sub process_service {
         $sth_state->execute($ds_id, "ds");
         my ($current_updated_timestamp, $current_updated_value,
             $previous_updated_timestamp, $previous_updated_value,
-            $old_alarm, $old_num_unknowns) = $sth_state->fetchrow_array;
+            $old_state, $old_num_unknowns) = $sth_state->fetchrow_array;
 
-        $oldstate = $old_alarm || 'ok';
+        $old_state ||= 'ok';
 
 		my $heartbeat = 600; # XXX - $heartbeat is a fixed 10 min (2 runs of 5 min).
 		if (! defined $current_updated_value || $current_updated_value eq "U") {
@@ -439,40 +438,41 @@ sub process_service {
                     : "Value is unknown.";
             my $num_unknowns;
 
-            if ( $oldstate ne "unknown") {
+            if ($old_state ne "unknown") {
+                # Assume that the state changed - see some exceptions below.
                 $hash->{'state_changed'} = 1;
             }
             else {
                 $hash->{'state_changed'} = 0;
             }
 
-            # First we'll need to check whether the user wants to ignore
-            # a few UNKNOWN values before actually changing the state to
-            # UNKNOWN.
+            # The user may want to ignore a few unknown values before
+            # they should be reported. Thus we need to track the number
+            # of recently received unknown values. And we may want to
+            # postpone a "change" notification until we reach the limit.
             if ($unknown_limit > 1) {
-                if (defined $onfield and defined $onfield->{"state"}) {
-                    if ($onfield->{"state"} ne "unknown") {
-                        if (defined $onfield->{"num_unknowns"}) {
-                            if ($onfield->{"num_unknowns"} < $unknown_limit) {
-                                # Don't change the state to UNKNOWN yet.
-                                $hash->{'state_changed'} = 0;
-                                $state = $onfield->{"state"};
-                                $extinfo = $onfield->{$state};
-
-                                # Increment the number of UNKNOWN values seen.
-                                $num_unknowns = $onfield->{"num_unknowns"} + 1;
-                            }
-                        }
-                        else {
+                if ($old_state ne "unknown") {
+                    # The last sample reported a different state.
+                    if ($old_num_unknowns) {
+                        # One or more previous values were also "unknown".
+                        if ($old_num_unknowns < $unknown_limit) {
                             # Don't change the state to UNKNOWN yet.
                             $hash->{'state_changed'} = 0;
-                            $state = $onfield->{"state"};
-                            $extinfo = $onfield->{$state};
-                            
-                            # Start counting the number of consecutive UNKNOWN
-                            # values seen.
-                            $num_unknowns = 1;
+                            $state = $old_state;
+                            $extinfo = $field->{"extinfo"};
+
+                            # Increment the number of UNKNOWN values seen.
+                            $num_unknowns = $old_num_unknowns + 1;
                         }
+                    } else {
+                        # The previous values were not reported as unknown.
+                        $hash->{'state_changed'} = 0;
+                        $state = $old_state;
+                        $extinfo = $field->{"extinfo"};
+
+                        # Start counting the number of consecutive UNKNOWN
+                        # values seen.
+                        $num_unknowns = 1;
                     }
                 }
             }
@@ -522,7 +522,7 @@ sub process_service {
                         . ") exceeded"
                 ));
 
-            if ( $oldstate ne "critical") {
+            if ($old_state ne "critical") {
                 $hash->{'state_changed'} = 1;
             }
         }
@@ -545,7 +545,7 @@ sub process_service {
                         . ") exceeded"
                 ));
 
-            if ( $oldstate ne "warning") {
+            if ($old_state ne "warning") {
                 $hash->{'state_changed'} = 1;
             }
         }
@@ -553,8 +553,8 @@ sub process_service {
             munin_set_var_loc(\%notes, [@$fpath, "state"], "ok");
             munin_set_var_loc(\%notes, [@$fpath, "ok"],    "OK");
 
-	    if ($oldstate ne 'ok') {
-                if ($oldstate eq 'unknown' && munin_get_bool($hobj, 'ignore_unknown', 'false')) {
+	    if ($old_state ne 'ok') {
+                if ($old_state eq 'unknown' && munin_get_bool($hobj, 'ignore_unknown', 'false')) {
                     DEBUG("[DEBUG] ignoring transition from UNKNOWN to OK");
                 } else {
 		    $hash->{'state_changed'} = 1;
@@ -564,7 +564,7 @@ sub process_service {
         }
 
 	# Replicate the state into the SQL DB
-	my $new_state = $onfield->{"state"};
+	my $new_state = $old_state;
 	$sth_state_upt->execute($new_state, $ds_id, "ds");
     }
     generate_service_message($hash);
