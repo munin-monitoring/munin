@@ -66,8 +66,9 @@ docs : |docs-latest|
 .. |build-master| image:: https://travis-ci.org/munin-monitoring/munin.svg?branch=master
    :target: https://travis-ci.org/munin-monitoring/munin
 
-.. |coverage-master| image:: https://coveralls.io/repos/munin-monitoring/munin/badge.svg?branch=master&service=github
+.. |coverage-master| image:: https://coveralls.io/repos/github/munin-monitoring/munin/badge.svg?branch=master
    :target: https://coveralls.io/github/munin-monitoring/munin?branch=master
+
 
 .. |docs-latest| image:: https://readthedocs.org/projects/munin/badge/?version=latest
    :target: http://guide.munin-monitoring.org/
