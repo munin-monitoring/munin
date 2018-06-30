@@ -470,12 +470,19 @@ lint:
 	@# SC1090: ignore sourcing of files with variable in path
 	@# SC2009: do not complain about "ps ... | grep" calls (may be platform specific)
 	@# SC2126: tolerate "grep | wc -l" (simple and widespread) instead of "grep -c"
-	find plugins/node.d.linux/ -type f -print0 \
+	# TODO: fix the remaining shellcheck issues for the missing platforms:
+	#       aix, darwin, netbsd, sunos
+	#       (these require tests with their specific shell implementations)
+	find plugins/node.d/ \
+			plugins/node.d.cygwin/ \
+			plugins/node.d.debug/ \
+			plugins/node.d.linux/ -type f -print0 \
 		| xargs -0 grep -l --null "@@GOODSH@@" \
 			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell dash
 	find plugins/ -type f -print0 \
 		| xargs -0 grep -l --null "@@BASH@@" \
 			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell bash
+	# TODO: perl plugins currently fail with perlcritic
 
 clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
 	cd $* && $(PERL) Build realclean
