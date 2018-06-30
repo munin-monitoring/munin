@@ -21,7 +21,7 @@ else
 fi
 
 if [ "$1" = "autoconf" ]; then
-        if [ -r $AVCSTATS ]; then
+        if [ -r "$AVCSTATS" ]; then
                 echo yes
         else
                 echo "no (missing $AVCSTATS file)"
@@ -88,17 +88,20 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-if [ -r $AVCSTATS ]; then
-    { read HEADER
-      while read lookups hits misses allocations reclaims frees; do
-        LOOKUPS=$(($LOOKUPS + $lookups))
-        HITS=$(($HITS + $hits))
-        MISSES=$(($MISSES + $misses))
-        ALLOCATIONS=$(($ALLOCATIONS + $allocations))
-        RECLAIMS=$(($RECLAIMS + $reclaims))
-        FREES=$(($FREES + $frees))
+if [ -r "$AVCSTATS" ]; then
+    {
+      # consume (and ignore) the header
+      # shellcheck disable=SC2034
+      read -r HEADER
+      while read -r lookups hits misses allocations reclaims frees; do
+        LOOKUPS=$((LOOKUPS + lookups))
+        HITS=$((HITS + hits))
+        MISSES=$((MISSES + misses))
+        ALLOCATIONS=$((ALLOCATIONS + allocations))
+        RECLAIMS=$((RECLAIMS + reclaims))
+        FREES=$((FREES + frees))
       done
-    } < $AVCSTATS
+    } < "$AVCSTATS"
     echo "lookups.value $LOOKUPS"
     echo "hits.value $HITS"
     echo "misses.value $MISSES"
