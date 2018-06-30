@@ -16,8 +16,13 @@ The following is default configuration
 
   [cpu]
 	env.HZ	100
+	env.scaleto100	no
 
-See "BUGS" for a explanation of this setting.
+"scaleto100" may be "yes" or "no". With "yes" all CPU-related values
+are scaled for a limit of 100.  With "no" (the default) all CPU-related
+values are scaled for a limit of n * 100 ("n" being the number of CPUs).
+
+See "BUGS" for an explanation of the "HZ" setting.
 
 =head2 EXAMPLE WARNING AND CRITICAL SETTINGS
 
@@ -111,6 +116,7 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 HZ=${HZ:-100}
+scaleto100=${scaleto100:-no}
 
 extinfo=""
 
