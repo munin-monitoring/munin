@@ -131,15 +131,14 @@ do_stats () {
     echo "tcp.value $(pick_stat RTCP "$XSTATS")"
     
     # Get a total of errors
-    errexpr="
-	    `pick_stat RNXD "$XSTATS"` +
-	    `pick_stat RFail "$XSTATS"` +
-	    `pick_stat RErr "$XSTATS"` +
-	    `pick_stat SErr "$XSTATS"` +
-	    `pick_stat RIQ "$XSTATS"` + 
-	    `pick_stat RFErr "$XSTATS"` ";
-
-    echo "errors.value `expr $errexpr`"
+    local error_value
+    error_value=$(( $(pick_stat RNXD "$XSTATS")
+                   + $(pick_stat RFail "$XSTATS")
+                   + $(pick_stat RErr "$XSTATS")
+                   + $(pick_stat SErr "$XSTATS")
+                   + $(pick_stat RIQ "$XSTATS")
+                   + $(pick_stat RFErr "$XSTATS") ))
+    echo "errors.value $error_value"
 }
 
 case $1 in

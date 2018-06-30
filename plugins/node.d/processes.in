@@ -62,34 +62,29 @@ munin-node.
 =cut
 
 # Search for program in $PATH unless predefined.
-[ $awk ]     || awk="awk"
-[ $ps ]      || ps="ps"
+awk=${awk:-awk}
+ps=${ps:-ps}
 
 # Find operating system
-[ $OPERSYS ] || OPERSYS=`uname | cut -f 1 -d _` || exit 1
+OPERSYS=${OPERSYS:-$(uname | cut -f 1 -d _)}
+[ -z "$OPERSYS" ] && echo >&2 "Failed to detect environment via uname" && exit 1
 
 if [ "$1" = "autoconf" ]; then
-        case "$OPERSYS" in
+    case "$OPERSYS" in
         Linux|SunOS|FreeBSD|OpenBSD|NetBSD|Darwin|CYGWIN)
-        $ps >/dev/null 2>/dev/null
-        if [ $? -ne 0 ]
-        then
-            echo "no (ps=$ps failed)"
+            if ! "$ps" >/dev/null 2>/dev/null; then
+                echo "no (ps=$ps failed)"
+            elif ! echo | "$awk" '{ print "Hei" }' >/dev/null 2>/dev/null; then
+                echo "no (awk=$awk failed)"
+            else
+                echo yes
+            fi
             exit 0
-        fi
-        echo | $awk '{ print "Hei" }' >/dev/null 2>/dev/null
-        if [ $? -ne 0 ]
-        then
-            echo "no (awk=$awk failed)"
+            ;;
+        *)
+            echo "no (unknown OS)"
             exit 0
-        fi
-    echo yes
-    exit 0
-    ;;
-    *)
-    echo "no (unknown OS)"
-    exit 0
-    ;;
+            ;;
     esac
 fi
 

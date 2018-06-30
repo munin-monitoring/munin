@@ -58,11 +58,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 =cut
 
 
-if [ -z $statsfile  ]; then
-        _target=/var/snort/snort.stats
-else
-        _target=$statsfile
-fi
+_target=${statsfile:-/var/snort/snort.stats}
+
 
 if [ "$1" = "autoconf" ]; then
         if [ -f "$_target" ]; then
@@ -92,4 +89,4 @@ if [ "$1" = "config" ]; then
 fi
 
 printf "pattmatch.value "
-echo $(tail -n1 $_target| awk -F, '{ print $7 }')
+tail -n1 "$_target" | awk -F, '{ print $7 }'

@@ -37,23 +37,23 @@ if [ "$1" = "config" ]; then
         echo 'graph_args --base 1000 -l 0 '
         echo 'graph_vlabel Daily Virus Types'
         echo 'graph_category Mail'
-        grep "`date +%d\ %b\ %Y`" $LOG0 $LOG1 | \
-		grep -v 'Disallowed  characters found in MIME headers|Disallowed breakage found in header name - potential virus|Disallowed MIME comment found in header name - potential virus' | \
-	       sed 's/clamdscan.*$//' | sed 's/[ \t]*$//' | \
-	       cut -f 5 | sort | uniq -c | sort -r | sed 's/\.\|-/_/g' | while read i; do
-	               name=`echo $i | awk '{print $2}'`;
-	               echo "$name.label $name" ;
-	               echo "'$name.draw LINE2";
-	       done
+        grep "$(date "+%d %b %Y")" "$LOG0" "$LOG1" | \
+               grep -vE 'Disallowed  characters found in MIME headers|Disallowed breakage found in header name - potential virus|Disallowed MIME comment found in header name - potential virus' | \
+               sed 's/clamdscan.*$//' | sed 's/[ \t]*$//' | \
+               cut -f 5 | sort | uniq -c | sort -r | sed 's/\.\|-/_/g' | while read -r i; do
+                       name=$(echo "$i" | awk '{print $2}')
+                       echo "$name.label $name"
+                       echo "$name.draw LINE2"
+               done
 
         exit 0
 fi
 
-grep "`date +%d\ %b\ %Y`" $LOG0 $LOG1 | \
-	egrep -v 'Disallowed  characters found in MIME headers|Disallowed breakage found in header name - potential virus|Disallowed MIME comment found in header name - potential virus' | \
-	sed 's/clamdscan.*$//' | sed 's/[ \t]*$//' | \
-	cut -f 5 | sort | uniq -c | sort -r | sed 's/\.\|-/_/g' | while read i; do
-		name=`echo $i | awk '{print $2}'`;
-		printf "%s.value " $name;
-		echo $i | awk '{print $1}'
-	done
+grep "$(date "+%d %b %Y")" "$LOG0" "$LOG1" | \
+        grep -vE 'Disallowed  characters found in MIME headers|Disallowed breakage found in header name - potential virus|Disallowed MIME comment found in header name - potential virus' | \
+        sed 's/clamdscan.*$//' | sed 's/[ \t]*$//' | \
+        cut -f 5 | sort | uniq -c | sort -r | sed 's/\.\|-/_/g' | while read -r i; do
+                name=$(echo "$i" | awk '{print $2}')
+                printf "%s.value " "$name"
+                echo "$i" | awk '{print $1}'
+        done

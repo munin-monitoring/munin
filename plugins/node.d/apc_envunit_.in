@@ -64,16 +64,16 @@ else
   fi
 fi
 
-UNITS=""
-COMMUNITY="public"
-SNMPGET=`which snmpget 2>/dev/null`
+UNITS=${units:-}
+COMMUNITY=${community:-public}
+SNMPGET=$(which snmpget 2>/dev/null)
 
-if [ "$units" ]; then UNITS=$units ; fi
-if [ "$oid" ]; then TOID=$oid ; fi
-if [ "$community" ]; then COMMUNITY=$community ; fi
+if [ -n "${oid:-}" ]; then TOID=$oid ; fi
 
-SNMPOPTS="-Ov -Oq -v1 -c ${COMMUNITY}"
 
+snmp_get() {
+  "$SNMPGET" -Ov -Oq -v1 -c "$COMMUNITY"
+}
 
 
 if [ "$1" = "autoconf" ]; then
@@ -108,9 +108,9 @@ if [ "$1" = "config" ]; then
 fi
 
 for m in ${UNITS} ; do
-  v1=`${SNMPGET} ${SNMPOPTS} $m ${TOID}.1`
-  v2=`${SNMPGET} ${SNMPOPTS} $m ${TOID}.2`
-  mm=`echo ${m} | tr '-' '_'`
+  v1=$(snmp_get "$m" "${TOID}.1")
+  v2=$(snmp_get "$m" "${TOID}.2")
+  mm=$(echo "$m" | tr '-' '_')
   echo "${mm}_${LETTER}1.value $v1"
   echo "${mm}_${LETTER}2.value $v2"
 done

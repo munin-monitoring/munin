@@ -57,9 +57,6 @@ SERVICE=${service:-$(basename "$0" | sed 's/^courier_//g')}
 OFFSET_FILE=${MUNIN_PLUGSTATE}/courier_${SERVICE}.offset
 LOGTAIL=${logtail:-/usr/sbin/logtail}
 
-mktempfile () {
-@@MKTEMP@@
-}
 
 case $1 in
     autoconf|detect)
@@ -88,14 +85,14 @@ EOF
 esac
 
 ARGS=0
-`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
+"$LOGTAIL" /etc/hosts 2>/dev/null >/dev/null
 if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
         ARGS=1
     fi
 fi
 
-TEMP_FILE=`mktempfile munin-courier.XXXXXX`
+TEMP_FILE=$(@@MKTEMP@@ munin-courier.XXXXXX)
 
 if [ -z "$TEMP_FILE" ] || [ ! -f "$TEMP_FILE" ]; then
     exit 3

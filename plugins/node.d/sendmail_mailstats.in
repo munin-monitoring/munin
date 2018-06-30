@@ -33,10 +33,9 @@ GPLv2
 
 =cut
 
-if [ -n "$mailstats" ];
-        then MAILSTATS=$mailstats;
-        else MAILSTATS=`which mailstats 2>/dev/null`;
-fi
+
+MAILSTATS=${mailstats:-$(which mailstats 2>/dev/null)}
+
 
 if [ "$1" = "autoconf" ]; then
         if [ -n "$MAILSTATS" ] && [ -x "$MAILSTATS" ]

@@ -76,13 +76,10 @@ GPLv2
 
 . "$MUNIN_LIBDIR/plugins/plugin.sh"
 
-if [ -z "$UPDATE_STATSFILE" ]; then
-    UPDATE_STATSFILE="$MUNIN_DBDIR/munin-update.stats"
-fi
 
-if [ -z "$MUNIN_UPDATE_LOCATION" ]; then
-    MUNIN_UPDATE_LOCATION="$MUNIN_LIBDIR/munin-update";
-fi
+UPDATE_STATSFILE=${UPDATE_STATSFILE:-$MUNIN_DBDIR/munin-update.stats}
+MUNIN_UPDATE_LOCATION=${MUNIN_UPDATE_LOCATION:-$MUNIN_LIBDIR/munin-update}
+
 
 if [ "$1" = "autoconf" ]; then
 	if [ -e "$MUNIN_UPDATE_LOCATION" ] ; then

@@ -78,8 +78,9 @@ fi
 for hosts in $host 
 do
     export site=$((site + 1))
-    ${ping:-ping} ${ping_args:-'-c 2'} ${hosts} ${ping_args2} \
-	| perl -n -e 'print "site$ENV{'site'}.value ", $1 / 1000, "\n" 
-        if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@; 
-        print "site$ENV{'site'}_packetloss.value $1\n" if /(\d+)% packet loss/;'
+    # shellcheck disable=SC2086
+    "${ping:-ping}" ${ping_args:-'-c 2'} ${hosts} ${ping_args2:-} \
+        | perl -n -e 'print "site$ENV{site}.value ", $1 / 1000, "\n"
+            if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@;
+            print "site$ENV{site}_packetloss.value $1\n" if /(\d+)% packet loss/;'
 done

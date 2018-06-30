@@ -46,14 +46,10 @@ MYSQLOPTS=${mysqlopts:-}
 MYSQLADMIN=${mysqladmin:-mysqladmin}
 
 if [ "$1" = "autoconf" ]; then
-        $MYSQLADMIN --version 2>/dev/null >/dev/null
-        if [ $? -eq 0 ]
-        then
-                $MYSQLADMIN $MYSQLOPTS status 2>/dev/null >/dev/null
-                if [ $? -eq 0 ]
-                then
+        if "$MYSQLADMIN" --version 2>/dev/null >/dev/null; then
+                # shellcheck disable=SC2086
+                if "$MYSQLADMIN" $MYSQLOPTS status 2>/dev/null >/dev/null; then
                         echo yes
-                        exit 0
                 else
                         echo "no (could not connect to mysql)"
                 fi

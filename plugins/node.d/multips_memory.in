@@ -104,11 +104,10 @@ names=${names:-}
 
 if [ "$1" = "autoconf" ]; then
     if [ -z "$names" ]; then
-	echo "no (Configuration required)"
-	exit 0
+        echo "no (Configuration required)"
+    else
+        echo yes
     fi
-
-    echo yes
     exit 0
 fi
 

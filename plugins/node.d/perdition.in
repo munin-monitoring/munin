@@ -49,9 +49,6 @@ Unknown
 
 =cut
 
-mktempfile () {
-@@MKTEMP@@
-}
 
 # Set the location of the perdition logs
 PERDITION_LOG=${logfile:-/var/log/perdition.log}
@@ -93,14 +90,14 @@ EOF
 esac
 
 ARGS=0
-`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
+"$LOGTAIL" /etc/hosts 2>/dev/null >/dev/null
 if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
         ARGS=1
     fi
 fi
 
-TEMP_FILE=`mktempfile munin-perdition.XXXXXX`
+TEMP_FILE=$(@@MKTEMP@@ munin-perdition.XXXXXX)
 
 if [ -z "$TEMP_FILE" ] || [ ! -f "$TEMP_FILE" ]; then
     exit 3

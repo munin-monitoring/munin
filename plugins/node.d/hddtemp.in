@@ -35,5 +35,4 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-for a in $drives ; do printf "$a.value $(hddtemp -n -q /dev/$a)\n" ; done
-
+for a in $drives ; do printf '%s.value %s\n' "$a" "$(hddtemp -n -q "/dev/$a")" ; done

@@ -38,10 +38,8 @@ GPLv2
 
 =cut
 
-MSP_QUEUE=/var/spool/mqueue-client
-MTA_QUEUE=/var/spool/mqueue
-if [ "$mspqueue"  ]; then MSP_QUEUE=$mspqueue ; fi
-if [ "$mtaqueue"  ]; then MTA_QUEUE=$mtaqueue ; fi
+MSP_QUEUE=${mspqueue:-/var/spool/mqueue-client}
+MTA_QUEUE=${mtaqueue:-/var/spool/mqueue}
 
 if [ "$1" = "autoconf" ]; then
 	if [ -d "$MSP_QUEUE" ] && [ -d "$MTA_QUEUE" ] ; then

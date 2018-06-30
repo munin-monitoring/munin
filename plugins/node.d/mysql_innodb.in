@@ -99,8 +99,12 @@ MYSQLOPTS="${mysqlopts:---user=munin --password=munin --host=localhost}"
 WARNING=${warning:-2147483648}   # 2GB
 CRITICAL=${critical:-1073741824} # 1GB
 
-# Convenient variables
-MEXEC="$MYSQL $MYSQLOPTS --batch --skip-column-names --database=information_schema --execute"
+
+mysql_exec() {
+    # shellcheck disable=SC2086
+    "$MYSQL" $MYSQLOPTS --batch --skip-column-names --database=information_schema --execute
+}
+
 
 ## No user serviceable parts below
 print_config() {
@@ -130,7 +134,7 @@ check_autoconf() {
     fi
 
     # Check server
-    $MEXEC "select(1);" | \
+    mysql_exec "select(1);" | \
 	while read -r res; do
 	    case $res in
 		1)
@@ -144,7 +148,7 @@ check_autoconf() {
     done
 
     # shellcheck disable=SC2034
-    $MEXEC "SHOW VARIABLES LIKE 'innodb_file_per_table';" | \
+    mysql_exec "SHOW VARIABLES LIKE 'innodb_file_per_table';" | \
 	while read -r var res; do
 	    case $res in
 		OFF)
@@ -161,7 +165,7 @@ check_autoconf() {
 	    esac
     done
 
-    $MEXEC "SELECT count(*) FROM tables WHERE ENGINE = 'InnoDB';" | \
+    mysql_exec "SELECT count(*) FROM tables WHERE ENGINE = 'InnoDB';" | \
 	while read -r res; do
 	    if [ "$res" = "0" ]; then
 		echo "no (No visible tables use InnoDB)"
@@ -175,14 +179,14 @@ check_autoconf() {
 
 # Get major.minor version of the server
 mysql_version() {
-    $MEXEC "SELECT version();" | awk '{printf "%1.1f", $1}'
+    mysql_exec "SELECT version();" | awk '{printf "%1.1f", $1}'
 }
 
 # InnoDB free bytes for MySQL 5.1 and newer
 innodb_free_new() {
-    t=$($MEXEC "SELECT count(*) FROM tables WHERE ENGINE = 'InnoDB';")
+    t=$(mysql_exec "SELECT count(*) FROM tables WHERE ENGINE = 'InnoDB';")
     if [ "$t" -gt "0" ]; then
-	$MEXEC "SELECT data_free FROM tables WHERE ENGINE = 'InnoDB' LIMIT 1;"
+        mysql_exec "SELECT data_free FROM tables WHERE ENGINE = 'InnoDB' LIMIT 1;"
     else
 	echo >&2 "$0: Error: No visible tables use InnoDB"
 	echo U
@@ -192,7 +196,7 @@ innodb_free_new() {
 
 # InnoDB free bytes for MySQL 5.0 and older
 innodb_free_old() {
-    $MEXEC "SELECT table_comment FROM tables WHERE ENGINE = 'InnoDB' LIMIT 1;" \
+    mysql_exec "SELECT table_comment FROM tables WHERE ENGINE = 'InnoDB' LIMIT 1;" \
 	| awk '/^InnoDB free:/ {print $3 * 1024}'
 }
 
