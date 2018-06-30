@@ -87,7 +87,7 @@ munin-node.
 POSTCONFSPOOL="$(postconf -h queue_directory 2>/dev/null || echo /var/spool/postfix)"
 SPOOLDIR=${spooldir:-$POSTCONFSPOOL}
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 case $1 in
     autoconf|detect)

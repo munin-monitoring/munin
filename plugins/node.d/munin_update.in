@@ -77,7 +77,7 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 if [ -z "$UPDATE_STATSFILE" ]; then
     UPDATE_STATSFILE="$MUNIN_DBDIR/munin-update.stats"

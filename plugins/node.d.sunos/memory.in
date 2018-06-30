@@ -59,7 +59,7 @@ Fixme: Using kstat would be much better
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 TOP=${top:-/usr/local/bin/top}
 

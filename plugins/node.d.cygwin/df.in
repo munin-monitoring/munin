@@ -46,7 +46,7 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 print_values () {
     df -P -x iso9660 2>/dev/null | sed -e 1d -e '/\/\//d' -e 's/%//' |
