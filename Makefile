@@ -34,7 +34,7 @@ PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
         build build-common-prime build-common-pre build-doc \
         source_dist \
-        test clean \
+        test lint clean \
         clean-% test-% build-% install-% \
 	tags \
 	infiles
@@ -464,6 +464,18 @@ install-%: %/Build
 
 test-%: %/Build
 	cd $* && $(PERL) Build test --verbose=0 || true
+
+lint:
+	@# SC1008: ignore our weird shebang (substituted later)
+	@# SC1090: ignore sourcing of files with variable in path
+	@# SC2009: do not complain about "ps ... | grep" calls (may be platform specific)
+	@# SC2126: tolerate "grep | wc -l" (simple and widespread) instead of "grep -c"
+	find plugins/node.d.linux/ -type f -print0 \
+		| xargs -0 grep -l --null "@@GOODSH@@" \
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell dash
+	find plugins/node.d.linux/ -type f -print0 \
+		| xargs -0 grep -l --null "@@BASH@@" \
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell bash
 
 clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
 	cd $* && $(PERL) Build realclean
