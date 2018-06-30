@@ -92,4 +92,4 @@ if [ "$1" = "config" ]; then
 fi
 
 printf "pktsec.value "
-echo $( tail -n1 $_target| awk -F, '{ print $5 }') \* 1000|bc -l
+tail -n1 "$_target" | awk -F, '{ print $5 * 1000 }'
