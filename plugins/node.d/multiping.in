@@ -54,10 +54,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 =cut
 
-if [ -z "$host" ]; then
-    file_host=$(basename $0 | sed 's/^ping_//g')
-    host=${host:-${file_host:-www.google.com}}
-fi
+
+host=${host:-www.google.com}
+
 
 if [ "$1" = "config" ]; then
     echo graph_title Ping times
