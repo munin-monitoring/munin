@@ -19,10 +19,11 @@ None needed by default.
 You can set one environment variable to modify the plugins behaviour:
 
   [cpuspeed]
-     env.scaleto100 1
+     env.scaleto100 yes
 
-Show the frequency as a percentage instead of absolute frequency.  If
-set the plugin sets up a CDEF to change the speed in Hz to percent.
+Show the frequency as a percentage instead of absolute frequency.
+If set the "yes" the plugin sets up a CDEF to change the speed in Hz
+to percent.
 
 If you set or unset this the whole time series will be shown in the
 same way, either as Hz or percent (as the graphs are updated).
@@ -56,6 +57,8 @@ GPLv2
 =cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
+
+scaleto100=${scaleto100:-no}
 
 if [ "$1" = "autoconf" ]; then
     if [ -r /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state ] ; then
