@@ -473,7 +473,7 @@ lint:
 	find plugins/node.d.linux/ -type f -print0 \
 		| xargs -0 grep -l --null "@@GOODSH@@" \
 			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell dash
-	find plugins/node.d.linux/ -type f -print0 \
+	find plugins/ -type f -print0 \
 		| xargs -0 grep -l --null "@@BASH@@" \
 			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell bash
 
