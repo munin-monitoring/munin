@@ -39,7 +39,7 @@ if [ -n "$mailstats" ];
 fi
 
 if [ "$1" = "autoconf" ]; then
-	if [ -n "$MAILSTATS" -a -x "$MAILSTATS" ]
+	if [ -n "$MAILSTATS" ] && [ -x "$MAILSTATS" ]
 		then echo yes
 		else echo "no (no mailstats command)"
 	fi
@@ -50,6 +50,7 @@ if [ "$1" = "config" ]; then
 
 	echo "graph_title Sendmail email volumes"
 	echo "graph_order received sent"
+	# shellcheck disable=SC2016
 	echo 'graph_vlabel bytes/${graph_period}'
 	echo "graph_category sendmail"
 	echo "received.label received"

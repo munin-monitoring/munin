@@ -123,4 +123,3 @@ case "$FUNCTION" in
 		current "$1"
 		;;
 esac
-

@@ -42,7 +42,7 @@ munin-node.
 
 =cut
 
-MYSQLOPTS="$mysqlopts"
+MYSQLOPTS=${mysqlopts:-}
 MYSQLADMIN=${mysqladmin:-mysqladmin}
 
 if [ "$1" = "autoconf" ]; then
@@ -75,4 +75,5 @@ if [ "$1" = "config" ]; then
 fi
 
 /usr/bin/printf "threads.value "
-($MYSQLADMIN $MYSQLOPTS status 2>/dev/null || echo 'a a a U') | awk '{print $4}'
+# shellcheck disable=SC2086
+("$MYSQLADMIN" $MYSQLOPTS status 2>/dev/null || echo 'a a a U') | awk '{print $4}'

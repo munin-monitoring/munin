@@ -49,7 +49,7 @@ Unknown
 
 =cut
 
-type=`echo $0 | sed -e 's/.*_\(.*\)/\1/'`
+type=$(echo "$0" | sed -e 's/.*_\(.*\)/\1/')
 if [ "${type}" = temperature ] ; then
   TOID="enterprises.318.1.1.10.3.13.1.1.3"
   NAME="temperature"
@@ -78,13 +78,13 @@ SNMPOPTS="-Ov -Oq -v1 -c ${COMMUNITY}"
 
 if [ "$1" = "autoconf" ]; then
   if [ -z "${UNITS}" ] ; then echo "no (no units to monitor)" ; exit 0 ; fi
-  if [ -z "$SNMPGET" -o ! -x "$SNMPGET" ] ; then 
+  if [ -z "$SNMPGET" ] || [ ! -x "$SNMPGET" ] ; then
       echo "no (no snmpget executable)"
       exit 0
   fi
 
   for m in ${UNITS} ; do
-    if ping -c1 -q $m >/dev/null 2>&1 ; then continue ; fi
+    if ping -c1 -q "$m" >/dev/null 2>&1; then continue; fi
     echo "no (can't reach $m)" ; exit 0
   done
   echo "yes" ; exit 0
@@ -100,7 +100,7 @@ if [ "$1" = "config" ]; then
   echo "graph_title Environmental units (${NAME} probes)"
   echo "graph_vlabel ${LABEL}"
   for m in ${UNITS} ; do
-    mm=`echo ${m} | tr '-' '_'`
+    mm=$(echo "$m" | tr '-' '_')
     echo "${mm}_${LETTER}1.label $m ${NAME} #1"
     echo "${mm}_${LETTER}2.label $m ${NAME} #2"
   done

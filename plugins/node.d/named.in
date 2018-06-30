@@ -71,7 +71,8 @@ munin-node.
 
 =cut
 
-if [ -n "$logfile" ]; then
+
+if [ -n "${logfile:-}" ]; then
     SYSLOGFILE=$logfile
 else 
     if [ -f /var/adm/messages ]; then
@@ -84,50 +85,50 @@ fi
 # ----------------------------------------------------------------------
 
 pick_stat () {
-    ret=`echo "$2" | sed "s/.* *$1=\([0-9]*\).*/\1/"`
+    ret=$(echo "$2" | sed 's/.* *'"$1"'=\([0-9]*\).*/\1/')
     if [ ! "$ret" ]; then
     	echo 0;
     else
-    	echo $ret
+        echo "$ret"
     fi
 }
 
 do_stats () {
 
-    if [ ! -f $SYSLOGFILE ] ; then 
-	echo $SYSLOGFILE is unavailable to me >&2
-	exit 1
+    if [ ! -f "$SYSLOGFILE" ]; then
+        echo "$SYSLOGFILE is unavailable to me" >&2
+        exit 1
     fi
 
     # Get out the last XSTATS and NSTATS lines
-    XSTATS=`grep 'named.*XSTATS' "$SYSLOGFILE" | tail -1`
-    # NSTATS=`grep 'named.*NSTATS' "$SYSLOGFILE" | tail -1`
+    XSTATS=$(grep 'named.*XSTATS' "$SYSLOGFILE" | tail -1)
+    # NSTATS=$(grep 'named.*NSTATS' "$SYSLOGFILE" | tail -1)
 
     # We concentrate on what clients communicate with us about
     # and counters that we suspect can indicate abuse or error conditions
 
     # Received Queries: Total volume of queries received. 
     # This should be nice and smooth.
-    echo "queries.value `pick_stat RQ "$XSTATS"`"
+    echo "queries.value $(pick_stat RQ "$XSTATS")"
 
     # Sent Answers: This should be the same as RQ except when there are
     # errors.  May not be very interesting.
-    echo "answers.value `pick_stat SAns "$XSTATS"`"
+    echo "answers.value $(pick_stat SAns "$XSTATS")"
 
     # Sent and Forwarded queries, in a proxy setting this should be
     # the same as Received Queries (?)
-    echo "forwarded.value `pick_stat SFwdQ "$XSTATS"`" 
+    echo "forwarded.value $(pick_stat SFwdQ "$XSTATS")"
 
     # Received Zone Transfer queries - should be low.  High value could
     # indicate some odd error or some kind of abuse
-    echo "axfr.value `pick_stat RAXFR "$XSTATS"`"	# Received AXFR Qs
+    echo "axfr.value $(pick_stat RAXFR "$XSTATS")"	# Received AXFR Qs
 
     # Received TCP connections: These are used for zone transfers or
     # oversized (>512 byte) answers.  A high value here could indicate
     # that you need to trim down the size of your answers somehow (Do you
     # have a ton of MXes or NSes that gets reported back?), or this could
     # be due to an error.  Or it could be due to abuse.
-    echo "tcp.value `pick_stat RTCP "$XSTATS"`"
+    echo "tcp.value $(pick_stat RTCP "$XSTATS")"
     
     # Get a total of errors
     errexpr="

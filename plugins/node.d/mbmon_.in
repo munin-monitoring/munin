@@ -21,10 +21,14 @@
 #%# family=contrib
 #%# capabilities=autoconf suggest
 
-what=`basename $0 | sed 's/^mbmon_//g'`
+what=$(basename "$0" | sed 's/^mbmon_//g')
+mbmon=${mbmon:-$(which mbmon)}
+
 
 if [ "$1" = "suggest" ]; then
-	printf "TEMP\nFAN\nVoltage\n"
+	echo 'TEMP'
+	echo 'FAN'
+	echo 'Voltage'
 	exit 0
 fi
 
@@ -100,7 +104,3 @@ case $what in
 		exit 0
 		;;
 esac
-
-
-
-

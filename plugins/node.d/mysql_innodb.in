@@ -112,26 +112,26 @@ print_config() {
     echo 'free.label Bytes free'
     echo 'free.type GAUGE'
     echo 'free.min 0'
-    echo 'free.warning' $WARNING:
-    echo 'free.critical' $CRITICAL:
+    echo "free.warning $WARNING:"
+    echo "free.critical $CRITICAL:"
     exit 0
 }
 
 print_data() {
-    innodb_free | xargs -r printf "free.value %s\n"
+    innodb_free | xargs -r printf 'free.value %s\n'
 }
 
 check_autoconf() {
 
     # Check client
-    if [ ! -x $MYSQL ]; then
+    if [ ! -x "$MYSQL" ]; then
 	echo "no ($MYSQL not executable)"
 	return 0
     fi
 
     # Check server
     $MEXEC "select(1);" | \
-	while read res; do
+	while read -r res; do
 	    case $res in
 		1)
 		# All is well
@@ -143,8 +143,9 @@ check_autoconf() {
 	    esac
     done
 
+    # shellcheck disable=SC2034
     $MEXEC "SHOW VARIABLES LIKE 'innodb_file_per_table';" | \
-	while read var res; do
+	while read -r var res; do
 	    case $res in
 		OFF)
 		# All is well
@@ -161,7 +162,7 @@ check_autoconf() {
     done
 
     $MEXEC "SELECT count(*) FROM tables WHERE ENGINE = 'InnoDB';" | \
-	while read res; do
+	while read -r res; do
 	    if [ "$res" = "0" ]; then
 		echo "no (No visible tables use InnoDB)"
 		return 0

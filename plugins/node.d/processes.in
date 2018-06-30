@@ -288,7 +288,7 @@ if [ "$1" = "config" ]; then
         echo "zombie.label zombie"
         echo "zombie.draw STACK"
         echo "zombie.colour $ZOMBIE"
-        echo "zombie.info The number of defunct ("zombie") processes (process terminated and parent not waiting)."
+        echo "zombie.info The number of defunct ('zombie') processes (process terminated and parent not waiting)."
         print_warning zombie
         print_critical zombie
     fi
@@ -308,7 +308,8 @@ if [ "$1" = "config" ]; then
 fi
 
 if [ "$OPERSYS" = "Linux" ]; then
-    $ps --no-header -eo s | $awk '
+    # shellcheck disable=SC2016
+    "$ps" --no-header -eo s | "$awk" '
 { processes++; stat[$1]++ }
 END {
 print "processes.value "        0+processes;
@@ -322,7 +323,8 @@ print "zombie.value "           0+stat["Z"];
 }'
 
 elif [ "$OPERSYS" = "SunOS" ]; then
-    $ps -e -o s | $awk '
+    # shellcheck disable=SC2016
+    "$ps" -e -o s | "$awk" '
 { total++; stat[$1]++ }
 END {
 print "total.value "    0+total;
@@ -333,7 +335,8 @@ print "stopped.value "  0+stat["T"];
 print "zombie.value "   0+stat["Z"];
 }'
 elif [ "$OPERSYS" = "FreeBSD" ]; then
-    $ps -axo state= | sed -e 's/^\(.\).*/\1/' | $awk '
+    # shellcheck disable=SC2016
+    "$ps" -axo state= | sed -e 's/^\(.\).*/\1/' | "$awk" '
 { processes++; stat[$1]++ }
 END {
 print "processes.value "        0+processes;
@@ -348,7 +351,8 @@ print "zombie.value "           0+stat["Z"];
 }'
 elif [ "$OPERSYS" = "OpenBSD" ]; then
     # First line is header. Remove it.
-    $ps -axo state= | sed '1d' | sed -e 's/^\(.\).*/\1/' | $awk '
+    # shellcheck disable=SC2016
+    "$ps" -axo state= | sed '1d' | sed -e 's/^\(.\).*/\1/' | "$awk" '
 { processes++; stat[$1]++ }
 END {
 print "processes.value "        0+processes;
@@ -361,7 +365,8 @@ print "zombie.value "           0+stat["Z"];
 }'
 elif [ "$OPERSYS" = "NetBSD" ]; then
     # First line is header. Remove it.
-    $ps -axo state= | sed '1d' | sed -e 's/^\(.\).*/\1/' | $awk '
+    # shellcheck disable=SC2016
+    "$ps" -axo state= | sed '1d' | sed -e 's/^\(.\).*/\1/' | "$awk" '
 { processes++; stat[$1]++ }
 END {
 print "processes.value "        0+processes;
@@ -376,7 +381,8 @@ print "zombie.value "           0+stat["Z"];
 
 elif [ "$OPERSYS" = "Darwin" ]; then
     # First line is header. Remove it.
-    $ps -axo state= | sed '1d' | sed -e 's/^\(.\).*/\1/' | $awk '
+    # shellcheck disable=SC2016
+    "$ps" -axo state= | sed '1d' | sed -e 's/^\(.\).*/\1/' | "$awk" '
 { processes++; stat[$1]++ }
 END {
 print "processes.value "        0+processes;
@@ -390,7 +396,8 @@ print "zombie.value "           0+stat["Z"];
 
 elif [ "$OPERSYS" = "CYGWIN" ]; then
     # First line is header. Remove it. Also remove WINPID duplicates.
-    $ps -aW | sed '1d' | cut -c 30-36 | sort -u | $awk '
+    # shellcheck disable=SC2016
+    "$ps" -aW | sed '1d' | cut -c 30-36 | sort -u | "$awk" '
 { processes++; }
 END {
 print "processes.value "        0+processes;
@@ -398,7 +405,8 @@ print "processes.value "        0+processes;
 
 elif [ "$OPERSYS" = "HP-UX" ]; then
     # First line is header. Remove it.
-    $ps -el | sed '1d' | $awk '{print $2}' | $awk '
+    # shellcheck disable=SC2016
+    "$ps" -el | sed '1d' | "$awk" '{print $2}' | "$awk" '
 { processes++; stat[$1]++ }
 END {
 print "processes.value "        0+processes;
