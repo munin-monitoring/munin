@@ -30,6 +30,7 @@ MANCENTER        := "Munin Documentation"
 MAN8		 := master/_bin/munin-update master/_bin/munin-limits master/_bin/munin-html master/_bin/munin-graph
 PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
+PYTHON_LINT_CALL ?= python3 -m flake8
 
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
         build build-common-prime build-common-pre build-doc \
@@ -482,6 +483,9 @@ lint:
 	find plugins/ -type f -print0 \
 		| xargs -0 grep -l --null "@@BASH@@" \
 			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell bash
+	find plugins/ -type f -print0 \
+		| xargs -0 grep -l --null "@@PYTHON@@" \
+			| xargs -0 $(PYTHON_LINT_CALL)
 	# TODO: perl plugins currently fail with perlcritic
 
 clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
