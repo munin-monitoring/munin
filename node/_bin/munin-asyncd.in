@@ -169,8 +169,12 @@ MAIN: while($keepgoing) {
 			);
 
 			unless ($sock) {
-				warn "Error creating socket: $!, moving to next plugin to try again";
-				next;
+				if ($do_fork) {
+					die "Error creating socket: $!";
+				} else {
+					warn "Error creating socket: $!, moving to next plugin to try again";
+					next;
+				}
 			}
 
 			<$sock>; # skip header
