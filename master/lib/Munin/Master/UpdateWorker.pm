@@ -224,7 +224,9 @@ sub do_work {
 		    %{$service_config{global}});
 
 		my $last_updated_timestamp = $self->_update_rrd_files(\%service_config, \%service_data);
-          	$self->set_spoolfetch_timestamp($last_updated_timestamp);
+		if ($last_updated_timestamp) {
+		    $self->set_spoolfetch_timestamp($last_updated_timestamp);
+		}
 	    } # for @plugins
 
 	    # Send "quit" to node
@@ -584,9 +586,7 @@ sub _update_rrd_files {
     		} keys %{$nested_service_config->{data_source}{$svc}};
     	    } keys %{$nested_service_config->{data_source}}
     	);
-    if (not $last_timestamp > 0) {
-    	$last_timestamp = time;
-    }
+    my $last_timestamp_or_now = ($last_timestamp > 0) ? $last_timestamp : time;
 
     for my $service (keys %{$nested_service_config->{data_source}}) {
 
@@ -620,7 +620,7 @@ sub _update_rrd_files {
 	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config, $first_epoch);
 
 	    if (defined($service_data) and defined($service_data->{$ds_name})) {
-		$self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}, $last_timestamp);
+		$self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}, $last_timestamp_or_now);
 	    }
 	    else {
 		WARN "[WARNING] Service $service on $nodedesignation returned no data for label $ds_name";
@@ -860,7 +860,7 @@ sub to_mul_nb {
 }
 
 sub _update_rrd_file {
-    my ($self, $rrd_file, $ds_name, $ds_values, $last_timestamp) = @_;
+    my ($self, $rrd_file, $ds_name, $ds_values, $max_timestamp) = @_;
 
     my $values = $ds_values->{value};
 
@@ -887,7 +887,7 @@ sub _update_rrd_file {
         my $when = $ds_values->{when}[$i];
 
 	if ($when == -1) {
-	    $when = $last_timestamp;
+	    $when = $max_timestamp;
 	}
 
 	# Ignore values that is not in monotonic increasing timestamp for the RRD.
