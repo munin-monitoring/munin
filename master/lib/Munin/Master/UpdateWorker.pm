@@ -886,7 +886,7 @@ sub _update_rrd_file {
         my $value = $values->[$i];
         my $when = $ds_values->{when}[$i];
 
-	if ($when == -1) {
+	if ($when == $self->{node}->NO_TIMESTAMP) {
 	    $when = $max_timestamp;
 	}
 
