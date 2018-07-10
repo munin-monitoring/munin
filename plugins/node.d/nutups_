@@ -6,17 +6,18 @@
 #
 # License: GPL
 #
-# usage: ups_upsid_function
+# usage: nutups_upsid_function
 #
 #%# family=contrib
 #%# capabilities=autoconf suggest
 
 UPS=$(basename $0 | cut -d_ -f2)
 FUNCTION=$(basename $0 | cut -d_ -f3)
+UPSC=$(which upsc)
 
 if [ "$1" = "autoconf" ]; then
-	[ -x /bin/upsc ] && [ -r /etc/nut/ups.conf ] && echo yes && exit 0
-	echo "no (/bin/upsc or /etc/nut/ups.conf not found)"
+	[ -x "$UPSC" ] && [ -r /etc/nut/ups.conf ] && echo yes && exit 0
+	echo "upsc or /etc/nut/ups.conf not found"
 	exit 0
 fi
 
@@ -43,7 +44,7 @@ voltages() {
 			echo "${i}.min 0"
 		done
 	else
-		upsc $UPS | sed -n '/volt/{
+		$UPSC $UPS | sed -n '/volt/{
 					s/://
 					/nominal/s/.* /nominal.value /
 					/voltage/s/\.[^ ]*/.value/
@@ -65,7 +66,7 @@ charge() {
 			echo "${i}.min 0"
 		done
 	else
-		upsc $UPS | sed -n '/charge/{
+		$UPSC $UPS | sed -n '/charge/{
 					s/^[^:]*\.//g
 					s/:/.value/
 					p
@@ -88,7 +89,7 @@ frequency() {
 		echo "acfreq.max 100"
 		echo "acfreq.min 5"
 	else
-		upsc $UPS | sed -n '/freq/{s/.*:/acfreq.value/;p}'
+		$UPSC $UPS | sed -n '/freq/{s/.*:/acfreq.value/;p}'
 	fi
 }
 
@@ -103,7 +104,7 @@ current() {
 		echo "current.max 100"
 		echo "current.min 0"
 	else
-		upsc $UPS | sed -n '/current/{s/.*:/current.value/;p}'
+		$UPSC $UPS | sed -n '/current/{s/.*:/current.value/;p}'
 	fi
 }
 
