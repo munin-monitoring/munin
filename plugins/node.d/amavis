@@ -80,15 +80,17 @@ GPLv2
 AMAVIS_LOG=${amavislog:-/var/log/mail/mail.info}
 LOGTAIL=${logtail:-logtail}
 STATEFILE=$MUNIN_PLUGSTATE/amavis.offset
+AMAVISD=${amavisd:-/usr/local/sbin/amavisd}
+AMAVISD_NEW=${amavisd_new:-/usr/sbin/amavisd-new}
 mktemp_command="${mktemp_command:-/bin/mktemp}"
 
 if [ "$1" = "autoconf" ]; then
-        if [ -f "${AMAVIS_LOG}" -a -n "${LOGTAIL}" -a -x "${LOGTAIL}" ] ; then
+	if [ -f "${AMAVIS_LOG}" -a -n "${LOGTAIL}" -a -x "${LOGTAIL}" -a -x "${AMAVISD}" -o -x "${AMAVISD_NEW}" ]; then
 		echo yes
 		exit 0
 	else
 		echo no
-		exit 0
+		exit 1
 	fi
 fi
 
