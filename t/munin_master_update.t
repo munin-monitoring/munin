@@ -30,6 +30,9 @@ Munin::Common::Logger::configure(
 my $update = Munin::Master::Update->new();
 ok($update->run() == 5);
 
+# Run a second time, with an already populated database
+ok($update->run() == 5);
+
 kill('TERM', $pid_debug_node);
 wait();
 
