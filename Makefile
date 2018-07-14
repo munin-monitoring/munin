@@ -149,7 +149,7 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	    fi                                                 \
 	done
 	@# Some HP-UX plugins need *.adv support files in LIBDIR
-	if [ "$(OSTYPE)" = "hp-ux" ]; then mv $(LIBDIR)/plugins/*.adv $(LIBDIR); done
+	if [ "$(OSTYPE)" = "hp-ux" ]; then mv $(LIBDIR)/plugins/*.adv $(LIBDIR); fi
 	$(INSTALL) -m 0644 build/plugins/plugins.history $(LIBDIR)/plugins/
 	$(INSTALL) -m 0644 build/plugins/plugin.sh $(LIBDIR)/plugins/
 
