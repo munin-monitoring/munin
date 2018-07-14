@@ -204,8 +204,8 @@ NODE_END:
 	    $node->quit();
 
 	    # We want to commit to avoid leaking transactions
-	    $dbh->commit();
-	    $dbh_state->commit();
+	    $dbh->commit() unless $dbh->{AutoCommit};
+	    $dbh_state->commit() unless $dbh_state->{AutoCommit};
 
 	}; # eval
 
@@ -665,7 +665,7 @@ sub uw_handle_config {
 	my $timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
 	$last_timestamp = $timestamp if $timestamp && $timestamp > $last_timestamp;
 
-	$self->{dbh}->commit();
+	$self->{dbh}->commit() unless $self->{dbh}->{AutoCommit};
 	return $last_timestamp;
 }
 
@@ -738,7 +738,7 @@ sub uw_handle_fetch {
 
 	}
 
-	$self->{dbh}->commit();
+	$self->{dbh}->commit() unless $self->{dbh}->{AutoCommit};
 
 	return $last_timestamp;
 }
