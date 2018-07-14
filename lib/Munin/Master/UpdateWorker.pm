@@ -101,6 +101,10 @@ sub do_work {
 
 		my @node_capabilities = $node->negotiate_capabilities();
 
+
+		$self->{dbh}->begin_work() if $self->{dbh}->{AutoCommit};
+		$self->{dbh_state}->begin_work() if $self->{dbh_state}->{AutoCommit};
+
 		my $dbh = $self->{dbh};
 		my $dbh_state = $self->{dbh_state};
 
@@ -198,6 +202,10 @@ sub do_work {
 NODE_END:
 	    # Send "quit" to node
 	    $node->quit();
+
+	    # We want to commit to avoid leaking transactions
+	    $dbh->commit() unless $dbh->{AutoCommit};
+	    $dbh_state->commit() unless $dbh_state->{AutoCommit};
 
 	}; # eval
 
@@ -594,7 +602,8 @@ sub uw_handle_config {
 		return $last_timestamp;
 	}
 
-	$self->{dbh}->begin_work();
+	# Begin transaction if not already in a transaction
+	$self->{dbh}->begin_work() if $self->{dbh}->{AutoCommit};
 
 	# Build FETCH data, just in case of dirty_config.
 	my @fetch_data;
@@ -656,7 +665,7 @@ sub uw_handle_config {
 	my $timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
 	$last_timestamp = $timestamp if $timestamp && $timestamp > $last_timestamp;
 
-	$self->{dbh}->commit();
+	$self->{dbh}->commit() unless $self->{dbh}->{AutoCommit};
 	return $last_timestamp;
 }
 
@@ -673,6 +682,8 @@ sub uw_handle_fetch {
 		WARN "uw_handle_fetch $plugin is already configured, skipping";
 		return $last_timestamp;
 	}
+
+	$self->{dbh}->begin_work() if $self->{dbh}->{AutoCommit};
 
 	my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
 
@@ -726,6 +737,8 @@ sub uw_handle_fetch {
 		$self->_update_rrd_file($rrd_file, $field, $ds_values);
 
 	}
+
+	$self->{dbh}->commit() unless $self->{dbh}->{AutoCommit};
 
 	return $last_timestamp;
 }
