@@ -45,9 +45,9 @@ doc:
 
 .PHONY: install
 install: $(BUILD_SCRIPT)
-	"$(BUILD_SCRIPT)" install --destdir=$(DESTDIR) --verbose
+	"$(BUILD_SCRIPT)" install --destdir="$(DESTDIR)" --verbose
 	@# various directory placeholders (e.g. "@@SPOOLDIR@@") need to be replaced
-	grep -rl --null "@@" "$(DESTDIR)" | xargs -0 sed -i \
+	grep -rl --null "@@" "$(or $(DESTDIR),.)" | xargs -0 sed -i \
 		-e "$$(perl -I lib -M"Munin::Common::Defaults" \
 			-e "Munin::Common::Defaults->print_as_sed_substitutions();")"
 
@@ -63,7 +63,7 @@ clean: $(BUILD_SCRIPT)
 # perl module
 
 $(BUILD_SCRIPT): Build.PL
-	$(PERL) Build.PL --destdir=$(DESTDIR) --installdirs=$(INSTALLDIRS) --verbose
+	$(PERL) Build.PL --destdir="$(DESTDIR)" --installdirs="$(INSTALLDIRS)" --verbose
 
 
 ######################################################################
