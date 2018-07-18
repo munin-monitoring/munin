@@ -23,7 +23,7 @@ $config->parse_config_from_file("t/config/munin.conf");
 
 Munin::Common::Logger::configure(
 	"output" => "screen",
-	"level" => "debug",
+	"level" => "info",
 );
 
 
