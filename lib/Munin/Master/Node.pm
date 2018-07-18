@@ -474,7 +474,7 @@ sub spoolfetch {
     my $last_timestamp = $timestamp;
     my $callback = sub {
 	    my ($plugin, $data) = @_;
-	    $last_timestamp = $uw_handle_config->($self, $plugin, $now, $data, $last_timestamp)
+	    $last_timestamp = $uw_handle_config->($plugin, $now, $data, $last_timestamp)
     };
     my $lines = $self->_node_read($callback);
 
