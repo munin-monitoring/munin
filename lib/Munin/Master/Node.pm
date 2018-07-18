@@ -675,6 +675,8 @@ sub _node_write_single {
 sub _node_read_single {
     my ($self) = @_;
 
+RESTART:
+
     my $res;
     my $tls = $self->{tls};
     if ($tls && $tls->session_started()) {
@@ -693,6 +695,9 @@ sub _node_read_single {
     # .. It has to be done in reverse order as we remove \n first, then \r.
     $res =~ s/\n$// if defined $res;
     $res =~ s/\r$// if defined $res;
+
+    # If the line is empty, just read another line
+    goto RESTART unless $res;
 
     DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\"." if $debug;
 
