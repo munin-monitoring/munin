@@ -27,7 +27,7 @@ system("mkdir", "-p", $config->{dbdir});
 
 Munin::Common::Logger::configure(
 	"output" => "screen",
-	"level" => "debug",
+	"level" => "info",
 );
 
 
