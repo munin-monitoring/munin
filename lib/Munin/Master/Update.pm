@@ -167,7 +167,7 @@ sub _run_workers {
 	$pm->run_on_finish(
 		sub {
 			my ($pid, $exit_code, $ident) = @_;
-			INFO "[INFO]: run_on_finish(pid:$pid, exit_code;$exit_code, ident:$ident)";
+			INFO "[INFO]: run_on_finish(pid:$pid, exit_code:$exit_code, ident:$ident)";
 			$nb_workers_failed++ if $exit_code;
 		}
 	);
