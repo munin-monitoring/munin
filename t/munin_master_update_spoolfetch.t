@@ -12,7 +12,7 @@ require_ok( 'Munin::Master::Config' );
 # Launch node-debug
 my $pid_debug_node = 0;
 unless (($pid_debug_node = fork())) {
-	exec("contrib/munin-node-debug", "--spoolfetch", "--debug");
+	exec("contrib/munin-node-debug", "--spoolfetch", "--starting-epoch", (time - 600));
 }
 
 # Wait for the node to start
