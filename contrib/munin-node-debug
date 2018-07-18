@@ -255,7 +255,8 @@ sub service
 sub get_plugin_number 
 {
 	my $plugin_name = shift;
-	return $services{$plugin_name};
+	my $plugin_number = $services{$plugin_name};
+	return $plugin_number || 0;
 }
 
 sub debug 
