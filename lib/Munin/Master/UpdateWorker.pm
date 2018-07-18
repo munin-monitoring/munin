@@ -78,8 +78,9 @@ sub do_work {
 		global => {},
 	);
 
-	# Try Connecting to the Carbon Server
-	$self->_connect_carbon_server() if $config->{carbon_server};
+	# Connecting to carbon isn't maintained with the new SQL metadata, so removing it.
+	# We should provide a generic way to hook into the data updating part
+	WARN "Connecting to a Carbon Server isn't supported anymore." if $config->{carbon_server};
 
 	# Having a local handle looks easier
 	my $node = $self->{node};
@@ -208,8 +209,6 @@ NODE_END:
 	    $dbh_state->commit() unless $dbh_state->{AutoCommit};
 
 	}; # eval
-
-	$self->_disconnect_carbon_server();
 
 	# kill the remaining process if needed
 	# (useful if we spawned an helper, as for cmd:// or ssh://)
@@ -765,91 +764,6 @@ sub uw_override_with_conf {
 
     return $service_config;
 }
-
-sub _connect_carbon_server {
-	my $self = shift;
-
-	DEBUG "[DEBUG] Connecting to Carbon server $config->{carbon_server}:$config->{carbon_port}...";
-
-	$self->{carbon_socket} = IO::Socket::INET->new (
-		PeerAddr => $config->{carbon_server},
-		PeerPort => $config->{carbon_port},
-		Proto    => 'tcp',
-	) or WARN "[WARN] Couldn't connect to Carbon Server: $!";
-}
-
-sub _disconnect_carbon_server {
-	my $self = shift;
-
-	if ($self->{carbon_socket}) {
-		DEBUG "[DEBUG] Closing Carbon socket";
-		delete $self->{carbon_socket};
-	}
-}
-
-sub _update_carbon_server {
-	# uncoverable subroutine
-	my ($self, $nested_service_config, $nested_service_data) = @_;
-
-	my $metric_path;
-
-	return unless exists $self->{carbon_socket};
-
-	if ($config->{carbon_prefix} ne "") {
-		$metric_path .= $config->{carbon_prefix};
-		if ($config->{carbon_prefix} !~ /\.$/) {
-			$metric_path .= '.';
-		}
-	}
-
-	$metric_path .= (join ".", reverse split /\./, $self->{host}{host_name}) . ".";
-
-	for my $service (keys %{$nested_service_config->{data_source}}) {
-		my $service_config = $nested_service_config->{data_source}{$service};
-		my $service_data   = $nested_service_data->{$service};
-
-		for my $ds_name (keys %{$service_config}) {
-			my $ds_config = $service_config->{$ds_name};
-
-			unless (defined($ds_config->{label})) {
-				# _update_rrd_files will already have warned about this so silently move on
-				next;
-			}
-			
-			if (defined($service_data) and defined($service_data->{$ds_name})) {
-				my $values = $service_data->{$ds_name}{value};
-				next unless defined ($values);
-				for (my $i = 0; $i < scalar @$values; $i++) {
-					my $value = $values->[$i];
-					my $when  = $service_data->{$ds_name}{when}[$i];
-
-					if ($value =~ /\d[Ee]([+-]?\d+)$/) {
-						# Looks like scientific format. I don't know how Carbon
-						# handles that, but convert it anyway so it gets the same
-						# data as RRDtool
-						my $magnitude = $1;
-						if ($magnitude < 0) {
-							# Preserve at least 4 significant digits
-							$magnitude = abs($magnitude) + 4;
-							$value = sprintf("%.*f", $magnitude, $value);
-						} else {
-							$value = sprintf("%.4f", $value);
-						}
-					}
-
-					DEBUG "[DEBUG] Sending ${metric_path}$service.$ds_name to Carbon";
-					$self->{carbon_socket}->print("${metric_path}$service.$ds_name $value $when\n");
-
-				}
-
-			} else {
-				# Again, _update_rrd_files will have warned
-			}
-		}
-	}
-}
-
-
 
 sub _update_rrd_files {
     my ($self, $nested_service_config, $nested_service_data) = @_;
