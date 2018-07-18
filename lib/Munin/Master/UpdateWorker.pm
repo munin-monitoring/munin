@@ -153,6 +153,12 @@ sub do_work {
 	    # Note: A multigraph plugin can present multiple services.
 	    my @plugins = $node->list_plugins();
 
+	    # We are not spoolfetching, so we should protect ourselves against
+	    # plugin redef. Note that we should declare 2 different HASHREF,
+	    # otherwise it is _shared_ which isn't what we want.
+	    $self->{__SEEN_PLUGINS__} = {};
+	    $self->{__SEEN_PLUGINS_FETCH__} = {};
+
 	    # Shuffle @plugins to avoid always having the same ordering
 	    # XXX - It might be best to preorder them on the TIMETAKEN ASC
 	    #       in order that statisticall fast plugins are done first to increase
@@ -596,7 +602,7 @@ sub uw_handle_config {
 	my ($self, $plugin, $now, $data, $last_timestamp) = @_;
 
 	# Protect oneself against multiple, conflicting multigraphs
-	if ($self->{__SEEN_PLUGINS__}{$plugin} ++) {
+	if (defined $self->{__SEEN_PLUGINS__} && $self->{__SEEN_PLUGINS__}{$plugin} ++) {
 		WARN "uw_handle_config: $plugin is already configured, skipping";
 		return $last_timestamp;
 	}
@@ -677,7 +683,7 @@ sub uw_handle_fetch {
 	my $last_timestamp = 0;
 
 	# Protect oneself against multiple, conflicting multigraphs
-	if ($self->{__SEEN_PLUGINS_FETCH__}{$plugin} ++) {
+	if (defined $self->{__SEEN_PLUGINS_FETCH__} && $self->{__SEEN_PLUGINS_FETCH__}{$plugin} ++) {
 		WARN "uw_handle_fetch $plugin is already configured, skipping";
 		return $last_timestamp;
 	}
