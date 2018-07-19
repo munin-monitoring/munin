@@ -162,10 +162,18 @@ sub _run_workers {
 
 	my $pm = Parallel::ForkManager->new($max_processes);
 
-	my $nb_workers = 0;
+	# Handle child process failures
+	my $nb_workers_failed = 0;
+	$pm->run_on_finish(
+		sub {
+			my ($pid, $exit_code, $ident) = @_;
+			INFO "[INFO]: run_on_finish(pid:$pid, exit_code:$exit_code, ident:$ident)";
+			$nb_workers_failed++ if $exit_code;
+		}
+	);
+
 	WORKER_LOOP:
 	for my $worker (@{$self->{workers}}) {
-		$nb_workers ++;
 		my $worker_pid = $pm->start();
 		next WORKER_LOOP if $worker_pid;
 
@@ -184,25 +192,25 @@ sub _run_workers {
 		$worker->{dbh}->disconnect();
 		$worker->{dbh_state}->disconnect();
 
-		$res = undef if $EVAL_ERROR;
-
 		my $worker_id = $worker->{ID};
-		if (defined($res)) {
-			$self->_handle_worker_result([$worker_id, $res]);
-		} else {
-			# Need to handle connection failure same as other
-			# failures.  do_connect fails softly.
-			WARN "[WARNING] Failed worker ".$worker_id."\n";
-			push @{$self->{failed_workers}}, $worker_id;
+		if (! defined($res) || $EVAL_ERROR) {
+			# No res, something went wrong
+			# Note that we handle connection failure same as other
+			# failures. Since "do_connect()" fails only softly.
+			INFO "[INFO]: no connection or EVAL_ERROR:$EVAL_ERROR";
+			$pm->finish(1, [ $worker_id ] );
 		}
 
-		$pm->finish;
+		$self->_handle_worker_result([$worker_id, $res]);
+		$pm->finish(); # Return 0
 	}
 
 	$pm->wait_all_children;
 
-	# Everything worked, return the number of workers
-	return $nb_workers;
+	# Everything worked, return the number of workers OK
+	my $nb_workers = scalar @{$self->{workers}};
+	my $nb_workers_ok = $nb_workers - $nb_workers_failed;
+	return $nb_workers_ok;
 }
 
 sub _handle_worker_result {
