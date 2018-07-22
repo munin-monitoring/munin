@@ -294,35 +294,35 @@ build-common-pre: common/Build
 
 common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm build-common-pre
 	rm -f common/blib/lib/Munin/Common/Defaults.pm
-	$(PERL) -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;   \
-                  s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
-                  s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \
-                  s{(SBINDIR    \s+=\s).*}{\1q{$(SBINDIR)};}x;     \
-                  s{(DOCDIR     \s+=\s).*}{\1q{$(DOCDIR)};}x;      \
-                  s{(LIBDIR	\s+=\s).*}{\1q{$(LIBDIR)};}x;      \
-                  s{(MANDIR	\s+=\s).*}{\1q{$(MANDIR)};}x;      \
-                  s{(LOGDIR	\s+=\s).*}{\1q{$(LOGDIR)};}x;      \
-                  s{(HTMLDIR	\s+=\s).*}{\1q{$(HTMLDIR)};}x;     \
-                  s{(DBDIR	\s+=\s).*}{\1q{$(DBDIR)};}x;       \
-                  s{(STATEDIR	\s+=\s).*}{\1q{$(STATEDIR)};}x;    \
-		  s{(SPOOLDIR	\s+=\s).*}{\1q{$(SPOOLDIR)};}x;    \
-                  s{(PERL	\s+=\s).*}{\1q{$(PERL)};}x;        \
-                  s{(PERLLIB	\s+=\s).*}{\1q{$(PERLLIB)};}x;     \
-                  s{(PYTHON	\s+=\s).*}{\1q{$(PYTHON)};}x;      \
-                  s{(RUBY       \s+=\s).*}{\1q{$(RUBY)};}x;        \
-                  s{(OSTYPE	\s+=\s).*}{\1q{$(OSTYPE)};}x;      \
-                  s{(HOSTNAME	\s+=\s).*}{\1q{$(HOSTNAME)};}x;    \
-                  s{(MKTEMP	\s+=\s).*}{\1q{$(MKTEMP)};}x;      \
-                  s{(VERSION	\s+=\s).*}{\1q{$(VERSION)};}x;     \
-                  s{(PLUGSTATE	\s+=\s).*}{\1q{$(PLUGSTATE)};}x;   \
-                  s{(CGIDIR	\s+=\s).*}{\1q{$(CGIDIR)};}x;      \
-                  s{(USER	\s+=\s).*}{\1q{$(USER)};}x;        \
-                  s{(GROUP	\s+=\s).*}{\1q{$(GROUP)};}x;       \
-                  s{(PLUGINUSER	\s+=\s).*}{\1q{$(PLUGINUSER)};}x;  \
-                  s{(GOODSH	\s+=\s).*}{\1q{$(GOODSH)};}x;      \
-                  s{(BASH	\s+=\s).*}{\1q{$(BASH)};}x;        \
-                  s{(HASSETR	\s+=\s).*}{\1q{$(HASSETR)};}x;'    \
-                  $< > $@
+	$(PERL) -pe 's{(PREFIX\s+=\s).*}{\1q{$(PREFIX)};}x; \
+		s{(CONFDIR\s+=\s).*}{\1q{$(CONFDIR)};}x; \
+		s{(BINDIR\s+=\s).*}{\1q{$(BINDIR)};}x; \
+		s{(SBINDIR\s+=\s).*}{\1q{$(SBINDIR)};}x; \
+		s{(DOCDIR\s+=\s).*}{\1q{$(DOCDIR)};}x; \
+		s{(LIBDIR\s+=\s).*}{\1q{$(LIBDIR)};}x; \
+		s{(MANDIR\s+=\s).*}{\1q{$(MANDIR)};}x; \
+		s{(LOGDIR\s+=\s).*}{\1q{$(LOGDIR)};}x; \
+		s{(HTMLDIR\s+=\s).*}{\1q{$(HTMLDIR)};}x; \
+		s{(DBDIR\s+=\s).*}{\1q{$(DBDIR)};}x; \
+		s{(STATEDIR\s+=\s).*}{\1q{$(STATEDIR)};}x; \
+		s{(SPOOLDIR\s+=\s).*}{\1q{$(SPOOLDIR)};}x; \
+		s{(PERL\s+=\s).*}{\1q{$(PERL)};}x; \
+		s{(PERLLIB\s+=\s).*}{\1q{$(PERLLIB)};}x; \
+		s{(PYTHON\s+=\s).*}{\1q{$(PYTHON)};}x; \
+		s{(RUBY\s+=\s).*}{\1q{$(RUBY)};}x; \
+		s{(OSTYPE\s+=\s).*}{\1q{$(OSTYPE)};}x; \
+		s{(HOSTNAME\s+=\s).*}{\1q{$(HOSTNAME)};}x; \
+		s{(MKTEMP\s+=\s).*}{\1q{$(MKTEMP)};}x; \
+		s{(VERSION\s+=\s).*}{\1q{$(VERSION)};}x; \
+		s{(PLUGSTATE\s+=\s).*}{\1q{$(PLUGSTATE)};}x; \
+		s{(CGIDIR\s+=\s).*}{\1q{$(CGIDIR)};}x; \
+		s{(USER\s+=\s).*}{\1q{$(USER)};}x; \
+		s{(GROUP\s+=\s).*}{\1q{$(GROUP)};}x; \
+		s{(PLUGINUSER\s+=\s).*}{\1q{$(PLUGINUSER)};}x; \
+		s{(GOODSH\s+=\s).*}{\1q{$(GOODSH)};}x; \
+		s{(BASH\s+=\s).*}{\1q{$(BASH)};}x; \
+		s{(HASSETR\s+=\s).*}{\1q{$(HASSETR)};}x;' \
+		$< > $@
 
 build-doc: build-doc-stamp Makefile Makefile.config
 
