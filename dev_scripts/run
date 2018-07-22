@@ -24,4 +24,4 @@ if [ -z "$RUN" ]; then
     usage
 fi
 
-env PERL5LIB=$DESTDIR$PERLSITELIB $RUN "$@"
+env PERL5LIB=$PERLLIB $RUN "$@"

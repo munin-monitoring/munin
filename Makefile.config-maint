@@ -70,8 +70,7 @@ GOODSH     := /bin/bash
 BASH       := /bin/bash
 
 # Server only - Where to install the perl libraries
-PERLSITELIB := $(shell $(PERL) -V:sitelib | cut -d"'" -f2)
-PERLLIB    = $(DESTDIR)$(PERLSITELIB)
+PERLLIB    = $(DESTDIR)$(shell $(PERL) -V:sitelib | cut -d"'" -f2)
 
 # Client only - Install plugins for this architecture
 OSTYPE     := $(shell uname | tr '[A-Z]' '[a-z]')
