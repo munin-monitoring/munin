@@ -20,10 +20,10 @@ print_values() {
 	/bin/df -P -i -t noprocfs,devfs,fdesc,linprocfs,nfs,nullfs,autofs | tail +2 | grep -v "//" | while read i; do
 		case $i in
 		mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
-		*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
+		*) name=`echo "$i" | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
 		esac
-		printf "$name.value "
-		echo $i | awk '{ print $8 }' | cut -f1 -d%
+		printf "%s.value " "$name"
+		echo "$i" | awk '{ print $8 }' | cut -f1 -d%
 	done
 }
 

@@ -26,7 +26,7 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/sys/fs/file-nr ]; then
@@ -51,8 +51,8 @@ if [ "$1" = "config" ]; then
 	computed_critical=$(awk '{printf "%d", $3*0.98}' < /proc/sys/fs/file-nr)
 	p_warning=$(print_warning used)
 	p_critical=$(print_critical used)
-	[ -z "$p_warning" ] && echo "used.warning $computed_warning" || echo $p_warning
-	[ -z "$p_critical" ] && echo "used.critical $computed_critical" || echo $p_critical
+	[ -z "$p_warning" ] && echo "used.warning $computed_warning" || echo "$p_warning"
+	[ -z "$p_critical" ] && echo "used.critical $computed_critical" || echo "$p_critical"
 	echo 'max.label max open files'
 	echo 'max.info The maximum supported number of open files. Tune by modifying /proc/sys/fs/file-max.'
 	print_warning max

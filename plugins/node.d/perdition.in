@@ -49,9 +49,6 @@ Unknown
 
 =cut
 
-mktempfile () {
-@@MKTEMP@@
-}
 
 # Set the location of the perdition logs
 PERDITION_LOG=${logfile:-/var/log/perdition.log}
@@ -60,8 +57,7 @@ LOGTAIL=${logtail:-/usr/sbin/logtail}
 
 case $1 in
     autoconf|detect)
-    if [ -f ${PERDITION_LOG} -a -x ${LOGTAIL} ]
-    then
+    if [ -f "$PERDITION_LOG" ] && [ -x "$LOGTAIL" ]; then
         echo yes
         exit 0
     else
@@ -85,42 +81,42 @@ EOF
     # Echo warnnig and critical attributes if set in the plugin config
     for i in imap imaps pop pops fatal connection disconnected; do
         warn=\$${i}_warn; eval val=$warn
-        [ "$val" ] && echo "$i.warning ${val}"
+        [ -n "${val:-}" ] && echo "$i.warning ${val}"
         crit=\$${i}_crit; eval val=$crit
-        [ "$val" ] && echo "$i.critical ${val}"
+        [ -n "${val:-}" ] && echo "$i.critical ${val}"
     done
     exit 0
     ;;
 esac
 
 ARGS=0
-`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
+"$LOGTAIL" /etc/hosts 2>/dev/null >/dev/null
 if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
         ARGS=1
     fi
 fi
 
-TEMP_FILE=`mktempfile munin-perdition.XXXXXX`
+TEMP_FILE=$(@@MKTEMP@@ munin-perdition.XXXXXX)
 
-if [ -z "$TEMP_FILE" -o ! -f "$TEMP_FILE" ]; then
+if [ -z "$TEMP_FILE" ] || [ ! -f "$TEMP_FILE" ]; then
     exit 3
 fi
 
-if [ $ARGS != 0 ]; then
-    ${LOGTAIL} -f ${PERDITION_LOG} -o ${OFFSET_FILE} > ${TEMP_FILE}
+if [ "$ARGS" != 0 ]; then
+    "$LOGTAIL" -f "$PERDITION_LOG" -o "$OFFSET_FILE" > "$TEMP_FILE"
 else
-    ${LOGTAIL} ${PERDITION_LOG} ${OFFSET_FILE} > ${TEMP_FILE}
+    "$LOGTAIL" "$PERDITION_LOG" "$OFFSET_FILE" > "$TEMP_FILE"
 fi
-connection=`grep "Connect:" ${TEMP_FILE} | wc -l`
-disconnected=`grep "Close:" ${TEMP_FILE} | wc -l`
-imap=`grep 'port="143" status="ok"' ${TEMP_FILE} | wc -l`
-imaps=`grep 'port="993" status="ok"' ${TEMP_FILE} | wc -l`
-pop=`grep 'port="110" status="ok"' ${TEMP_FILE} | wc -l`
-pops=`grep 'port="995" status="ok"' ${TEMP_FILE} | wc -l`
-fatal=`grep 'Fatal [e|E]rror' ${TEMP_FILE} | wc -l`
+connection=$(grep "Connect:" "$TEMP_FILE" | wc -l)
+disconnected=$(grep "Close:" "$TEMP_FILE" | wc -l)
+imap=$(grep 'port="143" status="ok"' "$TEMP_FILE" | wc -l)
+imaps=$(grep 'port="993" status="ok"' "$TEMP_FILE" | wc -l)
+pop=$(grep 'port="110" status="ok"' "$TEMP_FILE" | wc -l)
+pops=$(grep 'port="995" status="ok"' "$TEMP_FILE" | wc -l)
+fatal=$(grep 'Fatal [e|E]rror' "$TEMP_FILE" | wc -l)
 
-rm ${TEMP_FILE}
+rm "$TEMP_FILE"
 
 echo "connection.value ${connection}"
 echo "disconnected.value ${disconnected}"

@@ -57,14 +57,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 =cut
 
 
-if [ -z $statsfile  ]; then
-        _target=/var/snort/snort.stats
-else
-        _target=$statsfile
-fi
+_target=${statsfile:-/var/snort/snort.stats}
+
 
 if [ "$1" = "autoconf" ]; then
-        if [ -f $_target ]; then
+        if [ -f "$_target" ]; then
                 echo yes
         else
                 echo "no ($_target not readable)"
@@ -78,12 +75,12 @@ if [ "$1" = "config" ]; then
         echo 'graph_vlabel % percent'
         echo 'graph_scale no'
         echo 'droprate.label % percent'
-	if [ -n "$warning" ]; then
-		echo "droprate.warning $warning"
-	fi
-	if [ -n "$critical" ]; then
-		echo "droprate.critical $critical"
-	fi
+        if [ -n "${warning:-}" ]; then
+                echo "droprate.warning $warning"
+        fi
+        if [ -n "${critical:-}" ]; then
+                echo "droprate.critical $critical"
+        fi
         echo 'droprate.info Packet drop rate in %'
         echo 'graph_category Snort'
 
@@ -91,4 +88,4 @@ if [ "$1" = "config" ]; then
 fi
 
 printf "droprate.value "
-echo $(tail -n1 $_target| awk -F, '{ print $2 }')
+tail -n1 "$_target" | awk -F, '{ print $2 }'

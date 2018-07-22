@@ -29,18 +29,14 @@ GPLv2
 
 =cut
 
-MYSQLOPTS="$mysqlopts"
+MYSQLOPTS=${mysqlopts:-}
 MYSQLADMIN=${mysqladmin:-mysqladmin}
 
 if [ "$1" = "autoconf" ]; then
-        $MYSQLADMIN --version 2>/dev/null >/dev/null
-        if [ $? -eq 0 ]
-        then
-                $MYSQLADMIN $MYSQLOPTS status 2>/dev/null >/dev/null
-                if [ $? -eq 0 ]
-                then
+        if "$MYSQLADMIN" --version 2>/dev/null >/dev/null; then
+                # shellcheck disable=SC2086
+                if "$MYSQLADMIN" $MYSQLOPTS status 2>/dev/null >/dev/null; then
                         echo yes
-                        exit 0
                 else
                         echo "no (could not connect to mysql)"
                 fi
@@ -53,6 +49,7 @@ fi
 if [ "$1" = "config" ]; then
 	echo 'graph_title MySQL slow queries'
 	echo 'graph_args --base 1000 -l 0'
+	# shellcheck disable=SC2016
 	echo 'graph_vlabel slow queries / ${graph_period}'
 	echo 'graph_category mysql'
 	echo 'graph_info Note that this is a old plugin which is no longer installed by default.  It is retained for compatability with old installations.'
@@ -65,4 +62,5 @@ if [ "$1" = "config" ]; then
 fi
 
 /usr/bin/printf "queries.value "
-($MYSQLADMIN $MYSQLOPTS status 2>/dev/null || echo a a a a a a a a U) | awk '{print $9}'
+# shellcheck disable=SC2086
+("$MYSQLADMIN" $MYSQLOPTS status 2>/dev/null || echo a a a a a a a a U) | awk '{print $9}'

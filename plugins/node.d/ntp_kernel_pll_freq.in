@@ -46,8 +46,8 @@ if [ "$1" = "autoconf" ]; then
     exit 0
 fi
 
-if [ -f @@CONFDIR@@/ntp-freq-comp ]; then
-    fcomp=`cat @@CONFDIR@@/ntp-freq-comp`
+if [ -f "@@CONFDIR@@/ntp-freq-comp" ]; then
+    fcomp=$(cat "@@CONFDIR@@/ntp-freq-comp")
 else
     fcomp=0
 fi
@@ -65,7 +65,7 @@ fi
 
 printf 'ntp_pll_freq.value '
 
-if [ $(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.') -ge 427 ]
+if [ "$(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.')" -ge 427 ]
 then
     cmd=ntpq
 else

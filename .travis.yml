@@ -31,6 +31,8 @@ addons:
       - libtest-longstring-perl
       - libtest-mockmodule-perl
       - libtest-mockobject-perl
+      - python3-flake8
+      - shellcheck
 notifications:
   email: false
   irc:
@@ -52,7 +54,10 @@ before_install:
   cpanm -n Devel::Cover::Report::Coveralls
 
 script:
-  make && make test
+  - make
+  # the old travis environment requires an old flake8 invocation
+  - PYTHON_LINT_CALL="python3 -m flake8.main" make lint
+  - make test
 
 # Using the container-based infrastructure
 sudo: false

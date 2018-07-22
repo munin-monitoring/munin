@@ -42,8 +42,7 @@ displayed.
 
 =head1 BUGS
 
-Needs bash. Uses bashisms ${parm/?/pat/string} and $'...' to avoid
-running external programs.
+Needs bash, due zo using bashisms to avoid running external programs.
 
 =head1 AUTHOR
 
@@ -65,13 +64,12 @@ client=${client:-/usr/bin/fail2ban-client}
 
 # List jails, one on each line
 list_jails() {
-    ${client} status | while read line
-    do
+    "$client" status | while read -r line; do
         case $line in
             *'Jail list:'*)
                 line="${line##*Jail list*:}"
                 line="${line//[ $'\t']/}"
-                [ -n "$line" ] && printf "${line//,/$'\n'}\n"
+                if [ -n "$line" ]; then echo "${line//,/$'\n'}"; fi
                 ;;
         esac
     done
@@ -79,15 +77,13 @@ list_jails() {
 
 # Print the munin values
 values() {
-    list_jails | while read jail
-    do
-        ${client} status ${jail} | while read line
-        do
+    list_jails | while read -r jail; do
+        "$client" status "$jail" | while read -r line; do
             case $line in
                 *'Currently banned'*)
                     line="${line##*Currently banned:}"
                     num="${line//[ $'\t']/}"
-                    echo ${jail//[^0-9A-Za-z]/_}.value ${num}
+                    echo "${jail//[^0-9A-Za-z]/_}.value $num"
                     ;;
             esac
         done
@@ -104,20 +100,16 @@ config() {
     echo 'graph_args --base 1000 -l 0'
     echo 'graph_total total'
 
-    list_jails | while read jail
-    do
-        echo ${jail//[^0-9A-Za-z]/_}.label $jail
+    list_jails | while read -r jail; do
+        echo "${jail//[^0-9A-Za-z]/_}.label $jail"
     done
 }
 
 # Print autoconfiguration hint
 autoconf() {
-    if [ -e ${client} ]
-    then
-        if [ -x ${client} ]
-        then
-            if ${client} ping >/dev/null
-            then
+    if [ -e "$client" ]; then
+        if [ -x "$client" ]; then
+            if "$client" ping >/dev/null; then
                 echo "yes"
             else
                 echo "no (fail2ban-server does not respond to ping)"

@@ -25,13 +25,13 @@ COLOURS="00CC00 0066B3 FF8000 FFCC00 330099 990099 CCFF00 FF0000 808080
 I=1
 for C in $COLOURS; do
     col[$I]="$C"
-    I=$(($I + 1))
+    I=$((I + 1))
 done
-NUMCOL=$(($I - 1))
+NUMCOL=$((I - 1))
 
 
 do_ () { # Fetch
-   for I in $(seq 1 $NUMCOL); do
+   for I in $(seq 1 "$NUMCOL"); do
        echo "l$I.value $I"
    done
 }
@@ -39,14 +39,14 @@ do_ () { # Fetch
 do_config () {
     echo "graph_title Colour testing plugin"
     echo "graph_vlabel Colour index and colour"
-    for I in $(seq 1 $NUMCOL); do
-        echo "l$I.label "${col[$I]}
-        echo "l$I.colour "${col[$I]}
+    for I in $(seq 1 "$NUMCOL"); do
+        echo "l$I.label ${col[$I]}"
+        echo "l$I.colour ${col[$I]}"
         echo "l$I.type GAUGE"
     done
 }
 
 case $1 in
-    ''|config) eval do_$1;;
+    ''|config) eval "do_$1";;
     *) echo Error >&2; exit 1;;
 esac
