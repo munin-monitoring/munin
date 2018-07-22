@@ -22,6 +22,7 @@ addons:
       - libhtml-template-perl
       - libio-socket-inet6-perl
       - liblog-dispatch-perl
+      - liblog-log4perl-perl
       - libmodule-build-perl
       - libnet-server-perl
       - libnet-snmp-perl
