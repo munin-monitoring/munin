@@ -31,13 +31,28 @@ MAN8             := master/_bin/munin-update master/_bin/munin-limits master/_bi
 PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 PYTHON_LINT_CALL ?= python3 -m flake8
-CONFVAR_SUBSTITUTION_FILES := master/blib/libdoc/Munin\:\:Master\:\:HTMLOld.3pm \
+CONFVAR_SUBSTITUTION_FILES = \
+	master/blib/libdoc/Munin\:\:Master\:\:HTMLOld.3pm \
 	master/blib/lib/Munin/Master/HTMLOld.pm \
 	node/blib/sbin/munin-node-configure \
 	node/blib/sbin/munin-node \
 	node/blib/sbin/munin-run \
 	node/blib/sbin/munin-sched \
 	build/doc/munin-node.conf.5
+
+# TODO: remove this fallback code for "make v3.x" (up to Debian Wheezy / Ubuntu Trusty) as soon as
+#       the CI supports a more modern distribution
+#       (see https://docs.travis-ci.com/user/reference/overview/)
+# Make v3.x failed to handle colon escaping properly - thus we remove complicated filenames from
+# targets and dependencies.  This may affect corner cases of dependency handling for the one file
+# above containing a colon.  But in this case it is just about substituting paths in a
+# documentation file - thus we can live with this rare risk of incorrectness.
+ifeq ($(firstword $(subst ., ,$(MAKE_VERSION))),3)
+# weed out all complicated filenames containing a colon
+CONFVAR_SUBSTITUTION_DEP_FILES = $(shell printf '%s\n' $(CONFVAR_SUBSTITUTION_FILES) | grep -v ":")
+else
+CONFVAR_SUBSTITUTION_DEP_FILES = $(CONFVAR_SUBSTITUTION_FILES)
+endif
 
 
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
@@ -256,12 +271,12 @@ build/%: %.in
 		$< > $@;
 
 
-build-confvar-substitution-stamp: $(CONFVAR_SUBSTITUTION_FILES)
+build-confvar-substitution-stamp: $(CONFVAR_SUBSTITUTION_DEP_FILES)
 	$(MAKE) substitute-confvar-inline
 	touch build-confvar-substitution-stamp
 
 
-$(CONFVAR_SUBSTITUTION_FILES): build-master build-node build-man
+$(CONFVAR_SUBSTITUTION_DEP_FILES): build-master build-node build-man
 
 
 substitute-confvar-inline:
