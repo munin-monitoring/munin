@@ -31,6 +31,14 @@ MAN8             := master/_bin/munin-update master/_bin/munin-limits master/_bi
 PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 PYTHON_LINT_CALL ?= python3 -m flake8
+CONFVAR_SUBSTITUTION_FILES := master/blib/libdoc/Munin\:\:Master\:\:HTMLOld.3pm \
+	master/blib/lib/Munin/Master/HTMLOld.pm \
+	node/blib/sbin/munin-node-configure \
+	node/blib/sbin/munin-node \
+	node/blib/sbin/munin-run \
+	node/blib/sbin/munin-sched \
+	build/doc/munin-node.conf.5
+
 
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
 	build build-common build-common-pre build-doc \
@@ -210,7 +218,7 @@ install-doc: build-doc
 # Dummy rule to enable parallel building
 infiles: $(INFILES)
 
-build: infiles build-master build-common build-node build-plugins $(JAVA_BUILD) build-man substitute-confvar-inline
+build: infiles build-master build-common build-node build-plugins $(JAVA_BUILD) build-man build-confvar-substitution-stamp
 
 build/%: %.in
 	@echo "$< -> $@"
@@ -248,8 +256,16 @@ build/%: %.in
 		$< > $@;
 
 
+build-confvar-substitution-stamp: $(CONFVAR_SUBSTITUTION_FILES)
+	$(MAKE) substitute-confvar-inline
+	touch build-confvar-substitution-stamp
+
+
+$(CONFVAR_SUBSTITUTION_FILES): build-master build-node build-man
+
+
 substitute-confvar-inline:
-	@perl -p -i -e 's|\@\@PREFIX\@\@|$(PREFIX)|g;' \
+	perl -p -i -e 's|\@\@PREFIX\@\@|$(PREFIX)|g;' \
 		-e 's|\@\@CONFDIR\@\@|$(CONFDIR)|g;' \
 		-e 's|\@\@BINDIR\@\@|$(BINDIR)|g;' \
 		-e 's|\@\@SBINDIR\@\@|$(SBINDIR)|g;' \
@@ -279,13 +295,7 @@ substitute-confvar-inline:
 		-e 's|\@\@GOODSH\@\@|$(GOODSH)|g;' \
 		-e 's|\@\@BASH\@\@|$(BASH)|g;' \
 		-e 's|\@\@HASSETR\@\@|$(HASSETR)|g;' \
-		./master/blib/libdoc/Munin::Master::HTMLOld.3pm \
-		./master/blib/lib/Munin/Master/HTMLOld.pm \
-		./node/blib/sbin/munin-node-configure \
-		./node/blib/sbin/munin-node \
-		./node/blib/sbin/munin-run \
-		./node/blib/sbin/munin-sched \
-		./build/doc/munin-node.conf.5
+		$(CONFVAR_SUBSTITUTION_FILES)
 
 
 build-common-pre: common/Build
@@ -424,6 +434,7 @@ endif
 	-rm -f build-doc-stamp
 	-rm -f build-man-stamp
 	-rm -f build-java-stamp
+	-rm -f build-confvar-substitution-stamp
 	-rm -f build-common-defaults-stamp
 	-rm -rf t/install
 
