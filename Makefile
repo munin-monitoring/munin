@@ -350,8 +350,7 @@ build-doc-stamp:
 
 build-man: build-man-stamp Makefile Makefile.config
 
-build-man-stamp: infiles
-	touch build-man-stamp
+build-man-stamp: $(INFILES)
 	mkdir -p build/doc
 	for f in $(MAN8); do \
 		pod2man --section=8 --release=$(RELEASE) --center=$(MANCENTER) build/"$$f" > build/doc/`basename $$f`.8; \
@@ -362,6 +361,8 @@ build-man-stamp: infiles
 	for f in $(PODMAN5); do \
 		pod2man --section=5 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.5; \
 	done
+	touch build-man-stamp
+
 
 build-plugins-java: build/plugins/javalib/munin-jmx-plugins.jar
 
