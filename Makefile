@@ -34,6 +34,7 @@ PYTHON_LINT_CALL ?= python3 -m flake8
 
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
 	build build-common-prime build-common-pre build-doc \
+	substitute-build-defaults-inline substitute-confvar-inline \
 	source_dist \
 	test lint clean \
 	clean-% test-% build-% install-% \
@@ -247,7 +248,7 @@ build/%: %.in
 		$< > $@;
 
 
-build-common-prime: build-common-pre common/blib/lib/Munin/Common/Defaults.pm build-common
+build-common-prime: build-common-pre build-common-defaults-stamp build-common
 
 substitute-confvar-inline:
 	@perl -p -i -e 's|\@\@PREFIX\@\@|$(PREFIX)|g;' \
@@ -292,7 +293,25 @@ substitute-confvar-inline:
 build-common-pre: common/Build
 	cd common && $(PERL) Build code
 
-common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm build-common-pre
+
+# The target needs an update, if the latest substitution stamp is older then the generated
+# Defaults.pm. This can happen, if:
+#     * the generated Defaults.pm is missing
+#     * or "build-common-pre" caused an update of its source file (thus regenerated Defaults.pm)
+build-common-defaults-stamp: common/blib/lib/Munin/Common/Defaults.pm
+	$(MAKE) substitute-build-defaults-inline
+	@# We need the stamp file, due to the inline nature of this build step. Otherwise it would
+	@# be run again during "install" - which would mess up the paths substituted in that step.
+	touch build-common-defaults-stamp
+
+
+# The "build-common-defaults-stamp" needs a way to generate the (non-substituted) defaults file
+# during its first run.  Afterwards its content is sustituted due to the absence of the
+# "build-common-defaults-stamp" file.
+common/blib/lib/Munin/Common/Defaults.pm: build-common-pre
+
+
+substitute-build-defaults-inline:
 	rm -f common/blib/lib/Munin/Common/Defaults.pm
 	$(PERL) -pe 's{(PREFIX\s+=\s).*}{\1q{$(PREFIX)};}x; \
 		s{(CONFDIR\s+=\s).*}{\1q{$(CONFDIR)};}x; \
@@ -322,7 +341,8 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm bu
 		s{(GOODSH\s+=\s).*}{\1q{$(GOODSH)};}x; \
 		s{(BASH\s+=\s).*}{\1q{$(BASH)};}x; \
 		s{(HASSETR\s+=\s).*}{\1q{$(HASSETR)};}x;' \
-		$< > $@
+		common/lib/Munin/Common/Defaults.pm >common/blib/lib/Munin/Common/Defaults.pm
+
 
 build-doc: build-doc-stamp Makefile Makefile.config
 
@@ -405,6 +425,7 @@ endif
 	-rm -f build-doc-stamp
 	-rm -f build-man-stamp
 	-rm -f build-java-stamp
+	-rm -f build-common-defaults-stamp
 	-rm -rf t/install
 
 	-rm -f dists/redhat/munin.spec
@@ -450,7 +471,7 @@ t/install:
 build-%: %/Build
 	cd $* && $(PERL) Build
 
-build-common: common/Build
+build-common: build-common-defaults-stamp
 
 # BUG: the Build script writes files under PWD when it does "install"
 # can't seem to find a way to persuade it to write otherwhere.
@@ -488,5 +509,5 @@ lint:
 			| xargs -0 $(PYTHON_LINT_CALL)
 	# TODO: perl plugins currently fail with perlcritic
 
-clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
+clean-%: %/Build build-common-defaults-stamp
 	cd $* && $(PERL) Build realclean
