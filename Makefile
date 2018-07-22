@@ -33,7 +33,7 @@ PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 PYTHON_LINT_CALL ?= python3 -m flake8
 
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
-	build build-common-prime build-common-pre build-doc \
+	build build-common build-common-pre build-doc \
 	substitute-build-defaults-inline substitute-confvar-inline \
 	source_dist \
 	test lint clean \
@@ -210,7 +210,7 @@ install-doc: build-doc
 # Dummy rule to enable parallel building
 infiles: $(INFILES)
 
-build: infiles build-master build-common-prime build-node build-plugins $(JAVA_BUILD) build-man substitute-confvar-inline
+build: infiles build-master build-common build-node build-plugins $(JAVA_BUILD) build-man substitute-confvar-inline
 
 build/%: %.in
 	@echo "$< -> $@"
@@ -247,8 +247,6 @@ build/%: %.in
 		-e 's|@@HASSETR@@|$(HASSETR)|g' \
 		$< > $@;
 
-
-build-common-prime: build-common-pre build-common-defaults-stamp build-common
 
 substitute-confvar-inline:
 	@perl -p -i -e 's|\@\@PREFIX\@\@|$(PREFIX)|g;' \
