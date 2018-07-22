@@ -165,7 +165,9 @@ if (!defined($volume_delivered)) {
 } else {
     # decode the serialized hash
     # source format: "$id1=$size1:$timestamp1 $id2=$size2:$timestamp2 ..."
-    for my $queue_item_descriptor (split(/ /, $serialized_volumes_queue)) {
+    # The "serialized" value may be undefined, in case we just upgraded from the version before
+    # 2018, since that old version stored only two fields in the state file.  Tolerate this.
+    for my $queue_item_descriptor (split(/ /, $serialized_volumes_queue || "")) {
         (my $queue_item_id, my $queue_item_content) = split(/=/, $queue_item_descriptor);
         (my $size, my $timestamp) = split(/:/, $queue_item_content);
         $volumes_per_queue_id{$queue_item_id} = { size => int($size), timestamp => int($timestamp) };
