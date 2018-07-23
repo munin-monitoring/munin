@@ -76,7 +76,7 @@ sub parseLogfile {
     while (my $line = <$LOGFILE>) {
         chomp ($line);
 
-        if ($line =~ /qmgr.*: ([0-9A-F]+): from=.*, size=([0-9]+)/) {
+        if ($line =~ /qmgr.*: ([0-9A-Za-z]+): from=.*, size=([0-9]+)/) {
             # The line with queue ID and size may pass along multiple times (every time the mail
             # is moved into the active queue for another delivery attempt). The size should always
             # be the same.
@@ -85,7 +85,7 @@ sub parseLogfile {
             }
             # probably it is the same value as before
             $volumes_per_queue_id{$1}->{size} = $2;
-        } elsif ($line =~ / ([0-9A-F]+): to=.*, status=sent /) {
+        } elsif ($line =~ / ([0-9A-Za-z]+): to=.*, status=sent /) {
             # The "sent" line is repeated for every successful delivery for each recipient.
             if (exists($volumes_per_queue_id{$1})) {
                 $volume_delivered += $volumes_per_queue_id{$1}->{size};
