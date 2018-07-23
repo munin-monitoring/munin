@@ -108,20 +108,20 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
     my $logfile;
     `which postconf >/dev/null 2>/dev/null`;
     if (!$?) {
-	$logfile = "$LOGDIR/$LOGFILE";
+        $logfile = "$LOGDIR/$LOGFILE";
 
-	if (-f $logfile) {
+        if (-f $logfile) {
             if (-r "$logfile") {
                 print "yes\n";
                 exit 0;
             } else {
                 print "no (logfile '$logfile' not readable)\n";
             }
-	} else {
-	    print "no (logfile '$logfile' not found)\n";
-	}
+        } else {
+            print "no (logfile '$logfile' not found)\n";
+        }
     } else {
-	print "no (postfix not found)\n";
+        print "no (postfix not found)\n";
     }
 
     exit 0;
@@ -153,7 +153,7 @@ if (! -f $logfile) {
 
 
 if (!defined($volume_delivered)) {
-    
+
     # No state file present.  Avoid startup spike: Do not read log
     # file up to now, but remember how large it is now, and next
     # time read from there.

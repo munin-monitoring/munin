@@ -91,16 +91,16 @@ SPOOLDIR=${spooldir:-$POSTCONFSPOOL}
 
 case $1 in
     autoconf|detect)
-	
-	if [ -d "$SPOOLDIR" ] ; then
-	    echo yes
-	    exit 0
+
+        if [ -d "$SPOOLDIR" ] ; then
+            echo yes
+            exit 0
         else
-	    echo "no (spooldir not found)"
-	    exit 0
-        fi;;
+            echo "no (spooldir not found)"
+            exit 0
+            fi;;
     config)
-	cat <<'EOF'
+        cat <<'EOF'
 graph_title Postfix Mailqueue
 graph_vlabel Mails in queue
 graph_category postfix
@@ -112,11 +112,11 @@ incoming.label incoming
 corrupt.label corrupt
 hold.label held
 EOF
-	for field in active deferred maildrop incoming corrupt hold; do
-		print_warning "$field"
-		print_critical "$field"
-	done
-	exit 0;;
+        for field in active deferred maildrop incoming corrupt hold; do
+            print_warning "$field"
+            print_critical "$field"
+        done
+        exit 0;;
 esac
 
 cd "$SPOOLDIR" >/dev/null 2>/dev/null || {
