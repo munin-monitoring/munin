@@ -47,6 +47,7 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     between "html_strategy cron" and "html_strategy cgi"
   * munin.README.Debian: describe apache2 configuration (cgi/cron)
   * Specify "Rules-Requires-Root" as "no"
+  * Bump Standards-Version to 4.2.1, no changes needed.
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
