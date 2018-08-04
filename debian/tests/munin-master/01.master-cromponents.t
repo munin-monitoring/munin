@@ -2,7 +2,7 @@
 
 test_description="munin run"
 
-. debian/tests/sharness.sh
+. /usr/share/sharness/sharness.sh
 
 
 # the variable may be set by wrapper scripts

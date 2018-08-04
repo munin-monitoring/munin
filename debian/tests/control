@@ -4,22 +4,22 @@
 
 # systemd / cron strategy
 Test-Command: prove -v debian/tests/munin-master/*.t
-Depends: munin, munin-node, daemontools, apache2, curl, file
+Depends: munin, munin-node, daemontools, apache2, curl, file, sharness
 Restrictions: needs-root breaks-testbed isolation-container
 
 # systemd / CGI strategy
 Test-Command: debian/tests/run-with-cgi-strategy prove -v debian/tests/munin-master/*.t
-Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl
+Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness
 Restrictions: needs-root breaks-testbed isolation-container
 
 # sysvinit-core / cron strategy
 Test-Command: debian/tests/run-with-sysvinit prove -v debian/tests/munin-master/*.t
-Depends: munin, munin-node, daemontools, apache2, curl, file
+Depends: munin, munin-node, daemontools, apache2, curl, file, sharness
 Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 
 # sysvinit-core / CGI strategy
 Test-Command: debian/tests/run-with-cgi-strategy debian/tests/run-with-sysvinit prove -v debian/tests/munin-master/*.t
-Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl
+Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness
 Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 
 
@@ -29,12 +29,12 @@ Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 
 # systemd
 Test-Command: prove -v debian/tests/munin-node/*.t
-Depends: munin-node, netcat-openbsd
+Depends: munin-node, netcat-openbsd, sharness
 Restrictions: needs-root breaks-testbed isolation-container
 
 # sysvinit-core
 Test-Command: debian/tests/run-with-sysvinit prove -v debian/tests/munin-node/*.t
-Depends: munin-node, netcat-openbsd
+Depends: munin-node, netcat-openbsd, sharness
 Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 
 

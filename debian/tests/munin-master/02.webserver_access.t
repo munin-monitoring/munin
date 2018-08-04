@@ -2,7 +2,7 @@
 
 test_description="request generated html pages"
 
-. debian/tests/sharness.sh
+. /usr/share/sharness/sharness.sh
 
 
 get_munin_url() {

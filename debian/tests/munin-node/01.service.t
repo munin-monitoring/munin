@@ -5,7 +5,8 @@
 
 test_description="munin-node service"
 
-. debian/tests/sharness.sh
+. /usr/share/sharness/sharness.sh
+
 
 test_expect_success "status (should be started by default)" "
   service munin-node status

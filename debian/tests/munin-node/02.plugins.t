@@ -5,7 +5,7 @@
 
 test_description="munin-node plugins"
 
-. debian/tests/sharness.sh
+. /usr/share/sharness/sharness.sh
 
 
 test_expect_success "request list of configured plugins" '
