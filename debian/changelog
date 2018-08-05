@@ -54,6 +54,7 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     (Closes: 837788)
   * Change Suggest for munin-plugins-core and munin-plugins-extra from
     python to python3 (plugins were upgraded)
+  * Change copyright file to DEP-5 format (thanks, lintian)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
