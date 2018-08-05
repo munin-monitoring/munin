@@ -49,6 +49,9 @@ munin (2.0.37-3) UNRELEASED; urgency=low
   * Specify "Rules-Requires-Root" as "no"
   * Bump Standards-Version to 4.2.1, no changes needed.
   * Replace embedded copy of "sharness" with test dependency on the package
+  * Remove upstreamed patches for Java version and Makefile dependency
+  * Remove munin.service and skip init script instead for systemd
+    (Closes: 837788)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
