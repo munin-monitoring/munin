@@ -40,7 +40,7 @@ The git repository branches used by packaging are:
   branch is one (hopefully small) file containing the differences
   between a tarball and a release tag.
 
-If we have relases in «experimental», a pair of branches is used for
+If we have releases in «experimental», a pair of branches is used for
 that:
 
 * debian-experimental - packaging branch for experimental releases.
