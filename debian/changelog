@@ -15,6 +15,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * d/tests: use "set -eu" in test scripts
     (Thanks, Christian Göttsche)
   * Replace embedded copy of "sharness" with test dependency
+  * Bump Standards-Version to 4.2.0, no changes needed.
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 28 Jun 2018 05:06:39 +0200
 
