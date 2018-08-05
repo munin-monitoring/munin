@@ -42,7 +42,7 @@ with an additional group specified here.
 env.variable
 ------------
 
-A line 
+A line
 
  "env.logfile /var/log/syslog"
 

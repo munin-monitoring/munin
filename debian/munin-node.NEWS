@@ -1,9 +1,9 @@
 munin-node (1.4.0-1) unstable; urgency=low
 
-    munin-node-configure-snmp command is no longer available, use 
+    munin-node-configure-snmp command is no longer available, use
     munin-node-configure --snmp to configure snmp hosts.
 
-    If upgrading from 1.2.6, please review the 
+    If upgrading from 1.2.6, please review the
     /usr/share/doc/munin/UPGRADING file as there is an issue with truncated
     field names in plugins (especially with the df plugin), resulting
     in loss of history, which can be fixed manually.
@@ -19,7 +19,7 @@ munin-node (1.2.0-1) unstable; urgency=low
     start collecting data into a new, empty, file, which in turn will be read
     by munin-graph, and the final result is that the graph will appear to have
     lost all data.  The historical data will still be present in the old graph.
-    
+
     In the last two sections of this file I will attempt to detail how you can
     minimize the data loss by carefully planning how to perform the upgrade.
 
@@ -42,7 +42,7 @@ munin-node (1.2.0-1) unstable; urgency=low
 
   * Data loss issue 1
     =================
-  
+
     A number of plugins which in the 1.0.x series used the COUNTER data type
     has now been changed to use the DERIVE type, with a minimum of 0.  The
     reason is to hinder RRDtool from misdetecting counter wraps when a service
@@ -56,7 +56,7 @@ munin-node (1.2.0-1) unstable; urgency=low
     into a new, empty, RRD file.
 
     The method to ensure a painless upgrade is simple:
-    
+
     Ensure that you upgrade the "munin" package BEFORE you upgrade the
     ==================================================================
     "munin-node" package on any of the hosts it collects data from.
@@ -90,7 +90,7 @@ munin-node (1.2.0-1) unstable; urgency=low
 
   * Data loss issue 2
     =================
-  
+
     The 1.0.x series had rather nasty design flaw that caused field names
     longer than 18 characters be truncated, removing any excessive characters
     from the start of the field name.  This led to a nasty bug; if a plugin
@@ -139,11 +139,11 @@ munin-node (1.2.0-1) unstable; urgency=low
 
     "df" is of course the plugin name as found embedded in the RRD file name
     above.  You should now get the values reported by the plugin in return:
-    
+
         _dev_hda5.value  54
         _dev_mapper_pride_usr.value  88
         _dev.value  54
-    
+
     The field names are the strings before the periods.  At this point the
     correct field name is obvious - the truncated field name
     "v_mapper_pride_usr" is the last 18 characters of "_dev_mapper_pride_usr",
@@ -174,5 +174,5 @@ munin-node (1.2.0-1) unstable; urgency=low
 
     You will have to repeat the process for every possibly affected RRD file,
     after which you may safely upgrade your "munin" package.
-    
+
  -- Tore Anderson <tore@debian.org>  Mon, 21 Feb 2005 00:16:25 +0100
