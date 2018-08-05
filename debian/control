@@ -8,6 +8,13 @@ Build-Depends-Indep:
  default-jdk,
  html2text,
  htmldoc,
+ libtest-deep-perl,
+ libtest-differences-perl,
+ libtest-exception-perl,
+ libtest-longstring-perl,
+ libtest-mockmodule-perl,
+ libtest-mockobject-perl,
+ libfile-slurp-perl,
  perl,
 Build-Depends:
  debhelper (>=11),

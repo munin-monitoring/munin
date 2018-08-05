@@ -55,6 +55,9 @@ munin (2.0.37-3) UNRELEASED; urgency=low
   * Change Suggest for munin-plugins-core and munin-plugins-extra from
     python to python3 (plugins were upgraded)
   * Change copyright file to DEP-5 format (thanks, lintian)
+  * Add packages used for tests to "Build-Depends-Indep".
+    Previously the affected tests were simply skipped without the
+    requirement being installed.
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
