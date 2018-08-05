@@ -77,7 +77,7 @@ Suggests:
  libcache-cache-perl,
  libdbd-mysql-perl,
  libnet-dns-perl,
- python,
+ python3,
  ruby,
  time,
 Description: network-wide graphing framework (plugins for node)
@@ -102,7 +102,10 @@ Description: network-wide graphing framework (plugins for node)
 Package: munin-plugins-extra
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends}, munin-common (>= ${binary:Version})
-Suggests: libnet-netmask-perl, python, libnet-telnet-perl
+Suggests:
+ libnet-netmask-perl,
+ libnet-telnet-perl,
+ python3,
 Description: network-wide graphing framework (user contributed plugins for node)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still

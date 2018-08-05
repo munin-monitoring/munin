@@ -52,6 +52,8 @@ munin (2.0.37-3) UNRELEASED; urgency=low
   * Remove upstreamed patches for Java version and Makefile dependency
   * Remove munin.service and skip init script instead for systemd
     (Closes: 837788)
+  * Change Suggest for munin-plugins-core and munin-plugins-extra from
+    python to python3 (plugins were upgraded)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
