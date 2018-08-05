@@ -1,5 +1,13 @@
-munin (2.0.37-3) UNRELEASED; urgency=low
+munin (2.0.40-1) UNRELEASED; urgency=low
 
+  * New upstream version 2.0.40.
+  * New upstream version 2.0.39.
+  * New upstream version 2.0.38, fixing various issues, including bugs in:
+    - postfix_mailstats: incorrect delivered message count (Closes: #675318)
+    - quota_usage_: documentation deviates from behaviour (Closes: #730030)
+    - munin outputs malformed XHTML (Closes: #732149)
+    - iostat_ios: plugin should support configuration (Closes: #767018)
+    - mysql_innodb: improve version detection (Closes: #901729)
   * mysql plugins: switch the "mysqluser" from "debian-sys-maint" to "root"
     in the plugin configuration.
     See munin-node.NEWS entry for details.
@@ -76,7 +84,7 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     (obsolete due to the switch to quilt source format: #651449)
   * Add debian/upstream/metadata
 
- -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Sun, 16 Sep 2018 21:30:36 +0200
 
 munin (2.0.37-2) unstable; urgency=medium
 
