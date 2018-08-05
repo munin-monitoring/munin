@@ -5,7 +5,7 @@ set -e
 
 test_description="munin-update"
 
-. ./sharness.sh
+. /usr/share/sharness/sharness.sh
 
 test_expect_success "munin-update" "
   runuser -u munin /usr/bin/munin-update

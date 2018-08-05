@@ -5,7 +5,7 @@ set -e
 
 test_description="munin-node"
 
-. ./sharness.sh
+. /usr/share/sharness/sharness.sh
 
 test_expect_success "munin-node-configure" "
   munin-node-configure

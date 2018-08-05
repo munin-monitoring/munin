@@ -14,6 +14,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * autopkgtest: adjust paths and calling parameters
   * d/tests: use "set -eu" in test scripts
     (Thanks, Christian Göttsche)
+  * Replace embedded copy of "sharness" with test dependency
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 28 Jun 2018 05:06:39 +0200
 
