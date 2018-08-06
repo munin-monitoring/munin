@@ -1,2 +1,3 @@
 async-spool-directory.patch
 manpage-master-limitsold
+Makefile.javaplugin-INSTALL-variable.patch

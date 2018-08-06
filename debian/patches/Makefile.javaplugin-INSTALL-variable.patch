@@ -1,0 +1,15 @@
+Description: set INSTALL variable for Java plugin Makefile
+Author: Lars Kruse <devel@sumpfralle.de>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Makefile.javaplugin
++++ b/Makefile.javaplugin
+@@ -21,6 +21,8 @@ JAVA_CLASSES     := $(patsubst %.java,%.
+ JC     := javac
+ JFLAGS  = -g -sourcepath $(JAVA_SRCDIR) -d $(JAVA_DSTDIR)
+ 
++INSTALL ?= install
++
+ .PHONY: build-plugins-java
+ 
+ build-plugins-java: $(JAVA_DSTDIR)/munin-jmx-plugins.jar

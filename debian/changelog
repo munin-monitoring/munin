@@ -22,6 +22,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
     directories are generated via systemd-tmpfiles)
   * Plugins mysql_*: switch "mysqluser" from "debian-sys-maint" to "root"
     (Closes: #862238, #864845)
+  * Patch for Makefile: set INSTALL if necessary
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 06 Aug 2018 03:20:53 +0200
 
