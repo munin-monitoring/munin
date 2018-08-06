@@ -491,7 +491,7 @@ t/install:
 
 # This builds */Build from Build.PL
 %/Build: %/Build.PL
-	cd $* && $(PERL) Build.PL
+	cd $* && $(PERL) -I. Build.PL
 
 build-%: %/Build
 	cd $* && $(PERL) Build
