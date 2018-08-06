@@ -1,6 +1,5 @@
 munin (2.999.9-1) UNRELEASED; urgency=medium
 
-  [ Lars Kruse ]
   * New upstream beta release
   * munin and munin-node: use separate maintscript files
   * convert old doc directories (before "link-doc") to symlinks
@@ -21,8 +20,10 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * Fix minor whitespace inconsistencies in NEWS and README files
   * Skip munin init script in systemd environment (the created
     directories are generated via systemd-tmpfiles)
+  * Plugins mysql_*: switch "mysqluser" from "debian-sys-maint" to "root"
+    (Closes: #862238, #864845)
 
- -- Lars Kruse <devel@sumpfralle.de>  Thu, 28 Jun 2018 05:06:39 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Mon, 06 Aug 2018 03:20:53 +0200
 
 munin (2.999.8-1) experimental; urgency=medium
 
