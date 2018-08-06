@@ -15,6 +15,11 @@ fi
 #                    and munin-rrdcached.
 ### END INIT INFO
 
+
+# systemd creates the necessary directories (see /usr/lib/tmpfiles.d/munin.conf)
+test -d /run/systemd/system && exit 0
+
+
 DESC="munin (tmpfiles)"
 NAME="munin-tmpfiles"
 # it is not used directly - just as an indicator for the package being installed

@@ -19,6 +19,8 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * Specify "Rules-Requires-Root" as "no"
   * Fix trivial spelling mistakes below debian/ (thanks "codespell")
   * Fix minor whitespace inconsistencies in NEWS and README files
+  * Skip munin init script in systemd environment (the created
+    directories are generated via systemd-tmpfiles)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 28 Jun 2018 05:06:39 +0200
 
