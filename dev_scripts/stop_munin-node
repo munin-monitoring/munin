@@ -6,9 +6,10 @@ set -u
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 . "${FINDBIN}/common.sh"
 
-echo "Stopping munin-node"
+echo -n "Stopping munin-node...  "
 if [ -f "${RUNDIR}/munin-node.pid" ]; then
 	xargs -n 1 kill < "${RUNDIR}/munin-node.pid"
+	echo "Done"
 else
 	echo "Pid file not found. Not stopping"
 fi
