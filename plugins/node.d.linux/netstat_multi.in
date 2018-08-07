@@ -1123,7 +1123,7 @@ foreach (@statfiles) {
 
 foreach $key (sort keys %aspects) {
     my $val;
-    print "multigraph $key\n";
+    unless ( defined($ARGV[0]) and $ARGV[0] eq 'autoconf' ) { print "multigraph $key\n"; }
     if ( defined($ARGV[0]) and $ARGV[0] eq 'config' ) {
         foreach (@graph_parameters) {
             if (!defined($aspects{$key}{$_})) {
