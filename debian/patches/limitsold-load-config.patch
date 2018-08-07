@@ -1,0 +1,19 @@
+Description: use munin's default configuration
+ Currently the settings were not parsed, thus "munin-limits" could not
+ determine the relevant directories for operation.
+Author: Lars Kruse <devel@sumpfralle.de>
+Origin: https://github.com/munin-monitoring/munin/pull/995/commits/691ff0e16fec78a856211197cbd777a26c4ed892
+Bug: https://github.com/munin-monitoring/munin/pull/995
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/lib/Munin/Master/LimitsOld.pm
++++ b/lib/Munin/Master/LimitsOld.pm
+@@ -67,7 +67,7 @@ my $force          = 0;
+ my $verbose        = 0;
+ my $force_run_as_root = 0;
+ my %notes          = ();
+-my $config;
++my $config = Munin::Master::Config->instance()->{config};
+ my $modified     = 0;
+ my %default_text = (
+     "default" =>

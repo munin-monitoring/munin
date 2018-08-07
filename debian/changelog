@@ -26,6 +26,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * Fix issues related to "Rules-Requires-Root"
   * Patch for upstream problem in LimitsOld.pm
   * Change copyright file to DEP-5 format (thanks, lintian)
+  * Patch configuration handling for "munin-limits"
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 06 Aug 2018 03:20:53 +0200
 
