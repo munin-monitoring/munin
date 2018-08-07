@@ -63,7 +63,7 @@ my $force          = 0;
 my $verbose        = 0;
 my $force_run_as_root = 0;
 my %notes          = ();
-my $config;
+my $config = Munin::Master::Config->instance()->{config};
 my $modified     = 0;
 my %default_text = (
     "default" =>
