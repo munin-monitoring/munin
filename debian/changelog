@@ -23,6 +23,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * Plugins mysql_*: switch "mysqluser" from "debian-sys-maint" to "root"
     (Closes: #862238, #864845)
   * Patch for Makefile: set INSTALL if necessary
+  * Fix issues related to "Rules-Requires-Root"
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 06 Aug 2018 03:20:53 +0200
 

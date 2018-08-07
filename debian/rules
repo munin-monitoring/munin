@@ -25,14 +25,14 @@ override_dh_auto_install:
 	sed -i -e '/^pid_file/cpid_file /run/munin-node.pid' debian/tmp/etc/munin/munin-node.conf
 	mv debian/tmp/etc/munin/munin.conf.sample debian/tmp/etc/munin/munin.conf
 	# replace embedded copies of "fonts-materialdesignicons-webfont" with symlinks
-	rm debian/tmp/etc/munin/static/css/materialdesignicons.css
+	$(RM) debian/tmp/etc/munin/static/css/materialdesignicons.css
 	ln -s ../../../../usr/share/fonts-materialdesignicons-webfont/css/materialdesignicons.css \
 		debian/tmp/etc/munin/static/css/materialdesignicons.css
-	rm -r debian/tmp/etc/munin/static/fonts
+	$(RM) -r debian/tmp/etc/munin/static/fonts
 	ln -s ../../../../usr/share/fonts-materialdesignicons-webfont/fonts \
 		debian/tmp/etc/munin/static/fonts
 	# replace embedded copy of "libjs-jquery" with symlink
-	rm debian/tmp/etc/munin/static/js/jquery-1.8.3.js
+	$(RM) debian/tmp/etc/munin/static/js/jquery-1.8.3.js
 	ln -s ../../../../usr/share/javascript/jquery/jquery.js \
 		debian/tmp/etc/munin/static/js/jquery.js
 	sed -i 's#/js/jquery-1\.8\.3\.js#/js/jquery.js#' \
@@ -41,6 +41,14 @@ override_dh_auto_install:
 	$(MAKE) -f Makefile.javaplugin install-plugins-java \
 		LIBDIR=debian/munin-plugins-java/usr/share/munin \
 		JAVALIBDIR=debian/munin-plugins-java/usr/share/munin
+
+override_dh_strip_nondeterminism:
+	# Sadly "Rules-Requires-Root: no" combined with "ExtUtils::MakeMaker" leads to directories
+	# (and files) with read-only permissions for the owner.
+	# See https://alioth-lists-archive.debian.net/pipermail/debhelper-devel/2017-October/007241.html
+	# We need to add owner's write permissions for changes by "dh_strip_nondeterminism".
+	find debian/munin/etc/munin/static/img/ -type f -name "*.png" -perm 0444 -print0 | xargs -0 chmod u+w
+	dh_strip_nondeterminism
 
 override_dh_installinit:
 	dh_installinit --package=munin-async
