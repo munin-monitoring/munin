@@ -21,7 +21,9 @@ clean_sandbox() {
 
 	rm -rf sandbox
 
-	./Build distclean
+	if [ -f "Build" ]; then
+		./Build distclean
+	fi
 }
 
 make_sandbox() {
