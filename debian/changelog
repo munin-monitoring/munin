@@ -25,6 +25,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * Patch for Makefile: set INSTALL if necessary
   * Fix issues related to "Rules-Requires-Root"
   * Patch for upstream problem in LimitsOld.pm
+  * Change copyright file to DEP-5 format (thanks, lintian)
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 06 Aug 2018 03:20:53 +0200
 
