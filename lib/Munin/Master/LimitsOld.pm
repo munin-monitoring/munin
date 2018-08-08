@@ -326,8 +326,9 @@ sub process_service {
     my $datafilename = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile.sqlite";
     my $datafilename_state = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile-state.sqlite";
     DEBUG "[DEBUG] opening sql $datafilename";
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
-    my $dbh_state = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+    my $dbh = Munin::Master::Update::get_dbh();
+    # XXX - It is in the same DB for now
+    my $dbh_state = Munin::Master::Update::get_dbh();
     my $sth_state = $dbh_state->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm FROM state WHERE id = ? and type = ?');
     my $sth_state_upt = $dbh_state->prepare('UPDATE state SET alarm = ? WHERE id = ? and type = ?');
     my $sth_ds = $dbh->prepare('SELECT id FROM url WHERE path = ? and type = ?');
@@ -567,6 +568,8 @@ sub process_service {
 	$sth_state_upt->execute($new_state, $ds_id, "ds");
     }
     generate_service_message($hash);
+    $dbh_state->disconnect();
+    $dbh->disconnect();
 }
 
 

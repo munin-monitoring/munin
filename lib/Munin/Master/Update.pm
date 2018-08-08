@@ -53,6 +53,7 @@ sub run {
 		my $dbh = get_dbh();
 		$self->_db_init($dbh, $dbh);
 		$config_old = $self->_db_params_update($dbh, $config);
+		$dbh->disconnect();
 	}
 
         $self->{workers} = $self->_create_workers();
@@ -180,10 +181,9 @@ sub _run_workers {
 		my $res;
 		eval {
 			# Inject the 2 dbh (meta + state)
+			$worker->{dbh} = get_dbh();
 			# XXX - It is in the same DB for now
-			my $common_dbh = get_dbh();
-			$worker->{dbh} = $common_dbh;
-			$worker->{dbh_state} = $common_dbh;
+			$worker->{dbh_state} = get_dbh();
 
 			# do_work fails hard on a number of conditions
 			$res = $worker->do_work();
