@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+set -u
+
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+. "${FINDBIN}/common.sh"
+
+echo "Starting munin-httpd..."
+./dev_scripts/run munin-httpd
