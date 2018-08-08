@@ -17,7 +17,11 @@ if [ -z "$1" ]; then
 	usage
 fi
 
-command=$(command -v "$1")
-echo "Found: ${command}"
-echo "Command line: " "$@"
-exec "$@"
+if command=$(command -v "$1"); then
+	echo "Found: ${command}"
+	echo "Command line: " "$@"
+	exec "$@"
+else
+	echo >&2 "Failed to find '$1'"
+	exit 1
+fi
