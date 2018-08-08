@@ -771,8 +771,8 @@ sub _get_params_services {
 		# Skip unrelated graphs if in multigraph
 		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
-		$n_warnings += $_state_warning;
-		$n_criticals += $_state_critical;
+		$n_warnings += $_state_warning || 0;
+		$n_criticals += $_state_critical || 0;
 
 		my %imgs = map { ("IMG$_" => "/$_url-$_.$graph_ext") } @times;
 		push @$services, {
