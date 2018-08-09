@@ -40,7 +40,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 =head1 MAGIC MARKERS
 
- #%# family=manual
+ #%# capabilities=autoconf suggest
+ #%# family=auto
 
 =cut
 
@@ -56,6 +57,35 @@ get_sensor_data() {
 }
 
 
+# find executable files in the search path starting with "digitemp_"
+find_digitemp_executables() {
+    [ -z "${PATH:-}" ] && return
+    # split PATH by colons
+    local IFS=":"
+    find $PATH -maxdepth 1 -xtype f -executable -name "digitemp_*" -print0 2>/dev/null \
+        | xargs -0 -r -n 1 basename
+}
+
+
+if [ "$1" = "suggest" ]; then
+    find_digitemp_executables
+    exit 0
+fi
+
+
+if [ "$1" = "autoconf" ]; then
+    if [ -z "$(find_digitemp_executables)" ]; then
+        echo "no (failed to find executable starting with 'digitemp_')"
+    elif [ ! -r "$digitemprc" ]; then
+        echo "no (failed to read configuration file: $digitemprc)"
+    else
+        echo "yes"
+    fi
+    exit 0
+fi
+
+
+# check if the digitemp executable is available
 if ! [ -x "$(which "$digitemp_bin")" ]; then
     echo "executable '$digitemp_bin' not found" >&2
     exit 1
