@@ -49,6 +49,13 @@ digitemp_bin=${0##*/}
 model=${digitemp_bin##*_}
 digitemprc=${digitemprc:-/etc/digitemp.conf}
 
+
+get_sensor_data() {
+    local output_pattern="$1"
+    "$digitemp_bin" -c "$digitemprc" -q -a -o "$output_pattern" | grep -v ^Found
+}
+
+
 if ! [ -x "$(which "$digitemp_bin")" ]; then
     echo "executable '$digitemp_bin' not found" >&2
     exit 1
@@ -59,7 +66,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_vlabel degrees C'
     echo 'graph_category sensors'
     echo "graph_info This graph shows the temperature read from $model 1-wire sensors"
-    "$digitemp_bin" -c "$digitemprc" -q -a -o '%s %R' | grep -v ^Found | while read -r sensor serial; do
+    get_sensor_data "%R %s" | while read -r serial sensor; do
         echo "sensor$serial.label sensor #$sensor"
         echo "sensor$serial.type GAUGE"
         echo "sensor$serial.info Temperature from sensor #$sensor"
@@ -69,4 +76,4 @@ if [ "$1" = "config" ]; then
    exit 0
 fi
 
-"$digitemp_bin" -c "$digitemprc" -q -a -o 'sensor%R.value %C'|grep -v ^Found
+get_sensor_data "sensor%R.value %C"
