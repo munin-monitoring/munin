@@ -18,6 +18,7 @@ The following enviroment variables are used by this plugin:
 =head1 USAGE
 
 Symlink as the name of the digitemp program to use, i.e. digitemp_DS2490
+and create configuration file (default: /etc/digitemp.conf).
 
 =head1 AUTHOR
 
