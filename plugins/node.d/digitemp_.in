@@ -60,10 +60,10 @@ if [ "$1" = "config" ]; then
     echo 'graph_category sensors'
     echo "graph_info This graph shows the temperature read from $model 1-wire sensors"
     $digitemp -c "$digitemprc" -q -a -o '%s %R' | grep -v ^Found | while read -r sensor serial; do
-	echo "sensor$serial.label sensor #$sensor"
-	echo "sensor$serial.type GAUGE"
-	echo "sensor$serial.info Temperature from sensor #$sensor"
-	echo "sensor$serial.critical 30"
+        echo "sensor$serial.label sensor #$sensor"
+        echo "sensor$serial.type GAUGE"
+        echo "sensor$serial.info Temperature from sensor #$sensor"
+        echo "sensor$serial.critical 30"
         echo "sensor$serial.warning 25"
    done
    exit 0
