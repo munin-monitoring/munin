@@ -130,6 +130,12 @@ def guess_full_path(hard_drive):
         return None
 
 
+def is_fatal_exitcode(exit_code):
+    # The exit code represents a bitmask.
+    # Bits 0/1/2 belong to fatal errors (see smartctl's man page). Check if one of these is set.
+    return (exit_code & 0b111) > 0
+
+
 def read_values(hard_drive):
     global emptyoutput
     try:
@@ -169,23 +175,21 @@ def read_values(hard_drive):
                 threshold = tokens[5]
                 smart_values[key] = {"value": value, "threshold": threshold}
             last_output_line = line
-        exit_status = proc.returncode
-        if exit_status != 0:
-            # smartctl exit code is a bitmask, check man page.
-            num_exit_status = int(exit_status/256)  # Python convention
+        real_exit_code = proc.returncode
+        if real_exit_code > 0:
             # Allow to turn off warnings for some bits
-            num_exit_status = num_exit_status & ~smartctl_ignore_exitcode_bitmask
+            num_exit_status = real_exit_code & ~smartctl_ignore_exitcode_bitmask
         else:
             num_exit_status = 0
         if num_exit_status != 0:
-            if int(log(num_exit_status, 2)) <= 2:  # bit code
+            if is_fatal_exitcode(num_exit_status):
                 verboselog('smartctl cannot access S.M.A.R.T values on drive {}. Command exited '
-                           'with code {} (bit {})'
-                           .format(hard_drive, num_exit_status, int(log(num_exit_status, 2))))
+                           'with code {}'.format(hard_drive, num_exit_status))
                 verboselog(last_output_line)
             else:
-                verboselog('smartctl exited with code {} (bit {}). {} may be FAILING RIGHT NOW!'
-                           .format(num_exit_status, int(log(num_exit_status, 2)), hard_drive))
+                # the error is not fatal, but we should announce a warning
+                verboselog('smartctl exited with code {}. {} may be FAILING RIGHT NOW!'
+                           .format(num_exit_status, hard_drive))
     except Exception as exc:
         verboselog('Cannot access S.M.A.R.T values ({})! Check user rights or proper '
                    'smartmontools installation/arguments.'.format(exc))
@@ -197,7 +201,7 @@ def read_values(hard_drive):
         emptyoutput = False
     smart_values["smartctl_exit_status"] = {"value": str(num_exit_status), "threshold": "1"}
     smart_values["model"] = model
-    return exit_status
+    return real_exit_code
 
 
 def get_state_filename(hard_drive):
