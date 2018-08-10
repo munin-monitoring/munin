@@ -69,8 +69,10 @@
 #                   log to aid in understanding why smartctl exited with
 #                   a nonzero status.
 # v2.2 2014-08-22 - Add "ignoreexit" environment variable.
+# v2.3 2018-08-10 - Improve readability, reduce code duplication, avoid shell expansion.
 #
 # Copyright (c) 2004-2009 Nicolas Stransky.
+# Copyright (c) 2018 Lars Kruse <devel@sumpfralle.de>
 #
 # Permission to use, copy, and modify this software with or without fee
 # is hereby granted, provided that this entire notice is included in
