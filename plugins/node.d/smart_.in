@@ -270,14 +270,11 @@ def get_hard_drive_name(plugin_name):
     try:
         name = plugin_name.split('_', 1)[1]
         if os.uname()[0] == "SunOS":
-            try:
-                # if hard_drive name starts with "rdsk" or "rmt", try to reconstruct the path
-                if name.startswith("rdsk"):
-                    name = os.path.join("rdsk", name[4:])
-                elif name.startswith("rmt"):
-                    name = os.path.join("rmt", name[3:])
-            except Exception as exc:
-                verboselog('Failed to find SunOS hard_drive: {}'.format(exc))
+            # Special handling of hard_drive names starting with "rdsk" or "rmt".
+            # These are changed from "rdsk0" to "rdsk/0".
+            for prefix in ('rdsk', 'rmt'):
+                if name.startswith(prefix):
+                    name = os.path.join(prefix, name[len(prefix):])
         if ((not os.path.exists(os.path.join('/dev', name)))
                 and (not os.path.exists(os.path.join('/dev/disk/by-id/', name)))):
             # For 3ware cards, we have to set multiple plugins for the same hard drive name.
