@@ -328,7 +328,7 @@ sub _print_service {
 
 sub _list_services {
     my ($session, $node) = @_;
-
+    $node ||= $config->{fqdn};
     if (keys %nodes == 1 && ! exists $nodes{$node}) {
 	    # Only one node. Naming mismatch. Just give the use what he wants.
 	    ($node) = keys %nodes;
