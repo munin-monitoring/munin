@@ -115,9 +115,9 @@ def read_values(hard_drive):
     try:
         verboselog('Reading S.M.A.R.T values')
         os.putenv('LC_ALL', 'C')
-        device = '/dev/' + hard_drive
+        device = os.path.join('/dev', hard_drive)
         if not os.path.exists(device):
-            device = '/dev/disk/by-id/' + hard_drive
+            device = os.path.join('/dev/disk/by-id', hard_drive)
         smart_output = (os.popen(os.getenv('smartpath', '/usr/sbin/smartctl') + ' '
                         + os.getenv('smartargs', '-a')
                         + (os.getenv('ignorestandby', False) and ' ' or ' -n standby ')
@@ -163,10 +163,9 @@ def read_values(hard_drive):
         verboselog('Cannot access S.M.A.R.T values ({})! Check user rights or proper '
                    'smartmontools installation/arguments.'.format(exc))
         sys.exit(1)
-    if smart_values == {}:
-        verboselog('Can\'t find any S.M.A.R.T values in smartctl output!')
+    if not smart_values:
+        verboselog("Can't find any S.M.A.R.T values in smartctl output!")
         emptyoutput = True
-        # sys.exit(1)
     else:
         emptyoutput = False
     smart_values["smartctl_exit_status"] = {"value": str(num_exit_status), "threshold": "1"}
@@ -201,7 +200,7 @@ def print_plugin_values(hard_drive):
         for key in smart_values.keys():
             if key == "model":
                 continue
-            print(key+".value "+smart_values[key]["value"])
+            print("{}.value {}".format(key, smart_values[key]["value"]))
     else:
         print_unknown_from_statefile(hard_drive)
 
@@ -209,7 +208,8 @@ def print_plugin_values(hard_drive):
 def print_config(hard_drive):
     if os.path.exists(get_state_filename(hard_drive)):
         try:
-            verboselog('Try to recall previous S.M.A.R.T attributes for '+','.join(hard_drive))
+            verboselog('Try to recall previous S.M.A.R.T attributes for {}'
+                       .format(','.join(hard_drive)))
             smart_values_state = pickle.load(open_state_file(hard_drive, "rb"))
         except Exception as exc:
             verboselog('Error opening existing state file ({})!'.format(exc))
@@ -221,7 +221,7 @@ def print_config(hard_drive):
         smart_values_state = smart_values
 
     verboselog('Printing configuration')
-    print('graph_title S.M.A.R.T values for drive '+','.join(hard_drive))
+    print('graph_title S.M.A.R.T values for drive {}'.format(','.join(hard_drive)))
     print('graph_vlabel Attribute S.M.A.R.T value')
     print('graph_args --base 1000 --lower-limit 0')
     print('graph_category disk')
@@ -238,15 +238,15 @@ def print_config(hard_drive):
             print('{}.critical {}:'.format(key, smart_values_state[key]["threshold"]))
     print('smartctl_exit_status.label smartctl_exit_status')
     if report_warnings:
-        print('smartctl_exit_status.warning '
-              + smart_values_state['smartctl_exit_status']["threshold"])
+        print('smartctl_exit_status.warning {}'
+              .format(smart_values_state['smartctl_exit_status']["threshold"]))
 
 
 def print_unknown_from_statefile(hard_drive):
     if os.path.exists(get_state_filename(hard_drive)):
         try:
             verboselog('Failed to get S.M.A.R.T values from drive. Try to recall previous '
-                       'S.M.A.R.T attributes for '+','.join(hard_drive))
+                       'S.M.A.R.T attributes for {}'.format(','.join(hard_drive)))
             smart_values_state = pickle.load(open_state_file(hard_drive, "rb"))
         except Exception as exc:
             verboselog('Error opening existing state file ({})!'.format(exc))
@@ -256,40 +256,37 @@ def print_unknown_from_statefile(hard_drive):
         sys.exit(1)
 
     verboselog('Printing unknown values for all attributes in state file')
-    attributes = smart_values_state.keys()
-    for key in attributes:
-        if key == 'model':
-            continue
-        print(key+'.value U')
+    for key in smart_values_state.keys():
+        if key != 'model':
+            print('{}.value U'.format(key))
 
 
 def get_hard_drive_name():
     try:
-        name = [plugin_name[plugin_name.index('_')+1:]]
+        name = [plugin_name.split('_', 1)[1]]
         if os.uname()[0] == "SunOS":
             try:
                 # if hard_drive name starts with "rdsk" or "rmt", try to reconstruct the path
-                if name[0][0:4] == "rdsk":
+                if name[0].startswith("rdsk"):
                     name[0] = os.path.join("rdsk", name[0][4:])
-                elif name[0][0:3] == "rmt":
+                elif name[0].startswith("rmt"):
                     name[0] = os.path.join("rmt", name[0][3:])
             except Exception as exc:
                 verboselog('Failed to find SunOS hard_drive: {}'.format(exc))
-        if ((not os.path.exists('/dev/' + name[0]))
-                and (not os.path.exists('/dev/disk/by-id/' + name[0]))):
+        if ((not os.path.exists(os.path.join('/dev', name[0])))
+                and (not os.path.exists(os.path.join('/dev/disk/by-id/', name[0])))):
             # For 3ware cards, we have to set multiple plugins for the same hard drive name.
             # Let's see if we find a '-' in the drive name.
-            if name[0].find('-') != -1:
-                # Put the drive name and it's number in a list
-                name = [name[0][:name[0].rindex('-')], name[0][name[0].rindex('-')+1:]]
+            if '-' in name:
+                name = [name.split('-')[0], name.split('-', 1)[1]]
         # Chech that the drive exists in /dev
-        if ((not os.path.exists('/dev/' + name[0]))
-                and (not os.path.exists('/dev/disk/by-id/' + name[0]))):
-            verboselog('/dev/(disk/by-id/)?' + name[0] + ' not found!')
+        if ((not os.path.exists(os.path.join('/dev/', name[0])))
+                and (not os.path.exists(os.path.join('/dev/disk/by-id/', name[0])))):
+            verboselog('/dev/(disk/by-id/)? {} not found!'.format(name[0]))
             sys.exit(1)
         return name
     except Exception as exc:
-        verboselog('No S.M.A.R.T device name found in plugin\'s symlink ({})!'.format(exc))
+        verboselog("No S.M.A.R.T device name found in plugin's symlink ({})!".format(exc))
         sys.exit(1)
 
 
@@ -439,7 +436,7 @@ def find_smart_drives():
 smart_values = {}
 emptyoutput = False
 plugin_name = list(os.path.split(sys.argv[0]))[1]
-verboselog('plugins\' UID: ' + str(os.geteuid()) + ' / plugins\' GID: ' + str(os.getegid()))
+verboselog("plugins' UID: {:d} / plugins' GID: {:d}".format(os.geteuid(), os.getegid()))
 
 # Parse arguments
 if len(sys.argv) > 1:
