@@ -174,7 +174,7 @@ sub _run_workers {
 
 	WORKER_LOOP:
 	for my $worker (@{$self->{workers}}) {
-		my $worker_pid = $pm->start();
+		my $worker_pid = $pm->start($worker);
 		next WORKER_LOOP if $worker_pid;
 
 		my $res;
