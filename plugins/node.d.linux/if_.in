@@ -1,6 +1,8 @@
 #!@@BASH@@
 # -*- sh -*-
 
+set -e
+
 : << =cut
 
 =head1 NAME

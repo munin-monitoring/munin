@@ -1,6 +1,9 @@
 #!@@PERL@@ -w
 # -*- cperl -*-
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 irqstats - Munin plugin to monitor individual interrupts on a Linux machine
@@ -50,14 +53,13 @@ GPLv2
 =cut
 
 use Munin::Plugin;
-use strict;
 
 if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
     if(-r '/proc/interrupts') {
 	print "yes\n";
 	exit(0);
     } else {
-	print "no\n";
+	print "no (file /proc/interrupts not readable)\n";
 	exit(1);
     }
 }

@@ -1,6 +1,9 @@
 #!@@PERL@@ -w
 # -*- perl -*-
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 users - Munin plugin to monitor the number of users logged in to a Unix box.
@@ -86,11 +89,11 @@ if ( defined($ARGV[0])) {
     }
 }
 
-$tty = 0;
-$pty = 0;
-$pts = 0;
-$X   = 0;
-$unc = 0;  # Unclassified
+my $tty = 0;
+my $pty = 0;
+my $pts = 0;
+my $X   = 0;
+my $unc = 0;  # Unclassified
 
 open (WHO,"who |");
 
