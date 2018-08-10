@@ -110,14 +110,25 @@ def verboselog(s):
         sys.stderr.write('{}: {}\n'.format(plugin_name, s))
 
 
+def guess_full_path(hard_drive):
+    """ try to find the full path for a given hard disk name
+
+    None is returned if no device node was found.
+    """
+    for dev_dir in ('/dev', '/dev/disk/by-id'):
+        full_path = os.path.join(dev_dir, hard_drive)
+        if os.path.exists(full_path):
+            return full_path
+    else:
+        return None
+
+
 def read_values(hard_drive):
     global emptyoutput
     try:
         verboselog('Reading S.M.A.R.T values')
         os.putenv('LC_ALL', 'C')
-        device = os.path.join('/dev', hard_drive)
-        if not os.path.exists(device):
-            device = os.path.join('/dev/disk/by-id', hard_drive)
+        device = guess_full_path(hard_drive)
         smart_output = (os.popen(os.getenv('smartpath', '/usr/sbin/smartctl') + ' '
                         + os.getenv('smartargs', '-a')
                         + (os.getenv('ignorestandby', False) and ' ' or ' -n standby ')
@@ -275,15 +286,13 @@ def get_hard_drive_name(plugin_name):
             for prefix in ('rdsk', 'rmt'):
                 if name.startswith(prefix):
                     name = os.path.join(prefix, name[len(prefix):])
-        if ((not os.path.exists(os.path.join('/dev', name)))
-                and (not os.path.exists(os.path.join('/dev/disk/by-id/', name)))):
+        if guess_full_path(name) is None:
             # For 3ware cards, we have to set multiple plugins for the same hard drive name.
             # Let's see if we find a '-' in the drive name.
             if '-' in name:
                 name = name.split('-')[0]
         # Chech that the drive exists in /dev
-        if ((not os.path.exists(os.path.join('/dev', name)))
-                and (not os.path.exists(os.path.join('/dev/disk/by-id', name)))):
+        if guess_full_path(name) is None:
             verboselog('/dev/(disk/by-id/)? {} not found!'.format(name))
             sys.exit(1)
         return name
