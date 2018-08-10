@@ -1,6 +1,8 @@
 #!@@GOODSH@@
 # -*- sh -*-
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -55,7 +57,7 @@ if [ "$1" = "autoconf" ]; then
 			echo "no (program $NETSTAT_CMD not found)"
 			exit 0
 		else
-			echo no
+			echo "no (unknown netstat return value $?)"
 			exit 0
 		fi
 	fi
