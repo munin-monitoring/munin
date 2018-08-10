@@ -93,6 +93,7 @@ import sys
 import string
 import pickle
 from math import log
+import subprocess
 
 # Increase verbosity (True/False) -> use munin-run --pidebug
 verbose = True if os.getenv('MUNIN_DEBUG') == '1' else False
@@ -135,16 +136,16 @@ def read_values(hard_drive):
         verboselog('Reading S.M.A.R.T values')
         os.putenv('LC_ALL', 'C')
         device = guess_full_path(hard_drive)
-        smart_output = (os.popen(smartctl_bin + ' '
-                        + smartctl_args
-                        + (' ' if smartctl_ignore_standby else ' -n standby ')
-                        + '-A -i ' + device))
+        command_tokens = [smartctl_bin] + smartctl_args.split()
+        if not smartctl_ignore_standby:
+            command_tokens.extend(('-n', 'standby'))
+        command_tokens.extend(('-A', '-i', device))
+        proc = subprocess.Popen(command_tokens, stdout=subprocess.PIPE)
+        stdout, stderr = proc.communicate()
         in_table_data = False
         last_output_line = None
         model = "unknown"
-        for line in smart_output:
-            # remove linebreak
-            line = line.strip()
+        for line in stdout.decode().splitlines():
             if not line:
                 # the table is finished
                 in_table_data = False
@@ -168,8 +169,8 @@ def read_values(hard_drive):
                 threshold = tokens[5]
                 smart_values[key] = {"value": value, "threshold": threshold}
             last_output_line = line
-        exit_status = smart_output.close()
-        if exit_status is not None:
+        exit_status = proc.returncode
+        if exit_status != 0:
             # smartctl exit code is a bitmask, check man page.
             num_exit_status = int(exit_status/256)  # Python convention
             # Allow to turn off warnings for some bits
