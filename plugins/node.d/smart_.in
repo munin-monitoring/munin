@@ -103,7 +103,6 @@ report_warnings = True
 # You may not modify anything below this line
 
 plugin_version = "2.2"
-statefiledir = os.environ['MUNIN_PLUGSTATE']
 
 
 def verboselog(s):
@@ -179,11 +178,16 @@ def read_values(hard_drive):
     return exit_status
 
 
+def get_state_filename(hard_drive):
+    statefiledir = os.environ['MUNIN_PLUGSTATE']
+    return os.path.join(statefiledir, "smart-{}.state".format("-".join(hard_drive)))
+
+
 def open_state_file(hard_drive, mode):
-    return open(statefiledir+'/smart-'+'-'.join(hard_drive)+'.state', mode)
+    return open(get_state_filename(hard_drive), mode)
 
 
-def update_state_file(hard_drive):
+def update_state_file(hard_drive, smart_values):
     try:
         verboselog('Saving statefile')
         pickle.dump(smart_values, open_state_file(hard_drive, "wb"))
@@ -203,7 +207,7 @@ def print_plugin_values(hard_drive):
 
 
 def print_config(hard_drive):
-    if os.path.exists(statefiledir+'/smart-'+'-'.join(hard_drive)+'.state'):
+    if os.path.exists(get_state_filename(hard_drive)):
         try:
             verboselog('Try to recall previous S.M.A.R.T attributes for '+','.join(hard_drive))
             smart_values_state = pickle.load(open_state_file(hard_drive, "rb"))
@@ -213,7 +217,7 @@ def print_config(hard_drive):
     else:
         verboselog('No state file, reading S.M.A.R.T values for the first time')
         read_values(hard_drive[0])
-        pickle.dump(smart_values, open_state_file(hard_drive, "wb"))
+        update_state_file(hard_drive, smart_values)
         smart_values_state = smart_values
 
     verboselog('Printing configuration')
@@ -239,7 +243,7 @@ def print_config(hard_drive):
 
 
 def print_unknown_from_statefile(hard_drive):
-    if os.path.exists(statefiledir + '/smart-' + '-'.join(hard_drive) + '.state'):
+    if os.path.exists(get_state_filename(hard_drive)):
         try:
             verboselog('Failed to get S.M.A.R.T values from drive. Try to recall previous '
                        'S.M.A.R.T attributes for '+','.join(hard_drive))
@@ -468,7 +472,7 @@ if len(sys.argv) > 1:
 hard_drive = get_hard_drive_name()
 read_values(hard_drive[0])
 if not emptyoutput:
-    update_state_file(hard_drive)
+    update_state_file(hard_drive, smart_values)
 print_plugin_values(hard_drive)
 sys.exit(0)
 
