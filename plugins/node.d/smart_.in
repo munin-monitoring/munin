@@ -97,6 +97,12 @@ from math import log
 # Increase verbosity (True/False) -> use munin-run --pidebug
 verbose = True if os.getenv('MUNIN_DEBUG') == '1' else False
 
+# collect configuration from environment
+smartctl_bin = os.getenv('smartpath', '/usr/sbin/smartctl')
+smartctl_args = os.getenv('smartargs', '-a')
+smartctl_ignore_standby = bool(os.getenv('ignorestandby', False))
+smartctl_ignore_exitcode_bitmask = int(os.getenv('ignoreexit', 0))
+
 # You may edit the following 3 variables
 # Suppress SMART warnings (True/False)
 report_warnings = True
@@ -129,9 +135,9 @@ def read_values(hard_drive):
         verboselog('Reading S.M.A.R.T values')
         os.putenv('LC_ALL', 'C')
         device = guess_full_path(hard_drive)
-        smart_output = (os.popen(os.getenv('smartpath', '/usr/sbin/smartctl') + ' '
-                        + os.getenv('smartargs', '-a')
-                        + (os.getenv('ignorestandby', False) and ' ' or ' -n standby ')
+        smart_output = (os.popen(smartctl_bin + ' '
+                        + smartctl_args
+                        + (' ' if smartctl_ignore_standby else ' -n standby ')
                         + '-A -i ' + device))
         in_table_data = False
         last_output_line = None
@@ -167,7 +173,7 @@ def read_values(hard_drive):
             # smartctl exit code is a bitmask, check man page.
             num_exit_status = int(exit_status/256)  # Python convention
             # Allow to turn off warnings for some bits
-            num_exit_status = num_exit_status & ~int(os.getenv('ignoreexit', 0))
+            num_exit_status = num_exit_status & ~smartctl_ignore_exitcode_bitmask
         else:
             num_exit_status = 0
         if num_exit_status != 0:
@@ -456,7 +462,7 @@ if len(sys.argv) > 1:
         print_config(hard_drive)
         sys.exit(0)
     elif sys.argv[1] == "autoconf":
-        if os.path.exists(os.getenv('smartpath', '/usr/sbin/smartctl')):
+        if os.path.exists(smartctl_bin):
             if not find_smart_drives():
                 print('no (no drives accessible)')
             else:
