@@ -88,11 +88,11 @@
 #  #%# capabilities=autoconf suggest
 #  #%# family=auto
 
+import collections
 import os
 import sys
 import string
 import pickle
-from math import log
 import subprocess
 
 # Increase verbosity (True/False) -> use munin-run --pidebug
@@ -110,6 +110,10 @@ report_warnings = True
 # You may not modify anything below this line
 
 plugin_version = "2.2"
+
+
+SmartCtlParseResult = collections.namedtuple("SmartCtlParseResult",
+                                             ("has_failed", "smart_data", "model", "is_empty"))
 
 
 def verboselog(s):
@@ -137,7 +141,7 @@ def is_fatal_exitcode(exit_code):
 
 
 def read_values(hard_drive):
-    global emptyoutput
+    smart_values = {}
     try:
         verboselog('Reading S.M.A.R.T values')
         os.putenv('LC_ALL', 'C')
@@ -196,12 +200,11 @@ def read_values(hard_drive):
         sys.exit(1)
     if not smart_values:
         verboselog("Can't find any S.M.A.R.T values in smartctl output!")
-        emptyoutput = True
+        is_empty = True
     else:
-        emptyoutput = False
+        is_empty = False
     smart_values["smartctl_exit_status"] = {"value": str(num_exit_status), "threshold": "1"}
-    smart_values["model"] = model
-    return real_exit_code
+    return SmartCtlParseResult(is_fatal_exitcode(real_exit_code), smart_values, model, is_empty)
 
 
 def get_state_filename(hard_drive):
@@ -213,21 +216,27 @@ def open_state_file(hard_drive, mode):
     return open(get_state_filename(hard_drive), mode)
 
 
-def update_state_file(hard_drive, smart_values):
+def update_state_file(hard_drive, model, smart_values):
+    data_storage = dict(smart_values)
+    data_storage["model"] = model
     try:
         verboselog('Saving statefile')
-        pickle.dump(smart_values, open_state_file(hard_drive, "wb"))
+        pickle.dump(data_storage, open_state_file(hard_drive, "wb"))
     except Exception as exc:
         verboselog('Error trying to save state file ({})! Check access rights'.format(exc))
 
 
-def print_plugin_values(hard_drive):
-    if not emptyoutput:
+def parse_state_file(hard_drive):
+    data = pickle.load(open_state_file(hard_drive, "rb"))
+    model = data.pop("model", "unknown")
+    return model, data
+
+
+def print_plugin_values(hard_drive, is_empty, smart_values):
+    if not is_empty:
         verboselog('Printing S.M.A.R.T values')
-        for key in smart_values.keys():
-            if key == "model":
-                continue
-            print("{}.value {}".format(key, smart_values[key]["value"]))
+        for key, content in smart_values.items():
+            print("{}.value {}".format(key, content["value"]))
     else:
         print_unknown_from_statefile(hard_drive)
 
@@ -237,15 +246,15 @@ def print_config(hard_drive):
         try:
             verboselog('Try to recall previous S.M.A.R.T attributes for {}'
                        .format(hard_drive))
-            smart_values_state = pickle.load(open_state_file(hard_drive, "rb"))
+            model, smart_values_state = parse_state_file(hard_drive)
         except Exception as exc:
             verboselog('Error opening existing state file ({})!'.format(exc))
             sys.exit(1)
     else:
         verboselog('No state file, reading S.M.A.R.T values for the first time')
-        read_values(hard_drive)
-        update_state_file(hard_drive, smart_values)
-        smart_values_state = smart_values
+        parsed_data = read_values(hard_drive)
+        update_state_file(hard_drive, parsed_data.model, parsed_data.smart_data)
+        smart_values_state = parsed_data.smart_data
 
     verboselog('Printing configuration')
     print('graph_title S.M.A.R.T values for drive {}'.format(hard_drive))
@@ -255,18 +264,12 @@ def print_config(hard_drive):
     print('graph_info This graph shows the value of all S.M.A.R.T attributes of drive {} ({}). '
           'smartctl_exit_status is the return value of smartctl. A non-zero return value '
           'indicates an error, a potential error, or a fault on the drive.'
-          .format(hard_drive, smart_values_state['model']))
-    attributes = smart_values_state.keys()
-    for key in attributes:
-        if key in ['smartctl_exit_status', 'model']:
-            continue
+          .format(hard_drive, model))
+    for key, content in smart_values_state.items():
         print('{}.label {}'.format(key, key))
         if report_warnings:
-            print('{}.critical {}:'.format(key, smart_values_state[key]["threshold"]))
-    print('smartctl_exit_status.label smartctl_exit_status')
-    if report_warnings:
-        print('smartctl_exit_status.warning {}'
-              .format(smart_values_state['smartctl_exit_status']["threshold"]))
+            level = "warning" if key == 'smartctl_exit_status' else "critical"
+            print('{}.{} {}:'.format(key, level, content["threshold"]))
 
 
 def print_unknown_from_statefile(hard_drive):
@@ -274,7 +277,7 @@ def print_unknown_from_statefile(hard_drive):
         try:
             verboselog('Failed to get S.M.A.R.T values from drive. Try to recall previous '
                        'S.M.A.R.T attributes for {}'.format(hard_drive))
-            smart_values_state = pickle.load(open_state_file(hard_drive, "rb"))
+            model, smart_values_state = parse_state_file(hard_drive)
         except Exception as exc:
             verboselog('Error opening existing state file ({})!'.format(exc))
             sys.exit(1)
@@ -284,8 +287,7 @@ def print_unknown_from_statefile(hard_drive):
 
     verboselog('Printing unknown values for all attributes in state file')
     for key in smart_values_state.keys():
-        if key != 'model':
-            print('{}.value U'.format(key))
+        print('{}.value U'.format(key))
 
 
 def get_hard_drive_name(plugin_name):
@@ -324,9 +326,8 @@ def find_smart_drives():
                         continue  # Ignore MD, Floppy, loop , RAM and LVM devices.
                     try:
                         verboselog('Trying {} ...'.format(drive))
-                        exit_status = read_values(drive)
-                        if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
-                                and not emptyoutput):
+                        parsed_data = read_values(drive)
+                        if not parsed_data.has_failed and not parsed_data.is_empty:
                             drives.append(drive)
                     except Exception:
                         continue
@@ -347,9 +348,8 @@ def find_smart_drives():
                     if words[-1][-1] not in string.digits:
                         try:
                             verboselog('Trying '+words[-1]+'...')
-                            exit_status = read_values(words[-1])
-                            if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
-                                    and not emptyoutput):
+                            parsed_data = read_values(words[-1])
+                            if not parsed_data.has_failed and not parsed_data.is_empty:
                                 drives.append(words[-1])
                         except Exception:
                             continue
@@ -366,9 +366,8 @@ def find_smart_drives():
                     continue
                 try:
                     verboselog('Trying '+drive+'c...')
-                    exit_status = read_values(drive+'c')
-                    if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values(drive + 'c')
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append(drive+'c')
                 except Exception:
                     continue
@@ -384,9 +383,8 @@ def find_smart_drives():
                     continue
                 try:
                     verboselog('Trying '+drive+'...')
-                    exit_status = read_values(drive)
-                    if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values(drive)
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append(drive)
                 except Exception:
                     continue
@@ -399,9 +397,8 @@ def find_smart_drives():
                 try:
                     drive = os.path.basename(drivepath)
                     verboselog('Trying '+drive+'...')
-                    exit_status = read_values(drive)
-                    if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values(drive)
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append(drive)
                 except Exception:
                     continue
@@ -417,9 +414,8 @@ def find_smart_drives():
                     continue
                 try:
                     verboselog('Trying {} ...'.format(drive))
-                    exit_status = read_values(drive + 'c')
-                    if ((exit_status is None or int(log(int(exit_status / 256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values(drive + 'c')
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append(drive + 'c')
                 except Exception:
                     continue
@@ -432,9 +428,8 @@ def find_smart_drives():
                 try:
                     drive = os.path.basename(drivepath)
                     verboselog('Trying rdsk {} ...'.format(drive))
-                    exit_status = read_values('rdsk' + drive)
-                    if ((exit_status is None or int(log(int(exit_status / 256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values('rdsk' + drive)
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append('rdsk' + drive)
                 except Exception:
                     continue
@@ -442,9 +437,8 @@ def find_smart_drives():
                 try:
                     drive = os.path.basename(drivepath)
                     verboselog('Trying rmt {} ...'.format(drive))
-                    exit_status = read_values('rmt' + drive)
-                    if ((exit_status is None or int(log(int(exit_status / 256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values('rmt' + drive)
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append('rmt' + drive)
                 except Exception:
                     continue
@@ -455,8 +449,6 @@ def find_smart_drives():
 
 """ Main part """
 
-smart_values = {}
-emptyoutput = False
 plugin_name = list(os.path.split(sys.argv[0]))[1]
 verboselog("plugins' UID: {:d} / plugins' GID: {:d}".format(os.geteuid(), os.getegid()))
 
@@ -489,10 +481,10 @@ if len(sys.argv) > 1:
 
 # No argument given, doing the real job:
 hard_drive = get_hard_drive_name(plugin_name)
-read_values(hard_drive)
-if not emptyoutput:
-    update_state_file(hard_drive, smart_values)
-print_plugin_values(hard_drive)
+parsed_data = read_values(hard_drive)
+if not parsed_data.is_empty:
+    update_state_file(hard_drive, parsed_data.model, parsed_data.smart_data)
+print_plugin_values(hard_drive, parsed_data.is_empty, parsed_data.smart_data)
 sys.exit(0)
 
 
