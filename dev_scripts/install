@@ -57,7 +57,7 @@ EOF
 
 configure_plugins() {
 	banner CONFIGURE PLUGINS
-	munin-node-configure --suggest --shell --families=contrib,auto | sh -x
+	munin-node-configure --suggest --shell --families=contrib,auto --remove-also | sh -x
 }
 
 configure_node() {
