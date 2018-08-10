@@ -122,26 +122,35 @@ def read_values(hard_drive):
                         + os.getenv('smartargs', '-a')
                         + (os.getenv('ignorestandby', False) and ' ' or ' -n standby ')
                         + '-A -i ' + device))
-        read_values = 0
-        lastline = None
-        for l in smart_output:
-            lastline = l
-            if l[:-1] == '':
-                read_values = 0
-            elif l[:13] == 'Device Model:' or l[:7] == 'Device:':
-                model_list = l.split(':')[1].split()
-                try:
-                    model_list.remove('Version')
-                except ValueError:
+        in_table_data = False
+        last_output_line = None
+        model = "unknown"
+        for line in smart_output:
+            # remove linebreak
+            line = line.strip()
+            if not line:
+                # the table is finished
+                in_table_data = False
+            elif not in_table_data:
+                # process header data
+                if line.startswith('Device Model:') or line.startswith('Device:'):
+                    value = line.split(':', 1)[1].strip()
+                    # ignore the "Version" string
+                    model = ' '.join(token for token in value.split() if token != 'Version')
+                elif line.startswith('ID# ATTRIBUTE_NAME'):
+                    # Start reading the Attributes block
+                    in_table_data = True
+                else:
+                    # we can ignore other header lines
                     pass
-                model = ''.join(model_list)
-            if read_values == 1:
-                smart_attribute = l.split()
-                smart_values[smart_attribute[1].replace('-', '_')] = {
-                    "value": smart_attribute[3], "threshold": smart_attribute[5]}
-            elif l[:18] == "ID# ATTRIBUTE_NAME":
-                # Start reading the Attributes block
-                read_values = 1
+            else:
+                # this is a data table row
+                tokens = line.split()
+                key = tokens[1].replace('-', '_')
+                value = tokens[3]
+                threshold = tokens[5]
+                smart_values[key] = {"value": value, "threshold": threshold}
+            last_output_line = line
         exit_status = smart_output.close()
         if exit_status is not None:
             # smartctl exit code is a bitmask, check man page.
@@ -155,7 +164,7 @@ def read_values(hard_drive):
                 verboselog('smartctl cannot access S.M.A.R.T values on drive {}. Command exited '
                            'with code {} (bit {})'
                            .format(hard_drive, num_exit_status, int(log(num_exit_status, 2))))
-                verboselog(lastline[:-1])
+                verboselog(last_output_line)
             else:
                 verboselog('smartctl exited with code {} (bit {}). {} may be FAILING RIGHT NOW!'
                            .format(num_exit_status, int(log(num_exit_status, 2)), hard_drive))
@@ -169,11 +178,7 @@ def read_values(hard_drive):
     else:
         emptyoutput = False
     smart_values["smartctl_exit_status"] = {"value": str(num_exit_status), "threshold": "1"}
-    try:
-        smart_values["model"] = model
-    # For some reason we may have no value for "model"
-    except NameError:
-        smart_values["model"] = "unknown"
+    smart_values["model"] = model
     return exit_status
 
 
