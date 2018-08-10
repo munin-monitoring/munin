@@ -131,7 +131,7 @@ def autoconf()
             puts "yes"
             return 0
         else
-            puts "no"
+            puts "no (could not connect to #{@host}#{@request} on port #{@port})"
             return 1
         end
     rescue
