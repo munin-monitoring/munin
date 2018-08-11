@@ -20,10 +20,14 @@ override_dh_auto_build:
 override_dh_auto_install:
 	dh_auto_install
 	rm -rfv debian/tmp/usr/share/man/man1
+	# configuration files
 	mv debian/tmp/etc/munin/munin-node.conf.sample debian/tmp/etc/munin/munin-node.conf
 	sed -i -e '/^log_file/clog_file Sys::Syslog' debian/tmp/etc/munin/munin-node.conf
 	sed -i -e '/^pid_file/cpid_file /run/munin-node.pid' debian/tmp/etc/munin/munin-node.conf
 	mv debian/tmp/etc/munin/munin.conf.sample debian/tmp/etc/munin/munin.conf
+	# install debian provided plugin configuration
+	install -D -m0644 debian/plugins.conf \
+		$(CURDIR)/debian/munin-node/etc/munin/plugin-conf.d/munin-node
 	# replace embedded copies of "fonts-materialdesignicons-webfont" with symlinks
 	$(RM) debian/tmp/etc/munin/static/css/materialdesignicons.css
 	ln -s ../../../../usr/share/fonts-materialdesignicons-webfont/css/materialdesignicons.css \

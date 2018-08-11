@@ -27,8 +27,10 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * Patch for upstream problem in LimitsOld.pm
   * Change copyright file to DEP-5 format (thanks, lintian)
   * Patch configuration handling for "munin-limits"
+  * Revive /etc/munin/plugin-conf.d/munin-node
+    (it is missing since commit 11f5659344 - uploaded as 2.999.3-1)
 
- -- Lars Kruse <devel@sumpfralle.de>  Mon, 06 Aug 2018 03:20:53 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Sat, 11 Aug 2018 02:06:34 +0200
 
 munin (2.999.8-1) experimental; urgency=medium
 
