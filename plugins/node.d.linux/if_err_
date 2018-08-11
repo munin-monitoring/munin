@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -41,7 +43,7 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 INTERFACE=${0##*/if_err_}
 
@@ -93,12 +95,12 @@ if [ "$1" = "config" ]; then
 fi;
 
 # Escape dots in the interface name (eg. vlans) before using it as a regex
-if [ -r /sys/class/net/$INTERFACE/statistics/rx_bytes ]; then
-    echo "rcvd.value $(cat /sys/class/net/$INTERFACE/statistics/rx_errors)"
-    echo "trans.value $(cat /sys/class/net/$INTERFACE/statistics/tx_errors)"
-    echo "rxdrop.value $(cat /sys/class/net/$INTERFACE/statistics/rx_dropped)"
-    echo "txdrop.value $(cat /sys/class/net/$INTERFACE/statistics/tx_dropped)"
-    echo "collisions.value $(cat /sys/class/net/$INTERFACE/statistics/collisions)"
+if [ -r "/sys/class/net/$INTERFACE/statistics/rx_bytes" ]; then
+    echo "rcvd.value $(cat "/sys/class/net/$INTERFACE/statistics/rx_errors")"
+    echo "trans.value $(cat "/sys/class/net/$INTERFACE/statistics/tx_errors")"
+    echo "rxdrop.value $(cat "/sys/class/net/$INTERFACE/statistics/rx_dropped")"
+    echo "txdrop.value $(cat "/sys/class/net/$INTERFACE/statistics/tx_dropped")"
+    echo "collisions.value $(cat "/sys/class/net/$INTERFACE/statistics/collisions")"
 else
     awk -v interface="$INTERFACE" \
         'BEGIN { gsub(/\./, "\\.", interface) } \

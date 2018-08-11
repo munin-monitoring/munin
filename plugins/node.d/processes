@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -92,7 +94,7 @@ if [ "$1" = "autoconf" ]; then
     esac
 fi
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 # Define colours
 RUNNABLE='22ff22'         # Green

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -32,7 +34,7 @@ munin-node.
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 
 if [ "$1" = "autoconf" ]; then
@@ -45,7 +47,7 @@ if [ "$1" = "autoconf" ]; then
 			echo "no (netstat program not found)"
 			exit 0
 		else
-			echo no
+			echo "no (unknown netstat return value $?)"
 			exit 0
 		fi
 	fi

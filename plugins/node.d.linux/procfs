@@ -1,5 +1,8 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 procfs - Plugin to monitor general system statistics
@@ -96,7 +99,6 @@ GPLv2
 
 =cut
 
-use strict;
 use Munin::Plugin::Framework;
 use Munin::Plugin;
 

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -24,7 +26,7 @@ The following environment variables are used by this plugin:
 . "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 
-df_entries=$(df -P -l 2>/dev/null | sed -e 1d -e '/\/\//d' -e 's/%//' | sort)
+df_entries=$(df -P -l 2>/dev/null | sed -e '1d' -e '/\/\//d' -e 's/%//' | sort)
 
 
 # Use the mountpoint instead of the device name for ambiguous virtual devices (tmpfs, ...).
