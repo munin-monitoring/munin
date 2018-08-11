@@ -82,6 +82,11 @@ if ($ARGV[0] eq 'autoconf') {
         exit 0;
     }
     $_ = <LPSTAT_R>;
+    if ( ! close(LPSTAT_R) ) {
+        print "no (lpstat returned non-zero)\n";
+        exit 0;
+    }
+
     if (! m/device for /mi) {
         print "no (no printers configured)\n";
         exit 0;
