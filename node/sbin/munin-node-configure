@@ -84,7 +84,6 @@ sub parse_args
 	my $debug = 0;
 	my $pidebug = 0;
 	my ($suggest, $shell, $removes, $newer);
-	my $exit_not_error = 1;
 	my @families;
 	my (@snmp_hosts, $snmpver, $snmpcomm, $snmpport, $snmpdomain);
     my ($snmp3username, $snmp3authpass, $snmp3authproto, $snmp3privpass, $snmp3privproto);
@@ -94,7 +93,6 @@ sub parse_args
         'version'         => \&print_version_and_exit,
 
         'suggest!'        => \$suggest,
-        'exitnoterror!'   => \$exit_not_error,
         'newer=s'         => \$newer,
 
         'shell!'          => \$shell,
@@ -167,7 +165,6 @@ sub parse_args
     $config->reinitialize({
         %$config,
 
-        exit_not_error => $exit_not_error,
         suggest        => $suggest,
 
         shell          => $shell,
@@ -353,13 +350,8 @@ sub run_plugin
 		}
 		elsif ($plugin_exit) {
             $plugin->log_error("Non-zero exit during $mode ($plugin_exit)");
+            return;
 
-			# Verboten according to the specification, but lots of plugins
-            # still exit(1) it during autoconf.  So making it a non-fatal error
-			# for the time being
-			return unless ($mode eq 'autoconf'
-			           and $plugin_exit == 1
-			           and $config->{exit_not_error});
 		}
 	}
 
