@@ -63,6 +63,7 @@ find_digitemp_executables() {
     [ -z "${PATH:-}" ] && return
     # split PATH by colons
     local IFS=":"
+    # shellcheck disable=SC2086
     find $PATH -maxdepth 1 -xtype f -executable -name "digitemp_*" -print0 2>/dev/null \
         | xargs -0 -r -n 1 basename
 }
