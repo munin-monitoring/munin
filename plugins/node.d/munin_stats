@@ -18,7 +18,7 @@
 #
 #
 # Magic markers (used by munin-node-configure and some installation scripts):
-#%# family=auto
+#%# family=manual
 #%# capabilities=autoconf
 
 use strict;
