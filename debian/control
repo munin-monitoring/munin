@@ -222,6 +222,7 @@ Description: munin plugins for monitoring remote devices with SNMP
 Package: munin-plugins-ldap
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
+Recommends: libnet-ldap-perl
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: munin plugins for monitoring LDAP servers

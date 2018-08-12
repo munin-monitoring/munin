@@ -31,6 +31,8 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
     (it is missing since commit 11f5659344 - uploaded as 2.999.3-1)
   * Add Depends for libcache-cache-perl to munin-plugins-mysql
     (Thanks, Christian Göttsche)
+  * Add Recommends for libnet-ldap-perl to munin-plugins-ldap
+    (Thanks, Christian Göttsche)
 
  -- Lars Kruse <devel@sumpfralle.de>  Sat, 11 Aug 2018 02:06:34 +0200
 
