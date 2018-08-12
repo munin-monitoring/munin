@@ -246,7 +246,7 @@ if ( -r "/proc/swaps" ) {
 	 type  => "DERIVE",
 	 min   => 0,
 	 graph => "no",
-	 value => $vmstat{pswpin}[0]  || $stat{swap}[0],
+	 value => defined($vmstat{pswpin}) ? $vmstat{pswpin}[0] : $stat{swap}[0],
 	},
 	swap_out =>
 	{
@@ -254,7 +254,7 @@ if ( -r "/proc/swaps" ) {
 	 type     => "DERIVE",
 	 min      => "0",
 	 negative => "swap_in",
-	 value    => $vmstat{pswpout}[0] || $stat{swap}[1]
+	 value    => defined($vmstat{pswpin}) ? $vmstat{pswpout}[0] : $stat{swap}[1],
 	},
        },
       }
