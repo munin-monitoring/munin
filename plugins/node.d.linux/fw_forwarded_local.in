@@ -47,7 +47,7 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" ) {
     if ( -x $conntrack or -r $nf_conntrack_file or -r $ip_conntrack_file) {
         print "yes\n";
     } else {
-        print "no\n";
+        print "no (command $conntrack or file $nf_conntrack_file or file $ip_conntrack_file not found)\n";
     }
     exit 0;
 }
