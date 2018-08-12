@@ -67,8 +67,8 @@ if [ "$1" = "config" ]; then
 fi
 
 echo -n "high.value "
-$PS --no-header -eo stat | grep \< | wc -l
+"$PS" --no-header -eo stat | grep \< | wc -l
 echo -n "low.value "
-$PS --no-header -eo stat | grep N | wc -l
+"$PS" --no-header -eo stat | grep N | wc -l
 echo -n "locked.value "
-$PS --no-header -eo stat | grep L | wc -l
+"$PS" --no-header -eo stat | grep L | wc -l
