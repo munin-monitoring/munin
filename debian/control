@@ -128,6 +128,15 @@ Depends: ${perl:Depends}, ${misc:Depends},
 Recommends:
  python3,
  ruby,
+Suggests:
+ libcache-memcached-perl,
+ libhttp-date-perl,
+ libnet-ip-perl,
+ libnet-netmask-perl,
+ libnet-snmp-perl,
+ libtext-csv-xs-perl,
+ libwww-perl,
+ libxml-libxml-perl,
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
 Description: community contributed plugins for munin node

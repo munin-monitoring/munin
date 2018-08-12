@@ -33,6 +33,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
     (Thanks, Christian Göttsche)
   * Add Recommends for libnet-ldap-perl to munin-plugins-ldap
     (Thanks, Christian Göttsche)
+  * Add multiple Suggests for munin-plugins-extra
 
  -- Lars Kruse <devel@sumpfralle.de>  Sat, 11 Aug 2018 02:06:34 +0200
 
