@@ -404,6 +404,19 @@ sub _db_service {
 		$self->_db_service_attr($service_id, $attr, $_service_value);
 	}
 
+	# Update the ordering of fields
+	{
+		my @graph_order = $service_attr->{graph_order};
+		DEBUG "_db_service.graph_order: @graph_order";
+		my $ordr = 0;
+		for my $_name (@graph_order) {
+			my $sth_service_ordr = $dbh->prepare_cached("UPDATE ds SET ordr = ? WHERE ds.service_id = ? AND ds.name = ?");
+			$sth_service_ordr->execute($ordr, $service_id, $_name);
+
+			$ordr ++;
+		}
+	}
+
 	# Handle the service_category
 	{
 		my $category = $service_attr->{graph_category} || "other";
@@ -616,6 +629,7 @@ sub uw_handle_config {
 	# Parse the output to a simple HASH
 	my %service_attr;
 	my %fields;
+	my @field_order;
 	for my $line (@$data) {
 		DEBUG "uw_handle_config: $line";
 		# Barbaric regex to parse the output of the config
@@ -636,7 +650,14 @@ sub uw_handle_config {
 		}
 
 		$fields{$arg1}{$arg2} = $value;
+
+		# Adding the $field if not present.
+		# Using an array since, obviously, the order is important.
+		push @field_order, $arg1 unless grep { $arg1 } @field_order;
 	}
+
+	# Adding the default graph_order if not present
+	$service_attr{"graph_order"} .= join(" ", @field_order);
 
 	# Sync to database
 	# Create/Update the service
