@@ -175,6 +175,7 @@ Package: munin-plugins-mysql
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  libdbd-mysql-perl,
+ libcache-cache-perl,
  munin-common,
  default-mysql-client,
 Replaces: munin-plugins-core (<< 2.999.1-1~),
