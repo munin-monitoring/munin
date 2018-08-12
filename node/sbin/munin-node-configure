@@ -363,8 +363,9 @@ sub run_plugin
 	}
 
     # Ignore debug output
-	my @response = grep !/^#/, @{ $res->{stdout} };
-    $plugin->log_error('Nothing printed to stdout') unless (scalar @response);
+    my @response = grep !/^#/, @{ $res->{stdout} };
+    # Error out on empty response except in suggest mode
+    $plugin->log_error('Nothing printed to stdout') unless (scalar @response || $mode eq 'suggest');
 
     return @response;
 }
