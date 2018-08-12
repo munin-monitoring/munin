@@ -34,8 +34,11 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * Add Recommends for libnet-ldap-perl to munin-plugins-ldap
     (Thanks, Christian Göttsche)
   * Add multiple Suggests for munin-plugins-extra
+  * Set "PrivateDevices=false" for "munin-node" service in order to
+    allow plugins like "smart_" to access devices
+    (Thanks, Christian Göttsche)
 
- -- Lars Kruse <devel@sumpfralle.de>  Sat, 11 Aug 2018 02:06:34 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Sun, 12 Aug 2018 19:50:59 +0200
 
 munin (2.999.8-1) experimental; urgency=medium
 
