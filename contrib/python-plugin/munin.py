@@ -65,8 +65,8 @@ class Plugin(object):
     p.autoconf = False
 
     for name, value in {'a': 1, 'b': 2}:
-        p[ name ].label = name
-        p[ name ].value = value
+        p[name].label = name
+        p[name].value = value
 
     p.run()
 
@@ -77,8 +77,8 @@ class Plugin(object):
 
     """
 
-    def __init__(self, title, vlabel,
-                 category="misc", info="", args="", scale=True):
+    def __init__(self, title, vlabel, category="misc", info="", args="",
+                 scale=True):
         """Sets up the plugin; title, vertical label, category -- all things
         that are global for the plugin.
         """
@@ -117,7 +117,7 @@ class Plugin(object):
         Similar to running with "values"-argument."""
         for prefix, line in self._values.items():
             value = line.get_value(prefix)
-            assert type(value) is int
+            assert isinstance(value, int)
             print("%s.value %s" % (prefix, value))
 
     def _print_config(self):
@@ -151,10 +151,10 @@ class Plugin(object):
             else:
                 aconf = self.autoconf
 
-        if bool(aconf):
-            print("YES")
+        if aconf:
+            print("yes")
         else:
-            print("NO")
+            print("no")
 
     def run(self, force_mode=None):
         """Run the plugin and "do the right thing"^(TM)."""
