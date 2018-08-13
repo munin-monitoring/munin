@@ -406,13 +406,13 @@ sub _db_service {
 
 	# Update the ordering of fields
 	{
-		my @graph_order = $service_attr->{graph_order};
+		my @graph_order = split(/ /, $service_attr->{graph_order});
 		DEBUG "_db_service.graph_order: @graph_order";
 		my $ordr = 0;
 		for my $_name (@graph_order) {
-			my $sth_service_ordr = $dbh->prepare_cached("UPDATE ds SET ordr = ? WHERE ds.service_id = ? AND ds.name = ?");
-			$sth_service_ordr->execute($ordr, $service_id, $_name);
-
+			my $sth_update_ordr = $dbh->prepare_cached("UPDATE ds SET ordr = ? WHERE ds.service_id = ? AND ds.name = ?");
+			$sth_update_ordr->execute($ordr, $service_id, $_name);
+			DEBUG "_db_service.update_order($ordr, $service_id, $_name)";
 			$ordr ++;
 		}
 	}
