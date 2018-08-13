@@ -121,8 +121,8 @@ my %stat = _parse_stat_file("/proc/stat");
 my %vmstat = _parse_stat_file("/proc/vmstat");
 
 my $cpu_limit = (scalar(grep(/^cpu[0-9]+$/, keys %stat))) * 100;
-my @cpu_graph_order = qw(system   user    nice   guest  guest_nice  idle   iowait   irq  softirq  steal  );
-my @cpu_graph_color = qw(00CC00  0066B3  FF8000  777777   EE00CC   FFEDA3  FF8080  00FFCC 990099  FF0000 );
+my @cpu_graph_order = qw(system  user    nice    idle   iowait  irq    softirq steal  guest  guest_nice );
+my @cpu_graph_color = qw(00CC00  0066B3  FF8000  FFEDA3 FF8080  00FFCC 990099  FF0000 777777 EE00CC );
 
 if ( %stat ) {
   $plugin->add_graphs
