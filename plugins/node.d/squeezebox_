@@ -57,18 +57,16 @@ PORT=${squeezecenter_port:-9090}
 NC=${netcat:-nc}
 
 if [ "$1" = "autoconf" ]; then
-        if [ ! "which $NC 1>/dev/null 2>&1" ]; then
+        if ! which "$NC" 1>/dev/null 2>&1; then
 		echo "no (no netcat/nc binary found)"
 		exit 0
 	fi
-	echo exit | $NC $HOST $PORT 1>/dev/null 2>&1
-	RET=$?
-	if [ "$RET" != "0" ]; then
+	if ! echo exit | "$NC" "$HOST" "$PORT" 1>/dev/null 2>&1; then
 		echo "no (no connection on $HOST port $PORT)"
 		exit 0
 	fi
-	VERSION=$(printf "%b" "version ?\nexit\n" | $NC $HOST $PORT 2>/dev/null)
-	if [ "$VERSION" != "" ]; then
+	VERSION=$(printf "%b" "version ?\\nexit\\n" | "$NC" "$HOST" "$PORT" 2>/dev/null)
+	if [ -n "$VERSION" ]; then
 		echo "yes"
 		exit 0
 	else
@@ -95,12 +93,12 @@ fi
 # example: 5 * * * * /usr/share/munin/plugins/squeezebox_ update
 
 if [ "$1" = "update" ]; then
-	printf "%b" "rescan\nexit\n" | $NC $HOST $PORT >/dev/null
+	printf "%b" "rescan\\nexit\\n" | "$NC" "$HOST" "$PORT" >/dev/null
 	exit 0
 fi
 
 
-CHECK=$(echo $0 | cut -d _ -f 2-)
+CHECK=$(echo "$0" | cut -d _ -f 2-)
 case "$CHECK" in
 	songs)
 		ATTR="songs"
@@ -132,15 +130,16 @@ case "$CHECK" in
 		;;
 esac
 
-if [ "$ATTR" = "" -a "$CMD" = "" ]; then
+if [ -z "$ATTR" ] && [ -z "$CMD" ]; then
 	echo "Urk"
 	exit 2
 fi
 
 if [ "$CMD" = "years" ]; then
-	no_of_years=$(printf "%b" "years\nexit\n" | $NC $HOST $PORT | sed 's/%3A/:/g' | cut -d ':' -f 2)
-	years_array=$(printf "%b" "years 0 $no_of_years\nexit\n" | $NC $HOST $PORT | sed 's/%3A/:/g' | cut -d ' ' -f 4- | sed 's/year://g' | cut -d ' ' -f -$no_of_years)
-	arr1=( `echo "$years_array" | tr -s ' ' ' '` )
+        no_of_years=$(printf "%b" "years\\nexit\\n" | "$NC" "$HOST" "$PORT" | sed 's/%3A/:/g' | cut -d ':' -f 2)
+        years_array=$(printf "%b" "years 0 $no_of_years\\nexit\\n" | "$NC" "$HOST" "$PORT" | sed 's/%3A/:/g' | cut -d ' ' -f 4- | sed 's/year://g' | cut -d ' ' -f "-$no_of_years")
+        # shellcheck disable=SC2207
+        arr1=( $(echo "$years_array" | tr -s ' ' ' ') )
 	(( no_of_years-- )) # We don't need that last entry in the array
 	if [ "$1" = "config" ]; then
                 echo "graph_title Number of years"
@@ -150,49 +149,50 @@ if [ "$CMD" = "years" ]; then
 		# echo $years_array | tr '[:space:]' " y"
 		# echo "graph_order y0"
 		printf "graph_order y"
-        echo $years_array | sed 's/ / y/g'
+                echo "${years_array// / y}"
 
-		for i in `seq 0 $no_of_years`; do
-			year=$(echo ${arr1[$i]})
-			if [ $year = 0 ]; then
-				echo y0.label No year
-			else
-				echo y${year}.label $year
-			fi
-			if [ $i = 0 ]; then
-				echo y${year}.draw AREA
-			else
-				echo y${year}.draw STACK
-			fi
-		done
-		exit 0
-	fi
-	for i in `seq 0 $no_of_years`; do
-		year=$(echo ${arr1[$i]})
-		printf "y%s.value " ${year}
-		printf "%b" "albums 0 0 year:${year}\nexit\n" | $NC $HOST $PORT | sed 's/%3A/:/g' | cut -d ':' -f 3
-	done
-elif [ "$CMD" = "signalstrength" -o "$CMD" = "mixer volume" ]; then
+                for i in $(seq 0 "$no_of_years"); do
+                        year=${arr1[$i]}
+                        if [ "$year" = 0 ]; then
+                                echo "y0.label No year"
+                        else
+                                echo "y${year}.label $year"
+                        fi
+                        if [ "$i" = 0 ]; then
+                                echo "y${year}.draw AREA"
+                        else
+                                echo "y${year}.draw STACK"
+                        fi
+                done
+                exit 0
+        fi
+        for i in $(seq 0 "$no_of_years"); do
+                year=${arr1[$i]}
+                printf "y%s.value " "$year"
+                printf "%b" "albums 0 0 year:${year}\\nexit\\n" | "$NC" "$HOST" "$PORT" | sed 's/%3A/:/g' | cut -d ':' -f 3
+        done
+elif [ "$CMD" = "signalstrength" ] || [ "$CMD" = "mixer volume" ]; then
         if [ "$1" = "config" ]; then
             echo "graph_title $TITLE"
             echo "graph_category radio"
-            COUNT=$(printf "%b" "player count ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 3)
+            COUNT=$(printf "%b" 'player count ?\nexit\n' | "$NC" "$HOST" "$PORT" | cut -d " " -f 3)
             (( COUNT-- ))
-            for ID in $(seq 0 $COUNT); do
-                MAC=$(printf "%b" "player id $ID ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%3A/:/g')
-		NAME=$(printf "%b" "player name $MAC ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%20/ /g')
-		MAC2=$(echo $MAC | sed 's/://g; s/\./_/g')
-	        echo "$MAC2.label $NAME"
+            for ID in $(seq 0 "$COUNT"); do
+                MAC=$(printf "%b" "player id $ID ?\\nexit\\n" | "$NC" "$HOST" "$PORT" | cut -d " " -f 4 | sed 's/%3A/:/g')
+                NAME=$(printf "%b" "player name $MAC ?\\nexit\\n" | "$NC" "$HOST" "$PORT" | cut -d " " -f 4 | sed 's/%20/ /g')
+                MAC2=${MAC//:/}
+                MAC2=${MAC2//./_}
+                echo "$MAC2.label $NAME"
             done
             exit 0
         fi
-        COUNT=$(printf "%b" "player count ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 3)
+        COUNT=$(printf "%b" 'player count ?\nexit\n' | "$NC" "$HOST" "$PORT" | cut -d " " -f 3)
         (( COUNT-- ))
-        for ID in $(seq 0 $COUNT); do
-            MAC=$(printf "%b" "player id $ID ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%3A/:/g')
-            VAL=$(printf "%b" "$MAC $CMD ?\nexit\n"| $NC $HOST $PORT | cut -d " " -f 2- | sed "s/$CMD //")
-            MAC2=$(echo $MAC| sed 's/://g')
-            [ $VAL -eq 0 ] && VAL=100
+        for ID in $(seq 0 "$COUNT"); do
+            MAC=$(printf "%b" "player id $ID ?\\nexit\\n" | "$NC" "$HOST" "$PORT" | cut -d " " -f 4 | sed 's/%3A/:/g')
+            VAL=$(printf "%b" "$MAC $CMD ?\\nexit\\n"| "$NC" "$HOST" "$PORT" | cut -d " " -f 2- | sed "s/$CMD //")
+            MAC2=${MAC//:/}
+            [ "$VAL" -eq 0 ] && VAL=100
             echo "$MAC2.value $VAL"
 	done
 else
@@ -205,5 +205,5 @@ else
 	fi
 	CMD="info total $ATTR "
 	echo -n "$ATTR.value "
-	printf "%b" "$CMD ?\nexit\n" | $NC $HOST $PORT | sed "s/^$CMD//"
+	printf "%b" "$CMD ?\\nexit\\n" | "$NC" "$HOST" "$PORT" | sed "s/^$CMD//"
 fi

@@ -76,7 +76,7 @@ sub parseLogfile {
     while (my $line = <$LOGFILE>) {
         chomp ($line);
 
-        if ($line =~ /qmgr.*: ([0-9A-F]+): from=.*, size=([0-9]+)/) {
+        if ($line =~ /qmgr.*: ([0-9A-Za-z]+): from=.*, size=([0-9]+)/) {
             # The line with queue ID and size may pass along multiple times (every time the mail
             # is moved into the active queue for another delivery attempt). The size should always
             # be the same.
@@ -85,7 +85,7 @@ sub parseLogfile {
             }
             # probably it is the same value as before
             $volumes_per_queue_id{$1}->{size} = $2;
-        } elsif ($line =~ / ([0-9A-F]+): to=.*, status=sent /) {
+        } elsif ($line =~ / ([0-9A-Za-z]+): to=.*, status=sent /) {
             # The "sent" line is repeated for every successful delivery for each recipient.
             if (exists($volumes_per_queue_id{$1})) {
                 $volume_delivered += $volumes_per_queue_id{$1}->{size};
@@ -108,20 +108,20 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
     my $logfile;
     `which postconf >/dev/null 2>/dev/null`;
     if (!$?) {
-	$logfile = "$LOGDIR/$LOGFILE";
+        $logfile = "$LOGDIR/$LOGFILE";
 
-	if (-f $logfile) {
+        if (-f $logfile) {
             if (-r "$logfile") {
                 print "yes\n";
                 exit 0;
             } else {
                 print "no (logfile '$logfile' not readable)\n";
             }
-	} else {
-	    print "no (logfile '$logfile' not found)\n";
-	}
+        } else {
+            print "no (logfile '$logfile' not found)\n";
+        }
     } else {
-	print "no (postfix not found)\n";
+        print "no (postfix not found)\n";
     }
 
     exit 0;
@@ -153,7 +153,7 @@ if (! -f $logfile) {
 
 
 if (!defined($volume_delivered)) {
-    
+
     # No state file present.  Avoid startup spike: Do not read log
     # file up to now, but remember how large it is now, and next
     # time read from there.
@@ -165,7 +165,9 @@ if (!defined($volume_delivered)) {
 } else {
     # decode the serialized hash
     # source format: "$id1=$size1:$timestamp1 $id2=$size2:$timestamp2 ..."
-    for my $queue_item_descriptor (split(/ /, $serialized_volumes_queue)) {
+    # The "serialized" value may be undefined, in case we just upgraded from the version before
+    # 2018, since that old version stored only two fields in the state file.  Tolerate this.
+    for my $queue_item_descriptor (split(/ /, $serialized_volumes_queue || "")) {
         (my $queue_item_id, my $queue_item_content) = split(/=/, $queue_item_descriptor);
         (my $size, my $timestamp) = split(/:/, $queue_item_content);
         $volumes_per_queue_id{$queue_item_id} = { size => int($size), timestamp => int($timestamp) };

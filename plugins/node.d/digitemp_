@@ -43,11 +43,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 =cut
 
+# common values: digitemp_DS2490, digitemp_DS9097, digitemp_DS9097U
 digitemp=${0##*/}
 model=${digitemp##*_}
 digitemprc=${digitemprc:-/etc/digitemp.conf}
 
-if ! [ -x "`which $digitemp`" ]; then
+if ! [ -x "$(which "$digitemp")" ]; then
     echo "$digitemp not found" >&2
     exit 1
 fi
@@ -57,7 +58,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_vlabel degrees C'
     echo 'graph_category sensors'
     echo "graph_info This graph shows the temperature read from $model 1-wire sensors"
-    $digitemp -c "$digitemprc" -q -a -o '%s %R' -H '%s %R' | grep -v ^Found | while read sensor serial; do
+    $digitemp -c "$digitemprc" -q -a -o '%s %R' | grep -v ^Found | while read -r sensor serial; do
 	echo "sensor$serial.label sensor #$sensor"
 	echo "sensor$serial.type GAUGE"
 	echo "sensor$serial.info Temperature from sensor #$sensor"
@@ -67,4 +68,4 @@ if [ "$1" = "config" ]; then
    exit 0
 fi
 
-$digitemp -c "$digitemprc" -q -a -o 'sensor%R.value %C' -H 'sensor%R.value %C'|grep -v ^Found
+$digitemp -c "$digitemprc" -q -a -o 'sensor%R.value %C'|grep -v ^Found

@@ -3486,6 +3486,70 @@ leeclemens (1):
 tsaavik (1):
       dynazoom: added logo and backlink
 
+munin-2.0.39, 2018-07-24
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Hans de Graaff (1):
+      Fix syntax error in make install sh code
+
+Lars Kruse (37):
+      Merge pull request #985 from bunder2015/patch-1
+      Merge pull request #988 from graaff/make-install-bash-syntax-error
+      plugin postfix_mailvolume: handle statefile upgrade from previous version
+      plugin threads: tolerate SELinux policies and other read errors
+      Makefile / dev_scripts: simplify variables
+      Fix shellcheck issues in dev_scripts/
+      Plugin cpuspeed: fix documentation of 'scaleto100' configuration
+      Plugins for Linux: fix shellcheck issues
+      Plugin tcp: fix autoconf exit code
+      Makefile: add lint check for Linux plugins
+      Plugin cpu: configurable 'scaleto100'
+      Plugins for Linux: fix more shellcheck issues
+      Plugin snort_pkts: remove dependency on 'bc'
+      Plugins: fix shellcheck issues for bash plugins
+      Plugins: fix MUNIN_LIBDIR source quoting
+      Plugin qmailqstat: fix misspelled configuration documentation
+      Plugin foldingathome: improve path handling
+      Plugin ipac-ng: return "U" in case of errors
+      Plugin multiping: remove unusable symlink detection
+      Plugins: fix more trivial shellcheck issues
+      Plugins: a bit more complicated fixes for shellcheck issues
+      Plugins: fix trivial quoting issues for non-Linux platforms
+      'make lint': add more platforms for shell checks and add python checks
+      'make lint': add python plugins
+      travis: add 'make lint' for style checks
+      Merge pull request #977 from sumpfralle/style-checks
+      Makefile: improve robustness of "Defaults" variable substitution
+      Makefile: unify usage of whitespace
+      Makefile: prevent repeated substitution of "Defaults.pm" during "install"
+      Makefile: remove obsolete 'build-common-prime' target
+      Makefile: prevent repetitive rebuild of man pages
+      Makefile: prevent repetitive substitutions for generated files
+      Travis: add 'liblog-log4perl-perl' dependency
+      Makefile: handle filenames with colons even with old versions of Make
+      Travis: reduce set of perl versions for CI
+      Plugin postfix_mailvolume: handle long queue IDs
+      Plugins postfix_*: unify whitespace
+
+Steve Schnepp (1):
+      Merge pull request #980 from zmousm/fix-asynd-fork-bomb
+
+Zenon Mousmoulas (1):
+      Fix munin-asyncd fork bomb
+
+bunder2015 (1):
+      Fix paths on nutups_
+
+
 munin-2.0.38, 2018-06-29
 
 -------

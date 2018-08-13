@@ -46,7 +46,7 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 if [ -f /etc/munin/ntp-freq-comp ]; then
-    fcomp=`cat /etc/munin/ntp-freq-comp`
+    fcomp=$(cat "/etc/munin/ntp-freq-comp")
 else
     fcomp=0
 fi
@@ -64,7 +64,7 @@ fi
 
 printf 'ntp_pll_freq.value '
 
-if [ $(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.') -ge 427 ]
+if [ "$(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.')" -ge 427 ]
 then
     cmd=ntpq
 else

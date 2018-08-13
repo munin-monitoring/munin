@@ -1,0 +1,4 @@
+#!/bin/sh
+
+./dev_scripts/stop_munin-sched
+./dev_scripts/start_munin-sched "$@"
