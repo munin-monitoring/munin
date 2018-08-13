@@ -62,13 +62,12 @@ if [ "$1" = "config" ]; then
         exit 0
 fi;
 
-fetchipac || error=1  
-if [ "$error" != "1" ]; then
+if fetchipac; then
         ipacsum -s 5m -x -f "$UP" | tail -n 1 | cut -d : -f 2 | awk \
-                {'print "up.value " $1'}                             
+                '{print "up.value " $1}'                             
         ipacsum -s 5m -x -f "$DOWN" | tail -n 1 | cut -d : -f 2 | awk \
-                {'print "down.value " $1'}                             
+                '{print "down.value " $1}'                             
 else
-        echo 'up.value 0'
-        echo 'down.value 0'
+        echo 'up.value U'
+        echo 'down.value U'
 fi

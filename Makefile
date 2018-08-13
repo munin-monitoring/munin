@@ -10,6 +10,8 @@
 DEFAULTS = Makefile.config
 CONFIG = Makefile.config
 
+PYTHON_LINT_CALL ?= python3 -m flake8
+
 include $(DEFAULTS)
 include $(CONFIG)
 
@@ -30,6 +32,7 @@ help:
 	@echo "    tar"
 	@echo
 	@echo "Test targets:"
+	@echo "    lint"
 	@echo "    test"
 	@echo "    testcover"
 	@echo "    testpod"
@@ -50,6 +53,29 @@ install: $(BUILD_SCRIPT)
 	grep -rl --null "@@" "$(or $(DESTDIR),.)" | xargs -0 sed -i \
 		-e "$$(perl -I lib -M"Munin::Common::Defaults" \
 			-e "Munin::Common::Defaults->print_as_sed_substitutions();")"
+
+.PHONY: lint
+lint:
+	@# SC1008: ignore our weird shebang (substituted later)
+	@# SC1090: ignore sourcing of files with variable in path
+	@# SC2009: do not complain about "ps ... | grep" calls (may be platform specific)
+	@# SC2126: tolerate "grep | wc -l" (simple and widespread) instead of "grep -c"
+	# TODO: fix the remaining shellcheck issues for the missing platforms:
+	#       aix, darwin, netbsd, sunos
+	#       (these require tests with their specific shell implementations)
+	find plugins/node.d/ \
+			plugins/node.d.cygwin/ \
+			plugins/node.d.debug/ \
+			plugins/node.d.linux/ -type f -print0 \
+		| xargs -0 grep -l --null '^#!.*/bin/sh' \
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell dash
+	find plugins/ -type f -print0 \
+		| xargs -0 grep -l --null "^#!.*/bin/bash" \
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell bash
+	find plugins/ -type f -print0 \
+		| xargs -0 grep -l --null "^#!.*python" \
+			| xargs -0 $(PYTHON_LINT_CALL)
+	# TODO: perl plugins currently fail with perlcritic
 
 .PHONY: clean
 clean: $(BUILD_SCRIPT)

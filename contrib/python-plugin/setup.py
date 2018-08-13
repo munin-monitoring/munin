@@ -11,11 +11,11 @@ try:
 except OSError:
     version = "unknown"
 
+
 setup(name="python-munin",
       version=version,
       url="http://dev.sbhr.dk/svn/python-munin",
       author="Morten Siebuhr",
       author_email="sbhr@sbhr.dk",
       description="",
-      # packages=['munin'],
       py_modules=['munin'])

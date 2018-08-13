@@ -16,7 +16,7 @@
 #%# family=manual
 #%# capabilities=autoconf suggest
 
-INTERFACE=$(basename $0 | sed 's/^vlan_//g' | tr '_' '.')
+INTERFACE=$(basename "$0" | sed 's/^vlan_//g' | tr '_' '.')
 
 if [ "$1" = "autoconf" ]; then
     if [ ! -d /proc/net/vlan ] ; then
@@ -39,7 +39,7 @@ fi
 if [ "$1" = "suggest" ]; then
     for file in /proc/net/vlan/*; do
 	if [ ! "$file" = "/proc/net/vlan/config" ]; then
-	    basename $file | tr '.' '_'
+	    basename "$file" | tr '.' '_'
 	fi
     done
     exit 0
@@ -49,6 +49,7 @@ if [ "$1" = "config" ]; then
 	echo "graph_order received transmitted"
 	echo "graph_title VLAN $INTERFACE Traffic"
 	echo 'graph_args --base 1024'
+	# shellcheck disable=SC2016
 	echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'
 	echo 'graph_category network'
 	echo 'received.label bps'
@@ -66,5 +67,4 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-awk "/bytes received/ { print \"received.value \" \$4 } /bytes transmitted/ { print \"transmitted.value \" \$4 }" < /proc/net/vlan/$INTERFACE
-
+awk '/bytes received/ { print "received.value " $4 } /bytes transmitted/ { print "transmitted.value " $4 }' <"/proc/net/vlan/$INTERFACE"

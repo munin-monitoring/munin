@@ -32,7 +32,7 @@ proc="getattr setattr lookup access readlink read write create mkdir symlink mkn
 if [ "$1" = "autoconf" ]; then
 	if [ -f "$NFSD" ]; then
 		grep -q proc3 "$NFSD"
-		if [ $? = 0 ]; then
+		if grep -q proc3 "$NFSD"; then
 			echo yes
 		else
 			echo "no (no proc3 in $NFSD)"
@@ -48,6 +48,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title NFS Server'
 	echo 'graph_args --base 1000 -l 0'
+	# shellcheck disable=SC2016
 	echo 'graph_vlabel requests / ${graph_period}'
 	echo 'graph_total total'
 	echo 'graph_category fs'

@@ -83,7 +83,7 @@ STATEFILE=$MUNIN_PLUGSTATE/amavis.offset
 mktemp_command="${mktemp_command:-/bin/mktemp}"
 
 if [ "$1" = "autoconf" ]; then
-        if [ -f "${AMAVIS_LOG}" -a -n "${LOGTAIL}" -a -x "${LOGTAIL}" ] ; then
+	if [ -f "${AMAVIS_LOG}" ] && [ -n "${LOGTAIL}" ] && [ -x "${LOGTAIL}" ] ; then
 		echo yes
 		exit 0
 	else
@@ -94,7 +94,7 @@ fi
 
 # Try tailing a random file to check how arguments are passed
 ARGS=0
-`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
+"$LOGTAIL" /etc/hosts 2>/dev/null >/dev/null
 if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
 	ARGS=1
@@ -124,22 +124,19 @@ spams=U
 TEMP_FILE=$($mktemp_command) || exit 73
 trap 'rm -f "$TEMP_FILE"' EXIT
 
-if [ -n "$TEMP_FILE" -a -f "$TEMP_FILE" ]
-then
-	if [ $ARGS != 0 ]; then
-	    $LOGTAIL -f ${AMAVIS_LOG} -o ${STATEFILE} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
+if [ -n "$TEMP_FILE" ] && [ -f "$TEMP_FILE" ]; then
+	if [ "$ARGS" != 0 ]; then
+	    "$LOGTAIL" -f "${AMAVIS_LOG}" -o "${STATEFILE}" | grep 'amavis\[.*\]:' > "${TEMP_FILE}"
 	else
-	    $LOGTAIL ${AMAVIS_LOG} ${STATEFILE} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
+	    "$LOGTAIL" "${AMAVIS_LOG}" "${STATEFILE}" | grep 'amavis\[.*\]:' > "${TEMP_FILE}"
 	fi
-	total=$(grep -c 'Hits:' ${TEMP_FILE})
-	virus=$(grep -c 'INFECTED.*Hits:' ${TEMP_FILE})
-	spamm=$(grep -c 'SPAMMY.*Hits:' ${TEMP_FILE})
-	spams=$(grep -c 'SPAM .*Hits:' ${TEMP_FILE})
-
+	total=$(grep -c 'Hits:' "$TEMP_FILE")
+	virus=$(grep -c 'INFECTED.*Hits:' "$TEMP_FILE")
+	spamm=$(grep -c 'SPAMMY.*Hits:' "$TEMP_FILE")
+	spams=$(grep -c 'SPAM .*Hits:' "$TEMP_FILE")
 fi
 
 echo "virus.value ${virus}"
 echo "spam_maybe.value ${spamm}"
 echo "spam_sure.value ${spams}"
 echo "total.value ${total}"
-

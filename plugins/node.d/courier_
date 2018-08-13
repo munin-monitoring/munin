@@ -52,15 +52,14 @@ Unknown
 
 # Set the location of the courier logs
 COURIER_LOG=${logfile:-/var/log/mail.log}
-SERVICE=${service:-`basename $0 | sed 's/^courier_//g'`}
+SERVICE=${service:-$(basename "$0" | sed 's/^courier_//g')}
 OFFSET_FILE=${MUNIN_PLUGSTATE}/courier_${SERVICE}.offset
 LOGTAIL=${logtail:-/usr/sbin/logtail}
 mktemp_command="${mktemp_command:-/bin/mktemp}"
 
 case $1 in
     autoconf|detect)
-    if [ -f ${COURIER_LOG} -a -x ${LOGTAIL} ] 
-    then
+    if [ -f "$COURIER_LOG" ] &&  [ -x "$LOGTAIL" ]; then
 	# Makes no sense for wildcard plugin to autoconf to yes
 	# unless you can provide suggestions.
 	echo no
@@ -86,7 +85,7 @@ EOF
 esac
 
 ARGS=0
-`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
+"$LOGTAIL" /etc/hosts 2>/dev/null >/dev/null
 if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
         ARGS=1
@@ -96,15 +95,15 @@ fi
 TEMP_FILE=$($mktemp_command) || exit 73
 trap 'rm -f "$TEMP_FILE"' EXIT
 
-if [ $ARGS != 0 ]; then
-    ${LOGTAIL} -f ${COURIER_LOG} -o ${OFFSET_FILE} | grep "$SERVICE" > ${TEMP_FILE}
+if [ "$ARGS" != 0 ]; then
+    "$LOGTAIL" -f "${COURIER_LOG}" -o "${OFFSET_FILE}" | grep "$SERVICE" > "$TEMP_FILE"
 else
-    ${LOGTAIL} ${COURIER_LOG} ${OFFSET_FILE} | grep "$SERVICE" > ${TEMP_FILE}
+    "$LOGTAIL" "${COURIER_LOG}" "${OFFSET_FILE}" | grep "$SERVICE" > "$TEMP_FILE"
 fi
-connection=`grep Connection ${TEMP_FILE} | wc -l`
-disconnected=`grep DISCONNECTED ${TEMP_FILE} | wc -l`
-login=`grep LOGIN ${TEMP_FILE} | wc -l`
-logout=`grep LOGOUT ${TEMP_FILE} | wc -l`
+connection=$(grep Connection "$TEMP_FILE" | wc -l)
+disconnected=$(grep DISCONNECTED "$TEMP_FILE" | wc -l)
+login=$(grep LOGIN "$TEMP_FILE" | wc -l)
+logout=$(grep LOGOUT "$TEMP_FILE" | wc -l)
 
 echo "connection.value ${connection}"
 echo "disconnected.value ${disconnected}"

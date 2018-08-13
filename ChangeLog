@@ -3486,6 +3486,168 @@ leeclemens (1):
 tsaavik (1):
       dynazoom: added logo and backlink
 
+munin-2.0.39, 2018-07-24
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Hans de Graaff (1):
+      Fix syntax error in make install sh code
+
+Lars Kruse (37):
+      Merge pull request #985 from bunder2015/patch-1
+      Merge pull request #988 from graaff/make-install-bash-syntax-error
+      plugin postfix_mailvolume: handle statefile upgrade from previous version
+      plugin threads: tolerate SELinux policies and other read errors
+      Makefile / dev_scripts: simplify variables
+      Fix shellcheck issues in dev_scripts/
+      Plugin cpuspeed: fix documentation of 'scaleto100' configuration
+      Plugins for Linux: fix shellcheck issues
+      Plugin tcp: fix autoconf exit code
+      Makefile: add lint check for Linux plugins
+      Plugin cpu: configurable 'scaleto100'
+      Plugins for Linux: fix more shellcheck issues
+      Plugin snort_pkts: remove dependency on 'bc'
+      Plugins: fix shellcheck issues for bash plugins
+      Plugins: fix MUNIN_LIBDIR source quoting
+      Plugin qmailqstat: fix misspelled configuration documentation
+      Plugin foldingathome: improve path handling
+      Plugin ipac-ng: return "U" in case of errors
+      Plugin multiping: remove unusable symlink detection
+      Plugins: fix more trivial shellcheck issues
+      Plugins: a bit more complicated fixes for shellcheck issues
+      Plugins: fix trivial quoting issues for non-Linux platforms
+      'make lint': add more platforms for shell checks and add python checks
+      'make lint': add python plugins
+      travis: add 'make lint' for style checks
+      Merge pull request #977 from sumpfralle/style-checks
+      Makefile: improve robustness of "Defaults" variable substitution
+      Makefile: unify usage of whitespace
+      Makefile: prevent repeated substitution of "Defaults.pm" during "install"
+      Makefile: remove obsolete 'build-common-prime' target
+      Makefile: prevent repetitive rebuild of man pages
+      Makefile: prevent repetitive substitutions for generated files
+      Travis: add 'liblog-log4perl-perl' dependency
+      Makefile: handle filenames with colons even with old versions of Make
+      Travis: reduce set of perl versions for CI
+      Plugin postfix_mailvolume: handle long queue IDs
+      Plugins postfix_*: unify whitespace
+
+Steve Schnepp (1):
+      Merge pull request #980 from zmousm/fix-asynd-fork-bomb
+
+Zenon Mousmoulas (1):
+      Fix munin-asyncd fork bomb
+
+bunder2015 (1):
+      Fix paths on nutups_
+
+
+munin-2.0.38, 2018-06-29
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Dmitry Marakasov (5):
+      Specify minimum value for tuples
+      Specify minimal value for postgres scans
+      Specify minimal value for bgwriter
+      Speficy minimal value for PostgreSQL checkpoints
+      Specify minimal value for postgresql buffer cache
+
+Jose-Marcio Martins da Cruz (1):
+      Update ntp_states.in
+
+Kenyon Ralph (3):
+      add Transport Domain environment variable for Munin::Plugin::SNMP
+      add SNMP domain to tests
+      munin-node-configure: allow setting SNMP domain
+
+Lars Kruse (55):
+      Plugin postfix_mailvolume: calculate separate volume for delivered mails
+      move debug plugin 'sincos' to debug plugin directory
+      plugin smart_: fix flake8 warnings
+      plugin threads (Linux): use "find" instead of globbing; handle zero threads
+      plugins postgres_*: unify commas in arrays and hashes
+      plugins postgres_*: unify end of plugin
+      backport plugin changes from master
+      Makefile: "build-man" depends on "infiles"
+      dynazoom: cleanup whitespace
+      dynazoom: add missing closing tags
+      dynazoom: fix validation issues and mark as XHTML 1.1
+      dynazoom: cgi-based template adapted to cron-based template
+      Template 'problemview': fix HTML validation problems
+      Template 'serviceview': use double quotes for tag attributes
+      plugin postfix_mailvolume: do not use hashs with save_state/restore_state
+      dynazoom: temporarily remove doctype line
+      plugin hddtemp_smartctl: handle missing 'smartctl' gracefully
+      Java compilation: change source and target specification from 1.5 to 1.7
+      getversion: replace '$(...)' with backticks (for portability)
+      getversion: unify whitespace
+      getversion: improve shell style
+      getversion: fix or override shellcheck warnings
+      plugin quota_usage_: backport changes from master
+      mysql_innodb: fix version string comparisons for v10.x (or later)
+      memory (freebsd): add new "laundry" counter
+      plugin bonding_err_: improve input parsing
+      plugin bonding_err_: separate interface name parsing
+      plugin bonding_err_: separate BONDINGIF assembly
+      plugin bonding_err_: separate misconfiguration warning; exit with error
+      plugin bonding_err_: rename variable 'if' to 'if_name'
+      plugin bonding_err_: fix remaining shellcheck issues
+      plugin iostat_ios: fix major block device number for filtering LVM
+      plugin iostat_ios: clarify documentation (only low-level devices are tracked)
+      plugin ipmi_sensor_: handle lines without values
+      plugin ipmi_sensor_: indicate possible symlink names in case of error
+      plugin ipmi_sensor_: unify whitespace
+      plugin ipmi_sensor_: python3 compatibility
+      plugin ipmi_sensor_: fix flake8 style issues
+      plugin ipmi_sensor_: decoding for python3
+      plugin ipmi_: add hint for "power", support %-based fan speed
+      Python plugin: Python3 compatibility
+      plugin df_inode_ (FreeBSD): adjust filesystem exclusion to 'df' plugin
+      plugin df_ (FreeBSD): ignore /sys via the filesystem type
+      plugin df_inode (FreeBSD): exclude sysfs
+      HTML: escape ampersand in URL
+      plugin ntp_: reduce DNS timeout to 5 seconds
+      plugin netstat: unify the two sets of netstat plugins
+      Makefile: clarify plugin order comment
+      Makefile: simplify HP-UX-specific plugin handling
+      switch default python interpreter for plugins to python3
+      COPYING: remove obsolete reference to Bitstream Vera Mono
+      update COPYING based on commits
+      plugin samba: improve documentation formatting
+      plugin samba: warn if run as non-root
+      plugin samba: improve formatting, fix shellcheck issue
+
+Robert (1):
+      Fix argument size too big in threads plugin when there are too many processes.
+
+Tom Hendrikx (1):
+      Add a lower limit of 0 to postgres database size
+
+Tomohiro Hosaka (1):
+      Do not set database=undef when paramdatabase.
+
+leeclemens (2):
+      Graph system peer's stratum
+      Add missing parens around $syspeer_stratum_value
+
+
 munin-2.0.37, 2018-03-28
 
 -------

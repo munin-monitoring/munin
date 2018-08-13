@@ -1,6 +1,21 @@
 Munin - a network-wide graphing framework
 
-  Copyright (C) 2002-2009  Jimmy Olsen, et al.
+  Copyright (C) 2004-2010 Lupe Christoph <lupe@lupe-christoph.de>
+  Copyright (C) 2004-2011 Jimmy Olsen <jo@redpill-linpro.com>
+  Copyright (C) 2006-2013 Nicolai Langfeldt <nicolai.langfeldt@broadnet.no>
+  Copyright (C) 2007-2014 Matthias Schmitz <matthias@sigxcpu.org>
+  Copyright (C) 2007-2017 Stig Sandbeck Mathisen <ssm@fnord.no>
+  Copyright (C) 2009-2009 Kjell-Magne Øierud <kjellm@redpill-linpro.com>
+  Copyright (C) 2009-2011 Matthew Boyle <mlb@decisionsoft.com>
+  Copyright (C) 2009-2011 Tom Feiner <feiner.tom@gmail.com>
+  Copyright (C) 2009-2012 Erik I. Bolsø <knan@redpill-linpro.com>
+  Copyright (C) 2010-2018 Steve Schnepp <steve.schnepp@pwkf.org>
+  Copyright (C) 2011-2018 Kenyon Ralph <kenyon@kenyonralph.com>
+  Copyright (C) 2012-2015 Daniel Black <daniel.black@openquery.com>
+  Copyright (C) 2013-2018 Gabriele Pohl <contact@dipohl.de>
+  Copyright (C) 2015-2018 Quentin Stoeckel <chteuchteu@gmail.com>
+  Copyright (C) 2016-2018 Lars Kruse <devel@Lars Kruse.de>
+  ... and many more contributors
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
