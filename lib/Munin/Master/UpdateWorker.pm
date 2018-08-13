@@ -653,11 +653,19 @@ sub uw_handle_config {
 
 		# Adding the $field if not present.
 		# Using an array since, obviously, the order is important.
-		push @field_order, $arg1 unless grep { $arg1 } @field_order;
+		push @field_order, $arg1;
 	}
 
-	# Adding the default graph_order if not present
-	$service_attr{"graph_order"} .= join(" ", @field_order);
+	# Merging graph_order & field_order
+	{
+		my @graph_order = split(/ /, $service_attr{"graph_order"});
+		for my $field (@field_order) {
+			push @graph_order, $field unless grep { $field } @graph_order;
+		}
+
+		$service_attr{"graph_order"} = join(" ", @graph_order);
+	}
+
 
 	# Sync to database
 	# Create/Update the service
