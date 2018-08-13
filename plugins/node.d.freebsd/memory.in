@@ -93,4 +93,4 @@ if [ -n "$LAUNDRY_COUNT" ]; then
     echo "laundry.value $(( LAUNDRY_COUNT * PAGESIZE ))"
 fi
 echo free.value $(($FREE_COUNT*$PAGESIZE))
-echo swap.value $(swapinfo -k | awk '{sum += $3}; END {print sum * 1024}')
+echo swap.value $(swapinfo -k | awk '!/^Total/ && !/^Device/ {sum += $3}; END {print sum * 1024}')

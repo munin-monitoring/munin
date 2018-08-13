@@ -15,7 +15,7 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-EXCLUDEDFS="-t noprocfs,devfs,fdescfs,linprocfs,linsysfs,sysfs,nfs,nullfs"
+EXCLUDEDFS="-t noprocfs,devfs,fdescfs,linprocfs,linsysfs,sysfs,nfs,nullfs,cd9660"
 
 if [ $(uname -s) = "GNU/kFreeBSD" ]; then
 	# Debian ships df from GNU coreutils
