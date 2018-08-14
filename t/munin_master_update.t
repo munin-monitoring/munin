@@ -21,13 +21,13 @@ sleep(5);
 my $config = Munin::Master::Config->instance()->{"config"};
 $config->parse_config_from_file("t/config/munin.conf");
 
-$config->{dbdir} .= "/$$";
+$config->{dbdir} .= "/update/$$";
 
 system("mkdir", "-p", $config->{dbdir});
 
 Munin::Common::Logger::configure(
 	"output" => "screen",
-	"level" => "debug",
+	"level" => "info",
 );
 
 
