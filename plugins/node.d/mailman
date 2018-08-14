@@ -73,7 +73,7 @@ if($ARGV[0] and $ARGV[0] eq "autoconf") {
     if(-f $logfile && -d $libdir && -x $lister ) {
         print "yes\n";
     } else {
-        print "no\n";
+        print "no (can not find file $logfile or dir $libdir or executable $lister)\n";
     }
     exit 0;
 }
