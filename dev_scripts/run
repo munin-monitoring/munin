@@ -18,8 +18,8 @@ if [ -z "${1:-}" ]; then
 fi
 
 if command=$(command -v "$1"); then
-	echo "Found: ${command}"
-	echo "Command line: " "$@"
+	echo "# [dev/run] Found: ${command}"
+	echo "# [dev/run] Command line: " "$@"
 	exec "$@"
 else
 	echo >&2 "Failed to find '$1'"
