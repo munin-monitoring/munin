@@ -10,16 +10,8 @@
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #%# family=contrib
-#%# capabilities=autoconf
 
 statefile=$MUNIN_PLUGSTATE/plugin-fah_rank.state
-
-if [ "$1" = "autoconf" ]; then
-    # No real check of anything
-    # echo yes
-    echo no
-    exit 0
-fi
 
 if [ "$1" = "config" ]; then
     echo 'graph_title Folding@Home Rank'
