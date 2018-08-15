@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -26,7 +28,7 @@ GNU GPL
 =cut
 
 if [ "$1" = "autoconf" ]; then
-    grep -q '^Threads' /proc/$$/status && echo "yes" || echo "no"
+    grep -q '^Threads' /proc/$$/status && echo "yes" || echo "no (/proc/$$/status not readable)"
     exit 0
 fi
 

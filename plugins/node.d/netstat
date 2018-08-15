@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -27,7 +29,6 @@ GPLv2
 
 . "$MUNIN_LIBDIR/plugins/plugin.sh"
 
-
 NETSTAT_CMD=netstat
 
 
@@ -41,7 +42,7 @@ if [ "$1" = "autoconf" ]; then
 			echo "no (program $NETSTAT_CMD not found)"
 			exit 0
 		else
-			echo no
+			echo "no (unknown netstat return value $?)"
 			exit 0
 		fi
 	fi
