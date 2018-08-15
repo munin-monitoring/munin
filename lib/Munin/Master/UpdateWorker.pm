@@ -512,8 +512,12 @@ sub _db_state_update {
 		WHERE ds.name = ?");
 	$sth_ds->execute($node_id, $plugin, $field);
 	my ($ds_id) = $sth_ds->fetchrow_array();
-	DEBUG "_db_state_update.ds_id:$ds_id";
 	$sth_ds->finish();
+	if (! defined $ds_id) {
+		$dbh->disconnect();
+		return undef;
+	}
+	DEBUG "_db_state_update.ds_id:$ds_id";
 
 	my $sth_state = $dbh->prepare_cached("SELECT last_epoch, last_value FROM state WHERE id = ? AND type = ?");
 	$sth_state->execute($ds_id, "ds");
@@ -741,7 +745,8 @@ sub uw_handle_fetch {
 
 		# Update all data-driven components: State, RRD, Graphite
 		my $ds_id = $self->_db_state_update($plugin, $field, $when, $value);
-	        DEBUG "[DEBUG] ds_id($plugin, $field, $when, $value) = $ds_id";
+		continue if (! defined $ds_id);
+		DEBUG "[DEBUG] ds_id($plugin, $field, $when, $value) = $ds_id";
 
 		my ($rrd_file, $rrd_field);
 		{
