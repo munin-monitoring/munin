@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -41,7 +43,7 @@ if [ "$1" = "autoconf" ]; then
 			echo "no (could not run \"vmstat\")"
 			exit 0
 		else
-			echo no
+			echo "no (unknown vmstat return value $?)"
 			exit 0
 		fi
 	fi

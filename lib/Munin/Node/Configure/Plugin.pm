@@ -254,11 +254,6 @@ sub parse_suggest_response
         }
     }
 
-    unless (@{ $self->{suggestions} }) {
-        $self->log_error("No valid suggestions");
-        return;
-    }
-
     return;
 }
 

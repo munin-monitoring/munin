@@ -23,7 +23,7 @@ if [ "$1" = "autoconf" ]; then
 	exit 0
 fi
 
-EXCLUDEDFS="-t noprocfs,devfs,fdescfs,linprocfs,linsysfs,sysfs,nfs,nullfs"
+EXCLUDEDFS="-t noprocfs,devfs,fdescfs,linprocfs,linsysfs,sysfs,nfs,nullfs,cd9660"
 
 if [ $(uname -s) = "GNU/kFreeBSD" ]; then
 	# Debian ships df from GNU coreutils

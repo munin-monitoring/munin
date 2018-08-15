@@ -45,7 +45,7 @@ if [ "$1" = "autoconf" ]; then
 		echo yes
 		exit 0
 	else
-		echo no
+		echo "no (directories ${MSP_QUEUE} and ${MTA_QUEUE} not found)"
 		exit 0
 	fi
 fi

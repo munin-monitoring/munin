@@ -252,6 +252,10 @@ v2.2  2014-08-22
 
     - Add "ignoreexit" environment variable.
 
+v2.3 2018-08-10
+
+    - Improve readability, reduce code duplication, avoid shell expansion.
+
 =head1 BUGS
 
 None known
@@ -268,14 +272,21 @@ GPLv2 (http://www.gnu.org/licenses/gpl-2.0.txt)
 =cut
 """
 
+import collections
 import os
 import sys
 import string
 import pickle
-from math import log
+import subprocess
 
 # Increase verbosity (True/False) -> use munin-run --pidebug
 verbose = True if os.getenv('MUNIN_DEBUG') == '1' else False
+
+# collect configuration from environment
+smartctl_bin = os.getenv('smartpath', '/usr/sbin/smartctl')
+smartctl_args = os.getenv('smartargs', '-a')
+smartctl_ignore_standby = bool(os.getenv('ignorestandby', False))
+smartctl_ignore_exitcode_bitmask = int(os.getenv('ignoreexit', 0))
 
 # You may edit the following 3 variables
 # Suppress SMART warnings (True/False)
@@ -283,7 +294,10 @@ report_warnings = True
 # You may not modify anything below this line
 
 plugin_version = "2.2"
-statefiledir = os.environ['MUNIN_PLUGSTATE']
+
+
+SmartCtlParseResult = collections.namedtuple("SmartCtlParseResult",
+                                             ("has_failed", "smart_data", "model", "is_empty"))
 
 
 def verboselog(s):
@@ -291,110 +305,140 @@ def verboselog(s):
         sys.stderr.write('{}: {}\n'.format(plugin_name, s))
 
 
+def guess_full_path(hard_drive):
+    """ try to find the full path for a given hard disk name
+
+    None is returned if no device node was found.
+    """
+    for dev_dir in ('/dev', '/dev/disk/by-id'):
+        full_path = os.path.join(dev_dir, hard_drive)
+        if os.path.exists(full_path):
+            return full_path
+    else:
+        return None
+
+
+def is_fatal_exitcode(exit_code):
+    # The exit code represents a bitmask.
+    # Bits 0/1/2 belong to fatal errors (see smartctl's man page). Check if one of these is set.
+    return (exit_code & 0b111) > 0
+
+
 def read_values(hard_drive):
-    global emptyoutput
+    smart_values = {}
     try:
         verboselog('Reading S.M.A.R.T values')
         os.putenv('LC_ALL', 'C')
-        device = '/dev/' + hard_drive
-        if not os.path.exists(device):
-            device = '/dev/disk/by-id/' + hard_drive
-        smart_output = (os.popen(os.getenv('smartpath', '/usr/sbin/smartctl') + ' '
-                        + os.getenv('smartargs', '-a')
-                        + (os.getenv('ignorestandby', False) and ' ' or ' -n standby ')
-                        + '-A -i ' + device))
-        read_values = 0
-        lastline = None
-        for l in smart_output:
-            lastline = l
-            if l[:-1] == '':
-                read_values = 0
-            elif l[:13] == 'Device Model:' or l[:7] == 'Device:':
-                model_list = l.split(':')[1].split()
-                try:
-                    model_list.remove('Version')
-                except ValueError:
+        device = guess_full_path(hard_drive)
+        command_tokens = [smartctl_bin] + smartctl_args.split()
+        if not smartctl_ignore_standby:
+            command_tokens.extend(('-n', 'standby'))
+        command_tokens.extend(('-A', '-i', device))
+        proc = subprocess.Popen(command_tokens, stdout=subprocess.PIPE)
+        stdout, stderr = proc.communicate()
+        in_table_data = False
+        last_output_line = None
+        model = "unknown"
+        for line in stdout.decode().splitlines():
+            if not line:
+                # the table is finished
+                in_table_data = False
+            elif not in_table_data:
+                # process header data
+                if line.startswith('Device Model:') or line.startswith('Device:'):
+                    value = line.split(':', 1)[1].strip()
+                    # ignore the "Version" string
+                    model = ' '.join(token for token in value.split() if token != 'Version')
+                elif line.startswith('ID# ATTRIBUTE_NAME'):
+                    # Start reading the Attributes block
+                    in_table_data = True
+                else:
+                    # we can ignore other header lines
                     pass
-                model = ''.join(model_list)
-            if read_values == 1:
-                smart_attribute = l.split()
-                smart_values[smart_attribute[1].replace('-', '_')] = {
-                    "value": smart_attribute[3], "threshold": smart_attribute[5]}
-            elif l[:18] == "ID# ATTRIBUTE_NAME":
-                # Start reading the Attributes block
-                read_values = 1
-        exit_status = smart_output.close()
-        if exit_status is not None:
-            # smartctl exit code is a bitmask, check man page.
-            num_exit_status = int(exit_status/256)  # Python convention
+            else:
+                # this is a data table row
+                tokens = line.split()
+                key = tokens[1].replace('-', '_')
+                value = tokens[3]
+                threshold = tokens[5]
+                smart_values[key] = {"value": value, "threshold": threshold}
+            last_output_line = line
+        real_exit_code = proc.returncode
+        if real_exit_code > 0:
             # Allow to turn off warnings for some bits
-            num_exit_status = num_exit_status & ~int(os.getenv('ignoreexit', 0))
+            num_exit_status = real_exit_code & ~smartctl_ignore_exitcode_bitmask
         else:
             num_exit_status = 0
         if num_exit_status != 0:
-            if int(log(num_exit_status, 2)) <= 2:  # bit code
+            if is_fatal_exitcode(num_exit_status):
                 verboselog('smartctl cannot access S.M.A.R.T values on drive {}. Command exited '
-                           'with code {} (bit {})'
-                           .format(hard_drive, num_exit_status, int(log(num_exit_status, 2))))
-                verboselog(lastline[:-1])
+                           'with code {}'.format(hard_drive, num_exit_status))
+                verboselog(last_output_line)
             else:
-                verboselog('smartctl exited with code {} (bit {}). {} may be FAILING RIGHT NOW!'
-                           .format(num_exit_status, int(log(num_exit_status, 2)), hard_drive))
+                # the error is not fatal, but we should announce a warning
+                verboselog('smartctl exited with code {}. {} may be FAILING RIGHT NOW!'
+                           .format(num_exit_status, hard_drive))
     except Exception as exc:
         verboselog('Cannot access S.M.A.R.T values ({})! Check user rights or proper '
                    'smartmontools installation/arguments.'.format(exc))
         sys.exit(1)
-    if smart_values == {}:
-        verboselog('Can\'t find any S.M.A.R.T values in smartctl output!')
-        emptyoutput = True
-        # sys.exit(1)
+    if not smart_values:
+        verboselog("Can't find any S.M.A.R.T values in smartctl output!")
+        is_empty = True
     else:
-        emptyoutput = False
+        is_empty = False
     smart_values["smartctl_exit_status"] = {"value": str(num_exit_status), "threshold": "1"}
-    try:
-        smart_values["model"] = model
-    # For some reason we may have no value for "model"
-    except NameError:
-        smart_values["model"] = "unknown"
-    return exit_status
+    return SmartCtlParseResult(is_fatal_exitcode(real_exit_code), smart_values, model, is_empty)
+
+
+def get_state_filename(hard_drive):
+    statefiledir = os.environ['MUNIN_PLUGSTATE']
+    return os.path.join(statefiledir, "smart-{}.state".format(hard_drive))
 
 
 def open_state_file(hard_drive, mode):
-    return open(statefiledir+'/smart-'+'-'.join(hard_drive)+'.state', mode)
+    return open(get_state_filename(hard_drive), mode)
 
 
-def update_state_file(hard_drive):
+def update_state_file(hard_drive, model, smart_values):
+    data_storage = dict(smart_values)
+    data_storage["model"] = model
     try:
         verboselog('Saving statefile')
-        pickle.dump(smart_values, open_state_file(hard_drive, "wb"))
+        pickle.dump(data_storage, open_state_file(hard_drive, "wb"))
     except Exception as exc:
         verboselog('Error trying to save state file ({})! Check access rights'.format(exc))
 
 
-def print_plugin_values(hard_drive):
-    if not emptyoutput:
+def parse_state_file(hard_drive):
+    data = pickle.load(open_state_file(hard_drive, "rb"))
+    model = data.pop("model", "unknown")
+    return model, data
+
+
+def print_plugin_values(hard_drive, is_empty, smart_values):
+    if not is_empty:
         verboselog('Printing S.M.A.R.T values')
-        for key in smart_values.keys():
-            if key == "model":
-                continue
-            print(key+".value "+smart_values[key]["value"])
+        for key, content in smart_values.items():
+            print("{}.value {}".format(key, content["value"]))
     else:
         print_unknown_from_statefile(hard_drive)
 
 
 def print_config(hard_drive):
-    if os.path.exists(statefiledir+'/smart-'+'-'.join(hard_drive)+'.state'):
+    if os.path.exists(get_state_filename(hard_drive)):
         try:
-            verboselog('Try to recall previous S.M.A.R.T attributes for '+','.join(hard_drive))
-            smart_values_state = pickle.load(open_state_file(hard_drive, "rb"))
+            verboselog('Try to recall previous S.M.A.R.T attributes for {}'
+                       .format(hard_drive))
+            model, smart_values_state = parse_state_file(hard_drive)
         except Exception as exc:
             verboselog('Error opening existing state file ({})!'.format(exc))
             sys.exit(1)
     else:
         verboselog('No state file, reading S.M.A.R.T values for the first time')
-        read_values(hard_drive[0])
-        pickle.dump(smart_values, open_state_file(hard_drive, "wb"))
-        smart_values_state = smart_values
+        parsed_data = read_values(hard_drive)
+        update_state_file(hard_drive, parsed_data.model, parsed_data.smart_data)
+        smart_values_state = parsed_data.smart_data
 
     verboselog('Printing configuration')
     print('graph_title S.M.A.R.T values for drive '+','.join(hard_drive))
@@ -404,26 +448,20 @@ def print_config(hard_drive):
     print('graph_info This graph shows the value of all S.M.A.R.T attributes of drive {} ({}). '
           'smartctl_exit_status is the return value of smartctl. A non-zero return value '
           'indicates an error, a potential error, or a fault on the drive.'
-          .format(','.join(hard_drive), smart_values_state['model']))
-    attributes = smart_values_state.keys()
-    for key in attributes:
-        if key in ['smartctl_exit_status', 'model']:
-            continue
+          .format(hard_drive, model))
+    for key, content in smart_values_state.items():
         print('{}.label {}'.format(key, key))
         if report_warnings:
-            print('{}.critical {}:'.format(key, smart_values_state[key]["threshold"]))
-    print('smartctl_exit_status.label smartctl_exit_status')
-    if report_warnings:
-        print('smartctl_exit_status.warning '
-              + smart_values_state['smartctl_exit_status']["threshold"])
+            level = "warning" if key == 'smartctl_exit_status' else "critical"
+            print('{}.{} {}:'.format(key, level, content["threshold"]))
 
 
 def print_unknown_from_statefile(hard_drive):
-    if os.path.exists(statefiledir + '/smart-' + '-'.join(hard_drive) + '.state'):
+    if os.path.exists(get_state_filename(hard_drive)):
         try:
             verboselog('Failed to get S.M.A.R.T values from drive. Try to recall previous '
-                       'S.M.A.R.T attributes for '+','.join(hard_drive))
-            smart_values_state = pickle.load(open_state_file(hard_drive, "rb"))
+                       'S.M.A.R.T attributes for {}'.format(hard_drive))
+            model, smart_values_state = parse_state_file(hard_drive)
         except Exception as exc:
             verboselog('Error opening existing state file ({})!'.format(exc))
             sys.exit(1)
@@ -432,40 +470,31 @@ def print_unknown_from_statefile(hard_drive):
         sys.exit(1)
 
     verboselog('Printing unknown values for all attributes in state file')
-    attributes = smart_values_state.keys()
-    for key in attributes:
-        if key == 'model':
-            continue
-        print(key+'.value U')
+    for key in smart_values_state.keys():
+        print('{}.value U'.format(key))
 
 
-def get_hard_drive_name():
+def get_hard_drive_name(plugin_name):
     try:
-        name = [plugin_name[plugin_name.index('_')+1:]]
+        name = plugin_name.split('_', 1)[1]
         if os.uname()[0] == "SunOS":
-            try:
-                # if hard_drive name starts with "rdsk" or "rmt", try to reconstruct the path
-                if name[0][0:4] == "rdsk":
-                    name[0] = os.path.join("rdsk", name[0][4:])
-                elif name[0][0:3] == "rmt":
-                    name[0] = os.path.join("rmt", name[0][3:])
-            except Exception as exc:
-                verboselog('Failed to find SunOS hard_drive: {}'.format(exc))
-        if ((not os.path.exists('/dev/' + name[0]))
-                and (not os.path.exists('/dev/disk/by-id/' + name[0]))):
+            # Special handling of hard_drive names starting with "rdsk" or "rmt".
+            # These are changed from "rdsk0" to "rdsk/0".
+            for prefix in ('rdsk', 'rmt'):
+                if name.startswith(prefix):
+                    name = os.path.join(prefix, name[len(prefix):])
+        if guess_full_path(name) is None:
             # For 3ware cards, we have to set multiple plugins for the same hard drive name.
             # Let's see if we find a '-' in the drive name.
-            if name[0].find('-') != -1:
-                # Put the drive name and it's number in a list
-                name = [name[0][:name[0].rindex('-')], name[0][name[0].rindex('-')+1:]]
+            if '-' in name:
+                name = name.split('-')[0]
         # Chech that the drive exists in /dev
-        if ((not os.path.exists('/dev/' + name[0]))
-                and (not os.path.exists('/dev/disk/by-id/' + name[0]))):
-            verboselog('/dev/(disk/by-id/)?' + name[0] + ' not found!')
+        if guess_full_path(name) is None:
+            verboselog('/dev/(disk/by-id/)? {} not found!'.format(name))
             sys.exit(1)
         return name
     except Exception as exc:
-        verboselog('No S.M.A.R.T device name found in plugin\'s symlink ({})!'.format(exc))
+        verboselog("No S.M.A.R.T device name found in plugin's symlink ({})!".format(exc))
         sys.exit(1)
 
 
@@ -481,9 +510,8 @@ def find_smart_drives():
                         continue  # Ignore MD, Floppy, loop , RAM and LVM devices.
                     try:
                         verboselog('Trying {} ...'.format(drive))
-                        exit_status = read_values(drive)
-                        if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
-                                and not emptyoutput):
+                        parsed_data = read_values(drive)
+                        if not parsed_data.has_failed and not parsed_data.is_empty:
                             drives.append(drive)
                     except Exception:
                         continue
@@ -504,9 +532,8 @@ def find_smart_drives():
                     if words[-1][-1] not in string.digits:
                         try:
                             verboselog('Trying '+words[-1]+'...')
-                            exit_status = read_values(words[-1])
-                            if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
-                                    and not emptyoutput):
+                            parsed_data = read_values(words[-1])
+                            if not parsed_data.has_failed and not parsed_data.is_empty:
                                 drives.append(words[-1])
                         except Exception:
                             continue
@@ -523,9 +550,8 @@ def find_smart_drives():
                     continue
                 try:
                     verboselog('Trying '+drive+'c...')
-                    exit_status = read_values(drive+'c')
-                    if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values(drive + 'c')
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append(drive+'c')
                 except Exception:
                     continue
@@ -541,9 +567,8 @@ def find_smart_drives():
                     continue
                 try:
                     verboselog('Trying '+drive+'...')
-                    exit_status = read_values(drive)
-                    if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values(drive)
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append(drive)
                 except Exception:
                     continue
@@ -556,9 +581,8 @@ def find_smart_drives():
                 try:
                     drive = os.path.basename(drivepath)
                     verboselog('Trying '+drive+'...')
-                    exit_status = read_values(drive)
-                    if ((exit_status is None or int(log(int(exit_status/256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values(drive)
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append(drive)
                 except Exception:
                     continue
@@ -574,9 +598,8 @@ def find_smart_drives():
                     continue
                 try:
                     verboselog('Trying {} ...'.format(drive))
-                    exit_status = read_values(drive + 'c')
-                    if ((exit_status is None or int(log(int(exit_status / 256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values(drive + 'c')
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append(drive + 'c')
                 except Exception:
                     continue
@@ -589,9 +612,8 @@ def find_smart_drives():
                 try:
                     drive = os.path.basename(drivepath)
                     verboselog('Trying rdsk {} ...'.format(drive))
-                    exit_status = read_values('rdsk' + drive)
-                    if ((exit_status is None or int(log(int(exit_status / 256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values('rdsk' + drive)
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append('rdsk' + drive)
                 except Exception:
                     continue
@@ -599,9 +621,8 @@ def find_smart_drives():
                 try:
                     drive = os.path.basename(drivepath)
                     verboselog('Trying rmt {} ...'.format(drive))
-                    exit_status = read_values('rmt' + drive)
-                    if ((exit_status is None or int(log(int(exit_status / 256), 2)) > 2)
-                            and not emptyoutput):
+                    parsed_data = read_values('rmt' + drive)
+                    if not parsed_data.has_failed and not parsed_data.is_empty:
                         drives.append('rmt' + drive)
                 except Exception:
                     continue
@@ -612,19 +633,17 @@ def find_smart_drives():
 
 """ Main part """
 
-smart_values = {}
-emptyoutput = False
 plugin_name = list(os.path.split(sys.argv[0]))[1]
-verboselog('plugins\' UID: ' + str(os.geteuid()) + ' / plugins\' GID: ' + str(os.getegid()))
+verboselog("plugins' UID: {:d} / plugins' GID: {:d}".format(os.geteuid(), os.getegid()))
 
 # Parse arguments
 if len(sys.argv) > 1:
     if sys.argv[1] == "config":
-        hard_drive = get_hard_drive_name()
+        hard_drive = get_hard_drive_name(plugin_name)
         print_config(hard_drive)
         sys.exit(0)
     elif sys.argv[1] == "autoconf":
-        if os.path.exists(os.getenv('smartpath', '/usr/sbin/smartctl')):
+        if os.path.exists(smartctl_bin):
             if not find_smart_drives():
                 print('no (no drives accessible)')
             else:
@@ -645,9 +664,9 @@ if len(sys.argv) > 1:
         sys.exit(1)
 
 # No argument given, doing the real job:
-hard_drive = get_hard_drive_name()
-read_values(hard_drive[0])
-if not emptyoutput:
-    update_state_file(hard_drive)
-print_plugin_values(hard_drive)
+hard_drive = get_hard_drive_name(plugin_name)
+parsed_data = read_values(hard_drive)
+if not parsed_data.is_empty:
+    update_state_file(hard_drive, parsed_data.model, parsed_data.smart_data)
+print_plugin_values(hard_drive, parsed_data.is_empty, parsed_data.smart_data)
 sys.exit(0)

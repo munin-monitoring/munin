@@ -94,4 +94,3 @@ if [ -n "$LAUNDRY_COUNT" ]; then
 fi
 echo free.value $(($FREE_COUNT*$PAGESIZE))
 echo swap.value $(swapinfo -k | awk '!/^Total/ && !/^Device/ {sum += $3}; END {print sum * 1024}')
-echo buffers.value $(($BUFFERS_COUNT))

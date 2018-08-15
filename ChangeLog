@@ -3486,6 +3486,69 @@ leeclemens (1):
 tsaavik (1):
       dynazoom: added logo and backlink
 
+
+munin-2.0.40, 2018-08-15
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Christian Göttsche (15):
+      [plugins] fix varnish autoconf errors
+      [plugins] fix nestats_multi autoconf error
+      [plugins] fix meminfo autoconf error
+      [plugins] fix ejabberd_ autoconf error
+      fix pgsql plugin driver to give a well formed autoconf reply
+      fix warning on node list operation
+      [plugins] give reasons for inactive plugins
+      [plugins] return 0 in autoconf
+      [munin-node-configure] expect autoconf to return 0 even in the no case
+      [plugins] fix autoconf for lpstat
+      overlook some plugins
+      [munin-node-configure] do not error out on empty suggest output
+      [plugins] quote variable
+      [plugins] fix hddtemp_smartctl autoconf
+      [plugins] overlook df and netstat linux plugins
+
+Hiroaki Abe (1):
+      plugins/freebsd/{df,df_inode}: exclude cd9660 file systems.
+
+Lars Kruse (24):
+      Makefile: add current directory to perl include path
+      Plugin digitemp_: unify whitespace
+      Plugin digitemp_: fix shellcheck issues; clarify error message
+      Plugin digitemp_: reduce code duplication
+      Plugin digitemp_: implement "autoconf" and "suggest"
+      Plugin digitemp_: mention the configuration file
+      Plugin hddtemp_smartctl: unify whitespace
+      Plugin sensors_: enable 'auto' family
+      Plugin smart_: unify state file access
+      Plugin smart_: pythonize expressions
+      Plugin smart_: simplify output parser
+      Plugin smart_: remove hard disk list weirdness
+      Plugin smart_: simplify 'SunOS' disk handling
+      Plugin smart_: unify code for guessing of full path
+      Plugin smart_: assemble environment configuration at the beginning
+      Plugin smart_: use 'subprocess' for safe command execution
+      Plugin smart_: improve exit code handling
+      Plugin smart_: avoid global variables and clarify data structure
+      Plugin smart_: update version information
+      Revert "fix warning on node list operation"
+      Plugin digitemp_: fix shellcheck issue
+      postfix_mailsts plugin: add 'milter-reject' event
+      Makefile: add targets "tar-signed" and "tar-upload"
+      Update release checklist
+
+Mathieu Arnold (1):
+      Fix when using more than one swap device.
+
+
 munin-2.0.39, 2018-07-24
 
 -------

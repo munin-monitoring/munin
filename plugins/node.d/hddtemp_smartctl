@@ -1,5 +1,8 @@
 #!/usr/bin/perl -w
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 hddtemp_smartctl - Plugin to monitor harddrive temperatures through
@@ -93,7 +96,6 @@ on all platforms.
 
 =cut
 
-use strict;
 use File::Spec::Functions qw(splitdir);
 use lib $ENV{'MUNIN_LIBDIR'};
 use Munin::Plugin;
@@ -107,11 +109,11 @@ if (exists $ENV{smartctl}) {
    if (defined $ARGV[0] and $ARGV[0] eq 'autoconf') {
       # The real "autoconf" section follows later. But here we need to check for requirements, too.
       if (! -e $smartctl) {
-	 print "no (Predefined smartctl ($smartctl) does not exist)\n";
-	 exit 0;
+        print "no (Predefined smartctl ($smartctl) does not exist)\n";
+        exit 0;
       } elsif (! -x $smartctl) {
-	 print "no (Predefined smartctl ($smartctl) is not executable)\n";
-	 exit 0;
+        print "no (Predefined smartctl ($smartctl) is not executable)\n";
+        exit 0;
       }
    } else {
       # immediate failure is allowed outside of "autoconf"
@@ -122,17 +124,20 @@ if (exists $ENV{smartctl}) {
    # Not defined in %ENV? Check obvious places
     my @dirs = split(':', $ENV{PATH});
     push (@dirs, qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin) );
-    
+
     until ($smartctl or @dirs == 0) {
-	my $dir = shift @dirs;
-	my $path = $dir.'/smartctl';
-	$smartctl = $path if -x $path;
+      my $dir = shift @dirs;
+      my $path = $dir.'/smartctl';
+      $smartctl = $path if -x $path;
     }
-    if (defined $ARGV[0] and $ARGV[0] eq 'autoconf') {
-        print "no ('smartctl' executable not found)\n";
-        exit 0;
-    } else {
-        die "'smartctl' executable not found\n" unless ($smartctl);
+
+    unless ($smartctl) {
+        if (defined $ARGV[0] and $ARGV[0] eq 'autoconf') {
+            print "no ('smartctl' executable not found)\n";
+            exit 0;
+        } else {
+            die "'smartctl' executable not found\n";
+        }
     }
 }
 
@@ -169,7 +174,7 @@ if ($^O eq 'linux') {
 
   # Get list of all drives we found
   @drives=(@drivesIDE,@drivesSCSI);
-  
+
 } elsif ($^O eq 'freebsd') {
   opendir(DEV, '/dev');
   @drives = grep /^(ada?|da)[0-9]+$/, readdir DEV;
@@ -189,11 +194,11 @@ if (defined $ARGV[0]) {
   if ($ARGV[0] eq 'autoconf') {
     if (@drives) {
       my $cmd = command_for_drive_device($drives[0],
-					 device_for_drive($drives[0]));
+                                         device_for_drive($drives[0]));
       if (`$cmd` =~ /Temperature/) {
-	print "yes\n";
+        print "yes\n";
       } else {
-	print "no (first drive not supported, configure the plugin)\n";
+        print "no (first drive not supported, configure the plugin)\n";
       }
       exit 0;
     } else {
@@ -224,9 +229,9 @@ foreach my $drive (@drives) {
   # isn't supported (hdparm isn't available on all platforms).
   if (!$use_nocheck && $hdparm && $fulldev =~ /\/dev\/[sh]d?/) {
     if (`$hdparm -C $fulldev 2>/dev/null` =~ /standby/) {
-	warn "[DEBUG] Drive $fulldev is in standby mode, not checking\n"
-	    if $DEBUG;
-	next;
+      warn "[DEBUG] Drive $fulldev is in standby mode, not checking\n"
+        if $DEBUG;
+      next;
     }
   }
 
@@ -290,6 +295,7 @@ sub device_for_drive {
 
     return $fulldev;
 }
+
 
 sub command_for_drive_device {
     my ($drive, $fulldev, $use_nocheck) = @_;
