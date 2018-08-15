@@ -24,49 +24,32 @@ This is a pre-release checklist for the maintainer.
 
 # Git release
 
-  We follow the workflow documented at
-  http://nvie.com/posts/a-successful-git-branching-model/
-
   The tag used here is "2.0.1", exchange this with a current version.
-
- * Create release branch from "devel"
-
-   git checkout -b release-2.0.1 devel
 
  * Update ChangeLog
 
-   $EDITOR Changelog
-   git commit -m 'Update changelog for release' -- ChangeLog
+   new="2.0.1"; old=$(git describe --abbrev=0)
+   header=$(printf '\nmunin-%s, %s\n%s' "$new" "$(date +%Y-%m-%d)" "$(sed -n 4,14p ChangeLog)")
+   shortlog=$(git log --pretty=short --no-merges "${old}.." | git shortlog)
+   printf "%s\n\n%s\n\n" "$header" "$shortlog" | sed -i "1r /dev/stdin" ChangeLog
 
- * Merge release branch to master
+ * Commit the updated changelog and tag this release
 
-   git checkout master
-   git merge --no-ff release-2.0.1
-
-   (handle any conflicts, and "git commit" the result)
-
- * Tag on master
-
-   git tag -a -s -m 'Release 2.0.1' 2.0.1 master
-
- * Merge the release branch back to devel
-
-  git checkout devel
-  git merge --no-ff release-2.0.1
+   git commit -m "$new" -- ChangeLog
+   git tag -s "$new" -m "$new"
 
 # Make tarball from tag
 
   git checkout 2.0.1
   make tar
+  OR
+  make tar-signed
 
 # Propaganda
 
  * Broadcast the good news:
-   1. make a sha256sum : sha256sum munin-version.tar.gz > munin-version.tar.gz.sha256sum
-      and sign it using gpg.
-   2. Upload the tar.gz on sourceforge.net
-   3. Create a news on sf annoucing it
-   4. Update our front page
-   5. Create a new release on freshmeat.net 
-   6. Send an email to the ML 
-
+   1. Upload the release tar and signature:
+      make tar-upload
+   2. Update our website
+   3. Send an email to the ML
+   4. Update the version in the topic of the IRC channel
