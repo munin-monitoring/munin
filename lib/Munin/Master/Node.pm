@@ -754,8 +754,6 @@ sub _node_read {
 	} else {
 		my $new_plugin = $1;
 
-		use Data::Dumper;
-
 		# Callback is called with ($plugin, $data) to flush the previous plugins
 		# ... if there's already a plugin
 		if ($current_plugin) {
@@ -771,6 +769,7 @@ sub _node_read {
 
     # Handle the multigraph one last time
     if ($callback && $current_plugin) {
+	DEBUG "last callback->($current_plugin, " . Dumper(\@array) . ")";
 	$callback->($current_plugin, \@array);
 	@array = ();
     }
