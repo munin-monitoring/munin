@@ -404,13 +404,37 @@ build/%.class: %.class build-java-stamp
 ######################################################################
 # DIST RULES
 
-tar:
-	git archive --prefix=munin-$(RELEASE)/ --format=tar --output ../munin-$(RELEASE).tar HEAD
-	mkdir -p munin-$(RELEASE)/
-	echo $(RELEASE) > munin-$(RELEASE)/RELEASE
-	tar rf ../munin-$(RELEASE).tar --owner=root --group=root munin-$(RELEASE)/RELEASE
-	rm -rf munin-$(RELEASE)
-	gzip -f -9 ../munin-$(RELEASE).tar
+.PHONY: tar
+tar: munin-$(RELEASE).tar.gz.sha256sum
+
+.PHONY: tar-signed
+tar-signed: munin-$(RELEASE).tar.gz.asc
+
+munin-$(RELEASE).tar.gz:
+	@# prevent the RELEASE file from misleading the "getversion" script
+	rm -f RELEASE
+	tempdir=$$(mktemp -d) \
+		&& mkdir -p "$$tempdir/munin-$(RELEASE)/" \
+		&& echo $(RELEASE) > "$$tempdir/munin-$(RELEASE)/RELEASE" \
+		&& git archive --prefix=munin-$(RELEASE)/ --format=tar --output "$$tempdir/export.tar" HEAD \
+		&& tar --append --file "$$tempdir/export.tar" --owner=root --group=root -C "$$tempdir" "munin-$(RELEASE)/RELEASE" \
+			| gzip >munin-$(RELEASE).tar.gz \
+		&& rm -rf "$$tempdir"
+
+munin-$(RELEASE).tar.gz.sha256sum: munin-$(RELEASE).tar.gz
+	sha256sum "$<" >"$@"
+
+munin-$(RELEASE).tar.gz.asc: munin-$(RELEASE).tar.gz
+	gpg --armor --detach-sign --sign "$<"
+
+.PHONY: tar-upload
+tar-upload: tar tar-signed
+	@if [ -z "$(UPLOAD_DIR)" ]; then echo "You need to set UPLOAD_DIR (e.g. '/srv/www/downloads.munin-monitoring.org/munin/stable')" >&2; false; fi
+	@if [ -z "$(UPLOAD_HOST)" ]; then echo "You need to set UPLOAD_HOST" >&2; false; fi
+	{ \
+		echo "mkdir $(UPLOAD_DIR)/$(VERSION)"; \
+		echo "put munin-$(VERSION).tar.gz* $(UPLOAD_DIR)/$(VERSION)/"; \
+	} | sftp -b - "$(UPLOAD_HOST)"
 
 suse-pre:
 	(! grep MAINTAINER Makefile.config)
