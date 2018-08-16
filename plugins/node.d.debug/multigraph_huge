@@ -6,7 +6,6 @@
 #
 
 nb=${nb:-"300"}
-dirty_config=${dirty_config:-""}
 all="$(seq 1 "$nb")"
 
 config() {
@@ -35,7 +34,7 @@ if [ "$1" = "config" ]; then
 	done
 
 	# exit if not dirty config enabled
-	[ -z "$dirty_config" ] && exit 0
+	if [ "${MUNIN_CAP_DIRTYCONFIG:-0}" != 1 ]; then exit 0; fi
 fi
 
 fetch a
