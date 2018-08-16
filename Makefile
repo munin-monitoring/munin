@@ -418,7 +418,7 @@ munin-$(RELEASE).tar.gz:
 		&& echo $(RELEASE) > "$$tempdir/munin-$(RELEASE)/RELEASE" \
 		&& git archive --prefix=munin-$(RELEASE)/ --format=tar --output "$$tempdir/export.tar" HEAD \
 		&& tar --append --file "$$tempdir/export.tar" --owner=root --group=root -C "$$tempdir" "munin-$(RELEASE)/RELEASE" \
-		&& gzip --to-stdout "$$tempdir/export.tar" >"munin-$(RELEASE).tar.gz" \
+		&& gzip -9 <"$$tempdir/export.tar" >"munin-$(RELEASE).tar.gz" \
 		&& rm -rf "$$tempdir"
 
 munin-$(RELEASE).tar.gz.sha256sum: munin-$(RELEASE).tar.gz
