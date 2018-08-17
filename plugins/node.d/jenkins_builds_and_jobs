@@ -207,25 +207,30 @@ do_fetch_trivial() {
 }
 
 
+do_fetch() {
+	# Expensive operations are executed only periodically (see "jenkins_update_interval").
+	# Delete statefile if it is older than "$jenkins_update_interval".
+	find "$STATEFILE" -maxdepth 0 -mmin "+$jenkins_update_interval" -delete 2>&1 || true
+	# Does the state file exist and is not outdated?
+	# In this case just output its data and do not update the state.
+	if [ -f "$STATEFILE" ]; then
+		cat "$STATEFILE"
+	else
+		do_fetch_expensive | tee "$STATEFILE"
+	fi
+
+	# trivial operations are executed during every run
+	do_fetch_trivial
+}
+
+
 case "${1:-}" in
 	config)
 		do_config
-		exit 0
+		if [ "${MUNIN_CAP_DIRTYCONFIG:-0}" = 1 ]; then do_fetch; fi
 		;;
 	"")
-		# Expensive operations are executed only periodically (see "jenkins_update_interval").
-		# Delete statefile if it is older than "$jenkins_update_interval".
-		find "$STATEFILE" -maxdepth 0 -mmin "+$jenkins_update_interval" -delete 2>&1 || true
-		# Does the state file exist and is not outdated?
-		# In this case just output its data and do not update the state.
-		if [ -f "$STATEFILE" ]; then
-			cat "$STATEFILE"
-		else
-			do_fetch_expensive | tee "$STATEFILE"
-		fi
-
-		# trivial operations are executed during every run
-		do_fetch_trivial
+		do_fetch
 		;;
 	*)
 		echo >&2 "Invalid action requested"
