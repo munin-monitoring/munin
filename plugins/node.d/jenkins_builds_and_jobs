@@ -164,7 +164,7 @@ do_fetch_expensive() {
 	JOB_PREFIXES=$(get_job_prefixes)
 	echo "multigraph ${plugin_name}_builds"
 	for PREFIX in $JOB_PREFIXES; do
-		NR=$(find "$jenkins_job_dir/$PREFIX"*/builds/ -type d -mtime -1 -name "*_*" 2>/dev/null | wc -l)
+		NR=$(find "$jenkins_job_dir/$PREFIX"*/builds/ -type d -mtime -1 2>/dev/null | wc -l)
 		echo "jenkins_builds_$PREFIX.value $NR"
 	done
 
