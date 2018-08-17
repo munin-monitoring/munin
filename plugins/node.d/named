@@ -73,11 +73,11 @@ munin-node.
 
 if [ -n "${logfile:-}" ]; then
     SYSLOGFILE=$logfile
-else
+else 
     if [ -f /var/adm/messages ]; then
-        SYSLOGFILE=/var/adm/messages
+	SYSLOGFILE=/var/adm/messages
     else
-        SYSLOGFILE=/var/log/daemon.log
+	SYSLOGFILE=/var/log/daemon.log
     fi
 fi
 
@@ -86,7 +86,7 @@ fi
 pick_stat () {
     ret=$(echo "$2" | sed 's/.* *'"$1"'=\([0-9]*\).*/\1/')
     if [ ! "$ret" ]; then
-        echo 0
+    	echo 0;
     else
         echo "$ret"
     fi
@@ -106,7 +106,7 @@ do_stats () {
     # We concentrate on what clients communicate with us about
     # and counters that we suspect can indicate abuse or error conditions
 
-    # Received Queries: Total volume of queries received.
+    # Received Queries: Total volume of queries received. 
     # This should be nice and smooth.
     echo "queries.value $(pick_stat RQ "$XSTATS")"
 
@@ -120,7 +120,7 @@ do_stats () {
 
     # Received Zone Transfer queries - should be low.  High value could
     # indicate some odd error or some kind of abuse
-    echo "axfr.value $(pick_stat RAXFR "$XSTATS")"  # Received AXFR Qs
+    echo "axfr.value $(pick_stat RAXFR "$XSTATS")"	# Received AXFR Qs
 
     # Received TCP connections: These are used for zone transfers or
     # oversized (>512 byte) answers.  A high value here could indicate
@@ -128,7 +128,7 @@ do_stats () {
     # have a ton of MXes or NSes that gets reported back?), or this could
     # be due to an error.  Or it could be due to abuse.
     echo "tcp.value $(pick_stat RTCP "$XSTATS")"
-
+    
     # Get a total of errors
     local error_value
     error_value=$(( $(pick_stat RNXD "$XSTATS")
@@ -142,7 +142,7 @@ do_stats () {
 
 case $1 in
     config)
-        cat <<'EOF'
+	cat <<'EOF'
 graph_title BIND DNS Query statistics
 graph_vlabel Queries / ${graph_period}
 graph_category dns
@@ -166,8 +166,8 @@ errors.label Errors
 errors.type DERIVE
 errors.min 0
 EOF
-        exit 0
-        ;;
+	exit 0
+	;;
 esac
 
 do_stats

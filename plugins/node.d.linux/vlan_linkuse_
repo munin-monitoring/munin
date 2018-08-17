@@ -8,7 +8,7 @@
 #
 # The interface must also have an accounting iptables rule defined, _before_
 # any action rules. E.g., in /etc/network/vlan-firewall.d/eth1-200-out, you
-# will find:
+# will find: 
 # 	
 # 	--out-interface eth0
 #
@@ -45,11 +45,11 @@ while (<IN>)
 			print "graph_args --base 1000\n";
 			print "graph_category network\n";
 			print "graph_vlabel bits per \${graph_period} in (-) / out (+)\n";
-			print "in.label bps\n";
-			print "in.cdef in,8,*\n";
-			print "in.graph no\n";
-			print "in.type DERIVE\n";
-			print "in.min 0\n";
+			print "in.label bps\n"; 
+			print "in.cdef in,8,*\n"; 
+			print "in.graph no\n"; 
+			print "in.type DERIVE\n"; 
+			print "in.min 0\n"; 
 		}
 		else
 		{
@@ -71,11 +71,11 @@ while (<IN>)
 		next unless (($proto eq "all") and (!$comment));
 		if ($ARGV[0] and $ARGV[0] eq "config")
 		{
-			print "out.label bps\n";
-			print "out.cdef out,8,*\n";
-			print "out.negative in\n";
-			print "out.type DERIVE\n";
-			print "out.min 0\n";
+			print "out.label bps\n"; 
+			print "out.cdef out,8,*\n"; 
+			print "out.negative in\n"; 
+			print "out.type DERIVE\n"; 
+			print "out.min 0\n"; 
 		}
 		else
 		{

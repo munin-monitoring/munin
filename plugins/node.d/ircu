@@ -39,8 +39,8 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf")
 {
     if ($ret)
     {
-        print "no ($ret)\n";
-        exit 0;
+	print "no ($ret)\n";
+	exit 0;
     }
     my $irc = new Net::IRC;
     my $conn;
@@ -48,8 +48,8 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf")
     $irc = new Net::IRC; $conn = $irc->newconn(Nick => 'munin-ircd', Server => 'localhost');
     if (!$conn)
     {
-        print "no (Couldn't connect to IRC server)\n";
-        exit 0;
+	print "no (Couldn't connect to IRC server)\n";
+	exit 0;
     }
     print "yes\n";
     exit 0;
@@ -72,7 +72,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
 
 my $irc = new Net::IRC;
 my $conn = $irc->newconn(Nick => 'munin-ircd',
-                         Server => 'localhost');
+			 Server => 'localhost');
 
 my %result;
 #$conn->debug(0);
@@ -81,33 +81,33 @@ sub luserclient {
     my($self, $event) = @_;
     # Do we have something like an UnrealIRCD?
     if(($event->args)[1] =~  /There are (\d+) users and (\d+) invisible on (\d+) servers/) {
-        $result{'clients'} = $1 + $2 - 1; # don't count this script
-        $result{'servers'} = $3;
+	$result{'clients'} = $1 + $2 - 1; # don't count this script
+	$result{'servers'} = $3;
     }
     # Or maybe some freendode hyperion stuff?
     elsif(($event->args)[1] =~  /There are (\d+) listed and (\d+) unlisted users on (\d+) servers/) {
-        $result{'clients'} = $1 + $2 - 1; # don't count this script
-        $result{'servers'} = $3;
+	$result{'clients'} = $1 + $2 - 1; # don't count this script
+	$result{'servers'} = $3;
     }
     # Or some recent ircnet ircd?
     elsif(($event->args)[1] =~  /There are (\d+) users and \d+ services on (\d+) servers/) {
-        $result{'clients'} = $1 - 1; # don't count this script
-        $result{'servers'} = $2;
+	$result{'clients'} = $1 - 1; # don't count this script
+	$result{'servers'} = $2;
     }
     # Anything else goes here
     elsif(($event->args)[1] =~  /There are (\d+) users and (\d+) invisible/) {
-        $result{'clients'} = $1 + $2 - 1; # don't count this script
+	$result{'clients'} = $1 + $2 - 1; # don't count this script
     }
     # And here (if there are no invisible count)
     elsif(($event->args)[1] =~  /There are (\d+) users/) {
-        $result{'clients'} = $1 - 1; # don't count this script
+	$result{'clients'} = $1 - 1; # don't count this script
     }
 }
 
 sub luserchannels {
     my($self, $event) = @_;
     if(($event->args)[1] =~  /^(\d+)/) {
-        $result{'channels'} = $1;
+	$result{'channels'} = $1;
     }
 }
 
@@ -127,4 +127,4 @@ $conn->add_global_handler('luserchannels', \&luserchannels);
 
 while(1) {
     $irc->do_one_loop();
-}
+}		 

@@ -143,7 +143,7 @@ foreach my $i (keys %{$rejects}) {
 
 if(-l $statefile) {
     die("$statefile is a symbolic link, refusing to touch it.");
-}
+}				
 open (OUT, ">$statefile") or exit 4;
 print OUT "$pos:$delivered\n";
 foreach my $i (keys %{$rejects}) {
@@ -151,11 +151,11 @@ foreach my $i (keys %{$rejects}) {
 }
 close OUT;
 
-sub parseLogfile {
+sub parseLogfile {    
     my ($fname, $start, $stop) = @_;
     open (LOGFILE, $fname) or exit 3;
     seek (LOGFILE, $start, 0) or exit 2;
-
+    
     while (tell (LOGFILE) < $stop) {
 	my $line =<LOGFILE>;
 	chomp ($line);
@@ -165,7 +165,7 @@ sub parseLogfile {
 	    $rejects->{$1} ++;
 	}
     }
-    close(LOGFILE);
+    close(LOGFILE);    
 }
 
 sub get_prev_date {

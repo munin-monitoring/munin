@@ -137,7 +137,7 @@ for name in $names; do
         fieldname="$(clean_fieldname "$name")"
 
 	ps -eo "$monitor,comm" | gawk '
-BEGIN              { total = "U"; } # U = Unknown.
+BEGIN              { total = "U"; } # U = Unknown. 
 /grep/             { next; }
 $2 ~ /^'"$name"'$/ { total = total + ($1*1024); }
 END                { print "'"$fieldname"'.value", total; }'

@@ -52,4 +52,4 @@ fi
 
 /usr/bin/vmstat | /usr/bin/awk 'END { print "swap_in.value " $8 "\nswap_out.value " $9 }'
 
-#awk '/swap/ { print "swap_in.value " $2 "\nswap_out.value " $3 }' < /proc/stat
+#awk '/swap/ { print "swap_in.value " $2 "\nswap_out.value " $3 }' < /proc/stat 

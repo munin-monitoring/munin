@@ -52,7 +52,7 @@ if($arg && $arg eq "autoconf") {
         exit 0;
       }
   }
-
+ 
 if($arg && $arg eq "config")
   {
     print "graph_title IOstat (VPaths Only)\n";
@@ -69,13 +69,13 @@ if($arg && $arg eq "config")
       }
     exit 0;
   }
-
+  
 my($line);
 my @info = processVPaths();
 foreach $line (@info)
   {print "$line";}
-
-
+  
+    
 sub getDiskIO
 {
   my($diskOnly) = @_;
@@ -131,4 +131,4 @@ sub printArray
         {print $labels[$count].substr($spacer,0,length($spacer)-length($labels[$count])).$item."\n";}
       $count++;
     }
-}
+}      

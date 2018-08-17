@@ -521,7 +521,7 @@ sub do_preprocess {
     my @mediatypes = split(/[ ,]+/,$mediatypes);
 
     # Hash of numerical media types the user finds interesting.
-    my $mediatype={};
+    my $mediatype={}; 
 
     if ($mediatypes eq 'ALL') {
 	$mediatype = undef;

@@ -25,9 +25,9 @@ The following environment settings are the default configuration.  The
      env.critical 0.95
      env.warning 0.9
 
-The optional filter setting is used to strip parts of ranges for the
+The optional filter setting is used to strip parts of ranges for the 
 network labels (example will show 10.140.80.0 as 80.0). Both critical
-and warning are optional settings, default for warning is 0.9 (90%)
+and warning are optional settings, default for warning is 0.9 (90%) 
 and 0.95 for critical (95%).
 
 =head1 INTERPRETATION
@@ -67,7 +67,7 @@ if(! eval "require HTTP::Date") {
 }
 if(! eval "require Net::IP") {
     $ret = "Net::IP not found";
-}
+}	  
 
 
 use strict;
@@ -154,10 +154,10 @@ foreach my $network (sort(keys %leases)) {
 
 sub parseconfig {
     my($configfile) = @_;
-
+    
     local(*IN);
     open(IN, "<$configfile") or exit 4;
-
+    
     my $name = undef;
     LINE: while(<IN>) {
 	if(/subnet\s+((?:\d+\.){3}\d+)\s+netmask\s+((?:\d+\.){3}\d+)/ && ! /^\s*#/) {
@@ -194,7 +194,7 @@ sub rangecount {
 
     $from = ((new Net::IP($from))->intip())->numify();
     $to   = ((new Net::IP($to))->intip())->numify();
-
+    
     if($from < $to) {
 	return ($to - $from) + 1;
     } else {
@@ -206,7 +206,7 @@ sub rangecount {
 sub parseleases {
     my $ip = 0;
     my $abandon = 0;
-    my $time    = time();
+    my $time    = time(); 
 
     open(IN, "<$LEASEFILE") or exit 4;
     while(<IN>) {
@@ -218,9 +218,9 @@ sub parseleases {
             # 2037/12/31 23:59:59 is max date on perl <= 5.6
 	    print "# DEBUG: end $1\n" if $DEBUG;
 	    my $end = HTTP::Date::str2time($1, "GMT");
-	    # we assume that missing $end is valid due to
+	    # we assume that missing $end is valid due to 
 	    # restrictions in Time::Local on perl <= 5.6
-	    if($end && $end < $time) {
+	    if($end && $end < $time) { 
 		print "# DEBUG: old $end $time:(\n" if $DEBUG;
 		$abandon = 1;
 	    }

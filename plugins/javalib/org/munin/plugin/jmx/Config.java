@@ -39,7 +39,7 @@ public class Config {
 			category = categoryEnv;
 		}
 		if (prefix == null || prefix.length() == 0) {
-			this.prefix = "jmx";
+			this.prefix = "jmx"; 
 		} else {
 			this.prefix = prefix;
 		}

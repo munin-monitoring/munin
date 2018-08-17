@@ -11,7 +11,7 @@ gp_gbl_mem_util - Munin plugin to fetch global memory utilisation via Glance
 
 On HP-UX with GlancePlus (GP) installed
 
-=head1 USAGE
+=head1 USAGE 
 
 Run this command as root user to install the plugin
 
@@ -19,7 +19,7 @@ Run this command as root user to install the plugin
 
 and restart your munin-node.
 
-=head2 REQUIRES
+=head2 REQUIRES   
 
 Separate GP adviser syntax file whose location is made known
 by ADVISER environment variable which defaults to
@@ -27,7 +27,7 @@ by ADVISER environment variable which defaults to
 
 The contents of the syntax file should look like this:
 
-  if (gbl_interval > 2) then
+  if (gbl_interval > 2) then 
   {
       print "mem_util.value ",gbl_mem_util|6|2
       print "mem_user.value ",gbl_mem_user_util|6|2

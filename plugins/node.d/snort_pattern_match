@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-snort_pattmatch - Plugin to monitor percent of data received that
+snort_pattmatch - Plugin to monitor percent of data received that 
                    Snort processes in pattern matching.
 
 =head1 CONFIGURATION

@@ -7,7 +7,7 @@
 #
 # ...will monitor eth0.
 #
-# To aggregate all network interfaces on the system (except lo0),
+# To aggregate all network interfaces on the system (except lo0), 
 # link if_aggregated to this file.
 #
 # Any device found in /usr/bin/netstat can be monitored.
@@ -45,7 +45,7 @@ fi
 
 if [ "$1" = "config" ]; then
 
-	echo "graph_order rbytes obytes"
+	echo "graph_order rbytes obytes" 
 	echo "graph_title $INTERFACE traffic"
 	echo 'graph_args --base 1000'
 	echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'
@@ -69,7 +69,7 @@ if [ "$INTERFACE" = "aggregated" ]; then
 	/usr/bin/netstat -i -b -n | grep -v '^lo' | awk '
 BEGIN { rsum = 0; osum = 0; }
 /<Link#[0-9]*>/ {
-	if (NF == 10) {
+	if (NF == 10) { 
 		rsum += $6; osum += $9;
 	} else if (NF == 11) {
 		if ($4 ~ /:/) {
@@ -85,11 +85,11 @@ END {
 	printf "rbytes.value %i\n", rsum;
 	printf "obytes.value %i\n", osum;
 }'
-
+  
 else
 	/usr/bin/netstat -i -b -n -I $INTERFACE | awk '
 /<Link#[0-9]*>/ {
-	if (NF == 10) {
+	if (NF == 10) { 
 		print "rbytes.value", $6;
 		print "obytes.value", $9;
 	} else if (NF == 11) {

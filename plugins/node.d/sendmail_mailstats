@@ -40,7 +40,7 @@ if [ "$1" = "autoconf" ]; then
         if [ -n "$MAILSTATS" ] && [ -x "$MAILSTATS" ]
                 then echo yes
                 else echo "no (no mailstats command)"
-        fi
+        fi  
         exit 0
 fi
 

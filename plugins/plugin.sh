@@ -42,7 +42,7 @@ get_warning () {
 }
 
 
-# Usage:
+# Usage: 
 #   warning=${warning:-92}
 #   print_warning "$name"
 
@@ -87,7 +87,7 @@ print_critical () {
 # the threshold string adjusted for percentages if percent sizes are present.
 # If not, the threshold is left unchanged.
 # Usage:
-#   adjust_threshold "50%:50%" 200
+#   adjust_threshold "50%:50%" 200 
 # Returns:
 #   100:100
 #

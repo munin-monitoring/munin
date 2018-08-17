@@ -55,7 +55,7 @@ if($arg eq 'autoconf')
       }
   }
 
-
+  
 if($arg eq 'config')
   {
     my($percent) = 100;
@@ -101,7 +101,8 @@ sub findTotalTime
   my($sysTime) = ceil($sys);
   my($idleTime) = ceil($idle);
   my($iowaitTime) = ceil($iowait);
-
+  
+  
   print "user.value $userTime\nsystem.value $sysTime\nidle.value $idleTime\niowait.value $iowaitTime\n";
 }
 
@@ -143,3 +144,4 @@ sub getMeasurements
   my($iowait)= $items[6];
   return ($user,$sys,$idle,$iowait);
 }
+    

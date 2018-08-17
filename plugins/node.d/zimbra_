@@ -887,7 +887,7 @@ foreach my $field ( @$tmpfield )
     my @csvfields = $csv->fields();
     my $csvindex = 0; $csvindex++ until $csvindex > $#csvfields or $csvfields[$csvindex] eq $field->{'csvfield'};
     if ($csvindex > $#csvfields) { $error = 1; goto FIELDERR; }
-
+    
     my $csvindex2;
     if (exists $field->{'csvfield2'})
     {

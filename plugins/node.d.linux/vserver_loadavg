@@ -83,9 +83,9 @@ KCIN=$(( 16#${INFO[2]} ))
 
 # If this is 1, then VCI_SPACES is present in the kernel (new in 2.6.19)
 if [ $(( (KCIN >> 10) & 1 )) -eq 1 ]
-then
+then 
     NAMELOC="nsproxy"
-else
+else 
     NAMELOC="cvirt"
 fi
 
@@ -107,9 +107,9 @@ else
         fi
     done
 fi
-
+	
 # If run with the "config"-parameter, give out information on how the
-# graphs should look.
+# graphs should look.  
 if [ "$1" = "config" ]; then
         # The title of the graph
 	echo 'graph_title loadavg of vserver'
@@ -131,7 +131,7 @@ if [ "$1" = "config" ]; then
 		NAME=$(echo "$LABEL" | cut -d. -f1 |  tr '-' '_')
 		echo "$NAME.label $LABEL: load average"
 		echo "$NAME.info $NAME average load for the past 5 minutes"
-	done
+	done 
         # Last, if run with the "config"-parameter, quit here (don't
         # display any data)
         exit 0

@@ -31,7 +31,7 @@ Manager password
 
 =head1 USAGE
 
-Needs access to http://<user>:<password>@localhost:8080/manager/status?XML=true (or modify the address for another host).
+Needs access to http://<user>:<password>@localhost:8080/manager/status?XML=true (or modify the address for another host). 
 
 Tomcat 5.0 or higher.
 
@@ -81,16 +81,16 @@ my $url = sprintf $URL, uri_escape($USER), uri_escape($PASSWORD), $HOST, $PORT;
 
 if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
     if($ret) {
-        print "no ($ret)\n";
-        exit 0;
+	print "no ($ret)\n";
+	exit 0;
     }
     my $response = $UA->get($url);
     if($response->is_success and $response->content =~ /<status>.*<\/status>/im) {
-        print "yes\n";
-        exit 0;
+	print "yes\n";
+	exit 0;
     } else {
-        print "no (no tomcat status)\n";
-        exit 0;
+	print "no (no tomcat status)\n";
+	exit 0;
     }
 }
 
@@ -117,13 +117,13 @@ my $xs = new XML::Simple;
 my $response = $UA->get($url);
 my $xml = $xs->XMLin($response->content);
 
-if($xml->{'jvm'}->{'memory'}->{'free'} &&
+if($xml->{'jvm'}->{'memory'}->{'free'} && 
     $xml->{'jvm'}->{'memory'}->{'total'} &&
     $xml->{'jvm'}->{'memory'}->{'max'}) {
     print "free.value " . $xml->{'jvm'}->{'memory'}->{'free'} . "\n";
-    print "used.value " .
-        ($xml->{'jvm'}->{'memory'}->{'total'} -
-            $xml->{'jvm'}->{'memory'}->{'free'}) . "\n";
+    print "used.value " . 
+	  ($xml->{'jvm'}->{'memory'}->{'total'} - 
+	      $xml->{'jvm'}->{'memory'}->{'free'}) . "\n";
     print "max.value " . $xml->{'jvm'}->{'memory'}->{'max'} . "\n";
 } else {
     print "free.value U\n";

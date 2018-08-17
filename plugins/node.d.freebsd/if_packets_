@@ -8,7 +8,7 @@
 #
 # ...will monitor eth0.
 #
-# To aggregate all network interfaces on the system (except lo0),
+# To aggregate all network interfaces on the system (except lo0), 
 # link if_packets_aggregated to this file.
 #
 # Any device found in /usr/bin/netstat can be monitored.
@@ -70,7 +70,7 @@ if [ "$INTERFACE" = "aggregated" ]; then
 	/usr/bin/netstat -i -b -n | grep -v '^lo' | awk '
 BEGIN { rsum = 0; osum = 0; }
 /<Link#[0-9]*>/ {
-	if (NF == 10) {
+	if (NF == 10) { 
 		rsum += $4; osum += $7;
 	} else if (NF == 11) {
 		if ($4 ~ /:/) {

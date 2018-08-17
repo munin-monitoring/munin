@@ -125,9 +125,9 @@ KCIN=$(( 16#${INFO[2]} ))
 
 # If this is 1, then VCI_SPACES is present in the kernel (new in 2.6.19)
 if [ $(( (KCIN >> 10) & 1 )) -eq 1 ]
-then
+then 
     NAMELOC="nsproxy"
-else
+else 
     NAMELOC="cvirt"
 fi
 
@@ -171,7 +171,7 @@ if [ -z "$MODE" ] ; then
 	MODE=hold
 	# shellcheck disable=SC2001
 	TARGET=$(echo "$BASEPARAM" | sed 's/^hold_//')
-else
+else 
 	MODE=cpu
 	# shellcheck disable=SC2001
 	TARGET=$(echo "$BASEPARAM" | sed 's/^cpu_//')
@@ -179,11 +179,11 @@ fi
 
 CPU1=0
 if [ -n "$TARGET" ] ; then
-	if [ "${#TARGET}" == 1 ] ; then
+	if [ "${#TARGET}" == 1 ] ; then 
 		if [ -n "$debug" ]; then echo "$MODE, only on cpu $TARGET, for all vservers"; fi
 		WHAT=ALLVSERVER
 		CPU1=$TARGET
-	else
+	else 
 		if [ -n "$debug" ]; then echo "$MODE on all cpus together, only for vserver $TARGET"; fi
 		WHAT=VSERVER
 	fi
@@ -218,21 +218,21 @@ if [ "$1" = "config" ]; then
 		echo 'graph_info Shows jiffies on hold used per cpu on each vserver.'
 	fi
 
- 	for j in $CPUS ; do
+ 	for j in $CPUS ; do 
 		A=0
-	        for i in $XIDS ; do
+	        for i in $XIDS ; do 
 			LABEL=$(grep "NodeName" "/proc/virtual/$i/$NAMELOC" | cut -f 2)
 			if [ "$WHAT" == "ALLVSERVER" ] || [ "$TARGET" == "$LABEL" ] ; then
 				NAME=$(echo "$LABEL" | cut -d. -f1 |  tr '-' '_')
 	    			if [ "$MODE" == "cpu" ] ; then
 					echo "${NAME}_$j.label cpu usage for cpu $j on $LABEL"
 					echo "${NAME}_$j.info cpu usage for cpu $j on $LABEL."
-				else
+				else 
 					echo "${NAME}_$j.label on hold for cpu $j on $LABEL"
 					echo "${NAME}_$j.info on hold for cpu $j on $LABEL."
 				fi
 				echo "${NAME}_$j.type COUNTER"
-				if [ "$A" == 0 ] ; then
+				if [ "$A" == 0 ] ; then 
 					echo "${NAME}_$j.draw AREA"
 					A=1
 				else
@@ -244,7 +244,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-for j in $CPUS ; do
+for j in $CPUS ; do 
 	for i in $XIDS ; do
 		LABEL=$(grep "NodeName" "/proc/virtual/$i/$NAMELOC" | cut -f 2)
 		if [ "$WHAT" == "ALLVSERVER" ] || [ "$TARGET" == "$LABEL" ] ; then
@@ -257,6 +257,6 @@ for j in $CPUS ; do
 			else
 				grep "cpu $j:" "/proc/virtual/$i/sched" | cut -d ' ' -f 5
 			fi
-		fi
+		fi	
 	done
 done

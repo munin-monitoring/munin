@@ -1,5 +1,5 @@
 #!/bin/sh
-#
+# 
 # Plugin to monitor the number of open files in the system.
 #
 # Parameters:
@@ -18,13 +18,13 @@
 if [ "$1" = "autoconf" ]; then
     if [ -x /sbin/sysctl ]; then
         /sbin/sysctl kern.openfiles > /dev/null
-	if [ $? = "0" ]; then
-		echo yes
-		exit 0
-	else
-		echo no
-		exit 0
-	fi
+    	if [ $? = "0" ]; then
+	    	echo yes
+    		exit 0
+    	else
+		    echo no
+		    exit 0
+	    fi
     else
         echo no
         exit 0

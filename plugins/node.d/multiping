@@ -75,7 +75,7 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-for hosts in $host
+for hosts in $host 
 do
     export site=$((site + 1))
     # shellcheck disable=SC2086

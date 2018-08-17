@@ -81,7 +81,7 @@ while (<F>) {
 	# destined for the firewall, then the difference is wrong.  If
 	# you firewall does not receive traffic itself it is correct
 	# though.
-	#
+	# 
 	# print "rejected.value ", $received - $forwarded,"\n";
 	last;
     }
