@@ -1,0 +1,227 @@
+#!/bin/sh
+
+set -eu
+
+: << =cut
+
+=head1 NAME
+
+jenkins_builds_and_jobs - Plugin to track statistics for jenkins builds and jobs
+
+=head1 CONFIGURATION
+
+[jenkins_builds_and_jobs]
+env.jenkins_update_interval 15
+env.jenkins_job_dir /var/lib/jenkins/jobs
+env.build_process_regex /tmp/hudson
+
+jenkins_update_interval: minimum number of minutes between successive
+    update operations (adjust according to your resource limits)
+    Default: 15
+jenkins_job_dir: jenkins data directory for build logs
+build_process_regex: distinct regular expression identifying running build processes
+
+=head1 AUTHOR
+
+Contributed by Holger Levsen. I wrote and used them first for
+https://jenkins.debian.net and very much like to hear about
+other users of these plugins! Please do tell me!
+
+Use at your own risk and monitor the resource usage of the plugins
+too - it will vary depending on your setup!
+
+Patches, postcards and pancakes are all very much welcome!
+
+=head1 LICENSE
+
+Copyright 2012-2014 Holger Levsen <holger@layer-acht.org>
+Copyright 2018 Lars Kruse <devel@sumpfralle.de>
+
+Released under the GPLv2.
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+# shellcheck disable=SC1090
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
+
+jenkins_update_interval=${jenkins_update_interval:-15}
+jenkins_job_dir=${jenkins_job_dir:-/var/lib/jenkins/jobs}
+build_process_regex=${build_process_regex:-/tmp/hudson}
+
+plugin_name=$(basename "$0")
+
+
+if [ "${1:-}" = "autoconf" ]; then
+	if [ -d "$jenkins_job_dir" ]; then
+		echo yes
+	else
+		echo "no ($jenkins_job_dir not found)"
+	fi
+	exit 0
+fi
+
+STATEFILE=$MUNIN_PLUGSTATE/$(basename "$0")
+
+
+get_job_prefixes() {
+	find "$jenkins_job_dir" -maxdepth 1 -mindepth 1 -type d -print0 \
+		| xargs -0 -r -n 1 basename \
+		| cut -d "_" -f 1 \
+		| sort -f -u
+}
+
+
+# count the result states from a jenkins jobs log
+count_job_result_states() {
+	awk '
+		BEGIN { success=0; unstable=0; failure=0; unknown=0; IGNORECASE=1; }
+		{
+			if (/success/) success+=1;
+			else if (/unstable/) unstable+=1;
+			else if (/(failure|aborted)/) failure+=1;
+			else unknown+=1;
+		}
+		END {
+			print "success", success;
+			print "unstable", unstable;
+			print "failure", failure;
+			print "unknown", unknown;
+		}'
+}
+
+
+do_config() {
+	JOB_PREFIXES=$(get_job_prefixes)
+	echo "multigraph ${plugin_name}_builds"
+	echo 'graph_title Jenkins Builds in the last 24h'
+	echo 'graph_args --base 1000 -l 0 '
+	echo 'graph_scale no'
+	echo 'graph_total total'
+	echo 'graph_vlabel Jenkins Builds per category in the last 24h'
+	echo 'graph_category devel'
+	for PREFIX in $JOB_PREFIXES; do
+		echo "jenkins_builds_$PREFIX.label $PREFIX builds"
+		echo "jenkins_builds_$PREFIX.draw AREASTACK"
+	done
+
+	echo "multigraph ${plugin_name}_builds_results"
+	echo 'graph_title Jenkins Builds results'
+	echo 'graph_args --base 1000 -l 0 '
+	echo 'graph_scale no'
+	echo 'graph_total total'
+	echo 'graph_vlabel Jenkins Builds results per category'
+	echo 'graph_category devel'
+	for PREFIX in $JOB_PREFIXES; do
+		for STATE in success unstable failure unknown; do
+			echo "jenkins_builds_results_${PREFIX}_${STATE}.label ${PREFIX} ${STATE}"
+			echo "jenkins_builds_results_${PREFIX}_${STATE}.draw AREASTACK"
+		done
+	done
+
+	echo "multigraph ${plugin_name}_builds_results_summary"
+	echo 'graph_title Jenkins Builds results summary'
+	echo 'graph_args --base 1000 -l 0 '
+	echo 'graph_scale no'
+	echo 'graph_total total'
+	echo 'graph_vlabel Jenkins Builds results summary'
+	echo 'graph_category devel'
+	for STATE in success unstable failure unknown; do
+		echo "jenkins_builds_results_all_${STATE}.label ${PREFIX} ${STATE}"
+		echo "jenkins_builds_results_all_${STATE}.draw AREASTACK"
+	done
+
+	echo "multigraph ${plugin_name}_builds_running"
+	echo 'graph_title Jenkins Builds running'
+	echo 'graph_args --base 1000 -l 0 '
+	echo 'graph_scale no'
+	echo 'graph_vlabel Jenkins Builds currently running'
+	echo 'graph_category devel'
+	echo "jenkins_builds_running.label $PREFIX builds_running"
+	echo "jenkins_builds_running.draw AREA"
+
+	echo "multigraph ${plugin_name}_jobs"
+	echo 'graph_title Jenkins Jobs'
+	echo 'graph_args --base 1000 -l 0 '
+	echo 'graph_scale no'
+	echo 'graph_total total'
+	echo 'graph_vlabel Jenkins Jobs per category'
+	echo 'graph_category devel'
+	for PREFIX in $JOB_PREFIXES; do
+		echo "jenkins_jobs_$PREFIX.label $PREFIX jobs"
+		echo "jenkins_jobs_$PREFIX.draw AREASTACK"
+	done
+}
+
+
+# Some operations may take quite a bit of time. These are updated periodically
+# (see "jenkins_update_interval").
+do_fetch_expensive() {
+	JOB_PREFIXES=$(get_job_prefixes)
+	echo "multigraph ${plugin_name}_builds"
+	for PREFIX in $JOB_PREFIXES; do
+		NR=$(find "$jenkins_job_dir/$PREFIX"*/builds/ -type d -mtime -1 -name "*_*" 2>/dev/null | wc -l)
+		echo "jenkins_builds_$PREFIX.value $NR"
+	done
+
+	echo "multigraph ${plugin_name}_builds_results"
+	for PREFIX in $JOB_PREFIXES; do
+		find "$jenkins_job_dir/$PREFIX"*/builds/*/log -type f -print0 2>/dev/null \
+				| xargs -0 -r tail --quiet -n 1 \
+				| count_job_result_states \
+				| while read -r state count; do
+			echo "jenkins_builds_results_${PREFIX}_${state}.value $count"
+		done
+	done
+
+	echo "multigraph ${plugin_name}_builds_results_summary"
+	find "$jenkins_job_dir"/*/builds/*/log -type f -print0 2>/dev/null \
+			| xargs -0 -r tail --quiet -n 1 \
+			| count_job_result_states \
+			| while read -r state count; do
+		echo "jenkins_builds_results_all_${state}.value $count"
+	done
+
+	echo "multigraph ${plugin_name}_jobs"
+	for PREFIX in $JOB_PREFIXES; do
+		NR=$(find "$jenkins_job_dir" -maxdepth 1 -mindepth 1 -name "${PREFIX}*" -type d | wc -l)
+		echo "jenkins_jobs_$PREFIX.value $NR"
+	done
+}
+
+
+do_fetch_trivial() {
+	echo "multigraph ${plugin_name}_builds_running"
+	echo "jenkins_builds_running.value $(pgrep -f "$build_process_regex" | wc -l)"
+}
+
+
+case "${1:-}" in
+	config)
+		do_config
+		exit 0
+		;;
+	"")
+		# Expensive operations are executed only periodically (see "jenkins_update_interval").
+		# Delete statefile if it is older than "$jenkins_update_interval".
+		find "$STATEFILE" -maxdepth 0 -mmin "+$jenkins_update_interval" -delete 2>&1 || true
+		# Does the state file exist and is not outdated?
+		# In this case just output its data and do not update the state.
+		if [ -f "$STATEFILE" ]; then
+			cat "$STATEFILE"
+		else
+			do_fetch_expensive | tee "$STATEFILE"
+		fi
+
+		# trivial operations are executed during every run
+		do_fetch_trivial
+		;;
+	*)
+		echo >&2 "Invalid action requested"
+		exit 1
+		;;
+esac
