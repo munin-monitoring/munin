@@ -331,7 +331,15 @@ sub init_snmp
 sub run_plugin
 {
     my ($plugins, $plugin, $mode) = @_;
-    my $name = $plugin->{name};
+
+    # un-taint the plugin name cause it is getting executed
+    my $name;
+    if ($plugin->{name} =~ /^([\w-]+)$/x) {
+        $name = $1;
+    } else {
+        $plugin->log_error("Invalid plugin name '$plugin->{name}'");
+        return;
+    }
 
 	DEBUG("Running '$mode' on $name" );
     my $res = $plugins->{library}->fork_service($name, $mode);
@@ -349,10 +357,18 @@ sub run_plugin
 		# Definitely a bad sign
 		if ($plugin_signal) {
             $plugin->log_error("Died with signal $plugin_signal during $mode");
+            if (my @junk = grep !/^#/, @{ $res->{stderr} }) {
+               $plugin->log_error("Junk printed to stderr");
+               DEBUG("Junk printed to stderr: @junk");
+            }
 			return;
 		}
 		elsif ($plugin_exit) {
             $plugin->log_error("Non-zero exit during $mode ($plugin_exit)");
+            if (my @junk = grep !/^#/, @{ $res->{stderr} }) {
+               $plugin->log_error("Junk printed to stderr");
+               DEBUG("Junk printed to stderr: @junk");
+            }
             return;
 
 		}
