@@ -6,8 +6,8 @@
 # 22:00 < janll> 4. broken config, good fetch
 # 22:00 < janll> 5. good config, broken fetch
 # 22:00 < janll> 6. broken everything
-# 
-# 22:03 < janll> modes of breakage: mistyped keywords, missing keywords, missing 
+#
+# 22:03 < janll> modes of breakage: mistyped keywords, missing keywords, missing
 #                values, illegal values
 
 # Plugin filename = testplugin

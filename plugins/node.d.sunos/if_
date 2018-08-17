@@ -64,7 +64,7 @@ fi
 
 if [ "$1" = "config" ]; then
 
-	echo "graph_order rbytes obytes" 
+	echo "graph_order rbytes obytes"
 	echo "graph_title $INTERFACE traffic"
 	echo 'graph_args --base 1000'
 	echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'

@@ -64,13 +64,13 @@ if (defined $ARGV[0] and $ARGV[0] eq "autoconf") {
     print "closed.max 50000\n";
     exit 0;
 }
-  
+
 my(%toFind) = ("requests" => "connection requests",
                "accepts" => "connection accepts",
                "established" => "connections established",
                "closed" => "connections closed ("
               );
-              
+
 my($item,$line,@lineArray);
 
 foreach $item (keys(%toFind)) {

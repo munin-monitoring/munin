@@ -56,7 +56,7 @@ public abstract class AbstractMemoryPoolProvider extends
 	 * While that's an improvement it's still fundamentally broken, as pool
 	 * names and even their existence is undefined and implementation- as well
 	 * as configuration-dependent.
-	 * 
+	 *
 	 * A fully correct solution would dynamically create graphs for each pool
 	 * encountered and not make any assumption. {@link MultigraphMemory} is such
 	 * a fully dynamic implementation and should be preferred.

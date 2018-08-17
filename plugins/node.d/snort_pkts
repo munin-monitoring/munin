@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-snort_pktsec - Plugin to monitor the number of packets per second 
+snort_pktsec - Plugin to monitor the number of packets per second
                passed through Snort filters
 
 =head1 CONFIGURATION

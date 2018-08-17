@@ -11,7 +11,7 @@ Tomcat 5.0 or higher with the default tomcat manager webapp.
 
 =head1 USAGE
 
-Needs access to http://<user>:<password>@localhost:8080/manager/status?XML=true (or modify the address for another host). 
+Needs access to http://<user>:<password>@localhost:8080/manager/status?XML=true (or modify the address for another host).
 
 A munin-user in $CATALINA_HOME/conf/tomcat-users.xml should be set up for this to work.
 
@@ -45,11 +45,11 @@ Override default status-url
 
 =item user
 
-Manager username 
+Manager username
 
 =item password
 
-Manager password 
+Manager password
 
 =item connector
 

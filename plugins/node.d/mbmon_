@@ -74,7 +74,7 @@ case $what in
 		;;
 	FAN)
 		echo 'graph_title Motherboard Fans'
-		echo 'graph_category sensors' 
+		echo 'graph_category sensors'
 		echo 'graph_order FAN0 FAN1 FAN2'
 		echo 'graph_vlabel rpm'
 		echo 'FAN0.label Fan 1'

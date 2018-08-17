@@ -65,7 +65,7 @@ public abstract class AbstractMultiGraphsProvider extends
 	 * Utility method that adds a specified provider to the providers
 	 * <code>Map</code> multiple times: Once as a non-graphing data graph and
 	 * any number of times as alias graphs.
-	 * 
+	 *
 	 * @param providers
 	 *            the <code>Map</code> of providers to add to
 	 * @param provider
@@ -74,7 +74,7 @@ public abstract class AbstractMultiGraphsProvider extends
 	 *            the name of the non-graphing instance
 	 * @param aliases
 	 *            the names of the alias instances.
-	 * 
+	 *
 	 * @see #noGraph(AbstractGraphsProvider)
 	 * @see #aliasFor(AbstractGraphsProvider, String)
 	 */
@@ -134,7 +134,7 @@ public abstract class AbstractMultiGraphsProvider extends
 
 	/**
 	 * Creates an alias for the specified provider.
-	 * 
+	 *
 	 * @param provider
 	 *            provider to alias
 	 * @param origName
@@ -154,7 +154,7 @@ public abstract class AbstractMultiGraphsProvider extends
 
 	/**
 	 * Creates an alias for the specified provider.
-	 * 
+	 *
 	 * @param provider
 	 *            provider to alias
 	 * @param origName

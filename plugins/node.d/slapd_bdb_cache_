@@ -119,7 +119,7 @@ if ($arg && $arg eq "config") {
     print "percent\n";
     exit 0;
 }
-         
+
 
 if ($config) {
     print <<EOF;

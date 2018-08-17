@@ -5,7 +5,7 @@ package org.munin.plugin.jmx;
  * 1.4-era JMX Pluginwas hard-coded to those names and expected them at a
  * specific location in the returned MBeans (which is not portable and has lead
  * to several mis-represented values at best).
- * 
+ *
  * Generally speaking pool names hsould not be hard-coded at all in the JMX
  * plugins, as they are not specified and can vary between JVMs, JVM versions
  * and even based on the settings used to run the JVM (ConcurrentMarkSweep vs.
