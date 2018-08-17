@@ -95,6 +95,19 @@ count_job_result_states() {
 }
 
 
+# Parse the result states from log files below "builds" directories.
+# The base directories are determined by appending a "*" (for globbing) to the
+# given parameter. The output consists of key/value pairs (state and count)
+# for each possible state.
+process_job_log_results() {
+	local dir_prefix="$1"
+	find "$dir_prefix"*/builds/ -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null \
+		| xargs -0 -r -I '{}' find '{}' -mindepth 1 -maxdepth 1 -type f -name 'log' -print0 \
+		| xargs -0 -r tail --quiet -n 1 \
+		| count_job_result_states
+}
+
+
 do_config() {
 	JOB_PREFIXES=$(get_job_prefixes)
 	echo "multigraph ${plugin_name}_builds"
@@ -170,19 +183,13 @@ do_fetch_expensive() {
 
 	echo "multigraph ${plugin_name}_builds_results"
 	for PREFIX in $JOB_PREFIXES; do
-		find "$jenkins_job_dir/$PREFIX"*/builds/*/log -type f -print0 2>/dev/null \
-				| xargs -0 -r tail --quiet -n 1 \
-				| count_job_result_states \
-				| while read -r state count; do
+		process_job_log_results "$jenkins_job_dir/$PREFIX" | while read -r state count; do
 			echo "jenkins_builds_results_${PREFIX}_${state}.value $count"
 		done
 	done
 
 	echo "multigraph ${plugin_name}_builds_results_summary"
-	find "$jenkins_job_dir"/*/builds/*/log -type f -print0 2>/dev/null \
-			| xargs -0 -r tail --quiet -n 1 \
-			| count_job_result_states \
-			| while read -r state count; do
+	process_job_log_results "$jenkins_job_dir/" | while read -r state count; do
 		echo "jenkins_builds_results_all_${state}.value $count"
 	done
 
