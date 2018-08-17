@@ -1,4 +1,4 @@
-#! /bin/bash
+#!@@BASH@@
 
 if [ "$1" == "config" ]; then
 	echo "graph_title test with decimal value"

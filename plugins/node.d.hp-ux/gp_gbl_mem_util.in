@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!@@GOODSH@@
 #
 # gp_gbl_mem - Munin plug-in to fetch global memory utilisation via Glance
 #	      (should only run on HP-UX with GlancePlus (GP) installed therefore)		

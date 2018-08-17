@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@@BASH@@
 
 # A small plugin for testing .negative.  Currently exposes issues with
 # .negative and field names longer than 15 characters.  This also fails if a
