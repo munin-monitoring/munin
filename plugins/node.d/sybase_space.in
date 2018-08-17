@@ -67,7 +67,7 @@ if ($ARGV[0] eq "autoconf")
     exit 0;
 }
 
-if (!$dbh) 
+if (!$dbh)
 {
 	die "Could not run DBI::connect\n";
 }

@@ -18,13 +18,13 @@
 if [ "$1" = "autoconf" ]; then
     if [ -x /sbin/sysctl ]; then
         /sbin/sysctl vm.stats.vm.v_swappgsin > /dev/null
-    	if [ $? = "0" ]; then
-	    	echo yes
-    		exit 0
-    	else
-		    echo no
-		    exit 0
-	    fi
+	if [ $? = "0" ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 0
+	fi
     else
         echo no
         exit 0
@@ -51,7 +51,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-#awk '/swap/ { print "swap_in.value " $2 "\nswap_out.value " $3 }' < /proc/stat 
+#awk '/swap/ { print "swap_in.value " $2 "\nswap_out.value " $3 }' < /proc/stat
 echo -n 'swap_in.value '
 /sbin/sysctl -n vm.stats.vm.v_swappgsin
 echo -n 'swap_out.value '

@@ -35,7 +35,7 @@ detailed information on the graph page for the meaning of each state.
 
 =head1 MIB INFORMATION
 
-This plugin requires support for the TCP-MIB (RFC 4022).  It reports 
+This plugin requires support for the TCP-MIB (RFC 4022).  It reports
 the contents of the tcpConnState column of tcpConnTable.
 
 =head1 MAGIC MARKERS

@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-snmp__print_supplies - SNMP plugin to monitor supplies levels on 
+snmp__print_supplies - SNMP plugin to monitor supplies levels on
 printers adhering to RFC1759
 
 =head1 APPLICABLE SYSTEMS
@@ -12,7 +12,7 @@ printers adhering to RFC1759
 Any SNMP capable printer adhering to RFC1759.  Using a command such
 as "munin-node-configure --snmp xerox.skillingstad.no --snmpversion 2c
 --snmpcommunity public | sh -x" should auto-detect all applicable
-interfaces.  
+interfaces.
 
 =head1 CONFIGURATION
 
@@ -39,13 +39,13 @@ information.
 
   #%# family=snmpauto
   #%# capabilities=snmpconf
-    
+
 =head1 VERSION
-    
+
  $Id: $
-      
+
 =head1 BUGS
-      
+
 None known.
 
 =head1 AUTHOR
@@ -77,7 +77,7 @@ if(defined $ARGV[0] and $ARGV[0] eq "snmpconf") {
 }
 
 
-my ($session, $error); 
+my ($session, $error);
 
 # SNMP needed for both config and fetch.
 $session = Munin::Plugin::SNMP->session();
@@ -94,7 +94,7 @@ if(!defined ($session)) {
 # Configure
 if(defined $ARGV[0] and $ARGV[0] eq "config") {
     my ($host,undef,$version) = Munin::Plugin::SNMP->config_session();
-    
+
     print "host_name $host\n" unless $host eq 'localhost';
     print "graph_title Supply Level\n";
     print "graph_args --base 1000 -l 0 --upper-limit 100\n";
@@ -102,9 +102,9 @@ if(defined $ARGV[0] and $ARGV[0] eq "config") {
     print "graph_scale no\n";
     print "graph_category print\n";
     print "graph_info This graph represents supplies level\n";
-    
+
     foreach my $supply (keys(%supplies)) {
-	print "supply$supply.label ".(length($supplies{$supply}{desc})<=$MAXLABEL ? 
+        print "supply$supply.label ".(length($supplies{$supply}{desc})<=$MAXLABEL ?
 	    $supplies{$supply}{desc} : substr($supplies{$supply}{desc},0,($MAXLABEL-3))."...");
 	print "\n";
 	print "supply$supply.draw LINE1\n";
@@ -112,7 +112,7 @@ if(defined $ARGV[0] and $ARGV[0] eq "config") {
 	print "supply$supply.warning $warning:100\n";
 	print "supply$supply.critical $critical:100\n";
     }
-    
+
     exit 0;
 }
 
@@ -128,9 +128,9 @@ sub get_multiple {
     my $session = shift;
     my $oid     = shift;
     my $type    = shift;
-    
+
     print "# Getting table $oid...\n" if $Munin::Plugin::SNMP::DEBUG;
-    
+
     my $response = $session->get_table($oid);
 
     if(!defined($response)) {

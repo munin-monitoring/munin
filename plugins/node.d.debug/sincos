@@ -16,11 +16,11 @@ if ($ARGV[0] eq "config") {
 
 
 my $epoch = time;
-   
+
 for (my $i = $epoch - 5; $i < $epoch; $i += 1) {
    print "sin.value $i:". sin($i / 3600). "\n";
 }
-   
+
 for (my $i = $epoch - 5; $i < $epoch; $i += 1) {
    print "cos.value $i:". cos($i / 3600). "\n";
 }

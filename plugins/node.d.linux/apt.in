@@ -128,7 +128,7 @@ if ($ARGV[0] and $ARGV[0] eq "update")
 {
 	my $maxinterval = $ARGV[1] ? $ARGV[1] : update_helpandexit;
 	my $probability = $ARGV[2] ? $ARGV[2] : update_helpandexit;
-	
+
 	# if it's been $probability seconds since the last update, do
 	# it now.
 	if(-e $statefile &&

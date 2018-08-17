@@ -389,7 +389,7 @@ sub calculate_and_print_values {
 
     my $average_rq_size_in_kb
         = $total_ios
-        ? ( $rd_sectors + $wr_sectors ) 
+        ? ( $rd_sectors + $wr_sectors )
         * $bytes_per_sector / 1024
         / $total_ios
         : 0;

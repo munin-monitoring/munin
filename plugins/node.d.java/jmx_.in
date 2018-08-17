@@ -35,7 +35,7 @@ Needed configuration on the Tomcat side: add
 
 to CATALINA_OPTS in your startup scripts.
 
-Replace authenticate=false with 
+Replace authenticate=false with
   -Dcom.sun.management.jmxremote.password.file=/etc/tomcat/jmxremote.password \
   -Dcom.sun.management.jmxremote.access.file=/etc/tomcat/jmxremote.access
  ...if you want authentication.

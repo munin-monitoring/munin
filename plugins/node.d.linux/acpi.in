@@ -1,7 +1,7 @@
 #!@@GOODSH@@
 # -*- sh -*-
 
-: <<=cut 
+: <<=cut
 
 =head1 NAME
 
@@ -21,7 +21,7 @@ Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
 
 =head1 INTERPRETATION
 
-The plugin shows the temperature from the different thermal zones. 
+The plugin shows the temperature from the different thermal zones.
 
 =head1 MAGIC MARKERS
 

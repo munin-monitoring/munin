@@ -85,18 +85,18 @@ if (!defined ($session)) {
                           7 => 'low',
                           8 => 'warn',
                           );
-	
+
 	# TODO: Fill out more from MIB
 	my %sensor_types = (
                             1  => 'not available',
                             10 => 'temperature',
                             );
-	
+
 	if ($configure) {
 	    # .1.3.6.1.4.1.2606.4.2.3.5.2.1.x.1
 	    #                 unit -^       ^ ^- index
 	    #                               `- property
-	    
+
 	    my $baseoid = "1.3.6.1.4.1.2606.4.2." . (2 + $sensor_unit) . ".5.2.1";
 	    if (defined (my $response = $session->get_table ($baseoid))) {
 		while (my ($oid, $value) = each (%$response)) {
@@ -138,19 +138,19 @@ if (!defined ($session)) {
 	    # Find number of connected CMC units
 	    my $num_units_oid = '1.3.6.1.4.1.2606.4.2.2.0';
 	    my $num_units = $session->get_request ($num_units_oid)->{$num_units_oid};
-	    
+
 	    # .1.3.6.1.4.1.2606.4.2.3.5.2.1.1.1
 	    #                       ^- 2 + $unit_no
-	    
+
 	    for (my $i = 1; $i <= $num_units; $i++) {
-		
+
 		# Walk each table
 		my $baseoid = "1.3.6.1.4.1.2606.4.2." . (2 + $i) . ".5.2.1";
-		
+
 		# Find properties and values
 		# We only traverse the OID tree once per sensor,
 		# to reduce number of SNMP GET requests.
-		
+
 		if (defined (my $response = $session->get_table ($baseoid))) {
 		    while (my ($oid, $value) = each (%$response)) {
 			my $prop_id = undef;
@@ -183,12 +183,12 @@ if (!defined ($session)) {
 	    # Go directly to the OID we want
 	    my $oid = "1.3.6.1.4.1.2606.4.2." . (2 + $sensor_unit) . ".5.2.1.5." . $sensor_index;
 	    my $value = $session->get_request ($oid)->{$oid};
-	    
+
 	    # Show values
 	    print "sensor_" . $sensor_unit . "_" . $sensor_index . ".value $value\n";
 	}
     }
-    
+
     $session->close();
 }
 exit 0;

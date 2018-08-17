@@ -98,7 +98,7 @@ EOM
     print 'graph_order ', join(' ', map { get_id($_) } oid_lex_sort keys %$fans), "\n";
     print 'host_name ', $session->hostname(), "\n"
       unless $session->hostname eq 'localhost';
-      
+
     for my $fan (keys %$fans) {
 	my $id = get_id($fan);
 	for my $key (qw(label warning)) {

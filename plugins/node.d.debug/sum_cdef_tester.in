@@ -57,11 +57,11 @@ graph_order \
         donald_disk \
         ferdinand_disk=mg_ferdinand_disk.sda \
         donald_mb=mg_donald_mb.temp1 \
-        ferdinand_mb=mg_ferdinand_mb.temp1 
+        ferdinand_mb=mg_ferdinand_mb.temp1
 donald_disk.sum \
         mg_donald_disk.sda \
         mg_donald_disk.sdb \
-        mg_donald_disk.sdc 
+        mg_donald_disk.sdc
 donald_disk.cdef donald_disk,3,/
 donald_disk.label donald disk
 donald_mb.label Mainboard donald

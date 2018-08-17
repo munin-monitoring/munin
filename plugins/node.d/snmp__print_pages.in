@@ -3,15 +3,15 @@
 
 =head1 NAME
 
-snmp__print_supplies - SNMP plugin to monitor pages printed on 
-printers adhering to RFC1759. 
+snmp__print_supplies - SNMP plugin to monitor pages printed on
+printers adhering to RFC1759.
 
 =head1 APPLICABLE SYSTEMS
 
 Any SNMP capable printer adhering to RFC1759.  Using a command such
 as "munin-node-configure --snmp xerox.skillingstad.no --snmpversion 2c
 --snmpcommunity public | sh -x" should auto-detect all applicable
-interfaces.  
+interfaces.
 
 =head1 CONFIGURATION
 
@@ -21,7 +21,7 @@ configuration (shown here) will only work on insecure sites/devices:
    [snmp_*]
         env.version 2
         env.community public
-		   
+
 In general SNMP is not very secure at all unless you use SNMP version
 3 which supports authentication and privacy (encryption).  But in any
 case the community string for your devices should not be "public".
@@ -33,13 +33,13 @@ information.
 
   #%# family=snmpauto
   #%# capabilities=snmpconf
-    
+
 =head1 VERSION
-    
+
  $Id: $
-      
+
 =head1 BUGS
-      
+
 For printers having duplex module: pages != number of sheets
 
 =head1 AUTHOR
@@ -75,10 +75,10 @@ if(!defined ($session)) {
 
 if(defined $ARGV[0] and $ARGV[0] eq "config") {
     my ($host,undef,$version) = Munin::Plugin::SNMP->config_session();
-    
+
     print "host_name $host\n" unless $host eq 'localhost';
     print "graph_title Pages
-graph_args --base 1000 -l 0 
+graph_args --base 1000 -l 0
 graph_vlabel Printed pages pr minute
 graph_scale no
 graph_category print

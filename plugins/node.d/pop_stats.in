@@ -81,13 +81,13 @@ open (OUT, ">" . $pop{'statefile'}) or exit 4;
 print OUT "$pos:$logons\n";
 close OUT;
 
-sub parsePopfile 
-{    
+sub parsePopfile
+{
 	my ($fname, $start, $stop) = @_;
 	open (LOGFILE, $fname) or exit 3;
 	seek (LOGFILE, $start, 0) or exit 2;
 
-	while (tell (LOGFILE) < $stop) 
+	while (tell (LOGFILE) < $stop)
 	{
 		my $line =<LOGFILE>;
 		chomp ($line);
@@ -97,7 +97,7 @@ sub parsePopfile
 			$logons++;
 		}
 	}
-	close(LOGFILE);    
+	close(LOGFILE);
 }
 
 

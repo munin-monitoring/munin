@@ -117,7 +117,7 @@ EOM
     print 'graph_order ', join(' ', map { get_id($_) } oid_lex_sort keys %$temps), "\n";
     print 'host_name ', $session->hostname(), "\n"
       unless $session->hostname eq 'localhost';
-      
+
     for my $sensor (keys %$temps) {
 	my $id = get_id($sensor);
 	for my $key (qw(label warning critical info)) {

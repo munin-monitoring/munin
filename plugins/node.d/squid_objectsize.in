@@ -73,27 +73,27 @@ sub autoconf {
     my $cachemgr = IO::Socket::INET->new (PeerAddr => $host,
                                           PeerPort => $port,
                                           Proto    => 'tcp');
-    
+
     if (!$cachemgr) {
 	print "no (could not connect: $!)\n";
 	exit 0;
     }
-    
+
     my $request = "GET cache_object://$host/info HTTP/1.0\r\n" .
 	"Accept: */*\r\n" .
 	&make_auth_header ($user, $passwd) .
 	"\r\n";
-    
+
     $cachemgr->syswrite ($request, length($request));
     my @lines = $cachemgr->getlines();
-    
+
     print "yes\n";
     exit 0;
 }
 
 sub make_auth_header {
     my ($user, $passwd) = @_;
-    
+
     if (!defined $passwd || $passwd eq "") {
 	return "";
     } else {
@@ -108,12 +108,12 @@ sub query_squid {
     my $cachemgr = IO::Socket::INET->new (PeerAddr => $host,
                                           PeerPort => $port,
                                           Proto    => 'tcp') or die($!);
-    
+
     my $request = "GET cache_object://$host/info HTTP/1.0\r\n" .
 	"Accept: */*\r\n" .
 	&make_auth_header ($user, $passwd) .
 	"\r\n";
-    
+
     $cachemgr->syswrite ($request, length($request));
     my @lines = grep (/Mean Object Size/, $cachemgr->getlines());
     my $line = pop @lines;

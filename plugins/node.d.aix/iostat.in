@@ -63,7 +63,7 @@ if($arg && $arg eq "autoconf") {
         exit 0;
     }
 }
- 
+
 if($arg && $arg eq "config")
   {
     print "graph_title IOstat\n";
@@ -80,7 +80,7 @@ if($arg && $arg eq "config")
       }
     exit 0;
   }
-  
+
 my(@info) = getDiskIO('');
 my($line);
 foreach $line (@info)
@@ -88,8 +88,8 @@ foreach $line (@info)
 @info = processVPaths();
 foreach $line (@info)
   {print "$line";}
-  
-    
+
+
 sub getDiskIO
 {
   my($diskOnly) = @_;
@@ -115,7 +115,7 @@ sub getDiskIO
           chomp($writes);
           $reads = $lineArray[4];
           chomp($reads);
-          
+
           push(@diskArray,"$lineArray[0]_read.value $reads\n","$lineArray[0]_write.value $writes\n");
         }
     }
@@ -161,4 +161,4 @@ sub printArray
         {print $labels[$count].substr($spacer,0,length($spacer)-length($labels[$count])).$item."\n";}
       $count++;
     }
-}      
+}

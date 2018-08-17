@@ -111,5 +111,5 @@ eval $DF | $TAIL +2 | while read dev size used avail pct mnt; do
 	swap:*) name=$(clean_fieldname $mnt);;
 	*)    name=$(clean_fieldname $dev);;
     esac
-    echo "$name.value $pct" | cut -f1 -d% 
+    echo "$name.value $pct" | cut -f1 -d%
 done

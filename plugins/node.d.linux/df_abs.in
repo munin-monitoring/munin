@@ -83,7 +83,7 @@ if [ "$1" = "config" ]; then
 		echo 'graph_total Total'
 	fi
 	# shellcheck disable=SC2086
-	df -P -l $exclude | sed 1d | grep -v "//" | 
+	df -P -l $exclude | sed 1d | grep -v "//" |
 	while read -r dev size used avail cap mnt; do
 		name="$(get_fieldname "$dev" "$mnt")"
 		echo "$name.label $mnt"
@@ -101,7 +101,7 @@ if [ "$1" = "config" ]; then
 fi
 
 # shellcheck disable=SC2034,SC2086
-df -P -l $exclude | sed 1d | grep -v "//" | 
+df -P -l $exclude | sed 1d | grep -v "//" |
 	while read -r dev size used avail cap mnt; do
 		echo "$(get_fieldname "$dev" "$mnt").value $used"
 	done

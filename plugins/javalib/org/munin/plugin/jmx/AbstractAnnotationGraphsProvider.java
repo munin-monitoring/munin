@@ -14,7 +14,7 @@ import java.util.TreeSet;
 
 public abstract class AbstractAnnotationGraphsProvider extends
 		AbstractGraphsProvider {
-	
+
 	protected AbstractAnnotationGraphsProvider(final Config config) {
 		super(config);
 	}

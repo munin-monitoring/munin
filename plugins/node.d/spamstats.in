@@ -128,25 +128,25 @@ open (OUT, ">$statefile") or exit 4;
 print OUT "$pos:$ham:$spam\n";
 close OUT;
 
-sub parselogfile 
-{    
+sub parselogfile
+{
     my ($fname, $start, $stop) = @_;
     open (LOGFILE, $fname) or exit 3;
     seek (LOGFILE, $start, 0) or exit 2;
 
-    while (tell (LOGFILE) < $stop) 
+    while (tell (LOGFILE) < $stop)
     {
 	my $line =<LOGFILE>;
 	chomp ($line);
 
-	if ($line =~ m/clean message/) 
+	if ($line =~ m/clean message/)
 	{
 	    $ham++;
-	} 
+	}
 	elsif ($line =~ m/identified spam/)
 	{
 	    $spam++;
 	}
     }
-    close(LOGFILE);    
+    close(LOGFILE);
 }

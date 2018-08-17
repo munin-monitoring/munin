@@ -148,7 +148,7 @@ sub mailmanDomains {
     if (-e "$libdir/data") {
 	@domains = (".");
     } else {
-	opendir(DOMAINS, $libdir) or 
+	opendir(DOMAINS, $libdir) or
 	    die "Can't open directory $libdir for reading: $!";
 	@domains = grep ( { !/^\@/ && !/^\./ && -d "$libdir/$_" }
 			  readdir(DOMAINS) );
@@ -161,7 +161,7 @@ sub mailmanLists {
     my ($domain) = @_;
     opendir(LISTS, "$libdir/$domain/lists") or
 	die "Can't open directory $libdir/$domain/lists for reading: $!";
-    my @lists = grep ( { !/^\@/ && !/^\./ && -d "$libdir/$domain/lists/$_" } 
+    my @lists = grep ( { !/^\@/ && !/^\./ && -d "$libdir/$domain/lists/$_" }
 		       readdir(LISTS) );
     closedir(LISTS);
     return @lists;

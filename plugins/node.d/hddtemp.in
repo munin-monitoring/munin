@@ -7,7 +7,7 @@
 # the preferred one.
 #
 # client-conf.d/-options:
-# 	
+#
 # 	drives		-- List drives to monitor. E.g. "hda hdc".
 #
 #%# family=contrib

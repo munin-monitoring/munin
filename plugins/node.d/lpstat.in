@@ -56,7 +56,7 @@ $ENV{'LC_MESSAGES'} = "C";
 my $host = '127.0.0.1';
 
 my $lpstat = exists $ENV{lpstat} ? $ENV{lpstat} : '';
- 
+
 # If the envvar is not set, look for lpstat
 if (!$lpstat) {
    # Still not found? Check obvious places

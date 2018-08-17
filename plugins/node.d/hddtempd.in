@@ -3,7 +3,7 @@
 #
 # Munin plugin to monitor hdd temperature from a hddtemp daemon.
 #
-# This plugin is an alternative to the hddtemp_smartctl, which is the 
+# This plugin is an alternative to the hddtemp_smartctl, which is the
 # preferred one.
 #
 # Author: Stein Magnus Jodal <jodal at users.sourceforge.net>
@@ -81,7 +81,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 		${$this}[0] =~ tr#_#/#;
 		print "${$this}[0]\n";
 	}
-	
+
         exit 0;
 }
 

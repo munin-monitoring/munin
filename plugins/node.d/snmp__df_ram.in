@@ -19,7 +19,7 @@ The following environment variables are used
 
 Copyright (C) 2011 Erik Inge Bolsø, Redpill Linpro AS for OSL
 
-Based on snmp__df (C) 2004 Jimmy Olsen 
+Based on snmp__df (C) 2004 Jimmy Olsen
 
 =head1 LICENSE
 
@@ -115,7 +115,7 @@ my @keep = ();
 
 foreach my $id (keys %$correct_capacity)
 {
-	if (exists $correct_type->{$id} and 
+	if (exists $correct_type->{$id} and
 	    exists $correct_removable->{$id})
 	{
 	    push (@keep, $id);
@@ -162,7 +162,7 @@ if ($foundpartitions == 0 or defined $partitions{""})
 		$partitions{$spart}{extinfo} = $part;
 		$stor_id->{$id} = $spart;
 	}
-} else 
+} else
 { # Get the ones we're sure about
 
 	$stor_id   = get_by_regex ($session, $hrStorageDesc, '(^'.join('$|^',keys(%partitions)).'$)');
