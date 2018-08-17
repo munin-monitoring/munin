@@ -41,7 +41,7 @@ if [ "$1" = "autoconf" ]; then
                 echo yes
                 exit 0
         else          
-                echo no
+                echo "no (can not exectute /usr/sbin/fetchipac or /usr/sbin/ipacsum)"
                 exit 0
         fi            
 fi
