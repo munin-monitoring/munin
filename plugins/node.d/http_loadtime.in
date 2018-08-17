@@ -38,7 +38,7 @@ GPLv2
 target=${target:-"http://localhost/"}
 requisites=${requisites:-"false"}
 
-urls=$(echo "$target" | tr "," "\n")
+urls=$(echo "$target" | tr ',' '\n')
 
 
 request_url() {
