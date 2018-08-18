@@ -1,5 +1,8 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
+
 =head1 NAME
 
   hwmon - Multigraph plugin to monitor Linux hwmon drivers
@@ -54,7 +57,6 @@ GPLv2
 
 =cut
 
-use strict;
 use Munin::Plugin::Framework;
 use Munin::Plugin;
 use File::Basename;
@@ -154,15 +156,19 @@ foreach my $devdir (@devdirs) {
 
     my ($lwarn) = readarray($path . "_min");
     $lwarn /= $denominator if $lwarn;
+    $lwarn = '' unless $lwarn;
 
     my ($hwarn) = readarray($path . "_max");
     $hwarn /= $denominator if $hwarn;
+    $hwarn = '' unless $hwarn;
 
     my ($lcrit) = readarray($path . "_lcrit");
     $lcrit /= $denominator if $lcrit;
+    $lcrit = '' unless $lcrit;
 
     my ($hcrit) = readarray($path . "_crit");
     $hcrit /= $denominator if $hcrit;
+    $hcrit = '' unless $hcrit;
 
     my ($val) = readarray($path . "_input");
     $val /= $denominator if $val;

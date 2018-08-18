@@ -1,5 +1,8 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 procsys - Plugin to monitor kernel sysctl data
@@ -52,7 +55,6 @@ GPLv2
 
 =cut
 
-use strict;
 use Munin::Plugin::Framework;
 use Munin::Plugin;
 
