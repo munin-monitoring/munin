@@ -137,7 +137,6 @@ sub do_work {
 	# plugin redef. Note that we should declare 2 different HASHREF,
 	# otherwise it is _shared_ which isn't what we want.
 	$self->{__SEEN_PLUGINS__} = {};
-	$self->{__SEEN_PLUGINS_FETCH__} = {};
 
 	# Shuffle @plugins to avoid always having the same ordering
 	# XXX - It might be best to preorder them on the TIMETAKEN ASC
@@ -690,12 +689,6 @@ sub uw_handle_fetch {
 
 	# timestamp == 0 means "Nothing was updated"
 	my $last_timestamp = 0;
-
-	# Protect oneself against multiple, conflicting multigraphs
-	if (defined $self->{__SEEN_PLUGINS_FETCH__} && $self->{__SEEN_PLUGINS_FETCH__}{$plugin} ++) {
-		WARN "uw_handle_fetch $plugin is already configured, skipping";
-		return $last_timestamp;
-	}
 
 	$self->{dbh}->begin_work() if $self->{dbh}->{AutoCommit};
 
