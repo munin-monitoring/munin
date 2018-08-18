@@ -27,20 +27,12 @@ Plugin has capabilities "autoconf", but "autoconf" seems broken.
 =head1 MAGIC MARKERS
 
  #%# family=contrib
- #%# capabilities=autoconf
 
 =cut
 
 EOF
 
 statefile=$MUNIN_PLUGSTATE/plugin-fah_wu.state
-
-if [ "$1" = "autoconf" ]; then
-    # Didn't check anything, which is meaningless in this case.
-    # echo yes
-    echo no
-    exit 0
-fi
 
 if [ "$1" = "config" ]; then
     echo 'graph_title Folding@Home Working Units submited'
