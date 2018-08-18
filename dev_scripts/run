@@ -17,10 +17,10 @@ if [ -z "${1:-}" ]; then
 	usage
 fi
 
-if command=$(command -v "$1"); then
-	echo "# [dev/run] Found: ${command}"
-	echo "# [dev/run] Command line: " "$@"
-	exec "$@"
+if [ -x "${BASEDIR}/sandbox/bin/$1" ]; then
+	echo "# [dev/run] Found: ${BASEDIR}/sandbox/bin/$1"
+	echo "# [dev/run] Command line: /usr/bin/perl -T -Mlib=${BASEDIR}/sandbox/lib/perl5/ ${BASEDIR}/sandbox/bin/$@"
+	exec /usr/bin/perl -T -Mlib="${BASEDIR}/sandbox/lib/perl5/" "${BASEDIR}/sandbox/bin/$@"
 else
 	echo >&2 "Failed to find '$1'"
 	exit 1
