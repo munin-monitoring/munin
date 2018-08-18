@@ -25,9 +25,6 @@
 use strict;
 use warnings;
 
-# Trust PERL5LIB from environment
-use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
-
 use Getopt::Long;
 
 use Munin::Common::Defaults;
@@ -47,20 +44,8 @@ my $paranoia = 0;
 
 my $config = Munin::Node::Config->instance();
 
-
 sub main
 {
-    # "Clean" environment to disable taint-checking on the environment. We _know_
-    # that the environment is insecure, but we want to let admins shoot themselves
-    # in the foot with it, if they want to.
-    foreach my $key (keys %ENV) {
-        $ENV{$key} =~ /^(.*)$/;
-        $ENV{$key} = $1;
-    }
-
-    $0 =~ /^(.*)$/;
-    $0 = $1;
-
     my ($plugin, $arg) = parse_args();
 
     # Loads the settings from munin-node.conf.

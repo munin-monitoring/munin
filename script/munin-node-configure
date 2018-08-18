@@ -32,7 +32,6 @@ my $config = Munin::Node::Config->instance();
 my @all_families     = qw/auto manual contrib/;
 my @default_families = qw/auto/;
 
-
 sub main
 {
 	parse_args();
