@@ -53,7 +53,6 @@ sub run {
 		my $dbh = get_dbh();
 		$self->_db_init($dbh, $dbh);
 		$config_old = $self->_db_params_update($dbh, $config);
-		$dbh->disconnect();
 	}
 
         $self->{workers} = $self->_create_workers();

@@ -567,8 +567,6 @@ sub process_service {
 	$sth_state_upt->execute($new_state, $ds_id, "ds");
     }
     generate_service_message($hash);
-    $dbh_state->disconnect();
-    $dbh->disconnect();
 }
 
 
