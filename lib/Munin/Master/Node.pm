@@ -450,6 +450,7 @@ sub fetch_service_config {
 			}
 			# Now we are in the new block
 			$local_service_name = $1;
+			$local_service_name = $self->_sanitise_plugin_name($local_service_name);
 
 			next;
 		}
@@ -616,6 +617,7 @@ sub fetch_service_data {
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
     INFO "data: $elapsed sec for '$plugin' on $nodedesignation";
 
+    $plugin = $self->_sanitise_fieldname($plugin);
     return $uw_handle_data->($plugin, $lines);
 }
 
@@ -762,6 +764,7 @@ sub _node_read {
 		}
 
 		# Handled the old one. Moving to the new one.
+		$new_plugin = $self->_sanitise_plugin_name($new_plugin);
 		$current_plugin = $new_plugin;
 		@array = ();
 	}
