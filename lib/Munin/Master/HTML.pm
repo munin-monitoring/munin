@@ -583,7 +583,6 @@ RENDERING:
 		use JSON;
 		print encode_json( \%template_params );
 	}
-	$dbh->disconnect();
 }
 
 sub _get_params_groups {
@@ -842,7 +841,6 @@ sub get_param
 	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 	my $dbh = Munin::Master::Update::get_dbh();
 	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
-	$dbh->disconnect();
 	return $value;
 }
 
