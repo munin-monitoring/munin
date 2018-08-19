@@ -54,6 +54,7 @@ install: $(BUILD_SCRIPT)
 		-e "$$(perl -I lib -M"Munin::Common::Defaults" \
 			-e "Munin::Common::Defaults->print_as_sed_substitutions();")"
 
+#TODO: merge with lint target, when done
 .PHONY: perlcritic
 perlcritic:
 	#TODO: apply to scripts/ and lib/Munin/Master/
