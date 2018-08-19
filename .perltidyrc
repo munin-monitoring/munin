@@ -16,6 +16,7 @@
 
 # I/O Control
 --backup-and-modify-in-place
+--backup-file-extension=/
 
 # Basic Options
 --maximum-line-length=100
@@ -34,3 +35,12 @@
 
 # Blank Line Control
 --maximum-consecutive-blank-lines=2
+
+# Turn warnings into errors
+--warning-output
+
+# Write errors to stderr, not to a file
+--standard-error-output
+
+# Check Syntax via perl -c -T
+--check-syntax
