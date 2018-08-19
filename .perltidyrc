@@ -15,6 +15,10 @@
 # Use: perltidy --profile=./perltidyrc [FILE]...
 
 --backup-and-modify-in-place
+--backup-file-extension=/
+
+# Basic Options
+--maximum-line-length=100
 --output-line-ending=unix
 --continuation-indentation=4   # Don't really like these, but setting
                                # it to 0 is not good either ...
@@ -40,3 +44,5 @@
 --keep-old-blank-lines=1
 --minimum-space-to-comment=2
 
+# Turn warnings into errors
+--warning-output

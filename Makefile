@@ -74,6 +74,11 @@ default: build
 .java.class:
 	$(JC) -sourcepath plugins/javalib -d build/plugins/javalib $(JFLAGS) plugins/javalib/$(subst plugins/javalib/,,$*.java)
 
+.PHONY: apply-formatting
+apply-formatting:
+	perltidy script/munin-async script/munin-asyncd script/munin-cron.PL script/munin-doc script/munin-httpd script/munin-limits script/munin-node script/munin-node-configure script/munin-run script/munin-update
+	find lib/ -type f -exec perltidy {} \;
+
 uninstall:
 	echo "Uninstall is not implemented yet"
 

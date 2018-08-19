@@ -359,7 +359,7 @@ sub GetData {
         }
         foreach my $row (@$r) {
             my $l = Munin::Plugin::clean_fieldname($row->[0]);
-            print $l . ".value " . $row->[1] . "\n";
+            print "$l.value " . $row->[1] . "\n";
         }
         return;
     }
