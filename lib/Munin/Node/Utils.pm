@@ -20,7 +20,8 @@ sub set_difference
     my %set;
     @set{@$A} = ();
     delete @set{@$B};
-    return sort keys %set;
+    my @tmp = sort keys %set;
+    return @tmp;
 }
 
 
@@ -29,7 +30,8 @@ sub set_intersection
     my ($A, $B) = @_;
     my %set;
     @set{@$A} = (1) x @$A;
-    return sort grep $set{$_}, @$B;
+    my @tmp = sort grep $set{$_}, @$B;
+    return @tmp;
 }
 
 
