@@ -727,8 +727,10 @@ sub uw_handle_fetch {
 		my ($field, $arg, $value) = ($1, $2, $3);
 
 		my $when = $now; # Default is NOW, unless specified
+		my $when_is_now = 1;
 		if ($value =~ /^(\d+):(.+)$/) {
 			$when = $1;
+			$when_is_now = 0;
 			$value = $2;
 		}
 
@@ -737,7 +739,7 @@ sub uw_handle_fetch {
 		$when = round_to_granularity($when, $update_rate_in_seconds) if $is_update_aligned;
 
 		# Update last_timestamp if the current update is more recent
-		$last_timestamp = $when if $when > $last_timestamp;
+		$last_timestamp = $when if (!$when_is_now && $when > $last_timestamp);
 
 		# Update all data-driven components: State, RRD, Graphite
 		my $ds_id = $self->_db_state_update($plugin, $field, $when, $value);
