@@ -216,6 +216,7 @@ sub _process_command_line {
 sub _get_commandline {
   my $self = shift;
 
+  ## no critic Variables::ProhibitPunctuationVars
   my $script = $0;
   # make relative path absolute
   $script = $ENV{'PWD'} .'/'. $script if $script =~ m|^[^/]+/| && $ENV{'PWD'};
