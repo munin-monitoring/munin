@@ -105,6 +105,8 @@ package Munin::Plugin::Pgsql;
 use strict;
 use warnings;
 
+use English qw(-no_match_vars);
+
 use Munin::Plugin;
 
 =head2 Initialization
@@ -449,7 +451,7 @@ sub _connect() {
 
     return 1 if ($self->{dbh});
 
-    if (eval "require DBI; require DBD::Pg;") {
+    if (eval {require DBI; require DBD::Pg;}) {
 
         # By default, connect to database template1, because it exists on both old
         # and new versions of PostgreSQL, unless the database should be controlled
@@ -469,7 +471,7 @@ sub _connect() {
             $err_str =~ s/[\r\n\t]/ /g;
             $err_str =~ s/\h+/ /g;
             $err_str =~ s/ $//;
-            $self->{connecterror} = $err_str;	
+            $self->{connecterror} = $err_str;
             return 0;
         }
     }
@@ -595,14 +597,14 @@ sub replace_wildcard_parameters {
 sub wildcard_parameter {
     my ($self, $paramnum) = @_;
 
-    return undef unless (defined $self->{basename});
+    return unless (defined $self->{basename});
 
     $paramnum = 0 unless (defined $paramnum);
     if ($0 =~ /$self->{basename}(.*)$/) {
 
         # If asking for first parameter, and there's no filter on it,
         # return undef.
-        return undef if ($1 eq "ALL" && $paramnum == 0);
+        return if ($1 eq "ALL" && $paramnum == 0);
 
         # If asking for unsplit, return that (internal use only, really)
         return $1 if ($paramnum == -1);

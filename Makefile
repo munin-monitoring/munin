@@ -58,7 +58,7 @@ install: $(BUILD_SCRIPT)
 .PHONY: perlcritic
 perlcritic:
 	#TODO: apply to scripts/ and lib/Munin/Master/
-	perlcritic lib/Munin/Node
+	perlcritic lib/Munin/Node lib/Munin/Plugin
 
 .PHONY: lint
 lint:
