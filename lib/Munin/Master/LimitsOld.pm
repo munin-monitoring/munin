@@ -784,7 +784,7 @@ sub generate_service_message {
                 # See https://github.com/munin-monitoring/munin/issues/382
                 # and https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=291168.
                 close(STDOUT);
-                exec($cmd) or WARN "[WARNING] Failed to exec for contact $c in pid $PID";
+                exec($cmd) or WARN "[WARNING] Failed to exec for contact $c in pid $$";
                 exit;
             }
         }

@@ -20,8 +20,6 @@ our @EXPORT
 use Params::Validate qw(validate SCALAR);
 use POSIX;
 
-use English qw(-no_match_vars);
-
 sub _program_name {
     my @path = split( '/', $0 );
     return $path[-1];
@@ -49,7 +47,7 @@ my $screen_format = sub {
 
     chomp $message;
 
-    return sprintf( "%s [%s][%06d]: %s\n", _timestamp, $level, $PID, $message );
+    return sprintf( "%s [%s][%06d]: %s\n", _timestamp, $level, $$, $message );
 };
 
 my $file_format = $screen_format;

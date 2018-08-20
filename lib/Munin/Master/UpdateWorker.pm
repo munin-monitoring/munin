@@ -85,7 +85,7 @@ sub do_work {
 	# Having a local handle looks easier
 	my $node = $self->{node};
 
-    INFO "[INFO] starting work in $PID for $nodedesignation.\n";
+    INFO "[INFO] starting work in $$ for $nodedesignation.\n";
     my $done = $node->do_in_session(sub {
 
 	# A I/O timeout results in a violent exit.  Catch and handle.

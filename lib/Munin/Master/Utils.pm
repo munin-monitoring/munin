@@ -128,8 +128,8 @@ sub munin_getlock {
         seek(LOCK, 0, 0);
     }
     DEBUG "[DEBUG] Writing out PID to lock file $lockname";
-    print LOCK $PID; # we want the pid inside for later use
-    if (defined($pid) && length $PID < length $pid) {
+    print LOCK $$; # we want the pid inside for later use
+    if (defined($pid) && length $$ < length $pid) {
 	# Since pid was defined we need to truncate in case len($) < len($pid)
 	truncate(LOCK, tell(LOCK))
     }

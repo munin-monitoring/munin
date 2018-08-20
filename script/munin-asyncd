@@ -130,7 +130,7 @@ my $process_name = "main";
 
 my $plugins = {};
 {
-	INFO("[$PID][$process_name] Reading config from $host");
+	INFO("[$$][$process_name] Reading config from $host");
 	my $sock = new IO::Socket::INET(
 		PeerAddr	=> "$host",
 		Proto	=> 'tcp'
@@ -207,7 +207,7 @@ MAIN: while($keepgoing) {
 				$when_next = $should_be_next;
 			}
 
-			DEBUG("[$PID][$process_name] $plugin: should_have_been $should_have_been (" .
+			DEBUG("[$$][$process_name] $plugin: should_have_been $should_have_been (" .
 				localtime($should_have_been) .
 				"), should_be_next: $should_be_next (" .
 				localtime($should_be_next) .
@@ -250,10 +250,10 @@ MAIN: while($keepgoing) {
 	if ($sock)
 	{
 		if ( $sock->connected ) {
-			print STDERR "[$PID][$process_name][>] quit\n" if $verbose;
+			print STDERR "[$$][$process_name][>] quit\n" if $verbose;
 			print $sock "quit\n" ;
 		}
-		print STDERR "[$PID][$process_name] closing sock\n" if $verbose;
+		print STDERR "[$$][$process_name] closing sock\n" if $verbose;
 		$sock = undef;
 	}
 
@@ -267,14 +267,14 @@ MAIN: while($keepgoing) {
 	my $sleep_sec = $when_next - time;
 
 	if ($sleep_sec > 0) {
-		INFO("[$PID][$process_name] Sleeping $sleep_sec sec");
+		INFO("[$$][$process_name] Sleeping $sleep_sec sec");
 		sleep $sleep_sec;
 	} else {
-		INFO("[$PID][$process_name] Already late : should sleep $sleep_sec sec\n");
+		INFO("[$$][$process_name] Already late : should sleep $sleep_sec sec\n");
 	}
 }
 
-print STDERR "[$PID][$process_name] Exiting\n" if $verbose;
+print STDERR "[$$][$process_name] Exiting\n" if $verbose;
 
 sub fetch_data
 {
@@ -284,9 +284,9 @@ sub fetch_data
 	my $sock = shift;
 
 
-		print STDERR "[$PID][$process_name][>][$plugin] asking for config\n" if $verbose;
+		print STDERR "[$$][$process_name][>][$plugin] asking for config\n" if $verbose;
 
-		print STDERR "[$PID][$process_name][>][$plugin][sock] config $plugin\n" if $debug;
+		print STDERR "[$$][$process_name][>][$plugin][sock] config $plugin\n" if $debug;
 		print $sock "config $plugin\n";
 
 		my $is_dirtyconfig;
@@ -295,7 +295,7 @@ sub fetch_data
 
 		while(my $line = <$sock>) {
 			chomp($line);
-			print STDERR "[$PID][$process_name][<][$plugin][sock] $line\n" if $debug;
+			print STDERR "[$$][$process_name][<][$plugin][sock] $line\n" if $debug;
 
 			if ($line =~ m/^\./) {
 				# Starting with . => end
@@ -322,7 +322,7 @@ sub fetch_data
 		# if dirty config, bypass the "fetch" part
 		goto WRITE_SPOOL if $is_dirtyconfig;
 
-		INFO("[$PID][$process_name][>][$plugin] asking for data\n");
+		INFO("[$$][$process_name][>][$plugin] asking for data\n");
                 DEBUG("[sock][>][$plugin] fetch $plugin\n");
 		print $sock "fetch $plugin\n";
 
