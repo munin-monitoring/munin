@@ -34,7 +34,6 @@ our (@ISA, @EXPORT);
 	   'munin_writeconfig_storable',
 	   'munin_read_storable',
 	   'munin_write_storable',
-	   'munin_overwrite',
 	   'munin_dumpconfig',
 	   'munin_dumpconfig_as_str',
 	   'munin_readconfig_base',
@@ -465,11 +464,6 @@ Returns:
 Make a directory and recursively any nonexistent directory in the path
 to it.
 
-
-=item B<munin_overwrite>
-
-Take contents of one config-namespace and replace/insert the instances
-needed.
 
 =item B<munin_parse_config>
 
