@@ -241,8 +241,8 @@ Options:
 
 # Get the host of the service in question
 sub get_host_node {
-    my $service = shift || return undef;
-    my $parent  = munin_get_parent($service) || return undef;
+    my $service = shift || return;
+    my $parent  = munin_get_parent($service) || return;
 
     if (munin_has_subservices($parent)) {
 	return get_host_node($parent);
@@ -265,7 +265,7 @@ sub get_notify_name {
 
 # Joined "sub-path" under host level
 sub get_full_service_name {
-    my $service    = shift || return undef;
+    my $service    = shift || return;
     my $parent     = munin_get_parent($service);
     my $name       = get_notify_name($service);
 
@@ -279,7 +279,7 @@ sub get_full_service_name {
 
 # Joined group path above host level
 sub get_full_group_path {
-    my $group      = shift || return undef;
+    my $group      = shift || return;
     my $parent     = munin_get_parent($group);
     my $name       = get_notify_name($group);
 
@@ -467,7 +467,7 @@ sub process_service {
                             $hash->{'state_changed'} = 0;
                             $state = $onfield->{"state"};
                             $extinfo = $onfield->{$state};
-                            
+
                             # Start counting the number of consecutive UNKNOWN
                             # values seen.
                             $num_unknowns = 1;
@@ -649,9 +649,9 @@ sub generate_service_message {
     DEBUG "[DEBUG] generating service message: "
 	. join('::', @{munin_get_node_loc($hash)});
 
-    my $children = 
+    my $children =
 	munin_get_children(
-	    munin_get_node(\%notes, 
+	    munin_get_node(\%notes,
 			   munin_get_node_loc($hash)));
 
     if ( defined($children) ) {
@@ -783,7 +783,7 @@ sub generate_service_message {
                 # See https://github.com/munin-monitoring/munin/issues/382
                 # and https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=291168.
                 close(STDOUT);
-                exec($cmd) or WARN "[WARNING] Failed to exec for contact $c in pid $$";
+                exec($cmd) or WARN "[WARNING] Failed to exec for contact $c in pid $PID";
                 exit;
             }
         }

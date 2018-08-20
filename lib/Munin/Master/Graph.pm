@@ -26,6 +26,8 @@ use warnings;
 
 package Munin::Master::Graph;
 
+use English qw(-no_match_vars);
+
 use Time::HiRes;
 
 use POSIX;
@@ -104,7 +106,7 @@ my %CONTENT_TYPES = (
 sub is_ext_handled
 {
 	my $ext = shift;
-	return undef unless $ext;
+	return unless $ext;
 	return defined $CONTENT_TYPES{uc($ext)};
 }
 
@@ -612,7 +614,7 @@ sub handle_request
 	{
 		my $buffer;
 		# No buffering wanted when sending the file
-		local $| = 1;
+		local $OUTPUT_AUTOFLUSH = 1;
 		while (sysread($rrd_fh, $buffer, 40 * 1024)) { print $buffer; }
 	}
 
@@ -682,7 +684,7 @@ sub RRDs_graph {
 
 	waitpid( $chld_pid, 0 );
 
-	my $child_exit_status = ($? >> 8);
+	my $child_exit_status = ($CHILD_ERROR >> 8);
 
 	return $child_exit_status;
 }
@@ -776,6 +778,7 @@ sub RRDs_graph_or_dump {
 		print $out_fh "        \"columns\": " . (scalar @$columns) . ",\n";
 		print $out_fh "        \"legend\": [\n";
 		my $index = 0;
+		## no critic ControlStructures::ProhibitMutatingListFunctions
 		my @json_columns = map { s/\\l$//; $_; } @{ $columns }; # Remove trailing "\l"
 		for my $column ( @json_columns ) {
 			print $out_fh "            \"$column\"";

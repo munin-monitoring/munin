@@ -57,8 +57,8 @@ install: $(BUILD_SCRIPT)
 #TODO: merge with lint target, when done
 .PHONY: perlcritic
 perlcritic:
-	#TODO: apply to scripts/ and lib/Munin/Master/
-	perlcritic lib/Munin/Node lib/Munin/Plugin lib/Munin/Common
+	#TODO: apply to scripts/
+	perlcritic lib/
 
 .PHONY: lint
 lint:

@@ -85,7 +85,7 @@ sub do_work {
 	# Having a local handle looks easier
 	my $node = $self->{node};
 
-    INFO "[INFO] starting work in $$ for $nodedesignation.\n";
+    INFO "[INFO] starting work in $PID for $nodedesignation.\n";
     my $done = $node->do_in_session(sub {
 
 	# A I/O timeout results in a violent exit.  Catch and handle.
@@ -221,7 +221,7 @@ FETCH_OK:
     }); # do_in_session
 
     # This handles failure in do_in_session,
-    return undef if ! $done || ! $done->{exit_value};
+    return if ! $done || ! $done->{exit_value};
 
     return {
         time_used => Time::HiRes::time - $update_time,
@@ -675,7 +675,8 @@ sub uw_handle_config {
 
 	# Delegate the FETCH part
 	my $update_rate = "300"; # XXX - should use the correct version
-	my $timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
+	my $timestamp;
+	$timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
 	$last_timestamp = $timestamp if $timestamp && $timestamp > $last_timestamp;
 
 	$self->{dbh}->commit() unless $self->{dbh}->{AutoCommit};
@@ -842,7 +843,7 @@ sub get_config_for_service {
 	}
 
 	# Not found
-	return undef;
+	return;
 }
 
 
@@ -1154,11 +1155,11 @@ sub convert_to_float
 sub dump_to_file
 {
 	my ($filename, $obj) = @_;
-	open(DUMPFILE, ">> $filename");
+	open(my $DUMPFILE, q{>>}, "$filename");
 
-	print DUMPFILE Dumper($obj);
+	print $DUMPFILE Dumper($obj);
 
-	close(DUMPFILE);
+	close($DUMPFILE);
 }
 
 sub _get_default_address

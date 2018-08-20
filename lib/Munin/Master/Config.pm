@@ -544,7 +544,7 @@ sub look_up {
 	    $value = $value->{groups}{$group};
 
 	} else {
-	    return undef;
+	    return;
 	}
     }
 
@@ -555,7 +555,7 @@ sub look_up {
 	return $value->{hosts}{$host};
     };
 
-    return undef;
+    return;
 }
 
 
