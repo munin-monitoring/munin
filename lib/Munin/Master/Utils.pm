@@ -143,7 +143,7 @@ sub munin_mkdir_p {
     eval {
         mkpath($dirname, 0, $umask);
     };
-    return if $EVAL_ERROR;
+    return if $@;
     return 1;
 }
 

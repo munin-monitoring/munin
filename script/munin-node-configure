@@ -317,7 +317,7 @@ sub init_snmp
 {
     unless (eval { require Munin::Node::SNMPConfig; }) {
         die "# ERROR: Cannot perform SNMP probing as Munin::Node::SNMPConfig module is not available.\n",
-            $EVAL_ERROR;
+            $@;
     }
     return Munin::Node::SNMPConfig->new(@_);
 }

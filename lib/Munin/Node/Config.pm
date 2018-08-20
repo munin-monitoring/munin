@@ -198,10 +198,10 @@ sub parse_plugin_config_file {
 	if $self->{DEBUG};
 
     eval { $self->parse_plugin_config($CONF) };
-    if ($EVAL_ERROR) {
+    if ($@) {
         carp sprintf(
             '%s at %s line %d. Skipping the rest of the file',
-            $EVAL_ERROR,
+            $@,
             $file,
             $INPUT_LINE_NUMBER,
         );

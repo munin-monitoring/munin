@@ -145,7 +145,7 @@ Exceptions are caught with an eval:
  eval {
      # Exceptionally scary code
  };
- if ($EVAL_ERROR) {
+ if ($@) {
      # Handle exception
  }
 

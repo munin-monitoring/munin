@@ -103,7 +103,7 @@ sub _load_net_ssleay {
     eval {
         require Net::SSLeay;
     };
-    if ($EVAL_ERROR) {
+    if ($@) {
 	ERROR("TLS enabled but Net::SSLeay unavailable.");
 	return 0;
     }

@@ -193,11 +193,11 @@ sub _run_workers {
 		$worker->{dbh_state}->disconnect();
 
 		my $worker_id = $worker->{ID};
-		if (! defined($res) || $EVAL_ERROR) {
+		if (! defined($res) || $@) {
 			# No res, something went wrong
 			# Note that we handle connection failure same as other
 			# failures. Since "do_connect()" fails only softly.
-			INFO "[INFO]: no connection or EVAL_ERROR:$EVAL_ERROR";
+			INFO "[INFO]: no connection or EVAL_ERROR:$@";
 			$pm->finish(1, [ $worker_id ] );
 		}
 

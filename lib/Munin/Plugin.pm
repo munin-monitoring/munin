@@ -304,7 +304,7 @@ sub restore_state {
 	my @state;
 	# Protects _restore_state_raw() with an eval()
 	eval { @state = _restore_state_raw(); };
-	if ($EVAL_ERROR) { @state = (); warn $EVAL_ERROR; }
+	if ($@) { @state = (); warn $@; }
 
 	return _decode_state(@state);
 }

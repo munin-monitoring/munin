@@ -223,8 +223,8 @@ sub change_real_and_effective_user_and_group
             Munin::Node::OS->set_effective_user_id($uid)    unless $uid  == $root_uid;
         };
 
-        if ($EVAL_ERROR) {
-            CRITICAL("# FATAL: Plugin '$service' Can't drop privileges: $EVAL_ERROR.");
+        if ($@) {
+            CRITICAL("# FATAL: Plugin '$service' Can't drop privileges: $@.");
             exit 1;
         }
     }

@@ -54,7 +54,7 @@ sub do_with_timeout {
         alarm ($new_timeout_epoch - time);
         $ret_value = $block->();
     };
-    my $err = $EVAL_ERROR;
+    my $err = $@;
 
     # Restore the old $current_timeout_epoch...
     $current_timeout_epoch = $old_current_timeout_epoch;

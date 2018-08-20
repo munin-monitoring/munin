@@ -145,7 +145,7 @@ sub process_request
         });
     };
 
-    ERROR($EVAL_ERROR)                                   if ($EVAL_ERROR);
+    ERROR($@)                                   if ($@);
     ERROR("Node side timeout while processing: '$line'") if ($timed_out);
 
     return;
@@ -196,8 +196,8 @@ sub _process_command_line {
         eval {
             $session->{tls_started} = _process_starttls_command($session);
         };
-        if ($EVAL_ERROR) {
-            ERROR($EVAL_ERROR);
+        if ($@) {
+            ERROR($@);
             return 0;
         }
         DEBUG ('DEBUG: Returned from starttls.') if $config->{DEBUG};

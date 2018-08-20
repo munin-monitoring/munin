@@ -204,12 +204,12 @@ NODE_END:
 		kill 'KILL', $node_pid; # Using SIGKILL, since normal termination didn't happen
 	}
 
-	if ($EVAL_ERROR =~ m/^NO_SPOOLFETCH_DATA /) {
+	if ($@ =~ m/^NO_SPOOLFETCH_DATA /) {
 	    INFO "[INFO] No spoofetch data for $nodedesignation";
 	    return;
-	} elsif ($EVAL_ERROR) {
+	} elsif ($@) {
 	    ERROR "[ERROR] Error in node communication with $nodedesignation: "
-		.$EVAL_ERROR;
+		.$@;
 	    return;
 	}
 
