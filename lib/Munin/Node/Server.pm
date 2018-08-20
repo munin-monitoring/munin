@@ -120,7 +120,7 @@ sub process_request
     $session->{tls_mode}     = $config->{tls} || 'auto';
     $session->{peer_address} = $self->{server}->{peeraddr};
 
-    $PROGRAM_NAME .= " [$session->{peer_address}]";
+    $0 .= " [$session->{peer_address}]";
 
     # Used to provide per-master state-files
     $ENV{MUNIN_MASTER_IP} = $session->{peer_address};
@@ -216,7 +216,7 @@ sub _process_command_line {
 sub _get_commandline {
   my $self = shift;
 
-  my $script = $PROGRAM_NAME;
+  my $script = $0;
   # make relative path absolute
   $script = $ENV{'PWD'} .'/'. $script if $script =~ m|^[^/]+/| && $ENV{'PWD'};
   # untaint for later use in hup

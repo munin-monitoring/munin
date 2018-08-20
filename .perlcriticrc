@@ -16,7 +16,7 @@ profile-strictness = quiet
 
 [Variables::ProhibitPunctuationVars]
 severity = 5
-allow = $_ $!
+allow = $_ $! $0
 
 [CodeLayout::RequireTidyCode]
 perltidyrc = perltidyrc
