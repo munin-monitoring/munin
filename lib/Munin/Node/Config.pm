@@ -268,7 +268,7 @@ sub _parse_plugin_line {
     elsif ($var_name eq 'command') {
     	# Don't split on escaped whitespace. Also support escaping the escape character.
     	# Better implementations welcome :).
-	## no critic ControlStructures::ProhibitMutatingListFunctions
+	## no critic qw(ControlStructures::ProhibitMutatingListFunctions)
         return (command => [reverse map {s/\\(.)/$1/g; scalar reverse} split /\s+(?=(?:\\\\)*(?!\\))/, reverse $var_value]);
     }
     elsif ($var_name eq 'host_name') {

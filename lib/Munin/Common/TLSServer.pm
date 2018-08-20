@@ -50,7 +50,7 @@ __END__
 
 =head1 NAME
 
-Munin::Node::TLSServer - Implements the server side of the STARTTLS protocol
+Munin::Common::TLSServer - Implements the server side of the STARTTLS protocol
 
 
 =head1 SYNOPSIS

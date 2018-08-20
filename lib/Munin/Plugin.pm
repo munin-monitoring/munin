@@ -28,7 +28,7 @@ use File::Temp; # File::Temp was first released with perl 5.006001
 # This file uses subroutine prototypes. This is considered a bad
 # practice according to PBP (see page 194).
 
-## no critic Prototypes
+## no critic qw(Prototypes)
 
 =head1 NAME 
 
@@ -56,6 +56,7 @@ set_state_name, save_state, restore_state, tail_open, tail_close.
 
 =cut
 
+use English qw(-no_match_vars);
 use Exporter;
 our @ISA = ('Exporter');
 our @EXPORT = qw(
@@ -303,7 +304,7 @@ sub restore_state {
 	my @state;
 	# Protects _restore_state_raw() with an eval()
 	eval { @state = _restore_state_raw(); };
-	if ($@) { @state = (); warn $@; }
+	if ($EVAL_ERROR) { @state = (); warn $EVAL_ERROR; }
 
 	return _decode_state(@state);
 }
@@ -317,7 +318,7 @@ sub _restore_state_raw {
     }
 
     # Read a state vector from a plugin appropriate state file
-    local $/;
+    local $INPUT_RECORD_SEPARATOR;
 
     my @state = split(/\n/, <$STATE>);
     my $filemagic = shift(@state);
@@ -395,7 +396,7 @@ these percentages against $base.
 sub adjust_threshold {
     my ($threshold, $base) = @_;
 
-    return undef if(!defined $threshold or !defined $base);
+    return if(!defined $threshold or !defined $base);
 
     $threshold =~ s!(\d+\.?\d*)%!$1*$base/100!eg;
 
@@ -462,8 +463,8 @@ the kernel exposes.
 sub readfile($) {
   my ($path) = @_;
 
-  open my $FH, "<", $path or return undef;
-  local $/;
+  open my $FH, "<", $path or return;
+  local $INPUT_RECORD_SEPARATOR;
   my $content = <$FH>;
   close $FH;
 
@@ -485,7 +486,7 @@ Returns an empty array if the file is empty (or contains only whitespace).
 sub readarray($) {
   my ($path) = @_;
 
-  open my $FH, "<", $path or return undef;
+  open my $FH, "<", $path or return;
   my $line = <$FH>;
   # handle an empty file gracefully
   $line = "" if not defined($line);
@@ -556,7 +557,7 @@ sub scaleNumber {
 		 1E+9,  'G',  # giga
 		 1E+6,  'M',  # mega
 		 1E+3,  'k',  # kilo
-		 1,     '');  # nothing
+		 1,     '',); # nothing
 
     my %small = (1,     '',   # nothing
 		 1E-3,  'm',  # milli
@@ -566,7 +567,7 @@ sub scaleNumber {
 		 1E-15, 'f',  # femto
 		 1E-18, 'a',  # atto
 		 1E-21, 'z',  # zepto
-		 1E-24, 'y'); # yocto
+		 1E-24, 'y',);# yocto
 
     # Get the absolute and exaggerate it slightly since floating point
     # numbers don't compare very well.
@@ -612,6 +613,7 @@ if it doesn't support multigraph plugins.
 sub need_multigraph {
     return if $ENV{MUNIN_CAP_MULTIGRAPH};
 
+    ## no critic qw(InputOutput::ProhibitInteractiveTest)
     if (-t and (!$ARGV[0] or ($ARGV[0] eq 'config'))) {
 
 	# Catch people running the plugin on the command line.  Note

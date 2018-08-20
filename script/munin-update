@@ -61,7 +61,7 @@ sub configure {
 	my @files = grep { ! /^\.|~$/ } readdir($DIR);
 	closedir($DIR);
 
-	## no critic ControlStructures::ProhibitMutatingListFunctions
+	## no critic qw(ControlStructures::ProhibitMutatingListFunctions)
 	@files = map { $_ = $dirname.'/'.$_; } (sort @files);
 
 	foreach my $f (@files) {

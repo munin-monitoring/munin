@@ -413,7 +413,7 @@ __END__
 
 =head1 NAME
 
-Munin::Node::TLS - Abstract base class implementing the STARTTLS protocol
+Munin::Common::TLS - Abstract base class implementing the STARTTLS protocol
 
 
 =head1 SYNOPSIS

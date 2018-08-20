@@ -115,7 +115,7 @@ sub handle_request
 		MUNIN_VERSION   => $Munin::Common::Defaults::MUNIN_VERSION,
 		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
 		R_PATH          => '',
-		GRAPH_EXT       => $graph_ext
+		GRAPH_EXT       => $graph_ext,
 	);
 
 

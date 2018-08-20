@@ -223,7 +223,7 @@ sub new {
         base      => 1000,
         category  => 'PostgreSQL',
         graphdraw => 'LINE1',
-        graphtype => 'GAUGE'
+        graphtype => 'GAUGE',
     );
 
     my $self = {
