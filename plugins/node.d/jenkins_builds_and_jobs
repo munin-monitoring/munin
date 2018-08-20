@@ -123,20 +123,6 @@ do_config() {
 	done
 
 	echo "multigraph ${plugin_name}_builds_results"
-	echo 'graph_title Jenkins Builds results'
-	echo 'graph_args --base 1000 -l 0 '
-	echo 'graph_scale no'
-	echo 'graph_total total'
-	echo 'graph_vlabel Jenkins Builds results per category'
-	echo 'graph_category devel'
-	for PREFIX in $JOB_PREFIXES; do
-		for STATE in success unstable failure unknown; do
-			echo "jenkins_builds_results_${PREFIX}_${STATE}.label ${PREFIX} ${STATE}"
-			echo "jenkins_builds_results_${PREFIX}_${STATE}.draw AREASTACK"
-		done
-	done
-
-	echo "multigraph ${plugin_name}_builds_results_summary"
 	echo 'graph_title Jenkins Builds results summary'
 	echo 'graph_args --base 1000 -l 0 '
 	echo 'graph_scale no'
@@ -144,8 +130,22 @@ do_config() {
 	echo 'graph_vlabel Jenkins Builds results summary'
 	echo 'graph_category devel'
 	for STATE in success unstable failure unknown; do
-		echo "jenkins_builds_results_all_${STATE}.label ${PREFIX} ${STATE}"
-		echo "jenkins_builds_results_all_${STATE}.draw AREASTACK"
+		echo "${STATE}.label ${STATE}"
+		echo "${STATE}.draw AREASTACK"
+	done
+
+	for PREFIX in $JOB_PREFIXES; do
+		echo "multigraph ${plugin_name}_builds_results.prefix_$PREFIX"
+		echo "graph_title Jenkins Builds results for $PREFIX"
+		echo 'graph_args --base 1000 -l 0 '
+		echo 'graph_scale no'
+		echo 'graph_total total'
+		echo 'graph_vlabel Jenkins Builds results'
+		echo 'graph_category devel'
+		for STATE in success unstable failure unknown; do
+			echo "${STATE}.label ${STATE}"
+			echo "${STATE}.draw AREASTACK"
+		done
 	done
 
 	echo "multigraph ${plugin_name}_builds_running"
@@ -182,15 +182,15 @@ do_fetch_expensive() {
 	done
 
 	echo "multigraph ${plugin_name}_builds_results"
-	for PREFIX in $JOB_PREFIXES; do
-		process_job_log_results "$jenkins_job_dir/$PREFIX" | while read -r state count; do
-			echo "jenkins_builds_results_${PREFIX}_${state}.value $count"
-		done
+	process_job_log_results "$jenkins_job_dir/" | while read -r state count; do
+		echo "${state}.value $count"
 	done
 
-	echo "multigraph ${plugin_name}_builds_results_summary"
-	process_job_log_results "$jenkins_job_dir/" | while read -r state count; do
-		echo "jenkins_builds_results_all_${state}.value $count"
+	for PREFIX in $JOB_PREFIXES; do
+		echo "multigraph ${plugin_name}_builds_results.prefix_$PREFIX"
+		process_job_log_results "$jenkins_job_dir/$PREFIX" | while read -r state count; do
+			echo "${state}.value $count"
+		done
 	done
 
 	echo "multigraph ${plugin_name}_jobs"
