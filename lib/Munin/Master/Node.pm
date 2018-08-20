@@ -450,6 +450,7 @@ sub fetch_service_config {
 			}
 			# Now we are in the new block
 			$local_service_name = $1;
+			$local_service_name = $self->_sanitise_plugin_name($local_service_name);
 
 			next;
 		}
@@ -616,6 +617,7 @@ sub fetch_service_data {
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
     INFO "data: $elapsed sec for '$plugin' on $nodedesignation";
 
+    $plugin = $self->_sanitise_fieldname($plugin);
     return $uw_handle_data->($plugin, $lines);
 }
 
@@ -754,8 +756,6 @@ sub _node_read {
 	} else {
 		my $new_plugin = $1;
 
-		use Data::Dumper;
-
 		# Callback is called with ($plugin, $data) to flush the previous plugins
 		# ... if there's already a plugin
 		if ($current_plugin) {
@@ -764,6 +764,7 @@ sub _node_read {
 		}
 
 		# Handled the old one. Moving to the new one.
+		$new_plugin = $self->_sanitise_plugin_name($new_plugin);
 		$current_plugin = $new_plugin;
 		@array = ();
 	}
@@ -771,6 +772,7 @@ sub _node_read {
 
     # Handle the multigraph one last time
     if ($callback && $current_plugin) {
+	DEBUG "last callback->($current_plugin, " . Dumper(\@array) . ")";
 	$callback->($current_plugin, \@array);
 	@array = ();
     }

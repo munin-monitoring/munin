@@ -109,63 +109,42 @@ sub do_work {
 		my $dbh = $self->{dbh};
 		my $dbh_state = $self->{dbh_state};
 
-		# prepare_cached all the useful statements
-		$self->{sth}{node} = $dbh->prepare_cached('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
-		$self->{sth}{node_attr} = $dbh->prepare_cached('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
-		$self->{sth}{service} = $dbh->prepare_cached('INSERT INTO service (node_id, name, path, service_title, graph_info, subgraphs)
-			VALUES (?, ?, ?, ?, ?, ?)');
-		$self->{sth}{service_attr} = $dbh->prepare_cached('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
-		$self->{sth}{ds} = $dbh->prepare_cached('INSERT INTO ds (service_id, name, path, ordr) VALUES (?, ?, ?, ?)');
-		$self->{sth}{ds_attr} = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
-		$self->{sth}{ds_type} = $dbh->prepare_cached('UPDATE ds SET type = ? where id = ?');
-		$self->{sth}{url} = $dbh->prepare_cached('INSERT INTO url (id, type, path) VALUES (?, ?, ?)');
-		$self->{sth}{url}->{RaiseError} = 1;
-		$self->{sth}{state} = $dbh_state->prepare_cached('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns
-			FROM state WHERE id = ? AND type = ?');
-		$self->{sth}{state_i} = $dbh_state->prepare_cached(
-			'INSERT INTO state (last_epoch, last_value, prev_epoch, prev_value, id, type) VALUES (?, ?, ?, ?, ?, ?)');
-		$self->{sth}{state_u} = $dbh_state->prepare_cached(
-			'UPDATE state SET last_epoch = ?, last_value = ?, prev_epoch = ?, prev_value = ? WHERE id = ? AND type = ?');
-		$self->{sth}{state_i}->{RaiseError} = 0;
-		$self->{sth}{state_u}->{RaiseError} = 0;
+		# Handle spoolfetch, one call to retrieve everything
+		if (grep /^spool$/, @node_capabilities) {
+		my $spoolfetch_last_timestamp = $self->get_spoolfetch_timestamp();
+		local $0 = "$0 s($spoolfetch_last_timestamp)";
 
-            # Handle spoolfetch, one call to retrieve everything
-	    if (grep /^spool$/, @node_capabilities) {
-		    my $spoolfetch_last_timestamp = $self->get_spoolfetch_timestamp();
-		    local $0 = "$0 s($spoolfetch_last_timestamp)";
+		# We do inject the update handling, in order to have on-the-fly
+		# updates, as we don't want to slurp the whole spoolfetched output
+		# and process it later. It will surely timeout, and use a truckload
+		# of RSS.
+		my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub { $self->uw_handle_config( @_ ); } );
 
-		    # We do inject the update handling, in order to have on-the-fly
-		    # updates, as we don't want to slurp the whole spoolfetched output
-		    # and process it later. It will surely timeout, and use a truckload
-		    # of RSS.
-		    my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub { $self->uw_handle_config( @_ ); } );
+		# update the timestamp if we spoolfetched something
+		$self->set_spoolfetch_timestamp($timestamp) if $timestamp;
 
-		    # update the timestamp if we spoolfetched something
-		    $self->set_spoolfetch_timestamp($timestamp) if $timestamp;
+		# Note that spoolfetching hosts is always a success. BY DESIGN.
+		# Since, if we cannot connect, or whatever else, it is NOT an issue.
 
-		    # Note that spoolfetching hosts is always a success. BY DESIGN.
-		    # Since, if we cannot connect, or whatever else, it is NOT an issue.
+		# No need to do more than that on this node
+		goto NODE_END;
+	}
 
-		    # No need to do more than that on this node
-		    goto NODE_END;
-	    }
+	# Note: A multigraph plugin can present multiple services.
+	my @plugins = $node->list_plugins();
 
-	    # Note: A multigraph plugin can present multiple services.
-	    my @plugins = $node->list_plugins();
+	# We are not spoolfetching, so we should protect ourselves against
+	# plugin redef. Note that we should declare 2 different HASHREF,
+	# otherwise it is _shared_ which isn't what we want.
+	$self->{__SEEN_PLUGINS__} = {};
 
-	    # We are not spoolfetching, so we should protect ourselves against
-	    # plugin redef. Note that we should declare 2 different HASHREF,
-	    # otherwise it is _shared_ which isn't what we want.
-	    $self->{__SEEN_PLUGINS__} = {};
-	    $self->{__SEEN_PLUGINS_FETCH__} = {};
+	# Shuffle @plugins to avoid always having the same ordering
+	# XXX - It might be best to preorder them on the TIMETAKEN ASC
+	#       in order that statisticall fast plugins are done first to increase
+	#       the global throughtput
+	@plugins = shuffle(@plugins);
 
-	    # Shuffle @plugins to avoid always having the same ordering
-	    # XXX - It might be best to preorder them on the TIMETAKEN ASC
-	    #       in order that statisticall fast plugins are done first to increase
-	    #       the global throughtput
-	    @plugins = shuffle(@plugins);
-
-	    for my $plugin (@plugins) {
+	for my $plugin (@plugins) {
 		DEBUG "[DEBUG] for my $plugin (@plugins)";
 		if (defined $config->{limit_services} && %{$config->{limit_services}}) {
 		    next unless $config->{limit_services}{$plugin};
@@ -710,12 +689,6 @@ sub uw_handle_fetch {
 
 	# timestamp == 0 means "Nothing was updated"
 	my $last_timestamp = 0;
-
-	# Protect oneself against multiple, conflicting multigraphs
-	if (defined $self->{__SEEN_PLUGINS_FETCH__} && $self->{__SEEN_PLUGINS_FETCH__}{$plugin} ++) {
-		WARN "uw_handle_fetch $plugin is already configured, skipping";
-		return $last_timestamp;
-	}
 
 	$self->{dbh}->begin_work() if $self->{dbh}->{AutoCommit};
 
