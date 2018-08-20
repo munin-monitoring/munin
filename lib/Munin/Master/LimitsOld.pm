@@ -358,7 +358,6 @@ sub process_service {
 	my ($ds_id) = $sth_ds->fetchrow_array;
 
         DEBUG "[DEBUG] processing field: " . join('::', @$fpath);
-        DEBUG "[DEBUG] field: " . munin_dumpconfig_as_str($field);
 	my $value;
     	{
 		my $rrd_filename = munin_get_rrd_filename($field, $path);

@@ -97,9 +97,6 @@ them.
 If you have ``munin-limits`` also running on update-masters, it generate
 a ``limits`` files, those are also plain text.
 
-In order to make that part easier, a ``munin-mergedb.pl`` is provided in
-contrib.
-
 Merging rrd tree
 ----------------
 
