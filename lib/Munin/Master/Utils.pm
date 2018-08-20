@@ -35,7 +35,6 @@ our (@ISA, @EXPORT);
 	   'munin_read_storable',
 	   'munin_write_storable',
 	   'munin_dumpconfig',
-	   'munin_dumpconfig_as_str',
 	   'munin_readconfig_base',
 	   'munin_readconfig_part',
 	   'munin_get_bool',
