@@ -24,13 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 =cut
 
+use strict;
+use warnings;
+
 # Trust PERL5LIB from environment
 use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 
 package Munin::Master::Http;
-
-use strict;
-use warnings;
 
 use HTTP::Server::Simple::CGI::PreFork;
 use base qw(HTTP::Server::Simple::CGI::PreFork);
@@ -56,7 +56,7 @@ sub handle_request
 		Munin::Master::Graph::handle_request($cgi);
 	} else {
 		Munin::Master::HTML::handle_request($cgi);
-	}	
+	}
 }
 
 package main;

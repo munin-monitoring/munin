@@ -57,8 +57,7 @@ install: $(BUILD_SCRIPT)
 #TODO: merge with lint target, when done
 .PHONY: perlcritic
 perlcritic:
-	#TODO: apply to scripts/
-	perlcritic lib/
+	perlcritic lib/ script/
 
 .PHONY: lint
 lint:

@@ -24,6 +24,8 @@ use Munin::Common::Defaults;
 use Munin::Node::Configure::PluginList;
 use Munin::Node::Configure::Debug;
 
+use English qw(-no_match_vars);
+
 use Munin::Node::Config;
 my $config = Munin::Node::Config->instance();
 
@@ -136,7 +138,8 @@ sub parse_args
     # comma-delimited form
     @snmp_hosts = map { split /,/ } @snmp_hosts;
 
-    my $snmp = init_snmp(
+    my $snmp;
+    $snmp = init_snmp(
         hosts        => \@snmp_hosts,
         version      => $snmpver,
         port         => $snmpport,
@@ -314,7 +317,7 @@ sub init_snmp
 {
     unless (eval { require Munin::Node::SNMPConfig; }) {
         die "# ERROR: Cannot perform SNMP probing as Munin::Node::SNMPConfig module is not available.\n",
-            $@;
+            $EVAL_ERROR;
     }
     return Munin::Node::SNMPConfig->new(@_);
 }
