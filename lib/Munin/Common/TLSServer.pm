@@ -31,7 +31,7 @@ sub _initial_communication {
     else {
         $self->{write_func}("TLS MAYBE\n");
     }
-            
+
     return 1;
 }
 

@@ -53,15 +53,15 @@ sub _start_tls {
     my $self = shift;
 
     my %tls_verified = (
-        level          => 0, 
+        level          => 0,
         cert           => "",
-        verified       => 0, 
-        required_depth => $self->{tls_vdepth}, 
+        verified       => 0,
+        required_depth => $self->{tls_vdepth},
         verify         => $self->{tls_verify},
     );
 
     DEBUG("[TLS] Enabling TLS.") if $self->{DEBUG};
-    
+
     $self->_load_net_ssleay()
         or return 0;
 
@@ -71,16 +71,16 @@ sub _start_tls {
 
     $self->_load_private_key()
         or return 0;
-    
+
     $self->_load_certificate();
 
     $self->_load_ca_certificate();
-    
+
     $self->_initial_communication()
         or return 0;
-    
+
     $self->_set_peer_requirements(\%tls_verified);
-    
+
     if (! ($self->{tls_session} = Net::SSLeay::new($self->{tls_context})))
     {
 	ERROR("Could not create TLS: $!");
@@ -103,7 +103,7 @@ sub _load_net_ssleay {
     eval {
         require Net::SSLeay;
     };
-    if ($@) {
+    if ($EVAL_ERROR) {
 	ERROR("TLS enabled but Net::SSLeay unavailable.");
 	return 0;
     }
@@ -146,8 +146,8 @@ sub _load_private_key {
 
     if (defined $self->{tls_priv} and length $self->{tls_priv}) {
     	if (-e $self->{tls_priv} or $self->{tls_paranoia} eq "paranoid") {
-	    if (Net::SSLeay::CTX_use_PrivateKey_file($self->{tls_context}, 
-                                                     $self->{tls_priv}, 
+	    if (Net::SSLeay::CTX_use_PrivateKey_file($self->{tls_context},
+                                                     $self->{tls_priv},
                                                      &Net::SSLeay::FILETYPE_PEM)) {
                 $self->{private_key_loaded} = 1;
             }
@@ -211,7 +211,7 @@ sub _set_peer_requirements {
     if (defined $err and length $err) {
         WARNING("in set_verify_depth: $err");
     }
-    Net::SSLeay::CTX_set_verify ($self->{tls_context}, 
+    Net::SSLeay::CTX_set_verify ($self->{tls_context},
                                  $self->{tls_verify}  ? &Net::SSLeay::VERIFY_PEER :
                                                         &Net::SSLeay::VERIFY_NONE,
                                  $self->_tls_verify_callback($tls_verified));
@@ -219,7 +219,7 @@ sub _set_peer_requirements {
     if (defined $err and length $err) {
         WARNING("in set_verify: $err");
     }
-    
+
     return 1;
 }
 
@@ -228,7 +228,7 @@ sub _tls_verify_callback {
     my ($self, $tls_verified) = @_;
 
     return sub {
-        my ($ok, $subj_cert, $issuer_cert, $depth, 
+        my ($ok, $subj_cert, $issuer_cert, $depth,
 	    $errorcode, $arg, $chain) = @_;
 
         $tls_verified->{"level"}++;
@@ -238,7 +238,7 @@ sub _tls_verify_callback {
             DEBUG("[TLS] Verified certificate.") if $self->{DEBUG};
             return 1;           # accept
         }
-        
+
         if (!($tls_verified->{"verify"})) {
             DEBUG("[TLS] Certificate failed verification, but we aren't verifying.") if $self->{DEBUG};
             $tls_verified->{"verified"} = 1;
@@ -321,7 +321,7 @@ sub _accept_or_connect {
     }
     elsif ($self->{"tls_match"} and
     	Net::SSLeay::dump_peer_certificate($self->{tls_session}) !~ /$self->{tls_match}/)
-    { 
+    {
 	ERROR("Could not match pattern \"" . $self->{tls_match} .
 		"\" in dump of certificate.");
 	$self->_on_unmatched_cert();
@@ -342,7 +342,7 @@ sub _accept_or_connect {
 sub _initial_communication {
     my ($self) = @_;
     croak "Abstract method called '_initial_communication', "
-        . "needs to be defined in child" 
+        . "needs to be defined in child"
             if ref $self eq __PACKAGE__;
 }
 
@@ -351,7 +351,7 @@ sub _initial_communication {
 sub _use_key_if_present {
     my ($self) = @_;
     croak "Abstract method called '_use_key_if_present', "
-        . "needs to be defined in child" 
+        . "needs to be defined in child"
             if ref $self eq __PACKAGE__;
 }
 
@@ -365,7 +365,7 @@ sub _on_unmatched_cert {}
 sub read {
     my ($self) = @_;
 
-    croak "Tried to do an encrypted read, but a TLS session is not started" 
+    croak "Tried to do an encrypted read, but a TLS session is not started"
         unless $self->session_started();
 
     my $read = Net::SSLeay::read($self->{tls_session});
@@ -384,7 +384,7 @@ sub read {
 sub write {
     my ($self, $text) = @_;
 
-    croak "Tried to do an encrypted write, but a TLS session is not started" 
+    croak "Tried to do an encrypted write, but a TLS session is not started"
         unless $self->session_started();
 
     DEBUG("DEBUG: > $text") if $self->{DEBUG};
@@ -395,7 +395,7 @@ sub write {
         ERROR("[TLS] Warning in write: $err");
         return 0;
     }
-    
+
     return 1;
 }
 
