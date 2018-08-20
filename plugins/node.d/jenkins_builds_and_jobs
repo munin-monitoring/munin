@@ -118,7 +118,7 @@ do_config() {
 	echo 'graph_vlabel Jenkins Builds per category in the last 24h'
 	echo 'graph_category devel'
 	for PREFIX in $JOB_PREFIXES; do
-		echo "jenkins_builds_$PREFIX.label $PREFIX builds"
+		echo "jenkins_builds_$PREFIX.label $PREFIX"
 		echo "jenkins_builds_$PREFIX.draw AREASTACK"
 	done
 
@@ -154,7 +154,7 @@ do_config() {
 	echo 'graph_scale no'
 	echo 'graph_vlabel Jenkins Builds currently running'
 	echo 'graph_category devel'
-	echo "jenkins_builds_running.label $PREFIX builds_running"
+	echo "jenkins_builds_running.label $PREFIX"
 	echo "jenkins_builds_running.draw AREA"
 
 	echo "multigraph ${plugin_name}_jobs"
@@ -165,7 +165,7 @@ do_config() {
 	echo 'graph_vlabel Jenkins Jobs per category'
 	echo 'graph_category devel'
 	for PREFIX in $JOB_PREFIXES; do
-		echo "jenkins_jobs_$PREFIX.label $PREFIX jobs"
+		echo "jenkins_jobs_$PREFIX.label $PREFIX"
 		echo "jenkins_jobs_$PREFIX.draw AREASTACK"
 	done
 }
