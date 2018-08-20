@@ -54,13 +54,11 @@ install: $(BUILD_SCRIPT)
 		-e "$$(perl -I lib -M"Munin::Common::Defaults" \
 			-e "Munin::Common::Defaults->print_as_sed_substitutions();")"
 
-#TODO: merge with lint target, when done
-.PHONY: perlcritic
-perlcritic:
-	perlcritic lib/ script/
-
 .PHONY: lint
 lint:
+	# Scanning munin code
+	perlcritic lib/ script/
+
 	@# SC1008: ignore our weird shebang (substituted later)
 	@# SC1090: ignore sourcing of files with variable in path
 	@# SC2009: do not complain about "ps ... | grep" calls (may be platform specific)
