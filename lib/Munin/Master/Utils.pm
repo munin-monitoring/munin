@@ -29,36 +29,17 @@ our (@ISA, @EXPORT);
 	   'munin_removelock',
 	   'munin_runlock',
 	   'munin_getlock',
-	   'munin_readconfig_raw',
-	   'munin_writeconfig',
-	   'munin_writeconfig_storable',
-	   'munin_read_storable',
-	   'munin_write_storable',
-	   'munin_dumpconfig',
-	   'munin_readconfig_base',
-	   'munin_readconfig_part',
 	   'munin_get_bool',
 	   'munin_get',
-	   'munin_get_picture_loc',
-	   'munin_get_filename',
-	   'munin_get_keypath',
 	   'munin_get_rrd_filename',
 	   'munin_get_node_name',
-	   'munin_get_orig_node_name',
-	   'munin_get_parent_name',
-	   'munin_get_node_fqn',
 	   'munin_get_node_loc',
 	   'munin_get_node',
 	   'munin_set_var_loc',
-	   'munin_set_var_path',
 	   'munin_set',
-	   'munin_copy_node_toloc',
 	   'munin_mkdir_p',
-	   'munin_find_field',
 	   'munin_find_field_for_limits',
-	   'munin_get_parent',
 	   'munin_get_children',
-	   'munin_get_node_partialpath',
 	   'munin_has_subservices',
 	   'print_version_and_exit',
 	   'exit_if_run_by_super_user',
@@ -208,17 +189,6 @@ Munin::Master::Utils - Exports a lot of utility functions.
 
 =over
 
-=item B<munin_readconfig_base>
-
-Read configuration file, include dir files, and initialize important
-default values that are optional.
-
-Parameters:
- - $file: munin.conf filename. If omitted, default filename is used.
-
-Returns:
- - Success: The $config hash (also cached in module)
-
 =item B<munin_copy_node>
 
 Copy hash node.
@@ -232,40 +202,12 @@ Returns:
  - Failure: undef
 
 
-=item B<munin_copy_node_toloc>
-
-Copy hash node at.
-
-Parameters:
- - $from: Hash node to copy
- - $to: Where to copy it to
- - $loc: Path to node under $to
-
-Returns:
- - Success: $to
- - Failure: undef
-
-
 =item B<munin_createlock>
 
 
 
 =item B<munin_delete>
 
-
-
-=item B<munin_find_field>
-
-Search a hash to find hash nodes with $field defined.
-
-Parameters: 
- - $hash: A hash ref to search
- - $field: The name of the field to search for, or a regex
- - $avoid: [optional] Stop traversing further down if this field is found
-
-Returns:
- - Success: A ref to an array of the hash nodes containing $field.
- - Failure: undef
 
 
 =item B<munin_get>
@@ -308,19 +250,6 @@ Returns:
  - Failure: undef
 
 
-=item B<munin_get_filename>
-
-Get rrd filename for a field, without any bells or whistles. Used by
-munin-update to figure out which file to update.
-
-Parameters:
- - $hash: Ref to hash field
-
-Returns:
- - Success: Full path to rrd file
- - Failure: undef
-
-
 =item B<munin_get_node>
 
 Gets a node by loc.
@@ -354,56 +283,6 @@ Parameters:
 
 Returns:
  - Success: The name of the node
-
-
-=item B<munin_get_node_partialpath>
-
-Gets a node from a partial path.
-
-Parameters: 
- - $hash: A ref to the "current" location in the hash tree
- - $var: A path string with relative location (from the $hash).
-
-Returns:
- - Success: The node
- - Failure: undef
-
-
-=item B<munin_get_parent>
-
-Get parent node of a hash.
-
-Parameters: 
- - $hash: A ref to the node
-
-Returns:
- - Success: Ref to an parent
- - Failure: undef
-
-
-=item B<munin_get_parent_name>
-
-Return the name of the parent of the hash node supplied
-
-Parameters: 
- - $hash: A ref to the hash node
-
-Returns:
- - Success: The name of the parent node
- - Failure: If no parent node exists, "none" is returned.
-
-
-=item B<munin_get_picture_loc>
-
-Get location array for hash node for picture purposes. Differs from
-munin_get_node_loc in that it honors #%#origin metadata
-
-Parameters: 
- - $hash: A ref to the node 
-
-Returns: 
- - Success: Ref to an array with the full path of the variable
- - Failure: undef
 
 
 =item B<munin_get_root_node>
@@ -480,16 +359,6 @@ Returns:
  - Failure: undef
 
 
-=item B<munin_readconfig_part>
-
-Read a partial configuration
-
-Parameters:
- - $what: name of the part that should be loaded (datafile or limits)
-
-Returns:
- - Success: a $config with the $specified part, but overwritten by $config
-
 =item B<munin_removelock>
 
 
@@ -524,28 +393,6 @@ Parameters:
 Returns:
  - Success: The $hash we were handed
  - Failure: undef
-
-
-=item B<munin_set_var_path>
-
-Sets a variable in a hash.
-
-Parameters: 
- - $hash: A ref to the hash to set the variable in
- - $var: A string with the full path of the variable
- - $val: The value to set the variable to
-
-Returns:
- - Success: The $hash we were handed
- - Failure: The $hash we were handed
-
-
-=item B<munin_writeconfig>
-
-
-
-=item B<munin_writeconfig_loop>
-
 
 
 =back
