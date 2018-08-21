@@ -59,8 +59,6 @@ sub handle_request
 	}
 }
 
-package main;
-
 $ENV{PATH} = '/usr/bin:/bin';
 
 # start the server on port 4948
