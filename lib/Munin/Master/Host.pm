@@ -20,7 +20,7 @@ sub new {
         port          => 4949,
         update        => 1,
         use_node_name => 0,
-        
+
         %$attributes,
     };
 

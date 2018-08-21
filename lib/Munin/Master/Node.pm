@@ -17,6 +17,7 @@ use Munin::Common::Logger;
 use Time::HiRes qw( gettimeofday tv_interval );
 use IO::Socket::INET6;
 
+use English qw(-no_match_vars);
 my $config = Munin::Master::Config->instance()->{config};
 
 # Quick version, to enable "DEBUG ... if $debug" constructs
@@ -85,7 +86,7 @@ sub _do_connect {
 		PeerAddr  => $uri->host,
 		PeerPort  => $self->{port} || 4949,
 		LocalAddr => $config->{local_address},
-		Proto     => 'tcp', 
+		Proto     => 'tcp',
 		MultiHomed => 1,
 		Timeout   => $config->{timeout}
 	);
@@ -175,7 +176,7 @@ sub _run_starttls_if_required {
         read_func    => sub { _node_read_single($self) },
         tls_ca_cert  => $config->{tls_ca_certificate},
         tls_cert     => $config->{tls_certificate},
-        tls_paranoia => $tls_requirement, 
+        tls_paranoia => $tls_requirement,
         tls_priv     => $config->{tls_private_key},
         tls_vdepth   => $config->{tls_verify_depth},
         tls_verify   => $config->{tls_verify_certificate},
@@ -370,7 +371,7 @@ sub parse_service_config {
 	    $correct++;
 	    # Special case for dirtyconfig
             my ($ds_name, $value, $when) = ($1, $2, $now);
-            
+
 	    $ds_name = $self->_sanitise_fieldname($ds_name);
 	    if ($value =~ /^(\d+):(.+)$/) {
 		$when = $1;
@@ -382,14 +383,14 @@ sub parse_service_config {
             $data_source_config->{$service}{$ds_name} ||= {};
             $data_source_config->{$service}{$ds_name}{when} ||= [];
             $data_source_config->{$service}{$ds_name}{value} ||= [];
-	
+
 	    # Saving the timed value in the datastructure
 	    push @{$data_source_config->{$service}{$ds_name}{when}}, $when;
 	    push @{$data_source_config->{$service}{$ds_name}{value}}, $value;
         }
 	elsif ($line =~ m{\A ([^\.]+)\.([^\s]+) \s+ (.+?) \s* $}xms) {
 	    $correct++;
-	    
+
             my ($ds_name, $ds_var, $ds_val) = ($1, $2, $3);
             $ds_name = $self->_sanitise_fieldname($ds_name);
             $data_source_config->{$service}{$ds_name} ||= {};
@@ -578,7 +579,7 @@ sub parse_service_data {
 	elsif ($line =~ m{\A ([^\.]+)\.extinfo \s+ (.+?) \s* $}xms) {
 	    # Extinfo is used in munin-limits
             my ($data_source, $value) = ($1, $2);
-	    
+
 	    $correct++;
 
             $data_source = $self->_sanitise_fieldname($data_source);
@@ -595,7 +596,7 @@ sub parse_service_data {
         }
     }
     if ($errors) {
-	my $percent = ($errors / ($errors + $correct)) * 100; 
+	my $percent = ($errors / ($errors + $correct)) * 100;
 	$percent = sprintf("%.2f", $percent);
 	WARN "[WARNING] $errors lines had errors while $correct lines were correct ($percent%) in data from 'fetch $plugin' on $nodedesignation";
     }
@@ -612,7 +613,7 @@ sub fetch_service_data {
     $self->_node_write_single("fetch $plugin\n");
 
     my $lines = $self->_node_read($uw_handle_data);
-    
+
     my $elapsed = tv_interval($t0);
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
     INFO "data: $elapsed sec for '$plugin' on $nodedesignation";
@@ -638,7 +639,7 @@ sub _sanitise_plugin_name {
     my ($self, $name) = @_;
 
     $name =~ s/[^_A-Za-z0-9]/_/g;
-    
+
     return $name;
 }
 
@@ -714,7 +715,7 @@ sub _node_read_fast {
 	return _node_read(@_) if $self->{tls};
 
 	# Disable Buffering here, to be able to use sysread()
-	local $| = 1;
+	local $OUTPUT_AUTOFLUSH = 1;
 
 	my $io_src = $self->{reader};
         my $buf;

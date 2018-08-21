@@ -20,6 +20,7 @@
 use strict;
 use warnings;
 
+use English qw(-no_match_vars);
 use Sys::Hostname;
 use Data::Dumper;
 use Getopt::Long;
@@ -32,7 +33,7 @@ use Munin::Common::Logger;
 use Munin::Common::Utils qw( is_valid_hostname );
 
 # Disable buffering
-$| = 1;
+$OUTPUT_AUTOFLUSH = 1;
 
 my $SPOOLDIR = $Munin::Common::Defaults::MUNIN_SPOOLDIR;
 my $hostname;
@@ -141,14 +142,14 @@ sub cleanup {
 sub cat_file {
 	my $filename = shift;
 	return if ! -r $filename;
-	
-	open(FILE, "$filename");
-	while(<FILE>) { 
+
+	open(my $file, '<', "$filename");
+	while(<$file>) {
 		# remove line starting with .
 		next if m/^\./;
-		print $_; 
+		print $_;
 	}
-	close(FILE);
+	close($file);
 }
 
 __END__

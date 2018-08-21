@@ -71,7 +71,7 @@ my %default_text = (
     "nagios" =>
         '${var:host}\t${var:graph_title}\t${var:worstid}\t${strtrunc:350 ${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}}',
     "old-nagios" =>
-        '${var:host}\t${var:plugin}\t${var:worstid}\t${strtrunc:350 ${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}}'
+        '${var:host}\t${var:plugin}\t${var:worstid}\t${strtrunc:350 ${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}}',
 );
 
 sub limits_startup {
@@ -241,8 +241,8 @@ Options:
 
 # Get the host of the service in question
 sub get_host_node {
-    my $service = shift || return undef;
-    my $parent  = munin_get_parent($service) || return undef;
+    my $service = shift || return;
+    my $parent  = munin_get_parent($service) || return;
 
     if (munin_has_subservices($parent)) {
 	return get_host_node($parent);
@@ -265,7 +265,7 @@ sub get_notify_name {
 
 # Joined "sub-path" under host level
 sub get_full_service_name {
-    my $service    = shift || return undef;
+    my $service    = shift || return;
     my $parent     = munin_get_parent($service);
     my $name       = get_notify_name($service);
 
@@ -279,7 +279,7 @@ sub get_full_service_name {
 
 # Joined group path above host level
 sub get_full_group_path {
-    my $group      = shift || return undef;
+    my $group      = shift || return;
     my $parent     = munin_get_parent($group);
     my $name       = get_notify_name($group);
 
@@ -467,7 +467,7 @@ sub process_service {
                             $hash->{'state_changed'} = 0;
                             $state = $onfield->{"state"};
                             $extinfo = $onfield->{$state};
-                            
+
                             # Start counting the number of consecutive UNKNOWN
                             # values seen.
                             $num_unknowns = 1;
@@ -642,16 +642,17 @@ sub generate_service_message {
         'warning'  => [],
         'unknown'  => [],
         'foks'     => [],
-        'ok'       => []);
+        'ok'       => [],
+    );
 
     my $contacts = munin_get_children(munin_get_node($config, ["contact"]));
 
     DEBUG "[DEBUG] generating service message: "
 	. join('::', @{munin_get_node_loc($hash)});
 
-    my $children = 
+    my $children =
 	munin_get_children(
-	    munin_get_node(\%notes, 
+	    munin_get_node(\%notes,
 			   munin_get_node_loc($hash)));
 
     if ( defined($children) ) {

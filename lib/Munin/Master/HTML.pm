@@ -115,7 +115,7 @@ sub handle_request
 		MUNIN_VERSION   => $Munin::Common::Defaults::MUNIN_VERSION,
 		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
 		R_PATH          => '',
-		GRAPH_EXT       => $graph_ext
+		GRAPH_EXT       => $graph_ext,
 	);
 
 
@@ -689,8 +689,9 @@ sub _get_params_services_for_comparison {
 		my @nodes;
 		$sth_node->execute($service_name, $grp_id);
 		while (my ($node_name, $node_url, $srv_url, $srv_label) = $sth_node->fetchrow_array) {
-			my $_srv_url = "$srv_url.html" if defined $srv_url;
-			my $_img_url = "/$srv_url-$comparison.$graph_ext" if defined $srv_url;
+			my ($_srv_url, $_img_url);
+			$_srv_url = "$srv_url.html" if defined $srv_url;
+			$_img_url = "/$srv_url-$comparison.$graph_ext" if defined $srv_url;
 			push @nodes, {
 				R_PATH => '',
 				NODENAME => $node_name,

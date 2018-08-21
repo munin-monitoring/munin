@@ -24,6 +24,8 @@ use Munin::Common::Defaults;
 use Munin::Node::Configure::PluginList;
 use Munin::Node::Configure::Debug;
 
+use English qw(-no_match_vars);
+
 use Munin::Node::Config;
 my $config = Munin::Node::Config->instance();
 
@@ -136,7 +138,8 @@ sub parse_args
     # comma-delimited form
     @snmp_hosts = map { split /,/ } @snmp_hosts;
 
-    my $snmp = init_snmp(
+    my $snmp;
+    $snmp = init_snmp(
         hosts        => \@snmp_hosts,
         version      => $snmpver,
         port         => $snmpport,

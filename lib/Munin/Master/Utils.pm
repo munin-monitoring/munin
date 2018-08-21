@@ -25,24 +25,24 @@ use Scalar::Util qw(isweak weaken);
 our (@ISA, @EXPORT);
 
 @ISA = ('Exporter');
-@EXPORT = (
-	   'munin_removelock',
-	   'munin_runlock',
-	   'munin_getlock',
-	   'munin_get_bool',
-	   'munin_get',
-	   'munin_get_rrd_filename',
-	   'munin_get_node_name',
-	   'munin_get_node_loc',
-	   'munin_get_node',
-	   'munin_set_var_loc',
-	   'munin_set',
-	   'munin_mkdir_p',
-	   'munin_find_field_for_limits',
-	   'munin_get_children',
-	   'munin_has_subservices',
-	   'print_version_and_exit',
-	   'exit_if_run_by_super_user',
+@EXPORT = qw(
+	   munin_removelock
+	   munin_runlock
+	   munin_getlock
+	   munin_get_bool
+	   munin_get
+	   munin_get_rrd_filename
+	   munin_get_node_name
+	   munin_get_node_loc
+	   munin_get_node
+	   munin_set_var_loc
+	   munin_set
+	   munin_mkdir_p
+	   munin_find_field_for_limits
+	   munin_get_children
+	   munin_has_subservices
+	   print_version_and_exit
+	   exit_if_run_by_super_user
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -99,7 +99,6 @@ sub munin_runlock {
 
 sub munin_getlock {
     my ($lockname) = @_;
-    my $LOCK;
 
     if (sysopen (LOCK, $lockname, O_RDWR | O_CREAT)) {
 	DEBUG "[DEBUG] Create/open lock : $lockname succeeded\n";
@@ -109,9 +108,9 @@ sub munin_getlock {
     my $pid = <LOCK>;
 
     if (defined($pid)) {
-	
+
 	DEBUG "[DEBUG] Lock contained pid '$pid'";
-	
+
         # Make sure it's a proper pid
 	if ($pid =~ /^(\d+)$/ and $1 != 1) {
 	    $pid = $1;
@@ -144,7 +143,7 @@ sub munin_mkdir_p {
     eval {
         mkpath($dirname, 0, $umask);
     };
-    return if $EVAL_ERROR;
+    return if $@;
     return 1;
 }
 
@@ -242,7 +241,7 @@ Returns:
 
 Get all child hash nodes.
 
-Parameters: 
+Parameters:
  - $hash: A hash ref to the parent node
 
 Returns:
@@ -266,7 +265,7 @@ Returns:
 
 Get location array for hash node.
 
-Parameters: 
+Parameters:
  - $hash: A ref to the node
 
 Returns:
@@ -278,7 +277,7 @@ Returns:
 
 Return the name of the hash node supplied.
 
-Parameters: 
+Parameters:
  - $hash: A ref to the hash node
 
 Returns:
@@ -351,7 +350,7 @@ to it.
 
 Returns a loc array from a path string.
 
-Parameters: 
+Parameters:
  - $path: A path string
 
 Returns:
@@ -371,7 +370,7 @@ Returns:
 
 Sets a variable in a hash.
 
-Parameters: 
+Parameters:
  - $hash: A ref to the hash to set the variable in
  - $var: The name of the variable
  - $val: The value to set the variable to
@@ -385,7 +384,7 @@ Returns:
 
 Sets a variable in a hash.
 
-Parameters: 
+Parameters:
  - $hash: A ref to the hash to set the variable in
  - $loc: A ref to an array with the full path of the variable
  - $val: The value to set the variable to

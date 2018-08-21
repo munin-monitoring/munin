@@ -35,6 +35,8 @@ use Munin::Node::Config;
 use Munin::Node::OS;
 use Munin::Node::Service;
 
+use English qw(-no_match_vars);
+
 my $services;
 my $servicedir;
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";

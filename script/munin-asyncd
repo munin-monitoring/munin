@@ -20,6 +20,7 @@
 use strict;
 use warnings;
 
+use English qw(-no_match_vars);
 use IO::Socket;
 use IO::File;
 use File::Path qw(mkpath);
@@ -85,7 +86,7 @@ $minrate = $update_rate if ! defined $minrate;
 $verbose = 1 if $debug;
 
 unless (-d $SPOOLDIR) {
-	mkpath($SPOOLDIR, { verbose => $verbose, } ) 
+	mkpath($SPOOLDIR, { verbose => $verbose, } )
 		or LOGCROAK("Cannot create '$SPOOLDIR': $!");
 }
 
@@ -130,10 +131,10 @@ my $process_name = "main";
 my $plugins = {};
 {
 	INFO("[$$][$process_name] Reading config from $host");
-	my $sock = new IO::Socket::INET( 
-		PeerAddr	=> "$host", 
+	my $sock = new IO::Socket::INET(
+		PeerAddr	=> "$host",
 		Proto	=> 'tcp'
-	) || die "Error creating socket: $!"; 
+	) || die "Error creating socket: $!";
 
 	local $0 = "munin-asyncd [$metahostname] [list]";
 	DEBUG("[sock][>] cap multigraph dirtyconfig");

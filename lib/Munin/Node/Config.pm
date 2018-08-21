@@ -198,10 +198,10 @@ sub parse_plugin_config_file {
 	if $self->{DEBUG};
 
     eval { $self->parse_plugin_config($CONF) };
-    if ($EVAL_ERROR) {
+    if ($@) {
         carp sprintf(
             '%s at %s line %d. Skipping the rest of the file',
-            $EVAL_ERROR,
+            $@,
             $file,
             $INPUT_LINE_NUMBER,
         );
@@ -268,7 +268,7 @@ sub _parse_plugin_line {
     elsif ($var_name eq 'command') {
     	# Don't split on escaped whitespace. Also support escaping the escape character.
     	# Better implementations welcome :).
-	## no critic ControlStructures::ProhibitMutatingListFunctions
+	## no critic qw(ControlStructures::ProhibitMutatingListFunctions)
         return (command => [reverse map {s/\\(.)/$1/g; scalar reverse} split /\s+(?=(?:\\\\)*(?!\\))/, reverse $var_value]);
     }
     elsif ($var_name eq 'host_name') {

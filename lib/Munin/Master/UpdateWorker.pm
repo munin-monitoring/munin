@@ -204,12 +204,12 @@ NODE_END:
 		kill 'KILL', $node_pid; # Using SIGKILL, since normal termination didn't happen
 	}
 
-	if ($EVAL_ERROR =~ m/^NO_SPOOLFETCH_DATA /) {
+	if ($@ =~ m/^NO_SPOOLFETCH_DATA /) {
 	    INFO "[INFO] No spoofetch data for $nodedesignation";
 	    return;
-	} elsif ($EVAL_ERROR) {
+	} elsif ($@) {
 	    ERROR "[ERROR] Error in node communication with $nodedesignation: "
-		.$EVAL_ERROR;
+		.$@;
 	    return;
 	}
 
@@ -221,7 +221,7 @@ FETCH_OK:
     }); # do_in_session
 
     # This handles failure in do_in_session,
-    return undef if ! $done || ! $done->{exit_value};
+    return if ! $done || ! $done->{exit_value};
 
     return {
         time_used => Time::HiRes::time - $update_time,
@@ -500,7 +500,6 @@ sub _db_state_update {
 	$sth_state->finish();
 
 	{
-		no warnings;
 		DEBUG "_db_state_update.last_epoch:$last_epoch";
 		DEBUG "_db_state_update.last_value:$last_value";
 	}
@@ -675,7 +674,8 @@ sub uw_handle_config {
 
 	# Delegate the FETCH part
 	my $update_rate = "300"; # XXX - should use the correct version
-	my $timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
+	my $timestamp;
+	$timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
 	$last_timestamp = $timestamp if $timestamp && $timestamp > $last_timestamp;
 
 	$self->{dbh}->commit() unless $self->{dbh}->{AutoCommit};
@@ -842,7 +842,7 @@ sub get_config_for_service {
 	}
 
 	# Not found
-	return undef;
+	return;
 }
 
 
@@ -1154,11 +1154,11 @@ sub convert_to_float
 sub dump_to_file
 {
 	my ($filename, $obj) = @_;
-	open(DUMPFILE, ">> $filename");
+	open(my $DUMPFILE, q{>>}, "$filename");
 
-	print DUMPFILE Dumper($obj);
+	print $DUMPFILE Dumper($obj);
 
-	close(DUMPFILE);
+	close($DUMPFILE);
 }
 
 sub _get_default_address

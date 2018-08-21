@@ -131,7 +131,7 @@ sub _do_with_lock_and_timing {
     if (!open ($self->{STATS}, '>', "$config->{dbdir}/munin-update.stats.tmp")) {
         WARN "[WARNING] Could not open STATS to $config->{dbdir}/munin-update.stats.tmp: $!";
         # Use /dev/null instead - if the admin won't fix he won't care
-        open($self->{STATS}, '>', "/dev/null") or 
+        open($self->{STATS}, '>', "/dev/null") or
 	    LOGCROAK "[FATAL] Could not open STATS to /dev/null (fallback for not being able to open $config->{dbdir}/munin-update.stats.tmp): $!";
     }
 
@@ -193,11 +193,11 @@ sub _run_workers {
 		$worker->{dbh_state}->disconnect();
 
 		my $worker_id = $worker->{ID};
-		if (! defined($res) || $EVAL_ERROR) {
+		if (! defined($res) || $@) {
 			# No res, something went wrong
 			# Note that we handle connection failure same as other
 			# failures. Since "do_connect()" fails only softly.
-			INFO "[INFO]: no connection or EVAL_ERROR:$EVAL_ERROR";
+			INFO "[INFO]: no connection or EVAL_ERROR:$@";
 			$pm->finish(1, [ $worker_id ] );
 		}
 
@@ -221,7 +221,7 @@ sub _handle_worker_result {
 	LOGCROAK("[FATAL] Handle_worker_result got handed a failed worker result");
     }
 
-    my ($worker_id, $time_used, $service_configs) 
+    my ($worker_id, $time_used, $service_configs)
         = ($res->[0], $res->[1]{time_used}, $res->[1]{service_configs});
 
     my $update_time = sprintf("%.2f", $time_used);

@@ -120,7 +120,7 @@ sub process_request
     $session->{tls_mode}     = $config->{tls} || 'auto';
     $session->{peer_address} = $self->{server}->{peeraddr};
 
-    $PROGRAM_NAME .= " [$session->{peer_address}]";
+    $0 .= " [$session->{peer_address}]";
 
     # Used to provide per-master state-files
     $ENV{MUNIN_MASTER_IP} = $session->{peer_address};
@@ -145,7 +145,7 @@ sub process_request
         });
     };
 
-    ERROR($EVAL_ERROR)                                   if ($EVAL_ERROR);
+    ERROR($@)                                   if ($@);
     ERROR("Node side timeout while processing: '$line'") if ($timed_out);
 
     return;
@@ -196,8 +196,8 @@ sub _process_command_line {
         eval {
             $session->{tls_started} = _process_starttls_command($session);
         };
-        if ($EVAL_ERROR) {
-            ERROR($EVAL_ERROR);
+        if ($@) {
+            ERROR($@);
             return 0;
         }
         DEBUG ('DEBUG: Returned from starttls.') if $config->{DEBUG};
@@ -216,7 +216,7 @@ sub _process_command_line {
 sub _get_commandline {
   my $self = shift;
 
-  my $script = $PROGRAM_NAME;
+  my $script = $0;
   # make relative path absolute
   $script = $ENV{'PWD'} .'/'. $script if $script =~ m|^[^/]+/| && $ENV{'PWD'};
   # untaint for later use in hup
