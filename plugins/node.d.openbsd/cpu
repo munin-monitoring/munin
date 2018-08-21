@@ -49,8 +49,9 @@ if [ "$1" = "config" ]; then
 #	SYSCRITICAL=$PERCENT*50/100
 #	INTWARNING=$PERCENT*80/100
 #	USRWARNING=$PERCENT*80/100
+#	SPINWARNING=$PERCENT*80/100
 	echo 'graph_title CPU usage'
-	echo 'graph_order system interrupt user nice idle'
+	echo 'graph_order system spin interrupt user nice idle'
 	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $PERCENT "
 	echo 'graph_vlabel %'
 	echo 'graph_scale no'
@@ -89,6 +90,13 @@ if [ "$1" = "config" ]; then
 	echo 'nice.info CPU time spent by nice(1)d programs'
 	echo 'nice.min 0'
 	echo "nice.cdef nice,$CDEF"
+	echo 'spin.label nice'
+	echo 'spin.draw STACK'
+	echo 'spin.max 5000'
+	echo 'spin.type DERIVE'
+	echo 'spin.info CPU time spent in spin locks'
+	echo 'spin.min 0'
+	echo "spin.cdef spin,$CDEF"
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
 	echo 'idle.max 5000'
@@ -105,5 +113,6 @@ set -- $(/sbin/sysctl -n kern.cp_time | sed 's/,/ /g')
 echo user.value $(($1*NCPU))
 echo nice.value $(($2*NCPU))
 echo system.value $(($3*NCPU))
-echo interrupt.value $(($4*NCPU))
-echo idle.value $(($5*NCPU))
+echo spin.value $(($4*NCPU))
+echo interrupt.value $(($5*NCPU))
+echo idle.value $(($6*NCPU))
