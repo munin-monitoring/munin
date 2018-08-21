@@ -129,7 +129,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "recv.graph no\n";
 	print "recv.cdef recv,8,*\n";
 	print "recv.max 4000000000\n";
-	print "recv.warning ", (-$warn), "\n" if defined $warn;
+	print "recv.warning $warn\n" if defined $warn;
 	print "send.label bps\n";
 	print "send.type DERIVE\n";
 	print "send.min 0\n";
