@@ -79,6 +79,7 @@ if [ "$1" = "autoconf" ]; then
         # "acpi-cpufreq" is available
         echo yes
     elif [ -r "$INTEL_PSTATE_INDICATOR_FILENAME" ]; then
+        # the "intel_pstate" driver is available (no averaging, but at least snapshot values)
         echo yes
     else
         echo "no (neither $ACPI_CPUFREQ_INDICATOR_FILENAME nor $INTEL_PSTATE_INDICATOR_FILENAME is readable)"
@@ -101,10 +102,13 @@ if [ "$1" = "config" ]; then
     # the visualized data depends on the available data source
     if [ -r "$ACPI_CPUFREQ_INDICATOR_FILENAME" ]; then
         graph_info="This graph shows the average running speed of each CPU."
+        field_type="DERIVE"
     elif [ -r "$INTEL_PSTATE_INDICATOR_FILENAME" ]; then
         graph_info="This graph shows the current speed of the CPU at the time of the data retrieval (not its average). This is a limitiation of the 'intel_pstate' driver."
+        field_type="GAUGE"
     else
         graph_info="The properties of this data source are not documented."
+        field_type="DERIVE"
     fi
     echo "graph_info $graph_info"
 
@@ -112,7 +116,7 @@ if [ "$1" = "config" ]; then
         N=${c##*/cpu}
 
         echo "cpu$N.label CPU $N"
-        echo "cpu$N.type DERIVE"
+        echo "cpu$N.type $field_type"
 
         if [ -r "$c/cpufreq/cpuinfo_max_freq" ]; then
 
