@@ -111,3 +111,5 @@ sub get_basic_credentials {
 
   return $isproxy ? () : ($ENV{'http_username'}, $ENV{'http_password'});
 }
+
+1;

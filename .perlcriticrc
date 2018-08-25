@@ -44,3 +44,12 @@ severity = 5
 
 [Variables::ProhibitUnusedVariables]
 severity = 5
+
+[Modules::ProhibitMultiplePackages]
+severity = 5
+
+[Modules::RequireEndWithOne]
+severity = 5
+
+[ValuesAndExpressions::ProhibitConstantPragma]
+severity = 5

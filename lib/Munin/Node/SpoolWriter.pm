@@ -16,10 +16,11 @@ use Munin::Common::Utils qw( is_valid_hostname );
 
 use Params::Validate qw( :all );
 use List::Util qw( first );
+use Readonly;
 
-use constant DEFAULT_TIME => 86_400;      # put 1 day of results into a spool file
-use constant MAXIMUM_AGE  => 7;           # remove spool files more than a week old
-use constant DEFAULT_HOSTNAME => 'munin.example.com';
+Readonly my $DEFAULT_TIME => 86_400;      # put 1 day of results into a spool file
+Readonly my $MAXIMUM_AGE  => 7;           # remove spool files more than a week old
+Readonly my $DEFAULT_HOSTNAME => 'munin.example.com';
 
 sub _snap_to_epoch_boundary { my $self = shift; return $_[0] - ($_[0] % $self->{interval_size}) }
 
@@ -50,19 +51,19 @@ sub new {
     $self->{interval_size} = first { defined($_) and $_ > 0 } (
         $validated->{interval_size},
         $self->{metadata}->{interval_size},
-        DEFAULT_TIME
+        $DEFAULT_TIME
     );
 
     $self->{interval_keep} = first { defined($_) and $_ > 0 } (
         $validated->{interval_keep},
         $self->{metadata}->{interval_keep},
-        MAXIMUM_AGE,
+        $MAXIMUM_AGE,
     );
 
     $self->{hostname} = first { defined($_) and is_valid_hostname($_) } (
         $validated->{hostname},
         $self->{metadata}->{hostname},
-        DEFAULT_HOSTNAME,
+        $DEFAULT_HOSTNAME,
     );
 
     return $self;

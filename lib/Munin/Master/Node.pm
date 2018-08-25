@@ -793,6 +793,7 @@ sub _merge_into_str_no_dup
 }
 
 # Defines the URL::scheme for munin
+## no critic qw(Modules::ProhibitMultiplePackages)
 package URI::munin;
 
 # We are like a generic server

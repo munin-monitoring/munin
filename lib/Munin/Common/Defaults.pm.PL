@@ -73,7 +73,7 @@ print $fh <<'EOF';
 sub get_defaults {
     my ($class) = @_;
 
-    ## no critic
+    ## no critic qw(TestingAndDebugging::ProhibitNoStrict)
 
     no strict 'refs';
     my $defaults = {};
