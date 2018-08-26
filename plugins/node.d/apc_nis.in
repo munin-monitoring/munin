@@ -65,12 +65,12 @@ if($ARGV[0] and $ARGV[0] eq "config") {
         if ($line =~ /\WITEMP /) {
             $has_temperature = 1;
         } elsif ($line =~ /\WLOTRANS /) {
-	    $line =~ s/.* (\d+.\d+).*/$1/;
-	    $line_volt_min = $line;
+            $line =~ s/.* (\d+.\d+).*/$1/;
+            $line_volt_min = $line;
         } elsif ($line =~ /\WHITRANS /) {
-	    $line =~ s/.* (\d+.\d+).*/$1/;
-	    $line_volt_max = $line;
-	}
+            $line =~ s/.* (\d+.\d+).*/$1/;
+            $line_volt_max = $line;
+        }
     } while(!($line =~ /END APC/));
 
     close($sock);
