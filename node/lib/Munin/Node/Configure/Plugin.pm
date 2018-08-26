@@ -228,8 +228,8 @@ sub parse_autoconf_response
     my ($self, @response) = @_;
 
     unless (scalar(@response) == 1) {
-        # FIXME: not a good message
-        $self->log_error('Wrong amount of autoconf');
+        $self->log_error('Wrong amount of autoconf: expected 1 line, got ' . scalar(@response) . ' lines:');
+        $self->log_error('[start]' . join("[newline]", @response) . '[end]');
         return;
     }
 
@@ -238,7 +238,7 @@ sub parse_autoconf_response
     unless ($line =~ /^(yes)$/
          or $line =~ /^(no)(?:\s+\((.*)\))?\s*$/)
     {
-        $self->log_error("Junk printed to stdout");
+        $self->log_error("Junk printed to stdout: '$line'");
         return;
     }
 
@@ -260,7 +260,7 @@ sub parse_suggest_response
             $self->add_suggestions($line);
         }
         else {
-            $self->log_error("\tBad suggestion: $line");
+            $self->log_error("\tBad suggestion: '$line'");
         }
     }
 
