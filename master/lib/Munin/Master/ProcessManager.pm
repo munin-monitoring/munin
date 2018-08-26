@@ -263,6 +263,7 @@ sub _do_work {
 	}
     };
     if ($EVAL_ERROR) {
+        $EVAL_ERROR =~ s/\R//;
         ERROR "[ERROR] $worker died with '$EVAL_ERROR'";
         $res = undef;
         $retval = $E_DIED;
