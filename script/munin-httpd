@@ -27,9 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 use strict;
 use warnings;
 
-# Trust PERL5LIB from environment
-use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
-
 package Munin::Master::Http;
 
 use HTTP::Server::Simple::CGI::PreFork;
@@ -60,8 +57,6 @@ sub handle_request
 }
 
 package main;
-
-$ENV{PATH} = '/usr/bin:/bin';
 
 # start the server on port 4948
 Munin::Master::Http->new(4948)->run(prefork => 1, max_servers => 10);

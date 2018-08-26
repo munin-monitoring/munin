@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -T
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,7 +31,6 @@ my $config = Munin::Node::Config->instance();
 
 my @all_families     = qw/auto manual contrib/;
 my @default_families = qw/auto/;
-
 
 sub main
 {
@@ -331,7 +330,15 @@ sub init_snmp
 sub run_plugin
 {
     my ($plugins, $plugin, $mode) = @_;
-    my $name = $plugin->{name};
+
+    # un-taint the plugin name cause it is getting executed
+    my $name;
+    if ($plugin->{name} =~ /^([\w-]+)$/x) {
+        $name = $1;
+    } else {
+        $plugin->log_error("Invalid plugin name '$plugin->{name}'");
+        return;
+    }
 
 	DEBUG("Running '$mode' on $name" );
     my $res = $plugins->{library}->fork_service($name, $mode);
@@ -349,10 +356,18 @@ sub run_plugin
 		# Definitely a bad sign
 		if ($plugin_signal) {
             $plugin->log_error("Died with signal $plugin_signal during $mode");
+            if (my @junk = grep !/^#/, @{ $res->{stderr} }) {
+               $plugin->log_error("Junk printed to stderr");
+               DEBUG("Junk printed to stderr: @junk");
+            }
 			return;
 		}
 		elsif ($plugin_exit) {
             $plugin->log_error("Non-zero exit during $mode ($plugin_exit)");
+            if (my @junk = grep !/^#/, @{ $res->{stderr} }) {
+               $plugin->log_error("Junk printed to stderr");
+               DEBUG("Junk printed to stderr: @junk");
+            }
             return;
 
 		}
@@ -463,7 +478,7 @@ plugins will be printed. These can be reviewed or piped directly into a shell
 to install the plugins.
 
 
-=head1 GENERAL OPTIONS
+=head1 OPTIONS
 
 =over 4
 
@@ -666,13 +681,13 @@ not this works with any particular device, we do not know.
 
 This is munin-node-configure (munin-node) v@@VERSION@@.
 
-=head1 AUTHOR
+=head1 AUTHORS
 
   Copyright (C) 2009-2010 Matthew Boyle
   Copyright (C) 2006 Nicolai Langfeldt
   Copyright (C) 2003-2005 Jimmy Olsen
 
-=head1 LICENSE
+=head1 COPYRIGHT
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
