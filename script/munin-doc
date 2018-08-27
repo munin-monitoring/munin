@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -T
 #
 # This script provides the basis for a plugin documentation system for
 # munin.  Please see "man perlpod" for the reference manual to writing
@@ -32,6 +32,8 @@ use Pod::Perldoc;
 use File::Find;
 use Munin::Common::Defaults;
 
+local $ENV{PATH} = '/usr/bin/local:/usr/bin:/bin';
+
 my @found = ();		# Found plugin path names, by priority
 
 my @myargv = @ARGV;	# Save the ARGV we want for ourselves.
@@ -40,47 +42,79 @@ my ($plugin) = @myargv; # First argument is a plugin name
 
 die "munindoc: Please name a plugin\n" unless $plugin;
 
+# un-taint plugin name
+die "munindoc: Invalid plugin name '$plugin'\n" unless $plugin =~ /^([\w-]+)$/x;
+$plugin = $1;
+
 my $plugin_re = quotemeta($plugin);
 
-@ARGV=();
+local @ARGV=();
 
 # Dirs in which to look for $plugin.pod and $plugin files.
 my @DIRS = ("$Munin::Common::Defaults::MUNIN_LIBDIR/plugins",
 	    "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins");
 
-File::Find::find({wanted => \&wanted_pod}, @DIRS);
-File::Find::find({wanted => \&wanted_basename}, @DIRS);
+File::Find::find({wanted => \&wanted_pod,      untaint => 1 }, @DIRS);
+File::Find::find({wanted => \&wanted_basename, untaint => 1 }, @DIRS);
 
-# print "Found: ",join(", ",@found),"\n";
-# exit 0;
+die "munin-doc: Plugin '$plugin' not found\n" if !@found;
 
-# -F  Arguments are file names, not modules
-push(@ARGV,'-F',@found);
+my ($found_first) = @found;
+
+# -F  The single Argument is file name, not module
+push(@ARGV,'-F',$found_first);
+
+# un-taint program name
+$0 =~ /^(.*)$/x;
+local $0 = $1;    ## no critic qw(RegularExpressions::ProhibitCaptureWithoutTest)
 
 exit( Pod::Perldoc->run() );
 
 sub wanted_pod {
-#    print "Want pod: $File::Find::name\n";
-    /^$plugin_re\.pod$/so && push(@found,$File::Find::name);
+    /^$plugin_re\.pod$/xso && push(@found,$File::Find::name);
+    return;
 }
 
 sub wanted_basename {
-#    print "Want basename: $File::Find::name\n";
-    $_ eq $plugin && push(@found,$File::Find::name);
+    # un-taint full path
+    $File::Find::name =~ /^(.*)$/x;
+    push(@found,$1) if $_ eq $plugin;    ## no critic qw(RegularExpressions::ProhibitCaptureWithoutTest)
+    return;
 }
+
 
 __END__
 
 =head1 NAME
 
-munindoc - Munin documentation
+munin-doc - View Munin plugin documentation.
+
+=head1 USAGE
+
+munin-doc I<pluginname>
+
+=head1 REQUIRED ARGUMENTS
+
+The name of the plugin the documentation should be shown for.
+
+=head1 OPTIONS
+
+None.
+
+=head1 EXIT STATUS
+
+0 on success, non-zero otherwise.
+
+=head1 CONFIGURATION
+
+None needed.
 
 =head1 DESCRIPTION
 
 This program displays Munin documentation, esp. plugin documentation.
 Note that not all plugins are documented yet.
 
-Most Munin commands (such as munin-run, and munindoc itself) is only
+Most Munin commands (such as munin-run, and munin-doc itself) is only
 documented through the usual Unix man command.
 
 =head1 PLUGIN DOCUMENTATION
@@ -99,6 +133,10 @@ http://munin-monitoring.org/wiki/munindoc for details on how to do it.
 But all the work is handed off to the perldoc command once we have
 located the Munin documentation files.
 
+=head1 BUGS AND LIMITATIONS
+
+None known. If you found one, please report under L<https://github.com/munin-monitoring/munin/issues>.
+
 =head1 AUTHOR
 
   Copyright (C) 2008-2009 Nicolai Langfeldt, Linpro AS
@@ -106,3 +144,5 @@ located the Munin documentation files.
 =head1 LICENSE
 
 GPLv2
+
+=cut
