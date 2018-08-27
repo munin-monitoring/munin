@@ -1,8 +1,125 @@
 #!/usr/bin/perl -T
 
-=encoding utf8
 
-=begin comment
+use strict;
+use warnings;
+
+package Munin::Master::Http;
+
+use HTTP::Server::Simple::CGI::PreFork;
+use base qw(HTTP::Server::Simple::CGI::PreFork);
+
+use Munin::Master::Graph;
+use Munin::Master::HTML;
+
+
+sub handle_request {
+    my $self = shift;
+    my $cgi  = shift;    # XXX - this is NOT thread-safe?
+
+    my $path = $cgi->path_info();
+
+    # Dispatch by extension, so we can have the same URL prefix
+    my $is_graph
+      = ( $path !~ m/\.html$/x ) && ( $path =~ m/.*-(day|hour|week|month|year|pinpoint).*$/x );
+    if ($is_graph) {
+        Munin::Master::Graph::handle_request($cgi);
+    }
+    else {
+        Munin::Master::HTML::handle_request($cgi);
+    }
+    return;
+}
+
+package main;    ## no critic qw(Modules::ProhibitMultiplePackages)
+
+use Getopt::Long;
+
+my $port = 4948;
+
+print_usage_and_exit()
+  unless GetOptions(
+    "port=i"  => \$port,
+    "version" => \&print_version_and_exit,
+    "help"    => \&print_usage_and_exit,
+  );
+
+# un-taint port number
+die "ERROR: Invalid port '$port' supplied.\n" unless $port =~ /^(\d+)$/x;
+$port = $1;
+
+# start the server
+Munin::Master::Http->new($port)->run( prefork => 1, max_servers => 10 );
+
+
+sub print_usage_and_exit {
+    require Pod::Usage;
+    Pod::Usage::pod2usage( -verbose => 1 );
+}
+
+
+sub print_version_and_exit {
+    require Pod::Usage;
+    Pod::Usage::pod2usage(
+        -verbose  => 99,
+        -sections => 'VERSION|COPYRIGHT',
+    );
+}
+
+__END__
+
+=head1 NAME
+
+munin-httpd - Runs a http server for displaying Munin graphs.
+
+=head1 USAGE
+
+munin-httpd [options]
+
+=head1 REQUIRED ARGUMENTS
+
+None.
+
+=head1 EXIT STATUS
+
+This daemon should normally not exit, non-zero on failure.
+
+=head1 DESCRIPTION
+
+munin-httpd is a simple http server to display Munin graphs.
+It supports three click zooming.
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<< --port <portnumber> >>
+
+Sets the port number to run on. [4948]
+
+=item B<--help >
+
+View this help message.
+
+=item B<--version >
+
+Show version information.
+
+=back
+
+=head1 VERSION
+
+This is munin-httpd (munin) v@@VERSION@@
+
+=head1 AUTHOR
+
+Steve Schnepp
+
+=head1 BUGS AND LIMITATIONS
+
+None known. If you found one, please report under L<https://github.com/munin-monitoring/munin/issues>.
+
+=head1 LICENSE AND COPYRIGHT
 
 Copyright (C) 2014-2015 Steve Schnepp
 
@@ -19,44 +136,4 @@ General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-=end comment
-
 =cut
-
-use strict;
-use warnings;
-
-package Munin::Master::Http;
-
-use HTTP::Server::Simple::CGI::PreFork;
-use base qw(HTTP::Server::Simple::CGI::PreFork);
-
-use Munin::Master::Graph;
-use Munin::Master::HTML;
-
-my @times = qw(day week month year);
-# Current incarnation of $cgi.
-# XXX - this is NOT thread-safe!
-my $cgi;
-
-sub handle_request
-{
-	my $self = shift;
-	$cgi = shift;
-
-	my $path = $cgi->path_info();
-
-	# Dispatch by extension, so we can have the same URL prefix
-	my $is_graph = ($path !~ m/\.html$/) && ($path =~ m/.*-(day|hour|week|month|year|pinpoint).*$/);
-	if ($is_graph) {
-		Munin::Master::Graph::handle_request($cgi);
-	} else {
-		Munin::Master::HTML::handle_request($cgi);
-	}
-}
-
-package main;
-
-# start the server on port 4948
-Munin::Master::Http->new(4948)->run(prefork => 1, max_servers => 10);
