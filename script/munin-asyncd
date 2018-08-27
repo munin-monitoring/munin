@@ -103,6 +103,11 @@ while(my $line = <$sock>) {
 	chomp($line);
 	print STDERR "[sock][<] $line\n" if $debug;
 	last if $line =~ /^\./;
+
+	# un-taint nodename TODO: too strict?
+	$line =~ /^([\w.]+)$/x;
+	$line = $1;
+
 	push(@nodes, $line);
 }
 
@@ -156,6 +161,11 @@ my $plugins = {};
 			print $fh_list $plugins_line;
 			print $fh_list "\n";
 		}
+
+		#un-taint plugin_line TODO: more strict?
+		$plugins_line =~ /^(.*)$/x;
+		$plugins_line = $1;
+
 		$plugins->{$node} = [ split(/ /, $plugins_line) ];
 	}
 }
@@ -369,4 +379,4 @@ munin-asyncd [options]
         --screen                Log to screen instead of syslog
         --debug                 Log debug messages
      -v --verbose               Be verbose
-     -h --help                  View this message	
+     -h --help                  View this message
