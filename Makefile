@@ -54,6 +54,15 @@ install: $(BUILD_SCRIPT)
 		-e "$$(perl -I lib -M"Munin::Common::Defaults" \
 			-e "Munin::Common::Defaults->print_as_sed_substitutions();")"
 
+.PHONY: apply-formatting
+apply-formatting:
+	# Format munin perl files with the recommend perltidy settings
+	# This is recommend, but NOT mandatory
+	@# select all scipts except munin-check
+	perltidy script/munin-async script/munin-asyncd script/munin-cron.PL script/munin-doc script/munin-httpd script/munin-limits script/munin-node script/munin-node-configure script/munin-run script/munin-update
+	@# format munin libraries
+	find lib/ -type f -exec perltidy {} \;
+
 .PHONY: lint
 lint:
 	# Scanning munin code
