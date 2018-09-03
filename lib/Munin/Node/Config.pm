@@ -280,6 +280,9 @@ sub _parse_plugin_line {
     elsif ($var_name eq 'update_rate') {
         return (update_rate => $var_value);
     }
+    elsif ($var_name eq 'disable_autoconf') {
+        return (disable_autoconf => _convert_bool($var_value));
+    }
     elsif (index($var_name, 'env.') == 0) {
         return (env => { substr($var_name, length 'env.') => $var_value});
     }
@@ -337,6 +340,15 @@ sub _apply_wildcard_to_service {
 
     $self->{sconf}{$service} = $sconf;
     return;
+}
+
+
+sub _convert_bool {
+    my ($arg) = @_;
+
+    return 1 if grep(/^$arg$/x, qw(true True TRUE));
+    return 0 if grep(/^$arg$/x, qw(false False FALSE));
+    croak "Invalid boolean value '$arg'";
 }
 
 

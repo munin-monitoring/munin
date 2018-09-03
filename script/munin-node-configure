@@ -247,6 +247,9 @@ sub gather_suggestions
     $plugins->{library}->prepare_plugin_environment($plugins->names);
 
     foreach my $plugin ($plugins->list) {
+        my $disable_autoconf = $config->{sconf}{$plugin->{name}}{disable_autoconf};
+        next if defined $disable_autoconf && $disable_autoconf;
+
         fetch_plugin_autoconf($plugins, $plugin);
         fetch_plugin_suggestions($plugins, $plugin);
     }

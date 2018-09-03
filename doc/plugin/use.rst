@@ -104,6 +104,12 @@ timeout <seconds>
 command <command>
   Run <command> instead of plugin. %c will be expanded to what would otherwise have been run. E.g. command sudo -u root %c.
 
+disable_autoconf <boolean>
+  If set to True, ignore plugin when running munin-node-configure.
+  This prevents the plugin even when possibly be supported on the system to be installed.
+
+  Default: False
+
 .. note::
 
    When configuring a munin plugin, add the least amount of extra
