@@ -262,6 +262,7 @@ build/%: %.in
 		-e 's|@@VERSION@@|$(VERSION)|g' \
 		-e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g' \
 		-e 's|@@CGIDIR@@|$(CGIDIR)|g' \
+		-e 's|@@CGITMPDIR@@|$(CGITMPDIR)|g' \
 		-e 's|@@USER@@|$(USER)|g' \
 		-e 's|@@GROUP@@|$(GROUP)|g' \
 		-e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g' \
