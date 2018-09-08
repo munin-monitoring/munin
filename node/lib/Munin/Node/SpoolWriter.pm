@@ -14,6 +14,8 @@ use Munin::Common::Defaults;
 use Munin::Common::SyncDictFile;
 use Munin::Node::Logger;
 
+use File::Copy;
+
 
 use constant DEFAULT_TIME => 86_400;      # put 1 day of results into a spool file
 use constant MAXIMUM_AGE  => 7;           # remove spool files more than a week old
@@ -47,6 +49,8 @@ sub new
     $args{interval_size} = DEFAULT_TIME unless ($args{interval_size});
     $args{interval_keep} = MAXIMUM_AGE unless ($args{interval_keep});
     $args{hostname} = "unknown" unless ($args{hostname});
+    $args{commit_suffix} = $$ unless ($args{commit_suffix});
+    $args{commit_mode} = 0 unless ($args{commit_mode});
 
     set_metadata(\%args, "interval_size", $args{interval_size}) if $args{interval_size} != get_metadata(\%args, "interval_size");
     set_metadata(\%args, "interval_keep", $args{interval_keep}) if $args{interval_keep} != get_metadata(\%args, "interval_keep");
@@ -58,6 +62,28 @@ sub new
     # TODO: set umask
 
     return bless \%args, $class;
+}
+
+
+sub suffix_filename
+{
+	my ($self, $filename) = @_;
+
+	return ($filename, $filename .".". $self->{commit_suffix});
+}
+
+
+sub add_file_to_commit
+{
+	my ($self, $fn) = @_;
+
+	my ($src, $dst) = $self->suffix_filename($fn);
+
+	$self->{files_to_commit} ||= {};
+
+	$self->{files_to_commit}->{$src} = $dst;
+
+	return ($src, $dst);
 }
 
 
@@ -104,7 +130,24 @@ sub write
 
     my $fmtTimestamp = $self->_snap_to_epoch_boundary($timestamp);
 
-    open my $fh , '>>', "$self->{spooldir}/munin-daemon.$service.$fmtTimestamp." . $self->{interval_size}
+    my $filename = "$self->{spooldir}/munin-daemon.$service.$fmtTimestamp." . $self->{interval_size};
+
+    if ($self->{commit_mode}) {
+	(my $filename_src, $filename) = do {
+	    if ($self->{commit_mode} > 1) {
+		print "commit $filename\n";
+		$self->suffix_filename($filename);
+	    } else {
+		$self->add_file_to_commit($filename);
+	    }
+	};
+	if (-f $filename_src) {
+	    copy($filename_src, $filename)
+	      or die "File copy ($filename_src -> $filename) failed: $!";
+	}
+    }
+
+    open my $fh , '>>', $filename
         or die "Unable to open spool file: $!";
     flock($fh, LOCK_EX);
 
@@ -122,7 +165,21 @@ sub write
         print {$fh} $line, "\n" or logger("Error writing results: $!");
     }
 
+    close $fh or die "Unable to close spool file: $!";
+
     return;
+}
+
+
+sub do_commit
+{
+    my ($self) = @_;
+
+    while (my ($plain, $suffixed) = each %{$self->{files_to_commit}}) {
+	move($suffixed, $plain)
+	  or die "File commit ($suffixed -> $plain) failed: $!";
+	delete $self->{files_to_commit}->{$plain};
+    }
 }
 
 

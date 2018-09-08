@@ -24,6 +24,7 @@ use warnings;
 
 use IO::Socket;
 use IO::File;
+use IO::Select;
 use File::Path qw(mkpath);
 use Getopt::Long;
 use Pod::Usage;
@@ -40,7 +41,8 @@ my $timeout = 3600;
 my $minrate = 300;
 my $retaincount = 7;
 my $nocleanup;
-my $do_fork;
+my $do_fork = 0;
+my $subproc_read_timeout = 60;
 my $verbose;
 my $debug;
 my $help;
@@ -88,10 +90,14 @@ my $spoolwriter = Munin::Node::SpoolWriter->new(
 	interval_size => $intervalsize,
 	interval_keep => $retaincount,
 	hostname  => $metahostname,
+	commit_mode => 1 + $do_fork, # 1=do commit, 2=fork commit
+	commit_suffix => $$, # use our pid as suffix for tmp files
 );
 $0 = "munin-asyncd [$metahostname] [idle]";
 
 my $process_name = "main";
+
+my $select = IO::Select->new if ($do_fork);
 
 my @plugins;
 {
@@ -157,7 +163,8 @@ MAIN: while($keepgoing) {
 		$last_updated{$plugin} = $when;
 		$when_next = min($when_next, $when + max($plugin_rate, $minrate));
 
-		if ($do_fork && fork()) {
+		if ($do_fork && open my $cfh, '-|') {
+			$select->add($cfh);
 			# parent, return directly
 			next PLUGIN;
 		}
@@ -196,6 +203,24 @@ MAIN: while($keepgoing) {
 
 	print STDERR "[$$][$process_name] closing sock\n" if $verbose;
 	$sock = undef;
+
+	if ($do_fork) {
+	    my $bufs;
+	    while ($select->count) {
+		foreach my $cfh ($select->can_read($subproc_read_timeout)) {
+		    our $buf; local *buf = \$bufs->{fileno($cfh)}; $buf ||= '';
+		    unless (sysread $cfh, $buf, 4096, length($buf)) {
+			while ($buf =~ s/\G(\w+)\s+(.+)\n//) {
+			    if ($1 eq 'commit') {
+				$spoolwriter->add_file_to_commit($2);
+			    }
+			}
+			$select->remove($cfh);
+		    }
+		}
+	    }
+	}
+	$spoolwriter->do_commit();
 
 	$spoolwriter->set_metadata("lastruntime", $when);
 
