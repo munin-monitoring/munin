@@ -63,10 +63,10 @@ if [ "$1" = "config" ]; then
 	echo 'graph_category disk'
 	echo 'graph_scale no'
 	df -P -k | sed 1d | grep -v "//" | grep -v "nfs" | while read i; do
-		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $6 }'`
+		name=`echo "$i" | sed 's/[\/.-]/_/g'| awk '{ print $6 }'`
 		devName="$name.label "
-		fsLabel=`echo $i | awk '{ print $6 }'`
-                echo $devName$fsLabel
+		fsLabel=`echo "$i" | awk '{ print $6 }'`
+		echo "$devName$fsLabel"
 		echo "$name.warning ${warning:-92}"
 		echo "$name.critical ${critical:-98}"
 	done
@@ -74,7 +74,7 @@ if [ "$1" = "config" ]; then
 fi
 
 df -P -k | sed 1d | grep -v "//" | grep -v "nfs" | while read i; do
-	name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $6 ".value " }'`
-	name2=`echo $i | awk '{ print $5 }' | cut -f1 -d%`
-        echo $name $name2
+	name=`echo "$i" | sed 's/[\/.-]/_/g'| awk '{ print $6 ".value " }'`
+	name2=`echo "$i" | awk '{ print $5 }' | cut -f1 -d%`
+        echo "$name $name2"
 done

@@ -64,8 +64,8 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
     if (-d $LOGDIR)
     {
-	if (-f $logfile)
-	{
+        if (-f $logfile)
+        {
             if (-r $logfile)
             {
                 print "yes\n";
@@ -75,11 +75,11 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
             {
                 print "no (logfile '$logfile' not readable)\n";
             }
-	}
-	else
-	{
-	    print "no (logfile '$logfile' not found)\n";
-	}
+        }
+        else
+        {
+            print "no (logfile '$logfile' not found)\n";
+        }
     }
     else
     {
@@ -95,14 +95,14 @@ if ( -f $statefile)
     open (IN, '<', $statefile) or die "Unable to open state-file: $!\n";
     if (<IN> =~ /^(\d+):(\d+)/)
     {
-	($pos, $delivered) = ($1, $2);
+        ($pos, $delivered) = ($1, $2);
     }
     while (<IN>)
     {
-    	if (/^([0-9a-z.\-]+):(\d+)$/)
-	{
-		$rejects->{$1} = $2;
-	}
+        if (/^([0-9a-z.\-]+):(\d+)$/)
+        {
+            $rejects->{$1} = $2;
+        }
     }
     close IN;
 }
@@ -110,9 +110,10 @@ if ( -f $statefile)
 if (! -f $logfile)
 {
     print "delivered.value U\n";
-    foreach my $i (sort keys %{$rejects})
+    foreach my $reason (sort keys %rejects)
     {
-    	print "r$i.value U\n";
+        my $fieldname = clean_fieldname("r$reason");
+        print "$fieldname.value U\n";
     }
     exit 0;
 }
@@ -142,58 +143,61 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "delivered.type DERIVE\n";
     print "delivered.draw AREA\n";
     print "delivered.min 0\n";
-    foreach my $i (sort keys %{$rejects})
+    foreach my $reason (sort keys %rejects)
     {
-	    print "r$i.label reject $i\n";
-	    print "r$i.type DERIVE\n";
-	    print "r$i.draw STACK\n";
-	    print "r$i.min 0\n";
+        my $fieldname = clean_fieldname("r$reason");
+        print "$fieldname.label reject $reason\n";
+        print "$fieldname.type DERIVE\n";
+        print "$fieldname.draw STACK\n";
+        print "$fieldname.min 0\n";
     }
     exit 0;
 }
 
 print "delivered.value $delivered\n";
-foreach my $i (sort keys %{$rejects})
+foreach my $reason (sort keys %rejects)
 {
-	print "r$i.value ", $rejects->{$i}, "\n";
+    my $fieldname = clean_fieldname("r$reason");
+    print "$fieldname.value ", $rejects->{$reason}, "\n";
 }
 
 if(-l $statefile) {
-	die("$statefile is a symbolic link, refusing to touch it.");
-}				
+    die("$statefile is a symbolic link, refusing to touch it.");
+}
 open (OUT, '>', $statefile) or die "Unable to open statefile: $!\n";
 print OUT "$pos:$delivered\n";
 foreach my $i (sort keys %{$rejects})
 {
-	print OUT "$i:", $rejects->{$i}, "\n";
+    print OUT "$i:", $rejects->{$i}, "\n";
 }
 close OUT;
 
-sub parseLogfile 
-{    
+sub parseLogfile
+{
     my ($fname, $start, $stop) = @_;
     open (LOGFILE, $fname)
-    	or die "Unable to open logfile $fname for reading: $!\n";
+        or die "Unable to open logfile $fname for reading: $!\n";
     seek (LOGFILE, $start, 0)
-    	or die "Unable to seek to $start in $fname: $!\n";
+        or die "Unable to seek to $start in $fname: $!\n";
 
-    while (tell (LOGFILE) < $stop) 
+    while (tell (LOGFILE) < $stop)
     {
-	my $line = <LOGFILE>;
-	chomp ($line);
+        my $line = <LOGFILE>;
+        chomp ($line);
 
-	if ($line =~ / to=.*, status=sent /)
-	{
-	    $delivered++;
-	} 
-	elsif ($line =~ /postfix\/smtpd.*proxy-reject: \S+ (\S+)/ ||
-	       $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
-	       $line =~ /postfix\/cleanup.* reject: (\S+)/)
-	{
-	    $rejects->{$1}++;
-	}
+        if ($line =~ / to=.*, status=sent /)
+        {
+            $delivered++;
+        }
+        elsif ($line =~ /postfix\/smtpd.*proxy-reject: \S+ (\S+)/ ||
+               $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
+               $line =~ /postfix\/cleanup.* reject: (\S+)/ ||
+               $line =~ /postfix\/cleanup.* milter-reject: \S+ \S+ \S+ (\S+)/)
+        {
+            $rejects->{$1}++;
+        }
     }
-    close(LOGFILE) or warn "Error closing $fname: $!\n";    
+    close(LOGFILE) or warn "Error closing $fname: $!\n";
 }
 
 # vim:syntax=perl

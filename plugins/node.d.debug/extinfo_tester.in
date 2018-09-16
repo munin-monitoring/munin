@@ -20,4 +20,4 @@ hold.label hold
 EOF
 }
 
-do_$1
+"do_$1"

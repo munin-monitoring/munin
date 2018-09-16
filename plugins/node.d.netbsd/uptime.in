@@ -45,7 +45,7 @@ fi
 boottime=`/sbin/sysctl -n kern.boottime`
 now=`/bin/date +%s`
 
-awk -v boottime=$boottime -v now=$now </dev/null '
+awk -v "boottime=$boottime" -v "now=$now" </dev/null '
 END {
     printf "uptime.value %.2f\n", (now - boottime) / 86400;
 }'

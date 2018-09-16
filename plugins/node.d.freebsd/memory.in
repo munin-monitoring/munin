@@ -30,13 +30,19 @@ fi
 PAGESIZE=$(/sbin/sysctl -n vm.stats.vm.v_page_size)
 MEMSIZE=$(/sbin/sysctl -n vm.stats.vm.v_page_count)
 MEMMAX=$(($PAGESIZE*$MEMSIZE))
+CACHE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_cache_count)
+LAUNDRY_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_laundry_count)
 
 if [ "$1" = "config" ]; then
     echo 'graph_args --base 1024 -l 0 --vertical-label Bytes --upper-limit' $MEMMAX
     echo 'graph_title Memory usage'
     echo 'graph_category system'
     echo 'graph_info This graph shows what the machine uses its memory for.'
-    echo 'graph_order active inactive wired buffers cached free swap'
+    # assemble the graph order (including the optional items)
+    printf 'graph_order active inactive wired buffers'
+    if [ -n "$CACHE_COUNT" ]; then printf ' cached'; fi
+    if [ -n "$LAUNDRY_COUNT" ]; then printf ' laundry'; fi
+    echo ' free swap'
     echo 'active.label active'
     echo 'active.info pages recently statistically used'
     echo 'active.draw AREA'
@@ -49,9 +55,18 @@ if [ "$1" = "config" ]; then
     echo 'buffers.label buffers'
     echo 'buffers.info pages used for filesystem buffers'
     echo 'buffers.draw STACK'
-    echo 'cached.label cache'
-    echo 'cached.info pages that have percolated from inactive to a status where they maintain their data, but can often be immediately reused'
-    echo 'cached.draw STACK'
+    # the "cache" counter was removed in 2015
+    if [ -n "$CACHE_COUNT" ]; then
+        echo 'cached.label cache'
+        echo 'cached.info pages that have percolated from inactive to a status where they maintain their data, but can often be immediately reused'
+        echo 'cached.draw STACK'
+    fi
+    # the "laundry" counter was introduced in 2015
+    if [ -n "$LAUNDRY_COUNT" ]; then
+        echo 'laundry.label laundry'
+        echo 'laundry.info number of dirty bytes inactive'
+        echo 'laundry.draw STACK'
+    fi
     echo 'free.label free'
     echo 'free.info pages without data content'
     echo 'free.draw STACK'
@@ -65,13 +80,17 @@ ACTIVE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_active_count)
 INACTIVE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_inactive_count)
 WIRED_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_wire_count)
 BUFFERS_COUNT=$(/sbin/sysctl -n vfs.bufspace)
-CACHE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_cache_count)
 FREE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_free_count)
 
 echo active.value $(($ACTIVE_COUNT*$PAGESIZE))
 echo inactive.value $(($INACTIVE_COUNT*$PAGESIZE))
 echo wired.value $(($WIRED_COUNT*$PAGESIZE))
 echo buffers.value $(($BUFFERS_COUNT))
-echo cached.value $(($CACHE_COUNT*$PAGESIZE))
+if [ -n "$CACHE_COUNT" ]; then
+    echo cached.value $(($CACHE_COUNT*$PAGESIZE))
+fi
+if [ -n "$LAUNDRY_COUNT" ]; then
+    echo "laundry.value $(( LAUNDRY_COUNT * PAGESIZE ))"
+fi
 echo free.value $(($FREE_COUNT*$PAGESIZE))
-echo swap.value $(swapinfo -k | awk '{sum += $3}; END {print sum * 1024}')
+echo swap.value $(swapinfo -k | awk '!/^Total/ && !/^Device/ {sum += $3}; END {print sum * 1024}')

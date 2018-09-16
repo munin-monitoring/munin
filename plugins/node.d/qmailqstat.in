@@ -16,22 +16,21 @@
 #
 # Configuration:
 #  [qmailstat]
-#      env.qmailstat /usr/bin/qmail-qstat
+#      env.qmailqstat /usr/bin/qmail-qstat
 #
 # Magic markers - optional - used by installation scripts and munin-config:
 #
 #%# family=auto
 #%# capabilities=autoconf
 
-QMAILQSTAT=/var/qmail/bin/qmail-qstat
-if [ "$qmailqstat" ]; then QMAILSTAT=$qmailqstat ; fi
+QMAILQSTAT=${qmailqstat:-/var/qmail/bin/qmail-qstat}
 
 if [ "$1" = "autoconf" ]; then
-        if [ -f ${QMAILQSTAT} ] ; then
+        if [ -f "$QMAILQSTAT" ] ; then
                 echo yes
                 exit 0
         else
-                echo no
+                echo "no (file ${QMAILQSTAT} not found)"
                 exit 0
         fi
 fi

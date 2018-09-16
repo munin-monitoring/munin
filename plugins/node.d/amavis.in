@@ -56,9 +56,6 @@ classify more spam as "surley spam" and so be able to elliminate it.
   #%# family=auto
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
 
 =head1 BUGS
 
@@ -76,28 +73,24 @@ GPLv2
 
 =cut
 
-mktempfile () {
-    cmd=`echo $MUNIN_MKTEMP | sed s/\\$1/$1/`
-    $cmd
-}
 
 AMAVIS_LOG=${amavislog:-/var/log/mail/mail.info}
 LOGTAIL=${logtail:-logtail}
 STATEFILE=$MUNIN_PLUGSTATE/amavis.offset
 
 if [ "$1" = "autoconf" ]; then
-        if [ -f "${AMAVIS_LOG}" -a -n "${LOGTAIL}" -a -x "${LOGTAIL}" ] ; then
+	if [ -f "${AMAVIS_LOG}" ] && [ -n "${LOGTAIL}" ] && [ -x "${LOGTAIL}" ] ; then
 		echo yes
 		exit 0
 	else
-		echo no
+		echo "no (command $LOGTAIL or file $AMAVIS_LOG not found)"
 		exit 0
 	fi
 fi
 
 # Try tailing a random file to check how arguments are passed
 ARGS=0
-`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
+"$LOGTAIL" /etc/hosts 2>/dev/null >/dev/null
 if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
 	ARGS=1
@@ -124,25 +117,23 @@ virus=U
 spamm=U
 spams=U
 
-TEMP_FILE=$(mktempfile munin-amavis.XXXXXX)
+TEMP_FILE=$(@@MKTEMP@@ munin-amavis.XXXXXX)
 
-if [ -n "$TEMP_FILE" -a -f "$TEMP_FILE" ]
-then
-	if [ $ARGS != 0 ]; then
-	    $LOGTAIL -f ${AMAVIS_LOG} -o ${STATEFILE} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
+if [ -n "$TEMP_FILE" ] && [ -f "$TEMP_FILE" ]; then
+	if [ "$ARGS" != 0 ]; then
+	    "$LOGTAIL" -f "${AMAVIS_LOG}" -o "${STATEFILE}" | grep 'amavis\[.*\]:' > "${TEMP_FILE}"
 	else
-	    $LOGTAIL ${AMAVIS_LOG} ${STATEFILE} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
+	    "$LOGTAIL" "${AMAVIS_LOG}" "${STATEFILE}" | grep 'amavis\[.*\]:' > "${TEMP_FILE}"
 	fi
-	total=$(grep -c 'Hits:' ${TEMP_FILE})
-	virus=$(grep -c 'INFECTED.*Hits:' ${TEMP_FILE})
-	spamm=$(grep -c 'SPAMMY.*Hits:' ${TEMP_FILE})
-	spams=$(grep -c 'SPAM .*Hits:' ${TEMP_FILE})
+	total=$(grep -c 'Hits:' "$TEMP_FILE")
+	virus=$(grep -c 'INFECTED.*Hits:' "$TEMP_FILE")
+	spamm=$(grep -c 'SPAMMY.*Hits:' "$TEMP_FILE")
+	spams=$(grep -c 'SPAM .*Hits:' "$TEMP_FILE")
 
-	/bin/rm -f $TEMP_FILE
+	/bin/rm -f "$TEMP_FILE"
 fi
 
 echo "virus.value ${virus}"
 echo "spam_maybe.value ${spamm}"
 echo "spam_sure.value ${spams}"
 echo "total.value ${total}"
-

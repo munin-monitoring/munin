@@ -34,7 +34,8 @@ None known
 
 =head1 VERSION
 
- $Id$
+v1.1 2018-03-24
+* calculate extra field for mail volume that is actually delivered ("volume_delivered")
 
 =head1 AUTHOR
 
@@ -49,27 +50,57 @@ GPLv2
 =cut
 
 use strict;
+use warnings;
 use Munin::Plugin;
 
-my $pos   = undef;
-my $volume = 0;
+my $pos = undef;
+# the volume that was actually delivered
+my $volume_delivered = 0;
+my %volumes_per_queue_id = ();
+my $serialized_volumes_queue;
+my %expired_queue_ids = ();
+# Discard old queue IDs after a while (otherwise the state storage grows infinitely). We need to
+# store the IDs long enough for the gap between two delivery attempts. Thus multiple hours are
+# recommended.
+use constant queue_id_expiry => 6 * 3600;
+
 my $LOGDIR  = $ENV{'logdir'}  || '/var/log';
 my $LOGFILE = $ENV{'logfile'} || 'syslog';
+
 
 sub parseLogfile {
     my ($fname, $start) = @_;
 
-    my ($LOGFILE,$rotated) = tail_open($fname,$start);
+    my ($LOGFILE, $rotated) = tail_open($fname, $start || 0);
 
-    my $line;
+    while (my $line = <$LOGFILE>) {
+        chomp ($line);
 
-    while ($line =<$LOGFILE>) {
-	chomp ($line);
-
-	if ($line =~ /qmgr.*from=.*size=([0-9]+)/) {
-	    $volume += $1;
-	}
+        if ($line =~ /qmgr.*: ([0-9A-Za-z]+): from=.*, size=([0-9]+)/) {
+            # The line with queue ID and size may pass along multiple times (every time the mail
+            # is moved into the active queue for another delivery attempt). The size should always
+            # be the same.
+            if (not exists($volumes_per_queue_id{$1})) {
+                $volumes_per_queue_id{$1} = {timestamp => time};
+            }
+            # probably it is the same value as before
+            $volumes_per_queue_id{$1}->{size} = $2;
+        } elsif ($line =~ / ([0-9A-Za-z]+): to=.*, status=sent /) {
+            # The "sent" line is repeated for every successful delivery for each recipient.
+            if (exists($volumes_per_queue_id{$1})) {
+                $volume_delivered += $volumes_per_queue_id{$1}->{size};
+                $volumes_per_queue_id{$1}->{timestamp} = time;
+            }
+        }
     }
+    # remove all expired queue IDs
+    my @expired_queue_ids;
+    for my $key (keys %volumes_per_queue_id) {
+        if (time > $volumes_per_queue_id{$key}->{timestamp} + queue_id_expiry) {
+            push @expired_queue_ids, $key;
+        }
+    }
+    delete(@expired_queue_ids{@expired_queue_ids});
     return tail_close($LOGFILE);
 }
 
@@ -77,20 +108,20 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
     my $logfile;
     `which postconf >/dev/null 2>/dev/null`;
     if (!$?) {
-	$logfile = "$LOGDIR/$LOGFILE";
+        $logfile = "$LOGDIR/$LOGFILE";
 
-	if (-f $logfile) {
+        if (-f $logfile) {
             if (-r "$logfile") {
                 print "yes\n";
                 exit 0;
             } else {
                 print "no (logfile '$logfile' not readable)\n";
             }
-	} else {
-	    print "no (logfile '$logfile' not found)\n";
-	}
+        } else {
+            print "no (logfile '$logfile' not found)\n";
+        }
     } else {
-	print "no (postfix not found)\n";
+        print "no (postfix not found)\n";
     }
 
     exit 0;
@@ -103,7 +134,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" ) {
     print "graph_vlabel bytes / \${graph_period}\n";
     print "graph_scale yes\n";
     print "graph_category postfix\n";
-    print "volume.label throughput\n";
+    print "volume.label delivered volume\n";
     print "volume.type DERIVE\n";
     print "volume.min 0\n";
     exit 0;
@@ -117,23 +148,37 @@ if (! -f $logfile) {
     exit 1;
 }
 
-($pos,$volume) = restore_state();
+# load the stored data
+($pos, $volume_delivered, $serialized_volumes_queue) = restore_state();
 
-if (!defined($volume)) {
-    
+
+if (!defined($volume_delivered)) {
+
     # No state file present.  Avoid startup spike: Do not read log
     # file up to now, but remember how large it is now, and next
     # time read from there.
 
     $pos = (stat $logfile)[7]; # File size
 
-    $volume = 0;
+    $volume_delivered = 0;
+    %volumes_per_queue_id = ();
 } else {
+    # decode the serialized hash
+    # source format: "$id1=$size1:$timestamp1 $id2=$size2:$timestamp2 ..."
+    # The "serialized" value may be undefined, in case we just upgraded from the version before
+    # 2018, since that old version stored only two fields in the state file.  Tolerate this.
+    for my $queue_item_descriptor (split(/ /, $serialized_volumes_queue || "")) {
+        (my $queue_item_id, my $queue_item_content) = split(/=/, $queue_item_descriptor);
+        (my $size, my $timestamp) = split(/:/, $queue_item_content);
+        $volumes_per_queue_id{$queue_item_id} = { size => int($size), timestamp => int($timestamp) };
+    }
     $pos = parseLogfile ($logfile, $pos);
 }
 
-print "volume.value $volume\n";
+print "volume.value $volume_delivered\n";
 
-save_state($pos,$volume);
+# serialize the hash to a string (see "source format" above)
+$serialized_volumes_queue = join(" ", map { sprintf("%s=%s", $_, sprintf("%d:%d", $volumes_per_queue_id{$_}->{size}, $volumes_per_queue_id{$_}->{timestamp})) } keys %volumes_per_queue_id);
+save_state($pos, $volume_delivered, $serialized_volumes_queue);
 
 # vim:syntax=perl

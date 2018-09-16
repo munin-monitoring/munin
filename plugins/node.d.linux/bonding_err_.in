@@ -47,11 +47,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 EOF
 
 # Source plugin library functions
-. $MUNIN_LIBDIR/plugins/plugin.sh
+# shellcheck disable=SC1090
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 PROCDIR="/proc/net/bonding"
-MYSELF=$(basename $0)
+MYSELF=$(basename "$0")
 FILENAME="bonding_err_"
+BONDINGIF=$(echo "$MYSELF" | sed "s/^$FILENAME//")
+
+
+get_bonding_interface_names() {
+    grep "^Slave Interface:" "${PROCDIR}/${BONDINGIF}" | awk '{print $3}'
+}
+
 
 if [ "$1" = "autoconf" ]; then
   if [ -d "${PROCDIR}" ]; then
@@ -63,40 +71,35 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 if [ "$1" = "suggest" ]; then
-  ls -1 ${PROCDIR}
-  exit 0
-fi
-
-if [ "$1" = "config" ]; then
-  if [ "$MYSELF" = "$FILENAME" ]; then
-    echo "Can't run config on un-symlinked plugin. Please run the plugin with 'suggest' before attempting this."
-    exit 0
-  else 
-    BONDINGIF=$(echo $MYSELF | sed "s/^$FILENAME//")
-    echo "graph_title Bonding interface errors for $BONDINGIF"
-    echo "graph_category Network"
-    echo "graph_args --base 1000 -l 0"
-    grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
-      fieldname=$(clean_fieldname "$if")
-      echo "if_${fieldname}.label ${if}"
-      echo "if_${fieldname}.type DERIVE"
-      echo "if_${fieldname}.min 0"
-      echo "if_${fieldname}.warning 0"
-    done
-  fi
+  ls -1 "$PROCDIR"
   exit 0
 fi
 
 if [ "$MYSELF" = "$FILENAME" ]; then
-  echo "Can't run an un-symlinked plugin. Please run the plugin with 'suggest' before attempting this."
-  exit 0
+    echo "Can't run an un-symlinked plugin. Please run the plugin with 'suggest' before attempting this."
+    exit 1
 fi
 
-BONDINGIF=$(echo $MYSELF | sed "s/^$FILENAME//")
-grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
-  fieldname=$(clean_fieldname "$if")
+if [ "$1" = "config" ]; then
+    echo "graph_title Bonding interface errors for $BONDINGIF"
+    echo "graph_category Network"
+    echo "graph_args --base 1000 -l 0"
+    get_bonding_interface_names | while read -r if_name; do
+      fieldname=$(clean_fieldname "$if_name")
+      echo "if_${fieldname}.label $if_name"
+      echo "if_${fieldname}.type DERIVE"
+      echo "if_${fieldname}.min 0"
+      echo "if_${fieldname}.warning 0"
+    done
+    exit 0
+fi
+
+get_bonding_interface_names | while read -r if_name; do
+  fieldname=$(clean_fieldname "$if_name")
   echo -n "if_${fieldname}.value "
-  grep -A 4 "^Slave Interface: ${if}" ${PROCDIR}/${BONDINGIF} | grep "Link Failure Count:" | cut -d " " -f 4
+  sed "0,/^Slave Interface: ${if_name}/d; /^\$/,\$d" "${PROCDIR}/${BONDINGIF}" \
+    | grep "Link Failure Count:" \
+    | cut -d " " -f 4
 done
 
 

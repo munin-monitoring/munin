@@ -1,11 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-	<script language="JavaScript" src="formatdate.js"></script>
-	<script language="JavaScript" src="querystring.js"></script>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+	<title>Munin: dynamic graph zoom</title>
+	<script src="formatdate.js" type="text/javascript"></script>
+	<script src="querystring.js" type="text/javascript"></script>
+
+	<style type="text/css">
+	#overlayDiv {
+		opacity: .55;
+		filter: alpha(opacity=55);
+		background-color:#EEE;
+		position: absolute;
+		z-index: 2;
+	}
+	</style>
 </head>
 <body>
 	
 <div style="position:relative;">
-	<img id="image" />
+	<img id="image" src="" alt="Dynamically zoomable graph" />
 <div id="overlayDiv" />
 
 </div>
@@ -16,30 +29,30 @@
 </td>
 <td>
 	Zooming is very easy, it's done in 3 clicks (regular clicks, no drag&amp;drop):
-	<ul>
-		<li> First click to define the start of zoom.
-		<li> Second click to define the ending of zoom.
-		<li> Third click inside the defined zone to zoom, outside to cancel the zone.
-	</ul>
-<td>
+	<ol>
+		<li>First click to define the start of zoom.</li>
+		<li>Second click to define the ending of zoom.</li>
+		<li>Third click inside the defined zone to zoom, outside to cancel the zone.</li>
+	</ol>
+</td>
 </tr>
 </table>
 
-<form name="myNewForm" id="myNewForm">
+<form id="myNewForm" action="">
 <table>
 	<!-- Plugin Name : "domain/hostname" -->
 	<tr>
 		<td>Plugin Name <em>(domain/hostname/plugin_name)</em> :</td>
-		<td><input type="text" name="plugin_name" size="64" ></td>
+		<td><input type="text" name="plugin_name" size="64" /></td>
 	</tr>
 
 	<!-- Start and stop -->
 	<tr>
-		<td>Start/Stop of the graph <br/>(format:2005-08-15T15:52:01+0000) <br /><em>(epoch)</em> :</td>
+		<td>Start/Stop of the graph <br/>(format:2005-08-15T15:52:01+0000) <br/><em>(epoch)</em> :</td>
 		<td>
-			<input type="text" name="start_iso8601" size='24'> / <input type="text" name="stop_iso8601" size="24"> <input name="btnMaj" type=button value="update" /> <br />
+			<input type="text" name="start_iso8601" size="24" /> / <input type="text" name="stop_iso8601" size="24" /> <input name="btnMaj" type="button" value="update" /> <br/>
 
-			(<input type="text" name="start_epoch" size="10"> / <input type="text" name="stop_epoch" size="10">)
+			(<input type="text" name="start_epoch" size="10" /> / <input type="text" name="stop_epoch" size="10" />)
 		</td>
 	</tr>
 
@@ -48,7 +61,7 @@
 		<td>Limit low/high :</td>
 		<td>
 
-			<input type="text" name="lower_limit" size="10"> /  <input type="text" name="upper_limit" size="10">
+			<input type="text" name="lower_limit" size="10" /> / <input type="text" name="upper_limit" size="10" />
 		</td>
 	</tr>
 
@@ -58,18 +71,19 @@
 		<td>Graph size (w/o legend) <em>(pixels)</em>:</td>
 
 		<td>
-			<input type="text" name="size_x" size="5"> / <input type="text" name="size_y" size="5" >
+			<input type="text" name="size_x" size="5" /> / <input type="text" name="size_y" size="5" />
 		</td>
 	</tr>
 </table>
-	<input type=hidden name="cgiurl_graph" />
-	<input type=submit />
-	<input type=button name="btnZoomOut" value="Zoom Out x2" />
+<p>
+	<input type="hidden" name="cgiurl_graph" />
+	<input type="submit" />
+	<input type="button" name="btnZoomOut" value="Zoom Out x2" />
+</p>
 </form>
 
-</body>
-
-<script>
+<script type="text/javascript">
+//<![CDATA[
 
 // Insert values in the form
 var qs = new Querystring();
@@ -96,10 +110,10 @@ var scale = refreshImg();
 
 function refreshImg() {
 	image.src = form.cgiurl_graph.value + "/"
-		+ form.plugin_name.value 
+		+ form.plugin_name.value
 		+ "-pinpoint=" + parseInt(form.start_epoch.value) + "," + parseInt(form.stop_epoch.value)
 		+ ".png"
-		+ "?" 
+		+ "?"
 		+ "&lower_limit=" + form.lower_limit.value
 		+ "&upper_limit=" + form.upper_limit.value
 		+ "&size_x=" + form.size_x.value
@@ -156,7 +170,7 @@ function startZoom(mouseMouveEvent) {
 
 	// Show the div
 	divOverlay.style.visibility = 'visible';
-	divOverlay.style.backgroundColor = '#555'; 
+	divOverlay.style.backgroundColor = '#555';
 
 	// Initial show
 	divOverlay.style.left = mouseMouveEvent.pageX;
@@ -171,7 +185,7 @@ function startZoom(mouseMouveEvent) {
 }
 
 function endZoom(event) {
-	divOverlay.style.backgroundColor = '#000'; 
+	divOverlay.style.backgroundColor = '#000';
 	image.onmousemove = undefined;
 	divOverlay.onmousemove = undefined;
 	divOverlay.onclick = doZoom;
@@ -229,27 +243,19 @@ divOverlay.onclick = image.onclick = click;
 var clickCounter = 1;
 function click(event) {
 	switch ((clickCounter++) % 3) {
-		case 0: 
+		case 0:
 			clearZoom(event);
 			break;
-		case 1: 
+		case 1:
 			startZoom(event);
 			break;
-		case 2: 
+		case 2:
 			endZoom(event);
 			break;			
 	}
 }
 
+//]]>
 </script>
-
-<style>
-#overlayDiv { 
-	opacity: .55; 
-	filter: alpha(opacity=55); 
-	background-color:#EEE; 
-	position: absolute; 
-	z-index: 2;
-}
-</style>
-
+</body>
+</html>

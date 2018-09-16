@@ -880,12 +880,14 @@ sub xml_characters {
 # Note that 'flag' is translated to RRD-equivalents here.
 sub xml_commit_state
 {
+	my $type;
+	my $name;
 	if ($state{'values'}{'name'} =~ /\./) {
 		# since Varnish 5.2 the 'name' field includes a 'type' prefix ("type.name")
-		(my $type, my $name) = split(/\./, $state{'values'}{'name'}, 2);
+		($type, $name) = split(/\./, $state{'values'}{'name'}, 2);
 	} else {
-		my $name = $state{'values'}{'name'};
-		my $type = $state{'values'}{'type'};
+		$name = $state{'values'}{'name'};
+		$type = $state{'values'}{'type'};
 	}
 	my $ident = $state{'values'}{'ident'};
 
@@ -934,7 +936,7 @@ sub populate_stats
 	my $parser = new XML::Parser(Handlers => {Start => \&xml_start_elem,
 						End => \&xml_end_elem,
 						Char => \&xml_characters} );
-	
+
 	if ($varnishname) {
 		$arg .= " -n $varnishname";
 	}
@@ -974,7 +976,7 @@ sub print_dynamic
 	}
 	my $counter = $ASPECTS{$self}{'values'}{$name}{'counter'};
 	my $type = $ASPECTS{$self}{'values'}{$name}{'family'};
-	
+
 	foreach my $key (keys %{$data{$type}}) {
 		my $pname = normalize_name($type . "_" . $key . "_" . $counter);
 		print $pname . $suffix . " ";
@@ -1062,7 +1064,7 @@ sub get_config
 			}
 			next;
 		}
-		
+
 		if (!print_if_exist(\%values,$value,'label')) {
 			print "$value.label $data{$value}{'description'}\n";
 		}
@@ -1100,9 +1102,9 @@ sub check_args
 # Execution starts here        #
 ################################
 
-set_aspect;
-check_args;
-populate_stats;
+set_aspect();
+check_args();
+populate_stats();
 
 # We only get here if we're supposed to.
 # Walks through the relevant values and either prints the varnishstat, or

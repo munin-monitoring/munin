@@ -46,12 +46,12 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 print_values () {
     df -P -x iso9660 2>/dev/null | sed -e 1d -e '/\/\//d' -e 's/%//' |
-    while read dev size used free pct fs; do
-	echo "$(clean_fieldname $dev).value $pct"
+    while read -r dev size used free pct fs; do
+        echo "$(clean_fieldname "$dev").value $pct"
     done
 }
 
@@ -71,12 +71,13 @@ if [ "$1" = "config" ]; then
     echo 'graph_vlabel %'
     echo 'graph_scale no'
     echo 'graph_category disk'
-    df -P -x iso9660 | sed -e 1d -e '/\/\//d' -e 's/%//' | sort |
-    while read dev size used free pct fs; do
-	name=$(clean_fieldname $dev)
-	echo "$name.label $fs"
-	print_warning $name
-	print_critical $name
+    # shellcheck disable=SC2034
+    df -P -x iso9660 | sed -e 1d -e '/\/\//d' -e 's/%//' | sort \
+            | while read -r dev size used free pct fs; do
+        name=$(clean_fieldname "$dev")
+        echo "$name.label $fs"
+        print_warning "$name"
+        print_critical "$name"
     done
     exit 0
 fi

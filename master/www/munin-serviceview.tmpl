@@ -66,7 +66,7 @@ This service is in WARNING state because one of the values reported is outside t
 <TMPL_IF NAME="STATE_CRITICAL"><p class="critical"><p><strong>Note:</strong> 
 This service is in CRITICAL state because one of the values reported is outside the allowed range.  Please see further down for information about the ranges and the graph for the values.
 <p></TMPL_IF>
-<TMPL_IF NAME="STATE_UNKNOWN"><p class='unknown'><strong>Note:</strong> This service is in UNKNOWN state, because something bad happened.  Please check your network, the munin-node, and the plugin.
+<TMPL_IF NAME="STATE_UNKNOWN"><p class="unknown"><strong>Note:</strong> This service is in UNKNOWN state, because something bad happened.  Please check your network, the munin-node, and the plugin.
 </p></TMPL_IF>
 
 <table id="legend">
@@ -83,13 +83,13 @@ This service is in CRITICAL state because one of the values reported is outside 
 	<td class="field"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></td>
     <td class="internal"><span title="For use in munin.conf"><TMPL_VAR ESCAPE="HTML" NAME="FIELD"></span></td>
     <td class="type"><TMPL_VAR NAME="TYPE"></td>
-    <td class="warn"><TMPL_IF NAME="STATE_WARNING"><div class='warntext'></TMPL_IF><TMPL_VAR NAME="WARN"><TMPL_IF NAME="STATE_WARNING"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
-    <td class="info"><TMPL_IF NAME="STATE_CRITICAL"><div class='crittext'></TMPL_IF><TMPL_VAR NAME="CRIT"><TMPL_IF NAME="STATE_CRITICAL"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+    <td class="warn"><TMPL_IF NAME="STATE_WARNING"><div class="warntext"></TMPL_IF><TMPL_VAR NAME="WARN"><TMPL_IF NAME="STATE_WARNING"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+    <td class="info"><TMPL_IF NAME="STATE_CRITICAL"><div class="crittext"></TMPL_IF><TMPL_VAR NAME="CRIT"><TMPL_IF NAME="STATE_CRITICAL"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
     <td><TMPL_IF NAME="INFO"><TMPL_VAR ESCAPE="HTML" NAME="INFO"><TMPL_ELSE>&nbsp;</TMPL_IF></td>
 </tr>
 <TMPL_IF NAME="EXTINFO">
 <tr class="<TMPL_IF NAME="__odd__">oddrow<TMPL_ELSE>evenrow</TMPL_IF>">
-  <td class='wrap' colspan="6" align='left' valign='top'>
+  <td class="wrap" colspan="6" align="left" valign="top">
     This field has the following extra information: <TMPL_VAR ESCAPE="HTML" NAME="EXTINFO">
 </td></tr>
 </TMPL_IF>

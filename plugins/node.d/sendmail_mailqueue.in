@@ -38,17 +38,15 @@ GPLv2
 
 =cut
 
-MSP_QUEUE=/var/spool/mqueue-client
-MTA_QUEUE=/var/spool/mqueue
-if [ "$mspqueue"  ]; then MSP_QUEUE=$mspqueue ; fi
-if [ "$mtaqueue"  ]; then MTA_QUEUE=$mtaqueue ; fi
+MSP_QUEUE=${mspqueue:-/var/spool/mqueue-client}
+MTA_QUEUE=${mtaqueue:-/var/spool/mqueue}
 
 if [ "$1" = "autoconf" ]; then
-	if [ -d ${MSP_QUEUE} -a -d ${MTA_QUEUE} ] ; then
+	if [ -d "$MSP_QUEUE" ] && [ -d "$MTA_QUEUE" ] ; then
 		echo yes
 		exit 0
 	else
-		echo no
+		echo "no (directories ${MSP_QUEUE} and ${MTA_QUEUE} not found)"
 		exit 0
 	fi
 fi
@@ -65,6 +63,6 @@ fi
 
 # Append /. to directory to force following symlinks at the start
 # point.
-mspmails=$(find ${MSP_QUEUE}/. -type f -name '[qQ]*' 2>/dev/null | fgrep -v '.hoststat' | wc -l)
-mtamails=$(find ${MTA_QUEUE}/. -type f -name '[qQ]*' 2>/dev/null | fgrep -v '.hoststat' | wc -l)
-echo "mails.value `expr ${mspmails} + ${mtamails}`"
+mspmails=$(find "${MSP_QUEUE}/." -type f -name '[qQ]*' 2>/dev/null | grep -vF '.hoststat' | wc -l)
+mtamails=$(find "${MTA_QUEUE}/." -type f -name '[qQ]*' 2>/dev/null | grep -vF '.hoststat' | wc -l)
+echo "mails.value $((mspmails + mtamails))"

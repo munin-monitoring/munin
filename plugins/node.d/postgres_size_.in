@@ -73,9 +73,8 @@ my $pg = Munin::Plugin::Pgsql->new(
         "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1 LIMIT 10",
     graphdraw => 'AREA',
     stack     => 1,
-    base      => 1024
+    base      => 1024,
+    graphmin  => 0,
 );
 
 $pg->Process();
-exit(0);
-

@@ -43,7 +43,7 @@ Copyright (C) 2008 Alan DeKok <aland@deployingradius.com>
 
 =cut
 
-RADMIN=${radmin:-`which radmin 2>/dev/null`}
+RADMIN=${radmin:-$(which radmin 2>/dev/null)}
 RADMIN=${RADMIN:-/usr/sbin/radmin}
 SOCKETFILE=${socketfile:-/var/run/radiusd/radiusd.sock}
 
@@ -59,6 +59,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_title FreeRADIUS Accounting Requests'
     echo 'graph_args --base 1000 -l 0 '
     echo 'graph_period second'
+    # shellcheck disable=SC2016
     echo 'graph_vlabel requests / ${graph_period}'
     echo 'graph_category Other'
 
@@ -105,4 +106,4 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-$RADMIN -f $SOCKETFILE -e "stats client acct" | awk '{print $1".value " $2}'
+$RADMIN -f "$SOCKETFILE" -e "stats client acct" | awk '{print $1".value " $2}'

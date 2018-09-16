@@ -9,6 +9,19 @@ netstat - Plugin to monitor network connections
 
 No configuration
 
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+This will measure the amount of network traffic coming into and
+out of the server.  It will report back the number of connections
+accepted, requested, established, and closed.  It uses
+/usr/bin/netstat to gather its information.
+
+=head2 RESTRICTIONS
+
+None known.  /usr/bin/netstat should be executable by everyone by default.
+
 =head1 AUTHOR
 
 Unknown author
@@ -28,38 +41,42 @@ use strict;
 use Munin::Plugin;
 
 if (defined $ARGV[0] and $ARGV[0] eq "autoconf") {
-  print "yes\n";
-  exit;
+    if(-e "/usr/bin/netstat" && -X "/usr/bin/netstat") {
+        print "yes\n";
+    } else {
+        print "no\n";
+    }
+    exit 0;
 } elsif (defined $ARGV[0] and $ARGV[0] eq "config") {
-  print "graph_title Netstat\n";
-  print "graph_args --base 1000 --logarithmic\n";
-  print "graph_vlabel active connections per \${graph_period}\n";
-  print "graph_category network\n";
-  print "active.label active\n";
-  print "active.type DERIVE\n";
-  print "active.min 0\n";
-  print "active.max 50000\n";
-  print_thresholds("active");
-  print "passive.label passive\n";
-  print "passive.type DERIVE\n";
-  print "passive.min 0\n";
-  print "passive.max 50000\n";
-  print_thresholds("passive");
-  print "failed.label failed\n";
-  print "failed.type DERIVE\n";
-  print "failed.min 0\n";
-  print "failed.max 50000\n";
-  print_thresholds("failed");
-  print "resets.label resets\n";
-  print "resets.type DERIVE\n";
-  print "resets.min 0\n";
-  print "resets.max 50000\n";
-  print_thresholds("resets");
-  print "established.label established\n";
-  print "established.type GAUGE\n";
-  print "established.max 50000\n";
-  print_thresholds("established");
-  exit;
+    print "graph_title Netstat\n";
+    print "graph_args --base 1000 --logarithmic\n";
+    print "graph_vlabel active connections per \${graph_period}\n";
+    print "graph_category network\n";
+    print "active.label active\n";
+    print "active.type DERIVE\n";
+    print "active.min 0\n";
+    print "active.max 50000\n";
+    print_thresholds("active");
+    print "passive.label passive\n";
+    print "passive.type DERIVE\n";
+    print "passive.min 0\n";
+    print "passive.max 50000\n";
+    print_thresholds("passive");
+    print "failed.label failed\n";
+    print "failed.type DERIVE\n";
+    print "failed.min 0\n";
+    print "failed.max 50000\n";
+    print_thresholds("failed");
+    print "resets.label resets\n";
+    print "resets.type DERIVE\n";
+    print "resets.min 0\n";
+    print "resets.max 50000\n";
+    print_thresholds("resets");
+    print "established.label established\n";
+    print "established.type GAUGE\n";
+    print "established.max 50000\n";
+    print_thresholds("established");
+    exit 0;
 }
 
 my %trans = (

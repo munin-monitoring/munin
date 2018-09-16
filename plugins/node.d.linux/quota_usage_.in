@@ -1,26 +1,71 @@
 #!@@PERL@@
 #
-# Plugin to monitor quota on a specified device. Needs repquota and root privs
-#
-# Usage: place in /etc/munin/node.d/quota-usage_<dev> (or link it there using
-# ln -s), for example quota-usage_hda3. Use underscores instead of slashes, for
-# example to monitor /dev/mapper/vol-foo, name this quota-usage_mapper_vol-foo
-#
-# Parameters understood:
-#
-# 	config   (required)
-#
-#%# family=manual
+
+=head1 NAME
+
+quota_usage_ - Plugin to monitor quota on a specified device.
+
+=head1 APPLICABLE SYSTEMS
+
+Needs repquota and root privs
+
+=head1 USAGE
+
+Create Service Link /etc/munin/plugins/quota_usage_<dev>
+for example C<quota_usage_hda3>. Use underscores instead of slashes, for
+example to monitor C</dev/mapper/vol-foo>, name this C<quota_usage_mapper_vol-foo>
+
+For backwards compatibility the prefix C<quota-usage_> is also acceptable
+(instead of C<quota_usage_>).
+
+This plugin uses the soft and hard quota data for warning and critical
+levels respectively.
+
+=head1 MAGIC MARKERS
+
+  #%# family=manual
+
+=head1 AUTHOR
+
+Unknown author
+
+Source: L<https://svn.koumbit.net/koumbit/trunk/munin-plugins/quota-usage>
+
+L<http://munin-monitoring.org/attachment/ticket/143/quota-usage>
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
 
 use strict;
 use warnings;
 use Munin::Plugin;
+use File::Spec::Functions qw(splitdir);
 
 # We do some magic to allow device strings with underscore to mean a /
-# So to monitor /dev/mapper/vol-foo use quota-usage_mapper_vol-foo
-my @tmp = split(/_/, $0);
-shift @tmp;
-my $dev = join("/", @tmp);
+# So to monitor /dev/mapper/vol-foo use "quota_usage_mapper_vol-foo" or
+# "quota-usage_mapper_vol-foo". The latter was advertised as the default usage previously, but it
+# is confusing since it does not match the name of the plugin exactly.
+# See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=730030
+my @path_tokens = splitdir($0);
+my $basename = $path_tokens[-1];
+# partial name of the device (it will be prefixed with "/dev/")
+my $dev;
+if ($basename =~ /^quota_usage_(.+)$/) {
+	# The plugin was called with the basename "quota_usage_*".
+	$dev = $1;
+	$dev =~ s#_#/#g;
+} else {
+	# The plugin was called with the basename "quota-usage_*" (or another prefix without an
+	# underscore).
+	# This approach was documented for this plugin. But it conflicts with the common style of
+	# using the exact plugin name (instead of a slight variation) for symlinks.
+	my @tmp = split(/_/, $basename);
+	shift @tmp;
+	$dev = join("/", @tmp);
+}
 my %users;
 
 open (REP, "/usr/sbin/repquota /dev/$dev |") or exit 22;
@@ -28,7 +73,14 @@ while (<REP>) {
 	chomp;
 	if (/^-+$/../^$/) {
 		my @data = split(/ +/);
-		$users{$data[0]} = $data[2] if (@data > 2 && $data[2] > 0);
+
+		next if !$data[0] || $data[0] =~ /^#/;
+
+		if ( @data > 2 && $data[2] > 0 ) {
+		  $users{$data[0]}[0] = $data[2]; # current usage
+		  $users{$data[0]}[1] = $data[3]; # Soft quota
+		  $users{$data[0]}[2] = $data[4]; # Hard quota
+		}
 	}
 }
 close REP;
@@ -42,19 +94,28 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "graph_category disk\n";
 	for my $user (@users_by_usage) {
 		my ($uid, $name) = (getpwnam($user))[2,6];
+		my $id = clean_fieldname($user);
 		$name = $user if (length($name) < length($user));
-		$user = clean_fieldname($user);
 		$name = (split(/,/, $name))[0];
-		printf "%s.label %s\n", $user, $name;
-		printf "%s.cdef %s,1024,*\n", $user, $user;
-		printf "%s.graph no\n", $user if ($uid < 1000);
+
+		printf "%s.label %s\n", $id, $name;
+		printf "%s.cdef %s,1024,*\n", $id, $id;
+
+		if ($users{$user}[1] && $users{$user}[1] > 0) {
+		  printf "%s.warning %s\n", $id, $users{$user}[1];
+		}
+		if ($users{$user}[2] && $users{$user}[2] > 0) {
+		  printf "%s.critical %s\n", $id, $users{$user}[2];
+		}
+
+		if ($uid < 200) {
+		  printf "%s.graph no\n", $id
+		}
 	}
 } else {
 	for my $user (@users_by_usage) {
 		my $esc = $user;
 		$esc = clean_fieldname($esc);
-		printf "%s.value %s\n", $esc, $users{$user};
+		printf "%s.value %s\n", $esc, $users{$user}[0];
 	}
 }
-
-# vim: set ts=4 sw=4:

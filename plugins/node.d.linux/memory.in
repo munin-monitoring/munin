@@ -1,6 +1,9 @@
 #!@@PERL@@ -w
 # -*- perl -*-
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 memory - Plugin to monitor memory usage
