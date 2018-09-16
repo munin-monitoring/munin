@@ -70,6 +70,8 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     (Thanks, lintian)
   * Add multiple Suggests for munin-plugins-(core|extra)
   * Add privilege limits to munin-node.service
+  * Use dpkg/pkg-info.mk for DEB_VERSION_UPSTREAM instead of
+    dpkg-parsechangelog (Thanks, lintian)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
