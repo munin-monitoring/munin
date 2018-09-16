@@ -1,6 +1,6 @@
 munin (2.999.9-1) UNRELEASED; urgency=medium
 
-  * New upstream beta release
+  * New upstream beta release (2.999.9)
   * munin and munin-node: use separate maintscript files
   * convert old doc directories (before "link-doc") to symlinks
     (Closes: #881713)
@@ -47,7 +47,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * Patch: fix hard-coded database locations
   * Do not remove users in postrm (removal was introduced in 2.999.8)
 
- -- Lars Kruse <devel@sumpfralle.de>  Sun, 12 Aug 2018 19:50:59 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Sun, 16 Sep 2018 23:49:58 +0200
 
 munin (2.999.8-1) experimental; urgency=medium
 
