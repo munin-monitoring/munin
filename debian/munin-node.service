@@ -9,6 +9,12 @@ Type=forking
 Restart=always
 ExecStart=/usr/sbin/munin-node $DAEMON_ARGS
 PIDFile=/run/munin/munin-node.pid
+# Plugins like "smart_" require access to devices
+PrivateDevices=false
+PrivateTmp=true
+ProtectHome=true
+# "full" (instead of "strict") still allows write access to the state files
+ProtectSystem=full
 
 [Install]
 WantedBy=multi-user.target
