@@ -74,6 +74,7 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     dpkg-parsechangelog (Thanks, lintian)
   * Remove chmod-workaround for executable debian/ostype_helper
     (obsolete due to the switch to quilt source format: #651449)
+  * Add debian/upstream/metadata
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
