@@ -76,7 +76,6 @@ Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, munin-common (>= ${binary:Version})
 Recommends: libnet-snmp-perl
 Suggests:
- bc,
  conntrack,
  libnet-netmask-perl,
  libnet-telnet-perl,

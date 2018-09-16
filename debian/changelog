@@ -59,6 +59,7 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     Previously the affected tests were simply skipped without the
     requirement being installed.
   * Remove "time" from "Suggests" (obsolete since v2.0.36)
+  * Remove "bc" from "Suggests" (obsolete since v2.0.39)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
