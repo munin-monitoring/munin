@@ -72,6 +72,8 @@ munin (2.0.37-3) UNRELEASED; urgency=low
   * Add privilege limits to munin-node.service
   * Use dpkg/pkg-info.mk for DEB_VERSION_UPSTREAM instead of
     dpkg-parsechangelog (Thanks, lintian)
+  * Remove chmod-workaround for executable debian/ostype_helper
+    (obsolete due to the switch to quilt source format: #651449)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 

@@ -18,7 +18,6 @@ MAKEOPTS = CONFIG=debian/Makefile.config INSTALL_PLUGINS="auto manual snmpauto c
 override_dh_auto_build:
 	# ./getversion reads RELEASE if it exists
 	echo "$(DEB_VERSION_UPSTREAM)" >RELEASE
-	chmod 755 debian/ostype_helper
 	dh_auto_build -- $(MAKEOPTS)
 
 override_dh_auto_install:
