@@ -68,6 +68,7 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     (Thanks, Christian Göttsche)
   * debian/(changelog|control|rules): drop trailing whitespaces
     (Thanks, lintian)
+  * Add multiple Suggests for munin-plugins-(core|extra)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 

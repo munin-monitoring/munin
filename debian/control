@@ -76,6 +76,8 @@ Depends: ${perl:Depends}, ${misc:Depends}, munin-common (>= ${binary:Version})
 Recommends: libnet-snmp-perl
 Suggests:
  conntrack,
+ libhttp-date-perl,
+ libnet-ip-perl,
  libnet-ldap-perl,
  libnet-netmask-perl,
  libnet-telnet-perl,
@@ -108,8 +110,13 @@ Package: munin-plugins-extra
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends}, munin-common (>= ${binary:Version})
 Suggests:
+ libcache-memcached-perl,
+ libnet-ip-perl,
  libnet-netmask-perl,
  libnet-telnet-perl,
+ libnet-snmp-perl,
+ libtext-csv-xs-perl,
+ libxml-libxml-perl,
  python3,
 Description: network-wide graphing framework (user contributed plugins for node)
  Munin is a highly flexible and powerful solution used to create graphs of
