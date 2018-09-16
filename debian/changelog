@@ -60,6 +60,8 @@ munin (2.0.37-3) UNRELEASED; urgency=low
     requirement being installed.
   * Remove "time" from "Suggests" (obsolete since v2.0.36)
   * Remove "bc" from "Suggests" (obsolete since v2.0.39)
+  * Do not remove the user "munin-async" in postrm maintainer script
+    (see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=228692#18)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Jun 2018 22:05:46 +0200
 
