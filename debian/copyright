@@ -3,27 +3,28 @@ Source: https://github.com/munin-monitoring/munin
 
 Files: *
 License: GPL-2
-Copyright: Copyright (C) 2004-2010 Lupe Christoph <lupe@lupe-christoph.de>
-           Copyright (C) 2004-2011 Jimmy Olsen <jo@redpill-linpro.com>
-           Copyright (C) 2006-2013 Nicolai Langfeldt <nicolai.langfeldt@broadnet.no>
-           Copyright (C) 2007-2014 Matthias Schmitz <matthias@sigxcpu.org>
-           Copyright (C) 2007-2017 Stig Sandbeck Mathisen <ssm@fnord.no>
-           Copyright (C) 2009-2009 Kjell-Magne Øierud <kjellm@redpill-linpro.com>
-           Copyright (C) 2009-2011 Matthew Boyle <mlb@decisionsoft.com>
-           Copyright (C) 2009-2011 Tom Feiner <feiner.tom@gmail.com>
-           Copyright (C) 2009-2012 Erik I. Bolsø <knan@redpill-linpro.com>
-           Copyright (C) 2010-2018 Steve Schnepp <steve.schnepp@pwkf.org>
-           Copyright (C) 2011-2018 Kenyon Ralph <kenyon@kenyonralph.com>
-           Copyright (C) 2012-2015 Daniel Black <daniel.black@openquery.com>
-           Copyright (C) 2013-2018 Gabriele Pohl <contact@dipohl.de>
-           Copyright (C) 2015-2018 Quentin Stoeckel <chteuchteu@gmail.com>
-           Copyright (C) 2016-2018 Lars Kruse <devel@sumpfralle.de>
+Copyright: 2004-2010 Lupe Christoph <lupe@lupe-christoph.de>
+           2004-2011 Jimmy Olsen <jo@redpill-linpro.com>
+           2006-2013 Nicolai Langfeldt <nicolai.langfeldt@broadnet.no>
+           2007-2014 Matthias Schmitz <matthias@sigxcpu.org>
+           2007-2017 Stig Sandbeck Mathisen <ssm@fnord.no>
+           2009-2009 Kjell-Magne Øierud <kjellm@redpill-linpro.com>
+           2009-2011 Matthew Boyle <mlb@decisionsoft.com>
+           2009-2011 Tom Feiner <feiner.tom@gmail.com>
+           2009-2012 Erik I. Bolsø <knan@redpill-linpro.com>
+           2010-2018 Steve Schnepp <steve.schnepp@pwkf.org>
+           2011-2018 Kenyon Ralph <kenyon@kenyonralph.com>
+           2012-2015 Daniel Black <daniel.black@openquery.com>
+           2013-2018 Gabriele Pohl <contact@dipohl.de>
+           2015-2018 Quentin Stoeckel <chteuchteu@gmail.com>
+           2016-2018 Lars Kruse <devel@sumpfralle.de>
            ... and many more contributors
 
 Files: debian/*
 License: GPL-2
 Copyright: 2008-2018 Holger Levsen <holger@debian.org>
            2009-2017 Stig Sandbeck Mathisen <ssm@debian.org>
+           2016-2018 Lars Kruse <devel@sumpfralle.de>
 
 License: GPL-2
   This program is free software; you can redistribute it and/or modify
