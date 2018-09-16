@@ -37,6 +37,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * Set "PrivateDevices=false" for "munin-node" service in order to
     allow plugins like "smart_" to access devices
     (Thanks, Christian Göttsche)
+  * Add debian/upstream/metadata
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 12 Aug 2018 19:50:59 +0200
 
