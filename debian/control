@@ -154,12 +154,12 @@ Depends: ${misc:Depends},
  default-jre-headless,
 Replaces: munin-plugins-core (<< 2.999.1-1~)
 Breaks: munin-plugins-core (<< 2.999.1-1~)
-Description: community contributed plugins for munin node
+Description: Java-related plugins for munin node
  Munin plugins collect details of a host or its environment.
  The munin-node daemon provides access to the plugin to local or remote
  munin master instances.
  .
- This package contains munin plugins for monitoring JAVA-related
+ This package contains munin plugins for monitoring Java-related
  services.
 
 Package: munin-plugins-http
