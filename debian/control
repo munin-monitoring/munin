@@ -51,7 +51,6 @@ Suggests:
  munin-plugins-java,
  default-mysql-client,
  net-tools,
- python,
  ruby,
  smartmontools,
 Replaces: munin-doc (<< 2.0.37-3)
