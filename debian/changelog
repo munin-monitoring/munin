@@ -40,6 +40,8 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * Add debian/upstream/metadata
   * Use dpkg/pkg-info.mk for DEB_VERSION_UPSTREAM instead of
     dpkg-parsechangelog (Thanks, lintian)
+  * Remove unused lintian override for missing source of javascript file
+    (Thanks, lintian)
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 12 Aug 2018 19:50:59 +0200
 
