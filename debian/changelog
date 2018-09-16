@@ -38,6 +38,8 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
     allow plugins like "smart_" to access devices
     (Thanks, Christian Göttsche)
   * Add debian/upstream/metadata
+  * Use dpkg/pkg-info.mk for DEB_VERSION_UPSTREAM instead of
+    dpkg-parsechangelog (Thanks, lintian)
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 12 Aug 2018 19:50:59 +0200
 

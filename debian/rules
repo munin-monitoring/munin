@@ -1,5 +1,8 @@
 #! /usr/bin/make -f
 
+# for DEB_VERSION_UPSTREAM
+include /usr/share/dpkg/pkg-info.mk
+
 # export DH_VERBOSE=1
 
 MAKEOPTS = INSTALLDIRS=vendor
@@ -11,7 +14,7 @@ BUILD_DATE=$(shell LC_ALL=C date -u "+%B %d, %Y" -d "$(LAST_CHANGE)")
 
 override_dh_auto_build:
 	# ./getversion reads RELEASE if it exists
-	dpkg-parsechangelog | sed -n 's/^Version: //p' > RELEASE
+	echo "$(DEB_VERSION_UPSTREAM)" >RELEASE
 	dh_auto_build -- $(MAKEOPTS)
 	# build java plugin files
 	$(MAKE) -f Makefile.config -f Makefile.javaplugin build-plugins-java
