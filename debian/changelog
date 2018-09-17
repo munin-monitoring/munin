@@ -44,6 +44,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
     (Thanks, lintian)
   * Fix short description of munin-plugins-java
     (Thanks, lintian)
+  * Patch: fix hard-coded database locations
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 12 Aug 2018 19:50:59 +0200
 
