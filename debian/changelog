@@ -45,6 +45,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * Fix short description of munin-plugins-java
     (Thanks, lintian)
   * Patch: fix hard-coded database locations
+  * Do not remove users in postrm (removal was introduced in 2.999.8)
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 12 Aug 2018 19:50:59 +0200
 
