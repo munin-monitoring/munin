@@ -66,7 +66,6 @@ if (! eval "require LWP::UserAgent;"){
 }
 
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://localhost/nginx_status";
-my $port = exists $ENV{'port'} ? $ENV{'port'} : "80";
 
 if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
@@ -99,7 +98,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 	print "graph_vlabel Requests per \${graph_period}\n";
 	print "request.type DERIVE\n";
 	print "request.min 0\n";
-	print "request.label requests port $port\n";
+	print "request.label requests\n";
 	print "request.draw LINE\n";
 
 	exit 0;
