@@ -143,7 +143,11 @@ my $last_cleanup=0;
 MAIN: while($keepgoing) {
 	my $when = time;
 
-	my $when_next = $when + $timeout; # wake up at least every $timeout sec
+	my $when_next = int($when / $minrate) * $minrate + 180;
+	if ($when_next <= $when) {
+		$when_next = $when_next + $minrate;
+	}
+
 	my $sock;
 	PLUGIN: foreach my $plugin (@plugins) {
 		# See if this plugin should be updated
@@ -154,8 +158,7 @@ MAIN: while($keepgoing) {
 		}
 
 		# Should update it
-		$last_updated{$plugin} = $when;
-		$when_next = min($when_next, $when + max($plugin_rate, $minrate));
+		$last_updated{$plugin} = $when - 180;
 
 		if ($do_fork && fork()) {
 			# parent, return directly
