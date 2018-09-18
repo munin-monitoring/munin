@@ -126,7 +126,7 @@ sub query_squid {
     $cachemgr->syswrite($request, length($request));
     my @lines = $cachemgr->getlines();
     for(my $i = 0; $i <= $#lines; $i++) {
-	if($lines[$i] =~ /$target\s+(\d+)/) {
+	if($lines[$i] =~ /$target\s+(-?\d+)/) {
 	    print "$1.value $2\n";
 	}
     }
