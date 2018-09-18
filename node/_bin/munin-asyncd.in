@@ -76,7 +76,14 @@ unless (-d $SPOOLDIR) {
 my $sock = new IO::Socket::INET(
 	PeerAddr        => "$host",
 	Proto   => 'tcp'
-) || die "Error creating socket: $!";
+);
+if (!$sock) {
+	sleep 20;
+	$sock = new IO::Socket::INET(
+		PeerAddr        => "$host",
+		Proto   => 'tcp'
+	) || die "Error creating socket: $!";
+}
 my $nodeheader = <$sock>;
 print $sock "quit\n";
 close ($sock);
