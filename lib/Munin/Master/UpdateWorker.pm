@@ -972,7 +972,7 @@ sub _create_rrd_file {
                 $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
     );
 
-    DEBUG "[DEBUG] RRDs::create @args";
+    INFO "[INFO] RRDs::create @args";
     RRDs::create @args;
     if (my $ERROR = RRDs::error) {
         ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";
