@@ -49,7 +49,11 @@ GPLv2
 
 
 # directories containing thermal zone information
-ATZ=$(find /sys/class/thermal/ -maxdepth 1 -name "thermal_zone*")
+if [ -d /sys/class/thermal/ ]; then
+    ATZ=$(find /sys/class/thermal/ -maxdepth 1 -name "thermal_zone*")
+else
+    ATZ=
+fi
 
 
 do_ () { # Fetch
