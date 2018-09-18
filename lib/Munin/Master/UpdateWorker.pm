@@ -500,6 +500,7 @@ sub _db_state_update {
 	$sth_state->finish();
 
 	{
+		no warnings; # $last_epoch might be null
 		DEBUG "_db_state_update.last_epoch:$last_epoch";
 		DEBUG "_db_state_update.last_value:$last_value";
 	}
@@ -511,7 +512,6 @@ sub _db_state_update {
 	}
 
 	# Update the state with the new values
-	my ($prev_epoch, $prev_value) = ($last_epoch, $last_value);
 	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
 	$sth_state_u->execute($when, $value, $ds_id, "ds");
 
