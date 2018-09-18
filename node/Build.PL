@@ -1,3 +1,4 @@
+BEGIN { push @INC, '.'; }
 use NodeBuilder;
 
 use warnings;
