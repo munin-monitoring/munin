@@ -106,7 +106,7 @@ sub do_config {
     my $k;
 
     print "graph_title DNS Queries by type
-graph_category BIND
+graph_category dns
 graph_vlabel Queries / \${graph_period}
 query_other.label Other
 query_other.type DERIVE
