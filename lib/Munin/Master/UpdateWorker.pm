@@ -636,7 +636,7 @@ sub uw_handle_config {
 
 	# Merging graph_order & field_order
 	{
-		my @graph_order = split(/ /, $service_attr{"graph_order"});
+		my @graph_order = split(/ /, $service_attr{"graph_order"} || "");
 		for my $field (@field_order) {
 			push @graph_order, $field unless grep { $field } @graph_order;
 		}
