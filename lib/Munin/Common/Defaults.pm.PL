@@ -73,16 +73,13 @@ print $fh <<'EOF';
 sub get_defaults {
     my ($class) = @_;
 
-    ## no critic
 
-    no strict 'refs';
+    no strict 'refs'; ## no critic qw( ProhibitNoStrict )
     my $defaults = {};
     for my $g ( keys %{"Munin::Common::Defaults::"} ) {
         next unless $g =~ /MUNIN_/;
         $defaults->{$g} = ${ *$g{'SCALAR'} };
     }
-
-    ## use critic
 
     return $defaults;
 }

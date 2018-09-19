@@ -500,6 +500,8 @@ sub _db_state_update {
 	$sth_state->finish();
 
 	{
+		# $last_epoch might be null
+		no warnings; ## no critic qw( ProhibitNoWarnings )
 		DEBUG "_db_state_update.last_epoch:$last_epoch";
 		DEBUG "_db_state_update.last_value:$last_value";
 	}
@@ -511,7 +513,6 @@ sub _db_state_update {
 	}
 
 	# Update the state with the new values
-	my ($prev_epoch, $prev_value) = ($last_epoch, $last_value);
 	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
 	$sth_state_u->execute($when, $value, $ds_id, "ds");
 
@@ -636,7 +637,7 @@ sub uw_handle_config {
 
 	# Merging graph_order & field_order
 	{
-		my @graph_order = split(/ /, $service_attr{"graph_order"});
+		my @graph_order = split(/ /, $service_attr{"graph_order"} || "");
 		for my $field (@field_order) {
 			push @graph_order, $field unless grep { $field } @graph_order;
 		}
@@ -815,7 +816,7 @@ sub _update_rrd_files {
 	    DEBUG "[DEBUG] asking for a rrd of size : " . $ds_config->{graph_data_size};
 
 	    # Avoid autovivification (for multigraphs)
-	    my $first_epoch = (defined($service_data) and defined($service_data->{$ds_name})) ? ($service_data->{$ds_name}->{when}->[0]) : 0;
+	    my $first_epoch = time - (12 * 3600); # XXX - we should be able to have some delay in the past for spoolfetched plugins
 	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config, $first_epoch);
 
 	    if (defined($service_data) and defined($service_data->{$ds_name})) {
@@ -972,7 +973,7 @@ sub _create_rrd_file {
                 $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
     );
 
-    DEBUG "[DEBUG] RRDs::create @args";
+    INFO "[INFO] RRDs::create @args";
     RRDs::create @args;
     if (my $ERROR = RRDs::error) {
         ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";

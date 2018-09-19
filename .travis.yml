@@ -69,17 +69,20 @@ env:
   - TEST_MEDIUM=1
 
 before_install:
-  cpanm -n Devel::Cover::Report::Coveralls
+  - cpanm -n Devel::Cover::Report::Coveralls
+  - cpanm --quiet --installdeps --notest .
 
-script:
+install:
   # check for potential spelling mistakes
   - codespell --quiet-level=3 --skip=ChangeLog,Announce-2.0,*.js,memory,jmx_,jmx_tomcat_dbpools,netstat_multi,munin_node_os.t
-  - perl Build.PL && ./Build build && cover -test -report coveralls
-  - make
-  # the old travis environment requires an old flake8 invocation
-  # TODO: fix lint issues and enable the test
-  - PYTHON_LINT_CALL="python3 -m flake8.main" make lint || true
-  - make test
+  - perl Build.PL
+  - ./Build build
+  # We want to lint first, to avoid expensive tests if code isn't clean
+  - make lint-munin
+  # Plugins are currently not compliant
+  - make lint-plugins || true
+script:
+  - cover -test -report coveralls
 
 # Using the container-based infrastructure
 sudo: false
