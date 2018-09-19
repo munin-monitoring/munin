@@ -436,7 +436,7 @@ sub Process {
 }
 
 # Internal useful functions
-sub connect() {
+sub connect {
     my ($self, $noexit, $nowildcard) = @_;
 
     my $r = $self->_connect($nowildcard);
@@ -446,7 +446,7 @@ sub connect() {
     exit(1);
 }
 
-sub _connect() {
+sub _connect {
     my ($self, $nowildcard) = @_;
 
     return 1 if ($self->{dbh});

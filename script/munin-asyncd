@@ -172,7 +172,7 @@ my $plugins = {};
 
 my $keepgoing = 1;
 
-sub termhandler() {
+sub termhandler {
 	$keepgoing = 0;
 }
 
