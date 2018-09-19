@@ -66,7 +66,7 @@ apply-formatting:
 .PHONY: lint
 lint:
 	# Scanning munin code
-	perlcritic lib/ script/
+	perlcritic --profile .perlcriticrc lib/ script/
 
 	@# SC1008: ignore our weird shebang (substituted later)
 	@# SC1090: ignore sourcing of files with variable in path
