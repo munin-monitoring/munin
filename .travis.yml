@@ -75,11 +75,9 @@ script:
   # check for potential spelling mistakes
   - codespell --quiet-level=3 --skip=ChangeLog,Announce-2.0,*.js,memory,jmx_,jmx_tomcat_dbpools,netstat_multi,munin_node_os.t
   - perl Build.PL && ./Build build && cover -test -report coveralls
-  - make
   # the old travis environment requires an old flake8 invocation
   # TODO: fix lint issues and enable the test
   - PYTHON_LINT_CALL="python3 -m flake8.main" make lint || true
-  - make test
 
 # Using the container-based infrastructure
 sudo: false
