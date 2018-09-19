@@ -74,8 +74,11 @@ before_install:
 script:
   # check for potential spelling mistakes
   - codespell --quiet-level=3 --skip=ChangeLog,Announce-2.0,*.js,memory,jmx_,jmx_tomcat_dbpools,netstat_multi,munin_node_os.t
-  - perl Build.PL && ./Build build && cover -test -report coveralls
+  - perl Build.PL
+  - ./Build build
+  # We want to lint first, to avoid expensive tests if code isn't clean
   - make lint
+  - cover -test -report coveralls
 
 # Using the container-based infrastructure
 sudo: false
