@@ -500,7 +500,8 @@ sub _db_state_update {
 	$sth_state->finish();
 
 	{
-		no warnings; # $last_epoch might be null
+		# $last_epoch might be null
+		no warnings; ## no critic qw( ProhibitNoWarnings )
 		DEBUG "_db_state_update.last_epoch:$last_epoch";
 		DEBUG "_db_state_update.last_value:$last_value";
 	}
