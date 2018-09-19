@@ -69,7 +69,8 @@ env:
   - TEST_MEDIUM=1
 
 before_install:
-  cpanm -n Devel::Cover::Report::Coveralls
+  - cpanm -n Devel::Cover::Report::Coveralls
+  - cpanm --quiet --installdeps --notest .
 
 install:
   # check for potential spelling mistakes
