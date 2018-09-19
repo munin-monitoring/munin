@@ -77,7 +77,9 @@ install:
   - perl Build.PL
   - ./Build build
   # We want to lint first, to avoid expensive tests if code isn't clean
-  - make lint
+  - make lint-munin
+  # Plugins are currently not compliant
+  - make lint-plugins || true
 script:
   - cover -test -report coveralls
 

@@ -63,10 +63,14 @@ apply-formatting:
 	@# format munin libraries
 	find lib/ -type f -exec perltidy {} \;
 
-.PHONY: lint
-lint:
+.PHONY: lint lint-munin lint-plugins
+
+lint: lint-munin lint-plugins
+lint-munin:
 	# Scanning munin code
 	perlcritic --profile .perlcriticrc lib/ script/
+
+lint-plugins:
 
 	@# SC1008: ignore our weird shebang (substituted later)
 	@# SC1090: ignore sourcing of files with variable in path
