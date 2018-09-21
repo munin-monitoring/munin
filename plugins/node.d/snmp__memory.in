@@ -78,18 +78,18 @@ if (defined $ARGV[0] and $ARGV[0] eq "config")
     # some devices reports negative memtotal value
     print "# Total memsize reported $memsize..." if $Munin::Plugin::SNMP::DEBUG;
 
-    if ($memsize > 0) 
+    if ($memsize > 0)
     {
-	print "graph_args --base 1024 -l 0 --upper-limit $memsize\n";
+        print "graph_args --base 1024 -l 0 --upper-limit $memsize\n";
     }
     else
     {
-	print "graph_args --base 1024 -l 0\n";
+        print "graph_args --base 1024 -l 0\n";
     }
 
     print "memory.draw AREA\n";
     print "memory.label memory\n";
-   
+
     exit 0;
 }
 

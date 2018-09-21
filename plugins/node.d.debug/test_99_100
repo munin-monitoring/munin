@@ -1,11 +1,11 @@
-#! /bin/bash
+#!@@BASH@@
 
 if [ "$1" == "config" ]; then
 	echo "graph_title test with decimal value"
 	echo "graph_category Debug"
 	echo "graph_vlabel Some value"
 	echo "field99_100.label Some random decimal between 99 and 100"
-else 
+else
 	# emit a random decimal value between 99 and 100
 	echo "field99_100.value 99.${RANDOM:1}"
 fi

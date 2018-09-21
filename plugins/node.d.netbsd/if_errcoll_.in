@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Wildcard-plugin to monitor network interfaces. To monitor an
 # interface, link if_<interface> to this file. E.g.

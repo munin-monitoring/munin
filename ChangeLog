@@ -1,5 +1,83 @@
 -*- text -*-
 
+munin-2.0.42, 2018-09-21
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (5):
+      Fix Module::Build instance parameters for master and node
+      Retrieve version number for modules "Munin::Common" and "Munin::Plugins"
+      Module description: set contact to mailing list address
+      getversion: hide error message for detached HEAD
+      getversion: prevent localized output format for "git branch"
+
+
+munin-2.0.41, 2018-09-19
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Alejandro Suarez (1):
+      Update default warning threshold
+
+Christian Göttsche (6):
+      give reasons why a plugin says no on more occasions
+      [plugins] give reasons for autoconf no response
+      [plugins] drop autoconf capability when no real autoconf is supported
+      [plugins] overlook exim_mailstats
+      [mnc] fix documentation so that --help works
+      [munin-node-configure] print autoconf response on parse error
+
+Dmitry Marakasov (1):
+      Fix CDEF variable substitution
+
+Kim B. Heino (6):
+      ProcessManager: remove \n from output before it's logged
+      plugins/squeezebox: add missing graph_vlabel
+      plugins/bind9: use category "dns" as in other similar plugins, not "BIND"
+      plugins/nginx_request: stats are for all ports (80+443), never for single port
+      plugins/squid_traffic: allow negative numbers
+      munin-asyncd: retry connection to node once in startup
+
+Lars Kruse (21):
+      Plugin postgres_users: ignore undefined usename
+      Makefile: fix "tar" target
+      Makefile: increase compression level for 'tar' target
+      Plugins: replace all absolute references to shells with placeholders
+      Plugin http_loadtime: fix shellcheck issue
+      Whitespace cleanup: remove trailing and unify some spaces/tabs
+      Plugin cpuspeed: add support for 'intel_pstate' driver
+      Plugin cpuspeed: minor cleanup; support capability DIRTYCONFIG
+      Plugin cpuspeed: fix data type for "intel_pstate" driver
+      Build.PL: define a 'module_name' and a proper version string
+      Nagios command format: ensure non-empty plugin output
+      dev_scripts: fix processing of configuration files
+      munin-node: set default port if not mentioned in config file
+      Plugin apc_nis: autoconf tests connection to socket
+      Plugin acp_nis: unify whitespace
+      Replace CGITMPDIR placeholder during build
+      Plugin apt_all: simplify conditional expression for "update" operation
+      Plugin apt_all: update the current status before calculating the summary
+      munin-asyncd: improve messages in case of failed connections to munin-node
+      Plugins apache_: add documentation for HTTPS connections
+      Plugin acpi: prevent error message for missing thermal sys directory
+
+
 munin-2.0.40, 2018-08-15
 
 -------

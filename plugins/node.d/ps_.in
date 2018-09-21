@@ -40,7 +40,6 @@ GPLv2
 =head1 MAGIC MARKERS
 
  #%# family=manual
- #%# capabilities=autoconf suggest
 
 =cut
 
@@ -50,16 +49,6 @@ myname=$(basename "$0" | sed 's/^ps_//g')
 
 name="${name-\<$myname\>}"
 REGEX="${regex-\<$name\>}"
-
-if [ "$1" = "autoconf" ]; then
-    # Makes little sense to autoconf if you can't suggest
-    echo no
-    exit 0
-fi
-
-if [ "$1" = "suggest" ]; then
-	exit 0
-fi
 
 if [ "$1" = "config" ]; then
 

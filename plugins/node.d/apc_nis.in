@@ -29,19 +29,25 @@ The following configuration parameters are used by this plugin
 use IO::Socket;
 use strict;
 
-if($ARGV[0] and $ARGV[0] eq "autoconf") {
-    print "yes\n";
-    exit 0;
-}
-
 my $host = exists $ENV{'host'} ? $ENV{'host'} : "127.0.0.1";
 my $port = exists $ENV{'port'} ? $ENV{'port'} : "3551";
 
+# We connect early: the connection is used for every operation: autoconf, config and data fetch.
 my $sock = new IO::Socket::INET (
     PeerAddr => $host,
     PeerPort => $port,
     Proto => 'tcp'
     );
+
+if($ARGV[0] and $ARGV[0] eq "autoconf") {
+    if ($sock) {
+        # we successfully opened a connected to the configured daemon
+        print "yes\n";
+    } else {
+        print "no (failed to connect to $host:$port)\n";
+    }
+    exit 0;
+}
 
 die "Could not create socket: $!\n" unless $sock;
 
@@ -59,12 +65,12 @@ if($ARGV[0] and $ARGV[0] eq "config") {
         if ($line =~ /\WITEMP /) {
             $has_temperature = 1;
         } elsif ($line =~ /\WLOTRANS /) {
-	    $line =~ s/.* (\d+.\d+).*/$1/;
-	    $line_volt_min = $line;
+            $line =~ s/.* (\d+.\d+).*/$1/;
+            $line_volt_min = $line;
         } elsif ($line =~ /\WHITRANS /) {
-	    $line =~ s/.* (\d+.\d+).*/$1/;
-	    $line_volt_max = $line;
-	}
+            $line =~ s/.* (\d+.\d+).*/$1/;
+            $line_volt_max = $line;
+        }
     } while(!($line =~ /END APC/));
 
     close($sock);

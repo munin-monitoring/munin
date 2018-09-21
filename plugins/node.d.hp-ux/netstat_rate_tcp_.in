@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!@@GOODSH@@
 #
 # netstat_rate_tcp_ - Munin wildcard plug-in to parse netstat TCP counters
 #

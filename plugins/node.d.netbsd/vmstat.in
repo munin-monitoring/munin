@@ -1,9 +1,9 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor the number of procs in io-sleep and other wait
 # states. Uses `vmstat`.
 #
-# Parameters: 
+# Parameters:
 #
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)

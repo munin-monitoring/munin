@@ -200,26 +200,17 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 if ($ARGV[0] and $ARGV[0] eq "update") {
 	my $maxinterval = $ARGV[1] ? $ARGV[1] : update_helpandexit;
 	my $probability = $ARGV[2] ? $ARGV[2] : update_helpandexit;
-	
-	# if it's been $probability seconds since the last update, do
-	# it now.
-	if(-e $statefile &&
-	   (stat($statefile))[10] + $maxinterval < time()) {
-		update_state();
+
+	# The state file needs an update in three situations:
+	#     * it does not exist
+	#     * $maxinterval seconds elapsed since the last update
+	#     * random $probability was hit (one out of $probability)
+	if (!-e $statefile
+			|| ((stat($statefile))[10] + $maxinterval < time())
+			|| (int(rand($probability)) == 0)) {
 		exec("/usr/bin/apt-get update")
 			or die("Unable to exec() apt-get");
-	}
-
-	# if the state-file doesn't exist, create it.
-	if(!-e $statefile) {
 		update_state();
-	}
-
-	# update the database if the 1 in $probability check hits.
-	if(!int(rand($probability))) {
-		update_state();
-		exec("/usr/bin/apt-get update")
-			or die("Unable to exec() apt-get");
 	}
 	exit(0);
 }

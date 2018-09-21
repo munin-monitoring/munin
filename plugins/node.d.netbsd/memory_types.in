@@ -1,4 +1,4 @@
-#! /bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor memory usage by type.
 #

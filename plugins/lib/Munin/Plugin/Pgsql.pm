@@ -433,7 +433,7 @@ sub _connect() {
             $err_str =~ s/[\r\n\t]/ /g;
             $err_str =~ s/\h+/ /g;
             $err_str =~ s/ $//;
-            $self->{connecterror} = $err_str;	
+            $self->{connecterror} = $err_str;
             return 0;
         }
     }

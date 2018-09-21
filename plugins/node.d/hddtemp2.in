@@ -3,7 +3,7 @@
 #
 # Plugin to monitor hard drive temperatures.
 #
-# This plugin is an alternative to the hddtemp_smartctl, which is the 
+# This plugin is an alternative to the hddtemp_smartctl, which is the
 # preferred one.
 #
 # Requirements:

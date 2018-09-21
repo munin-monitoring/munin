@@ -262,6 +262,7 @@ build/%: %.in
 		-e 's|@@VERSION@@|$(VERSION)|g' \
 		-e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g' \
 		-e 's|@@CGIDIR@@|$(CGIDIR)|g' \
+		-e 's|@@CGITMPDIR@@|$(CGITMPDIR)|g' \
 		-e 's|@@USER@@|$(USER)|g' \
 		-e 's|@@GROUP@@|$(GROUP)|g' \
 		-e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g' \
@@ -418,7 +419,7 @@ munin-$(RELEASE).tar.gz:
 		&& echo $(RELEASE) > "$$tempdir/munin-$(RELEASE)/RELEASE" \
 		&& git archive --prefix=munin-$(RELEASE)/ --format=tar --output "$$tempdir/export.tar" HEAD \
 		&& tar --append --file "$$tempdir/export.tar" --owner=root --group=root -C "$$tempdir" "munin-$(RELEASE)/RELEASE" \
-			| gzip >munin-$(RELEASE).tar.gz \
+		&& gzip -9 <"$$tempdir/export.tar" >"munin-$(RELEASE).tar.gz" \
 		&& rm -rf "$$tempdir"
 
 munin-$(RELEASE).tar.gz.sha256sum: munin-$(RELEASE).tar.gz

@@ -13,7 +13,7 @@ feature propper object orientation like munin-update and will have to
 wait until later.
 
 Copyright (C) 2002-2010 Jimmy Olsen, Audun Ytterdal, Kjell Magne
-Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
+Ã˜ierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -1793,9 +1793,9 @@ sub expand_cdef {
         my $fieldname = munin_get_node_name($field);
         my $rrdname = &orig_to_cdef($service, $fieldname);
         if ($cdef =~ /\b$fieldname\b/) {
-            $max =~ s/([,=])$fieldname([,=]|$)/$1a$rrdname$2/g;
-            $min =~ s/([,=])$fieldname([,=]|$)/$1i$rrdname$2/g;
-            $avg =~ s/([,=])$fieldname([,=]|$)/$1g$rrdname$2/g;
+            $max =~ s/(?<=[,=(])$fieldname(?=[,=)]|$)/a$rrdname/g;                                                                                                                                                                                                    
+            $min =~ s/(?<=[,=(])$fieldname(?=[,=)]|$)/i$rrdname/g;                                                                                                                                                                                                    
+            $avg =~ s/(?<=[,=(])$fieldname(?=[,=)]|$)/g$rrdname/g;                                                                                                                                                                                                    
         }
     }
 

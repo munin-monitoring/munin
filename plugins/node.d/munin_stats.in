@@ -48,7 +48,7 @@ sub uses_graph_cron {
 
 
 if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
-    my $munin_update_location = 
+    my $munin_update_location =
                 "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-update";
 
     if (! -e $munin_update_location) {
@@ -59,7 +59,7 @@ if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
    if (! -x $munin_update_location) {
         print "no ($munin_update_location was found, but is not executable)\n";
         exit 0;
-   } 
+   }
    else {
         print "yes\n";
         exit 0;

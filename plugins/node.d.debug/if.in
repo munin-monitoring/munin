@@ -67,7 +67,7 @@ if($mode eq "autoconf") {
 
 
 # Collect data
-# 
+#
 open(FH, $PROCNETDEV)
     or die "Failed to open $PROCNETDEV: $!";
 

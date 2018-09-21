@@ -825,7 +825,7 @@ EOF
 multigraph ${plugin_name}_iops
 graph_title Disk IOs per device
 graph_args --base 1000
-graph_vlabel IOs/\${graph_period} read (-) / write (+) 
+graph_vlabel IOs/\${graph_period} read (-) / write (+)
 graph_category disk
 graph_width $config_graph_width
 

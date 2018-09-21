@@ -147,7 +147,7 @@ if [ "$1" = "config" ]; then
 	echo 'system.draw AREA'
 	echo 'system.min 0'
 	echo 'system.type DERIVE'
-	echo "system.info CPU time spent by the kernel in system activities" 
+	echo "system.info CPU time spent by the kernel in system activities"
 	echo 'user.label user'
 	echo 'user.draw STACK'
 	echo 'user.min 0'

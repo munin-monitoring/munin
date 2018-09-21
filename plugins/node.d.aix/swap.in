@@ -65,7 +65,7 @@ if($ARGV[0] && $ARGV[0] eq "config")
 my(@swapInfo) = getSwapSpace();
 print "total.value $swapInfo[0]\n";
 print "used.value $swapInfo[1]\n";
-  
+
 sub getSwapSpace
 {
   my($line,@lineArray,$amountUsed,$totalSpace);

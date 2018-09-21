@@ -30,7 +30,7 @@ GPLv2
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/stat ]; then
-		echo yes 
+		echo yes
 		exit 0
 	else
 		echo "no (/proc/stat not readable)"

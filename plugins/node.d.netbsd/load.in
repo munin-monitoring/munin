@@ -1,5 +1,5 @@
-#!/bin/sh
-# 
+#!@@GOODSH@@
+#
 # Plugin to monitor the load average on a system.
 #
 # Usage: Link or copy into /etc/munin/node.d/
@@ -53,8 +53,8 @@ NCPU=`/sbin/sysctl -n hw.ncpu`
 if [ $? != 0 ]; then NCPU=1; fi
 
 # If run with the "config"-parameter, give out information on how the
-# graphs should look. 
- 
+# graphs should look.
+
 if [ "$1" = "config" ]; then
 	# The host name this plugin is for. (Can be overridden to have
 	# one machine answer for several)
@@ -72,7 +72,7 @@ if [ "$1" = "config" ]; then
 	# The category of the plugin. Defaults to "other".
 	echo 'graph_category system'
 	# The fields. "label" is used in the legend. "label" is the only
-	# required subfield. 
+	# required subfield.
 	echo 'load.label load'
 	# These two are optional. They are only used if you have
 	# configured your munin to tell a Nagios-server about any

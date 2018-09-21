@@ -529,7 +529,7 @@ sub do_preprocess {
     my @mediatypes = split(/[ ,]+/,$mediatypes);
 
     # Hash of numerical media types the user finds interesting.
-    my $mediatype={}; 
+    my $mediatype={};
 
     if ($mediatypes eq 'ALL') {
 	$mediatype = undef;
@@ -666,7 +666,7 @@ sub do_config_if {
     print "recv.cdef recv,8,*\n";
     print "recv.max $speed\n" if $speed;
     print "recv.min 0\n";
-    print "recv.warning ", (-$warn), "\n" if defined $warn;
+    print "recv.warning $warn\n" if defined $warn;
     print "send.label bps\n";
     print "send.type DERIVE\n";
     print "send.negative recv\n";

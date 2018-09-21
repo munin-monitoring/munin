@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor the number of forks per second on the machine.
 #
@@ -31,7 +31,7 @@
 
 if [ "$1" = "autoconf" ]; then
     if [ -x /usr/bin/vmstat ]; then
-	echo yes 
+	echo yes
 	exit 0
     else
 	echo "no (no /usr/bin/vmstat executable)"

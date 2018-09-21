@@ -92,7 +92,7 @@ sub autoconf {
 	"Accept: */*\r\n" .
 	&make_auth_header($user, $passwd) .
 	"\r\n";
-		  
+
     $cachemgr->syswrite($request, length($request));
     my @lines = $cachemgr->getlines();
 
@@ -120,13 +120,13 @@ sub query_squid {
 					PeerPort => $port,
 					Proto    => 'tcp') or die($!);
 
-    
+
 
     my $request = "GET cache_object://$host/storedir HTTP/1.0\r\n" .
 	"Accept: */*\r\n" .
 	&make_auth_header($user, $passwd) .
 	"\r\n";
-		  
+
     $cachemgr->syswrite($request, length($request));
     my @lines = $cachemgr->getlines();
     my %outs = ('Maximum' => 0, 'Current' => 0);

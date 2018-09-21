@@ -55,7 +55,7 @@ specified more than one vserver when the resource is set to ALL:
 
  [vserver_resources]
   user root
-  env.vservers vserver5 
+  env.vservers vserver5
   env.resource ALL
   env.limits 0
 
@@ -190,9 +190,9 @@ KCIN=$(( 16#${INFO[2]} ))
 
 # If this is 1, then VCI_SPACES is present in the kernel (new in 2.6.19)
 if [ $(( (KCIN >> 10) & 1 )) -eq 1 ]
-then 
+then
     NAMELOC="nsproxy"
-else 
+else
     NAMELOC="cvirt"
 fi
 
@@ -290,12 +290,12 @@ if [ "$1" = "config" ]; then
     esac
     echo 'graph_category vserver'
 
-    
+
     # do not assume we are on i386 where pagesize is 4096...
     pagesize=$(perl -MPOSIX -e 'print POSIX::sysconf(_SC_PAGESIZE), "\n";')
-    
+
     for xid in $XIDS ; do
-	    
+
 	LABEL=$(grep "NodeName" "/proc/virtual/$xid/$NAMELOC" | cut -f 2)
 	NAME=$(echo "$LABEL" | cut -d. -f1 |  tr '-' '_')
 
@@ -354,7 +354,7 @@ if [ "$1" = "config" ]; then
 		exit 1
 		;;
 	esac
-	    
+
 	if [ ! -z "$LIMITS" ] && [ "$LIMITS" = 1 ]; then
 	    LIMIT=$(grep "$RESOURCE" "/proc/virtual/$xid/limit" | cut -f 4)
 	    if [ "${LIMIT:-0}" -gt 0 ]; then

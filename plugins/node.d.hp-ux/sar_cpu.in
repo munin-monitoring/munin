@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!@@GOODSH@@
 #
 # HP-UX port from original cpu plugin, here using sar instead of
 # Solaris' kstat.  Also note that kstat as well as Linux /proc/stat

@@ -460,7 +460,7 @@ plugins will be printed. These can be reviewed or piped directly into a shell
 to install the plugins.
 
 
-=head1 GENERAL OPTIONS
+=head1 OPTIONS
 
 =over 4
 

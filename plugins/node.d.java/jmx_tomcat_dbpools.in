@@ -33,7 +33,7 @@ Needed configuration on the Tomcat side: add
 
 to CATALINA_OPTS in your startup scripts.
 
-Replace authenticate=false with 
+Replace authenticate=false with
   -Dcom.sun.management.jmxremote.password.file=/etc/tomcat/jmxremote.password \
   -Dcom.sun.management.jmxremote.access.file=/etc/tomcat/jmxremote.access
  ...if you want authentication.
@@ -52,8 +52,8 @@ No encryption supported in the JMX connection.
 
 =encoding UTF-8
 
-Code written by Jimmy Olsen, Redpill Linpro AS. This code also 
-uses code written by Mo Amini, Diyar Amin and Younes Hajji, 
+Code written by Jimmy Olsen, Redpill Linpro AS. This code also
+uses code written by Mo Amini, Diyar Amin and Younes Hajji,
 Høgskolen i Oslo/Oslo University College.
 
 Previous work on JMX plugin by Aleksey Studnev. Support for
@@ -111,7 +111,7 @@ sub config() {
 sub fetch() {
 
     # Fetch bean values (through jmx) via the command line. We basically run the class "org.munin.plugin.jmx.Beans"
-    # with the parameters <bean> and <filter>, the <bean> being a bean pattern to fetch (in this case 
+    # with the parameters <bean> and <filter>, the <bean> being a bean pattern to fetch (in this case
     # "Catalina:type=DataSource,class=javax.sql.DataSource,name=*", and <filter> being "numActive" (the single field
     # we're actually interested in). We can fetch multiple fields by listing them all as parameters, or list all fields
     # by not supplying a filter (only a bean).

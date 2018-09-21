@@ -152,7 +152,7 @@ sub parselogfile {
 	    } elsif(defined($printers{$1})) {
 		$printers{$1} += int($2)*int($3);
 	    }
-	} 
+	}
     }
     close(LOGFILE);
 }

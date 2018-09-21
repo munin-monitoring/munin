@@ -33,7 +33,7 @@ if (! eval "require Net::LDAP;") {
 }
 
 use vars qw ( $config $param $act $scope $descr $cn $vlabel
-	      $info $title $label);
+              $info $title $label);
 
 # Change these to reflect your LDAP ACL. The given DN must have
 # read access to the Monitor branch.
@@ -54,7 +54,7 @@ my %ops =
          'label'  => 'Bytes',
          'title'  => "Number of bytes sent",
          'info'   => "The graph shows the number of bytes sent",
-	 'scope'  => "base"
+         'scope'  => "base"
          },
      'statistics_pdu'
      => {
@@ -64,10 +64,10 @@ my %ops =
          'label'  => 'PDUs',
          'title'  => "Number of PDUs sent",
          'info'   => "The graph shows the number of PDUs sent",
-	 'scope'  => "base"
+         'scope'  => "base"
          },
      # Referrals
-     'statistics_referrals' 
+     'statistics_referrals'
      => {
          'search' => "cn=Referrals,cn=Statistics",
          'desc'   => "The number of Referrals sent by the LDAP server.",
@@ -75,7 +75,7 @@ my %ops =
          'label'  => 'Referrals',
          'title'  => "Number of LDAP Referrals",
          'info'   => "The graph shows the number of referrals sent",
-	 'scope'  => "base"
+         'scope'  => "base"
          },
      # Entries
      'statistics_entries'
@@ -86,10 +86,10 @@ my %ops =
          'label'  => 'Entries',
          'title'  => "Number of LDAP Entries",
          'info'   => "The graph shows the number of entries sent",
-	 'scope'  => "base"
+         'scope'  => "base"
          },
      # Only read Total
-     'connections' 
+     'connections'
      => {
          'search' => 'cn=Total,cn=Connections',
          'desc'   => 'The number of connections',
@@ -101,7 +101,7 @@ my %ops =
          },
      # dn: cn=Write,cn=Waiters,cn=Monitor
      # dn: cn=Read,cn=Waiters,cn=Monitor
-     'waiters' 
+     'waiters'
      => {
          'search' => 'cn=Waiters',
          'filter' => '(|(cn=Write)(cn=Read))',
@@ -142,7 +142,7 @@ graph_title $ops{$action}->{'title'}
 graph_category OpenLDAP
 graph_info $ops{$action}->{'info'}
 EOF
-    
+
     if ($ops{$action}->{'label2'}) {
         while (my ($key, $val) = each (%{$ops{$action}->{'label2'}})) {
           my $name = $action . "_" . $key;
@@ -174,7 +174,7 @@ EOF
                                       'cn'],
                            );
         $mesg->code && die $mesg->error;
-        
+
         my $max = $mesg->count;
         for (my $i = 0 ; $i < $max ; $i++) {
             my $entry = $mesg->entry ($i);
@@ -189,7 +189,7 @@ EOF
                 print "$name.info The difference between Initiated ";
                 print "and Completed operations (should be 0)\n";
                 print "$name.warning 1\n";
-            }            
+            }
         }
 
         $ldap->unbind;
@@ -206,10 +206,10 @@ EOF
 if ($ARGV[0]) {
     if ($ARGV[0] eq 'autoconf') {
         # Check for Net::LDAP
-	if ($ret) {
-	    print "no ($ret)\n";
-	    exit 0;
-	}
+        if ($ret) {
+            print "no ($ret)\n";
+            exit 0;
+        }
 
         # Check for LDAP version 3
         my $ldap = Net::LDAP->new ($server, version => 3)
@@ -315,27 +315,24 @@ for (my $i = 0 ; $i < $max ; $i++) {
     my $entry = $mesg->entry ($i);
     my $cn = $entry->get_value('cn');
     if ($action =~ /operations(_diff)?$/) {
-	if ($1) {
-	    my $opsInit =
-		$entry->get_value('monitorOpInitiated'); 
-	    my $opsComp =
-		$entry->get_value('monitorOpCompleted');
-	    print lc ("operations_diff_${cn}.value ");
-	    print ($opsInit - $opsComp);
-	    print "\n";
-	} else {
-	    print lc ("operations_${cn}.value ");
-	    print $entry->get_value('monitorOpCompleted'),
-	    "\n";
-	}
+        if ($1) {
+            my $opsInit = $entry->get_value('monitorOpInitiated');
+            my $opsComp = $entry->get_value('monitorOpCompleted');
+            print lc ("operations_diff_${cn}.value ");
+            print ($opsInit - $opsComp);
+            print "\n";
+        } else {
+            print lc ("operations_${cn}.value ");
+            print $entry->get_value('monitorOpCompleted'), "\n";
+        }
     } else {
-	# Hotfix, must do for now
-	if ($action =~ /_/ || $action eq 'connections') {
-	    print lc ("${action}.value ");
-	} else {
-	    print lc ("${action}_${cn}.value ");
-	}
-	print $entry->get_value('monitorCounter'), "\n";
+        # Hotfix, must do for now
+        if ($action =~ /_/ || $action eq 'connections') {
+            print lc ("${action}.value ");
+        } else {
+            print lc ("${action}_${cn}.value ");
+        }
+        print $entry->get_value('monitorCounter'), "\n";
     }
 }
 $ldap->unbind;

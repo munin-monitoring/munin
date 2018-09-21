@@ -1,6 +1,6 @@
-#!/bin/sh
-# 
-# Plugin to monitor the number of interrupts and context switches on a system. 
+#!@@GOODSH@@
+#
+# Plugin to monitor the number of interrupts and context switches on a system.
 #
 # Idea and base from Ragnar Wisløff.
 #
@@ -37,8 +37,8 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 # If run with the "config"-parameter, give out information on how the
-# graphs should look. 
- 
+# graphs should look.
+
 if [ "$1" = "config" ]; then
     # The title of the graph
     echo 'graph_title Interrupts & context switches'
@@ -59,7 +59,7 @@ if [ "$1" = "config" ]; then
     echo 'ctx.info A context switch occurs when a multitasking operatings system suspends the currently running process, and starts executing another.'
 
     # The fields. "label" is used in the legend. "label" is the only
-    # required subfield. 
+    # required subfield.
     echo 'devint.label device interrupts'
     echo 'softint.label software interrupts'
     echo 'ctx.label context switches'

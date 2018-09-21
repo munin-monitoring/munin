@@ -51,9 +51,9 @@ use constant IOSTATPRM => "-Ixr";
 
 if ($ARGV[0] && $ARGV[0] eq "autoconf"){
     if (-x IOSTATBIN) {
-	print "yes\n";
+        print "yes\n";
     } else {
-	print 'no (no ',IOSTATBIN," executable)\n";
+        print 'no (no ',IOSTATBIN," executable)\n";
     }
     exit 0;
 }
@@ -88,7 +88,7 @@ if ($ARGV[0] && $ARGV[0] eq "config"){
     exit 0;
 }
 
-open(IOSTAT, IOSTATBIN." ".IOSTATPRM."|") || 
+open(IOSTAT, IOSTATBIN." ".IOSTATPRM."|") ||
     die ("Couldn't run iostat $!\n");
 
 my($dev,$nri,$nwi,$bri,$bwi);
@@ -100,14 +100,14 @@ while(<IOSTAT>){
     ($dev,$nri,$nwi,$bri,$bwi,undef) = split(',',$_,6);
     # print "$dev $nri $nwi $bri $bwi\n";
     if ($dev =~ /^sd/) {
-	$dev = 'disk';
+        $dev = 'disk';
     } elsif ($dev =~ /^st/) {
-	$dev = 'tape';
+        $dev = 'tape';
     } elsif ($dev =~ /^nfs/) {
-	$dev = 'nfs';
+        $dev = 'nfs';
     } else {
-	# We ignore fd = floppy, and lines of headers and such
-	next;
+        # We ignore fd = floppy, and lines of headers and such
+        next;
     }
     $nri{$dev} += $nri;
     $nwi{$dev} += $nwi;
@@ -121,4 +121,3 @@ foreach $dev ('disk','tape','nfs') {
     print $dev,"w.value ", (defined($bwi{$dev}) ? $bwi{$dev} : "U"), "\n";
     print $dev,"r.value ", (defined($bri{$dev}) ? $bri{$dev} : "U"), "\n";
 }
-

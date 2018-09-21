@@ -1,6 +1,6 @@
-#!/usr/bin/sh
+#!@@GOODSH@@
 #
-# if_err_  
+# if_err_
 #
 # HP-UX wildcard-plugin to fetch error mibstats from network interfaces (NICs).
 # To add a NIC, symlink if_err_<NIC> in munin-node's plugins confdir to this file,
@@ -53,7 +53,7 @@ if [[ $1 = suggest ]]; then
 fi
 
 if [[ $1 = config ]]; then
-    echo "graph_order inbound outbound" 
+    echo "graph_order inbound outbound"
     echo "graph_title $INTERFACE errors"
     echo 'graph_args --base 1000'
     echo 'graph_vlabel packets per ${graph_period} in (-) / out (+)'
