@@ -7,7 +7,7 @@ my $version = `../getversion`;
 chomp($version);
 
 my $build = NodeBuilder->new(
-    module_name    => 'Munin::Node',
+    dist_name      => 'Munin::Node',
     dist_version   => $version,
     dist_author    => 'The Munin Team <fix@example.com>',
     dist_abstract  => 'The Munin Node',
