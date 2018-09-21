@@ -1,4 +1,4 @@
-munin-node (2.0.40-1) unstable; urgency=low
+munin-node (2.0.42-1) unstable; urgency=low
 
     The mysql_* plugins no longer use the "debian-sys-maint" account for
     accessing the mysql database, but use "root" instead.  This is based

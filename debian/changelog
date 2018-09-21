@@ -1,7 +1,7 @@
-munin (2.0.40-1) UNRELEASED; urgency=low
+munin (2.0.42-1) UNRELEASED; urgency=low
 
-  * New upstream version 2.0.40.
-  * New upstream version 2.0.39.
+  * New upstream version 2.0.42.
+  * New upstream version 2.0.41, Closes: #717287
   * New upstream version 2.0.38, fixing various issues, including bugs in:
     - postfix_mailstats: incorrect delivered message count (Closes: #675318)
     - quota_usage_: documentation deviates from behaviour (Closes: #730030)
@@ -84,7 +84,7 @@ munin (2.0.40-1) UNRELEASED; urgency=low
     (obsolete due to the switch to quilt source format: #651449)
   * Add debian/upstream/metadata
 
- -- Lars Kruse <devel@sumpfralle.de>  Sun, 16 Sep 2018 21:30:36 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Fri, 21 Sep 2018 13:45:33 +0200
 
 munin (2.0.37-2) unstable; urgency=medium
 
