@@ -6,7 +6,7 @@ chomp($version);
 my $build = Module::Build->new(
     dist_name      => 'Munin::Common',
     dist_version   => $version,
-    dist_author    => 'The Munin Team <fix@example.com>',
+    dist_author    => 'The Munin Team <munin-users@lists.sourceforge.net>',
     dist_abstract  => 'Shared libraries for Munin Node and Munin Master',
     license        => 'gpl',
     requires       => {},
