@@ -25,24 +25,13 @@
 
 current_git_branch() {
     # hide stderr (for detached HEADs)
-    GB=`LANG='' git branch 2>/dev/null | awk '$1 == "*" {print $2}'`
-    case $GB in
-
-        # git checkout 402c6d6
-        # git branch
-        # * (detached from 402c6d6)
-        #   devel
-        # --> This is new with git 1.8+
-        "(detached" ) echo "detached";;
-
-        # git checkout 2.0.9
-        # git branch
-        # * (no branch)
-        #   devel
-        "(no" ) echo;;
-
-        *     ) echo "$GB";;
-    esac
+    GB=`LANG='' git branch --points-at HEAD 2>/dev/null | awk '$1 == "*" {print $2}'`
+    if echo "$GB" | grep -q "^("; then
+        # we are not part of a specific branch (the reason is given in braces)
+        echo
+    else
+        echo "$GB"
+    fi
 }
 
 
