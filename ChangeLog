@@ -1,5 +1,25 @@
 -*- text -*-
 
+munin-2.0.42, 2018-09-21
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (5):
+      Fix Module::Build instance parameters for master and node
+      Retrieve version number for modules "Munin::Common" and "Munin::Plugins"
+      Module description: set contact to mailing list address
+      getversion: hide error message for detached HEAD
+      getversion: prevent localized output format for "git branch"
+
+
 munin-2.0.41, 2018-09-19
 
 -------
