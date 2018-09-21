@@ -25,7 +25,7 @@
 
 current_git_branch() {
     # hide stderr (for detached HEADs)
-    GB=`git branch 2>/dev/null | awk '$1 == "*" {print $2}'`
+    GB=`LANG= git branch 2>/dev/null | awk '$1 == "*" {print $2}'`
     case $GB in
 
         # git checkout 402c6d6
