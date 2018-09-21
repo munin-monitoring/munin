@@ -3,9 +3,12 @@ use PluginsBuilder;
 use warnings;
 use strict;
 
+my $version = `../getversion`;
+chomp($version);
+
 my $build = PluginsBuilder->new(
     dist_name      => 'Munin::Plugins',
-    dist_version   => '0.0.0',
+    dist_version   => $version,
     dist_author    => 'The Munin Team <fix@example.com>',
     dist_abstract  => 'The Munin Node',
     license        => 'gpl',
