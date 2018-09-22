@@ -541,18 +541,30 @@ sub is_fresh_enough {
 
 sub get_spoolfetch_timestamp {
 	my ($self) = @_;
+	my $dbh = $self->{dbh};
+	my $node_id = $self->{node_id};
 
-	my $last_updated_value = $self->{state}{spoolfetch} || "0";
+	my $sth_spoolfetch = $dbh->prepare_cached("SELECT spoolepoch FROM node WHERE id = ?");
+	$sth_spoolfetch->execute($node_id);
+	my ($last_updated_value) = $sth_spoolfetch->fetchrow_array();
+	$sth_spoolfetch->finish();
+
+	# 0 if unset
+	$last_updated_value = 0 unless $last_updated_value;
+
+	DEBUG "[DEBUG] get_spoolfetch_timestamp($node_id) = $last_updated_value";
 	return $last_updated_value;
 }
 
 sub set_spoolfetch_timestamp {
 	my ($self, $timestamp) = @_;
-	DEBUG "[DEBUG] set_spoolfetch_timestamp($timestamp)";
+	my $dbh = $self->{dbh};
+	my $node_id = $self->{node_id};
+	DEBUG "[DEBUG] set_spoolfetch_timestamp($node_id, $timestamp)";
 
-	# Using the last timestamp sended by the server :
-	# -> It can be different than "now" to be able to process the backlock slowly
-	$self->{state}{spoolfetch} = $timestamp;
+	my $sth_spoolfetch = $dbh->prepare_cached("UPDATE node SET spoolepoch = ? WHERE id = ?");
+	$sth_spoolfetch->execute($timestamp, $node_id);
+	$sth_spoolfetch->finish();
 }
 
 sub parse_update_rate {
