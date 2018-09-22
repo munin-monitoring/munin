@@ -707,38 +707,6 @@ RESTART:
     return $res;
 }
 
-sub _node_read_fast {
-	my ($self) = @_;
-
-	# We cannot bypass the IO if using TLS
-	# so just reverting to normal mode.
-	return _node_read(@_) if $self->{tls};
-
-	# Disable Buffering here, to be able to use sysread()
-	local $OUTPUT_AUTOFLUSH = 1;
-
-	my $io_src = $self->{reader};
-        my $buf;
-    	my $offset = 0;
-        while (my $read_len = sysread($io_src, $buf, 4096, $offset)) {
-		$offset += $read_len;
-
-		# Stop when we read a \n.\n
-		# ... No need to have a full regex : simple index()
-		my $start_offset = $offset - $read_len - 3;
-		$start_offset = 0 if $start_offset < 0;
-		last if index($buf, "\n.\n", $start_offset) >= 0;
-
-		# if empty, the client only sends a plain ".\n"
-		last if $buf eq ".\n";
-        }
-
-	# Remove the last line that only contains ".\n"
-	$buf =~ s/\.\n$//;
-
-	return [ split(/\n/, $buf) ];
-}
-
 sub _node_read {
     my ($self, $callback) = @_;
 
