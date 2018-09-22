@@ -116,6 +116,9 @@ sub _cat_multigraph_file
     # samples
     $max_samples_per_service = 5 if (! defined $max_samples_per_service);
 
+    # If $timestamp is negative, use "since $timestamp" as $timestamp
+    $timestamp = time + $timestamp if $timestamp < 0;
+
     my $data = "";
 
     rewinddir $self->{spooldirhandle}

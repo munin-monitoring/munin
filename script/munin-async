@@ -116,7 +116,7 @@ while (my $line = <>) {
 
 		# XXX - Vector-fetching is disabled for now
 		print ".\n";
-	} elsif ($line =~ m/^spoolfetch (\d+)/) {
+	} elsif ($line =~ m/^spoolfetch (-?\d+)/) {
 		my $last_epoch = $1;
 		print $spoolreader->fetch($last_epoch);
 		print ".\n";
