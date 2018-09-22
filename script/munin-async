@@ -139,19 +139,6 @@ sub cleanup {
 	$spoolwriter->cleanup();
 }
 
-sub cat_file {
-	my $filename = shift;
-	return if ! -r $filename;
-
-	open(my $file, '<', "$filename");
-	while(<$file>) {
-		# remove line starting with .
-		next if m/^\./;
-		print $_;
-	}
-	close($file);
-}
-
 __END__
 
 =head1 NAME
