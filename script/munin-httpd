@@ -35,21 +35,21 @@ package main;    ## no critic qw(Modules::ProhibitMultiplePackages)
 
 use Getopt::Long;
 
-my $port = 4948;
+my $listen = ":";
 
 print_usage_and_exit()
   unless GetOptions(
-    "port=i"  => \$port,
+    "listen=s"  => \$listen,
     "version" => \&print_version_and_exit,
     "help"    => \&print_usage_and_exit,
   );
 
-# un-taint port number
-die "ERROR: Invalid port '$port' supplied.\n" unless $port =~ /^(\d+)$/x;
-$port = $1;
+die "ERROR: Invalid listen argument supplied: '$listen'\n" unless $listen =~ /^(\S+|\[\S+\])?:(\d+)?$/x;
+my $host = defined $1 ? $1 : "*";
+my $port = defined $2 ? $2 : 4948;
 
 # start the server
-Munin::Master::Http->new($port)->run( prefork => 1, max_servers => 10 );
+Munin::Master::Http->new( { host => $host, port => $port } )->run( prefork => 1, max_servers => 10 );
 
 
 sub print_usage_and_exit {
@@ -93,9 +93,9 @@ It supports three click zooming.
 
 =over 5
 
-=item B<< --port <portnumber> >>
+=item B<< --listen <hostname:port> >>
 
-Sets the port number to run on. [4948]
+Sets the hostname and port to listen on. [*:4948]
 
 =item B<--help >
 

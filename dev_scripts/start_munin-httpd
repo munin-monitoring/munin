@@ -4,4 +4,4 @@ set -e
 set -u
 
 echo "Starting munin-httpd..."
-./dev_scripts/run munin-httpd --port 4946
+./dev_scripts/run munin-httpd --listen :4946
