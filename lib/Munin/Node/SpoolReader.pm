@@ -80,22 +80,40 @@ sub set_metadata
 
 
 
-# returns all output for all services since $timestamp.
+# returns all output for all services since $from_epoch
 sub fetch
 {
-    my ($self, $timestamp) = @_;
+    my ($self, $from_epoch) = @_;
 
     my $return_str = '';
 
     my @plugins = $self->_get_spooled_plugins();
-    DEBUG("timestamp:$timestamp, plugins:@plugins") if $config->{DEBUG};
+
+    # No need to have more recent than $to_epoch, it will not be complete
+    my $to_epoch = $self->_get_to_epoch(\@plugins);
+
+    DEBUG("from_epoch:$from_epoch, to_epoch:$to_epoch, plugins:@plugins") if $config->{DEBUG};
     foreach my $plugin (@plugins) {
-        $return_str .= $self->_cat_multigraph_file($plugin, $timestamp);
+        $return_str .= $self->_cat_multigraph_file($plugin, $from_epoch, $to_epoch);
     }
 
     return $return_str;
 }
 
+sub _get_to_epoch
+{
+	my ($self, $plugins) = @_;
+
+	my $to_epoch = time;
+
+	# Get the earliest timestamp, to avoid hitting in-flight data
+	for my $plugin (@$plugins) {
+		my $last_timestamp = $self->get_metadata("last-timestamp.$plugin");
+		$to_epoch = $last_timestamp if ($last_timestamp < $to_epoch);
+	}
+
+	return $to_epoch;
+}
 
 sub list
 {
@@ -108,7 +126,7 @@ sub list
 
 sub _cat_multigraph_file
 {
-    my ($self, $service, $timestamp, $max_samples_per_service) = @_;
+    my ($self, $service, $from_epoch, $to_epoch, $max_samples_per_service) = @_;
 
     # Default $max_samples_per_service is 5, in order to have a 5x time
     # increase in catchup.  This enables to not overwhelm the munin-update when
@@ -117,7 +135,11 @@ sub _cat_multigraph_file
     $max_samples_per_service = 5 if (! defined $max_samples_per_service);
 
     # If $timestamp is negative, use "since $timestamp" as $timestamp
-    $timestamp = time + $timestamp if $timestamp < 0;
+    $from_epoch = time + $from_epoch if $from_epoch < 0;
+
+    # $to_epoch has the same rules as $from_epoch, but defaults to now()
+    $to_epoch = time unless $to_epoch;
+    $to_epoch = time + $to_epoch if $to_epoch < 0;
 
     my $data = "";
 
@@ -127,7 +149,7 @@ sub _cat_multigraph_file
     my $nb_samples_sent = 0;
     foreach my $file (readdir $self->{spooldirhandle}) {
         next unless $file =~ m/^munin-daemon\.$service\.(\d+)\.(\d+)$/;
-        next unless $1+$2 >= $timestamp;
+        next unless $1+$2 >= $from_epoch;
 
         open my $fh, '<', "$self->{spooldir}/$file"
             or die "Unable to open spool file: $!";
@@ -139,11 +161,11 @@ sub _cat_multigraph_file
         while (<$fh>) {
             ($epoch) = m/^timestamp (\d+)/ or next;
             DEBUG("Timestamp: $epoch") if $config->{DEBUG};
-            last if ($epoch > $timestamp);
+            last if ($epoch > $from_epoch);
         }
 
         if (eof $fh) {
-            DEBUG("Epoch $timestamp not found in spool file for '$service'")
+            DEBUG("Epoch $from_epoch not found in spool file for '$service'")
                 if $config->{DEBUG};
             next;
         }
@@ -156,6 +178,11 @@ sub _cat_multigraph_file
             if (m/^timestamp (\d+)/) {
                 # epoch is updated
                 $epoch = $1;
+
+		# timestamp in the future.
+		# should fetch next time.
+		last if ($epoch > $to_epoch);
+
                 next;
             }
 
