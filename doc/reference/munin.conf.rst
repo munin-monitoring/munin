@@ -446,7 +446,7 @@ A virtual node definition. Disable update, and make a graph consisting of data f
    update no
    load.graph_title Total load
    load.sum_load.label load
-   load.sum_load.special_stack mail=mail.example.com web=web.example.com munin=munin.example.com
+   load.sum_load.stack mail=mail.example.com web=web.example.com munin=munin.example.com
 
 .. _address-schemes:
 
