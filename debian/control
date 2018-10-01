@@ -2,7 +2,7 @@ Source: munin
 Section: net
 Priority: optional
 Maintainer: Munin Debian Maintainers <team+munin@tracker.debian.org>
-Uploaders: Holger Levsen <holger@debian.org>, 
+Uploaders: Holger Levsen <holger@debian.org>,
  Stig Sandbeck Mathisen <ssm@debian.org>
 Build-Depends-Indep:
  openjdk-8-jdk,
@@ -84,9 +84,9 @@ Description: network-wide graphing framework (plugins for node)
  .
  This package contains the official plugins for the Munin node, capable of
  extracting common values such as cpu usage, network usage, load average, and
- so on. 
+ so on.
  .
- Creating your own plugins which are capable of extracting other system-specific 
+ Creating your own plugins which are capable of extracting other system-specific
  values is very easy, and is often done in a matter of minutes.
  You can also create plugins which relay information from other devices in your
  network that can't run Munin, such as a switch or a server running another
@@ -106,7 +106,7 @@ Description: network-wide graphing framework (user contributed plugins for node)
  maintaining a rattling ease of installation and configuration.
  .
  This package contains unsupported plugins for the Munin node, contributed by
- various users of Munin. 
+ various users of Munin.
  .
  Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
  RRDtool. To see a real example of Munin in action, you can follow a link
@@ -122,8 +122,8 @@ Description: network-wide graphing framework (java plugins for node)
  virtually everything imaginable throughout your network, while still
  maintaining a rattling ease of installation and configuration.
  .
- This package contains the java based plugins that are used by munin-node to 
- monitor Java Management Extensions (JMX). 
+ This package contains the java based plugins that are used by munin-node to
+ monitor Java Management Extensions (JMX).
  .
  Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
  RRDtool. To see a real example of Munin in action, you can follow a link

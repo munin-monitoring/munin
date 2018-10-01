@@ -1,6 +1,7 @@
 munin (2.0.37-3) UNRELEASED; urgency=medium
 
   * d/changelog: Remove trailing whitespaces
+  * d/control: Remove trailing whitespaces
 
  -- Ondřej Nový <onovy@debian.org>  Mon, 01 Oct 2018 09:45:58 +0200
 
