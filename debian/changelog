@@ -1,3 +1,9 @@
+munin (2.0.37-3) UNRELEASED; urgency=medium
+
+  * d/changelog: Remove trailing whitespaces
+
+ -- Ondřej Nový <onovy@debian.org>  Mon, 01 Oct 2018 09:45:58 +0200
+
 munin (2.0.37-2) unstable; urgency=medium
 
   * d/control:
@@ -23,7 +29,7 @@ munin (2.0.37-1) unstable; urgency=medium
     - add suggests to time. Closes: #862794
     - add suggests to bc. Closes: #886516
   * Switch maintainer address to team+munin@tracker.debian.org.
-  * debian/changelog: drop trailing whitespaces, thanks lintian. 
+  * debian/changelog: drop trailing whitespaces, thanks lintian.
 
  -- Holger Levsen <holger@debian.org>  Thu, 29 Mar 2018 15:26:26 +0000
 
