@@ -8,7 +8,7 @@ memory - Show memory stats based on top output
 
 =head1 Applicable systems
 
-Solaris systems with the package SUNWtop or other package containint
+Solaris systems with the package SUNWtop or other package containing
 top installed.
 
 =head1 CONFIGURATION

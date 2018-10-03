@@ -58,7 +58,7 @@ Exemples will consider the shared folder /nfs/munin.
 Running munin-update
 ====================
 
-Cange the ``munin-cron`` to only run ``munin-update`` (and
+Change the ``munin-cron`` to only run ``munin-update`` (and
 ``munin-limits``, if you have alerts you want to be managed directly on
 those masters).
 

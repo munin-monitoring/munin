@@ -11,7 +11,7 @@
 #
 # If multiple memcache instances are running memcached_INSTANCE_DATASET can be
 # used and INSTANCE can be any instance name that will show up in the title.
-# In thise case your config should specify a different port/host for each like
+# In this case your config should specify a different port/host for each like
 # using the following in plugin configuration file:
 #
 # [memcached_pages_*]

@@ -41,7 +41,7 @@ use Data::Dumper;
 
 # Hash of available palettes
 my %PALETTE;
-# Array of actuall colours to use
+# Array of colours to use
 my @COLOUR;
 
 {

@@ -848,7 +848,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Mapped',
-      'info'  => 'Files which have been mmaped, such as libraries'
+      'info'  => 'Files which have been mapped, such as libraries'
     }
   },
   # ----------------------------------------------

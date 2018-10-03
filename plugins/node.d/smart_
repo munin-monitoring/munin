@@ -488,7 +488,7 @@ def get_hard_drive_name(plugin_name):
             # Let's see if we find a '-' in the drive name.
             if '-' in name:
                 name = name.split('-')[0]
-        # Chech that the drive exists in /dev
+        # Check that the drive exists in /dev
         if guess_full_path(name) is None:
             verboselog('/dev/(disk/by-id/)? {} not found!'.format(name))
             sys.exit(1)

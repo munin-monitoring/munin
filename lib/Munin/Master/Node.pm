@@ -213,7 +213,7 @@ sub _do_close {
 
 sub negotiate_capabilities {
     my ($self) = @_;
-    # Please note: Sone of the capabilities are asymetrical.  Each
+    # Please note: Sone of the capabilities are asymmetrical.  Each
     # side simply announces which capabilities they have, and then the
     # other takes advantage of the capabilities it understands (or
     # dumbs itself down to the counterparts level of sophistication).

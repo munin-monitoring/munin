@@ -178,7 +178,7 @@ sub do_work {
 
 		$last_timestamp = $node->fetch_service_data($plugin,
 			sub {
-				# First argument is the plugin name to be overrided when multigraphing
+				# First argument is the plugin name to be overridden when multigraphing
 				my $plugin_name = shift;
 
 				$self->uw_handle_fetch($plugin_name, $now, $update_rate, @_);
@@ -1076,7 +1076,7 @@ sub _update_rrd_file {
 		} elsif($RRDs::VERSION < 1.3){
 			WARN "[WARN] RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION;
 		} else {
-			# Using the RRDCACHED_ADDRESS environnement variable, as
+			# Using the RRDCACHED_ADDRESS environment variable, as
 			# it is way less intrusive than the command line args.
 			$ENV{RRDCACHED_ADDRESS} = $config->{"rrdcached_socket"};
 		}
