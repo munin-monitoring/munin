@@ -46,8 +46,10 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
     (Thanks, lintian)
   * Patch: fix hard-coded database locations
   * Do not remove users in postrm (removal was introduced in 2.999.8)
+  * sysvrc-init for munin-tmpfiles: require "remote_fs" for properly detecting
+    the installation status of munin (Thanks, Viktor Szépe)
 
- -- Lars Kruse <devel@sumpfralle.de>  Sun, 16 Sep 2018 23:49:58 +0200
+ -- Lars Kruse <devel@sumpfralle.de>  Wed, 03 Oct 2018 22:49:43 +0200
 
 munin (2.999.8-1) experimental; urgency=medium
 
