@@ -256,6 +256,7 @@ def print_config(hard_drive):
         verboselog('No state file, reading S.M.A.R.T values for the first time')
         parsed_data = read_values(hard_drive)
         update_state_file(hard_drive, parsed_data.model, parsed_data.smart_data)
+        model = parsed_data.model
         smart_values_state = parsed_data.smart_data
 
     verboselog('Printing configuration')
