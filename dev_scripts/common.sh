@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 
 BASEDIR=$(readlink -f -- "$FINDBIN/..")
 DESTDIR="$BASEDIR/sandbox"
-PERLSITELIB=$(perl -V:sitelib | cut -d"'" -f2)
+# shellcheck disable=SC2034
+PERLLIB=$DESTDIR$(perl -V:sitelib | cut -d"'" -f2)
 
 
-cd $BASEDIR
-
+cd "$BASEDIR"

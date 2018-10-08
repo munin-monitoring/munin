@@ -1,4 +1,4 @@
-#!@@GOODSH@@ 
+#!@@GOODSH@@
 # -*- sh -*-
 
 : << =cut
@@ -9,11 +9,20 @@ samba - Plugin to monitor number of files held open by the CIFS clients
 
 =head1 CONFIGURATION
 
-This plugin uses the following configuration variables
+This plugin uses the following configuration variables:
 
  [samba]
-  env.smbstatus      - Path to "smbstatus" executable
-  env.ignoreipcshare - Set this variable to ignore IPC$ when counting shares.
+  user root
+  env.smbstatus /usr/bin/smbstatus
+  env.ignoreipcshare 1
+
+Usually "smbstatus" requires to be run as root (see "user root" above).
+
+Environment variables:
+
+ * smbstatus: path to "smbstatus" executable
+   (default: search PATH and fall back to /usr/bin/smbstatus)
+ * ignoreipcshare: set this variable to any non-empty value to ignore IPC$ when counting shares.
 
 =head1 AUTHOR
 
@@ -30,17 +39,20 @@ GPLv2
 
 =cut
 
-SMBSTATUS=${smbstatus:-`which smbstatus`}
+SMBSTATUS=${smbstatus:-$(which smbstatus)}
 SMBSTATUS=${SMBSTATUS:-/usr/bin/smbstatus}
 
 if [ "$1" = "autoconf" ]; then
-	if [ -x $SMBSTATUS ]; then
-		echo yes
-		exit 0
+	if [ -x "$SMBSTATUS" ]; then
+		if "$SMBSTATUS" -V >/dev/null 2>&1; then
+			echo 'yes'
+		else
+			echo "no (failed to run $SMBSTATUS - maybe need to run as 'root'?)"
+		fi
 	else
-		echo no '(smbstatus not found)'
-		exit 0
+		echo 'no (smbstatus not found)'
 	fi
+	exit 0
 fi
 
 if [ "$1" = "config" ]; then
@@ -60,15 +72,16 @@ fi
 
 $SMBSTATUS -p 2>/dev/null | awk 'BEGIN {lines=0} $1 ~ /^[0-9]+/ {lines++} END {print "proc.value " lines}'
 $SMBSTATUS -L 2>/dev/null | awk 'BEGIN {lines=0} $1 ~ /^[0-9]+/ {lines++} END {print "lock.value " lines}'
-if [ -n "$ignoreipcshare" ]; then
+if [ -n "${ignoreipcshare:-}" ]; then
+	# shellcheck disable=SC2016
 	IGNORE='$1=="IPC$" {next}'
 fi
 $SMBSTATUS -S 2>/dev/null | awk '
-BEGIN {lines=0;state=0}
-$1=="Service"&&state==0 {state=1;next}
-/^--*$/&&state==1 {state=2;next}
-state<2 {next}
-/^$/ {next}           
-'"$IGNORE"'
-{lines++}
-END {print "share.value " lines}'
+	BEGIN {lines=0;state=0}
+	$1=="Service" && state==0 {state=1; next}
+	/^--*$/ && state==1 {state=2; next}
+	state < 2 {next}
+	/^$/ {next}
+	'"$IGNORE"'
+	{lines++}
+	END {print "share.value " lines}'

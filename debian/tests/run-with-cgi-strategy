@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+#
+# This allows tests of the System-V init scripts.
+# Simple prepend your test command with this script name.
+#
+
+set -eu
+
+
+CONF_DIR="/etc/munin/munin-conf.d"
+CONF_FILE_PATTERN="munin-cron-test-XXXXXX.conf"
+CONF_FILE_GLOB="munin-cron-test-*.conf"
+
+
+# delete potential stale configuration fragments
+find "$CONF_DIR" -type f -name "$CONF_FILE_GLOB" -delete
+
+# create configuration file for cron strategy
+temp_conf_file=$(mktemp -p /etc/munin/munin-conf.d "$CONF_FILE_PATTERN")
+trap 'rm "$temp_conf_file"' EXIT
+
+cat >"$temp_conf_file" <<EOF
+graph_strategy cgi
+html_strategy  cgi
+EOF
+
+chmod 0644 "$temp_conf_file"
+
+# execute the wrapped arguments and give the environment a hint regarding the configured strategy
+MUNIN_TEST_CGI_ENABLED=1 "$@"

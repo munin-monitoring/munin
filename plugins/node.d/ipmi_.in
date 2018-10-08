@@ -47,8 +47,8 @@ case $1 in
     autoconf)
 	type -p ipmitool &>/dev/null ||
 	  { echo 'no (missing ipmitool command)' && exit 0; }
-	
-	ipmitool sensor &>/dev/null || 
+
+	ipmitool sensor &>/dev/null ||
 	  { echo 'no (unable to access IPMI device)' && exit 0; }
 
 	echo yes
@@ -65,7 +65,7 @@ case $0 in
     *_temp) MEASURE=temp;;
     *_fans) MEASURE=fans;;
     *_power) MEASURE=power;;
-    *) echo Please invoke as ipmi_temp or ipmi_fans >&2
+    *) echo "Please invoke as ipmi_temp, ipmi_fans or ipmi_power" >&2
        exit 1;;
 esac
 
@@ -78,7 +78,7 @@ BEGIN {
     FANS = "";
     TEMPS = "";
     POWER = "";
-    CFANS = "graph_title Fan speeds based on IPMI\ngraph_vlabel RPM\ngraph_category Sensors\n";
+    CFANS = "graph_title Fan speeds based on IPMI\ngraph_vlabel RPM or %\ngraph_category Sensors\n";
     CTEMPS = "graph_title Machine temperature based on IPMI\ngraph_vlabel Degrees celcius\ngraph_category Sensors\n";
     CPOWER = "graph_title Power usage based on IPMI\ngraph_vlabel W\ngraph_category Sensors\n";
 }
@@ -119,7 +119,7 @@ BEGIN {
 	}
 }
 
-/RPM/ { 
+/(RPM|^Fan.*percent)/ {
         NAME=THING=$1;
 	gsub(/[^A-Za-z0-9]/,"",NAME);
 	SPEED=$2;

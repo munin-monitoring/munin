@@ -50,13 +50,13 @@ sub check_munindoc
     # FIXME: check for POD errors?
 
     my @headings;
-    
+
     foreach my $section (@$root) {
         # ignore any inapplicable headings
         next unless 'ARRAY' eq ref $section;
         next unless $section->[0] eq 'head1';
         next unless grep { $_ eq $section->[2] } @sections;
-        
+
         push @headings, $section->[2];
     }
 

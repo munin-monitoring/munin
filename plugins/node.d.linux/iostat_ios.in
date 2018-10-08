@@ -3,7 +3,7 @@
 
 =head1 NAME
 
-iostat_ios - Show IO-operation latency pr. device.
+iostat_ios - Show IO-operation latency per low-level block device.
 
 =head1 APPLICABLE SYSTEMS
 
@@ -22,9 +22,9 @@ Link this into @@CONFDIR@@/plugins/ and restart the munin-node.
 The plugin shows the average time a IO-operation needs to complete for
 each disk or block device on the system.
 
-Simple partitioned disks will only show as the whole disk.  When/if
-you use some device layer over that, such as LVM then LV devices will
-show up individualy.
+Simple partitioned disks will only show as the whole disk.
+LVM volumes, RAID devices and other derived block devices are not tracked
+individually.
 
 When the IO-operation time here increases it is to be expected that
 the iowait on the CPU graph increases, but please read about how
@@ -97,12 +97,16 @@ store_state( $r );
 
 sub filter {
     my ($major, $minor, $tmpnam) = @_;
+
+    # ignore derived logical block devices
     if(defined($major)) {
         return 0 if ($major ==   1); # RAM devices
         return 0 if ($major ==   9); # MD devices
         return 0 if ($major ==  58); # LVM devices
-        return 0 if ($major == 254); # LVM2 devices
+        return 0 if ($major == 253); # LVM2 devices
     }
+
+    # ignore partitions (ending in a digit)
     if(defined($tmpnam)) {
         return 0 if ($tmpnam =~ /part\d+$/);
         return 0 if ($tmpnam =~ /^\s*(?:sd|hd|x?vd)[a-z]\d+\s*$/);

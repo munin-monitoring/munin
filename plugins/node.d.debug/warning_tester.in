@@ -27,7 +27,7 @@ three.critical 0:84
 EOF
 }
 
-do_$1 2>/dev/null || {
+"do_$1" 2>/dev/null || {
     echo "Do what now?">&2
     exit 1
 }

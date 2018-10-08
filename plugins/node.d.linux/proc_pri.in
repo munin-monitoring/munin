@@ -1,6 +1,8 @@
 #!@@GOODSH@@
 # -*- sh -*-
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -27,9 +29,14 @@ GNU GPL
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
+PS=$(which ps 2>/dev/null) || true
 if [ "$1" = "autoconf" ]; then
+	if ! [ -x "$PS" ]; then
+		echo "no (command ps not found)"
+		exit 0
+	fi
 	echo yes
 	exit 0
 fi
@@ -60,8 +67,8 @@ if [ "$1" = "config" ]; then
 fi
 
 echo -n "high.value "
-ps --no-header -eo stat | grep \< | wc -l
+"$PS" --no-header -eo stat | grep \< | wc -l
 echo -n "low.value "
-ps --no-header -eo stat | grep N | wc -l
+"$PS" --no-header -eo stat | grep N | wc -l
 echo -n "locked.value "
-ps --no-header -eo stat | grep L | wc -l
+"$PS" --no-header -eo stat | grep L | wc -l

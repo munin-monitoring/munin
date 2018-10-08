@@ -55,7 +55,7 @@ specified more than one vserver when the resource is set to ALL:
 
  [vserver_resources]
   user root
-  env.vservers vserver5 
+  env.vservers vserver5
   env.resource ALL
   env.limits 0
 
@@ -180,36 +180,38 @@ if [ "$1" = "autoconf" ]; then
 	exit 0
 fi
 
-VSERVERS="$vservers"
-LIMITS="$limits"
-RESOURCE="$resource"
+VSERVERS="${vservers:-}"
+LIMITS="${limits:-}"
+RESOURCE="${resource:-}"
 
-INFO=(`sed 's/.*:\t//' /proc/virtual/info 2>/dev/null || echo '<none>'`)
-KCIN="$[ 16#${INFO[2]} ]";
+# shellcheck disable=SC2207
+INFO=($(sed 's/.*:\t//' /proc/virtual/info 2>/dev/null || echo '<none>'))
+KCIN=$(( 16#${INFO[2]} ))
 
 # If this is 1, then VCI_SPACES is present in the kernel (new in 2.6.19)
-if [ $[ (KCIN >> 10) & 1 ] -eq 1 ]
-then 
+if [ $(( (KCIN >> 10) & 1 )) -eq 1 ]
+then
     NAMELOC="nsproxy"
-else 
+else
     NAMELOC="cvirt"
 fi
 
 if [ -z "$VSERVERS" ] ; then
-    XIDS=`find /proc/virtual/* -type d -exec basename {} \;`
+    XIDS=$(find /proc/virtual/* -type d -exec basename {} \;)
 else
     # it's really more performant to specify vservers by ids or not at all
     XIDS=""
     for i in $VSERVERS ; do
-	if [ -d /proc/virtual/$i ] ; then
-	    XIDS="${XIDS}${i} "
-	else
-	    for j in `find /proc/virtual/* -type d -exec basename {} \;` ; do
-		if [ "$i" = "`cat /proc/virtual/$j/$NAMELOC |grep NodeName |cut -f2`" ] ; then
-		    XIDS="${XIDS}${j} "
-		fi
-	    done
-	fi
+        if [ -d "/proc/virtual/$i" ] ; then
+            XIDS="${XIDS}${i} "
+        else
+            # shellcheck disable=SC2044
+            for j in $(find /proc/virtual/* -type d -exec basename {} \;) ; do
+                if [ "$i" = "$(grep "NodeName" "/proc/virtual/$j/$NAMELOC" | cut -f 2)" ]; then
+                    XIDS="${XIDS}${j} "
+                fi
+            done
+        fi
     done
 fi
 
@@ -288,14 +290,14 @@ if [ "$1" = "config" ]; then
     esac
     echo 'graph_category vserver'
 
-    
+
     # do not assume we are on i386 where pagesize is 4096...
-    pagesize=`perl -MPOSIX -e 'print POSIX::sysconf(_SC_PAGESIZE), "\n";'`
-    
+    pagesize=$(perl -MPOSIX -e 'print POSIX::sysconf(_SC_PAGESIZE), "\n";')
+
     for xid in $XIDS ; do
-	    
-	LABEL=`cat /proc/virtual/$xid/$NAMELOC |grep NodeName |cut -f2`
-	NAME=`echo $LABEL | cut -d. -f1 |  tr '-' '_'`
+
+	LABEL=$(grep "NodeName" "/proc/virtual/$xid/$NAMELOC" | cut -f 2)
+	NAME=$(echo "$LABEL" | cut -d. -f1 |  tr '-' '_')
 
 	case "$RESOURCE" in
 	    PROC)
@@ -352,10 +354,10 @@ if [ "$1" = "config" ]; then
 		exit 1
 		;;
 	esac
-	    
-	if [ ! -z "$LIMITS" -a "$LIMITS" = 1 ]; then
-	    LIMIT=`cat /proc/virtual/$xid/limit | grep $RESOURCE | cut -f4`
-	    if [ ${LIMIT:-0} -gt 0 ]; then
+
+	if [ ! -z "$LIMITS" ] && [ "$LIMITS" = 1 ]; then
+	    LIMIT=$(grep "$RESOURCE" "/proc/virtual/$xid/limit" | cut -f 4)
+	    if [ "${LIMIT:-0}" -gt 0 ]; then
 		echo "$NAME.critical $LIMIT"
 	    fi
 	fi
@@ -365,10 +367,10 @@ fi
 
 
 for xid in $XIDS ; do
-    LABEL=`cat /proc/virtual/$xid/$NAMELOC |grep NodeName |cut -f2`
-    NAME=`echo $LABEL | cut -d. -f1 |  tr '-' '_'`
-    cat /proc/virtual/$xid/limit | awk -v name="${NAME}" -v resource="${RESOURCE}:" \
-	'{ if ( $1 == resource )
-            printf "%s.value %d\n", name, $2 }'
+    LABEL=$(grep "NodeName" "/proc/virtual/$xid/$NAMELOC" | cut -f 2)
+    NAME=$(echo "$LABEL" | cut -d. -f1 |  tr '-' '_')
+    awk -v name="${NAME}" -v resource="${RESOURCE}:" \
+        '{ if ( $1 == resource ) printf "%s.value %d\n", name, $2 }' \
+        "/proc/virtual/$xid/limit"
 done
 

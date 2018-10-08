@@ -8,7 +8,7 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Id$
-# 
+#
 # Magic markers (optional - used by munin-config and installation
 # scripts):
 #
@@ -23,12 +23,12 @@ print_values() {
     while read i; do
 	case $i in
 	    mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
-	    *) name=`echo $i | awk '{
+	    *) name=`echo "$i" | awk '{
 		gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'`
 		;;
 	esac
 	echo -n "$name.value "
-	echo $i | awk '{ print $8 }' | cut -f1 -d%
+	echo "$i" | awk '{ print $8 }' | cut -f1 -d%
     done
 }
 

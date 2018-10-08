@@ -1,5 +1,5 @@
 #!@@PERL@@
-# -*- perl -*- 
+# -*- perl -*-
 #
 # this is public domain copy and share at will
 # quick n dirty hack to read specific performance data on HP-UX thru

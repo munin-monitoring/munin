@@ -61,7 +61,7 @@ if($arg eq "autoconf")
         exit 0;
       }
   }
-  
+
 if($arg eq "config")
   {
     print "graph_args --base 1024 -l 0 --vertical-label Bytes --upper-limit ".getTotalMemBytes()."\n";
@@ -83,7 +83,7 @@ my($totalSwap,$swapUsed) = getSwapSpace();
 my($inUse,$free,$pinned) = findMemoryUsage();
 
 print "swap.value $swapUsed\ninuse.value $inUse\nfree.value $free\npinned.value $pinned\n";
-  
+
 sub getTotalMemBytes
 {
   my($line,@memInfo,$item,$totalMem);

@@ -26,7 +26,7 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/sys/kernel/random/entropy_avail ]; then
@@ -37,7 +37,7 @@ if [ "$1" = "autoconf" ]; then
 		exit 0
 	fi
 fi
- 
+
 if [ "$1" = "config" ]; then
 	echo 'graph_title Available entropy'
 	echo 'graph_args --base 1000 -l 0'

@@ -24,9 +24,11 @@ if [ "$1" = "autoconf" ]; then
 	exit 0
 fi
 
-EXCLUDEDFS="-t noprocfs,devfs,fdescfs,linprocfs,linsysfs,nfs,nullfs"
+EXCLUDEDFS="-t noprocfs,devfs,fdescfs,linprocfs,linsysfs,sysfs,nfs,nullfs,cd9660"
 
 if [ $(uname -s) = "GNU/kFreeBSD" ]; then
+	# Debian ships df from GNU coreutils
+	# use "-x" instead of "-t", split comma-separated list into single arguments
 	EXCLUDEDFS=$(echo $EXCLUDEDFS | sed 's/^-t /-x /; s/,/ -x /g')
 fi
 
@@ -38,7 +40,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_scale no'
 	echo 'graph_info This graph shows disk usage on the machine.'
 	mfs=0
-	/bin/df -P $EXCLUDEDFS | tail -n +2 | sort | grep -v '^/sys' | grep -v "//" | while read i; do
+	/bin/df -P $EXCLUDEDFS | tail -n +2 | sort | grep -v "//" | while read i; do
 		case $i in
 		mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
 		*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
@@ -52,7 +54,7 @@ if [ "$1" = "config" ]; then
 fi
 
 mfs=0
-/bin/df -P $EXCLUDEDFS | tail -n +2 | sort | grep -v '^/sys' | grep -v "//" | while read i; do
+/bin/df -P $EXCLUDEDFS | tail -n +2 | sort | grep -v "//" | while read i; do
 	case $i in
 	mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
 	*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;

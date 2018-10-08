@@ -35,23 +35,23 @@ PERL=${PERL:-@@PERL@@}
 
 if [ -z "$FUNCTION" ]; then
 	exit
-elif [ $FUNCTION = "busy" ]; then
+elif [ "$FUNCTION" = "busy" ]; then
 	TITLE="Busy & Wait"
 	IN=rtime
 	INNAME=busy
 	OUT=wtime
-	OUTNAME=wait
+	OUTNAME="wait"
 	CDEF=",100,*"
 	GARGS="--lower-limit 0 --upper-limit 100"
 	VLABEL='%'
-elif [ $FUNCTION = "bytes" ]; then
+elif [ "$FUNCTION" = "bytes" ]; then
 	TITLE="I/O"
 	IN=nread
 	INNAME=$IN
 	OUT=nwritten
 	OUTNAME=$OUT
 	VLABEL='Bytes per second'
-elif [ $FUNCTION = "ops" ]; then
+elif [ "$FUNCTION" = "ops" ]; then
 	TITLE="Operations"
 	IN=reads
 	INNAME=$IN
@@ -80,17 +80,17 @@ if [ "$1" = "suggest" ]; then
 fi
 
 REGEX="$MODULE"
-if [ $MODULE = "sd" ]; then
+if [ "$MODULE" = "sd" ]; then
 	REGEX="/^(s?sd|vdc|zvblk)$/"
 	NAME="Disk Device"
-elif [ $MODULE = "dad" ]; then
+elif [ "$MODULE" = "dad" ]; then
 	NAME="IDE Disk Device"
-elif [ $MODULE = "md" ]; then
+elif [ "$MODULE" = "md" ]; then
 	NAME="Disksuite"
-elif [ $MODULE = "nfs" ]; then
+elif [ "$MODULE" = "nfs" ]; then
 	NAME="NFS"
 	CLASS=nfs
-elif [ $MODULE = "st" ]; then
+elif [ "$MODULE" = "st" ]; then
 	NAME="Tape"
 	CLASS=tape
 else

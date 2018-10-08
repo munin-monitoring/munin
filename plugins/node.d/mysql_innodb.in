@@ -99,8 +99,12 @@ MYSQLOPTS="${mysqlopts:---user=munin --password=munin --host=localhost}"
 WARNING=${warning:-2147483648}   # 2GB
 CRITICAL=${critical:-1073741824} # 1GB
 
-# Convenient variables
-MEXEC="$MYSQL $MYSQLOPTS --batch --skip-column-names --database=information_schema --execute"
+
+mysql_exec() {
+    # shellcheck disable=SC2086
+    "$MYSQL" $MYSQLOPTS --batch --skip-column-names --database=information_schema --execute
+}
+
 
 ## No user serviceable parts below
 print_config() {
@@ -112,26 +116,26 @@ print_config() {
     echo 'free.label Bytes free'
     echo 'free.type GAUGE'
     echo 'free.min 0'
-    echo 'free.warning' $WARNING:
-    echo 'free.critical' $CRITICAL:
+    echo "free.warning $WARNING:"
+    echo "free.critical $CRITICAL:"
     exit 0
 }
 
 print_data() {
-    innodb_free | xargs -r printf "free.value %s\n"
+    innodb_free | xargs -r printf 'free.value %s\n'
 }
 
 check_autoconf() {
 
     # Check client
-    if [ ! -x $MYSQL ]; then
+    if [ ! -x "$MYSQL" ]; then
 	echo "no ($MYSQL not executable)"
 	return 0
     fi
 
     # Check server
-    $MEXEC "select(1);" | \
-	while read res; do
+    mysql_exec "select(1);" | \
+	while read -r res; do
 	    case $res in
 		1)
 		# All is well
@@ -143,8 +147,9 @@ check_autoconf() {
 	    esac
     done
 
-    $MEXEC "SHOW VARIABLES LIKE 'innodb_file_per_table';" | \
-	while read var res; do
+    # shellcheck disable=SC2034
+    mysql_exec "SHOW VARIABLES LIKE 'innodb_file_per_table';" | \
+	while read -r var res; do
 	    case $res in
 		OFF)
 		# All is well
@@ -160,8 +165,8 @@ check_autoconf() {
 	    esac
     done
 
-    $MEXEC "SELECT count(*) FROM tables WHERE ENGINE = 'InnoDB';" | \
-	while read res; do
+    mysql_exec "SELECT count(*) FROM tables WHERE ENGINE = 'InnoDB';" | \
+	while read -r res; do
 	    if [ "$res" = "0" ]; then
 		echo "no (No visible tables use InnoDB)"
 		return 0
@@ -174,14 +179,14 @@ check_autoconf() {
 
 # Get major.minor version of the server
 mysql_version() {
-    $MEXEC "SELECT version();" | awk '{printf "%1.1f", $1}'
+    mysql_exec "SELECT version();" | awk '{printf "%1.1f", $1}'
 }
 
 # InnoDB free bytes for MySQL 5.1 and newer
 innodb_free_new() {
-    t=$($MEXEC "SELECT count(*) FROM tables WHERE ENGINE = 'InnoDB';")
-    if [ "$t" ">" "0" ]; then
-	$MEXEC "SELECT data_free FROM tables WHERE ENGINE = 'InnoDB' LIMIT 1;"
+    t=$(mysql_exec "SELECT count(*) FROM tables WHERE ENGINE = 'InnoDB';")
+    if [ "$t" -gt "0" ]; then
+        mysql_exec "SELECT data_free FROM tables WHERE ENGINE = 'InnoDB' LIMIT 1;"
     else
 	echo >&2 "$0: Error: No visible tables use InnoDB"
 	echo U
@@ -191,14 +196,15 @@ innodb_free_new() {
 
 # InnoDB free bytes for MySQL 5.0 and older
 innodb_free_old() {
-    $MEXEC "SELECT table_comment FROM tables WHERE ENGINE = 'InnoDB' LIMIT 1;" \
+    mysql_exec "SELECT table_comment FROM tables WHERE ENGINE = 'InnoDB' LIMIT 1;" \
 	| awk '/^InnoDB free:/ {print $3 * 1024}'
 }
 
 # InnoDB free bytes wrapper
 innodb_free() {
     ver=$(mysql_version)
-    if [ "$ver" ">" "5.0" ]; then
+    major_version=$(echo "$ver" | cut -f 1 -d ".")
+    if [ "$major_version" -ge "5" ]; then
 		case $ver in
 			5.0.*|5.1.?|5.1.1?|5.1.2[0123])
 				innodb_free_old

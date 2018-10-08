@@ -58,9 +58,6 @@ Munin-update removes the "domain" information on all hosts.  If there
 are two hosts with the same host name in different domains then one of
 them will be disappeared by the munin-update collection process.
 
-=head1 VERSION
-
-  $Id$
 
 =head1 AUTHOR
 
@@ -77,20 +74,17 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
-if [ -z "$UPDATE_STATSFILE" ]; then
-    UPDATE_STATSFILE="$MUNIN_DBDIR/munin-update.stats"
-fi
 
-if [ -z "$MUNIN_UPDATE_LOCATION" ]; then
-    MUNIN_UPDATE_LOCATION="$MUNIN_LIBDIR/munin-update";
-fi
+UPDATE_STATSFILE=${UPDATE_STATSFILE:-$MUNIN_DBDIR/munin-update.stats}
+MUNIN_UPDATE_LOCATION=${MUNIN_UPDATE_LOCATION:-$MUNIN_LIBDIR/munin-update}
+
 
 if [ "$1" = "autoconf" ]; then
 	if [ -e "$MUNIN_UPDATE_LOCATION" ] ; then
 	    echo "yes";
-	else 
+	else
 	    echo "no ($MUNIN_UPDATE_LOCATION is not present so this is not a munin-master)"
 	fi
 	exit 0
@@ -109,8 +103,8 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel seconds'
 	echo 'graph_category munin'
 	echo 'graph_info This graph shows the time it takes to collect data from each hosts that munin collects data on. Munin-master is run from cron every 5 minutes and we want each of the munin-update runs to complete before the next one starts.  If munin-update uses too long time to run on one host run it with --debug to determine which plugin(s) are slow and solve the problem with them if possible.'
-	sed '/^UD|/!d; s/.*;//; s/|/ /;' < $UPDATE_STATSFILE | sort | 
-	while read i j; do
+	sed '/^UD|/!d; s/.*;//; s/|/ /;' < "$UPDATE_STATSFILE" | sort |
+	while read -r i j; do
             name="$(clean_fieldname "$i")"
 	    echo "$name.label $i"
 	    echo "$name.warning 240"
@@ -119,14 +113,14 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-[ -f $UPDATE_STATSFILE ] || {
+[ -f "$UPDATE_STATSFILE" ] || {
     echo 'error.value 1'
     echo "error.extinfo Plugin cannot read stats file $UPDATE_STATSFILE"
     exit 0
 }
 
-sed '/^UD|/!d; s/.*;//; s/|/ /;' < $UPDATE_STATSFILE | sort | 
-while read i j; do
+sed '/^UD|/!d; s/.*;//; s/|/ /;' < "$UPDATE_STATSFILE" | sort |
+while read -r i j; do
         name="$(clean_fieldname "$i")"
 	echo "$name.value $j"
 done

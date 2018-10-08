@@ -2,7 +2,7 @@
 # -*- perl -*-
 #
 # Plugin copyright Bjorn Ruberg <bjorn@ruberg.no> 2005-2009
-# 
+#
 # Licensed under GPLv2. Be nice.
 #
 # Environment variables:
@@ -17,7 +17,7 @@
 #   - title    (Optional) The plugin's title. Useful if you
 #              have more than one DIT installed.
 #   - warning  (Optional) A threshold integer value. Triggers
-#              plugin to send warnings if cache percentage 
+#              plugin to send warnings if cache percentage
 #              drops below the given value.
 #
 # Limitations:
@@ -87,7 +87,7 @@ if ($arg && $arg eq "config") {
     print "percent\n";
     exit 0;
 }
-         
+
 
 if ($config) {
     print <<EOF;

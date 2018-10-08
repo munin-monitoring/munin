@@ -26,11 +26,11 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/stat ]; then
-		echo yes 
+		echo yes
 		exit 0
 	else
 		echo "no (/proc/stat not readable)"
@@ -42,6 +42,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title Fork rate'
 	echo 'graph_args --base 1000 -l 0 '
+	# shellcheck disable=SC2016
 	echo 'graph_vlabel forks / ${graph_period}'
 	echo 'graph_category processes'
 	echo 'graph_info This graph shows the number of forks (new processes started) per second.'
@@ -57,6 +58,3 @@ fi
 
 echo -n "forks.value "
 awk '/processes/ {print $2}' /proc/stat
-
-
-

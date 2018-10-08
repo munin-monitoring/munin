@@ -43,7 +43,7 @@ always be included.
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 if [ "$1" = "autoconf" ]; then
         echo yes

@@ -1,67 +1,41 @@
-Munin is maintained for Debian by Tore Anderson <tore@debian.org>.
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Source: https://github.com/munin-monitoring/munin
 
-The upstream source is available from <http://munin-monitoring.org/>.
+Files: *
+License: GPL-2
+Copyright: 2004-2010 Lupe Christoph <lupe@lupe-christoph.de>
+           2004-2011 Jimmy Olsen <jo@redpill-linpro.com>
+           2006-2013 Nicolai Langfeldt <nicolai.langfeldt@broadnet.no>
+           2007-2014 Matthias Schmitz <matthias@sigxcpu.org>
+           2007-2017 Stig Sandbeck Mathisen <ssm@fnord.no>
+           2009-2009 Kjell-Magne Øierud <kjellm@redpill-linpro.com>
+           2009-2011 Matthew Boyle <mlb@decisionsoft.com>
+           2009-2011 Tom Feiner <feiner.tom@gmail.com>
+           2009-2012 Erik I. Bolsø <knan@redpill-linpro.com>
+           2010-2018 Steve Schnepp <steve.schnepp@pwkf.org>
+           2011-2018 Kenyon Ralph <kenyon@kenyonralph.com>
+           2012-2015 Daniel Black <daniel.black@openquery.com>
+           2013-2018 Gabriele Pohl <contact@dipohl.de>
+           2015-2018 Quentin Stoeckel <chteuchteu@gmail.com>
+           2016-2018 Lars Kruse <devel@sumpfralle.de>
+           ... and many more contributors
 
-Lead developers include:
+Files: debian/*
+License: GPL-2
+Copyright: 2008-2018 Holger Levsen <holger@debian.org>
+           2009-2017 Stig Sandbeck Mathisen <ssm@debian.org>
+           2016-2018 Lars Kruse <devel@sumpfralle.de>
 
-  Audun Ytterdal  <ay@linpro.no>
-  Jimmy Olsen     <jo@linpro.no>
-  Tore Anderson   <tore@linpro.no>
-  Knut Haugen     <knuthaug@linpro.no>
-  Ingvar Hagelund <ingvar@linpro.no>
-
-Munin is licensed under the terms of the GNU General Public License, version 2.
-A verbatim copy of this license is found in the file
-
- `/usr/share/common-licenses/GPL-2'
-
-on every Debian GNU/Linux system.
-
-The font Bitstream Vera Mono is bundled with this package, and is distributed
-under the following licence:
-
-  Copyright (C) 2003 Bitstream, Inc.
-  All Rights Reserved. Bitstream Vera is a trademark of Bitstream, Inc.
-
-  Permission is hereby granted, free of charge, to any person obtaining a
-  copy of the fonts accompanying this license ("Fonts") and associated
-  documentation files (the "Font Software"), to reproduce and distribute
-  the Font Software, including without limitation the rights to use, copy,
-  merge, publish, distribute, and/or sell copies of the Font Software, and
-  to permit persons to whom the Font Software is furnished to do so,
-  subject to the following conditions:
-
-  The above copyright and trademark notices and this permission notice
-  shall be included in all copies of one or more of the Font Software
-  typefaces.
-
-  The Font Software may be modified, altered, or added to, and in
-  particular the designs of glyphs or characters in the Fonts may be
-  modified and additional glyphs or characters may be added to the Fonts,
-  only if the fonts are renamed to names not containing either the words
-  "Bitstream" or the word "Vera".
-
-  This License becomes null and void to the extent applicable to Fonts or
-  Font Software that has been modified and is distributed under the
-  "Bitstream Vera" names.
-
-  The Font Software may be sold as part of a larger software package but
-  no copy of one or more of the Font Software typefaces may be sold by
-  itself.
-
-  THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
-  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF
-  COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL
-  BITSTREAM OR THE GNOME FOUNDATION BE LIABLE FOR ANY CLAIM, DAMAGES OR
-  OTHER LIABILITY, INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL,
-  OR CONSEQUENTIAL DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-  OTHERWISE, ARISING FROM, OUT OF THE USE OR INABILITY TO USE THE FONT
-  SOFTWARE OR FROM OTHER DEALINGS IN THE FONT SOFTWARE.
-
-  Except as contained in this notice, the names of Gnome, the Gnome
-  Foundation, and Bitstream Inc., shall not be used in advertising or
-  otherwise to promote the sale, use or other dealings in this Font
-  Software without prior written authorization from the Gnome Foundation
-  or Bitstream Inc., respectively. For further information, contact:
-  <fonts@gnome.org>.
+License: GPL-2
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+  .
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  .
+  A copy of the GNU General Public License is available as
+  /usr/share/common-licenses/GPL-2 in the Debian distribution or on the World
+  Wide Web at https://www.gnu.org/licenses/.

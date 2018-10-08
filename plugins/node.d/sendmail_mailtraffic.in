@@ -33,13 +33,12 @@ GPLv2
 
 =cut
 
-if [ -n "$mailstats" ];
-	then MAILSTATS=$mailstats;
-	else MAILSTATS=`which mailstats 2>/dev/null`;
-fi
+
+MAILSTATS=${mailstats:-$(which mailstats 2>/dev/null)}
+
 
 if [ "$1" = "autoconf" ]; then
-	if [ -n "$MAILSTATS" -a -x "$MAILSTATS" ]
+	if [ -n "$MAILSTATS" ] && [ -x "$MAILSTATS" ]
 		then echo yes
 		else echo "no (no mailstats command)"
 	fi
@@ -50,6 +49,7 @@ if [ "$1" = "config" ]; then
 
 	echo "graph_title Sendmail email volumes"
 	echo "graph_order received sent"
+	# shellcheck disable=SC2016
 	echo 'graph_vlabel bytes/${graph_period}'
 	echo "graph_category sendmail"
 	echo "received.label received"

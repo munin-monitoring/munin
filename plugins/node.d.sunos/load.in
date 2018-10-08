@@ -44,7 +44,7 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 if [ "$1" = "autoconf" ]; then
         echo 'yes'
@@ -59,12 +59,12 @@ graph_category system
 graph_scale no
 graph_vlabel load
 graph_args --base 1000 -l 0
-graph_info The load average of the machine describes how many processes are in the run-queue 
+graph_info The load average of the machine describes how many processes are in the run-queue
 load.label load
 load.info 5 minute load average
 EOF
-	print_warning load
-	print_critical load
+        print_warning load
+        print_critical load
         exit 0
 fi
 
@@ -74,4 +74,3 @@ fi
 
 printf "load.value "
 /bin/uptime | sed -e 's/.*, \([\.0-9]*\),.*/\1/g'
-

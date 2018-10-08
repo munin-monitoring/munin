@@ -16,7 +16,7 @@ No configuration
 This will measure the amount of network traffic coming into and
 out of the server.  It will report back the number of connections
 accepted, requested, established, and closed.  It uses
-/usr/bin/netstat to gather it's information.
+/usr/bin/netstat to gather its information.
 
 =head2 RESTRICTIONS
 
@@ -39,22 +39,14 @@ GPLv2
 
 use strict;
 
-if($ARGV[0] && $ARGV[0] eq "autoconf")
-  {
-    if(-e "/usr/bin/netstat" && -X "/usr/bin/netstat")
-      {
+if (defined $ARGV[0] and $ARGV[0] eq "autoconf") {
+    if(-e "/usr/bin/netstat" && -X "/usr/bin/netstat") {
         print "yes\n";
-        exit 0;
-      }
-    else
-      {
+    } else {
         print "no\n";
-        exit 0;
-      }
-  }
-  
-if($ARGV[0] && $ARGV[0] eq "config")
-  {
+    }
+    exit 0;
+} elsif (defined $ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Netstat\n";
     print "graph_args --base 1000 --logarithmic\n";
     print "graph_vlabel requests connections per \${graph_period}\n";
@@ -72,14 +64,14 @@ if($ARGV[0] && $ARGV[0] eq "config")
     print "closed.type COUNTER\n";
     print "closed.max 50000\n";
     exit 0;
-  }
-  
+}
+
 my(%toFind) = ("requests" => "connection requests",
                "accepts" => "connection accepts",
                "established" => "connections established",
                "closed" => "connections closed ("
               );
-              
+
 my($item,$line,@lineArray);
 
 foreach $item (keys(%toFind)) {

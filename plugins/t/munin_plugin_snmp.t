@@ -319,7 +319,7 @@ use_ok('Munin::Plugin::SNMP');
 		eval { Munin::Plugin::SNMP->session(); };
 		like($@, qr/./, 'Unknown SNMP version causes an exception.');
 	}
-	
+
 	# Unable to create session
 	{
 		no warnings;

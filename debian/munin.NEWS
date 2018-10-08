@@ -104,7 +104,7 @@ munin (1.2.0-1) unstable; urgency=low
     could not be accomplished without introducing a risk of losing historical
     data after upgrades.  Or more precisely:  no data will be lost, but the
     exact name of the RRD file will change, so that the update process will
-    start collecting data into a new, emtpy, file, which in turn will be read
+    start collecting data into a new, empty, file, which in turn will be read
     by munin-graph, and the final result is that the graph will appear to have
     lost all data.  The historical data will still be present in the old graph.
     
@@ -183,7 +183,7 @@ munin (1.2.0-1) unstable; urgency=low
     longer than 18 characters be truncated, removing any excessive characters
     from the start of the field name.  This led to a nasty bug; if a plugin
     reported values for two fields, who both had long names where the last 18
-    charaters were the same, only one RRD file would be generated, and its
+    characters were the same, only one RRD file would be generated, and its
     contents would be unpredictable.  The 1.2.x series do not exhibit this
     behaviour, and will store the entire field name as part of the RRD file
     name.  As this leads to the fact that a new, empty, file will be created
@@ -278,7 +278,7 @@ munin (2.0~rc2-1~1) unstable; urgency=low
     See http://munin-monitoring.org/wiki/CgiHowto2 for more information.
 
     The munin-node package now only provides the actual node, plugins are 
-    provided in seperate munin-plugins* packages. munin-async is a new feature 
+    provided in separate munin-plugins* packages. munin-async is a new feature 
     in 2.0
     The documentation for munin has been moved to the new "munin-doc" package.
 

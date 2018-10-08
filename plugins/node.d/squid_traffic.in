@@ -87,7 +87,7 @@ sub autoconf {
 	"Accept: */*\r\n" .
 	&make_auth_header($user, $passwd) .
 	"\r\n";
-		  
+
     $cachemgr->syswrite($request, length($request));
     my @lines = $cachemgr->getlines();
 
@@ -116,17 +116,17 @@ sub query_squid {
 					PeerPort => $port,
 					Proto    => 'tcp') or die($!);
 
-    
+
 
     my $request = "GET cache_object://$host/counters HTTP/1.0\r\n" .
 	"Accept: */*\r\n" .
 	&make_auth_header($user, $passwd) .
 	"\r\n";
-		  
+
     $cachemgr->syswrite($request, length($request));
     my @lines = $cachemgr->getlines();
     for(my $i = 0; $i <= $#lines; $i++) {
-	if($lines[$i] =~ /$target\s+(\d+)/) {
+	if($lines[$i] =~ /$target\s+(-?\d+)/) {
 	    print "$1.value $2\n";
 	}
     }
@@ -148,10 +148,10 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "kbytes_out.type DERIVE\n";
     print "kbytes_out.min 0\n";
     print "kbytes_out.max 500000\n";
-    print "hit_kbytes_out.label from cache\n";	
+    print "hit_kbytes_out.label from cache\n";
     print "hit_kbytes_out.cdef hit_kbytes_out,8096,*\n";
-    print "hit_kbytes_out.type DERIVE\n";	
-    print "hit_kbytes_out.min 0\n";	
+    print "hit_kbytes_out.type DERIVE\n";
+    print "hit_kbytes_out.min 0\n";
     print "hit_kbytes_out.max 500000\n";
     exit 0;
 }

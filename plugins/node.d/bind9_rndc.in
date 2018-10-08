@@ -11,7 +11,7 @@ The following environment variables are used by this plugin
 
   [bind_rndc]
     env.rndc		/usr/sbin/rndc
-    env.rndc_options	
+    env.rndc_options
     env.querystats      /var/run/named.stats
 
 The user/group that runs the plugin must have read access to the stats
@@ -197,7 +197,7 @@ close($stats);
 if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
     print "graph_title DNS Queries by status\n";
     print "graph_vlabel queries / \${graph_period}\n";
-    print "graph_category BIND\n";
+    print "graph_category dns\n";
 
     for my $key (keys %IN) {
         print "query_$key.label $key\n";

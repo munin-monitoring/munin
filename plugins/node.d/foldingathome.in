@@ -13,23 +13,16 @@
 #%# family=contrib
 #%# capabilities=autoconf
 
-PATH=/usr/local/fah
-FILE=${file:=unitinfo.txt}
+FOLDING_PATH=/usr/local/fah
+data_filename=$FOLDING_PATH/${file:-unitinfo.txt}
 
 if [ "$1" = "autoconf" ]; then
-    if ( cat $PATH/$FILE 2>/dev/null >/dev/null ); then
+    if [ -r "$data_filename" ]; then
         echo yes
-        exit 0
     else
-        if [ $? -eq 127 ]
-        then
-            echo "no (F@H not found)"
-            exit 0
-        else
-            echo no
-            exit 0
-        fi
+        echo "no (F@H file '$data_filename' not found)"
     fi
+    exit 0
 fi
 
 if [ "$1" = "config" ]; then
@@ -39,8 +32,8 @@ if [ "$1" = "config" ]; then
     echo 'graph_vlabel % finished'
     echo 'done.label done folding'
     echo 'done.type GAUGE'
-    echo 'done.max 100'''
+    echo 'done.max 100'
     exit 0
 fi
 
-echo `/bin/grep "Progress" $PATH/$FILE | /bin/sed 's/^.*: \(.*\)%.*/done.value \1/'`
+grep "Progress" "$data_filename" | /bin/sed 's/^.*: \(.*\)%.*/done.value \1/'

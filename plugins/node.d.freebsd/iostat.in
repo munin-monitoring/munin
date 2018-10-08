@@ -2,7 +2,7 @@
 # -*- sh -*-
 #
 # Original script (NetBSD) by he
-# 
+#
 # Adapted to FreeBSD 6.2 / PC-BSD 1.4 by Pierre Bauduin (pierre@baudu.in)
 # Version 0.0.2
 # October 24 2007
@@ -45,8 +45,8 @@ if [ "$1" = "config" ]; then
     echo 'graph_category disk'
     echo 'graph_info This graph shows the I/O to and from block devices'
     # We don't give a XXXX about device or extended
-    drives=`/usr/sbin/iostat -I -x | 
-		awk '/^device/ { next; } // { print $1; }' | 
+    drives=`/usr/sbin/iostat -I -x |
+		awk '/^device/ { next; } // { print $1; }' |
 		awk '/extended/ { next; } // { print $1; }'`
     echo -n 'graph_order'
     for d in $drives; do
@@ -76,7 +76,7 @@ fi
     # On NetBSD the kilobyte read and kilobyte write are columns 5 and 9
     # On FreeBSD the kilobyte read and kilobyte write are columns 4 and 5
     /usr/sbin/iostat -I -x |
-		awk '/^device/ { next; } //'  | 
+		awk '/^device/ { next; } //'  |
 		awk '/extended/ { next; } //' |
 		awk ' {
     			print $1 "_read.value " int($4);

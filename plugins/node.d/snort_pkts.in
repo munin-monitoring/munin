@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-snort_pktsec - Plugin to monitor the number of packets per second 
+snort_pktsec - Plugin to monitor the number of packets per second
                passed through Snort filters
 
 =head1 CONFIGURATION
@@ -57,15 +57,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 =cut
 
+statsfile=${statsfile:-}
 
-if [ -z $statsfile  ]; then
+if [ -z "$statsfile" ]; then
         _target=/var/snort/snort.stats
 else
         _target=$statsfile
 fi
 
 if [ "$1" = "autoconf" ]; then
-        if [ -f $_target ]; then
+        if [ -f "$_target" ]; then
                 echo yes
         else
                 echo "no ($_target not readable)"
@@ -76,15 +77,16 @@ fi
 if [ "$1" = "config" ]; then
         echo 'graph_title Snort Avg packets/s'
         echo 'graph_args --base 1000 -l 0'
-        echo 'graph_vlabel Packets / second'
+        # shellcheck disable=SC2016
+        echo 'graph_vlabel Packets / ${graph_period}'
         echo 'graph_scale no'
-        echo 'pktsec.label Packets/second'
-	if [ -n "$warning" ]; then
-		echo "pktsec.warning $warning"
-	fi
-	if [ -n "$critical" ]; then
-		echo "pktsec.critical $critical"
-	fi
+        echo 'pktsec.label Packets'
+        if [ -n "${warning:-}" ]; then
+            echo "pktsec.warning $warning"
+        fi
+        if [ -n "${critical:-}" ]; then
+            echo "pktsec.critical $critical"
+        fi
         echo 'pktsec.info The number of packets per second'
         echo 'graph_category Snort'
 
@@ -92,4 +94,4 @@ if [ "$1" = "config" ]; then
 fi
 
 printf "pktsec.value "
-echo $( tail -n1 $_target| awk -F, '{ print $5 }') \* 1000|bc -l
+tail -n1 "$_target" | awk -F, '{ print $5 * 1000 }'

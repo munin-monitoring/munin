@@ -1,6 +1,9 @@
 #!@@PERL@@ -w
 # -*-  perl -*-
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 df - Munin plugin to monitor disk usage
@@ -81,7 +84,6 @@ GPLv2
 
 =cut
 
-use strict;
 use Munin::Plugin;
 
 # For these devices use the mount point, the device is useless

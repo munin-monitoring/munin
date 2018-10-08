@@ -1,6 +1,9 @@
 #!@@PERL@@
 # -*- perl -*-
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 lpstat - Plugin to graph the queue size for the list of printers
@@ -36,7 +39,6 @@ Readapted to munin by Nikolai Langfeldt for Oslo Airport
 =cut
 
 
-use strict;
 use Getopt::Std;
 
 my $printer;
@@ -54,7 +56,7 @@ $ENV{'LC_MESSAGES'} = "C";
 my $host = '127.0.0.1';
 
 my $lpstat = exists $ENV{lpstat} ? $ENV{lpstat} : '';
- 
+
 # If the envvar is not set, look for lpstat
 if (!$lpstat) {
    # Still not found? Check obvious places
@@ -72,7 +74,7 @@ if (!$lpstat) {
     undef $lpstat;
 }
 
-if ($ARGV[0] eq 'autoconf') {
+if (defined($ARGV[0]) && $ARGV[0] eq 'autoconf') {
     if( ! -x $lpstat ) {
         print "no (lpstat not found)\n";
         exit 0;
@@ -82,6 +84,11 @@ if ($ARGV[0] eq 'autoconf') {
         exit 0;
     }
     $_ = <LPSTAT_R>;
+    if ( ! close(LPSTAT_R) ) {
+        print "no (lpstat returned non-zero)\n";
+        exit 0;
+    }
+
     if (! m/device for /mi) {
         print "no (no printers configured)\n";
         exit 0;
@@ -149,7 +156,7 @@ foreach $printer ( @printers ) {
     $jobs{$printer}=$n_jobs || 0;
 }
 
-if ($ARGV[0] eq 'config') {
+if ( defined($ARGV[0]) && $ARGV[0] eq 'config') {
     print "graph_title Print queues
 graph_args --base 1000
 graph_vlabel Queued jobs

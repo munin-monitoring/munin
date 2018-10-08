@@ -1,6 +1,8 @@
 #!@@GOODSH@@
 # -*- sh -*-
 
+set -e
+
 : << EOF
 
 =head1 NAME
@@ -81,10 +83,7 @@ munin-node.
 EOF
 
 # You cannot trust the exit status of which
-EXIQGREP=$(which exiqgrep 2>/dev/null)
-case $EXIQGREP:$? in
-    *:1|no*) EXIQGREP=''
-esac
+EXIQGREP=$(which exiqgrep 2>/dev/null) || true
 
 GRAPHTITLE='Exim Mailqueue'
 
@@ -97,15 +96,15 @@ FROZENWARN=${frozenwarn:-100}
 FROZENCRIT=${frozencrit:-200}
 
 if [ "$1" = "autoconf" ]; then
-    if [ -z "$EXIQGREP" ]; then
-	echo "no (no exiqgrep)"
-	exit 0
+    if [ ! -x "$EXIQGREP" ]; then
+        echo "no (command exiqgrep not found)"
+        exit 0
     else
-        echo yes
+	    echo yes
         exit 0
     fi
 fi
-	
+
 if [ "$1" = "config" ]; then
 	echo "graph_title $GRAPHTITLE"
 	echo 'graph_args --base 1000 -l 0'

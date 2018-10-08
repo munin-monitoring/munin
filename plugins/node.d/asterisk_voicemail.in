@@ -118,7 +118,7 @@ my @fields;
 while (($line = $pop->getline)  and ($line !~ /--END/o))
 {
     if ($start) {
-	@fields = (split ' ', $line);	
+	@fields = (split ' ', $line);
 	$results = $results + pop(@fields);
     }
 

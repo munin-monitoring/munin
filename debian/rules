@@ -1,6 +1,11 @@
 #! /usr/bin/make -f
 
+# for DEB_VERSION_UPSTREAM
+include /usr/share/dpkg/pkg-info.mk
+
 export DH_VERBOSE=1
+# Build.PL relies on the munin modules to be found locally
+export PERL5LIB=.
 
 MAKEOPTS = CONFIG=debian/Makefile.config INSTALL_PLUGINS="auto manual snmpauto contrib"
 
@@ -8,12 +13,11 @@ MAKEOPTS = CONFIG=debian/Makefile.config INSTALL_PLUGINS="auto manual snmpauto c
 	# --no-parallel was introduced with debhelper compat level 10
 	# (else it would fail to build) - this will probably also
 	# "fix"  #839233
-	dh $@ --with systemd --no-parallel
+	dh $@ --no-parallel
 
 override_dh_auto_build:
 	# ./getversion reads RELEASE if it exists
-	dpkg-parsechangelog | sed -n 's/^Version: //p' > RELEASE
-	chmod 755 debian/ostype_helper
+	echo "$(DEB_VERSION_UPSTREAM)" >RELEASE
 	dh_auto_build -- $(MAKEOPTS)
 
 override_dh_auto_install:
@@ -33,6 +37,18 @@ override_dh_auto_install:
 	$(MAKE) install-node-prime $(MAKEOPTS) \
 		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
 		DESTDIR=$(CURDIR)/debian/munin-node
+	# Do not install the program manpages in the munin-doc tree
+	# Instead: remove them here and rely on dh_installman.
+	# We cannot split the MANDIR target for manpages and module documentation. Thus the
+	# separation has to be done manually.
+	rm -f debian/munin-doc/usr/share/man/man1/munin-node.1p \
+		debian/munin-doc/usr/share/man/man1/munin-node-configure.1p \
+		debian/munin-doc/usr/share/man/man1/munin-run.1p \
+		debian/munin-doc/usr/share/man/man1/munin-sched.1p \
+		debian/munin-doc/usr/share/man/man1/munindoc.1p
+	rmdir debian/munin-doc/usr/share/man/man1
+	# we do not expect other manpages in munin-doc (except for perl module documentation)
+	[ -z "$(shell find debian/munin-doc/usr/share/man/ -type f | grep -v 'man3/')" ]
 
 	# workaround bug in upstream Makefile
 	mkdir -p $(CURDIR)/debian/munin-async/var/lib
@@ -46,10 +62,6 @@ override_dh_auto_install:
 		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
 		DESTDIR=$(CURDIR)/debian/munin-plugins-java
 
-	# Install apache configuration
-	install -D -m0644 debian/munin.apache.conf \
-		$(CURDIR)/debian/munin/etc/munin/apache.conf
-
 	# Install apache 2.4 configuration
 	install -D -m0644 debian/munin.apache24.conf \
 		$(CURDIR)/debian/munin/etc/munin/apache24.conf
@@ -58,12 +70,12 @@ override_dh_auto_install:
 	# in the default apache2/conf.d/munin configuration
 	rm -v $(CURDIR)/debian/munin/var/cache/munin/www/.htaccess
 
-	# Remove bundled VeraMono.ttf, debian gets this font from 
+	# Remove bundled VeraMono.ttf, debian gets this font from
 	# the fonts-dejavu-core package. http://bugs.debian.org/548508
 	rm -v $(CURDIR)/debian/munin/usr/share/munin/DejaVuSans*.ttf
 
 	# Munin::Plugins & plugins.sh go into munin-common.
-	# They are used for munin-plugins-* and we don't want a whole 
+	# They are used for munin-plugins-* and we don't want a whole
 	# dedicated new package (munin-plugins-common) for that. yet.
 	for file in usr/share/perl5/Munin/Plugin.pm usr/share/munin/plugins/plugin.sh; do \
 		mkdir -p $(CURDIR)/debian/munin-common/$$(dirname $$file) ;\
@@ -74,6 +86,12 @@ override_dh_auto_install:
 	# Install debian provided plugin configuration
 	install -D -m0644 debian/plugins.conf \
 		$(CURDIR)/debian/munin-node/etc/munin/plugin-conf.d/munin-node
+	install -D -m0644 debian/plugins.README \
+		$(CURDIR)/debian/munin-node/etc/munin/plugin-conf.d/README
+	install -D -m0644 debian/plugins-spamstats.conf \
+		$(CURDIR)/debian/munin-plugins-extra/etc/munin/plugin-conf.d/spamstats
+	install -D -m0644 debian/plugins-dhcpd3.conf \
+		$(CURDIR)/debian/munin-plugins-extra/etc/munin/plugin-conf.d/dhcpd3
 
 	# Move plugins not marked "auto" "manual" or "snmpauto" to the
 	# "munin-plugins-extra" package.
@@ -93,6 +111,3 @@ override_dh_auto_clean:
 	dh_auto_clean -- $(MAKEOPTS) clean-node clean-master clean-plugins clean-common clean
 	find plugins/javalib -name '*.class' -print0 | xargs -0 -r rm -v
 	rm RELEASE -f
-
-# Disable build tests for now
-override_dh_auto_test:

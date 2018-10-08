@@ -193,6 +193,12 @@ The port to connect to.  Default 161.
 
 The timeout in seconds to use. Default 5.
 
+=item C<env.domain>
+
+The Transport Domain to use for exchanging SNMP messages. The default
+is UDP/IPv4. Possible values: 'udp', 'udp4', 'udp/ipv4'; 'udp6',
+'udp/ipv6'; 'tcp', 'tcp4', 'tcp/ipv4'; 'tcp6', 'tcp/ipv6'.
+
 =item C<env.version>
 
 The SNMP version to use for the connection. One of 1, 2, 3, snmpv1,
@@ -219,6 +225,9 @@ Security is handled differently for versions 1/2c and 3.  See below.
 
     # Timeout
     push @options, (-timeout => $ENV{timeout}) if $ENV{timeout};
+
+    # Transport Domain
+    push @options, (-domain => $ENV{domain}) if $ENV{domain};
 
     if ($version eq '1' or $version eq 'snmpv1'
      or $version eq '2' or $version eq 'snmpv2c')

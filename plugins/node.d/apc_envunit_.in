@@ -49,7 +49,7 @@ Unknown
 
 =cut
 
-type=`echo $0 | sed -e 's/.*_\(.*\)/\1/'`
+type=$(echo "$0" | sed -e 's/.*_\(.*\)/\1/')
 if [ "${type}" = temperature ] ; then
   TOID="enterprises.318.1.1.10.3.13.1.1.3"
   NAME="temperature"
@@ -64,27 +64,27 @@ else
   fi
 fi
 
-UNITS=""
-COMMUNITY="public"
-SNMPGET=`which snmpget 2>/dev/null`
+UNITS=${units:-}
+COMMUNITY=${community:-public}
+SNMPGET=$(which snmpget 2>/dev/null)
 
-if [ "$units" ]; then UNITS=$units ; fi
-if [ "$oid" ]; then TOID=$oid ; fi
-if [ "$community" ]; then COMMUNITY=$community ; fi
+if [ -n "${oid:-}" ]; then TOID=$oid ; fi
 
-SNMPOPTS="-Ov -Oq -v1 -c ${COMMUNITY}"
 
+snmp_get() {
+  "$SNMPGET" -Ov -Oq -v1 -c "$COMMUNITY"
+}
 
 
 if [ "$1" = "autoconf" ]; then
   if [ -z "${UNITS}" ] ; then echo "no (no units to monitor)" ; exit 0 ; fi
-  if [ -z "$SNMPGET" -o ! -x "$SNMPGET" ] ; then 
+  if [ -z "$SNMPGET" ] || [ ! -x "$SNMPGET" ] ; then
       echo "no (no snmpget executable)"
       exit 0
   fi
 
   for m in ${UNITS} ; do
-    if ping -c1 -q $m >/dev/null 2>&1 ; then continue ; fi
+    if ping -c1 -q "$m" >/dev/null 2>&1; then continue; fi
     echo "no (can't reach $m)" ; exit 0
   done
   echo "yes" ; exit 0
@@ -100,7 +100,7 @@ if [ "$1" = "config" ]; then
   echo "graph_title Environmental units (${NAME} probes)"
   echo "graph_vlabel ${LABEL}"
   for m in ${UNITS} ; do
-    mm=`echo ${m} | tr '-' '_'`
+    mm=$(echo "$m" | tr '-' '_')
     echo "${mm}_${LETTER}1.label $m ${NAME} #1"
     echo "${mm}_${LETTER}2.label $m ${NAME} #2"
   done
@@ -108,9 +108,9 @@ if [ "$1" = "config" ]; then
 fi
 
 for m in ${UNITS} ; do
-  v1=`${SNMPGET} ${SNMPOPTS} $m ${TOID}.1`
-  v2=`${SNMPGET} ${SNMPOPTS} $m ${TOID}.2`
-  mm=`echo ${m} | tr '-' '_'`
+  v1=$(snmp_get "$m" "${TOID}.1")
+  v2=$(snmp_get "$m" "${TOID}.2")
+  mm=$(echo "$m" | tr '-' '_')
   echo "${mm}_${LETTER}1.value $v1"
   echo "${mm}_${LETTER}2.value $v2"
 done

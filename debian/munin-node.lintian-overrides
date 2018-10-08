@@ -1,6 +1,0 @@
-munin-node binary: binary-without-manpage usr/sbin/munin-node
-munin-node binary: binary-without-manpage usr/sbin/munin-node-configure
-munin-node binary: binary-without-manpage usr/sbin/munin-run
-munin-node binary: binary-without-manpage usr/sbin/munin-sched
-munin-node binary: binary-without-manpage usr/bin/munindoc
-munin-node binary: dependency-on-python-version-marked-for-end-of-life (Suggests: python)

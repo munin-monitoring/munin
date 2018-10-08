@@ -1,6 +1,8 @@
 #!@@GOODSH@@
 # -*- sh -*-
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -42,7 +44,7 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 INTERFACE=${0##*/if_err_}
 
@@ -67,6 +69,7 @@ if [ "$1" = "config" ]; then
     echo "graph_order rcvd trans"
     echo "graph_title $INTERFACE errors"
     echo 'graph_args --base 1000'
+    # shellcheck disable=SC2016
     echo 'graph_vlabel packets in (-) / out (+) per ${graph_period}'
     echo 'graph_category network'
     echo "graph_info This graph shows the amount of errors, packet drops, and collisions on the $INTERFACE network interface."
@@ -94,20 +97,20 @@ if [ "$1" = "config" ]; then
 fi;
 
 # Escape dots in the interface name (eg. vlans) before using it as a regex
-if [ -r /sys/class/net/$INTERFACE/statistics/rx_bytes ]; then
-    echo "rcvd.value $(cat /sys/class/net/$INTERFACE/statistics/rx_errors)"
-    echo "trans.value $(cat /sys/class/net/$INTERFACE/statistics/tx_errors)"
-    echo "rxdrop.value $(cat /sys/class/net/$INTERFACE/statistics/rx_dropped)"
-    echo "txdrop.value $(cat /sys/class/net/$INTERFACE/statistics/tx_dropped)"
-    echo "collisions.value $(cat /sys/class/net/$INTERFACE/statistics/collisions)"
+if [ -r "/sys/class/net/$INTERFACE/statistics/rx_bytes" ]; then
+    echo "rcvd.value $(cat "/sys/class/net/$INTERFACE/statistics/rx_errors")"
+    echo "trans.value $(cat "/sys/class/net/$INTERFACE/statistics/tx_errors")"
+    echo "rxdrop.value $(cat "/sys/class/net/$INTERFACE/statistics/rx_dropped")"
+    echo "txdrop.value $(cat "/sys/class/net/$INTERFACE/statistics/tx_dropped")"
+    echo "collisions.value $(cat "/sys/class/net/$INTERFACE/statistics/collisions")"
 else
     awk -v interface="$INTERFACE" \
-        'BEGIN { gsub(/\./, "\\.", interface) } \
+        'BEGIN { gsub(/\./, "\\.", interface) }
         $1 ~ "^" interface ":" {
-            split($0, a, /: */); $0 = a[2]; \
-            print "rcvd.value " $3 "\ntrans.value " $11; \
-            print "rxdrop.value " $4 "\ntxdrop.value " $12; \
-            print "collisions.value " $14; \
+            split($0, a, /: */); $0 = a[2];
+            print "rcvd.value " $3 "\ntrans.value " $11;
+            print "rxdrop.value " $4 "\ntxdrop.value " $12;
+            print "collisions.value " $14;
         }' \
         /proc/net/dev
 fi

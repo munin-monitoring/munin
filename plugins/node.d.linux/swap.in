@@ -26,7 +26,7 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/stat ]; then
@@ -42,6 +42,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title Swap in/out'
 	echo 'graph_args -l 0 --base 1000'
+	# shellcheck disable=SC2016
 	echo 'graph_vlabel pages per ${graph_period} in (-) / out (+)'
 	echo 'graph_category system'
 	echo 'swap_in.label swap'
@@ -62,7 +63,7 @@ if [ "$1" = "config" ]; then
 fi
 
 if [ -f /proc/vmstat ]; then
-	awk '/pswpin/ { print "swap_in.value " $2 } /pswpout/ { print "swap_out.value " $2 }' < /proc/vmstat 
+	awk '/pswpin/ { print "swap_in.value " $2 } /pswpout/ { print "swap_out.value " $2 }' < /proc/vmstat
 else
-	awk '/swap/ { print "swap_in.value " $2 "\nswap_out.value " $3 }' < /proc/stat 
+	awk '/swap/ { print "swap_in.value " $2 "\nswap_out.value " $3 }' < /proc/stat
 fi

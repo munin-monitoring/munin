@@ -32,16 +32,20 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
+
+
+NETSTAT_CMD=netstat
+
 
 if [ "$1" = "autoconf" ]; then
-	if ( netstat -s 2>/dev/null >/dev/null ); then
+	if ( "$NETSTAT_CMD" -s 2>/dev/null >/dev/null ); then
 		echo yes
 		exit 0
 	else
 		if [ $? -eq 127 ]
 		then
-			echo "no (netstat program not found)"
+			echo "no (program $NETSTAT_CMD not found)"
 			exit 0
 		else
 			echo no
@@ -54,35 +58,35 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title Netstat'
 	echo 'graph_args --base 1000 --logarithmic'
-	echo 'graph_vlabel active connections'
+	echo 'graph_vlabel TCP connections'
 	echo 'graph_category network'
 	echo 'graph_period second'
 	echo 'graph_info This graph shows the TCP activity of all the network interfaces combined.'
 	echo 'active.label active'
 	echo 'active.type DERIVE'
-	echo 'active.max 50000'
 	echo 'active.min 0'
+	echo 'active.max 50000'
 	echo 'active.info The number of active TCP openings per second.'
 	print_warning active
 	print_critical active
 	echo 'passive.label passive'
 	echo 'passive.type DERIVE'
-	echo 'passive.max 50000'
 	echo 'passive.min 0'
+	echo 'passive.max 50000'
 	echo 'passive.info The number of passive TCP openings per second.'
 	print_warning passive
 	print_critical passive
 	echo 'failed.label failed'
 	echo 'failed.type DERIVE'
-	echo 'failed.max 50000'
 	echo 'failed.min 0'
+	echo 'failed.max 50000'
 	echo 'failed.info The number of failed TCP connection attempts per second.'
 	print_warning failed
 	print_critical failed
 	echo 'resets.label resets'
 	echo 'resets.type DERIVE'
-	echo 'resets.max 50000'
 	echo 'resets.min 0'
+	echo 'resets.max 50000'
 	echo 'resets.info The number of TCP connection resets.'
 	print_warning resets
 	print_critical resets
@@ -95,7 +99,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-netstat -s | awk '
+"$NETSTAT_CMD" -s | awk '
 /Active Opens/                 { print "active.value " $4 }
 /Passive Opens/                { print "passive.value " $4 }
 /Failed Connection Attempts/   { print "failed.value " $5 }

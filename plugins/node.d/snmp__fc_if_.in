@@ -80,7 +80,7 @@ elsif (!defined($host))
 	die "# Error: couldn't understand what I'm supposed to monitor.";
 }
 
-my $fcEntryDescr     = "1.3.6.1.2.1.8888.1.1.6.1.16.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface"; 
+my $fcEntryDescr     = "1.3.6.1.2.1.8888.1.1.6.1.16.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
 my $fcEntrySpeed     = "1.3.6.1.2.1.8888.1.1.6.1.14.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
 my $fcEntryStatus    = "1.3.6.1.2.1.8888.1.1.6.1.6.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
 my $fcEntryInOctets  = "1.3.6.1.2.1.8888.1.3.1.1.6.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
@@ -129,7 +129,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "recv.graph no\n";
 	print "recv.cdef recv,8,*\n";
 	print "recv.max 4000000000\n";
-	print "recv.warning ", (-$warn), "\n" if defined $warn;
+	print "recv.warning $warn\n" if defined $warn;
 	print "send.label bps\n";
 	print "send.type DERIVE\n";
 	print "send.min 0\n";
@@ -137,7 +137,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "send.cdef send,8,*\n";
 	print "send.max 4000000000\n";
 	print "send.warning $warn\n" if defined $warn;
-	exit 0; 
+	exit 0;
 }
 
 my $status = 1;

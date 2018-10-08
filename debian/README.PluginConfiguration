@@ -5,9 +5,12 @@ Munin plugins are configured by editing existing or placing new files in
 /etc/munin/plugin-conf.d/.  Since files in this directory may contain passwords
 or other sensitive information, the directory is not world readable.
 
-A plugin configuration file contain one or more sections.  Each section starts
+Configuration files are read only once during the startup of "munin-node".
+Thus a restart of this service is necessary for changes to take effect.
+
+A plugin configuration file contains one or more sections.  Each section starts
 with a label (between '[' and ']'), and contains an optional "user" statement,
-an optional "grop" statement, and zero or more lines beginning with "env.":
+an optional "group" statement, and zero or more lines beginning with "env.":
 
 Example:
 
@@ -54,5 +57,6 @@ Debugging
 To check if plugin configuration is applied, run munin-run with "-d" to enable
 debugging, as root, (like "sudo munin-run -d someplugin") and check the output.
 
-If you do not run the plugin as root, you may not be able to read the plugin
-configuration files, and debugging your plugins may be harder than necessary
+If you do not execute "munin-run" as root, you may not be able to read the
+plugin configuration files, and debugging your plugins may be harder than
+necessary.

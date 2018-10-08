@@ -2,6 +2,8 @@
 # -*- sh -*-
 # vim: ft=sh
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -28,7 +30,7 @@ GNU GPL
 =cut
 
 if [ "$1" = "autoconf" ]; then
-    grep -q '^Threads' /proc/$$/status && echo "yes" || echo "no"
+    grep -q '^Threads' /proc/$$/status && echo "yes" || echo "no (/proc/$$/status not readable)"
     exit 0
 fi
 
@@ -43,8 +45,13 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-# -s suppresses errors about files that vanished before they could
-# be read.  It isn't entirely portable, but GNU grep should be a given on
-# Linux.  Sadly awk has no such equivalent option or we could skip grep
-# altogether
-grep -s '^Threads' /proc/[0-9]*/status | awk '{ sum += $2; } END { print "threads.value", sum; }'
+# Discard find's stderr, since SELinux or others may prevent us from parsing
+# proc directories (e.g. "find: '/proc/fs/nfsd': Permission denied").
+# grep's -s suppresses errors about files that vanished before they could be
+# read.  It isn't entirely portable, but GNU grep should be a given on Linux.
+# Sadly awk has no such equivalent option or we could skip grep altogether.
+find /proc/ -mindepth 2 -maxdepth 2 -type f -name status -print0 2>/dev/null \
+    | xargs -0 --no-run-if-empty --max-args=1000 grep -sh '^Threads:' \
+    | awk 'BEGIN { sum = 0; }
+           { sum += $2; }
+           END { print "threads.value", sum; }'

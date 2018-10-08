@@ -3,10 +3,13 @@ use MasterBuilder;
 use warnings;
 use strict;
 
+my $version = `../getversion`;
+chomp($version);
+
 my $build = MasterBuilder->new(
     dist_name      => 'Munin::Master',
-    dist_version   => '0.0.0',
-    dist_author    => 'The Munin Team <fix@example.com>',
+    dist_version   => $version,
+    dist_author    => 'The Munin Team <munin-users@lists.sourceforge.net>',
     dist_abstract  => 'The Munin Master',
     license        => 'gpl',
     requires       => {

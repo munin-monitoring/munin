@@ -76,39 +76,41 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 # if vservers are specified, use them; the default is to use all.
-VSERVERS="$vservers"
+VSERVERS="${vservers:-}"
 
-INFO=(`sed 's/.*:\t//' /proc/virtual/info 2>/dev/null || echo '<none>'`)
-KCIN="$[ 16#${INFO[2]} ]";
+# shellcheck disable=SC2207
+INFO=($(sed 's/.*:\t//' /proc/virtual/info 2>/dev/null || echo '<none>'))
+KCIN=$(( 16#${INFO[2]} ))
 
 # If this is 1, then VCI_SPACES is present in the kernel (new in 2.6.19)
-if [ $[ (KCIN >> 10) & 1 ] -eq 1 ]
-then 
+if [ $(( (KCIN >> 10) & 1 )) -eq 1 ]
+then
     NAMELOC="nsproxy"
-else 
+else
     NAMELOC="cvirt"
 fi
 
 if [ -z "$VSERVERS" ] ; then
-    XIDS=`find /proc/virtual/* -type d -exec basename {} \;`
+    XIDS=$(find /proc/virtual/* -type d -exec basename {} \;)
 else
     # it's really more performant to specify vservers by ids or not at all
     XIDS=""
     for i in $VSERVERS ; do
-	if [ -d /proc/virtual/$i ] ; then
-	    XIDS="${XIDS}${i} "
-	else
-	    for j in `find /proc/virtual/* -type d -exec basename {} \;` ; do
-		if [ "$i" = "`cat /proc/virtual/$j/$NAMELOC |grep NodeName |cut -f2`" ] ; then
-		    XIDS="${XIDS}${j} "
-		fi
-	    done
-	fi
+        if [ -d "/proc/virtual/$i" ] ; then
+            XIDS="${XIDS}${i} "
+        else
+            # shellcheck disable=SC2044
+            for j in $(find /proc/virtual/* -type d -exec basename {} \;); do
+                if [ "$i" = "$(grep "NodeName" "/proc/virtual/$j/$NAMELOC" | cut -f 2)" ] ; then
+                    XIDS="${XIDS}${j} "
+                fi
+            done
+        fi
     done
 fi
-	
+
 # If run with the "config"-parameter, give out information on how the
-# graphs should look.  
+# graphs should look.
 if [ "$1" = "config" ]; then
         # The title of the graph
 	echo 'graph_title loadavg of vserver'
@@ -126,19 +128,19 @@ if [ "$1" = "config" ]; then
 	echo 'graph_category vserver'
 	for xid in $XIDS ; do
 	# Specify the vservers
-		LABEL=`cat /proc/virtual/$xid/$NAMELOC |grep NodeName |cut -f2`
-		NAME=`echo $LABEL | cut -d. -f1 |  tr '-' '_'`
+		LABEL=$(grep "NodeName" "/proc/virtual/$xid/$NAMELOC" | cut -f 2)
+		NAME=$(echo "$LABEL" | cut -d. -f1 |  tr '-' '_')
 		echo "$NAME.label $LABEL: load average"
 		echo "$NAME.info $NAME average load for the past 5 minutes"
-	done 
+	done
         # Last, if run with the "config"-parameter, quit here (don't
         # display any data)
         exit 0
 fi
 
 for xid in $XIDS ; do
-	LABEL=`cat /proc/virtual/$xid/$NAMELOC |grep NodeName |cut -f2`
-	NAME=`echo $LABEL | cut -d. -f1 |  tr '-' '_'`
-	echo -n "$NAME.value ";
-	cat /proc/virtual/$xid/cvirt | grep loadavg: | cut -d' ' -f2	
+	LABEL=$(grep "NodeName" "/proc/virtual/$xid/$NAMELOC" | cut -f 2)
+	NAME=$(echo "$LABEL" | cut -d. -f1 |  tr '-' '_')
+	echo -n "$NAME.value "
+	grep "loadavg:" "/proc/virtual/$xid/cvirt" | cut -d ' ' -f 2
 done

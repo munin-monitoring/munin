@@ -121,16 +121,16 @@ print "volume.value $volume\n";
 
 if(-l $statefile) {
     die("$statefile is a symbolic link, refusing to touch it.");
-}				
+}
 open (OUT, ">$statefile") or exit 4;
 print OUT "$pos:$volume\n";
 close OUT;
 
-sub parseLogfile {    
+sub parseLogfile {
     my ($fname, $start, $stop) = @_;
     open (LOGFILE, $fname) or exit 3;
     seek (LOGFILE, $start, 0) or exit 2;
-    
+
     while (tell (LOGFILE) < $stop) {
 	my $line =<LOGFILE>;
 	chomp ($line);
@@ -138,7 +138,7 @@ sub parseLogfile {
 	    $volume += $1;
 	}
     }
-    close(LOGFILE);    
+    close(LOGFILE);
 }
 
 sub get_prev_date {

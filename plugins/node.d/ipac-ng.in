@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-ipac-ng - Skeleton-plugin to monitor ipac-ng rules. 
+ipac-ng - Skeleton-plugin to monitor ipac-ng rules.
 
 =head1 CONFIGURATION
 
@@ -41,34 +41,33 @@ if [ "$1" = "autoconf" ]; then
         if [ -x /usr/sbin/fetchipac ] && [ -x /usr/sbin/ipacsum ]; then
                 echo yes
                 exit 0
-        else          
-                echo no
+        else
+                echo "no (can not exectute /usr/sbin/fetchipac or /usr/sbin/ipacsum)"
                 exit 0
-        fi            
+        fi
 fi
 
 if [ "$1" = "config" ]; then
         echo "graph_order down up"
-        echo "graph_title $TITLE" 
+        echo "graph_title $TITLE"
         echo 'graph_args --base 1000'
         echo 'graph_vlabel b/s in (-) / out (+)'
-        echo 'down.label received'              
+        echo 'down.label received'
         echo 'down.graph no'
         # Divide it by 1500 seconds (5m), to get b/s
-        echo 'down.cdef down,1500,/'                
-        echo 'up.label b/s'         
+        echo 'down.cdef down,1500,/'
+        echo 'up.label b/s'
         echo 'up.negative down'
         echo 'up.cdef up,1500,/'
         exit 0
 fi;
 
-fetchipac || error=1  
-if [ "$error" != "1" ]; then
+if fetchipac; then
         ipacsum -s 5m -x -f "$UP" | tail -n 1 | cut -d : -f 2 | awk \
-                {'print "up.value " $1'}                             
+                '{print "up.value " $1}'
         ipacsum -s 5m -x -f "$DOWN" | tail -n 1 | cut -d : -f 2 | awk \
-                {'print "down.value " $1'}                             
+                '{print "down.value " $1}'
 else
-        echo 'up.value 0'
-        echo 'down.value 0'
+        echo 'up.value U'
+        echo 'down.value U'
 fi

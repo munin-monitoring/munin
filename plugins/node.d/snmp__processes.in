@@ -81,7 +81,7 @@ if (defined $ARGV[0] and $ARGV[0] eq "config") {
 	print "host_name $host\n" unless ($host eq 'localhost');
 	print <<'EOC';
 graph_title Number of Processes
-graph_args --base 1000 -l 0 
+graph_args --base 1000 -l 0
 graph_vlabel number of processes
 graph_category system
 graph_info This graph shows the number of processes running on the system.

@@ -12,7 +12,7 @@
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/munin-node
-PIDFILE=/var/run/munin/munin-node.pid
+PIDFILE=/run/munin/munin-node.pid
 CONFFILE=/etc/munin/munin-node.conf
 DAEMON_ARGS=
 
@@ -48,10 +48,10 @@ verify_superuser() {
 
 start() {
 	log_daemon_msg "Starting Munin-Node"
-	mkdir -p /var/run/munin /var/log/munin
-	chown munin:root /var/run/munin
-	chown munin:www-data /var/log/munin
-	chmod 0755 /var/run/munin
+	mkdir -p /run/munin /var/log/munin
+	chown munin:root /run/munin
+	chown munin:adm /var/log/munin
+	chmod 0755 /run/munin
 	chmod 0755 /var/log/munin
 	if pidofproc -p $PIDFILE $DAEMON >/dev/null; then
 		log_progress_msg "started beforehand"

@@ -1,4 +1,4 @@
-#! /bin/sh
+#!@@GOODSH@@
 # Plugin to test complex multigraph thingies
 
 # This plugin, ideally, creates a multigraph tree that is 3 levels deep.  The

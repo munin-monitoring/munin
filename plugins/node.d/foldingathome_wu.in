@@ -27,7 +27,6 @@ Plugin has capabilities "autoconf", but "autoconf" seems broken.
 =head1 MAGIC MARKERS
 
  #%# family=contrib
- #%# capabilities=autoconf
 
 =cut
 
@@ -35,15 +34,7 @@ EOF
 
 statefile=$MUNIN_PLUGSTATE/plugin-fah_wu.state
 
-if [ "$1" = "autoconf" ]; then
-    # Didn't check anything, which is meaningless in this case.
-    # echo yes
-    echo no
-    exit 0
-fi
-
 if [ "$1" = "config" ]; then
-
     echo 'graph_title Folding@Home Working Units submited'
     echo 'graph_args -l 0 --base 1000'
     echo 'graph_vlabel WU done'
@@ -52,14 +43,13 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-wu=$(wget "http://vspx27.stanford.edu/cgi-bin/main.py?qtype=userpage&username=8d" -q -t 1 -T 5 -O - | egrep -A 2 "<TD> WU</TD>" | grep "<b>" | sed 's/.*<b> \([0-9]*\) .*/\1/')
+wu=$(wget "http://vspx27.stanford.edu/cgi-bin/main.py?qtype=userpage&username=8d" -q -t 1 -T 5 -O - | grep -E -A 2 "<TD> WU</TD>" | grep "<b>" | sed 's/.*<b> \([0-9]*\) .*/\1/')
 
-if [ "$wu" = "" ]; then
-	if [ -f $statefile ]; then
-		echo wu.value `cat $statefile`
+if [ -z "$wu" ]; then
+	if [ -f "$statefile" ]; then
+		echo "wu.value $(cat "$statefile")"
 	fi
 else
-	echo $wu > $statefile
-	echo wu.value $wu
+	echo "$wu" > "$statefile"
+	echo "wu.value $wu"
 fi
-

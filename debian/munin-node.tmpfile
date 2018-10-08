@@ -1,0 +1,3 @@
+# keep in sync with debian/munin.munin-(node|async).init (non-systemd)
+d /run/munin 0755 munin munin
+d /var/log/munin 0755 munin adm

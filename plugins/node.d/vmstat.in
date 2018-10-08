@@ -1,6 +1,8 @@
 #!@@GOODSH@@
 # -*- sh -*-
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -31,7 +33,7 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 if [ "$1" = "autoconf" ]; then
 	if ( vmstat 1 1 >/dev/null 2>&1 ); then
@@ -42,7 +44,7 @@ if [ "$1" = "autoconf" ]; then
 			echo "no (could not run \"vmstat\")"
 			exit 0
 		else
-			echo no
+			echo "no (unknown vmstat return value $?)"
 			exit 0
 		fi
 	fi

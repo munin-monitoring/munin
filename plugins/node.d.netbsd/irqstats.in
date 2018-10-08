@@ -1,5 +1,5 @@
-#! /bin/sh
-# 
+#!@@GOODSH@@
+#
 # Plugin to monitor the individual interrupt sources.
 #
 # Usage: Link or copy into /etc/munin/node.d/
@@ -48,8 +48,8 @@ intr_sources () {
 }
 
 # If run with the "config"-parameter, give out information on how the
-# graphs should look. 
- 
+# graphs should look.
+
 if [ "$1" = "config" ]; then
 
     echo 'graph_title Individual interrupts'

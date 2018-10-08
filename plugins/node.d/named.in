@@ -71,79 +71,79 @@ munin-node.
 
 =cut
 
-if [ -n "$logfile" ]; then
+
+if [ -n "${logfile:-}" ]; then
     SYSLOGFILE=$logfile
-else 
+else
     if [ -f /var/adm/messages ]; then
-	SYSLOGFILE=/var/adm/messages
+        SYSLOGFILE=/var/adm/messages
     else
-	SYSLOGFILE=/var/log/daemon.log
+        SYSLOGFILE=/var/log/daemon.log
     fi
 fi
 
 # ----------------------------------------------------------------------
 
 pick_stat () {
-    ret=`echo "$2" | sed "s/.* *$1=\([0-9]*\).*/\1/"`
+    ret=$(echo "$2" | sed 's/.* *'"$1"'=\([0-9]*\).*/\1/')
     if [ ! "$ret" ]; then
-    	echo 0;
+        echo 0
     else
-    	echo $ret
+        echo "$ret"
     fi
 }
 
 do_stats () {
 
-    if [ ! -f $SYSLOGFILE ] ; then 
-	echo $SYSLOGFILE is unavailable to me >&2
-	exit 1
+    if [ ! -f "$SYSLOGFILE" ]; then
+        echo "$SYSLOGFILE is unavailable to me" >&2
+        exit 1
     fi
 
     # Get out the last XSTATS and NSTATS lines
-    XSTATS=`grep 'named.*XSTATS' "$SYSLOGFILE" | tail -1`
-    # NSTATS=`grep 'named.*NSTATS' "$SYSLOGFILE" | tail -1`
+    XSTATS=$(grep 'named.*XSTATS' "$SYSLOGFILE" | tail -1)
+    # NSTATS=$(grep 'named.*NSTATS' "$SYSLOGFILE" | tail -1)
 
     # We concentrate on what clients communicate with us about
     # and counters that we suspect can indicate abuse or error conditions
 
-    # Received Queries: Total volume of queries received. 
+    # Received Queries: Total volume of queries received.
     # This should be nice and smooth.
-    echo "queries.value `pick_stat RQ "$XSTATS"`"
+    echo "queries.value $(pick_stat RQ "$XSTATS")"
 
     # Sent Answers: This should be the same as RQ except when there are
     # errors.  May not be very interesting.
-    echo "answers.value `pick_stat SAns "$XSTATS"`"
+    echo "answers.value $(pick_stat SAns "$XSTATS")"
 
     # Sent and Forwarded queries, in a proxy setting this should be
     # the same as Received Queries (?)
-    echo "forwarded.value `pick_stat SFwdQ "$XSTATS"`" 
+    echo "forwarded.value $(pick_stat SFwdQ "$XSTATS")"
 
     # Received Zone Transfer queries - should be low.  High value could
     # indicate some odd error or some kind of abuse
-    echo "axfr.value `pick_stat RAXFR "$XSTATS"`"	# Received AXFR Qs
+    echo "axfr.value $(pick_stat RAXFR "$XSTATS")"  # Received AXFR Qs
 
     # Received TCP connections: These are used for zone transfers or
     # oversized (>512 byte) answers.  A high value here could indicate
     # that you need to trim down the size of your answers somehow (Do you
     # have a ton of MXes or NSes that gets reported back?), or this could
     # be due to an error.  Or it could be due to abuse.
-    echo "tcp.value `pick_stat RTCP "$XSTATS"`"
-    
-    # Get a total of errors
-    errexpr="
-	    `pick_stat RNXD "$XSTATS"` +
-	    `pick_stat RFail "$XSTATS"` +
-	    `pick_stat RErr "$XSTATS"` +
-	    `pick_stat SErr "$XSTATS"` +
-	    `pick_stat RIQ "$XSTATS"` + 
-	    `pick_stat RFErr "$XSTATS"` ";
+    echo "tcp.value $(pick_stat RTCP "$XSTATS")"
 
-    echo "errors.value `expr $errexpr`"
+    # Get a total of errors
+    local error_value
+    error_value=$(( $(pick_stat RNXD "$XSTATS")
+                   + $(pick_stat RFail "$XSTATS")
+                   + $(pick_stat RErr "$XSTATS")
+                   + $(pick_stat SErr "$XSTATS")
+                   + $(pick_stat RIQ "$XSTATS")
+                   + $(pick_stat RFErr "$XSTATS") ))
+    echo "errors.value $error_value"
 }
 
 case $1 in
     config)
-	cat <<'EOF'
+        cat <<'EOF'
 graph_title BIND DNS Query statistics
 graph_vlabel Queries / ${graph_period}
 graph_scale no
@@ -166,8 +166,8 @@ errors.label Errors
 errors.type DERIVE
 errors.min 0
 EOF
-	exit 0
-	;;
+        exit 0
+        ;;
 esac
 
 do_stats

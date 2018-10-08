@@ -16,8 +16,13 @@ The following is default configuration
 
   [cpu]
 	env.HZ	100
+	env.scaleto100	no
 
-See "BUGS" for a explanation of this setting.
+"scaleto100" may be "yes" or "no". With "yes" all CPU-related values
+are scaled for a limit of 100.  With "no" (the default) all CPU-related
+values are scaled for a limit of n * 100 ("n" being the number of CPUs).
+
+See "BUGS" for an explanation of the "HZ" setting.
 
 =head2 EXAMPLE WARNING AND CRITICAL SETTINGS
 
@@ -72,10 +77,6 @@ about IO performance.
   #%# capabilities=autoconf
 
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 Some combinations of hardware and Linux (probably only 2.4 kernels)
@@ -98,7 +99,7 @@ GPLv2
 =cut
 
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/stat ]; then
@@ -111,15 +112,16 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 HZ=${HZ:-100}
+scaleto100=${scaleto100:-no}
 
 extinfo=""
 
-if egrep -q '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
+if grep -qE '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
 	extinfo="iowait irq softirq"
-	if egrep -q '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
+	if grep -qE '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
 		extextinfo="steal"
 	fi
-	if egrep -q '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
+	if grep -qE '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
 		extextextinfo="guest"
 	fi
 
@@ -127,14 +129,14 @@ fi
 
 if [ "$1" = "config" ]; then
 
-	NCPU=$(egrep '^cpu[0-9]+ ' /proc/stat | wc -l)
+	NCPU=$(grep -E '^cpu[0-9]+ ' /proc/stat | wc -l)
 	if [ "$scaleto100" = "yes" ]; then
 		graphlimit=100
 	else
-		graphlimit=$(($NCPU * 100))
+		graphlimit=$((NCPU * 100))
 	fi
 	echo 'graph_title CPU usage'
-	echo "graph_order system user nice idle" $extinfo
+	echo "graph_order system user nice idle $extinfo"
 	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $graphlimit"
 	echo 'graph_vlabel %'
 	echo 'graph_scale no'
@@ -145,7 +147,7 @@ if [ "$1" = "config" ]; then
 	echo 'system.draw AREA'
 	echo 'system.min 0'
 	echo 'system.type DERIVE'
-	echo "system.info CPU time spent by the kernel in system activities" 
+	echo "system.info CPU time spent by the kernel in system activities"
 	echo 'user.label user'
 	echo 'user.draw STACK'
 	echo 'user.min 0'
@@ -209,9 +211,7 @@ if [ "$1" = "config" ]; then
 		if [ "$scaleto100" = "yes" ]; then
 			echo "steal.cdef steal,$NCPU,/"
 		fi
-		for field in steal; do
-			print_adjusted_thresholds "$field" "$graphlimit"
-		done
+		print_adjusted_thresholds "steal" "$graphlimit"
 	fi
 
 	if [ ! -z "$extextextinfo" ]
@@ -224,9 +224,7 @@ if [ "$1" = "config" ]; then
 		if [ "$scaleto100" = "yes" ]; then
 			echo "guest.cdef guest,$NCPU,/"
 		fi
-		for field in guest; do
-			print_adjusted_thresholds "$field" "$graphlimit"
-		done
+		print_adjusted_thresholds "guest" "$graphlimit"
 	fi
 
 	exit 0
@@ -236,11 +234,11 @@ fi
 # to avoid 10e+09 and the like %.0f should do this.
 
 if [ ! -z "$extextextinfo" ]; then
-	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\nsteal.value %.0f\nguest.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz, $9*100/hz, $10*100/hz }' < /proc/stat
+	awk -v "hz=$HZ" '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\nsteal.value %.0f\nguest.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz, $9*100/hz, $10*100/hz }' < /proc/stat
 elif [ ! -z "$extextinfo" ]; then
-	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\nsteal.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz, $9*100/hz }' < /proc/stat
+	awk -v "hz=$HZ" '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\nsteal.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz, $9*100/hz }' < /proc/stat
 elif [ ! -z "$extinfo" ]; then
-	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz }' < /proc/stat
+	awk -v "hz=$HZ" '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz }' < /proc/stat
 else
-	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz }' < /proc/stat
+	awk -v "hz=$HZ" '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz }' < /proc/stat
 fi

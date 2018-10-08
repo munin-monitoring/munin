@@ -1,0 +1,9 @@
+Bug-Database: https://github.com/munin-monitoring/munin/issues
+Bug-Submit: https://github.com/munin-monitoring/munin/issues/new/choose
+Changelog: https://raw.githubusercontent.com/munin-monitoring/munin/stable-2.0/ChangeLog
+Contact: irc://irc.oftc.net/
+Documentation: http://guide.munin-monitoring.org/
+FAQ: http://guide.munin-monitoring.org/en/latest/tutorial/troubleshooting.html
+Name: Munin
+Repository: https://github.com/munin-monitoring/munin.git
+Repository-Browse: https://github.com/munin-monitoring/munin

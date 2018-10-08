@@ -1,6 +1,9 @@
 #!@@PERL@@ -w
 # -*- perl -*-
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 fw_packets - Plugin to monitor the throuhgput of a firewall
@@ -38,7 +41,7 @@ if ( $ARGV[0] ) {
 	    print "yes\n";
 	    exit 0;
 	}
-	print "no\n";
+	print "no (file /proc/net/snmp not readable)\n";
 	exit 0;
 
     } elsif ( $ARGV[0] eq 'config' ) {
@@ -69,9 +72,9 @@ open(F, "/proc/net/snmp") or die "Cannot read /proc/net/snmp: $!\n";
 
 while (<F>) {
     if (/^Ip: \d/) {
-	@ip = split;
-	$forwarded = $ip[6];  #forwarded
-	$received = $ip[3];   #received
+	my @ip = split;
+	my $forwarded = $ip[6];  #forwarded
+	my $received = $ip[3];   #received
 	print "received.value $received\n";
 	print "forwarded.value $forwarded\n";
 
@@ -79,7 +82,7 @@ while (<F>) {
 	# destined for the firewall, then the difference is wrong.  If
 	# you firewall does not receive traffic itself it is correct
 	# though.
-	# 
+	#
 	# print "rejected.value ", $received - $forwarded,"\n";
 	last;
     }

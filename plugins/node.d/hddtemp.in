@@ -7,11 +7,12 @@
 # the preferred one.
 #
 # client-conf.d/-options:
-# 	
+#
 # 	drives		-- List drives to monitor. E.g. "hda hdc".
 #
 #%# family=contrib
 
+drives=${drives:-}
 HDDTEMP=/usr/sbin/hddtemp
 
 if [ "$1" = "autoconf" ]; then
@@ -30,9 +31,8 @@ if [ "$1" = "config" ]; then
         echo 'graph_args --base 1000 -l 0'
         echo 'graph_vlabel Degrees Celsius'
         echo 'graph_category sensors'
-        for a in $drives ; do echo $a.label $a ; done
+        for a in $drives ; do echo "$a.label $a"; done
         exit 0
 fi
 
-for a in $drives ; do printf "$a.value $(hddtemp -n -q /dev/$a)\n" ; done
-
+for a in $drives ; do printf '%s.value %s\n' "$a" "$(hddtemp -n -q "/dev/$a")" ; done

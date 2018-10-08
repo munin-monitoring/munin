@@ -73,10 +73,20 @@ unless (-d $SPOOLDIR) {
 		or die ("Cannot create '$SPOOLDIR': $!");
 }
 
+my $process_name = "main";
+
 my $sock = new IO::Socket::INET(
 	PeerAddr        => "$host",
 	Proto   => 'tcp'
-) || die "Error creating socket: $!";
+);
+if (!$sock) {
+	print STDERR "[$$][$process_name] Failed to connect to munin-node - trying again in a few seconds ...\n" if $verbose;
+	sleep 20;
+	$sock = new IO::Socket::INET(
+		PeerAddr        => "$host",
+		Proto   => 'tcp'
+	) || die "Error connecting to munin node ($host): $!";
+}
 my $nodeheader = <$sock>;
 print $sock "quit\n";
 close ($sock);
@@ -90,8 +100,6 @@ my $spoolwriter = Munin::Node::SpoolWriter->new(
 	hostname  => $metahostname,
 );
 $0 = "munin-asyncd [$metahostname] [idle]";
-
-my $process_name = "main";
 
 my @plugins;
 {
@@ -169,8 +177,12 @@ MAIN: while($keepgoing) {
 			);
 
 			unless ($sock) {
-				warn "Error creating socket: $!, moving to next plugin to try again";
-				next;
+				if ($do_fork) {
+					die "Error creating socket: $!";
+				} else {
+					warn "Error creating socket: $!, moving to next plugin to try again";
+					next;
+				}
 			}
 
 			<$sock>; # skip header

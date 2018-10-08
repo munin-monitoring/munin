@@ -1,3 +1,17 @@
+munin-node (2.0.42-1) unstable; urgency=low
+
+    The mysql_* plugins no longer use the "debian-sys-maint" account for
+    accessing the mysql database, but use "root" instead.  This is based
+    on authentication via unix socket (introduced in mariadb v10.0).
+    You may need to override the munin plugin configuration for "mysql_*"
+    (e.g. in /etc/munin/plugin-conf.d/foo) if your mariadb server was
+    upgraded from a mysql server package and thus does not support unix
+    socket based authentication.  This situation can be tested by running
+    "mysql -u root" without providing a password. No action is required,
+    if this works for you.
+
+ -- Lars Kruse <devel@sumpfralle.de>  Sun, 05 Aug 2018 03:03:58 +0200
+
 munin-node (1.4.0-1) unstable; urgency=low
 
     munin-node-configure-snmp command is no longer available, use 
@@ -16,7 +30,7 @@ munin-node (1.2.0-1) unstable; urgency=low
     could not be accomplished without introducing a risk of losing historical
     data after upgrades.  Or more precisely:  no data will be lost, but the
     exact name of the RRD file will change, so that the update process will
-    start collecting data into a new, emtpy, file, which in turn will be read
+    start collecting data into a new, empty, file, which in turn will be read
     by munin-graph, and the final result is that the graph will appear to have
     lost all data.  The historical data will still be present in the old graph.
     
@@ -95,7 +109,7 @@ munin-node (1.2.0-1) unstable; urgency=low
     longer than 18 characters be truncated, removing any excessive characters
     from the start of the field name.  This led to a nasty bug; if a plugin
     reported values for two fields, who both had long names where the last 18
-    charaters were the same, only one RRD file would be generated, and its
+    characters were the same, only one RRD file would be generated, and its
     contents would be unpredictable.  The 1.2.x series do not exhibit this
     behaviour, and will store the entire field name as part of the RRD file
     name.  As this leads to the fact that a new, empty, file will be created

@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!@@GOODSH@@
 #
 # if_
 #
@@ -23,8 +23,8 @@ LANSCAN=/usr/sbin/lanscan
 
 if [[ $1 = autoconf ]]; then
     if ! uname -s|grep -qEi hp-?ux; then
-	echo "no (OS doesn't seem to be HP-UX but reports as '$(uname -s)')"
-	exit 0
+        echo "no (OS doesn't seem to be HP-UX but reports as '$(uname -s)')"
+        exit 0
     fi
     if [ -x $LANADMIN ]; then
         echo yes
@@ -38,22 +38,22 @@ fi
 if [[ $1 = suggest ]]; then
     # lanscan will list all usable NICs seen by the kernel
     if [ -x $LANSCAN ] \
-	&& seen=$($LANSCAN|awk '$3~/^[0-9]+$/&&$4=="UP"{print$5}'); then
+            && seen=$($LANSCAN|awk '$3~/^[0-9]+$/&&$4=="UP"{print$5}'); then
         # but netstat will only list currently configured NICs
-	if [[ -n $seen ]] && netstat -in|grep -q "$seen"; then
-	    # HP-UX names all NICs with leading string "lan" (afaik)
-	    # Note, in SG environments NICs with trailing asterisk
-	    # are usually standby NICs that often are used for heartbeat exchange,
-	    # why they are suitable for collecting data as well
-	    netstat -in|awk 'NR>1&&$1~/^lan[0-9]+\*?$/{print$1}'|tr -d \*
-	    exit 0
-	fi
+        if [[ -n $seen ]] && netstat -in|grep -q "$seen"; then
+            # HP-UX names all NICs with leading string "lan" (afaik)
+            # Note, in SG environments NICs with trailing asterisk
+            # are usually standby NICs that often are used for heartbeat exchange,
+            # why they are suitable for collecting data as well
+            netstat -in|awk 'NR>1&&$1~/^lan[0-9]+\*?$/{print$1}'|tr -d \*
+            exit 0
+        fi
     fi
     exit 1
 fi
 
 if [[ $1 = config ]]; then
-    echo "graph_order inbound outbound" 
+    echo "graph_order inbound outbound"
     echo "graph_title $INTERFACE traffic"
     echo 'graph_args --base 1000'
     echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'

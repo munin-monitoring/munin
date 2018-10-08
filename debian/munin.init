@@ -6,16 +6,21 @@
 # Required-Stop:     $network $named $local_fs $remote_fs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Create /var/run/munin on boot
-# Description:       Create /var/run/munin on boot. Munin itself runs as CGI and has no extra startscript...
+# Short-Description: Create /run/munin on boot
+# Description:       Create /run/munin on boot. Munin itself runs as CGI and has no extra startscript...
 ### END INIT INFO
+
+
+# systemd creates the necessary directories (see /usr/lib/tmpfiles.d/munin-common.conf)
+test -d /run/systemd/system && exit 0
+
 
 . /lib/lsb/init-functions
 
 case "$1" in
   start|restart|force-reload)
 	# Create various dirs
-	mkdir -p /var/run/munin && chown munin /var/run/munin
+	mkdir -p /run/munin && chown munin /run/munin
 	exit $?
 	;;
   stop)

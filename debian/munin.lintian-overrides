@@ -1,6 +1,0 @@
-munin binary: binary-without-manpage usr/bin/munin-check
-munin binary: binary-without-manpage usr/bin/munin-cron
-
-# lintian error, service file can be a link to /dev/null to mask it.
-munin binary: service-file-is-not-a-file lib/systemd/system/munin.service
-munin binary: service-file-is-not-a-file lib/systemd/system/munin.service

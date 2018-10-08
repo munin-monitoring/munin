@@ -76,6 +76,15 @@ sub suggestion_string
         # Report why it's not being used
         $msg = " [$self->{defaultreason}]";
     }
+    elsif (! $self->{capabilities}->{autoconf} && ! $self->{capabilities}->{suggest}) {
+        $msg = " [[[ plugin has neither autoconf not suggest support ]]]";
+    }
+    elsif ( scalar @{$self->{errors}} != 0 ) {
+        $msg = " [[[ plugin has errors, see below ]]]";
+    }
+    else {
+        $msg = " [[[ plugin gave no reason why ]]]";
+    }
 
     return $self->{default} . $msg;
 }
@@ -135,7 +144,7 @@ sub _suggested_links
 {
     my ($self) = @_;
 
-    # no suggestions if the plugin shouldn't be installed 
+    # no suggestions if the plugin shouldn't be installed
     return [] if $self->{default} ne 'yes';
 
     if ($self->is_wildcard or $self->is_snmp) {
@@ -219,8 +228,8 @@ sub parse_autoconf_response
     my ($self, @response) = @_;
 
     unless (scalar(@response) == 1) {
-        # FIXME: not a good message
-        $self->log_error('Wrong amount of autoconf');
+        $self->log_error('Wrong amount of autoconf: expected 1 line, got ' . scalar(@response) . ' lines:');
+        $self->log_error('[start]' . join("[newline]", @response) . '[end]');
         return;
     }
 
@@ -229,7 +238,7 @@ sub parse_autoconf_response
     unless ($line =~ /^(yes)$/
          or $line =~ /^(no)(?:\s+\((.*)\))?\s*$/)
     {
-        $self->log_error("Junk printed to stdout");
+        $self->log_error("Junk printed to stdout: '$line'");
         return;
     }
 
@@ -251,13 +260,8 @@ sub parse_suggest_response
             $self->add_suggestions($line);
         }
         else {
-            $self->log_error("\tBad suggestion: $line");
+            $self->log_error("\tBad suggestion: '$line'");
         }
-    }
-
-    unless (@{ $self->{suggestions} }) {
-        $self->log_error("No valid suggestions");
-        return;
     }
 
     return;
@@ -406,7 +410,7 @@ directory, 'no' otherwise.
 =item B<suggestion_string()>
 
 Returns a string detailing whether or not autoconf considers that the plugin
-should be installed.  The string may also report the reason why the plugin 
+should be installed.  The string may also report the reason why the plugin
 declined to be installed, or the list of suggestions it provided, if this
 information is available.
 

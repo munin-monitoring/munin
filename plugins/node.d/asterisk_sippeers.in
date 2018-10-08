@@ -61,11 +61,11 @@ address with the copyright notice upgrade with your name.
 # #################################################################################
 # Following example from current asterisk 1.4
 #> sip show peers
-#Name/username              Host            Dyn Nat ACL Port     Status               
-#104-RANDALLBUILT/104-RAND  74.218.176.166   D          5060     Unmonitored           
-#...           
-#102-ROCKSOLID/102-ROCKSOL  (Unspecified)    D          0        Unmonitored           
-#101-ROCKSOLID/101-ROCKSOL  (Unspecified)    D   N      0        UNKNOWN              
+#Name/username              Host            Dyn Nat ACL Port     Status
+#104-RANDALLBUILT/104-RAND  74.218.176.166   D          5060     Unmonitored
+#...
+#102-ROCKSOLID/102-ROCKSOL  (Unspecified)    D          0        Unmonitored
+#101-ROCKSOLID/101-ROCKSOL  (Unspecified)    D   N      0        UNKNOWN
 #20 sip peers [Monitored: 0 online, 1 offline Unmonitored: 2 online, 17 offline]
 # #################################################################################
 

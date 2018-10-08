@@ -1,5 +1,6 @@
 #!@@GOODSH@@
 # -*- sh -*-
+
 : << =cut
 
 =head1 NAME
@@ -18,8 +19,6 @@ Unknown author
 
 GPLv2
 
-=head1 BUGS
-
 =head1 MAGIC MARKERS
 
  #%# family=auto
@@ -27,16 +26,20 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
+
+
+NETSTAT_CMD=netstat
+
 
 if [ "$1" = "autoconf" ]; then
-	if ( /usr/bin/netstat -s 2>/dev/null >/dev/null ); then
+	if ( "$NETSTAT_CMD" -s 2>/dev/null >/dev/null ); then
 		echo yes
 		exit 0
 	else
 		if [ $? -eq 127 ]
 		then
-			echo "no (netstat program not found)"
+			echo "no (program $NETSTAT_CMD not found)"
 			exit 0
 		else
 			echo no
@@ -49,7 +52,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title Netstat'
 	echo 'graph_args --base 1000 --logarithmic'
-	echo 'graph_vlabel active connections per ${graph_period}'
+	echo 'graph_vlabel TCP connections'
 	echo 'graph_category network'
 	echo 'graph_period second'
 	echo 'graph_info This graph shows the TCP activity of all the network interfaces combined.'
@@ -91,9 +94,9 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-/usr/bin/netstat -s | awk '
-/connection requests/ { print "active.value " $1 }
-/connection accepts/  { print "passive.value " $1 }
-/bad connection/      { print "failed.value " $1 }
-/reset$/              { print "resets.value " $1 }
+"$NETSTAT_CMD" -s | awk '
+/connection requests/     { print "active.value " $1 }
+/connection accepts/      { print "passive.value " $1 }
+/bad connection/          { print "failed.value " $1 }
+/reset$/                  { print "resets.value " $1 }
 /connections established/ { print "established.value " $1 }'

@@ -1,14 +1,15 @@
 #! /bin/sh
 # Helper shell to give the OSTYPE
 
+set -eu
+
 UNAME=$(uname)
 
-if [ "$UNAME" = "Linux" ];
-then
+if [ "$UNAME" = "Linux" ]; then
 	echo linux
-fi
-
-if [ "$UNAME" =	"GNU/kFreeBSD" ];
-then
+elif [ "$UNAME" = "GNU/kFreeBSD" ]; then
 	echo freebsd
+else
+	echo >&2 "Failed to determine OSTYPE based on 'uname': $UNAME"
+	exit 1
 fi

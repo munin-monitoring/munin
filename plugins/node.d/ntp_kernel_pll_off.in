@@ -35,7 +35,7 @@ if [ "$1" = "autoconf" ]; then
     { ntpq -c kerninfo; ntpdc -c kerninfo; } 2>/dev/null |
     awk 'BEGIN { ev=1; }
          /^pll offset:/ { ev=0; }
-         END { if (ev == 0) { print "yes";} else { print "no"; } exit ev; }'
+         END { if (ev == 0) { print "yes";} else { print "no (command ntpq or ntpdc not found)"; } exit 0; }'
     exit 0
 fi
 
@@ -51,7 +51,7 @@ fi
 
 printf 'ntp_pll_off.value '
 
-if [ $(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.') -ge 427 ]
+if [ "$(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.')" -ge 427 ]
 then
     ntpq -c kerninfo | awk '/^pll offset:/ { print $3 / 1000 }'
 else

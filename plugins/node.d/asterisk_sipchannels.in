@@ -126,11 +126,11 @@ $pop->print("\n");
 
 #Response: Follows
 #Privilege: Command
-#Peer           User/ANR    Call ID      Seq (Tx/Rx)  Format         Hold   Last Message   
+#Peer           User/ANR    Call ID      Seq (Tx/Rx)  Format         Hold   Last Message
 #0 active SIP channels
 # -- OR --
-#74.218.176.166  (None)    c24a5a230c6  00101/278584006  0x0 (nothing) No    Rx: REGISTER   
-#74.218.176.166  (None)    508c037f936  00101/07310  0x0 (nothing)    No     Rx: REGISTER   
+#74.218.176.166  (None)    c24a5a230c6  00101/278584006  0x0 (nothing) No    Rx: REGISTER
+#74.218.176.166  (None)    508c037f936  00101/07310  0x0 (nothing)    No     Rx: REGISTER
 #2 active SIP channels
 #--END COMMAND--
 

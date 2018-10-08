@@ -87,20 +87,20 @@ munin-node.
 POSTCONFSPOOL="$(postconf -h queue_directory 2>/dev/null || echo /var/spool/postfix)"
 SPOOLDIR=${spooldir:-$POSTCONFSPOOL}
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 case $1 in
     autoconf|detect)
-	
-	if [ -d $SPOOLDIR ] ; then
-	    echo yes
-	    exit 0
+
+        if [ -d "$SPOOLDIR" ] ; then
+            echo yes
+            exit 0
         else
-	    echo "no (spooldir not found)"
-	    exit 0
-        fi;;
+            echo "no (spooldir not found)"
+            exit 0
+            fi;;
     config)
-	cat <<'EOF'
+        cat <<'EOF'
 graph_title Postfix Mailqueue
 graph_vlabel Mails in queue
 graph_category postfix
@@ -112,23 +112,23 @@ incoming.label incoming
 corrupt.label corrupt
 hold.label held
 EOF
-	for field in active deferred maildrop incoming corrupt hold; do
-		print_warning $field
-		print_critical $field
-	done
-	exit 0;;
+        for field in active deferred maildrop incoming corrupt hold; do
+            print_warning "$field"
+            print_critical "$field"
+        done
+        exit 0;;
 esac
 
-cd $SPOOLDIR >/dev/null 2>/dev/null || {
+cd "$SPOOLDIR" >/dev/null 2>/dev/null || {
      echo "# Cannot cd to $SPOOLDIR"
      exit 1
 }
 
 cat <<EOF
-deferred.value `(test -d deferred && find deferred -type f ) | wc -l`
-active.value `(test -d active && find active -type f ) | wc -l`
-maildrop.value `(test -d maildrop && find maildrop -type f ) | wc -l`
-incoming.value `(test -d incoming && find incoming -type f ) | wc -l`
-corrupt.value `(test -d corrupt && find corrupt -type f ) | wc -l`
-hold.value `( test -d hold && find hold -type f ) | wc -l`
+deferred.value $( { test -d deferred && find deferred -type f; } | wc -l)
+active.value $( { test -d active && find active -type f; } | wc -l)
+maildrop.value $( { test -d maildrop && find maildrop -type f; } | wc -l)
+incoming.value $( { test -d incoming && find incoming -type f; } | wc -l)
+corrupt.value $( { test -d corrupt && find corrupt -type f; } | wc -l)
+hold.value $( { test -d hold && find hold -type f; } | wc -l)
 EOF

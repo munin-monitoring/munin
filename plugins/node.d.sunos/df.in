@@ -43,7 +43,7 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 DF=${df:-/usr/sbin/df}
 TAIL=/usr/bin/tail
@@ -67,12 +67,13 @@ if [ "$1" = "config" ]; then
     # device name.  Since the plugin already changed names this
     # should be ok.
 
-    $DF -k -l $only | $TAIL +2 | while read dev size used avail pct mnt; do
+    # shellcheck disable=SC2086
+    $DF -k -l ${only:-} | $TAIL +2 | while read -r dev size used avail pct mnt; do
 
 	case $dev:$mnt in
 	    /usr/lib*|ctfs:*|objfs:*|mnttab:*|sharefs:*|*:/cdrom/*|*:/media/*) continue;;
-	    swap:*) name=$(clean_fieldname $mnt);;
-	    *:*)    name=$(clean_fieldname $dev);;
+	    swap:*) name=$(clean_fieldname "$mnt");;
+	    *:*)    name=$(clean_fieldname "$dev");;
 	esac
         echo "$name.label $mnt"
 	print_warning "$name"
@@ -81,11 +82,12 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-$DF -k -l $only | $TAIL +2 | while read dev size used avail pct mnt; do
+# shellcheck disable=SC2034,SC2086
+$DF -k -l ${only:-} | $TAIL +2 | while read -r dev size used avail pct mnt; do
 	case $dev:$mnt in
 	    /usr/lib*|ctfs:*|objfs:*|mnttab:*|sharefs:*|*:/cdrom/*|*:/media/*) continue;;
-	    swap:*) name=$(clean_fieldname $mnt);;
-	    *:*)    name=$(clean_fieldname $dev);;
+	    swap:*) name=$(clean_fieldname "$mnt");;
+	    *:*)    name=$(clean_fieldname "$dev");;
 	esac
-        echo "$name.value $pct" | cut -f1 -d% 
+        echo "$name.value $pct" | cut -f1 -d%
 done

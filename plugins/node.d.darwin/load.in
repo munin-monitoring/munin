@@ -49,8 +49,8 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 # If run with the "config"-parameter, give out information on how the
-# graphs should look. 
- 
+# graphs should look.
+
 if [ "$1" = "config" ]; then
         LOAD_WARN=${load_warn:-10}
         LOAD_CRIT=${load_crit:-120}
@@ -71,7 +71,7 @@ if [ "$1" = "config" ]; then
 	# Graph category. Defaults to 'other'
 	echo 'graph_category system'
 	# The fields. "label" is used in the legend. "label" is the only
-	# required subfield. 
+	# required subfield.
 	echo 'load.label load'
 	# These two are optional. They are only used if you have
 	# configured your munin to tell a Nagios-server about any

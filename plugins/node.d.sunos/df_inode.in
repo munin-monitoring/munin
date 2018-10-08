@@ -44,7 +44,7 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 DF=${df:-/usr/sbin/df}
 TAIL=/usr/bin/tail
@@ -111,5 +111,5 @@ eval $DF | $TAIL +2 | while read dev size used avail pct mnt; do
 	swap:*) name=$(clean_fieldname $mnt);;
 	*)    name=$(clean_fieldname $dev);;
     esac
-    echo "$name.value $pct" | cut -f1 -d% 
+    echo "$name.value $pct" | cut -f1 -d%
 done

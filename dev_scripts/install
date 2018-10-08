@@ -1,11 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
-. $FINDBIN/common.sh
+. "$FINDBIN/common.sh"
 
-cd $BASEDIR
 
-if [ $1 ]; then
+if [ $# -ne 0 ]; then
     ./dev_scripts/stop_munin-node
     ./dev_scripts/stop_munin-sched
 
@@ -15,17 +14,17 @@ if [ $1 ]; then
     echo "**********************************************************************"
 fi
 
-make DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
-fakeroot make install-common-prime install-master-prime install-node-prime install-plugins-prime install-man install-async DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
+make "DESTDIR=$DESTDIR" "HTMLDIR=$DESTDIR/www/munin" || exit
+fakeroot make install-common-prime install-master-prime install-node-prime install-plugins-prime install-man install-async "DESTDIR=$DESTDIR" "HTMLDIR=$DESTDIR/www/munin" || exit
 
 
-if [ $1 ]; then
+if [ $# -ne 0 ]; then
     echo "**********************************************************************"
-    fakeroot make install-plugins-prime install-plugins-java DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
+    fakeroot make install-plugins-prime install-plugins-java "DESTDIR=$DESTDIR" "HTMLDIR=$DESTDIR/www/munin" || exit
     echo "**********************************************************************"
     perl -pi -e "s/port 4949/port 4948/; 
-                 s/user root/user $USER/; 
-                 s/group root/group $GROUPS/;
+                 s/user root/user $(id -n -u)/;
+                 s/group root/group $(id -n -g)/;
                  s|^(port .*)|\$1
 
 tls disabled
@@ -34,9 +33,9 @@ tls_certificate $BASEDIR/common/t/tls/node_cert.pem
 tls_ca_certificate $BASEDIR/common/t/tls/CA/ca_cert.pem
 tls_verify_certificate yes
 tls_verify_depth 5
-|; " $DESTDIR/etc/opt/munin/munin-node.conf
+|; " "$DESTDIR/etc/opt/munin/munin-node.conf"
 
-    perl -pi -e "s/(address 127\.0\.0\.1)/\$1\n    port 4948/;
+    perl -pi -e "s/(address 127\\.0\\.0\\.1)/\$1\\n    port 4948/;
                  s|(# a simple host tree)|tls disabled
 tls_private_key $BASEDIR/common/t/tls/master_key.pem
 tls_certificate $BASEDIR/common/t/tls/master_cert.pem
@@ -44,9 +43,8 @@ tls_ca_certificate $BASEDIR/common/t/tls/CA/ca_cert.pem
 tls_verify_certificate yes
 tls_verify_depth 5
 
-\$1|" $DESTDIR/etc/opt/munin/munin.conf
+\$1|" "$DESTDIR/etc/opt/munin/munin.conf"
 
     echo "**********************************************************************"
     ./dev_scripts/run munin-node-configure --shell --families=contrib,auto | sh -x
 fi
-

@@ -84,9 +84,8 @@ sub parse_args
 	my $debug = 0;
 	my $pidebug = 0;
 	my ($suggest, $shell, $removes, $newer);
-	my $exit_not_error = 1;
 	my @families;
-	my (@snmp_hosts, $snmpver, $snmpcomm, $snmpport);
+	my (@snmp_hosts, $snmpver, $snmpcomm, $snmpport, $snmpdomain);
     my ($snmp3username, $snmp3authpass, $snmp3authproto, $snmp3privpass, $snmp3privproto);
 
     print_usage_and_exit() unless GetOptions(
@@ -94,7 +93,6 @@ sub parse_args
         'version'         => \&print_version_and_exit,
 
         'suggest!'        => \$suggest,
-        'exitnoterror!'   => \$exit_not_error,
         'newer=s'         => \$newer,
 
         'shell!'          => \$shell,
@@ -114,6 +112,7 @@ sub parse_args
         'snmp=s'          => \@snmp_hosts,
         'snmpversion=s'   => \$snmpver,
         'snmpport=i'      => \$snmpport,
+        'snmpdomain=s'    => \$snmpdomain,
         # SNMPv1/2c
         'snmpcommunity=s' => \$snmpcomm,
         # SNMPv3
@@ -142,6 +141,7 @@ sub parse_args
         hosts        => \@snmp_hosts,
         version      => $snmpver,
         port         => $snmpport,
+        domain       => $snmpdomain,
 
         community    => $snmpcomm,
 
@@ -165,7 +165,6 @@ sub parse_args
     $config->reinitialize({
         %$config,
 
-        exit_not_error => $exit_not_error,
         suggest        => $suggest,
 
         shell          => $shell,
@@ -351,13 +350,8 @@ sub run_plugin
 		}
 		elsif ($plugin_exit) {
             $plugin->log_error("Non-zero exit during $mode ($plugin_exit)");
+            return;
 
-			# Verboten according to the specification, but lots of plugins
-            # still exit(1) it during autoconf.  So making it a non-fatal error
-			# for the time being
-			return unless ($mode eq 'autoconf'
-			           and $plugin_exit == 1
-			           and $config->{exit_not_error});
 		}
 	}
 
@@ -369,8 +363,9 @@ sub run_plugin
 	}
 
     # Ignore debug output
-	my @response = grep !/^#/, @{ $res->{stdout} };
-    $plugin->log_error('Nothing printed to stdout') unless (scalar @response);
+    my @response = grep !/^#/, @{ $res->{stdout} };
+    # Error out on empty response except in suggest mode
+    $plugin->log_error('Nothing printed to stdout') unless (scalar @response || $mode eq 'suggest');
 
     return @response;
 }
@@ -465,7 +460,7 @@ plugins will be printed. These can be reviewed or piped directly into a shell
 to install the plugins.
 
 
-=head1 GENERAL OPTIONS
+=head1 OPTIONS
 
 =over 4
 
@@ -583,6 +578,12 @@ The SNMP version (1, 2c or 3) to use. ['2c']
 =item B<< --snmpport <port> >>
 
 The SNMP port to use [161]
+
+=item B<< --snmpdomain <domain> >>
+
+The Transport Domain to use for exchanging SNMP messages. The default
+is UDP/IPv4. Possible values: 'udp', 'udp4', 'udp/ipv4'; 'udp6',
+'udp/ipv6'; 'tcp', 'tcp4', 'tcp/ipv4'; 'tcp6', 'tcp/ipv6'.
 
 =item B<SNMP 1/2c authentication>
 

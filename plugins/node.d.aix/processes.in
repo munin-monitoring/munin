@@ -62,7 +62,7 @@ if($ARGV[0] && $ARGV[0] eq "autoconf")
       }
   }
 
-my($item);  
+my($item);
 if($ARGV[0] && $ARGV[0] eq "config")
   {
     print "graph_title Number of Processes\n";
@@ -71,23 +71,23 @@ if($ARGV[0] && $ARGV[0] eq "config")
     print "graph_category processes\n";
     print "global.label global\n";
     print "global.draw LINE2\n";
-    
+
     foreach $item (@lookFor)
       {
         print "$item.label $item\n";
         print "$item.draw LINE2\n";
       }
   }
- 
-my($procNum); 
+
+my($procNum);
 foreach $item (@lookFor)
   {
     $procNum = `/usr/bin/ps -ef|grep $item|grep -v grep |wc -l`;
     chomp($procNum);
-    
+
     print "$item.value $procNum\n";
   }
-  
+
 $procNum = `/usr/bin/ps -ef|grep -v grep|wc -l`;
 chomp($procNum);
 print "global.value $procNum\n";

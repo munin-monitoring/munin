@@ -58,7 +58,7 @@ elsif (!defined($host))
 	die "# Error: couldn't understand what I'm supposed to monitor.";
 }
 
-my $fcEntryDescr     = "1.3.6.1.2.1.8888.1.1.6.1.16.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface"; 
+my $fcEntryDescr     = "1.3.6.1.2.1.8888.1.1.6.1.16.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
 my $fcEntrySpeed     = "1.3.6.1.2.1.8888.1.1.6.1.14.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
 my $fcEntryStatus    = "1.3.6.1.2.1.8888.1.1.6.1.6.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
 my $fcEntryErrs      = "1.3.6.1.2.1.8888.1.3.1.1.2.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.$iface";
@@ -99,7 +99,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "errs.type DERIVE\n";
 	print "errs.min 0\n";
 	print "errs.max 4000000000\n";
-	exit 0; 
+	exit 0;
 }
 
 my $status = 1;

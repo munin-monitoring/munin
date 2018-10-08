@@ -1,10 +1,10 @@
 #!@@GOODSH@@
 # -*- sh -*-
-# 
+#
 # Plugin to monitor the number of open files in the system.
 #
 # Parameters:
-# 	
+#
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
 #

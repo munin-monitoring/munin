@@ -43,7 +43,7 @@ class GCTimeGet {
 		for (GarbageCollectorMXBean gc : gcmbeans) {
 			GCresult[i++] = gc.getCollectionTime();
 		}
-		
+
 		return GCresult;
 	}
 }

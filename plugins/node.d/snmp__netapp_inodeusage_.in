@@ -15,7 +15,7 @@ with SNMP agent daemon activated. See na_snmp(8) for details.
 
 Unfortunately, SNMPv3 is not fully supported on all NetApp equipments.
 For this reason, this plugin will use SNMPv2 by default, which is
-insecure because it doesn't encrypt the community string. 
+insecure because it doesn't encrypt the community string.
 
 The following parameters will help you get this plugin working :
 

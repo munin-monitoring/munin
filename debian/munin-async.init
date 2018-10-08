@@ -20,7 +20,7 @@ NAME=munin-asyncd
 DAEMON=/usr/share/munin/$NAME
 DAEMON_ARGS=""
 DAEMON_USER="munin-async"
-PIDFILE=/var/run/munin/$NAME.pid
+PIDFILE=/run/munin/$NAME.pid
 SCRIPTNAME=/etc/init.d/munin-async
 
 # Exit if the package is not installed

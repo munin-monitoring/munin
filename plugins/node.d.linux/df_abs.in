@@ -47,7 +47,7 @@ for multiple mounts.
 
 EOF
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 if [ "$1" = "autoconf" ]; then
 	echo yes
@@ -56,11 +56,11 @@ fi
 
 # Append $mnt in case $dev is not a real block device
 get_fieldname() {
-	dev="$1"
-	mnt="$2"
+	local dev="$1"
+	local mnt="$2"
 	case "$dev" in
 		/* )
-			clean_fieldname $dev
+			clean_fieldname "$dev"
 			;;
 		* )
 			clean_fieldname "$dev $mnt"
@@ -71,7 +71,7 @@ get_fieldname() {
 total=${total:-on}
 
 exclude=${exclude:-iso9660}
-exclude=$(echo $exclude | sed -r -e 's/ +/ -x /g' -e 's/^/-x /') 
+exclude=$(echo "$exclude" | sed -r -e 's/ +/ -x /g' -e 's/^/-x /')
 
 if [ "$1" = "config" ]; then
 
@@ -82,24 +82,26 @@ if [ "$1" = "config" ]; then
 	if [ "$total" = "on" ]; then
 		echo 'graph_total Total'
 	fi
-	df -P -l $exclude | sed 1d | grep -v "//" | 
-	while read dev size used avail cap mnt; do
-		name="$(get_fieldname $dev $mnt)"
+	# shellcheck disable=SC2086
+	df -P -l $exclude | sed 1d | grep -v "//" |
+	while read -r dev size used avail cap mnt; do
+		name="$(get_fieldname "$dev" "$mnt")"
 		echo "$name.label $mnt"
 		echo "$name.cdef $name,1024,*"
-		warn=$(get_warning $name)
-		crit=$(get_critical $name)
+		warn=$(get_warning "$name")
+		crit=$(get_critical "$name")
 		if [ -n "$warn" ]; then
-			echo "$name.warning $((size * $warn / 100))"
+			echo "$name.warning $((size * warn / 100))"
 		fi
 		if [ -n "$crit" ]; then
-			echo "$name.critical $((size * $crit / 100))"
+			echo "$name.critical $((size * crit / 100))"
 		fi
 	done
 	exit 0
 fi
 
-df -P -l $exclude | sed 1d | grep -v "//" | 
-   while read dev size used avail cap mnt; do
-	echo "$(get_fieldname $dev $mnt).value $used"
-done
+# shellcheck disable=SC2034,SC2086
+df -P -l $exclude | sed 1d | grep -v "//" |
+	while read -r dev size used avail cap mnt; do
+		echo "$(get_fieldname "$dev" "$mnt").value $used"
+	done

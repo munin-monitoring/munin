@@ -25,17 +25,42 @@ DIR              := $(shell /bin/pwd | sed 's/^.*\///')
 INFILES          := $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
 INFILES_MASTER   := $(shell find master -name '*.in' | sed 's/\(.*\)\.in$$/build\/\1/')
 CLASSFILES       := $(shell find plugins/javalib -name '*.java' | sed 's/\(.*\)\.java$$/build\/\1.class/')
-PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/* $(JAVA_PLUGINS))
+PLUGINS          := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/* $(JAVA_PLUGINS))
 MANCENTER        := "Munin Documentation"
-MAN8		 := master/_bin/munin-update master/_bin/munin-limits master/_bin/munin-html master/_bin/munin-graph
+MAN8             := master/_bin/munin-update master/_bin/munin-limits master/_bin/munin-html master/_bin/munin-graph
 PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
+PYTHON_LINT_CALL ?= python3 -m flake8
+CONFVAR_SUBSTITUTION_FILES = \
+	master/blib/libdoc/Munin\:\:Master\:\:HTMLOld.3pm \
+	master/blib/lib/Munin/Master/HTMLOld.pm \
+	node/blib/sbin/munin-node-configure \
+	node/blib/sbin/munin-node \
+	node/blib/sbin/munin-run \
+	node/blib/sbin/munin-sched \
+	build/doc/munin-node.conf.5
+
+# TODO: remove this fallback code for "make v3.x" (up to Debian Wheezy / Ubuntu Trusty) as soon as
+#       the CI supports a more modern distribution
+#       (see https://docs.travis-ci.com/user/reference/overview/)
+# Make v3.x failed to handle colon escaping properly - thus we remove complicated filenames from
+# targets and dependencies.  This may affect corner cases of dependency handling for the one file
+# above containing a colon.  But in this case it is just about substituting paths in a
+# documentation file - thus we can live with this rare risk of incorrectness.
+ifeq ($(firstword $(subst ., ,$(MAKE_VERSION))),3)
+# weed out all complicated filenames containing a colon
+CONFVAR_SUBSTITUTION_DEP_FILES = $(shell printf '%s\n' $(CONFVAR_SUBSTITUTION_FILES) | grep -v ":")
+else
+CONFVAR_SUBSTITUTION_DEP_FILES = $(CONFVAR_SUBSTITUTION_FILES)
+endif
+
 
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
-        build build-common-prime build-common-pre build-doc \
-        source_dist \
-        test clean \
-        clean-% test-% build-% install-% \
+	build build-common build-common-pre build-doc \
+	substitute-build-defaults-inline substitute-confvar-inline \
+	source_dist \
+	test lint clean \
+	clean-% test-% build-% install-% \
 	tags \
 	infiles
 
@@ -126,15 +151,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 # Not ready to be installed yet
 # $(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
 
-# ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
-# GENERIC ONES
-
 install-node-plugins: install-plugins-prime
-
-# Some HP-UX plugins needs *.adv support files in LIBDIR
-ifneq ($(OSTYPE),hp-ux)
-HPUXONLY=true ||
-endif
 
 install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	@$(CHECKGROUP)
@@ -148,13 +165,16 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	$(CHMOD) 0755 $(PLUGSTATE)
 	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
 
+	@# Process the OS specific plugins at the end. Otherwise they would be overridden by the
+	@# generic ones.
 	for p in build/plugins/node.d/* build/plugins/node.d.$(OSTYPE)/* ; do \
-	    if test -f "$$p" ; then                            \
-		echo Installing $$p;                           \
-		$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;     \
-	    fi                                                 \
+		if test -f "$$p"; then \
+			echo Installing $$p; \
+			$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/; \
+		fi \
 	done
-	$(HPUXONLY) mv $(LIBDIR)/plugins/*.adv $(LIBDIR)
+	@# Some HP-UX plugins need *.adv support files in LIBDIR
+	if [ "$(OSTYPE)" = "hp-ux" ]; then mv $(LIBDIR)/plugins/*.adv $(LIBDIR); fi
 	$(INSTALL) -m 0644 build/plugins/plugins.history $(LIBDIR)/plugins/
 	$(INSTALL) -m 0644 build/plugins/plugin.sh $(LIBDIR)/plugins/
 
@@ -162,11 +182,11 @@ install-plugins-java: build-plugins-java
 	mkdir -p $(JAVALIBDIR)
 	$(INSTALL) -m 0644 build/plugins/javalib/munin-jmx-plugins.jar $(JAVALIBDIR)/
 	mkdir -p $(LIBDIR)/plugins
-	for p in build/plugins/node.d.java/*; do               \
-	    if test -f "$$p" ; then                            \
-		echo Installing $$p;                           \
-		$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;     \
-	    fi                                                 \
+	for p in build/plugins/node.d.java/*; do \
+		if test -f "$$p"; then \
+			echo Installing $$p; \
+			$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/; \
+		fi \
 	done
 
 #TODO:
@@ -213,120 +233,140 @@ install-doc: build-doc
 # Dummy rule to enable parallel building
 infiles: $(INFILES)
 
-build: infiles build-master build-common-prime build-node build-plugins $(JAVA_BUILD) build-man substitute-confvar-inline
+build: infiles build-master build-common build-node build-plugins $(JAVA_BUILD) build-man build-confvar-substitution-stamp
 
 build/%: %.in
 	@echo "$< -> $@"
 	@mkdir -p build/`dirname $<`
-	@sed -e 's|@@PREFIX@@|$(PREFIX)|g'                      \
-             -e 's|@@CONFDIR@@|$(CONFDIR)|g'                    \
-             -e 's|@@BINDIR@@|$(BINDIR)|g'                      \
-             -e 's|@@SBINDIR@@|$(SBINDIR)|g'                    \
-             -e 's|@@DOCDIR@@|$(DOCDIR)|g'                      \
-             -e 's|@@LIBDIR@@|$(LIBDIR)|g'                      \
-             -e 's|@@MANDIR@@|$(MANDIR)|g'                      \
-             -e 's|@@LOGDIR@@|$(LOGDIR)|g'                      \
-             -e 's|@@HTMLDIR@@|$(HTMLDIR)|g'                    \
-             -e 's|@@DBDIR@@|$(DBDIR)|g'                        \
-             -e 's|@@STATEDIR@@|$(STATEDIR)|g'                  \
-	     -e 's|@@SPOOLDIR@@|$(SPOOLDIR)|g'                  \
-             -e 's|@@PERL@@|$(PERL)|g'                          \
-             -e 's|@@PERLLIB@@|$(PERLLIB)|g'                    \
-             -e 's|@@PYTHON@@|$(PYTHON)|g'                      \
-             -e 's|@@RUBY@@|$(RUBY)|g'                          \
-             -e 's|@@JAVARUN@@|$(JAVARUN)|g'                    \
-             -e 's|@@JAVALIBDIR@@|$(JAVALIBDIR)|g'              \
-             -e 's|@@OSTYPE@@|$(OSTYPE)|g'                      \
-             -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'                  \
-             -e 's|@@MKTEMP@@|$(MKTEMP)|g'                      \
-             -e 's|@@VERSION@@|$(VERSION)|g'                    \
-             -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'                \
-             -e 's|@@CGIDIR@@|$(CGIDIR)|g'                      \
-             -e 's|@@USER@@|$(USER)|g'                          \
-             -e 's|@@GROUP@@|$(GROUP)|g'                        \
-             -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'              \
-             -e 's|@@GOODSH@@|$(GOODSH)|g'                      \
-             -e 's|@@BASH@@|$(BASH)|g'                          \
-             -e 's|@@HASSETR@@|$(HASSETR)|g'                    \
-             $< > $@;
+	@sed -e 's|@@PREFIX@@|$(PREFIX)|g' \
+		-e 's|@@CONFDIR@@|$(CONFDIR)|g' \
+		-e 's|@@BINDIR@@|$(BINDIR)|g' \
+		-e 's|@@SBINDIR@@|$(SBINDIR)|g' \
+		-e 's|@@DOCDIR@@|$(DOCDIR)|g' \
+		-e 's|@@LIBDIR@@|$(LIBDIR)|g' \
+		-e 's|@@MANDIR@@|$(MANDIR)|g' \
+		-e 's|@@LOGDIR@@|$(LOGDIR)|g' \
+		-e 's|@@HTMLDIR@@|$(HTMLDIR)|g' \
+		-e 's|@@DBDIR@@|$(DBDIR)|g' \
+		-e 's|@@STATEDIR@@|$(STATEDIR)|g' \
+		-e 's|@@SPOOLDIR@@|$(SPOOLDIR)|g' \
+		-e 's|@@PERL@@|$(PERL)|g' \
+		-e 's|@@PERLLIB@@|$(PERLLIB)|g' \
+		-e 's|@@PYTHON@@|$(PYTHON)|g' \
+		-e 's|@@RUBY@@|$(RUBY)|g' \
+		-e 's|@@JAVARUN@@|$(JAVARUN)|g' \
+		-e 's|@@JAVALIBDIR@@|$(JAVALIBDIR)|g' \
+		-e 's|@@OSTYPE@@|$(OSTYPE)|g' \
+		-e 's|@@HOSTNAME@@|$(HOSTNAME)|g' \
+		-e 's|@@MKTEMP@@|$(MKTEMP)|g' \
+		-e 's|@@VERSION@@|$(VERSION)|g' \
+		-e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g' \
+		-e 's|@@CGIDIR@@|$(CGIDIR)|g' \
+		-e 's|@@CGITMPDIR@@|$(CGITMPDIR)|g' \
+		-e 's|@@USER@@|$(USER)|g' \
+		-e 's|@@GROUP@@|$(GROUP)|g' \
+		-e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g' \
+		-e 's|@@GOODSH@@|$(GOODSH)|g' \
+		-e 's|@@BASH@@|$(BASH)|g' \
+		-e 's|@@HASSETR@@|$(HASSETR)|g' \
+		$< > $@;
 
 
-build-common-prime: build-common-pre common/blib/lib/Munin/Common/Defaults.pm build-common
+build-confvar-substitution-stamp: $(CONFVAR_SUBSTITUTION_DEP_FILES)
+	$(MAKE) substitute-confvar-inline
+	touch build-confvar-substitution-stamp
+
+
+$(CONFVAR_SUBSTITUTION_DEP_FILES): build-master build-node build-man
+
 
 substitute-confvar-inline:
-	@perl -p -i -e 's|\@\@PREFIX\@\@|$(PREFIX)|g;'               \
-             -e 's|\@\@CONFDIR\@\@|$(CONFDIR)|g;'                    \
-             -e 's|\@\@BINDIR\@\@|$(BINDIR)|g;'                      \
-             -e 's|\@\@SBINDIR\@\@|$(SBINDIR)|g;'                    \
-             -e 's|\@\@DOCDIR\@\@|$(DOCDIR)|g;'                      \
-             -e 's|\@\@LIBDIR\@\@|$(LIBDIR)|g;'                      \
-             -e 's|\@\@MANDIR\@\@|$(MANDIR)|g;'                      \
-             -e 's|\@\@LOGDIR\@\@|$(LOGDIR)|g;'                      \
-             -e 's|\@\@HTMLDIR\@\@|$(HTMLDIR)|g;'                    \
-             -e 's|\@\@DBDIR\@\@|$(DBDIR)|g;'                        \
-             -e 's|\@\@STATEDIR\@\@|$(STATEDIR)|g;'                  \
-             -e 's|\@\@SPOOLDIR\@\@|$(SPOOLDIR)|g;'                  \
-             -e 's|\@\@PERL\@\@|$(PERL)|g;'                          \
-             -e 's|\@\@PERLLIB\@\@|$(PERLLIB)|g;'                    \
-             -e 's|\@\@PYTHON\@\@|$(PYTHON)|g;'                      \
-             -e 's|\@\@RUBY\@\@|$(RUBY)|g;'                          \
-             -e 's|\@\@JAVARUN\@\@|$(JAVARUN)|g;'                    \
-             -e 's|\@\@JAVALIBDIR\@\@|$(JAVALIBDIR)|g;'              \
-             -e 's|\@\@OSTYPE\@\@|$(OSTYPE)|g;'                      \
-             -e 's|\@\@HOSTNAME\@\@|$(HOSTNAME)|g;'                  \
-             -e 's|\@\@MKTEMP\@\@|$(MKTEMP)|g;'                      \
-             -e 's|\@\@VERSION\@\@|$(VERSION)|g;'                    \
-             -e 's|\@\@PLUGSTATE\@\@|$(PLUGSTATE)|g;'                \
-             -e 's|\@\@CGIDIR\@\@|$(CGIDIR)|g;'                      \
-             -e 's|\@\@USER\@\@|$(USER)|g;'                          \
-             -e 's|\@\@GROUP\@\@|$(GROUP)|g;'                        \
-             -e 's|\@\@PLUGINUSER\@\@|$(PLUGINUSER)|g;'              \
-             -e 's|\@\@GOODSH\@\@|$(GOODSH)|g;'                      \
-             -e 's|\@\@BASH\@\@|$(BASH)|g;'                          \
-             -e 's|\@\@HASSETR\@\@|$(HASSETR)|g;'                    \
-             ./master/blib/libdoc/Munin::Master::HTMLOld.3pm    \
-             ./master/blib/lib/Munin/Master/HTMLOld.pm          \
-             ./node/blib/sbin/munin-node-configure              \
-             ./node/blib/sbin/munin-node                        \
-             ./node/blib/sbin/munin-run                         \
-             ./node/blib/sbin/munin-sched                       \
-             ./build/doc/munin-node.conf.5
+	perl -p -i -e 's|\@\@PREFIX\@\@|$(PREFIX)|g;' \
+		-e 's|\@\@CONFDIR\@\@|$(CONFDIR)|g;' \
+		-e 's|\@\@BINDIR\@\@|$(BINDIR)|g;' \
+		-e 's|\@\@SBINDIR\@\@|$(SBINDIR)|g;' \
+		-e 's|\@\@DOCDIR\@\@|$(DOCDIR)|g;' \
+		-e 's|\@\@LIBDIR\@\@|$(LIBDIR)|g;' \
+		-e 's|\@\@MANDIR\@\@|$(MANDIR)|g;' \
+		-e 's|\@\@LOGDIR\@\@|$(LOGDIR)|g;' \
+		-e 's|\@\@HTMLDIR\@\@|$(HTMLDIR)|g;' \
+		-e 's|\@\@DBDIR\@\@|$(DBDIR)|g;' \
+		-e 's|\@\@STATEDIR\@\@|$(STATEDIR)|g;' \
+		-e 's|\@\@SPOOLDIR\@\@|$(SPOOLDIR)|g;' \
+		-e 's|\@\@PERL\@\@|$(PERL)|g;' \
+		-e 's|\@\@PERLLIB\@\@|$(PERLLIB)|g;' \
+		-e 's|\@\@PYTHON\@\@|$(PYTHON)|g;' \
+		-e 's|\@\@RUBY\@\@|$(RUBY)|g;' \
+		-e 's|\@\@JAVARUN\@\@|$(JAVARUN)|g;' \
+		-e 's|\@\@JAVALIBDIR\@\@|$(JAVALIBDIR)|g;' \
+		-e 's|\@\@OSTYPE\@\@|$(OSTYPE)|g;' \
+		-e 's|\@\@HOSTNAME\@\@|$(HOSTNAME)|g;' \
+		-e 's|\@\@MKTEMP\@\@|$(MKTEMP)|g;' \
+		-e 's|\@\@VERSION\@\@|$(VERSION)|g;' \
+		-e 's|\@\@PLUGSTATE\@\@|$(PLUGSTATE)|g;' \
+		-e 's|\@\@CGIDIR\@\@|$(CGIDIR)|g;' \
+		-e 's|\@\@USER\@\@|$(USER)|g;' \
+		-e 's|\@\@GROUP\@\@|$(GROUP)|g;' \
+		-e 's|\@\@PLUGINUSER\@\@|$(PLUGINUSER)|g;' \
+		-e 's|\@\@GOODSH\@\@|$(GOODSH)|g;' \
+		-e 's|\@\@BASH\@\@|$(BASH)|g;' \
+		-e 's|\@\@HASSETR\@\@|$(HASSETR)|g;' \
+		$(CONFVAR_SUBSTITUTION_FILES)
 
 
 build-common-pre: common/Build
 	cd common && $(PERL) Build code
 
-common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm build-common-pre
+
+# The target needs an update, if the latest substitution stamp is older then the generated
+# Defaults.pm. This can happen, if:
+#     * the generated Defaults.pm is missing
+#     * or "build-common-pre" caused an update of its source file (thus regenerated Defaults.pm)
+build-common-defaults-stamp: common/blib/lib/Munin/Common/Defaults.pm
+	$(MAKE) substitute-build-defaults-inline
+	@# We need the stamp file, due to the inline nature of this build step. Otherwise it would
+	@# be run again during "install" - which would mess up the paths substituted in that step.
+	touch build-common-defaults-stamp
+
+
+# The "build-common-defaults-stamp" needs a way to generate the (non-substituted) defaults file
+# during its first run.  Afterwards its content is sustituted due to the absence of the
+# "build-common-defaults-stamp" file.
+common/blib/lib/Munin/Common/Defaults.pm: build-common-pre
+
+
+substitute-build-defaults-inline:
 	rm -f common/blib/lib/Munin/Common/Defaults.pm
-	$(PERL) -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;   \
-                  s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
-                  s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \
-                  s{(SBINDIR    \s+=\s).*}{\1q{$(SBINDIR)};}x;     \
-                  s{(DOCDIR     \s+=\s).*}{\1q{$(DOCDIR)};}x;      \
-                  s{(LIBDIR	\s+=\s).*}{\1q{$(LIBDIR)};}x;      \
-                  s{(MANDIR	\s+=\s).*}{\1q{$(MANDIR)};}x;      \
-                  s{(LOGDIR	\s+=\s).*}{\1q{$(LOGDIR)};}x;      \
-                  s{(HTMLDIR	\s+=\s).*}{\1q{$(HTMLDIR)};}x;     \
-                  s{(DBDIR	\s+=\s).*}{\1q{$(DBDIR)};}x;       \
-                  s{(STATEDIR	\s+=\s).*}{\1q{$(STATEDIR)};}x;    \
-		  s{(SPOOLDIR	\s+=\s).*}{\1q{$(SPOOLDIR)};}x;    \
-                  s{(PERL	\s+=\s).*}{\1q{$(PERL)};}x;        \
-                  s{(PERLLIB	\s+=\s).*}{\1q{$(PERLLIB)};}x;     \
-                  s{(PYTHON	\s+=\s).*}{\1q{$(PYTHON)};}x;      \
-                  s{(RUBY       \s+=\s).*}{\1q{$(RUBY)};}x;        \
-                  s{(OSTYPE	\s+=\s).*}{\1q{$(OSTYPE)};}x;      \
-                  s{(HOSTNAME	\s+=\s).*}{\1q{$(HOSTNAME)};}x;    \
-                  s{(MKTEMP	\s+=\s).*}{\1q{$(MKTEMP)};}x;      \
-                  s{(VERSION	\s+=\s).*}{\1q{$(VERSION)};}x;     \
-                  s{(PLUGSTATE	\s+=\s).*}{\1q{$(PLUGSTATE)};}x;   \
-                  s{(CGIDIR	\s+=\s).*}{\1q{$(CGIDIR)};}x;      \
-                  s{(USER	\s+=\s).*}{\1q{$(USER)};}x;        \
-                  s{(GROUP	\s+=\s).*}{\1q{$(GROUP)};}x;       \
-                  s{(PLUGINUSER	\s+=\s).*}{\1q{$(PLUGINUSER)};}x;  \
-                  s{(GOODSH	\s+=\s).*}{\1q{$(GOODSH)};}x;      \
-                  s{(BASH	\s+=\s).*}{\1q{$(BASH)};}x;        \
-                  s{(HASSETR	\s+=\s).*}{\1q{$(HASSETR)};}x;'    \
-                  $< > $@
+	$(PERL) -pe 's{(PREFIX\s+=\s).*}{\1q{$(PREFIX)};}x; \
+		s{(CONFDIR\s+=\s).*}{\1q{$(CONFDIR)};}x; \
+		s{(BINDIR\s+=\s).*}{\1q{$(BINDIR)};}x; \
+		s{(SBINDIR\s+=\s).*}{\1q{$(SBINDIR)};}x; \
+		s{(DOCDIR\s+=\s).*}{\1q{$(DOCDIR)};}x; \
+		s{(LIBDIR\s+=\s).*}{\1q{$(LIBDIR)};}x; \
+		s{(MANDIR\s+=\s).*}{\1q{$(MANDIR)};}x; \
+		s{(LOGDIR\s+=\s).*}{\1q{$(LOGDIR)};}x; \
+		s{(HTMLDIR\s+=\s).*}{\1q{$(HTMLDIR)};}x; \
+		s{(DBDIR\s+=\s).*}{\1q{$(DBDIR)};}x; \
+		s{(STATEDIR\s+=\s).*}{\1q{$(STATEDIR)};}x; \
+		s{(SPOOLDIR\s+=\s).*}{\1q{$(SPOOLDIR)};}x; \
+		s{(PERL\s+=\s).*}{\1q{$(PERL)};}x; \
+		s{(PERLLIB\s+=\s).*}{\1q{$(PERLLIB)};}x; \
+		s{(PYTHON\s+=\s).*}{\1q{$(PYTHON)};}x; \
+		s{(RUBY\s+=\s).*}{\1q{$(RUBY)};}x; \
+		s{(OSTYPE\s+=\s).*}{\1q{$(OSTYPE)};}x; \
+		s{(HOSTNAME\s+=\s).*}{\1q{$(HOSTNAME)};}x; \
+		s{(MKTEMP\s+=\s).*}{\1q{$(MKTEMP)};}x; \
+		s{(VERSION\s+=\s).*}{\1q{$(VERSION)};}x; \
+		s{(PLUGSTATE\s+=\s).*}{\1q{$(PLUGSTATE)};}x; \
+		s{(CGIDIR\s+=\s).*}{\1q{$(CGIDIR)};}x; \
+		s{(USER\s+=\s).*}{\1q{$(USER)};}x; \
+		s{(GROUP\s+=\s).*}{\1q{$(GROUP)};}x; \
+		s{(PLUGINUSER\s+=\s).*}{\1q{$(PLUGINUSER)};}x; \
+		s{(GOODSH\s+=\s).*}{\1q{$(GOODSH)};}x; \
+		s{(BASH\s+=\s).*}{\1q{$(BASH)};}x; \
+		s{(HASSETR\s+=\s).*}{\1q{$(HASSETR)};}x;' \
+		common/lib/Munin/Common/Defaults.pm >common/blib/lib/Munin/Common/Defaults.pm
+
 
 build-doc: build-doc-stamp Makefile Makefile.config
 
@@ -336,18 +376,19 @@ build-doc-stamp:
 
 build-man: build-man-stamp Makefile Makefile.config
 
-build-man-stamp:
-	touch build-man-stamp
+build-man-stamp: $(INFILES)
 	mkdir -p build/doc
 	for f in $(MAN8); do \
-	   pod2man --section=8 --release=$(RELEASE) --center=$(MANCENTER) build/"$$f" > build/doc/`basename $$f`.8; \
+		pod2man --section=8 --release=$(RELEASE) --center=$(MANCENTER) build/"$$f" > build/doc/`basename $$f`.8; \
 	done
 	for f in $(PODMAN8); do \
-	   pod2man --section=8 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.8; \
+		pod2man --section=8 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.8; \
 	done
 	for f in $(PODMAN5); do \
-	   pod2man --section=5 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.5; \
+		pod2man --section=5 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.5; \
 	done
+	touch build-man-stamp
+
 
 build-plugins-java: build/plugins/javalib/munin-jmx-plugins.jar
 
@@ -364,21 +405,45 @@ build/%.class: %.class build-java-stamp
 ######################################################################
 # DIST RULES
 
-tar:
-	git archive --prefix=munin-$(RELEASE)/ --format=tar --output ../munin-$(RELEASE).tar HEAD
-	mkdir -p munin-$(RELEASE)/
-	echo $(RELEASE) > munin-$(RELEASE)/RELEASE
-	tar rf ../munin-$(RELEASE).tar --owner=root --group=root munin-$(RELEASE)/RELEASE
-	rm -rf munin-$(RELEASE)
-	gzip -f -9 ../munin-$(RELEASE).tar
+.PHONY: tar
+tar: munin-$(RELEASE).tar.gz.sha256sum
+
+.PHONY: tar-signed
+tar-signed: munin-$(RELEASE).tar.gz.asc
+
+munin-$(RELEASE).tar.gz:
+	@# prevent the RELEASE file from misleading the "getversion" script
+	rm -f RELEASE
+	tempdir=$$(mktemp -d) \
+		&& mkdir -p "$$tempdir/munin-$(RELEASE)/" \
+		&& echo $(RELEASE) > "$$tempdir/munin-$(RELEASE)/RELEASE" \
+		&& git archive --prefix=munin-$(RELEASE)/ --format=tar --output "$$tempdir/export.tar" HEAD \
+		&& tar --append --file "$$tempdir/export.tar" --owner=root --group=root -C "$$tempdir" "munin-$(RELEASE)/RELEASE" \
+		&& gzip -9 <"$$tempdir/export.tar" >"munin-$(RELEASE).tar.gz" \
+		&& rm -rf "$$tempdir"
+
+munin-$(RELEASE).tar.gz.sha256sum: munin-$(RELEASE).tar.gz
+	sha256sum "$<" >"$@"
+
+munin-$(RELEASE).tar.gz.asc: munin-$(RELEASE).tar.gz
+	gpg --armor --detach-sign --sign "$<"
+
+.PHONY: tar-upload
+tar-upload: tar tar-signed
+	@if [ -z "$(UPLOAD_DIR)" ]; then echo "You need to set UPLOAD_DIR (e.g. '/srv/www/downloads.munin-monitoring.org/munin/stable')" >&2; false; fi
+	@if [ -z "$(UPLOAD_HOST)" ]; then echo "You need to set UPLOAD_HOST" >&2; false; fi
+	{ \
+		echo "mkdir $(UPLOAD_DIR)/$(VERSION)"; \
+		echo "put munin-$(VERSION).tar.gz* $(UPLOAD_DIR)/$(VERSION)/"; \
+	} | sftp -b - "$(UPLOAD_HOST)"
 
 suse-pre:
 	(! grep MAINTAINER Makefile.config)
-	@for file in `find dists/suse/ -type f -name '*.in'`; do                \
-		destname=`echo $$file | sed 's/.in$$//'`;               \
-		echo Generating $$destname..;                           \
-		sed -e 's|@@VERSION@@|$(VERSION)|g'                     \
-		$$file > $$destname;                                \
+	@for file in `find dists/suse/ -type f -name '*.in'`; do \
+		destname=`echo $$file | sed 's/.in$$//'`; \
+		echo Generating $$destname..; \
+		sed -e 's|@@VERSION@@|$(VERSION)|g' \
+		$$file > $$destname; \
 	done
 	-cp dists/tarball/plugins.conf .
 #	(cd ..; ln -s munin munin-$(VERSION))
@@ -409,6 +474,8 @@ endif
 	-rm -f build-doc-stamp
 	-rm -f build-man-stamp
 	-rm -f build-java-stamp
+	-rm -f build-confvar-substitution-stamp
+	-rm -f build-common-defaults-stamp
 	-rm -rf t/install
 
 	-rm -f dists/redhat/munin.spec
@@ -449,26 +516,48 @@ t/install:
 
 # This builds */Build from Build.PL
 %/Build: %/Build.PL
-	cd $* && $(PERL) Build.PL
+	cd $* && $(PERL) -I. Build.PL
 
 build-%: %/Build
 	cd $* && $(PERL) Build
 
-build-common: common/Build
+build-common: build-common-defaults-stamp
 
 # BUG: the Build script writes files under PWD when it does "install"
 # can't seem to find a way to persuade it to write otherwhere.
 install-%: %/Build
-	cd $* && $(PERL) Build install			\
-            --install_path lib=$(PERLLIB)		\
-            --install_path bin=$(BINDIR)		\
-            --install_path script=$(BINDIR)		\
-            --install_path sbin=$(SBINDIR)		\
-            --install_path bindoc=$(MANDIR)/man1	\
-            --install_path libdoc=$(MANDIR)/man3	\
+	cd $* && $(PERL) Build install \
+		--install_path lib=$(PERLLIB) \
+		--install_path bin=$(BINDIR) \
+		--install_path script=$(BINDIR) \
+		--install_path sbin=$(SBINDIR) \
+		--install_path bindoc=$(MANDIR)/man1 \
+		--install_path libdoc=$(MANDIR)/man3
 
 test-%: %/Build
 	cd $* && $(PERL) Build test --verbose=0 || true
 
-clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
+lint:
+	@# SC1008: ignore our weird shebang (substituted later)
+	@# SC1090: ignore sourcing of files with variable in path
+	@# SC2009: do not complain about "ps ... | grep" calls (may be platform specific)
+	@# SC2126: tolerate "grep | wc -l" (simple and widespread) instead of "grep -c"
+	# TODO: fix the remaining shellcheck issues for the missing platforms:
+	#       aix, darwin, netbsd, sunos
+	#       (these require tests with their specific shell implementations)
+	find plugins/node.d/ \
+			plugins/node.d.cygwin/ \
+			plugins/node.d.debug/ \
+			plugins/node.d.linux/ -type f -print0 \
+		| xargs -0 grep -l --null "@@GOODSH@@" \
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell dash
+	find plugins/ -type f -print0 \
+		| xargs -0 grep -l --null "@@BASH@@" \
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell bash
+	find plugins/ -type f -print0 \
+		| xargs -0 grep -l --null "@@PYTHON@@" \
+			| xargs -0 $(PYTHON_LINT_CALL)
+	# TODO: perl plugins currently fail with perlcritic
+
+clean-%: %/Build build-common-defaults-stamp
 	cd $* && $(PERL) Build realclean

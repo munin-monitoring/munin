@@ -11,35 +11,25 @@
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #%# family=contrib
-#%# capabilities=autoconf
 
 statefile=$MUNIN_PLUGSTATE/plugin-fah_rank.state
 
-if [ "$1" = "autoconf" ]; then
-    # No real check of anything
-    # echo yes
-    echo no
-    exit 0
-fi
-
 if [ "$1" = "config" ]; then
-
     echo 'graph_title Folding@Home Rank'
     echo 'graph_args -l 0 --base 1000'
     echo 'graph_vlabel rank'
     echo 'rank.label rank'
     echo 'rank.type GAUGE'
-    echo 'rank.max 12000'''
+    echo 'rank.max 12000'
     exit 0
 fi
 
-rank=`wget "http://vspx27.stanford.edu/cgi-bin/main.py?qtype=userpage&username=8d" -q -t 1 -T 5 -O - | egrep "<TD> <font size=3> <b> [0-9]* </b> of [0-9]* </font></TD>" | sed 's/.*<font size=3> <b> \([0-9]*\) .*/\1/'`
-if [ "$rank" = "" ]; then
-	if [ -f $statefile ]; then
-		echo rank.value `cat $statefile`
+rank=$(wget "http://vspx27.stanford.edu/cgi-bin/main.py?qtype=userpage&username=8d" -q -t 1 -T 5 -O - | grep -E "<TD> <font size=3> <b> [0-9]* </b> of [0-9]* </font></TD>" | sed 's/.*<font size=3> <b> \([0-9]*\) .*/\1/')
+if [ -z "$rank" ]; then
+	if [ -f "$statefile" ]; then
+		echo "rank.value $(cat "$statefile")"
 	fi
 else
-	echo $rank > $statefile
-	echo rank.value $rank
+	echo "$rank" >"$statefile"
+	echo "rank.value $rank"
 fi
-

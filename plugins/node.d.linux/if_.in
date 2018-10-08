@@ -1,6 +1,8 @@
 #!@@BASH@@
 # -*- sh -*-
 
+set -e
+
 : << =cut
 
 =head1 NAME
@@ -64,9 +66,10 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 INTERFACE=${0##*if_}
+speed=${speed:-}
 
 # Who whould have thought it's so much work to determine the
 # maximum speed of a network interface.  Buckle up!
@@ -75,13 +78,13 @@ findspeed_mbps() {
     # wifi drivers use "eth*" names.
     IWLIST=$(type -p iwlist)
     if [[ -x "$IWLIST" ]]; then
-        SPEED=$($IWLIST $INTERFACE rate 2>&1 |
+        SPEED=$("$IWLIST" "$INTERFACE" rate 2>&1 |
             awk 'BEGIN { RATE="U" }
                        { if ($2 == "Mb/s") RATE=$1; }
                  END   { print RATE; }')
 
         if [[ "$SPEED" != "U" ]]; then
-            echo $SPEED
+            echo "$SPEED"
             return
         fi
     fi
@@ -89,28 +92,28 @@ findspeed_mbps() {
     # sysfs can report the speed if the driver supports it (but it
     # doesn't work as well for wireless cards, thus why we check for
     # iwlist first)
-    if [[ -r /sys/class/net/$INTERFACE/speed ]]; then
-            SPEED=$(cat /sys/class/net/$INTERFACE/speed 2>/dev/null)
+    if [[ -r "/sys/class/net/$INTERFACE/speed" ]]; then
+            SPEED=$(cat "/sys/class/net/$INTERFACE/speed" 2>/dev/null)
             if [[ "$SPEED" -gt 0 ]]; then
-                echo $SPEED
+                echo "$SPEED"
                 return
             fi
     fi
 
     ETHTOOL=$(type -p ethtool)
     if [[ -x "$ETHTOOL" ]]; then
-        SPEED=$($ETHTOOL $INTERFACE 2>&1 |
+        SPEED=$("$ETHTOOL" "$INTERFACE" 2>&1 |
                  awk '/Speed:/ { gsub(/[^0-9]*/,"",$2); print $2; }')
 
         if [[ $SPEED == [0-9]* ]]; then
-            echo $SPEED
+            echo "$SPEED"
             return
         fi
     fi
 
     MIITOOL=$(type -p mii-tool)
-    if [[ -x $MIITOOL ]]; then
-        case $($MIITOOL $INTERFACE 2>&1) in
+    if [[ -x "$MIITOOL" ]]; then
+        case $("$MIITOOL" "$INTERFACE" 2>&1) in
             *1000base*) echo 1000; return ;;
             *100base*)  echo 100; return ;;
             *10base*)   echo 10; return ;;
@@ -128,7 +131,7 @@ findspeed() {
     fi
 
     if [[ -z "$SPEED" ]] || [[ "$SPEED" == "U" ]]; then
-        printf "up.info Traffic of the %s interface. Unable to determine interface speed." $INTERFACE
+        printf "up.info Traffic of the %s interface. Unable to determine interface speed." "$INTERFACE"
         if [[ $EUID -ne 0 ]]; then
                 echo " Please run the plugin as root."
         else
@@ -138,7 +141,7 @@ findspeed() {
         return
     fi
 
-    BPS=$(( $SPEED * 1000 * 1000 ))
+    BPS=$(( SPEED * 1000 * 1000 ))
 
     cat <<EOF
 up.max $BPS
@@ -171,6 +174,7 @@ case $1 in
         echo "graph_order down up"
         echo "graph_title $INTERFACE traffic"
         echo 'graph_args --base 1000'
+        # shellcheck disable=SC2016
         echo 'graph_vlabel bits in (-) / out (+) per ${graph_period}'
         echo 'graph_category network'
         echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is shown in bits per second, not bytes. IMPORTANT: On 32-bit systems the data source for this plugin uses 32-bit counters, which makes the plugin unreliable and unsuitable for most 100-Mb/s (or faster) interfaces, where traffic is expected to exceed 50 Mb/s over a 5 minute period.  This means that this plugin is unsuitable for most 32-bit production environments. To avoid this problem, use the ip_ plugin instead.  There should be no problems on 64-bit systems running 64-bit kernels."
@@ -197,14 +201,13 @@ esac
 
 # Escape dots in the interface name (eg. vlans) before using it as a regex
 if [[ -r /sys/class/net/$INTERFACE/statistics/rx_bytes ]]; then
-    echo "down.value $(cat /sys/class/net/$INTERFACE/statistics/rx_bytes)"
-    echo "up.value $(cat /sys/class/net/$INTERFACE/statistics/tx_bytes)"
+    echo "down.value $(cat "/sys/class/net/$INTERFACE/statistics/rx_bytes")"
+    echo "up.value $(cat "/sys/class/net/$INTERFACE/statistics/tx_bytes")"
 else
     awk -v interface="$INTERFACE" \
-        'BEGIN { gsub(/\./, "\\.", interface) } \
+        'BEGIN { gsub(/\./, "\\.", interface) }
         $1 ~ "^" interface ":" {
-            split($0, a, /: */); $0 = a[2]; \
-            print "down.value " $1 "\nup.value " $9 \
-        }' \
+            split($0, a, /: */); $0 = a[2];
+            print "down.value " $1 "\nup.value " $9}' \
         /proc/net/dev
 fi

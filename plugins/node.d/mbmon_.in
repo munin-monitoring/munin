@@ -21,24 +21,24 @@
 #%# family=contrib
 #%# capabilities=autoconf suggest
 
-what=`basename $0 | sed 's/^mbmon_//g'`
+what=$(basename "$0" | sed 's/^mbmon_//g')
+mbmon=${mbmon:-$(which mbmon)}
+
 
 if [ "$1" = "suggest" ]; then
-	printf "TEMP\nFAN\nVoltage\n"
+	echo 'TEMP'
+	echo 'FAN'
+	echo 'Voltage'
 	exit 0
 fi
 
 if [ "$1" = "autoconf" ]; then
-	if $mbmon -c 1 > /dev/null 2>/dev/null ; then
-		printf "yes\n"
-		exit 0
+	if [ -z "$mbmon" ] || [ ! -x "$mbmon" ]; then
+		echo "no (executable 'mbmon' not found)"
+	elif "$mbmon" -c 1 > /dev/null 2>/dev/null; then
+		echo "yes"
 	else
-		if [ $?=127 ] ;then
-			echo "no (executable not found)"
-		else
-			echo "no (mbmon could not read sensor values)"
-		fi
-		exit 0
+		echo "no (mbmon could not read sensor values)"
 	fi
 	exit 0
 fi
@@ -75,7 +75,7 @@ case $what in
 		;;
 	FAN)
 		echo 'graph_title Motherboard Fans'
-		echo 'graph_category sensors' 
+		echo 'graph_category sensors'
 		echo 'graph_order FAN0 FAN1 FAN2'
 		echo 'graph_vlabel rpm'
 		echo 'FAN0.label Fan 1'
@@ -100,7 +100,3 @@ case $what in
 		exit 0
 		;;
 esac
-
-
-
-

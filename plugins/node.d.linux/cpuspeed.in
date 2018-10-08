@@ -19,22 +19,34 @@ None needed by default.
 You can set one environment variable to modify the plugins behaviour:
 
   [cpuspeed]
-     env.scaleto100 1
+     env.scaleto100 yes
 
-Show the frequency as a percentage instead of absolute frequency.  If
-set the plugin sets up a CDEF to change the speed in Hz to percent.
+Show the frequency as a percentage instead of absolute frequency.
+If set the "yes" the plugin sets up a CDEF to change the speed in Hz
+to percent.
 
 If you set or unset this the whole time series will be shown in the
 same way, either as Hz or percent (as the graphs are updated).
 
 =head1 INTERPRETATION
 
-The plugin shows the average CPU speed in the measurement period as
-represented by /sys/devices/system/cpu/*/cpufreq/stats/time_in_state.
+The plugin supports two sources of information.
 
-This is a counter plugin and represents the average.  Many cpuspeed
-plugins reports the "instant" CPU speed at the time the plugin runs.
-This is not representative for this metric.
+The optimal source of information is the "acpi-cpufreq" kernel module.
+It provides access to the accumulated time a CPU spent in a specific
+speed state (see /sys/devices/system/cpu/*/cpufreq/stats/time_in_state).
+This value is fine-grained and represents the *average* CPU speed for
+every data collection period.
+This data is available only for non-Intel CPUs.
+
+An alternative (sub-optimal) source of information is provided by the
+"intel_pstate" driver (typically built into a kernel).
+This driver delivers only *instant* information about the CPU speed
+(at the time of the munin data collection). This is not necessarily
+representative for the real CPU speed history.
+The "pstate" driver conflicts with "acpi-cpufreq".  Thus hosts with an
+Intel CPU are usually stuck with "intel_pstate" as a less optimal
+source of frequency information.
 
 =head1 BUGS
 
@@ -55,24 +67,31 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
+
+scaleto100=${scaleto100:-no}
+ACPI_CPUFREQ_INDICATOR_FILENAME=/sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state
+INTEL_PSTATE_INDICATOR_FILENAME=/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+
 
 if [ "$1" = "autoconf" ]; then
-    if [ -r /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state ] ; then
+    if [ -r "$ACPI_CPUFREQ_INDICATOR_FILENAME" ]; then
+        # "acpi-cpufreq" is available
         echo yes
-        exit 0
+    elif [ -r "$INTEL_PSTATE_INDICATOR_FILENAME" ]; then
+        # the "intel_pstate" driver is available (no averaging, but at least snapshot values)
+        echo yes
     else
-        echo "no (missing /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state)"
-        exit 0
+        echo "no (neither $ACPI_CPUFREQ_INDICATOR_FILENAME nor $INTEL_PSTATE_INDICATOR_FILENAME is readable)"
     fi
+    exit 0
 fi
 
 
 if [ "$1" = "config" ]; then
-    echo graph_title CPU frequency scaling
-    echo graph_args --base 1000
-    echo graph_info This graph shows the average speeds at which the CPUs are running
-    echo graph_category system
+    echo "graph_title CPU frequency scaling"
+    echo "graph_args --base 1000"
+    echo "graph_category system"
 
     if [ "$scaleto100" = "yes" ]; then
         echo "graph_vlabel %"
@@ -80,43 +99,60 @@ if [ "$1" = "config" ]; then
     else
         echo "graph_vlabel Hz"
     fi
+    # the visualized data depends on the available data source
+    if [ -r "$ACPI_CPUFREQ_INDICATOR_FILENAME" ]; then
+        graph_info="This graph shows the average running speed of each CPU."
+        field_type="DERIVE"
+    elif [ -r "$INTEL_PSTATE_INDICATOR_FILENAME" ]; then
+        graph_info="This graph shows the current speed of the CPU at the time of the data retrieval (not its average). This is a limitiation of the 'intel_pstate' driver."
+        field_type="GAUGE"
+    else
+        graph_info="The properties of this data source are not documented."
+        field_type="DERIVE"
+    fi
+    echo "graph_info $graph_info"
 
     for c in /sys/devices/system/cpu/cpu[0-9]*; do
         N=${c##*/cpu}
 
         echo "cpu$N.label CPU $N"
-        echo "cpu$N.type DERIVE"
+        echo "cpu$N.type $field_type"
 
-	if [ -r $c/cpufreq/cpuinfo_max_freq ]; then
+        if [ -r "$c/cpufreq/cpuinfo_max_freq" ]; then
 
-            MAXHZ=$(cat $c/cpufreq/cpuinfo_max_freq)
+            MAXHZ=$(cat "$c/cpufreq/cpuinfo_max_freq")
             # Adding 10% to $MAXHZ, to cope with polling jitters
             # See bug D#615957
-            MAXHZ=$(( $MAXHZ + $MAXHZ / 10 ))
+            MAXHZ=$(( MAXHZ + MAXHZ / 10 ))
             echo "cpu$N.max $MAXHZ"
 
             if [ "$scaleto100" = "yes" ]; then
-		echo "cpu$N.cdef cpu$N,1000,*,$MAXHZ,/"
+                echo "cpu$N.cdef cpu$N,1000,*,$MAXHZ,/"
             else
-		echo "cpu$N.cdef cpu$N,1000,*"
+                echo "cpu$N.cdef cpu$N,1000,*"
             fi
-	fi
+        fi
 
-	if [ -r $c/cpufreq/cpuinfo_min_freq ]; then
-	    MINHZ=$(cat $c/cpufreq/cpuinfo_min_freq)
+        if [ -r "$c/cpufreq/cpuinfo_min_freq" ]; then
+            MINHZ=$(cat "$c/cpufreq/cpuinfo_min_freq")
             echo "cpu$N.min $MINHZ"
-	fi
+        fi
 
-	print_warning "cpu$N"
-	print_critical "cpu$N"
+        print_warning "cpu$N"
+        print_critical "cpu$N"
 
     done
-    exit 0;
+    if [ "${MUNIN_CAP_DIRTYCONFIG:-0}" != 1 ]; then exit 0; fi
 fi
 
 for c in /sys/devices/system/cpu/cpu[0-9]*; do
     N=${c##*/cpu}
-    awk -v cpu=$N '{ cycles += $1 * $2 } 
-               END { printf "cpu%d.value %.0f\n", cpu, cycles / 100; }' \
-        $c/cpufreq/stats/time_in_state
+    if [ -r "$ACPI_CPUFREQ_INDICATOR_FILENAME" ]; then
+        value=$(awk '{ cycles += $1 * $2 } END { print(cycles / 100); }' "$c/cpufreq/stats/time_in_state")
+    elif [ -r "$INTEL_PSTATE_INDICATOR_FILENAME" ]; then
+        value=$(cat "$c/cpufreq/scaling_cur_freq")
+    else
+        value="U"
+    fi
+    printf 'cpu%d.value %s\n' "$N" "$value"
 done

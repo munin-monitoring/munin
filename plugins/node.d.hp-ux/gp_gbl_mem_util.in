@@ -1,7 +1,7 @@
-#!/usr/bin/sh
+#!@@GOODSH@@
 #
 # gp_gbl_mem - Munin plug-in to fetch global memory utilisation via Glance
-#	      (should only run on HP-UX with GlancePlus (GP) installed therefore)		
+#	      (should only run on HP-UX with GlancePlus (GP) installed therefore)
 #
 # Requires:   Separate GP adviser syntax file whose location is made known
 #             by ADVISER environment variable which defaults to
@@ -23,13 +23,13 @@
 #
 #
 #	    Note, to avoid parsing problems on start of munin-node
-#	    add this entry to your munin-node.conf if you place the *.adv file 
+#	    add this entry to your munin-node.conf if you place the *.adv file
 #	    in above mentioned location: "ignore_file \.adv$"
 #
 #	    The contents of the syntax file for this plugin should look like
 #           this:
 #
-#	if (gbl_interval > 2) then 
+#	if (gbl_interval > 2) then
 #	{
 #	    print "mem_util.value ",gbl_mem_util|6|2
 #	    print "mem_user.value ",gbl_mem_user_util|6|2

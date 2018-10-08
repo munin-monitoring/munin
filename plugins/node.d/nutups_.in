@@ -5,26 +5,27 @@
 #
 # Written by Andras Korn in 2005. Licensed under the GPL.
 #
-# usage: ups_upsid_function
+# usage: nutups_upsid_function
 #
 #%# family=contrib
 #%# capabilities=autoconf suggest
 
-UPS=$(basename $0 | cut -d_ -f2)
-FUNCTION=$(basename $0 | cut -d_ -f3)
+UPS=$(basename "$0" | cut -d_ -f2)
+FUNCTION=$(basename "$0" | cut -d_ -f3)
+UPSC=$(command -v upsc)
 
 if [ "$1" = "autoconf" ]; then
-	[ -x /bin/upsc ] && [ -r /etc/nut/ups.conf ] && echo yes && exit 0
-	echo "no (/bin/upsc or /etc/nut/ups.conf not found)"
+	[ -x "$UPSC" ] && [ -r /etc/nut/ups.conf ] && echo yes && exit 0
+	echo "no (upsc or /etc/nut/ups.conf not found)"
 	exit 0
 fi
 
 if [ "$1" = "suggest" ]; then
 	grep '^\[[^]]*\]$' /etc/nut/ups.conf \
 		| tr -d '][' \
-		| while read ups; do
+		| while read -r ups; do
 			for i in voltages freq charge current; do
-				echo ${ups}_${i}
+				echo "${ups}_${i}"
 			done
 		done
 fi
@@ -42,7 +43,7 @@ voltages() {
 			echo "${i}.min 0"
 		done
 	else
-		upsc $UPS | sed -n '/volt/{
+		"$UPSC" "$UPS" | sed -n '/volt/{
 					s/://
 					/nominal/s/.* /nominal.value /
 					/voltage/s/\.[^ ]*/.value/
@@ -64,7 +65,7 @@ charge() {
 			echo "${i}.min 0"
 		done
 	else
-		upsc $UPS | sed -n '/charge/{
+		"$UPSC" "$UPS" | sed -n '/charge/{
 					s/^[^:]*\.//g
 					s/:/.value/
 					p
@@ -87,7 +88,7 @@ frequency() {
 		echo "acfreq.max 100"
 		echo "acfreq.min 5"
 	else
-		upsc $UPS | sed -n '/freq/{s/.*:/acfreq.value/;p}'
+		"$UPSC" "$UPS" | sed -n '/freq/{s/.*:/acfreq.value/;p}'
 	fi
 }
 
@@ -102,7 +103,7 @@ current() {
 		echo "current.max 100"
 		echo "current.min 0"
 	else
-		upsc $UPS | sed -n '/current/{s/.*:/current.value/;p}'
+		"$UPSC" "$UPS" | sed -n '/current/{s/.*:/current.value/;p}'
 	fi
 }
 
@@ -110,16 +111,15 @@ current() {
 
 case "$FUNCTION" in
 	voltages)
-		voltages $1
+		voltages "$1"
 		;;
 	charge)
-		charge $1
+		charge "$1"
 		;;
 	freq)
-		frequency $1
+		frequency "$1"
 		;;
 	current)
-		current $1
+		current "$1"
 		;;
 esac
-

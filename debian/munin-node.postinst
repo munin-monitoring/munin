@@ -4,6 +4,14 @@ set -e
 
 prevver="$2"
 
+initperms() {
+	chown munin:adm /var/log/munin
+	chmod 755 /var/log/munin
+
+	chown root:munin /etc/munin/plugin-conf.d
+	chmod 750 /etc/munin/plugin-conf.d
+}
+
 init_plugins() {
 	TMPFILE=`mktemp /tmp/munin-node.configure.XXXXXXXXXX`
 	TMPFILE_STDERR=`mktemp /tmp/munin-node.configure.err.XXXXXXXXXX`
@@ -41,6 +49,9 @@ init_plugins() {
 
 case "$1" in
 	configure)
+		if [ -z "$2" ]; then
+			initperms
+		fi
 		init_plugins
 		;;
         triggered)

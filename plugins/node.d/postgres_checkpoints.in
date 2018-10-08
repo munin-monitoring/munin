@@ -68,8 +68,8 @@ my $pg = Munin::Plugin::Pgsql->new(
         "VALUES ('checkpoints_timed','Timed checkpoints','Checkpoints started by timeout'),('checkpoints_req','Requested checkpoints','Checkpoints started by request')",
     stack       => 1,
     graphtype   => 'DERIVE',
-    graphperiod => 'minute'
+    graphperiod => 'minute',
+    graphmin    => 0,
 );
 
 $pg->Process();
-

@@ -70,7 +70,6 @@ all processes matching the process name, as reported by ps.
 
   0.1 first release, based on multips as distributed in Debian.
 
-  $Id $
 
 =head1 BUGS AND RESTRICTIONS
 
@@ -99,15 +98,16 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
+
+names=${names:-}
 
 if [ "$1" = "autoconf" ]; then
     if [ -z "$names" ]; then
-	echo "no (Configuration required)"
-	exit 0
+        echo "no (Configuration required)"
+    else
+        echo yes
     fi
-
-    echo yes
     exit 0
 fi
 
@@ -119,7 +119,7 @@ fi
 monitor=${monitor:-rss}
 
 if [ "$1" = "config" ]; then
-	echo graph_title Process $monitor summed by name
+	echo "graph_title Process $monitor summed by name"
 	echo 'graph_category processes'
 	echo 'graph_args --base 1024 -l 0'
 	echo 'graph_vlabel memory'
@@ -137,8 +137,8 @@ fi
 for name in $names; do
         fieldname="$(clean_fieldname "$name")"
 
-	ps -eo $monitor,comm | gawk '
-BEGIN              { total = "U"; } # U = Unknown. 
+	ps -eo "$monitor,comm" | gawk '
+BEGIN              { total = "U"; } # U = Unknown.
 /grep/             { next; }
 $2 ~ /^'"$name"'$/ { total = total + ($1*1024); }
 END                { print "'"$fieldname"'.value", total; }'

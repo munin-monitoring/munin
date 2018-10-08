@@ -30,7 +30,7 @@
 
 if [ "$1" = "autoconf" ]; then
     if [ -x /usr/sbin/iostat ]; then
-	echo yes 
+	echo yes
 	exit 0
     else
 	echo "no (no /usr/sbin/iostat executable)"

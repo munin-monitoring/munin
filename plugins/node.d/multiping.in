@@ -54,10 +54,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 =cut
 
-if [ -z "$host" ]; then
-    file_host=$(basename $0 | sed 's/^ping_//g')
-    host=${host:-${file_host:-www.google.com}}
-fi
+
+host=${host:-www.google.com}
+
 
 if [ "$1" = "config" ]; then
     echo graph_title Ping times
@@ -66,7 +65,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_category network'
     echo 'graph_info This graph shows ping RTT statistics.'
     for hosts in $host; do
-	site=`expr $site + 1`
+        site=$((site + 1))
 	echo "site$site.label $hosts"
 	echo "site$site.info Ping RTT statistics for $hosts."
 	echo "site$site.draw LINE2"
@@ -76,11 +75,12 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-for hosts in $host 
+for hosts in $host
 do
-    export site=$(expr $site + 1)
-    ${ping:-ping} ${ping_args:-'-c 2'} ${hosts} ${ping_args2} \
-	| perl -n -e 'print "site$ENV{'site'}.value ", $1 / 1000, "\n" 
-        if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@; 
-        print "site$ENV{'site'}_packetloss.value $1\n" if /(\d+)% packet loss/;'
+    export site=$((site + 1))
+    # shellcheck disable=SC2086
+    "${ping:-ping}" ${ping_args:-'-c 2'} ${hosts} ${ping_args2:-} \
+        | perl -n -e 'print "site$ENV{site}.value ", $1 / 1000, "\n"
+            if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@;
+            print "site$ENV{site}_packetloss.value $1\n" if /(\d+)% packet loss/;'
 done

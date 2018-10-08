@@ -80,7 +80,7 @@ if (defined $ARGV[0] and $ARGV[0] eq "config") {
 	print "host_name $host\n" unless $host eq 'localhost';
 	print <<"EOC";
 graph_title Number of users
-graph_args --base 1000 -l 0 
+graph_args --base 1000 -l 0
 graph_vlabel number of users
 graph_scale no
 graph_category system
@@ -94,4 +94,3 @@ EOC
 
 my $session = Munin::Plugin::SNMP->session();
 print "users.value ", $session->get_single('1.3.6.1.2.1.25.1.5.0'), "\n";
-

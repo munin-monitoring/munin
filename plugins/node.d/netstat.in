@@ -1,15 +1,17 @@
 #!@@GOODSH@@
 # -*- sh -*-
 
+set -e
+
 : << =cut
 
 =head1 NAME
 
-netstat - Plugin to monitor network connections.
+netstat - Plugin to monitor network connections
 
 =head1 CONFIGURATION
 
-No configuration for this plugin
+No configuration
 
 =head1 AUTHOR
 
@@ -21,32 +23,27 @@ GPLv2
 
 =head1 MAGIC MARKERS
 
-=begin comment
-
-These magic markers are used by munin-node-configure when installing
-munin-node.
-
-=end comment
-
  #%# family=auto
  #%# capabilities=autoconf
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
+
+NETSTAT_CMD=netstat
 
 
 if [ "$1" = "autoconf" ]; then
-	if ( netstat -s 2>/dev/null >/dev/null ); then
+	if ( "$NETSTAT_CMD" -s 2>/dev/null >/dev/null ); then
 		echo yes
 		exit 0
 	else
 		if [ $? -eq 127 ]
 		then
-			echo "no (netstat program not found)"
+			echo "no (program $NETSTAT_CMD not found)"
 			exit 0
 		else
-			echo no
+			echo "no (unknown netstat return value $?)"
 			exit 0
 		fi
 	fi
@@ -56,7 +53,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title Netstat'
 	echo 'graph_args --base 1000 --logarithmic'
-	echo 'graph_vlabel active connections per ${graph_period}'
+	echo 'graph_vlabel TCP connections'
 	echo 'graph_category network'
 	echo 'graph_period second'
 	echo 'graph_info This graph shows the TCP activity of all the network interfaces combined.'
@@ -98,7 +95,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-netstat -s | awk '
+"$NETSTAT_CMD" -s | awk '
 /connection requests/     { print "active.value " $1 }
 /connection accepts/      { print "passive.value " $1 }
 /bad connection/          { print "failed.value " $1 }
