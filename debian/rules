@@ -58,12 +58,12 @@ override_dh_auto_install:
 	# in the default apache2/conf.d/munin configuration
 	rm -v $(CURDIR)/debian/munin/var/cache/munin/www/.htaccess
 
-	# Remove bundled VeraMono.ttf, debian gets this font from
+	# Remove bundled VeraMono.ttf, debian gets this font from 
 	# the fonts-dejavu-core package. http://bugs.debian.org/548508
 	rm -v $(CURDIR)/debian/munin/usr/share/munin/DejaVuSans*.ttf
 
 	# Munin::Plugins & plugins.sh go into munin-common.
-	# They are used for munin-plugins-* and we don't want a whole
+	# They are used for munin-plugins-* and we don't want a whole 
 	# dedicated new package (munin-plugins-common) for that. yet.
 	for file in usr/share/perl5/Munin/Plugin.pm usr/share/munin/plugins/plugin.sh; do \
 		mkdir -p $(CURDIR)/debian/munin-common/$$(dirname $$file) ;\
