@@ -1,5 +1,6 @@
-munin (2.0.42-1) UNRELEASED; urgency=low
+munin (2.0.42-1) unstable; urgency=low
 
+  [ Lars Kruse ]
   * New upstream version 2.0.42.
   * New upstream version 2.0.41, Closes: #717287
   * New upstream version 2.0.38, fixing various issues, including bugs in:
@@ -84,7 +85,7 @@ munin (2.0.42-1) UNRELEASED; urgency=low
     (obsolete due to the switch to quilt source format: #651449)
   * Add debian/upstream/metadata
 
- -- Lars Kruse <devel@sumpfralle.de>  Fri, 21 Sep 2018 13:45:33 +0200
+ -- Holger Levsen <holger@debian.org>  Mon, 08 Oct 2018 21:56:32 +0100
 
 munin (2.0.37-2) unstable; urgency=medium
 
