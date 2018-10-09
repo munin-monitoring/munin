@@ -77,8 +77,7 @@ install:
   - ./Build build
   # We want to lint first, to avoid expensive tests if code isn't clean
   - make lint-munin
-  # Plugins are currently not compliant
-  - make lint-plugins || true
+  - make lint-plugins
   # check for potential spelling mistakes
   - make lint-spelling
 script:
