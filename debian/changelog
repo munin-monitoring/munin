@@ -1,5 +1,6 @@
-munin (2.999.9-1) UNRELEASED; urgency=medium
+munin (2.999.9-1) experimental; urgency=medium
 
+  [ Lars Kruse ]
   * New upstream beta release (2.999.9)
   * munin and munin-node: use separate maintscript files
   * convert old doc directories (before "link-doc") to symlinks
@@ -49,7 +50,7 @@ munin (2.999.9-1) UNRELEASED; urgency=medium
   * sysvrc-init for munin-tmpfiles: require "remote_fs" for properly detecting
     the installation status of munin (Thanks, Viktor Szépe)
 
- -- Lars Kruse <devel@sumpfralle.de>  Wed, 03 Oct 2018 22:49:43 +0200
+ -- Holger Levsen <holger@debian.org>  Tue, 09 Oct 2018 13:20:32 +0100
 
 munin (2.999.8-1) experimental; urgency=medium
 
