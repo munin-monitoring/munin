@@ -75,6 +75,7 @@ get_fieldname() {
 
 total=${total:-on}
 
+dfopts=${dfopts:-"-P -l"}
 exclude=${exclude:-iso9660}
 exclude=$(echo "$exclude" | sed -r -e 's/ +/ -x /g' -e 's/^/-x /')
 
