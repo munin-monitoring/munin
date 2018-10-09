@@ -73,9 +73,25 @@ get_fieldname() {
         esac
 }
 
+# Test whether the given text (first parameter) matches one of the given regular expressions
+# (second parameter; space separated list). Returns success (0) in case of a match.
+check_for_regex_match() {
+        local text="$1"
+        local list_of_regex="$2"
+        local re
+        for re in $list_of_regex; do
+                if [[ "$text" =~ $re ]]; then
+                        return 0
+                fi
+        done
+        # no expression matched the text
+        return 1
+}
+
 total=${total:-on}
 
 dfopts=${dfopts:-"-P -l"}
+exclude_re=${exclude_re:-}
 exclude=${exclude:-iso9660}
 exclude=$(echo "$exclude" | sed -r -e 's/ +/ -x /g' -e 's/^/-x /')
 
@@ -91,6 +107,8 @@ if [ "$1" = "config" ]; then
         # shellcheck disable=SC2086
         df $dfopts $exclude | sed 1d | grep -v "//" |
         while read -r dev size used avail cap mnt; do
+                check_for_regex_match "$dev" "$exclude_re" && continue
+                check_for_regex_match "$mnt" "$exclude_re" && continue
                 name="$(get_fieldname "$dev" "$mnt")"
                 echo "$name.label $mnt"
                 echo "$name.cdef $name,1024,*"
@@ -104,24 +122,12 @@ if [ "$1" = "config" ]; then
                 fi
         done
         exit 0
-		for re in $exclude_re
-		do
-			if [[ "$dev" =~ $re ]] || [[ "$mnt" =~ $re ]]
-			then
-				continue 2
-			fi
-		done
 fi
 
 # shellcheck disable=SC2034,SC2086
 df $dfopts $exclude | sed 1d | grep -v "//" |
 	while read -r dev size used avail cap mnt; do
-		for re in $exclude_re
-		do
-			if [[ "$dev" =~ $re ]] || [[ "$mnt" =~ $re ]]
-			then
-				continue 2
-			fi
-		done
+                check_for_regex_match "$dev" "$exclude_re" && continue
+                check_for_regex_match "$mnt" "$exclude_re" && continue
 		echo "$(get_fieldname "$dev" "$mnt").value $used"
 done
