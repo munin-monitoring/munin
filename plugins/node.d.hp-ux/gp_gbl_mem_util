@@ -68,7 +68,6 @@ to avoid parsing problems on start of munin-node.
 =cut
 
 PATH=/usr/bin:/usr/sbin
-MUNIN_RUN=@@SBINDIR@@/munin-run
 PLUGIN=${0##*/}
 
 # These variables are required to run Glance
