@@ -7,11 +7,11 @@
 #%# family=contrib
 #%# capabilities=autoconf suggest
 
-proto=$(basename $0|cut -d_ -f3)
+proto=$(basename "$0" | cut -d_ -f3)
 type=${0##*_}
 
 if [[ $1 = autoconf ]]; then
-    if uname -s|grep -qEi hp-?ux; then
+    if uname -s|grep -qEi "hp-?ux"; then
 	echo yes
 	exit 0
     else
@@ -19,7 +19,7 @@ if [[ $1 = autoconf ]]; then
 	exit 0
     fi
 fi
-[[ $1 = suggest ]] && printf "socket\nthroughput\n" && exit 0
+[[ $1 = suggest ]] && printf 'socket\nthroughput\n' && exit 0
 
 set -A SOCKET_LABELS requests accepts established closed
 
@@ -31,7 +31,8 @@ if [[ $1 = config ]]; then
 	socket)
 	    echo "graph_vlabel connections per \${graph_period}"
 	    for tag in ${SOCKET_LABELS[*]}; do
-		printf "%s.label %s\n%s.type COUNTER\n" $tag $tag $tag
+                printf '%s.label %s\n' "$tag" "$tag"
+                printf '%s.type COUNTER\n' "$tag"
 	    done
 	    ;;
 	throughput)
@@ -52,12 +53,12 @@ case $type in
 	typeset -i i=-1
 	netstat -s -p tcp \
 	    |awk '/connections? (requests|accepts|established|closed)/{print$1}' \
-    		|while read count; do
-		    printf "%s.value " ${SOCKET_LABELS[((i+=1))]}
-		    echo $count
+                | while read -r count; do
+                    printf '%s.value %s\n' "${SOCKET_LABELS[((i+=1))]}" "$count"
     		done
 	;;
     throughput)
+	# shellcheck disable=SC2046
 	set -- $(netstat -s -p tcp|awk '/packets (sent|received)$/{print$1}')
 	echo "ingress.value $2"
 	echo "egress.value $1"

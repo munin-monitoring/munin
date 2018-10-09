@@ -1,6 +1,7 @@
 #!/usr/local/bin/bash
 #
 
+# shellcheck disable=SC1117
 : <<=cut
 
 =head1 NAME
@@ -71,11 +72,11 @@ PATH=/usr/bin:/usr/sbin
 PLUGIN=${0##*/}
 
 # These variables are required to run Glance
-: ${GLANCE:=/opt/perf/bin/glance}
-: ${HOME:=/home/munin}
-: ${ADVISER_INT:=4}
-: ${ADVISER_ITS:=2}
-: ${ADVISER:=@@LIBDIR@@/$PLUGIN.adv}
+: "${GLANCE:=/opt/perf/bin/glance}"
+: "${HOME:=/home/munin}"
+: "${ADVISER_INT:=4}"
+: "${ADVISER_ITS:=2}"
+: "${ADVISER:=@@LIBDIR@@/$PLUGIN.adv}"
 
 export PATH
 export HOME
@@ -86,18 +87,19 @@ if [[ $1 = autoconf ]]; then
 	exit 0
     fi
     set +u
-    if [ ! -x $GLANCE ]; then
+    if [ ! -x "$GLANCE" ]; then
 	gp_depot=$(swlist -l product|awk '{if(match(tolower($0),"glance")){print$1}}')
 	if [[ -n $gp_depot ]]; then
+	    # shellcheck disable=SC2086
 	    GLANCE=$(swlist -l file $gp_depot|awk '$NF~/bin\/glance$/{print$NF}')
-	    [[ -n $GLANCE ]] && [ -x $GLANCE ] || exit 1
+	    [ -n "$GLANCE" ] && [ -x "$GLANCE" ] || exit 1
 	else
 	    echo "no (Found no glance executable in a standard location)"
 	    exit 0
 	fi
     fi
 
-    if [ ! -f $ADVISER ]; then
+    if [ ! -f "$ADVISER" ]; then
 	echo "no (Found no adviser command file, please copy $PLUGIN.adv to $ADVISER)"
 	exit 0
     fi
@@ -130,4 +132,4 @@ fi
 
 [ -f "$ADVISER" ] || exit 1
 j=${ADVISER_INT:-4} i=${ADVISER_ITS:-2}
-/opt/perf/bin/glance -j $j -iterations $i -adviser_only -syntax $ADVISER 2>/dev/null
+/opt/perf/bin/glance -j $j -iterations $i -adviser_only -syntax "$ADVISER" 2>/dev/null
