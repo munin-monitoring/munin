@@ -92,6 +92,21 @@ lint-plugins:
 		| xargs -0 grep -l --null "^#!.*python" \
 			| xargs -0 $(PYTHON_LINT_CALL)
 	# TODO: perl plugins currently fail with perlcritic
+	# verify that no multigraph plugin lacks a check for the node's capability
+	# Three capability checks are detected:
+	#     * perl: need__multigraph();
+	#     * shell: is_multigraph
+	#     * perl with "Munin::Plugin::Framework": we assume the framework takes care for it
+	#     * manual: evaluate environment variable MUNIN_CAP_MULTIGRAPH
+	# Some files are excluded from the test:
+	#     * plugins/node.d.debug/*: these plugins are used only for testing
+	#     * AbstractMultiGraphsProvider.java: this is not a plugin
+	plugins_without_multigraph_check=$$(grep -rlwZ "multigraph" plugins/ \
+		| xargs -r -0 grep -LwE '((need|is)_multigraph|Munin::Plugin::Framework|MUNIN_CAP_MULTIGRAPH)') \
+		| grep -vE 'plugins/(node\.d\.debug/|.*/AbstractMultiGraphsProvider\.java)'; \
+		if [ -n "$$plugins_without_multigraph_check" ]; then \
+			echo '[ERROR] Some plugins lack a "multigraph" check (e.g. "needs_multigraph();" or "is_multigraph"):'; \
+			echo "$$plugins_without_multigraph_check" | sed 's/^/\t/'; false; fi >&2
 
 lint-spelling:
 	# codespell misdetections may be ignored by adding the full line of text to the file .codespell.exclude
