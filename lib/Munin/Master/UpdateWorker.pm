@@ -499,12 +499,9 @@ sub _db_state_update {
 	my ($last_epoch, $last_value) = $sth_state->fetchrow_array();
 	$sth_state->finish();
 
-	{
-		# $last_epoch might be null
-		no warnings; ## no critic qw( ProhibitNoWarnings )
-		DEBUG "_db_state_update.last_epoch:$last_epoch";
-		DEBUG "_db_state_update.last_value:$last_value";
-	}
+	# $last_epoch might be null
+	DEBUG "_db_state_update.last_epoch:$last_epoch" if (defined $last_epoch);
+	DEBUG "_db_state_update.last_value:$last_value";
 
 	if (! defined $last_epoch) {
 		# No line exists yet. Create It.
