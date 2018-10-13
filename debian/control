@@ -17,7 +17,7 @@ Build-Depends-Indep:
  libfile-slurp-perl,
  perl,
 Build-Depends:
- debhelper (>=11),
+ debhelper-compat (=11),
  libmodule-build-perl,
 Rules-Requires-Root: no
 Standards-Version: 4.2.1
