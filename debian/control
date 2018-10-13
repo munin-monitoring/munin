@@ -44,7 +44,7 @@ Build-Depends-Indep:
  python,
  python3-sphinx,
  ruby,
-Build-Depends: debhelper (>=11), libmodule-build-perl
+Build-Depends: debhelper-compat (=11), libmodule-build-perl
 Rules-Requires-Root: no
 Standards-Version: 4.2.1
 Homepage: http://munin-monitoring.org
