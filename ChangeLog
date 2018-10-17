@@ -9,7 +9,7 @@ numeric only sorting works, as we do have distro that rely on that.
 Packagers can use that versioning or 3.0b9
 
 This add the possibility to replace a SQLite with a PostgreSQL one. It also
-adds persistance and therefore doesn't recreate the DB from stratch if already
+adds persistence and therefore doesn't recreate the DB from stratch if already
 present.
 
 Finally, it also restarts the whole testing from ground up. As those were not
@@ -422,7 +422,7 @@ Dmitry Marakasov (5):
       Specify minimum value for tuples
       Specify minimal value for postgres scans
       Specify minimal value for bgwriter
-      Speficy minimal value for PostgreSQL checkpoints
+      Specify minimal value for PostgreSQL checkpoints
       Specify minimal value for postgresql buffer cache
 
 Lars Kruse (18):
@@ -692,7 +692,7 @@ Steve Schnepp (24):
       dev_scripts: handle XDG_RUNTIME_DIR not set
       UpdateWorker: create RRD with 1h less
       Use the default in the munin.conf
-      suuport graph_data_size debug
+      support graph_data_size debug
       use the debug size
       adding a Dockerfile
       avoid using local LANG
@@ -848,7 +848,7 @@ Steve Schnepp (91):
       update: Use the callback for data fetching
       update: updating the state in SQL
       update: retrieve the ds_id from the node_id
-      update: fix timeing when calling plugin fetch
+      update: fix timing when calling plugin fetch
       dev_scripts: adding Perl Perf lib
       update: add an index on service
       update: use a single DB connection per worker
@@ -1099,7 +1099,7 @@ Quentin Stoeckel (49):
       Allow changing graph_ext from a newly created settings modal
       Make navigation panel state persistent
       Fix eventRuler min x position when navigation menu is toggled
-      Remove fixed timeRange switchs and add those as a Toolbar action icon
+      Remove fixed timeRange switches and add those as a Toolbar action icon
       Make the toolbar fixed at the top of the screen
       Fix reading cookies in HTML.pm
       Display timeRange switch in categoryview, force-disable navigation bar in comparison & category views
@@ -1754,7 +1754,7 @@ Quentin S (116):
       Add a filter text input in overview page
       Add a JS time range switch for each column in nodeview
       Time range switch: avoid conflicts between both
-      Fix bugs with time range switchs
+      Fix bugs with time range switches
       Enlarge layout to 100% width
       Enhance navigation readability
       Fix regression introduced by merge conflict resolution
@@ -1798,7 +1798,7 @@ Quentin S (116):
       Fix time range switch position on some resolutions
       Reset filter when focused by hitting ESC keyboard key
       Change filter input main color from white to black (more classy)
-      Fix time range switchs when using DYN_IMAGES
+      Fix time range switches when using DYN_IMAGES
       Time range switch: do not blindly overwrite URL parameters
       querystring.js: add set function
       Filter: add current filter expression in URL
@@ -2028,7 +2028,7 @@ Steve Schnepp (61):
       gitignore: update to the new build system
       Makefile: fix typo in Munin.pm generation
       httpd: should use the real perl
-      gitignore: add builded files
+      gitignore: add built files
       Revert "master: also _sanitise_plugin_name() on spoolfetch"
       asyncd: uniform logs
       master: mis-merged Graph.pm & HTML.pm
@@ -2097,7 +2097,7 @@ Stig Sandbeck Mathisen (82):
       Use correct variable name
       Declare variable before use
       Remove dead code containing undeclared variable
-      Add test depdendency on File::ReadBackwards
+      Add test dependency on File::ReadBackwards
       Move plugin sybase_space to contrib
       travis: Install devscript for "checkbashisms"
       Add more test dependencies for plugins
@@ -2203,9 +2203,9 @@ Daniel Black (62):
       fetch multiple service information all in one go
       syntax fixes
       needed no space in sed -i.orig to work
-      Corrent perl err: Found = in conditional, should be ==
+      Correct perl err: Found = in conditional, should be ==
       typo in table alias
-      Suggest capabilty removes unneeded graphs
+      Suggest capability removes unneeded graphs
       Add galera monitoring variables
       better handling of undefined data
       fix wsrep_flow_control_sent/wsrep_flow_control_recv as DERIVES and make the wsrep_flow_control_recv -ve on same graph
@@ -2224,7 +2224,7 @@ Daniel Black (62):
       remove poor quality wsrep_avgreplicated/wsrep_avgreceived data calculation
       Remove apply and commit count from p/mysql
       p/mysql add innodb_adaptive_hash graph
-      Suggest capabilty removes unneeded graphs
+      Suggest capability removes unneeded graphs
       Add galera monitoring variables
       better handling of undefined data
       fix wsrep_flow_control_sent/wsrep_flow_control_recv as DERIVES and make the wsrep_flow_control_recv -ve on same graph
@@ -3149,7 +3149,7 @@ Steve Schnepp (88):
       cgi/html: fast-handle static pages
       cgi/html: fast-handle png-like pages
       cgi/html: Not existing static files should send 404
-      cgi/html: use CGI.pm fonctions instead of env vars
+      cgi/html: use CGI.pm functions instead of env vars
       cgi/html: redirecting the graph to its CGI
       cgi/html: fixing the extension for the graph urls
       sql: suppress extra $log_file handling
@@ -3629,7 +3629,7 @@ Dmitry Marakasov (5):
       Specify minimum value for tuples
       Specify minimal value for postgres scans
       Specify minimal value for bgwriter
-      Speficy minimal value for PostgreSQL checkpoints
+      Specify minimal value for PostgreSQL checkpoints
       Specify minimal value for postgresql buffer cache
 
 Jose-Marcio Martins da Cruz (1):
@@ -3655,7 +3655,7 @@ Lars Kruse (55):
       dynazoom: cgi-based template adapted to cron-based template
       Template 'problemview': fix HTML validation problems
       Template 'serviceview': use double quotes for tag attributes
-      plugin postfix_mailvolume: do not use hashs with save_state/restore_state
+      plugin postfix_mailvolume: do not use hash with save_state/restore_state
       dynazoom: temporarily remove doctype line
       plugin hddtemp_smartctl: handle missing 'smartctl' gracefully
       Java compilation: change source and target specification from 1.5 to 1.7
@@ -5241,7 +5241,7 @@ Commits by kenyon, steve.schnepp
 Summary :
 
 * Adding the current action to the command line. Useful for debugging.
-* Adding a new URL param full_size_mode to enable predictible IMG sizes
+* Adding a new URL param full_size_mode to enable predictable IMG sizes
 * Enable sparklines with the url param "only_graph"
 * Start RRD just before first update. To avoid a very costly 1st update.
 * Emit the hosts in a sorted order, instead of somewhat random.
@@ -5558,7 +5558,7 @@ munin 1.4.4, r3276,3379, 2010-2-26
 * Munin/Master/GraphOld.pm sum+colour fix (closes #731)
   plugin to connect to a separate munin-node (or other daemon speaking the
   munin-node protocol) and fetch values from there.
-* munin-update: Fix config line continuation hadling
+* munin-update: Fix config line continuation handling
 * Add patch from munin ticket #828, to suppress "occasional" unknown states 
   to avoid alerts. Thanks to Steve Wilson for the patch!
 * proxy_plugin: New proxy plugin, that makes it possible for a single Munin
@@ -5708,7 +5708,7 @@ munin 1.4.2, r3167:3231, 2009-12-16
   found. This can happen if someone configured the plugin manually, or
   if the plugin is installed when LWP::Useragent is installed and
   passes autoconf, but sometime later LWP::Useragent is
-  removed. Without this patch the error message is confusing: Cant
+  removed. Without this patch the error message is confusing: Can't
   locate object method "new" via package "LWP::UserAgent" This also
   keeps autoconf output sane even if LWP::Useragent is not available
 * linux/ip_: Actually support ipv6.  Munin does actually handle : in
@@ -5977,7 +5977,7 @@ munin (1.4.0-alpha2, r2899:2981, 2009-11-13)
   touch
 * HTML: added variable to set the text for the dropdown for each of the
   template emitting functions.
-* Refactoring templates into partials (with include) to avod a lot of
+* Refactoring templates into partials (with include) to avoid a lot of
   duplication. There is some left. Better look on the legend table for
   service-biew and dropdown with 'other' links with config
   value. Default is 1 at the moment. Makefile adds install steps for
@@ -6066,7 +6066,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * Retire fieldname.warn and fieldname.crit.  The documentation has been
   saying .warning and .critical for a number of years.  Mass fix plugins
   accordingly.
-* Service view: Add hopefuly helpful explanatory text about
+* Service view: Add hopefully helpful explanatory text about
   warn/crit/unknown states in the graph-info field.
 * Get the HTML templates and CSS validating.
 * Updated templates and CSS with stylish new elements, fonts and such.
@@ -6478,8 +6478,8 @@ munin (1.3.4, r1277:1560, 8/3/2008)
  * Fix bug in node.d/ntp_ where jitter is plotted with the wrong values.
    Fixes #520.
  * Munin.pm: Bugfix in an error message, as well as added low-level reason
-   for dieing. Solves #468.  Detaint pid before kill(). Fixes #508.
- * munin-limits: Added support for "unknown" Resloves #29, #43.
+   for dying. Solves #468.  Detaint pid before kill(). Fixes #508.
+ * munin-limits: Added support for "unknown", Resolves #29, #43.
  * munin-update: Fixed timeout bug (timeout not working where intended).
    Closes #168.
  * freebsd/if_: Disable DNS lookups which are not used (fixes #509)
@@ -6516,7 +6516,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
      - make the support for servernames, port and so on uniform
  * ntp plugins: Make ntp_ plugin manual, it is no longer recommended,
      the new ntp_offset is
-     - Interprete magical ip-numbers used by ntpd for local
+     - Interpret magical ip-numbers used by ntpd for local
        clocks - stops spurious DNS lookups of these (closes #150)
  * It appears that some versions of Net::SSLeay needs a "" in
    print_errs("") calls (closes #154)
@@ -6615,7 +6615,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
    the munin-dirs - Thanks Matthias!
  * Implement multilevel-groups.
  * Enabled plugins to send values on the form <epoch>:<value>
-   (enabeling backdating of data)
+   (enabling backdating of data)
  * Rename munin_set_var -> munin_set for consistency purposes.
  * Fetch services directly after config, to make use of OS caches.
  * Bugfix: .graph was ignored in some cases in munin-html, ending in
@@ -6676,7 +6676,7 @@ munin (1.3.3, r910-r1236)
 	graph_printf
   * munin-graph/Munin.pm: Support graph_printf
   * users plugin: Move to platform independent directory
-  * users plugin: change familiy to auto, make generic
+  * users plugin: change family to auto, make generic
   * linux/memory: Further adjustments w.r.t. correct handling of vmalloc_used
   * Fix typo "contigious"
   * munin-node-simple: Fix @@ variable typos
@@ -6724,7 +6724,7 @@ munin (1.3.3, r910-r1236)
   * Add maintainer version of Makefile.config - and stop it from being
 	   distributed as the actual Makefile.config by accident
   * Add favicon.ico file and install
-  * Add other convinience features for the maintainer to Makefile
+  * Add other convenience features for the maintainer to Makefile
   * linux/fw_forwarded_local: Removed arbitrary max settings (trac #149)
   * Contributed plugins for netbsd
   * New ntpdc based ntp plugins to show kernel params
@@ -6977,7 +6977,7 @@ munin (1.3.0)
   * Main: "contacts" can now be set to "none".
   * Main: Bugfix with graphs using both "graph_sums" and data aliases.
   * Main: Tables in service-view now sorted according to graph_order.
-  * Main: Tables in service-view now containt the correct "Type" when using
+  * Main: Tables in service-view now contain the correct "Type" when using
     data aliases.
   * Plugins: generic/sendmail_mail{stats,traffic} updated.
   * Plugins: Made generic/samba more portable (fixes by Nicolas Stransky).
@@ -7223,7 +7223,7 @@ munin (1.1.0)
   * Bug regarding logo namechange from logo.gif to logo.png, when installing.
   * Allow/deny in munin-node can now be configured per plugin, in addition
     to "globally" for the whole node.
-  * "Upped" som plugins from contrib/manual to manual or auto.
+  * "Upped" some plugins from contrib/manual to manual or auto.
   * Code cleanups.
 
 munin (1.0.0pre4)
@@ -7601,7 +7601,7 @@ lrrd (0.9-11)
   * Last small fixes with warning and critical-nagiosLast small fixes 
     with warning and critical-nagios
   * Skipped a version to sync with server
-  * Included warning and critical on som of the services
+  * Included warning and critical on some of the services
 
 lrrd (0.9-10)
 
