@@ -46,7 +46,7 @@ Bart Coppens (1):
 Bas Couwenberg (1):
       Add support for rndc options in bind9_rndc plugin.
 
-Békefi Gábor (1):
+BÃ©kefi GÃ¡bor (1):
       Correcting mysql_queries plugin random hash ordering. Perl docs say: The
       keys of a hash are returned in an apparently random order. The actual
       random order is subject to change in future versions of Perl, but it is
@@ -86,7 +86,7 @@ Dmitry Marakasov (7):
       Calculate diskspace/inode usage percent accurately
       Sort df output
 
-Dr. Nagy Elemér Károly (1):
+Dr. Nagy ElemÃ©r KÃ¡roly (1):
       Visible graph titles => Ctrl-F works in browsers.
 
 Ed Szynaka (1):
@@ -114,7 +114,7 @@ IWAI, Masaharu (1):
 InsanePrawn (1):
       Update smart_
 
-Iván Montoro (1):
+IvÃ¡n Montoro (1):
       Add IPv6 support
 
 Jason Woods (4):
@@ -268,7 +268,7 @@ Michael Pirogov (1):
 Michael Scherer (1):
       Add autoconfig support to mailman plugin
 
-Raphaël Droz (1):
+RaphaÃ«l Droz (1):
       Keep-up with modern Linux kernel netstat data. * TCPAbortOnSyn was
       removed in v3.6 * TCPSYNChallenge was added in v3.6
       https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0c24604b68fc7810d429d6c3657b6f148270e528
@@ -332,7 +332,7 @@ Stig Sandbeck Mathisen (6):
       Declare variable before use
       Exclude btrfs from df_inode plugin
 
-Tobias Kappé (1):
+Tobias KappÃ© (1):
       Ignore current process when configuring labels for postgres_users plugin.
 
 Tomohiro Hosaka (1):
@@ -341,7 +341,7 @@ Tomohiro Hosaka (1):
 Vadim Zeitlin (1):
       Add "ignoreexit" parameter to smart_ plugin.
 
-Viktor Szépe (3):
+Viktor SzÃ©pe (3):
       Added graph_category
       Signal error in http_loadtime
       Typo in condition
@@ -3804,7 +3804,7 @@ Bart Coppens (1):
 Bas Couwenberg (1):
       Add support for rndc options in bind9_rndc plugin.
 
-Békefi Gábor (1):
+BÃ©kefi GÃ¡bor (1):
       Correcting mysql_queries plugin random hash ordering.
 
 Chris Butler (1):
@@ -3852,7 +3852,7 @@ Holger Levsen (1):
 InsanePrawn (1):
       Update smart_
 
-Iván Montoro (1):
+IvÃ¡n Montoro (1):
       Add IPv6 support
 
 Jason Woods (2):
@@ -3937,7 +3937,7 @@ Michael Pirogov (1):
 Michael Scherer (1):
       Add autoconfig support to mailman plugin
 
-Raphaël Droz (1):
+RaphaÃ«l Droz (1):
       Keep-up with modern Linux kernel netstat data.
 
 Rick Hansen (1):
@@ -3957,13 +3957,13 @@ Stig Sandbeck Mathisen (5):
       Declare variable before use
       Exclude btrfs from df_inode plugin
 
-Tobias Kappé (1):
+Tobias KappÃ© (1):
       Ignore current process when configuring labels for postgres_users plugin.
 
 Vadim Zeitlin (1):
       Add "ignoreexit" parameter to smart_ plugin.
 
-Viktor Szépe (3):
+Viktor SzÃ©pe (3):
       Added graph_category
       Signal error in http_loadtime
       Typo in condition
@@ -4152,7 +4152,7 @@ Bugfix release.
 Detailed Changelog
 ------------------
 
-Dr. Nagy Elemér Károly (1):
+Dr. Nagy ElemÃ©r KÃ¡roly (1):
       Visible graph titles => Ctrl-F works in browsers.
 
 IWAI, Masaharu (1):
@@ -4223,7 +4223,7 @@ Closes: D:761190, GH:426
 Detailed Changelog
 ------------------
 
-Bjørn Forsman (1):
+BjÃ¸rn Forsman (1):
       multips: reject 'autoconf' unless $names is set
 
 Gabriele (1):
