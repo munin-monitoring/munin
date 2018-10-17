@@ -29,7 +29,7 @@ Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 
 # systemd
 Test-Command: prove -v debian/tests/munin-node/*.t
-Depends: munin-node, netcat-openbsd, sharness
+Depends: munin-node, netcat-openbsd, net-tools, sharness
 Restrictions: needs-root breaks-testbed isolation-container
 
 # sysvinit-core

@@ -1,6 +1,9 @@
 munin (2.0.42-2) UNRELEASED; urgency=medium
 
-  * Use the new debhelper-compat(=11) notation and drop d/compat.
+  * d/control: Use the new debhelper-compat(=11) notation and drop d/compat.
+  * d/tests/control: Add dependency on net-tools for the plugin tests of
+    munin-node running with systemd. Thanks to Ivo De Decker for the analysis.
+    (Closes: #910684)
 
  -- Holger Levsen <holger@debian.org>  Sat, 13 Oct 2018 13:36:08 +0100
 
