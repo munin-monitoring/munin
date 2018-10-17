@@ -20,19 +20,19 @@ Here some examples pages with graph images:
   * `ejabberd <http://gallery.munin-monitoring.org/contrib/ejabberd/ejabberd_resources_.html>`_ - Image only, missing perldoc
   * `apache_activity <http://gallery.munin-monitoring.org/contrib/apache/apache_activity.html>`_ - Image only, missing perldoc
 
-The HTML-Presentation is auto-generated in a daily cronjob at our project server. It views the plugins documentation page, that is viewed by :ref:`munindoc <munindoc>` otherwise. Example graphs for the plugins have to be placed in our github repositories.
+The HTML-Presentation is auto-generated in a daily cronjob at our project server. It generates the plugins documentation page, that is accessible via :ref:`munindoc <munindoc>` otherwise. Example graphs for the plugins have to be placed in our github repositories.
 
-Help from contributors is welcome :-) Have a look at our instructions in the next section on this page.
+Help from contributors is welcome. Please take a look at the instructions in the next section below.
 
-The gallery has two showrooms. One called `Core Collection <http://gallery.munin-monitoring.org/index.html>`_ for the plugins that we deliver with the distribution of Munin-Node and one called `3rd-Party Collection <http://gallery.munin-monitoring.org/contrib/index.html>`_ for the plugins from the wild, that were uploaded to our Contrib-Repository. Especially the later needs a lot of documentation work and we are happy if you add info in perldoc format and representative example graph images to the contrib repo. The more descriptive content is there, the more helpful the Plugin Gallery will be ~
+The gallery has two showrooms. One called `Core Collection <http://gallery.munin-monitoring.org/index.html>`_ for the plugins that we deliver with the distribution of Munin-Node and one called `3rd-Party Collection <http://gallery.munin-monitoring.org/contrib/index.html>`_ for the plugins from the wild, that were uploaded to our Contrib-Repository. Especially the latter need a lot of documentation work and we are happy if you add info in perldoc format and representative example graph images to the contrib repo. The more descriptive content is there, the more helpful the Plugin Gallery will be.
 
 Categories
 ==========
 
 The plugins category is the main navigation criterion of the galley. So the first step of the build procedure is the search for the keyword ``graph_category`` within the plugin scripts and parse the string, that follows in the same line.
-It makes things easier if you don't use spaces within in the cagetories name. Please use character *underscore* instead if a separator is needed.
+It makes things easier if you don't use spaces within in the cagetories name. Please use the character *underscore* instead if a separator is needed.
 
-The following pages contain info and recommendations concerning categories:
+The following pages contain information and recommendations concerning categories:
 
 * :ref:`graph-category <graph_category>`
 * :ref:`Well-known plugin categories <well-known-categories>`
@@ -49,17 +49,17 @@ To make sure that we can auto-generate the portrait pages for each plugin please
 
 2. Upload the plugins files to `Github contrib directory <https://github.com/munin-monitoring/contrib/tree/master/plugins>`_.
 
- * Put the plugins script in a subdirectory named after the software or product that it monitors, e.g. apache, mariadb, postfix. When you wrote a plugin for a special operating system, place it in a directory with that name, e.g. debian, vmware. The directories name will act as outline on **2nd level** of the plugin gallery (within the plugin category index pages).
+ * Put the plugins script in a subdirectory named after the software or product that it monitors, e.g. apache, mariadb, postfix. In case of plugins targetting specific operating systems, place these in a subdirectory with that name, e.g. ``debian`` or ``vmware``. The directory's name will act as an outline on **2nd level** of the plugin gallery (within the plugin category index pages).
 
  * **Don't use generic terms as directory name** like "mail". We already use :ref:`generic terms <well-known-categories>` to navigate on the 1st level in the plugin gallery and also in the Munin overview!
 
 3. Choose and upload a Munin generated graph of your plugin for demonstration purpose.
 
- * Take one in original size of the Munin website plugin page. Please no the zoomed image! It should be a file in PNG-Format.
+ * Take one in original size of the Munin website plugin page. Please do not upload scaled images. Each image should be a file in PNG format.
 
- * Place it in the subdirectory ``example-graphs`` of your plugins directory, so one level deeper in the file hierarchy.
+ * Place the image in the subdirectory ``example-graphs`` of your plugins directory. This is one level deeper in the file hierarchy.
 
- * Its name should begin with the name of your plugins script file followed by ``-day.png`` for a daily graph, ``-week.png`` for a weekly graph, ``-month.png`` for a monthly graph, ``-year.png`` for a yearly graph, e.g. ``cpu-day.png`` or ``smart_-month.png``.
+ * The name of the image file should begin with the name of your plugins script file followed by ``-day.png`` for a daily graph, ``-week.png`` for a weekly graph, ``-month.png`` for a monthly graph, ``-year.png`` for a yearly graph, e.g. ``cpu-day.png`` or ``smart_-month.png``.
 
 4. Upload **more image files** to the subdirectory ``example-graphs`` in PNG-Format if you want **to illustrate** the documentation section **Interpretation**
 
@@ -73,4 +73,4 @@ We have `scripts to auto-generate the HTML presentation called "Munin Plugin Gal
 ToDo
 ----
 
-Whenever the scripts fails to find the relationship between plugins and categories, we put these into category 'other'. It would be good to improve the plugins data concerning the category or to improve the parse method to decrease the number of these unrelated plugins.
+Whenever the scripts fails to find the relationship between plugins and categories, we put these into category ``other``. It would be good to improve the plugins data concerning the category or to improve the parse method to decrease the number of these unrelated plugins.
