@@ -145,7 +145,7 @@ Export all the package variables to the environment.
   $class->print_as_sed_substitutions()
 
 Output an expression suitable for "sed". This expression can be used to
-substitude placeholders (e.g. "@@SPOOLDIR") in munin's source files
+substitute placeholders (e.g. "@@SPOOLDIR") in munin's source files
 during an installation procedure.
 
 =back

@@ -63,9 +63,9 @@ apply-formatting:
 	@# format munin libraries
 	find lib/ -type f -exec perltidy {} \;
 
-.PHONY: lint lint-munin lint-plugins
+.PHONY: lint lint-munin lint-plugins lint-spelling
 
-lint: lint-munin lint-plugins
+lint: lint-munin lint-plugins lint-spelling
 lint-munin:
 	# Scanning munin code
 	perlcritic --profile .perlcriticrc lib/ script/
@@ -92,6 +92,13 @@ lint-plugins:
 		| xargs -0 grep -l --null "^#!.*python" \
 			| xargs -0 $(PYTHON_LINT_CALL)
 	# TODO: perl plugins currently fail with perlcritic
+
+lint-spelling:
+	# codespell misdetections may be ignored by adding the full line of text to the file .codespell.exclude
+	find . -type f -print0 \
+		| grep --null-data -vE '^\./(\.git|\.pc|doc/_build|blib|.*/blib|build|sandbox|web/static/js|contrib/plugin-gallery/www/static/js)/' \
+		| grep --null-data -vE '\.(svg|png|gif|ico|css|woff|woff2|ttf|eot)$$' \
+		| xargs -0 -r codespell --exclude-file=.codespell.exclude
 
 .PHONY: clean
 clean: $(BUILD_SCRIPT)

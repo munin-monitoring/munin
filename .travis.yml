@@ -73,14 +73,14 @@ before_install:
   - cpanm --quiet --installdeps --notest .
 
 install:
-  # check for potential spelling mistakes
-  - codespell --quiet-level=3 --skip=ChangeLog,Announce-2.0,*.js,memory,jmx_,jmx_tomcat_dbpools,netstat_multi,munin_node_os.t
   - perl Build.PL
   - ./Build build
   # We want to lint first, to avoid expensive tests if code isn't clean
   - make lint-munin
   # Plugins are currently not compliant
   - make lint-plugins || true
+  # check for potential spelling mistakes
+  - make lint-spelling
 script:
   - cover -test -report coveralls
 

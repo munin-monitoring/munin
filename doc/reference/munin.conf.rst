@@ -344,7 +344,7 @@ only to that node.
 
    If set, changes the name by which the node presents itself when warning through :ref:`munin-limits`.
 
-.. note:: This directive can also be used on hiearchy level plugin to change the name by which the plugin presents itself when warning through ``munin-limits``.
+.. note:: This directive can also be used on hierarchy level plugin to change the name by which the plugin presents itself when warning through ``munin-limits``.
 
 .. option:: ignore_unknown <yes|no>
 

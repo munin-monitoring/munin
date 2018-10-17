@@ -108,7 +108,7 @@ You need a config section too.
         }
 
 That makes the plugin configurable. Please notice that the plugin prints a
-`host_name` line if it's not examining the locahost. This is the way Munin
+`host_name` line if it's not examining the localhost. This is the way Munin
 knows which device a non-local plugin is examining.
 
 All cool and good. Now we need it to autoconfigure for each new SNMP agent you

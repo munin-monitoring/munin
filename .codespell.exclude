@@ -1,0 +1,14 @@
+# This file contains exact (and complete) lines of text that should be ignored by "codespell" in all files.
+# Hint for adding new lines:
+#  sed -n LINEp FILENAME >>.codespell.exclude
+
+It turns out that multigraph plugins are written to generate graphs for all network devices or all disk devices on a system. There is a definitive need to provide filtering (include) features, such as device name patterns for disk devices or media types for network boxes so that only e.g. ethernet and ppp devices are included in the graphs, and not the loopback and serial devices (unless the serial device is actually interesting since it's really a long haul WAN line). Or, on the other hand a exclude feature to drop specifically uninteresting things.
+Stig Sandbeck Mathisen, E<lt>ssm@fnord.noE<gt>
+                'info' => 'Number of packets queued in OFO queue',
+                'info' => 'packets meant to be queued in OFO but dropped because socket rcvbuf limit hit',
+                'label' => 'DSACKS for Ofo received',
+                'label' => 'DSACKs for Ofo sent',
+Copyright 2009 Tim Small <tim@seoss.co.uk>
+# Linjen som grep'es ut kan se ut som dette:
+Mo Amini, Diyar Amin and Younes Hajji, Høgskolen i Oslo/Oslo
+uses code written by Mo Amini, Diyar Amin and Younes Hajji, 

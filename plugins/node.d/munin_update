@@ -35,7 +35,7 @@ munin-update forks one process pr. host that needs to get data
 collected, so all collection runs in parallel.
 
 Any host that is slow, for example slower than 4 miniutes, causes a
-risk that the next run of munin-update must be cancled due to the
+risk that the next run of munin-update must be canceled due to the
 lateness of the previous run.  In such cases there will be single line
 gaps in the "by day" graph.
 
