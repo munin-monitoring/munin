@@ -14,11 +14,11 @@ Plugin Gallery
 
 Here some examples pages with graph images:
 
-  * `packages.py <http://gallery.munin-monitoring.org/contrib/svn/contrib-master/plugins/apt/deb_packages/deb_packages.py.html>`_ - complete
-  * `quota2percent_ <http://gallery.munin-monitoring.org/contrib/svn/contrib-master/plugins/disk/quota2percent_.html>`_ - complete
-  * `oracle_sysstat <http://gallery.munin-monitoring.org/contrib/svn/contrib-master/plugins/oracle/oracle_sysstat.html>`_ - complete
-  * `ejabberd <http://gallery.munin-monitoring.org/contrib/svn/contrib-master/plugins/ejabberd/ejabberd_resources_.html>`_ - Image only, missing perldoc
-  * `apache_activity <http://gallery.munin-monitoring.org/contrib/svn/contrib-master/plugins/apache/apache_activity.html>`_ - Image only, missing perldoc
+  * `packages.py <http://gallery.munin-monitoring.org/contrib/apt/deb_packages/deb_packages.py.html>`_ - complete
+  * `quota2percent_ <http://gallery.munin-monitoring.org/contrib/disk/quota2percent_.html>`_ - complete
+  * `oracle_sysstat <http://gallery.munin-monitoring.org/contrib/oracle/oracle_sysstat.html>`_ - complete
+  * `ejabberd <http://gallery.munin-monitoring.org/contrib/ejabberd/ejabberd_resources_.html>`_ - Image only, missing perldoc
+  * `apache_activity <http://gallery.munin-monitoring.org/contrib/apache/apache_activity.html>`_ - Image only, missing perldoc
 
 The HTML-Presentation is auto-generated in a daily cronjob at our project server. It views the plugins documentation page, that is viewed by :ref:`munindoc <munindoc>` otherwise. Example graphs for the plugins have to be placed in our github repositories.
 
