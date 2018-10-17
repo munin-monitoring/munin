@@ -49,7 +49,7 @@ So it was decided to move all the plugins over to github branch "contrib".
 
 Github is now the official way of contributing 3rd-party plugins.
 
-These are tagged with **familiy contrib** (see: :option:`--families` in :ref:`munin-node-configure`).
+These are tagged with **family contrib** (see: :option:`--families` in :ref:`munin-node-configure`).
 
 Only if they meet the requirements for `vetted plugins <http://munin-monitoring.org/wiki/requirements-vetted>`_
 they can be included in the core plugins collection (distributed as `official` Munin release

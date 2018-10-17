@@ -79,7 +79,7 @@ graph_args --base 1000 -l 0
 graph_vlabel Printed pages pr minute
 graph_scale no
 graph_category printing
-graph_info This graph numer of printed pages
+graph_info This graph number of printed pages
 graph_total Total
 pages.label pages
 pages.draw AREA

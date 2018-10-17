@@ -49,7 +49,7 @@ To make sure that we can auto-generate the portrait pages for each plugin please
 
 2. Upload the plugins files to `Github contrib directory <https://github.com/munin-monitoring/contrib/tree/master/plugins>`_.
 
- * Put the plugins script in a subdirectory named after the software or product that it monitors, e.g. apache, mariadb, postfix. In case of plugins targetting specific operating systems, place these in a subdirectory with that name, e.g. ``debian`` or ``vmware``. The directory's name will act as an outline on **2nd level** of the plugin gallery (within the plugin category index pages).
+ * Put the plugins script in a subdirectory named after the software or product that it monitors, e.g. apache, mariadb, postfix. In case of plugins targeting specific operating systems, place these in a subdirectory with that name, e.g. ``debian`` or ``vmware``. The directory's name will act as an outline on **2nd level** of the plugin gallery (within the plugin category index pages).
 
  * **Don't use generic terms as directory name** like "mail". We already use :ref:`generic terms <well-known-categories>` to navigate on the 1st level in the plugin gallery and also in the Munin overview!
 
