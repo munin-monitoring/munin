@@ -482,7 +482,7 @@ sub spoolfetch {
 
     # using the multigraph parsing. 
     # Using "__root__" as a special plugin name. 
-    return $self->parse_service_config("__root__", $lines);
+    return $last_timestamp;
 }
 
 sub _validate_data_sources {
