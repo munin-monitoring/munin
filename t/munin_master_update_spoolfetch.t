@@ -35,8 +35,12 @@ my $update = Munin::Master::Update->new();
 ok($update->run() == 5);
 
 # Run a second time, with an already populated database
-# XXX - the second time it will not work, as the mock spoolfetch will issue too young data
-# ok($update->run() == 5);
+ok($update->run() == 5);
+
+# Run a third time, but wait for some more data to arrive
+sleep(60);
+
+ok($update->run() == 5);
 
 kill('TERM', $pid_debug_node);
 wait();
