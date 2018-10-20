@@ -203,16 +203,16 @@ sub service
 			print $client ".\n";
 		} elsif ($line =~ m/^spoolfetch (\d+)/) {
 			my $timestamp = $1;
+			print "asked $timestamp, " if $is_debug;
+			my $now = time;
 
 			# Cannot start before $starting_epoch
-			print "asked $timestamp, " if $is_debug;
-			$timestamp = ($timestamp < $starting_epoch) ? $starting_epoch : $timestamp;
-			print "starting at $starting_epoch, using $timestamp, \n" if $is_debug;
+			$timestamp = $starting_epoch if ($timestamp < $starting_epoch);
+			print "starting at $starting_epoch\n" if $is_debug;
 
 			# Only send something every $spoolfetch_rate * $update_rate
-			if ( $timestamp > time - $spoolfetch_rate * $update_rate) {
-				print $client ".\n";
-				return;
+			if ( $timestamp > $now - $spoolfetch_rate * $update_rate) {
+				goto END_SPOOL_CMD;
 			}
 
 			# Sends spools strictly > LastSpooled
@@ -234,6 +234,7 @@ sub service
 				}
 			}
 		}
+	END_SPOOL_CMD:
 			print $client ".\n";
 		} elsif ($line =~ m/^quit/) {
 			return;
