@@ -337,25 +337,6 @@ sub spoolfetch {
     return $last_timestamp;
 }
 
-sub _validate_data_sources {
-    my ($self, $all_data_source_config) = @_;
-
-    my $nodedesignation = $self->{host}."/".$self->{address}.":".$self->{port};
-
-    for my $service (keys %$all_data_source_config) {
-	my $data_source_config = $all_data_source_config->{$service};
-
-	for my $ds (keys %$data_source_config) {
-	    if (!defined $data_source_config->{$ds}{label}) {
-		ERROR "Missing required attribute 'label' for data source '$ds' in service $service on $nodedesignation";
-		$data_source_config->{$ds}{label} = 'No .label provided';
-		$data_source_config->{$ds}{extinfo} = "NOTE: The plugin did not provide any label for the data source $ds.  It is in need of fixing.";
-	    }
-	}
-    }
-}
-
-
 sub fetch_service_data {
     my ($self, $plugin, $uw_handle_data) = @_;
 
@@ -499,16 +480,6 @@ sub _node_read {
 
     # Return the remaining @array
     return \@array;
-}
-
-sub _merge_into_str_no_dup
-{
-	use List::MoreUtils qw(uniq);
-
-	my $str = shift;
-	my @a = uniq( split(/ /, $str), @_);
-
-	return join(" ", @a);
 }
 
 # Defines the URL::scheme for munin
