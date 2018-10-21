@@ -167,7 +167,10 @@ sub _run_workers {
 	$pm->run_on_finish(
 		sub {
 			my ($pid, $exit_code, $ident) = @_;
+
+			$exit_code = 0 unless defined $exit_code;
 			INFO "[INFO]: run_on_finish(pid:$pid, exit_code:$exit_code, ident:$ident)";
+
 			$nb_workers_failed++ if $exit_code;
 		}
 	);
@@ -246,7 +249,7 @@ sub _db_init {
 	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id $db_serial_type PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS r_g_grp ON grp (p_id, name)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS node (id $db_serial_type PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS node (id $db_serial_type PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR, spoolepoch INTEGER)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_node_attr ON node_attr (id, name)");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_n_grp ON node (grp_id)");

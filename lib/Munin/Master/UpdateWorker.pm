@@ -541,18 +541,30 @@ sub is_fresh_enough {
 
 sub get_spoolfetch_timestamp {
 	my ($self) = @_;
+	my $dbh = $self->{dbh};
+	my $node_id = $self->{node_id};
 
-	my $last_updated_value = $self->{state}{spoolfetch} || "0";
+	my $sth_spoolfetch = $dbh->prepare_cached("SELECT spoolepoch FROM node WHERE id = ?");
+	$sth_spoolfetch->execute($node_id);
+	my ($last_updated_value) = $sth_spoolfetch->fetchrow_array();
+	$sth_spoolfetch->finish();
+
+	# 0 if unset
+	$last_updated_value = 0 unless $last_updated_value;
+
+	DEBUG "[DEBUG] get_spoolfetch_timestamp($node_id) = $last_updated_value";
 	return $last_updated_value;
 }
 
 sub set_spoolfetch_timestamp {
 	my ($self, $timestamp) = @_;
-	DEBUG "[DEBUG] set_spoolfetch_timestamp($timestamp)";
+	my $dbh = $self->{dbh};
+	my $node_id = $self->{node_id};
+	DEBUG "[DEBUG] set_spoolfetch_timestamp($node_id, $timestamp)";
 
-	# Using the last timestamp sended by the server :
-	# -> It can be different than "now" to be able to process the backlock slowly
-	$self->{state}{spoolfetch} = $timestamp;
+	my $sth_spoolfetch = $dbh->prepare_cached("UPDATE node SET spoolepoch = ? WHERE id = ?");
+	$sth_spoolfetch->execute($timestamp, $node_id);
+	$sth_spoolfetch->finish();
 }
 
 sub parse_update_rate {
@@ -752,100 +764,6 @@ sub uw_handle_fetch {
 
 	return $last_timestamp;
 }
-
-sub uw_fetch_service_config {
-    my ($self, $plugin) = @_;
-
-    # Note, this can die for several reasons.  Caller must eval us.
-    my %service_config = $self->{node}->fetch_service_config($plugin);
-    my $merged_config = $self->uw_override_with_conf($plugin, \%service_config);
-
-    return %$merged_config;
-}
-
-sub uw_override_with_conf {
-    my ($self, $plugin, $service_config) = @_;
-
-    if ($self->{host}{service_config} &&
-	$self->{host}{service_config}{$plugin}) {
-
-        my %merged_config = (%$service_config, %{$self->{host}{service_config}{$plugin}});
-	$service_config = \%merged_config;
-    }
-
-    return $service_config;
-}
-
-sub _update_rrd_files {
-    my ($self, $nested_service_config, $nested_service_data) = @_;
-
-    my $nodedesignation = $self->{host}{host_name}."/".
-	$self->{host}{address}.":".$self->{host}{port};
-
-    my $last_timestamp = 0;
-
-    for my $service (keys %{$nested_service_config->{data_source}}) {
-	my $update = get_config_for_service($nested_service_config->{global}{$service}, "update");
-	if (defined($update) and $update eq 'no') {
-	    next;
-	}
-
-	my $service_config = $nested_service_config->{data_source}{$service};
-	my $service_data   = $nested_service_data->{$service};
-
-	for my $ds_name (keys %{$service_config}) {
-	    my $ds_config = $service_config->{$ds_name};
-
-	    unless (defined($ds_config->{label})) {
-		ERROR "[ERROR] Unable to update $service on $nodedesignation -> $ds_name: Missing data source configuration attribute: label";
-		next;
-	    }
-
-	    # Sets the DS resolution, searching in that order :
-	    # - per field
-	    # - per plugin
-	    # - globally
-            my $configref = $self->{node}{configref};
-	    $ds_config->{graph_data_size} ||= get_config_for_service($nested_service_config->{global}{$service}, "graph_data_size");
-	    $ds_config->{graph_data_size} ||= $config->{graph_data_size};
-
-	    $ds_config->{update_rate} ||= get_config_for_service($nested_service_config->{global}{$service}, "update_rate");
-	    $ds_config->{update_rate} ||= $config->{update_rate};
-	    $ds_config->{update_rate} ||= 300; # default is 5 min
-
-	    DEBUG "[DEBUG] asking for a rrd of size : " . $ds_config->{graph_data_size};
-
-	    # Avoid autovivification (for multigraphs)
-	    my $first_epoch = time - (12 * 3600); # XXX - we should be able to have some delay in the past for spoolfetched plugins
-	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config, $first_epoch);
-
-	    if (defined($service_data) and defined($service_data->{$ds_name})) {
-			$last_timestamp = max($last_timestamp, $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
-	    }
-           elsif (defined $ds_config->{cdef} && $ds_config->{cdef} !~ /\b${ds_name}\b/) {
-               DEBUG "[DEBUG] Service $service on $nodedesignation label $ds_name is synthetic";
-           }
-	    else {
-		WARN "[WARNING] Service $service on $nodedesignation returned no data for label $ds_name";
-	    }
-	}
-    }
-
-    return $last_timestamp;
-}
-
-sub get_config_for_service {
-	my ($array, $key) = @_;
-
-	for my $elem (@$array) {
-		next unless $elem->[0] && $elem->[0] eq $key;
-		return $elem->[1];
-	}
-
-	# Not found
-	return;
-}
-
 
 sub _get_rrd_data_source_with_defaults {
     my ($self, $data_source) = @_;
@@ -1150,16 +1068,6 @@ sub convert_to_float
 	}
 
 	return $value
-}
-
-sub dump_to_file
-{
-	my ($filename, $obj) = @_;
-	open(my $DUMPFILE, q{>>}, "$filename");
-
-	print $DUMPFILE Dumper($obj);
-
-	close($DUMPFILE);
 }
 
 sub _get_default_address
