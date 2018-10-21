@@ -1164,16 +1164,6 @@ sub convert_to_float
 	return $value
 }
 
-sub dump_to_file
-{
-	my ($filename, $obj) = @_;
-	open(my $DUMPFILE, q{>>}, "$filename");
-
-	print $DUMPFILE Dumper($obj);
-
-	close($DUMPFILE);
-}
-
 sub _get_default_address
 {
 	my ($host) = @_;

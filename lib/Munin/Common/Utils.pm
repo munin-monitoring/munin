@@ -29,6 +29,17 @@ sub is_valid_hostname {
 
 }
 
+sub dump_to_file
+{
+	my ($filename, $obj) = @_;
+	open(my $DUMPFILE, q{>>}, "$filename");
+
+	print $DUMPFILE Dumper($obj);
+
+	close($DUMPFILE);
+}
+
+
 
 1;
 
