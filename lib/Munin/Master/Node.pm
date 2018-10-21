@@ -84,7 +84,7 @@ sub _do_connect {
     if ($uri->scheme eq "munin") {
         $self->{reader} = $self->{writer} = IO::Socket::INET6->new(
 		PeerAddr  => $uri->host,
-		PeerPort  => $self->{port} || 4949,
+		PeerPort  => $self->{port} || $uri->{port},
 		LocalAddr => $config->{local_address},
 		Proto     => 'tcp',
 		MultiHomed => 1,
