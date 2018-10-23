@@ -2,6 +2,8 @@ munin (2.0.42-3) UNRELEASED; urgency=medium
 
   * munin-async.postinst: fix handling of a missing "munin-async" group
     (do not try to create the user again, but add it to the group instead)
+  * d/tests/munin-node: increase verbosity of output in case of failure
+    for the test of available plugins
 
  -- Lars Kruse <devel@sumpfralle.de>  Wed, 24 Oct 2018 00:37:01 +0200
 

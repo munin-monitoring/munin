@@ -1,24 +1,27 @@
 # tests for master components:
 #   * collect graphs
 #   * generate html and png files
+#
+# The environment variable "verbose=t" is interpreted by "sharness" and results in more
+# detailed output for analyzing failures.
 
 # systemd / cron strategy
-Test-Command: prove -v debian/tests/munin-master/*.t
+Test-Command: verbose=t prove -v debian/tests/munin-master/*.t
 Depends: munin, munin-node, daemontools, apache2, curl, file, sharness
 Restrictions: needs-root breaks-testbed isolation-container
 
 # systemd / CGI strategy
-Test-Command: debian/tests/run-with-cgi-strategy prove -v debian/tests/munin-master/*.t
+Test-Command: verbose=t debian/tests/run-with-cgi-strategy prove -v debian/tests/munin-master/*.t
 Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness
 Restrictions: needs-root breaks-testbed isolation-container
 
 # sysvinit-core / cron strategy
-Test-Command: debian/tests/run-with-sysvinit prove -v debian/tests/munin-master/*.t
+Test-Command: verbose=t debian/tests/run-with-sysvinit prove -v debian/tests/munin-master/*.t
 Depends: munin, munin-node, daemontools, apache2, curl, file, sharness
 Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 
 # sysvinit-core / CGI strategy
-Test-Command: debian/tests/run-with-cgi-strategy debian/tests/run-with-sysvinit prove -v debian/tests/munin-master/*.t
+Test-Command: verbose=t debian/tests/run-with-cgi-strategy debian/tests/run-with-sysvinit prove -v debian/tests/munin-master/*.t
 Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness
 Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 
@@ -28,12 +31,12 @@ Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 #   * access plugins
 
 # systemd
-Test-Command: prove -v debian/tests/munin-node/*.t
+Test-Command: verbose=t prove -v debian/tests/munin-node/*.t
 Depends: munin-node, netcat-openbsd, net-tools, sharness
 Restrictions: needs-root breaks-testbed isolation-container
 
 # sysvinit-core
-Test-Command: debian/tests/run-with-sysvinit prove -v debian/tests/munin-node/*.t
+Test-Command: verbose=t debian/tests/run-with-sysvinit prove -v debian/tests/munin-node/*.t
 Depends: munin-node, netcat-openbsd, sharness
 Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 

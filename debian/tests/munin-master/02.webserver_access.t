@@ -6,7 +6,8 @@ test_description="request generated html pages"
 
 
 get_munin_url() {
-    curl --silent --fail "http://localhost/munin/$1"
+    # "--no-buffer" prevents curl errors ("(23) Failed writing body") in case of incomplete consumption (e.g. "grep -q")
+    curl --silent --fail --no-buffer "http://localhost/munin/$1"
 }
 
 
