@@ -1,3 +1,10 @@
+munin (2.0.42-3) UNRELEASED; urgency=medium
+
+  * munin-async.postinst: fix handling of a missing "munin-async" group
+    (do not try to create the user again, but add it to the group instead)
+
+ -- Lars Kruse <devel@sumpfralle.de>  Wed, 24 Oct 2018 00:37:01 +0200
+
 munin (2.0.42-2) unstable; urgency=medium
 
   * d/tests/control: Add dependency on net-tools for the plugin tests of

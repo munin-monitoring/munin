@@ -8,10 +8,10 @@ add_munin_async_user() {
 	if ! getent passwd munin-async >/dev/null; then
 		adduser --group --system --home /var/lib/munin-async --shell /bin/bash munin-async
 	fi
-	# workaround bug (#531021) in xen-tools
+	# workaround bug (#531021) in xen-tools (user exists, but group is missing)
 	if ! getent group munin-async >/dev/null; then
 		addgroup --system munin-async
-		adduser --shell /bin/bash munin-async
+		adduser munin-async munin-async
 	fi
 }
 
