@@ -45,7 +45,7 @@ test_expect_success "munin-graph" "
 
 if [ "$MUNIN_TEST_CGI_ENABLED" = "1" ]; then
   test_expect_success "CGI strategy: do not generate static graph files" '
-    [ -z "$(find /var/cache/munin/www/localdomain -type f -name "*.png")" ]
+    [ -z "$(find /var/cache/munin/www/ -type f -name "*.png" | grep -v "/static/")" ]
   '
 else
   test_expect_success "cron strategy: generate static graph files" '
