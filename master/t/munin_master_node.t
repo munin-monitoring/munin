@@ -54,10 +54,19 @@ sub setup {
 
 ### _extract_name_from_greeting
 {
+    sub _extract_name_from_greeting {
+        my ($greeting) = @_;
+        if ($greeting && ($greeting =~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/i)) {
+             return $1;
+        } else {
+            return "";
+        }
+    }
+
     my $node = Munin::Master::Node->new();
-    is($node->_extract_name_from_greeting('# munin node at foo.example.com'),
+    is(_extract_name_from_greeting('# munin node at foo.example.com'),
        'foo.example.com', 'Node name from new greeting');
-    is($node->_extract_name_from_greeting('# lrrd client at foo.example.com'),
+    is(_extract_name_from_greeting('# lrrd client at foo.example.com'),
        'foo.example.com', 'Node name from old greeting');
 }
 
