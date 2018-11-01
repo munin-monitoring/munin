@@ -40,13 +40,6 @@ prompt             = no
 req_extensions     = v3_req
 
 [ req_distinguished_name ]
-C            = MU
-ST           = Province of Munin
-L            = Munin Town
-O            = Munin Inc.
-OU           = .
-CN           = 127.0.0.1
-emailAddress = munin@example.org
 
 [ v3_ca ] 
 basicConstraints       = CA:TRUE 
