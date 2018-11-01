@@ -14,6 +14,9 @@ munin (2.0.42-3) UNRELEASED; urgency=medium
   * Remove the empty directory /var/lib/munin-async from "munin" and add it to
     "munin-node". This directory is required by "munin-sched" (shipped in
     "munin-node").
+  * munin and munin-node: remove the empty directory /var/run.
+    This directory was moved to /run, thus we should not create it
+    explicitly anymore.
 
  -- Lars Kruse <devel@sumpfralle.de>  Wed, 24 Oct 2018 00:37:01 +0200
 
