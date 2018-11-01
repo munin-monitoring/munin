@@ -50,10 +50,6 @@ override_dh_auto_install:
 	# we do not expect other manpages in munin-doc (except for perl module documentation)
 	[ -z "$(shell find debian/munin-doc/usr/share/man/ -type f | grep -v 'man3/')" ]
 
-	# workaround bug in upstream Makefile
-	mkdir -p $(CURDIR)/debian/munin-async/var/lib
-	mv $(CURDIR)/debian/munin-node/var/lib/munin-async $(CURDIR)/debian/munin-async/var/lib/munin-async
-
 	$(MAKE) install-plugins-prime $(MAKEOPTS) \
 		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
 		DESTDIR=$(CURDIR)/debian/munin-plugins-core
@@ -102,6 +98,23 @@ override_dh_auto_install:
 			mv -v $$file $(CURDIR)/debian/munin-plugins-extra/usr/share/munin/plugins; \
 		fi; \
 	done
+
+	# The upstream Makefile creates /var/lib/munin-async (also known as "SPOOLDIR") during
+	# "make install-pre" (referenced by "install-master-prime" and "install-node-prime").
+	# This directory is used by the package "munin-async" as the home directory for the
+	# "munin-async" user. Thus it should not really exist before the installation of that
+	# package. Otherwise a warning is emitted when the user is created.
+	# But since "munin-sched" (being part of the "munin-node" package) requires the SPOOLDIR to
+	# exist, this directory needs to be shipped with "munin-node". Since "munin-async" depends
+	# on "munin-node", the above warning caused by munin-async's postinst script is inevitable
+	# under the current circumstances.
+	# Thus we can remove the directory from the package "munin", but we need to continue
+	# shipping it as part of "munin-node" in order to ensure that "munin-sched" works.
+	# The warning "directory already exists" in munin-async's postinst script is annoying, but
+	# can be safely ignored.
+	# Hint: munin-sched's use-case is quite exotic and the program is removed for munin 3.0.
+	# Thus there does not seem to be real need to fix this mess.
+	rmdir $(CURDIR)/debian/munin/var/lib/munin-async
 
 	rmdir $(CURDIR)/debian/munin/var/run/munin
 	rmdir $(CURDIR)/debian/munin-node/var/run/munin

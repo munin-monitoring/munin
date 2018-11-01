@@ -11,6 +11,9 @@ munin (2.0.42-3) UNRELEASED; urgency=medium
     currently tolerated by upstream)
   * tests: do not rely on /var/cache/munin/www/localdomain to be created in
     CGI mode
+  * Remove the empty directory /var/lib/munin-async from "munin" and add it to
+    "munin-node". This directory is required by "munin-sched" (shipped in
+    "munin-node").
 
  -- Lars Kruse <devel@sumpfralle.de>  Wed, 24 Oct 2018 00:37:01 +0200
 
