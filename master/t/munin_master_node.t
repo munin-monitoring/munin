@@ -219,7 +219,10 @@ sub setup {
                 fun        => [
                     [qw( foo bar    )],
                     [qw( zap gabonk )],
-                    [ 'graph_order', 'zip baz' ],
+                    # The internal "graph_order" implementation changed in 53f22440a and now
+                    # includes the list of data field appearances after the explicitly configured
+                    # graph_order.
+                    [ 'graph_order', 'zip baz baz zip' ],
                 ],
             },
             data_source => {

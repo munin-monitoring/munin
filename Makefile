@@ -536,7 +536,7 @@ install-%: %/Build
 
 test-%: %/Build
 	# currently test-master and test-node partially fail
-	cd $* && $(PERL) Build test --verbose=0 || [ "$*" = "node" ] || [ "$*" = "master" ]
+	cd $* && $(PERL) Build test --verbose=0 || [ "$*" = "node" ]
 
 lint:
 	@# SC1008: ignore our weird shebang (substituted later)
