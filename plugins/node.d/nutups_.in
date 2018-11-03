@@ -43,7 +43,7 @@ voltages() {
 			echo "${i}.min 0"
 		done
 	else
-		"$UPSC" "$UPS" | sed -n '/volt/{
+		"$UPSC" "$UPS" | sed -n '/^[^ ]*volt/{
 					s/://
 					/nominal/s/.* /nominal.value /
 					/voltage/s/\.[^ ]*/.value/
