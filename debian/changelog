@@ -1,22 +1,23 @@
 munin (2.0.42-3) UNRELEASED; urgency=medium
 
+  [ Lars Kruse ]
   * munin-async.postinst: fix handling of a missing "munin-async" group
     (do not try to create the user again, but add it to the group instead)
+  * tests: do not rely on /var/cache/munin/www/localdomain to be created in
+    CGI mode
+  * add more build dependencies for upstream tests (test failures are
+    currently tolerated by upstream)
   * d/tests/munin-node: increase verbosity of output in case of failure
     for the test of available plugins
   * d/tests/control: remove dependency on net-tools (introduced in 2.0.42-2)
     as it did not fix the test failure
-  * fix spelling of test filename munin-master/01.master-components.t
-  * add more build dependencies for upstream tests (test failures are
-    currently tolerated by upstream)
-  * tests: do not rely on /var/cache/munin/www/localdomain to be created in
-    CGI mode
   * Remove the empty directory /var/lib/munin-async from "munin" and add it to
     "munin-node". This directory is required by "munin-sched" (shipped in
     "munin-node").
   * munin and munin-node: remove the empty directory /var/run.
     This directory was moved to /run, thus we should not create it
     explicitly anymore.
+  * fix spelling of test filename munin-master/01.master-components.t
 
  -- Lars Kruse <devel@sumpfralle.de>  Wed, 24 Oct 2018 00:37:01 +0200
 
