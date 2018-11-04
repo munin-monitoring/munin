@@ -2,6 +2,7 @@
 # In all other regards (besides being used for testing) it is probably not
 # accurate (too many dependencies, ...).
 
+requires 'Alien::RRDtool';
 requires 'Digest::MD5';
 requires 'File::Path';
 requires 'File::ReadBackwards';

@@ -56,12 +56,7 @@ script:
   - make
   # the old travis environment requires an old flake8 invocation
   - PYTHON_LINT_CALL="python3 -m flake8.main" make lint
-  - make test-common
-  # The "master" test requires the "RRDs" module, which cannot be installed via CPAN and is ignored
-  # if installed via apt.
-  - make test-master || true
-  - make test-node
-  - make test-plugins
+  - make test
 
 # Using the container-based infrastructure
 sudo: false
