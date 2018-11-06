@@ -535,8 +535,7 @@ install-%: %/Build
 		--install_path libdoc=$(MANDIR)/man3
 
 test-%: %/Build
-	# currently test-master and test-node partially fail
-	cd $* && $(PERL) Build test --verbose=0 || [ "$*" = "node" ]
+	cd $* && $(PERL) Build test --verbose=0
 
 lint:
 	@# SC1008: ignore our weird shebang (substituted later)
