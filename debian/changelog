@@ -1,4 +1,4 @@
-munin (2.0.42-3) UNRELEASED; urgency=medium
+munin (2.0.42-3) unstable; urgency=medium
 
   [ Lars Kruse ]
   * munin-async.postinst: fix handling of a missing "munin-async" group
@@ -19,7 +19,7 @@ munin (2.0.42-3) UNRELEASED; urgency=medium
     explicitly anymore.
   * fix spelling of test filename munin-master/01.master-components.t
 
- -- Lars Kruse <devel@sumpfralle.de>  Wed, 24 Oct 2018 00:37:01 +0200
+ -- Holger Levsen <holger@debian.org>  Thu, 08 Nov 2018 12:43:40 +0100
 
 munin (2.0.42-2) unstable; urgency=medium
 
