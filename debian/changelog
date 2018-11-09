@@ -1,3 +1,11 @@
+munin (2.0.42-4) UNRELEASED; urgency=medium
+
+  * tests for munin-node plugins: add conntrack-related plugins to the list of
+    expected plugins, if conntrack is available in the test environment.
+    This fixes the current autopktest failure. (Closes: #910684)
+
+ -- Lars Kruse <devel@sumpfralle.de>  Fri, 09 Nov 2018 23:37:55 +0100
+
 munin (2.0.42-3) unstable; urgency=medium
 
   [ Lars Kruse ]
