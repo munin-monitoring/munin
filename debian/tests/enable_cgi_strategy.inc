@@ -1,11 +1,6 @@
-#!/bin/sh
+# reconfigure munin-master for the CGI strategy
 #
-#
-# This allows tests of the System-V init scripts.
-# Simple prepend your test command with this script name.
-#
-
-set -eu
+# Include this snippet in any test requiring the CGI strategy.
 
 
 CONF_DIR="/etc/munin/munin-conf.d"
@@ -27,5 +22,5 @@ EOF
 
 chmod 0644 "$temp_conf_file"
 
-# execute the wrapped arguments and give the environment a hint regarding the configured strategy
-MUNIN_TEST_CGI_ENABLED=1 "$@"
+# set flag for the following tests
+export MUNIN_TEST_CGI_ENABLED=1

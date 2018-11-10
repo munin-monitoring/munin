@@ -1,0 +1,3 @@
+#!/bin/sh
+
+verbose=t prove -v debian/tests/munin-node/*.t

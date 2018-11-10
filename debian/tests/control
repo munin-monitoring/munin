@@ -1,27 +1,14 @@
 # tests for master components:
 #   * collect graphs
 #   * generate html and png files
-#
-# The environment variable "verbose=t" is interpreted by "sharness" and results in more
-# detailed output for analyzing failures.
 
-# systemd / cron strategy
-Test-Command: verbose=t prove -v debian/tests/munin-master/*.t
-Depends: munin, munin-node, daemontools, apache2, curl, file, sharness
-Restrictions: needs-root breaks-testbed isolation-container
-
-# systemd / CGI strategy
-Test-Command: verbose=t debian/tests/run-with-cgi-strategy prove -v debian/tests/munin-master/*.t
+# systemd
+Tests: master-systemd-cron, master-systemd-cgi
 Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness
 Restrictions: needs-root breaks-testbed isolation-container
 
-# sysvinit-core / cron strategy
-Test-Command: verbose=t debian/tests/run-with-sysvinit prove -v debian/tests/munin-master/*.t
-Depends: munin, munin-node, daemontools, apache2, curl, file, sharness
-Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
-
-# sysvinit-core / CGI strategy
-Test-Command: verbose=t debian/tests/run-with-cgi-strategy debian/tests/run-with-sysvinit prove -v debian/tests/munin-master/*.t
+# sysvinit-core
+Tests: master-sysvinit-cron, master-sysvinit-cgi
 Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness
 Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 
@@ -31,17 +18,17 @@ Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 #   * access plugins
 
 # systemd
-Test-Command: verbose=t prove -v debian/tests/munin-node/*.t
+Tests: node-systemd
 Depends: munin-node, netcat-openbsd, sharness
 Restrictions: needs-root breaks-testbed isolation-container
 
 # sysvinit-core
-Test-Command: verbose=t debian/tests/run-with-sysvinit prove -v debian/tests/munin-node/*.t
+Tests: node-sysvinit
 Depends: munin-node, netcat-openbsd, sharness
 Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 
 
-# verify that all binary packages can be installed at the same (without conflicts)
+# verify that all binary packages can be installed at the same time (without conflicts)
 Test-Command: true
 Depends: @
 Restrictions: breaks-testbed

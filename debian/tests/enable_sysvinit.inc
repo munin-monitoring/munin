@@ -1,6 +1,6 @@
-#!/bin/sh
-#
 # install sysvinit-core and reboot
+#
+# Include this snippet in any test requiring sysvinit.
 #
 # This allows tests of the System-V init scripts.
 # Simple prepend your test command with this script name.
@@ -31,7 +31,3 @@ if [ -d /run/systemd/system ]; then
   echo "Rebooting into SysV init..."
   /tmp/autopkgtest-reboot into-sysv
 fi
-
-
-# execute the given arguments
-"$@"

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+. debian/tests/enable_sysvinit.inc
+
+verbose=t prove -v debian/tests/munin-node/*.t
