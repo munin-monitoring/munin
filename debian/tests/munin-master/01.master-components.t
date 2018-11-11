@@ -1,6 +1,6 @@
 #!/bin/sh
 
-test_description="munin run"
+test_description="munin-master components"
 
 . /usr/share/sharness/sharness.sh
 
@@ -52,5 +52,9 @@ else
     [ -s /var/cache/munin/www/localdomain/localhost.localdomain/df-day.png ]
   '
 fi
+
+test_expect_success "munin-cron" '
+  setuidgid munin /usr/bin/munin-cron
+'
 
 test_done

@@ -1,6 +1,18 @@
-# tests for master components:
+# Tests for master components:
 #   * collect graphs
 #   * generate html and png files
+#
+# Dependencies:
+#   * apache2: handle HTTP requests
+#   * curl: HTTP requests for munin-httpd
+#   * daemontools: for "setuidgid"
+#   * file: determine mime type of HTTP responses
+#   * libcgi-fast-perl: required for delivery via apache2
+#   * munin-node: provide data to be retrieved by the munin master
+#   * munin-plugins-core: required for requesting plugin graphs via munin-httpd
+#   * netcat-openbsd: test local tcp connection
+#   * sharness: test framework
+
 
 # systemd
 Tests: master-systemd-cron, master-systemd-cgi
@@ -13,9 +25,13 @@ Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, 
 Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 
 
-# tests for munin-node:
+# Tests for munin-node:
 #   * run the node
 #   * access plugins
+#
+# Dependencies:
+#   * netcat-openbsd: test local tcp connection
+#   * sharness: test framework
 
 # systemd
 Tests: node-systemd
