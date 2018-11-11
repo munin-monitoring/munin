@@ -5,14 +5,28 @@ test_description="request generated html pages"
 . /usr/share/sharness/sharness.sh
 
 
+if [ "$MUNIN_TEST_CGI_ENABLED" = "1" ]; then
+    GRAPH_BASE_URL=http://localhost/munin-cgi/munin-cgi-graph
+else
+    GRAPH_BASE_URL=http://localhost/munin
+fi
+
+
 get_munin_url() {
     # "--no-buffer" prevents curl errors ("(23) Failed writing body") in case of incomplete consumption (e.g. "grep -q")
     curl --silent --fail --no-buffer "http://localhost/munin/$1"
 }
 
 
-get_mime_type() {
-    file --mime-type --brief -
+get_graph_url() {
+    curl --silent --fail --no-buffer "$GRAPH_BASE_URL/${1#/}"
+}
+
+
+assert_mime_type() {
+    echo "$1" >expected_mime_type
+    file --mime-type --brief - >received_mime_type
+    test_cmp expected_mime_type received_mime_type
 }
 
 
@@ -38,7 +52,7 @@ configure_apache2_for_strategy
 
 
 test_expect_success "main site: mime type" '
-  [ "$(get_munin_url "/" | get_mime_type)" = "text/xml" ]
+  get_munin_url "/" | assert_mime_type "text/xml"
 '
 
 test_expect_success "main site: dynamically generated" '
@@ -54,11 +68,11 @@ test_expect_success "assets: CSS" '
 '
 
 test_expect_success "node: html" '
-  get_munin_url "/localdomain/localhost.localdomain/" | grep -q "df-day.png"
+  assert_http_response_content "/localdomain/localhost.localdomain/" "memory-day.png"
 '
 
 test_expect_success "node: graph" '
-  get_munin_url "/localdomain/localhost.localdomain/df-day.png" | get_mime_type "image/png"
+  get_graph_url "/localdomain/localhost.localdomain/memory-day.png" | assert_mime_type "image/png"
 '
 
 test_done

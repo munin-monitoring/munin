@@ -1,3 +1,9 @@
+munin (2.0.42-6) UNRELEASED; urgency=medium
+
+  * Fix test for MIME type of generated graphs (ignored before).
+
+ -- Lars Kruse <devel@sumpfralle.de>  Sun, 11 Nov 2018 16:01:17 +0100
+
 munin (2.0.42-5) unstable; urgency=medium
 
   [ Lars Kruse ]
