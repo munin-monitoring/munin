@@ -1,3 +1,44 @@
-Tests: run-tests
-Depends: @,procps,netcat-openbsd,sharness
-Restrictions: needs-root breaks-testbed
+# Tests for master components:
+#   * collect graphs
+#   * generate html and png files
+#
+# Dependencies:
+#   * curl: HTTP requests for munin-httpd
+#   * daemontools: for "setuidgid"
+#   * file: determine mime type of HTTP responses
+#   * munin-node: provide data to be retrieved by the munin master
+#   * munin-plugins-core: required for requesting plugin graphs via munin-httpd
+#   * netcat-openbsd: test local tcp connection
+#   * sharness: test framework
+
+
+Tests: master-systemd
+Depends: munin, munin-node, munin-plugins-core, daemontools, curl, file, netcat-openbsd, sharness
+Restrictions: needs-root, breaks-testbed, isolation-container
+
+Tests: master-sysvinit
+Depends: munin, munin-node, munin-plugins-core, daemontools, curl, file, netcat-openbsd, sharness
+Restrictions: needs-root, breaks-testbed, isolation-machine, needs-reboot
+
+
+# Tests for munin-node:
+#   * run the node
+#   * access plugins
+#
+# Dependencies:
+#   * munin-plugins-core: required for verifying plugin list and checking munin-doc
+#   * sharness: test framework
+
+Tests: node-systemd
+Depends: munin-node, munin-plugins-core, netcat-openbsd, sharness
+Restrictions: needs-root, breaks-testbed, isolation-container
+
+Tests: node-sysvinit
+Depends: munin-node, munin-plugins-core, netcat-openbsd, sharness
+Restrictions: needs-root, breaks-testbed, isolation-machine, needs-reboot
+
+
+# verify that all binary packages can be installed at the same time (without conflicts)
+Test-Command: true
+Depends: @
+Restrictions: breaks-testbed
