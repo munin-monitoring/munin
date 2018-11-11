@@ -39,7 +39,7 @@ users
 vmstat
 EOF
     # some plugins are only installed if specific programs are available in the test environment
-    if [ -x /usr/sbin/conntrack ] || [ -e /proc/net/nf_conntrack ] || [ -e /proc/net/ip_conntrack ]; then
+    if [ -x /usr/sbin/conntrack ]; then
       echo fw_conntrack
       echo fw_forwarded_local
     fi
