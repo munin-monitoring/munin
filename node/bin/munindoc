@@ -59,8 +59,9 @@ File::Find::find({wanted => \&wanted_basename}, @DIRS);
 
 die "munindoc: Could not find plugin\n" if (scalar(@found) == 0);
 
+# pick only the first match
 # -F  Arguments are file names, not modules
-push(@ARGV,'-F',@found);
+push(@ARGV, '-F', $found[0]);
 
 exit( Pod::Perldoc->run() );
 
