@@ -17,12 +17,12 @@
 # systemd
 Tests: master-systemd-cron, master-systemd-cgi
 Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness
-Restrictions: needs-root breaks-testbed isolation-container
+Restrictions: needs-root, breaks-testbed, isolation-container
 
 # sysvinit-core
 Tests: master-sysvinit-cron, master-sysvinit-cgi
 Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness
-Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
+Restrictions: needs-root, breaks-testbed, isolation-machine, needs-reboot
 
 
 # Tests for munin-node:
@@ -36,12 +36,12 @@ Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
 # systemd
 Tests: node-systemd
 Depends: munin-node, netcat-openbsd, sharness
-Restrictions: needs-root breaks-testbed isolation-container
+Restrictions: needs-root, breaks-testbed, isolation-container
 
 # sysvinit-core
 Tests: node-sysvinit
 Depends: munin-node, netcat-openbsd, sharness
-Restrictions: needs-root breaks-testbed isolation-machine needs-reboot
+Restrictions: needs-root, breaks-testbed, isolation-machine, needs-reboot
 
 
 # verify that all binary packages can be installed at the same time (without conflicts)
