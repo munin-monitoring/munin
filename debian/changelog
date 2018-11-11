@@ -1,11 +1,12 @@
-munin (2.0.42-5) UNRELEASED; urgency=medium
+munin (2.0.42-5) unstable; urgency=medium
 
+  [ Lars Kruse ]
   * Re-arrange tests for improved readability of test output
   * Tests: Properly detect the assumed presence of the conntrack-related munin
     plugins. Previously only the conntrack executable was checked - now the
     alternative procfs files are evaluated, too. (Really closes: #910684)
 
- -- Lars Kruse <devel@sumpfralle.de>  Sat, 10 Nov 2018 16:03:16 +0100
+ -- Holger Levsen <holger@debian.org>  Sun, 11 Nov 2018 13:48:17 +0100
 
 munin (2.0.42-4) unstable; urgency=medium
 
