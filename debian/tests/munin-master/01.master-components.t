@@ -9,21 +9,21 @@ test_description="munin run"
 MUNIN_TEST_CGI_ENABLED=${MUNIN_TEST_CGI_ENABLED:-0}
 
 
-test_expect_success "munin-update" "
+test_expect_success "munin-update" '
   setuidgid munin /usr/share/munin/munin-update
-"
+'
 
-test_expect_success "munin-limits" "
+test_expect_success "munin-limits" '
   setuidgid munin /usr/share/munin/munin-limits
-"
+'
 
 test_expect_success "munin-html: no files in /var/cache/munin/www/ before first run" '
   [ -z "$(find /var/cache/munin/www/ -mindepth 1)" ]
 '
 
-test_expect_success "munin-html: running" "
+test_expect_success "munin-html: running" '
   setuidgid munin /usr/share/munin/munin-html
-"
+'
 
 test_expect_success "munin-html: generated files in /var/cache/munin/www/static/" '
   [ -n "$(find /var/cache/munin/www/static/ -mindepth 1)" ]
@@ -39,9 +39,9 @@ else
   '
 fi
 
-test_expect_success "munin-graph" "
+test_expect_success "munin-graph" '
   setuidgid munin /usr/share/munin/munin-graph --cron
-"
+'
 
 if [ "$MUNIN_TEST_CGI_ENABLED" = "1" ]; then
   test_expect_success "CGI strategy: do not generate static graph files" '
