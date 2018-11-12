@@ -4,7 +4,7 @@ munin (2.999.9-2) UNRELEASED; urgency=medium
   * Use the new debhelper-compat(=11) notation and drop d/compat.
 
   [ Lars Kruse ]
-  * Integrate tests from non-experimental packaging.
+  * Integrate tests from unstable packaging.
 
  -- Holger Levsen <holger@debian.org>  Sat, 13 Oct 2018 13:34:42 +0100
 
