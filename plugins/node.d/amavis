@@ -78,7 +78,7 @@ GPLv2
 =cut
 
 AMAVIS_LOG=${amavislog:-/var/log/mail/mail.info}
-LOGTAIL=${logtail:-logtail}
+LOGTAIL=${logtail:-$(which logtail)}
 STATEFILE=$MUNIN_PLUGSTATE/amavis.offset
 mktemp_command="${mktemp_command:-/bin/mktemp}"
 
@@ -86,7 +86,7 @@ if [ "$1" = "autoconf" ]; then
 	if [ ! -f "$AMAVIS_LOG" ]; then
 		echo "no (file '$AMAVIS_LOG' not found)"
 	elif [ ! -n "$LOGTAIL" ]; then
-		echo "no (executable 'logtail' was not specified)"
+		echo "no (executable 'logtail' not found)"
 	elif [ ! -x "$LOGTAIL" ]; then
 		echo "no ('$LOGTAIL' is not executable)"
 	else
