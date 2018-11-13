@@ -83,13 +83,16 @@ STATEFILE=$MUNIN_PLUGSTATE/amavis.offset
 mktemp_command="${mktemp_command:-/bin/mktemp}"
 
 if [ "$1" = "autoconf" ]; then
-	if [ -f "${AMAVIS_LOG}" ] && [ -n "${LOGTAIL}" ] && [ -x "${LOGTAIL}" ] ; then
-		echo yes
-		exit 0
+	if [ ! -f "$AMAVIS_LOG" ]; then
+		echo "no (file '$AMAVIS_LOG' not found)"
+	elif [ ! -n "$LOGTAIL" ]; then
+		echo "no (executable 'logtail' was not specified)"
+	elif [ ! -x "$LOGTAIL" ]; then
+		echo "no ('$LOGTAIL' is not executable)"
 	else
-		echo "no (command $LOGTAIL or file $AMAVIS_LOG not found)"
-		exit 0
+		echo yes
 	fi
+	exit 0
 fi
 
 # Try tailing a random file to check how arguments are passed
