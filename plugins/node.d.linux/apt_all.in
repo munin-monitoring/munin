@@ -208,7 +208,7 @@ if ($ARGV[0] and $ARGV[0] eq "update") {
 	if (!-e $statefile
 			|| ((stat($statefile))[10] + $maxinterval < time())
 			|| (int(rand($probability)) == 0)) {
-		exec("/usr/bin/apt-get update")
+		system("/usr/bin/apt-get update")
 			or die("Unable to exec() apt-get");
 		update_state();
 	}
