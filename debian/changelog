@@ -1,3 +1,17 @@
+munin (2.0.43-1) UNRELEASED; urgency=medium
+
+  * New upstream version 2.0.43, Closes: #913661
+  * Remove duplicate systemd-tmpfiles line for /run/munin from munin-node.
+    Thanks to Vincas Dargis (Closes: #913784)
+  * Add autopktest for default user context of plugins.
+  * Tests: remove temporary exception for stderr from "munindoc"
+  * Change Vcs-Git to canonical URL (appending ".git")
+    Thanks to lintian
+  * Lintian: override suggested service for init script.
+    The purpose of the init script is covered by munin.tmpfiles.
+
+ -- Lars Kruse <devel@sumpfralle.de>  Fri, 16 Nov 2018 00:52:48 +0100
+
 munin (2.0.42-6) unstable; urgency=medium
 
   [ Lars Kruse ]
