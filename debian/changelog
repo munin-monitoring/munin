@@ -1,12 +1,12 @@
-munin (2.999.9-2) UNRELEASED; urgency=medium
-
-  [ Holger Levsen ]
-  * Use the new debhelper-compat(=11) notation and drop d/compat.
+munin (2.999.9-2) experimental; urgency=medium
 
   [ Lars Kruse ]
   * Integrate tests from unstable packaging.
 
- -- Holger Levsen <holger@debian.org>  Sat, 13 Oct 2018 13:34:42 +0100
+  [ Holger Levsen ]
+  * Use the new debhelper-compat(=11) notation and drop d/compat.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 15 Nov 2018 11:54:10 +0100
 
 munin (2.999.9-1) experimental; urgency=medium
 
