@@ -122,7 +122,7 @@ munin-update [options]
  Options:
      --config_file=<file>    Use <file> as configuration file. 
      --[no]debug             Enable [or disable] debug messages. [--nodebug]
-     --[no]fork              Query hosts in parallell (--fork), or 
+     --[no]fork              Query hosts in parallel (--fork), or
                              sequentially (--nofork). [--fork]
      --host <host>	     Limit graphed hosts to <host>. Multiple --host 
                              options may be supplied.

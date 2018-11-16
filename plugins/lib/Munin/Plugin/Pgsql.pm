@@ -156,9 +156,9 @@ use Munin::Plugin;
  base           Used for graph_args --base. Default is 1000, set to 1024 when
                 returning sizes in Kb for example.
  wildcardfilter The SQL to substitute for when a wildcard plugin is run against
-                a specific entity, for example a database. All occurrances of
+                a specific entity, for example a database. All occurrences of
                 the string %%FILTER%% will be replaced with this string, and
-                for each occurance a parameter with the value of the filtering
+                for each occurrence a parameter with the value of the filtering
                 condition will be added to the DBI statement.
  paramdatabase  Makes the plugin connect to the database in the first parameter
                 (wildcard plugins only) instead of 'template1'.
