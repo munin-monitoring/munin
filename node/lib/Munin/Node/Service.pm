@@ -24,8 +24,8 @@ sub new
     # Set defaults
     $args{servicedir} ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 
-    $args{defuser}  ||= getpwnam $Munin::Common::Defaults::MUNIN_PLUGINUSER;
-    $args{defgroup} ||= getgrnam $Munin::Common::Defaults::MUNIN_GROUP;
+    $args{defuser}  = getpwnam $Munin::Common::Defaults::MUNIN_PLUGINUSER unless defined($args{defuser});
+    $args{defgroup} = getgrnam $Munin::Common::Defaults::MUNIN_GROUP unless defined($args{defgroup});
 
     $args{timeout}  ||= 60; # Default transaction timeout : 1 min
     $args{pidebug}  ||= 0;
