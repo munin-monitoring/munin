@@ -42,7 +42,10 @@ my $os = 'Munin::Node::OS';
 ### get_fq_hostname
 {
 	ok($os->get_fq_hostname, 'Was able to establish the FQDN');
-	isnt(index($os->get_fq_hostname, '.'), -1, 'FQDN contains at least one dot');
+	SKIP: {
+		skip "autopktest environment does not set a domain for the FQDN test", 1 if ($os->get_fq_hostname =~ /^autopkgtest-/);
+		isnt(index($os->get_fq_hostname, '.'), -1, 'FQDN contains at least one dot');
+	}
 }
 
 
