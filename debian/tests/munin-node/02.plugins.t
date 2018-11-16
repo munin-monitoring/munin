@@ -49,4 +49,17 @@ EOF
   test_cmp expected_plugins all_without_network_interfaces
 '
 
+test_expect_success "plugins are executed as 'nobody' by default" '
+    cat >/etc/munin/plugins/test-id <<EOF
+#!/bin/sh
+printf "user.value "
+id --user --name
+EOF
+    chmod +x /etc/munin/plugins/test-id
+    service munin-node restart
+    printf "%s\\n" "fetch test-id" quit | nc localhost munin | grep -v "^#" | head -1 >real_id_output
+    echo "user.value nobody" >expected_id_output
+    test_cmp expected_id_output real_id_output
+'
+
 test_done
