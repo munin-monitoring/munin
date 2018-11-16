@@ -152,8 +152,8 @@ SKIP: {
 SKIP: {
     skip "Need to be run with sudo", 2 if $REAL_USER_ID != 0;
 
-    my $login = getpwnam $ENV{SUDO_USER};
-    die "Test assumes that the user logged in on the controlling terminal is not root" if $login == 0;
+    my $login = defined($ENV{SUDO_USER}) ? getpwnam $ENV{SUDO_USER} : 0;
+    skip "Test assumes that the user logged in on the controlling terminal is not root", 2 if $login == 0;
 
     $os->set_effective_user_id($login);
     is($EFFECTIVE_USER_ID, $login, "Changed effective UID");
