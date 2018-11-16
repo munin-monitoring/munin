@@ -2,6 +2,7 @@
 # In all other regards (besides being used for testing) it is probably not
 # accurate (too many dependencies, ...).
 
+requires 'Alien::RRDtool';
 requires 'Digest::MD5';
 requires 'File::Path';
 requires 'File::ReadBackwards';
@@ -19,6 +20,7 @@ requires 'List::Util';
 requires 'Log::Dispatch';
 requires 'Log::Dispatch::Screen';
 requires 'Log::Dispatch::Syslog';
+requires 'Log::Log4perl';
 requires 'MIME::Base64';
 requires 'Module::Build';
 requires 'Net::DNS';

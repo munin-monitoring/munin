@@ -168,7 +168,10 @@ sub get_node_service {
 
 # CGI in perl 5.20 is now seriously broken as it doesn't import into the namespace.
 # So we have to delegate explicitely. It's easier than prefixing with CGI:: each use.
-sub header { return CGI::header(@_); }
-sub path_info { return CGI::path_info(@_); }
-sub url { return CGI::url(@_); }
-sub script_name { return CGI::script_name(@_); }
+# This workaround is applied only if "header" is undefined (i.e. for perl >= 5.20).
+if(!defined &header){
+	*header = sub { return CGI::header(@_); };
+	*path_info = sub { return CGI::path_info(@_); };
+	*url = sub { return CGI::url(@_); };
+	*script_name = sub { return CGI::script_name(@_); };
+}

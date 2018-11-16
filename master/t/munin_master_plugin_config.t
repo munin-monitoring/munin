@@ -121,7 +121,10 @@ my $fasit = {
                                     ],
                                     [
                                       'graph_order',
-                                      'system user nice idle iowait irq softirq'
+                                      # Since 53f22440a the internal "graph_order" implementation
+                                      # includes the list of data field appearances after the
+                                      # explicitly configured graph_order.
+                                      'system user nice idle iowait irq softirq system user'
                                     ],
                                     [
                                       'graph_args',

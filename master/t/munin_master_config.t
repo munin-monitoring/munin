@@ -29,6 +29,7 @@ my $fasit = {
         debug           => 0,
         fork            => 1,
         graph_data_size => 'normal',
+        graph_strategy  => 'cron',
         groups          => {
             marvin => {
                 hosts => {
@@ -51,6 +52,8 @@ my $fasit = {
         logdir                 => '/opt/munin/sandbox/var/log/munin',
         max_processes          => 16,
         rundir                 => '/opt/munin/sandbox/var/run/munin',
+        ssh_command            => "ssh",
+        ssh_options            => "-o ChallengeResponseAuthentication=no -o StrictHostKeyChecking=no",
         timeout                => 180,
         tls                    => 'disabled',
         tls_ca_certificate     => '/opt/munin/common/t/tls/CA/ca_cert.pem',

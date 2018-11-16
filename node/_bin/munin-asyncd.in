@@ -151,7 +151,13 @@ my $last_cleanup=0;
 MAIN: while($keepgoing) {
 	my $when = time;
 
-	my $when_next = $when + $timeout; # wake up at least every $timeout sec
+	# start the next run close to the end of a munin-node update operation
+	# (i.e. try to avoid overlapping activities)
+	my $when_next = int((int($when / $minrate) + 0.75) * $minrate);
+	while ($when_next <= $when) {
+		$when_next = $when_next + $minrate;
+	}
+
 	my $sock;
 	PLUGIN: foreach my $plugin (@plugins) {
 		# See if this plugin should be updated
@@ -163,7 +169,6 @@ MAIN: while($keepgoing) {
 
 		# Should update it
 		$last_updated{$plugin} = $when;
-		$when_next = min($when_next, $when + max($plugin_rate, $minrate));
 
 		if ($do_fork && fork()) {
 			# parent, return directly

@@ -199,7 +199,7 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
     print "graph_vlabel queries / \${graph_period}\n";
     print "graph_category dns\n";
 
-    for my $key (keys %IN) {
+    for my $key (sort keys %IN) {
         print "query_$key.label $key\n";
         print "query_$key.type DERIVE\n";
         print "query_$key.min 0\n";

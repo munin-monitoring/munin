@@ -11,7 +11,10 @@ use_ok('Munin::Master::Utils');
 # munin_mkdir_p
 {
 	ok(munin_mkdir_p("./mkdirt", oct(444)), "Creating valid dir");
-	ok(!munin_mkdir_p("./mkdirt/bad", oct(444)), "Creating invalid dir");
+	SKIP: {
+		skip "Directory permission cannot be tested by root", 1 if $REAL_USER_ID == 0;
+		ok(!munin_mkdir_p("./mkdirt/bad", oct(444)), "Creating invalid dir");
+	}
 	eval {
 		rmdir("./mkdirt")
 	};

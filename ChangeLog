@@ -1,5 +1,63 @@
 -*- text -*-
 
+munin-2.0.43, 2018-11-16
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Moench-Tegeder (1):
+      make Linux diskstats plugin comaptible with Linux 4.19+
+
+Kim B. Heino (1):
+      munin-asyncd: sync munin-cron and munin-asyncd runtimes to not overlap
+
+Lars Kruse (27):
+      getversion: fix shellcheck issue
+      getversion: treat all states unrelated to branches equally
+      getversion: use commit tag if possible; update documentation
+      Clarify conditional usage of the CGI workaround
+      Plugin bind9_rndc: stabilize order of values in graph
+      Plugin smart_: fix variable handling during first run
+      Update master configuration test
+      Revive "_extract_name_from_greeting" for tests
+      Fix test for output of munin-node-configure
+      Use unique CNs for test TLS certificates
+      Remove trailing whitespace from openssl.cnf file
+      Remove outdated "md5" hash from OpenSSL configuration for tests
+      Recreate TLS certificate for tests
+      Enable evaluation of test results for test-common and test-plugins
+      Fix remaining broken master tests
+      travis: add missing dependency
+      travis: ignore result of "test-master"
+      Use "Alien::RRDtool" for travis tests
+      Disable the failing "proxyspooler" test for "test-node"
+      munindoc: output reasonable error message if plugin is not found
+      munindoc: prevent stderr output from perldoc
+      Plugin apt_all: allow status update after "apt-get update"
+      Plugin apt_all: fix "apt-get update" call
+      Tests: allow to run tests as root
+      Tests: allow to run in an autopkgtest environment lacking a FQDN
+      Tests: skip the tests around the effective user ID for root
+      Munin::Node::Service: accept zero (root) as defuser/defgroup
+
+RenWal (2):
+      Narrowed down voltage regex
+      Narrow down regex for all modes
+
+SeeSchloss (1):
+      smartctl_exit_status should be a single number and not a range (fixes #1100)
+
+Steve Mokris (1):
+      Only apply Perl 5.20 CGI workaround when needed
+
+
 munin-2.0.42, 2018-09-21
 
 -------

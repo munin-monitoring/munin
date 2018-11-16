@@ -535,7 +535,7 @@ install-%: %/Build
 		--install_path libdoc=$(MANDIR)/man3
 
 test-%: %/Build
-	cd $* && $(PERL) Build test --verbose=0 || true
+	cd $* && $(PERL) Build test --verbose=0
 
 lint:
 	@# SC1008: ignore our weird shebang (substituted later)

@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 29;
+use Test::More tests => 30;
 use Test::LongString;
 use Config;  # for signal numbers and names
 
@@ -42,7 +42,10 @@ my $os = 'Munin::Node::OS';
 ### get_fq_hostname
 {
 	ok($os->get_fq_hostname, 'Was able to establish the FQDN');
-	isnt(index($os->get_fq_hostname, '.'), -1, 'FQDN contains at least one dot');
+	SKIP: {
+		skip "autopktest environment does not set a domain for the FQDN test", 1 if ($os->get_fq_hostname =~ /^autopkgtest-/);
+		isnt(index($os->get_fq_hostname, '.'), -1, 'FQDN contains at least one dot');
+	}
 }
 
 
@@ -129,8 +132,17 @@ my $os = 'Munin::Node::OS';
 ### possible_to_signal_process
 {
 	ok(  $os->possible_to_signal_process($$),     'can send a signal to ourselves');
-	ok(! $os->possible_to_signal_process(1),      'cannot signal to init');
 	ok(! $os->possible_to_signal_process(999999), 'cannot signal non-existant process');
+}
+
+SKIP: {
+	skip "Test assumes that the user is not root", 1 if $REAL_USER_ID == 0;
+	ok(! $os->possible_to_signal_process(1), 'cannot signal to init');
+}
+
+SKIP: {
+	skip "Test assumes that the user is root", 1 if $REAL_USER_ID != 0;
+	ok($os->possible_to_signal_process(1), 'can signal to init');
 }
 
 ### set_effective_user_id
@@ -140,8 +152,8 @@ my $os = 'Munin::Node::OS';
 SKIP: {
     skip "Need to be run with sudo", 2 if $REAL_USER_ID != 0;
 
-    my $login = getpwnam $ENV{SUDO_USER};
-    die "Test assumes that the user logged in on the controlling terminal is not root" if $login == 0;
+    my $login = defined($ENV{SUDO_USER}) ? getpwnam $ENV{SUDO_USER} : 0;
+    skip "Test assumes that the user logged in on the controlling terminal is not root", 2 if $login == 0;
 
     $os->set_effective_user_id($login);
     is($EFFECTIVE_USER_ID, $login, "Changed effective UID");

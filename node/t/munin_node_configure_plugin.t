@@ -238,7 +238,7 @@ sub gen_plugin
     $p->parse_autoconf_response('no');
     is(
         $p->suggestion_string,
-        'no',
+        'no [[[ plugin has neither autoconf not suggest support ]]]',
         'Suggestion string - no'
     );
 }
@@ -268,7 +268,7 @@ sub gen_plugin
     $p->parse_autoconf_response('no');
     is(
         $p->suggestion_string,
-        'no',
+        'no [[[ plugin has neither autoconf not suggest support ]]]',
         'Suggestion string - no'
     );
 }
