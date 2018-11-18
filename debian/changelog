@@ -1,5 +1,6 @@
-munin (2.0.43-1) UNRELEASED; urgency=medium
+munin (2.0.43-1) unstable; urgency=medium
 
+  [ Lars Kruse ]
   * New upstream version 2.0.43, Closes: #913661
   * Remove duplicate systemd-tmpfiles line for /run/munin from munin-node.
     Thanks to Vincas Dargis (Closes: #913784)
@@ -10,7 +11,7 @@ munin (2.0.43-1) UNRELEASED; urgency=medium
   * Lintian: override suggested service for init script.
     The purpose of the init script is covered by munin.tmpfiles.
 
- -- Lars Kruse <devel@sumpfralle.de>  Fri, 16 Nov 2018 00:52:48 +0100
+ -- Holger Levsen <holger@debian.org>  Sun, 18 Nov 2018 12:23:38 +0100
 
 munin (2.0.42-6) unstable; urgency=medium
 
