@@ -253,7 +253,13 @@ def config_unit(unit):
         nname = normalize_sensor(lbl)
 
         print("%s.label %s" % (nname, lbl))
-        assertions = values['assertions enabled'].split()
+        # detect warning and critical ranges
+        try:
+            assertions = values['assertions enabled'].split()
+        except KeyError:
+            # Some devices do not provide assertions (e.g. power supplies).  Thus there is no way
+            # to guess their warning/critical ranges.  We can skip these.
+            continue
         warn_l = warn_u = crit_l = crit_u = ""
         if 'lcr-' in assertions:
             crit_l = values['lower critical'].replace("na", "")
