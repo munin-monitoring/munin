@@ -110,7 +110,7 @@ def parse_data(data):
             continue
         if line.startswith("Sensor ID"):
             label, data = line.split(":", 1)
-            idm = re.match("(.*) \((0x.*)\)", data)
+            idm = re.match(r"(.*) \((0x.*)\)", data)
             if not idm:
                 continue
             id = idm.group(1).strip()
