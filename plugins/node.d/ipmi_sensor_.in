@@ -221,7 +221,6 @@ UNITS_TO_SENSORS = {
 
 if access(CONFIG, R_OK):
     for line in open(CONFIG):
-        line = line.decode()
         if line.strip().startswith('#'):
             continue
         data = line.split('=', 1)
