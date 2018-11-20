@@ -30,7 +30,7 @@ use File::Temp; # File::Temp was first released with perl 5.006001
 
 ## no critic qw(Prototypes)
 
-=head1 NAME 
+=head1 NAME
 
 Munin::Plugin - Utility functions for Perl Munin plugins.
 

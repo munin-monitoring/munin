@@ -143,6 +143,7 @@ if [ "$CMD" = "years" ]; then
 	(( no_of_years-- )) # We don't need that last entry in the array
 	if [ "$1" = "config" ]; then
                 echo "graph_title Number of years"
+                echo "graph_vlabel years"
                 echo "graph_category radio"
 		echo "graph_args --base 1000 -l 0"
 		# echo -n "graph_order "
@@ -174,6 +175,7 @@ if [ "$CMD" = "years" ]; then
 elif [ "$CMD" = "signalstrength" ] || [ "$CMD" = "mixer volume" ]; then
         if [ "$1" = "config" ]; then
             echo "graph_title $TITLE"
+            echo "graph_vlabel $CMD"
             echo "graph_category radio"
             COUNT=$(printf "%b" 'player count ?\nexit\n' | "$NC" "$HOST" "$PORT" | cut -d " " -f 3)
             (( COUNT-- ))
@@ -198,6 +200,7 @@ elif [ "$CMD" = "signalstrength" ] || [ "$CMD" = "mixer volume" ]; then
 else
 	if [ "$1" = "config" ]; then
 		echo "graph_title Number of $ATTR"
+		echo "graph_vlabel $ATTR"
 		echo "graph_scale no"
 		echo "graph_category radio"
 		echo "$ATTR.label $ATTR"

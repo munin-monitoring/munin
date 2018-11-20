@@ -65,8 +65,8 @@ configure_node() {
 	install -m 0644 "${CONFDIR}/munin-node.conf.sample" "${CONFDIR}/munin-node.conf"
 
 	perl -pi -e "s/port 4949/port ${MUNIN_NODE_PORT}/;
-				 s/user root/user $USER/;
-				 s/group root/group $GROUP/;
+				 s/user root/user $(id -n -u)/;
+				 s/group root/group $(id -n -g)/;
 				 s|^(port .*)|\$1
 
 tls disabled

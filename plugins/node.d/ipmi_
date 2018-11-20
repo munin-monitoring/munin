@@ -46,7 +46,7 @@ case $1 in
     autoconf)
 	type -p ipmitool &>/dev/null ||
 	  { echo 'no (missing ipmitool command)' && exit 0; }
-	
+
 	ipmitool sensor &>/dev/null ||
 	  { echo 'no (unable to access IPMI device)' && exit 0; }
 

@@ -9,8 +9,8 @@
 # The interface must also have an accounting iptables rules defined, _before_
 # any action rules. E.g., in /etc/network/vlan-firewall.d/eth1-200-out, you
 # will find:
-#  
-#	--out-interface eth0 -p tcp --sport http 
+#
+#	--out-interface eth0 -p tcp --sport http
 #	--out-interface eth0 -p tcp --sport smtp
 #	--out-interface eth0 -p tcp --sport ssh
 #	--out-interface eth0 -p tcp --sport domain
@@ -96,65 +96,65 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 
 			if (@in_fields)
 			{
-				push (@out , "$in.draw STACK\n"); 
+				push (@out , "$in.draw STACK\n");
 			}
 			else
 			{
-				push (@out , "$in.draw AREA\n"); 
+				push (@out , "$in.draw AREA\n");
 			}
 			push (@in_fields, "$in");
-			push (@out , "$in.label $label\n"); 
-			push (@out , "$in.cdef $in,8,*\n"); 
-			push (@out , "$in.graph no\n"); 
-			push (@out , "$in.type DERIVE\n"); 
-			push (@out , "$in.min 0\n"); 
+			push (@out , "$in.label $label\n");
+			push (@out , "$in.cdef $in,8,*\n");
+			push (@out , "$in.graph no\n");
+			push (@out , "$in.type DERIVE\n");
+			push (@out , "$in.min 0\n");
 
 			if (@out_fields)
 			{
-				push (@out , "$out.draw STACK\n"); 
+				push (@out , "$out.draw STACK\n");
 			}
 			else
 			{
-				push (@out , "$out.draw AREA\n"); 
+				push (@out , "$out.draw AREA\n");
 			}
 			push (@out_fields, "$out");
-			push (@out , "$out.label $label\n"); 
-			push (@out , "$out.cdef $out,8,*\n"); 
-			push (@out , "$out.negative $in\n"); 
-			push (@out , "$out.type DERIVE\n"); 
-			push (@out , "$out.min 0\n"); 
+			push (@out , "$out.label $label\n");
+			push (@out , "$out.cdef $out,8,*\n");
+			push (@out , "$out.negative $in\n");
+			push (@out , "$out.type DERIVE\n");
+			push (@out , "$out.min 0\n");
 		}
 	}
 
 	if (@in_fields)
 	{
-		push (@out , "in_other.draw STACK\n"); 
+		push (@out , "in_other.draw STACK\n");
 	}
 	else
 	{
-		push (@out , "in_other.draw AREA\n"); 
+		push (@out , "in_other.draw AREA\n");
 	}
 	push (@in_fields, "in_other");
-	push (@out , "in_other.label other\n"); 
-	push (@out , "in_other.cdef in_other,8,*\n"); 
-	push (@out , "in_other.graph no\n"); 
-	push (@out , "in_other.type DERIVE\n"); 
-	push (@out , "in_other.min 0\n"); 
+	push (@out , "in_other.label other\n");
+	push (@out , "in_other.cdef in_other,8,*\n");
+	push (@out , "in_other.graph no\n");
+	push (@out , "in_other.type DERIVE\n");
+	push (@out , "in_other.min 0\n");
 
 	if (@out_fields)
 	{
-		push (@out , "out_other.draw STACK\n"); 
+		push (@out , "out_other.draw STACK\n");
 	}
 	else
 	{
-		push (@out , "out_other.draw AREA\n"); 
+		push (@out , "out_other.draw AREA\n");
 	}
 	push (@out_fields, "out_other");
-	push (@out , "out_other.label other\n"); 
-	push (@out , "out_other.cdef out_other,8,*\n"); 
-	push (@out , "out_other.negative in_other\n"); 
-	push (@out , "out_other.type DERIVE\n"); 
-	push (@out , "out_other.min 0\n"); 
+	push (@out , "out_other.label other\n");
+	push (@out , "out_other.cdef out_other,8,*\n");
+	push (@out , "out_other.negative in_other\n");
+	push (@out , "out_other.type DERIVE\n");
+	push (@out , "out_other.min 0\n");
 
 
 	print "graph_order ", join (' ', @in_fields, @out_fields), "\n";

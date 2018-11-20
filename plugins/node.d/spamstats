@@ -132,14 +132,14 @@ sub parselogfile
 	my $line =<$logfd>;
 	chomp ($line);
 
-	if ($line =~ m/clean message/) 
+	if ($line =~ m/clean message/)
 	{
 	    $ham++;
-	} 
+	}
 	elsif ($line =~ m/identified spam/)
 	{
 	    $spam++;
 	}
     }
-    return tail_close($logfd);    
+    return tail_close($logfd);
 }

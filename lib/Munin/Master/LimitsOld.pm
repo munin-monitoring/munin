@@ -655,6 +655,16 @@ sub generate_service_message {
     $hash->{'ufields'}  = join " ", @{$stats{'unknown'}};
     $hash->{'fofields'} = join " ", @{$stats{'foks'}};
     $hash->{'ofields'}  = join " ", @{$stats{'ok'}};
+    # The "fofields" (datasets that changed state from "failed" to "OK") can be empty under certain
+    # legitimate circumstances (e.g. "munin-limits --force" sends messages also for unchanged "OK"
+    # states).  But we may never allow the fourth output field for NSCA to be empty - otherwise the
+    # recipient (nagios/icinga) cannot determine, which fields are affected (and thus which test
+    # succeeded).  Thus we need to make sure, that "fofields" is always defined (since our
+    # self-made trivial template language does not support expressions like "fofields || ofields").
+    # Here "ofields" is a reasonable fallback value: it contains all datasets with status "OK".
+    if ($hash->{'fofields'} eq '') {
+        $hash->{'fofields'} = $hash->{'ofields'};
+    }
     $hash->{'numcfields'}  = scalar @{$stats{'critical'}};
     $hash->{'numwfields'}  = scalar @{$stats{'warning'}};
     $hash->{'numufields'}  = scalar @{$stats{'unknown'}};

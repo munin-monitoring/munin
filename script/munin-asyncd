@@ -90,10 +90,20 @@ unless (-d $SPOOLDIR) {
 		or LOGCROAK("Cannot create '$SPOOLDIR': $!");
 }
 
+my $process_name = "main";
+
 my $sock = new IO::Socket::INET(
 	PeerAddr        => "$host",
 	Proto   => 'tcp'
-) || LOGCROAK("Error creating socket: $!");
+);
+if (!$sock) {
+	print STDERR "[$$][$process_name] Failed to connect to munin-node - trying again in a few seconds ...\n" if $verbose;
+	sleep 20;
+	$sock = new IO::Socket::INET(
+		PeerAddr => "$host",
+		Proto => 'tcp'
+	) || LOGCROAK("Error connecting to munin node ($host): $!");
+}
 my $nodeheader = <$sock>;
 print STDERR "[sock][>] nodes\n" if $debug;
 print $sock "nodes\n";
@@ -130,8 +140,6 @@ foreach my $node (@nodes) {
 }
 
 $0 = "munin-asyncd [$metahostname] [idle]";
-
-my $process_name = "main";
 
 my $plugins = {};
 {
