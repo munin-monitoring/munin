@@ -199,7 +199,13 @@ MAIN: while($keepgoing) {
 
 	my $process_name_orig = $process_name;
 
-	my $when_next = $when + $timeout; # wake up at least every $timeout sec
+	# start the next run close to the end of a munin-node update operation
+	# (i.e. try to avoid overlapping activities)
+	my $when_next = int((int($when / $minrate) + 0.75) * $minrate);
+	while ($when_next <= $when) {
+		$when_next = $when_next + $minrate;
+	}
+
 	foreach my $node (@nodes)
 	{
 		my $sock;

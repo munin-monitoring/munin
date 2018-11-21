@@ -6,10 +6,11 @@
 #   This is in case we're building from a tarball.
 #
 # * If we're inside a git tree:
-#   - For the "master" branch, use "git describe".
-#   - For "detached" branches (mostly for tag checkouts), also use "git describe".
-#   - For other branches, use a "$VERSION-$NBCOMMITS-$BRANCH-$DATE-g$COMMIT"
-#     sortof version.
+#   - For a current tagged commit, return this tag.
+#   - For the "master/devel/stable-*" branches, use "git describe".
+#   - For other branches or detached HEADs, return a
+#     "$VERSION-$NBCOMMITS-$BRANCH-$DATE-g$COMMIT" version string
+#     (with "BRANCH=detached" for a detached HEAD)
 #
 # * Try to make it up from the directory name (munin-2.0.1 -> 2.0.1)
 #
@@ -23,46 +24,46 @@
 # shellcheck disable=SC2006
 
 
-current_git_branch() {
+get_current_git_branch_name() {
     # hide stderr (for detached HEADs)
-    GB=`LANG= git branch 2>/dev/null | awk '$1 == "*" {print $2}'`
-    case $GB in
-
-        # git checkout 402c6d6
-        # git branch
-        # * (detached from 402c6d6)
-        #   devel
-        # --> This is new with git 1.8+
-        "(detached" ) echo "detached";;
-
-        # git checkout 2.0.9
-        # git branch
-        # * (no branch)
-        #   devel
-        "(no" ) echo;;
-
-        *     ) echo "$GB";;
-    esac
+    GB=`LANG='' git branch --points-at HEAD 2>/dev/null | awk '$1 == "*" {print $2}'`
+    if echo "$GB" | grep -q "^("; then
+        # we are not part of a specific branch (the reason is given in braces)
+        echo
+    else
+        echo "$GB"
+    fi
 }
 
 
 generate_version_string() {
-    branch=`current_git_branch`
-    case "$branch" in
-        ""|master|devel|stable-*)
-            git describe
-            ;;
-        *)
-            branch=`echo "$branch" | sed -e 's/[^0-9A-Za-z\.\-\_]/_/g'`
-            # "foo | read VAR" does *not* work (variable is changed only in subshell)
-            # workaround stolen from http://www.etalabs.net/sh_tricks.html
-            read -r VERSION COMMITS <<EOF
+    # try the obvious: is our current commit tagged?
+    head_tag=`git tag --points-at HEAD`
+    if [ -n "$head_tag" ]; then
+        echo "$head_tag"
+    else
+        branch_name=`get_current_git_branch_name`
+        case "$branch_name" in
+            master|devel|stable-*)
+                # public branches or detached HEADs
+                git describe
+                ;;
+            *)
+                if [ -n "$branch_name" ]; then
+                    clean_branch_name=`echo "$branch_name" | sed -e 's/[^0-9A-Za-z\.\-\_]/_/g'`
+                else
+                    clean_branch_name="detached"
+                fi
+                # "foo | read VAR" does *not* work (variable is changed only in subshell)
+                # workaround stolen from http://www.etalabs.net/sh_tricks.html
+                read -r VERSION COMMITS <<EOF
 `git describe --long | perl -lne 'print "$1 $2" if m/(.*)-(\d+)-g\w+/'`
 EOF
-            # As git describe, we also use the "-g" magic string to denote a git hash
-            git log -n 1 --pretty="${VERSION}-${branch}-%ad-c${COMMITS}-g%h" --date=short
-            ;;
-    esac
+                # As git describe, we also use the "-g" magic string to denote a git hash
+                git log -n 1 --pretty="${VERSION}-${clean_branch_name}-%ad-c${COMMITS}-g%h" --date=short
+                ;;
+        esac
+    fi
 }
 
 

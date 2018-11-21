@@ -1,58 +1,45 @@
-# 
-# OpenSSL configuration file. 
-# 
+#
+# OpenSSL configuration file.
+#
 
-# Establish working directory. 
-dir = . 
+# Establish working directory.
+dir = .
 
-[ ca ] 
-default_ca = CA_default 
+[ ca ]
+default_ca = CA_default
 
-[ CA_default ] 
-serial        = $dir/CA/serial 
-database      = $dir/CA/index.txt 
-new_certs_dir = $dir/CA/newcerts 
-certificate   = $dir/CA/ca_cert.pem 
-private_key   = $dir/CA/private/ca_key.pem 
-default_days  = 365
-default_md    = md5 
-preserve      = no 
-email_in_dn   = no 
-nameopt       = default_ca 
-certopt       = default_ca 
-policy        = policy_match 
+[ CA_default ]
+serial        = $dir/CA/serial
+database      = $dir/CA/index.txt
+new_certs_dir = $dir/CA/newcerts
+certificate   = $dir/CA/ca_cert.pem
+private_key   = $dir/CA/private/ca_key.pem
+default_md    = default
+email_in_dn   = no
+policy        = policy_match
 
-[ policy_match ] 
-countryName            = match 
-stateOrProvinceName    = match 
-organizationName       = match 
-organizationalUnitName = optional 
-commonName             = supplied 
-emailAddress           = optional 
+[ policy_match ]
+countryName            = match
+stateOrProvinceName    = match
+organizationName       = match
+organizationalUnitName = optional
+commonName             = supplied
+emailAddress           = optional
 
-
-[ req ] 
-default_bits       = 1024 # Size of keys 
-default_md         = md5 # message digest algorithm 
-string_mask        = nombstr # permitted characters 
-distinguished_name = req_distinguished_name 
+[ req ]
+default_bits       = 2048
+string_mask        = utf8only
+distinguished_name = req_distinguished_name
 prompt             = no
 req_extensions     = v3_req
 
 [ req_distinguished_name ]
-C            = MU
-ST           = Province of Munin
-L            = Munin Town
-O            = Munin Inc.
-OU           = .
-CN           = 127.0.0.1
-emailAddress = munin@example.org
 
-[ v3_ca ] 
-basicConstraints       = CA:TRUE 
-subjectKeyIdentifier   = hash 
-authorityKeyIdentifier = keyid:always,issuer:always 
+[ v3_ca ]
+basicConstraints       = CA:TRUE
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always,issuer:always
 
-[ v3_req ] 
-basicConstraints = CA:FALSE 
-subjectKeyIdentifier = hash 
+[ v3_req ]
+basicConstraints = CA:FALSE
+subjectKeyIdentifier = hash

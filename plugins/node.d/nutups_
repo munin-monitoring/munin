@@ -44,7 +44,7 @@ voltages() {
 			echo "${i}.min 0"
 		done
 	else
-		"$UPSC" "$UPS" | sed -n '/volt/{
+		"$UPSC" "$UPS" | sed -n '/^[^:]*volt/{
 					s/://
 					/nominal/s/.* /nominal.value /
 					/voltage/s/\.[^ ]*/.value/
@@ -66,7 +66,7 @@ charge() {
 			echo "${i}.min 0"
 		done
 	else
-		"$UPSC" "$UPS" | sed -n '/charge/{
+		"$UPSC" "$UPS" | sed -n '/^[^:]*charge/{
 					s/^[^:]*\.//g
 					s/:/.value/
 					p
@@ -89,7 +89,7 @@ frequency() {
 		echo "acfreq.max 100"
 		echo "acfreq.min 5"
 	else
-		"$UPSC" "$UPS" | sed -n '/freq/{s/.*:/acfreq.value/;p}'
+		"$UPSC" "$UPS" | sed -n '/^[^:]*freq/{s/.*:/acfreq.value/;p}'
 	fi
 }
 
@@ -104,7 +104,7 @@ current() {
 		echo "current.max 100"
 		echo "current.min 0"
 	else
-		"$UPSC" "$UPS" | sed -n '/current/{s/.*:/current.value/;p}'
+		"$UPSC" "$UPS" | sed -n '/^[^:]*current/{s/.*:/current.value/;p}'
 	fi
 }
 
