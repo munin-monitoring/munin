@@ -4,13 +4,15 @@
 #
 # $Id$
 
-# Defaults/paths. Allows $(CONFIG) to be overrided by
+# Defaults/paths. Allows $(CONFIG) to be overridden by
 # make command line
 DEFAULTS = Makefile.config
 CONFIG = Makefile.config
 
 include $(DEFAULTS)
-include $(CONFIG)
+ifneq ($(DEFAULTS),$(CONFIG))
+    include $(CONFIG)
+endif
 
 ifeq ($(JCVALID),yes)
 JAVA_BUILD=build-plugins-java
