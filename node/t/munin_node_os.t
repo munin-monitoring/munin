@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 30;
+use Test::More tests => 28;
 use Test::LongString;
 use Config;  # for signal numbers and names
 
@@ -40,13 +40,8 @@ my $os = 'Munin::Node::OS';
 
 
 ### get_fq_hostname
-{
-	ok($os->get_fq_hostname, 'Was able to establish the FQDN');
-	SKIP: {
-		skip "autopktest environment does not set a domain for the FQDN test", 1 if ($os->get_fq_hostname =~ /^autopkgtest-/);
-		isnt(index($os->get_fq_hostname, '.'), -1, 'FQDN contains at least one dot');
-	}
-}
+# probably there is no good way to test it, since we cannot expect a certain host setup
+# (e.g. "test for a dot in the FQDN" fails in the Debian reproducibility test environment)
 
 
 ### check_perms_if_paranoid
