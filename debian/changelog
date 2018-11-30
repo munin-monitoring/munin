@@ -1,3 +1,11 @@
+munin (2.999.9-3) UNRELEASED; urgency=medium
+
+  [ Lars Kruse ]
+  * Convert old doc directory for munin-plugins-java to symlink.
+    Closes: #915020 Thanks to Andreas Beckmann for filing these bugs.
+
+ -- Holger Levsen <holger@debian.org>  Fri, 30 Nov 2018 12:55:38 +0100
+
 munin (2.999.9-2) experimental; urgency=medium
 
   [ Lars Kruse ]
