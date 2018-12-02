@@ -7,7 +7,7 @@ SUBJECT_NODE = /C=MU/ST=Province of Munin/L=Munin Town/O=Munin Inc./OU=Node/CN=1
 
 all:
 	mkdir CA
-	mkdir CA/newcerts CA/private 
+	mkdir CA/newcerts CA/private
 	touch CA/index.txt
 	echo '01' > CA/serial
 	openssl req -new -nodes -x509 -extensions v3_ca -subj "$(SUBJECT_CA)" -keyout CA/private/ca_key.pem -out CA/ca_cert.pem -days 3650 -config ./openssl.cnf

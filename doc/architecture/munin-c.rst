@@ -56,6 +56,6 @@ What plugins are included?
 Install
 =======
 
-After compiling there will be a binary named ``munin-plugins-c``. You can just replace the symlinks in ``/etc/munin/plugins/`` with symlinks to this binary. 
+After compiling there will be a binary named ``munin-plugins-c``. You can just replace the symlinks in ``/etc/munin/plugins/`` with symlinks to this binary.
 
 Note that the C version of the plugins do not need the C version of the node. It is just recommended as it gives you the full benefits at no added cost.

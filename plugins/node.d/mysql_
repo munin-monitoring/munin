@@ -1955,7 +1955,7 @@ sub update_variables {
 	$sth->finish();
     }
 
-    $data->{'mysql_base_memory'} = $data->{'key_buffer_size'} 
+    $data->{'mysql_base_memory'} = $data->{'key_buffer_size'}
                                          + $data->{'query_cache_size'}
                                          + $data->{'innodb_buffer_pool_size'}
                                          + ( $data->{'innodb_additional_mem_pool_size'} || 0 )
@@ -2465,7 +2465,7 @@ sub parse_buffer_pool_and_memory {
 		return 1;
 	    };
       # mariadb-5.5
-      m/\GInternal hash tables \(constant factor \+ variable factor\)\n\s*Adaptive hash index\s*(\d+)\s*\((\d+) \+ (\d+)\) *\n\s+Page hash +(\d+) +\(buffer pool \d+ only\) *\n\s+Dictionary cache\s*(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+File system\s+(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+Lock system\s+(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+Recovery system\s*(\d+)\s+\((\d+) \+ (\d+)\) *\n/gc  
+      m/\GInternal hash tables \(constant factor \+ variable factor\)\n\s*Adaptive hash index\s*(\d+)\s*\((\d+) \+ (\d+)\) *\n\s+Page hash +(\d+) +\(buffer pool \d+ only\) *\n\s+Dictionary cache\s*(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+File system\s+(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+Lock system\s+(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+Recovery system\s*(\d+)\s+\((\d+) \+ (\d+)\) *\n/gc
           && do {
           $data->{ib_bpool_internal_adaptive_hash_size_total}  = $1;
           $data->{ib_bpool_internal_adaptive_hash_size_const}  = $2;

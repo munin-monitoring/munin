@@ -97,7 +97,7 @@ sub prepare_plugin_environment
     # LC_ALL should be enough, but some plugins don't follow specs (#1014)
     $ENV{LANG} = 'C';
 
-    # PATH should be *very* sane by default. Can be overridden via 
+    # PATH should be *very* sane by default. Can be overridden via
     # config file if needed (Closes #863 and #1128).
     $ENV{PATH} = '/usr/sbin:/usr/bin:/sbin:/bin';
 
@@ -372,7 +372,7 @@ Runs miscellaneous tests on $file_name in the service directory, to try and
 establish whether it is a runnable service.
 
 =item B<list>
-  
+
   my @services = $services->list;
 
 Returns a list of all the runnable services in the directory.

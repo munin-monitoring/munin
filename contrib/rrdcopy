@@ -4,13 +4,13 @@
 # Copyright (C) 2009-2011 Steve Schnepp <steve.schnepp@pwkf.org>
 #
 # License: LGPL
-# 
+#
 # Usage : rrdcopy <src.rrd> <dst.rrd>
-# 
-# Both RRD have to exist and have the same DS (DataSource). 
+#
+# Both RRD have to exist and have the same DS (DataSource).
 # The tool copies all the datasources from the sources into the destination
-# like you mean it: 
-#  - start is the oldest value from src 
+# like you mean it:
+#  - start is the oldest value from src
 #     (but cannot be younger than the youngest from dst)
 #  - stop is the youngest value from src
 #  - asks src for the AVERAGED value on each step time.
@@ -24,11 +24,11 @@
 #	RRA:AVERAGE:0.5:1:115200 \
 #	RRA:MIN:0.5:1:115200 \
 #	RRA:MAX:0.5:1:115200
-# 
-# It doesn't do any MIN/MAX replication since this information 
+#
+# It doesn't do any MIN/MAX replication since this information
 # is usually not accurate at all when resampling.
 #
-# The environmment variable DEBUG is used like : 
+# The environmment variable DEBUG is used like:
 # 0/absent - no debug
 # 1        - emit to stdout all the updates to dst
 # 2        - emit also the data that try
@@ -37,7 +37,7 @@
 # XXX - It depends on RRDs.pm ...
 # ... as I'm waiting for a patch to use the plain rrdtool cli :-)
 #
-# It was known as the rrdmove tool from the pmptools project. 
+# It was known as the rrdmove tool from the pmptools project.
 # - I changed its name (as data is copied, not moved)
 # - I changed its hosting (way more useful for munin than for pmptools)
 
@@ -67,7 +67,7 @@ $stop = $infos_src->{'last_update'};
 
 my @rra_names;
 foreach my $key (keys %$infos_dst) {
-	if ($key =~ /^rra\[(\w+)\]\.cf$/) { 
+	if ($key =~ /^rra\[(\w+)\]\.cf$/) {
 		push @rra_names, $1;
 	}
 }
@@ -82,12 +82,12 @@ foreach my $rra_name (sort {$a <=> $b} @rra_names) {
 	}
 
 	print "rra[$rra_name]:$rra_start("
-		. (scalar localtime($rra_start)) 
+		. (scalar localtime($rra_start))
 		. "):$start("
 		. (scalar localtime($start))
 		.")\n" if $ENV{DEBUG} && $ENV{DEBUG} >= 2;
 }
-	
+
 # Converting
 my ($step_sample) = $step * 128;
 for (my $epoch = $start; $epoch <= $stop; $epoch += $step_sample) {
@@ -135,7 +135,7 @@ for (my $epoch = $start; $epoch <= $stop; $epoch += $step_sample) {
 		for ( my $ds_idx = 0; $ds_idx < scalar @$line; $ds_idx ++) {
 			my $name = $names->[$ds_idx];
 			my $value = $line->[$ds_idx];
-			$current_data{$name} = $value;	
+			$current_data{$name} = $value;
 		}
 
 		# Create the template
@@ -143,7 +143,7 @@ for (my $epoch = $start; $epoch <= $stop; $epoch += $step_sample) {
 
 		# Ignore lines with all values set to "U"
 		next unless grep { $_ ne "U" } @values;
-		
+
 		my $current_epoch = $fetched_epoch;
 		while ( $current_epoch < $fetched_epoch + $fetched_step ) {
 			push @rrd_updates, "$current_epoch:" . join(':', @values);

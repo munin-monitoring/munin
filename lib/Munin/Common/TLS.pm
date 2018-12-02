@@ -429,7 +429,7 @@ L<Munin::Common::TLSServer> and L<Munin::Common::TLSClient>.
 =item B<new>
 
  my $tls = Munin::Common::TLSFoo->new({ # Substitute Foo with Client or Server
-     # Mandatory attributes:  
+     # Mandatory attributes:
      read_fd     => fileno($socket),
      read_func   => \&a_socket_read_func,
      write_fd    => fileno($socket),

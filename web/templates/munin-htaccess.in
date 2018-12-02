@@ -6,7 +6,7 @@
 # to that set.
 #
 # As a config file enclose it in <directory> like so:
-# 
+#
 # <directory @@HTMLDIR@@>
 
 AuthUserFile @@CONFDIR@@/munin-htpasswd

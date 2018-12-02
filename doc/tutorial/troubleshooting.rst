@@ -26,14 +26,14 @@ The examples show a :ref:`munin-node` agent running on 127.0.0.1; replace it wit
 
   Using ``telnet`` was the previous recommended way as it was a fairly standard install.
   We don't recommend it anymore since ``netcat`` is now almost as ubiquitous as ``telnet``
-  and it offers a real native TCP connection, whereas ``telnet`` 
-  `does not <http://stackoverflow.com/questions/12730293/how-does-telnet-differ-from-a-raw-tcp-connection>`_. 
+  and it offers a real native TCP connection, whereas ``telnet``
+  `does not <http://stackoverflow.com/questions/12730293/how-does-telnet-differ-from-a-raw-tcp-connection>`_.
   Note that using `socat` also works perfectly, but it is not as mainstream.
 
 
 Does the :ref:`munin-node` agent allow connections from your munin master?
 
-Here we try to connect manually to the :ref:`munin-node` that runs on the Munin master host. It can be reached via IP address ``127.0.0.1`` or hostname ``localhost`` and port ``4949``. 
+Here we try to connect manually to the :ref:`munin-node` that runs on the Munin master host. It can be reached via IP address ``127.0.0.1`` or hostname ``localhost`` and port ``4949``.
 
 Output of a ``netcat`` session should be something like this:
 
@@ -127,13 +127,13 @@ Restart :ref:`munin-node`, as it only reads the plugin list upon start. (Good to
 
   /etc/init.d/munin-node restart
 
-Call :ref:`munin-run` on the monitored host to see whether the plugin runs through. 
+Call :ref:`munin-run` on the monitored host to see whether the plugin runs through.
 
-Try with and without the ``config`` plugin argument. Both runs should not emit any error message. 
+Try with and without the ``config`` plugin argument. Both runs should not emit any error message.
 
 .. note::
 
- You can also use the ``--debug`` flag, as it shows if the configuration file 
+ You can also use the ``--debug`` flag, as it shows if the configuration file
  is correctly parsed, mostly for UID & environment variables.
 
 Regular run:
@@ -162,7 +162,7 @@ Config run:
 **Check from Munin master**
 
 
-Does the plugin run through :ref:`munin-node`, with and without config? 
+Does the plugin run through :ref:`munin-node`, with and without config?
 
 Regular run:
 
@@ -200,7 +200,7 @@ With config:
   [...]
   .
 
-If the plugin works for ``munin-run`` but not through ``netcat``, you might have a ``$PATH`` problem. 
+If the plugin works for ``munin-run`` but not through ``netcat``, you might have a ``$PATH`` problem.
 
 .. note::
 
@@ -263,7 +263,7 @@ RRD files are filled with 0
 
 although munin-node seems to show sane values.
 
- * The plugin's output shows GAUGE values, but were declared as COUNTER or DERIVE in the plugin's config. 
+ * The plugin's output shows GAUGE values, but were declared as COUNTER or DERIVE in the plugin's config.
 
 .. note::
 

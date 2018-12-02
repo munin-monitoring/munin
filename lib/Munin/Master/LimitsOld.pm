@@ -230,13 +230,13 @@ Options:
     --force		Alias for \"--always-send ok,warning,critical,unknown\".
                         Overrides --always-send command line, as well as the
                         always_send contact configuration options.
-    --service <service>	Limit notified services to <service>. Multiple 
+    --service <service>	Limit notified services to <service>. Multiple
     			--service options may be supplied.
-    --host <host>	Limit notified hosts to <host>. Multiple --host 
+    --host <host>	Limit notified hosts to <host>. Multiple --host
     			options may be supplied.
-    --contact <contact>	Limit notified contacts to <contact>. Multiple 
+    --contact <contact>	Limit notified contacts to <contact>. Multiple
     			--contact options may be supplied.
-    --config <file>	Use <file> as configuration file. 
+    --config <file>	Use <file> as configuration file.
     			[/etc/munin/munin.conf]
 
 ";
@@ -611,7 +611,7 @@ sub get_limits {
         $unknown_limit = $1 if defined $1;
         if (defined $unknown_limit) {
             if ($unknown_limit < 1) {
-                # Zero and negative numbers are not valid.  
+                # Zero and negative numbers are not valid.
                 $unknown_limit = 1;
             }
         }

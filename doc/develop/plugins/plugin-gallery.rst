@@ -68,7 +68,7 @@ To make sure that we can auto-generate the portrait pages for each plugin please
 Current state of the project
 ============================
 
-We have `scripts to auto-generate the HTML presentation called "Munin Plugin Gallery" <https://github.com/munin-monitoring/munin/tree/master/contrib/plugin-gallery>`_ per daily cronjob. 
+We have `scripts to auto-generate the HTML presentation called "Munin Plugin Gallery" <https://github.com/munin-monitoring/munin/tree/master/contrib/plugin-gallery>`_ per daily cronjob.
 
 ToDo
 ----
