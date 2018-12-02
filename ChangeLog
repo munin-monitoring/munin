@@ -3500,7 +3500,7 @@ Detailed Changelog
 ------------------
 
 Christoph Moench-Tegeder (1):
-      make Linux diskstats plugin comaptible with Linux 4.19+
+      make Linux diskstats plugin compatible with Linux 4.19+
 
 Kim B. Heino (1):
       munin-asyncd: sync munin-cron and munin-asyncd runtimes to not overlap
