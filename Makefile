@@ -63,9 +63,10 @@ apply-formatting:
 	@# format munin libraries
 	find lib/ -type f -exec perltidy {} \;
 
-.PHONY: lint lint-munin lint-plugins lint-spelling
+.PHONY: lint lint-munin lint-plugins lint-spelling lint-whitespace
 
-lint: lint-munin lint-plugins lint-spelling
+lint: lint-munin lint-plugins lint-spelling lint-whitespace
+
 lint-munin:
 	# Scanning munin code
 	perlcritic --profile .perlcriticrc lib/ script/
@@ -115,6 +116,18 @@ lint-spelling:
 		| grep --null-data -vE '^\./(\.git|\.pc|doc/_build|blib|.*/blib|build|sandbox|web/static/js|contrib/plugin-gallery/www/static/js)/' \
 		| grep --null-data -vE '\.(svg|png|gif|ico|css|woff|woff2|ttf|eot)$$' \
 		| xargs -0 -r codespell --exclude-file=.codespell.exclude
+
+lint-whitespace: FILES_WITH_TRAILING_WHITESPACE = $(shell grep -r -l --binary-files=without-match \
+				--exclude-dir=.git --exclude-dir=sandbox '\s$$' . \
+			| grep -vE '/(blib|build|_build|web/static)/' \
+			| grep -vE '/logo\.eps$$')
+
+lint-whitespace:
+	@if [ -n "$(FILES_WITH_TRAILING_WHITESPACE)" ]; then \
+		echo 'Files containing trailing whitespace or non-native line endings:'; \
+		printf '\t%s\n' $(FILES_WITH_TRAILING_WHITESPACE); \
+		false; fi 2>&1
+
 
 .PHONY: clean
 clean: $(BUILD_SCRIPT)
