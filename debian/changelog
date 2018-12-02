@@ -1,3 +1,10 @@
+munin (2.0.43-2) UNRELEASED; urgency=medium
+
+  [ Lars Kruse ]
+  * Increase failure verbosity of "default plugin user" test.
+
+ -- Holger Levsen <holger@debian.org>  Sun, 02 Dec 2018 18:21:59 +0100
+
 munin (2.0.43-1) unstable; urgency=medium
 
   [ Lars Kruse ]
