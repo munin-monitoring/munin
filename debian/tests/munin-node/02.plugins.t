@@ -41,6 +41,12 @@ EOF
     # Some plugins are only installed if the test environment fulfills the conditions specified in
     # their "autoconf" section. Thus the conditions below are a copy of the "autoconf" conditions
     # of the affected plugins.
+    if [ -n "$(find /sys/class/thermal/ -maxdepth 1 -name "thermal_zone*" 2>/dev/null || true)" ]; then
+      echo acpi
+    fi
+    if [ -e "/sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state" ] || [ -e "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq" ]; then
+      echo cpuspeed
+    fi
     if [ -x /usr/sbin/conntrack ] || [ -e /proc/net/nf_conntrack ] || [ -e /proc/net/ip_conntrack ]; then
       echo fw_conntrack
       echo fw_forwarded_local
