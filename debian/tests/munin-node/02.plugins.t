@@ -65,7 +65,7 @@ EOF
     chmod +x /etc/munin/plugins/test-id
     service munin-node restart
     # give munin-node time to get ready for answering requests
-    sleep 2
+    sleep 5
     printf "%s\\n" "fetch test-id" quit | nc localhost munin | grep -v "^#" >real_id_output
     cat >expected_id_output <<EOF
 user.value nobody
