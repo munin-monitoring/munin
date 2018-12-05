@@ -1,3 +1,12 @@
+munin (2.0.43-3) UNRELEASED; urgency=medium
+
+  [ Lars Kruse ]
+  * Tests: handle autoconf detection for plugins "acpi" and "cpuspeed".
+  * Try to work around autopkgtest failure experienced on ci.d.n but not
+    locally.
+
+ -- Holger Levsen <holger@debian.org>  Wed, 05 Dec 2018 12:39:01 +0100
+
 munin (2.0.43-2) unstable; urgency=medium
 
   [ Lars Kruse ]
