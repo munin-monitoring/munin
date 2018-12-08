@@ -42,7 +42,7 @@ Depends: ${misc:Depends}, ${perl:Depends},
  munin-common (>= ${binary:Version}),
  munin-plugins-core,
  procps,
-Recommends: libnet-snmp-perl, munin-plugins-extra
+Recommends: munin-plugins-extra
 Suggests:
  libcrypt-ssleay-perl,
  libwww-perl,
