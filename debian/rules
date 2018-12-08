@@ -126,3 +126,7 @@ override_dh_auto_clean:
 	dh_auto_clean -- $(MAKEOPTS) clean-node clean-master clean-plugins clean-common clean
 	find plugins/javalib -name '*.class' -print0 | xargs -0 -r rm -v
 	rm RELEASE -f
+
+# for bpo, do nothing:
+override_dh_auto_test:
+

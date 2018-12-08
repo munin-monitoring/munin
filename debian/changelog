@@ -1,3 +1,10 @@
+munin (2.0.43-3~bpo9+1) stretch-backports; urgency=medium
+
+  * Rebuild for stretch-backports.
+  * Override to dh_auto_test to do nothing.
+
+ -- Holger Levsen <holger@debian.org>  Sat, 08 Dec 2018 14:54:12 +0100
+
 munin (2.0.43-3) unstable; urgency=medium
 
   [ Lars Kruse ]
