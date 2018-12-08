@@ -1,3 +1,436 @@
+munin-2.999.10, 2018-12-08
+
+-------
+Summary
+-------
+
+That release is the 10th beta of the 3.0 series. It is versioned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that.
+Packagers can use that versioning or 3.0b10
+
+This completes the possibility to replace a SQLite with a PostgreSQL one.
+It also contains lots of small improvements & bugfixes.
+
+------------------
+Detailed Changelog
+------------------
+
+Alejandro Suarez (1):
+      Update default warning threshold
+
+Alexander Moisseev (1):
+      Plugins snmp__winmem: add percentage limits
+
+Christian Göttsche (64):
+      dev_scripts/deps: move to python 3 and set strict shell mode
+      dev_scripts/start_munin-node: make ending tail -f more clear
+      dev_scripts/query_munin_node: add set -eu
+      dev_scripts/deps: add rrdcached
+      make './dev_scripts/install clean' able to run twice
+      [plugins] fix varnish autoconf errors
+      [plugins] fix nestats_multi autoconf error
+      [plugins] fix meminfo autoconf error
+      [plugins] fix ejabberd_ autoconf error
+      fix pgsql plugin driver to give a well formed autoconf reply
+      fix warning on node list operation
+      drop Alien::RRDtool dependency
+      fix warning on munin-update
+      fix uninitialized varibales in munin-httpd
+      [plugins] fix squid autoconf errors
+      [plugins] give reasons for inactive plugins
+      [dev_scripts] remove unavailable plugins on ./install node
+      [plugins] overlook df and netstat linux plugins
+      [plugins] return 0 in autoconf
+      [munin-node-configure] expect autoconf to return 0 even in the no case
+      [plugins] fix autoconf for lpstat
+      overlook some plugins
+      [munin-node-configure] do not error out on empty suggest output
+      [plugins] quote variable
+      [plugins] fix hddtemp_smartctl autoconf
+      [plugins] fix procfs swap
+      [plugins] overlook df and netstat linux plugins
+      give reasons why a plugin says no on more occasions
+      [plugins] give reasons for autoconf no response
+      [plugins] drop autoconf capability when no real autoconf is supported
+      [plugins] overlook exim_mailstats
+      overlook some plugins
+      [dev_scripts] prefix run output
+      [mnc] fix documentation so that --help works
+      [perlcritic] add make target
+      [perlcritic] fix CodeLayout::ProhibitTrailingWhitespace
+      [perlcritic] fix Subroutines::ProhibitReturnSort
+      [perlcritic] silence Variables::ProhibitPunctuationVars
+      [perlcritic] silence ControlStructures::ProhibitMutatingListFunctions
+      [perlcritic] add Makefile TODO
+      [perlcritic] use $PROGRAM_NAME instead of silencing $0 usage
+      [perlcritic] fix lib/Munin/Plugin warnings
+      [perlcritic] fix lib/Munin/Common warnings
+      [perlcritic] fix lib/Munin/Master warnings
+      [perlcritic] fix script/ warnings
+      [perlcritic] fix warnings in generated file
+      [perlcritic] fix some more warnings
+      [perlcritic] merge make target with lint
+      [perlcritic] allow usage of $0
+      [perlcritic] allow usage of $@
+      [perlcritic] allow usage of $$
+      [mnc] prepare for tainted mode
+      [mnc] fix documentation so that --help works
+      enable taint mode for m-n-c and munin-update
+      update dev scripts for running sandbox with taint mode
+      cleanup un-taint code
+      [munin-node-configure] print autoconf response on parse error
+      perltidy: update config, name cfgfile correctly and add format target
+      fix perltidy warning
+      [munin-asyncd] fix taint mode
+      [munin-httpd] cleanup and documentation
+      [munin-node-configure] add disable_autoconf keyword to disable plugins
+      [munin-httpd] add listen option
+      [munin-httpd] update listen option
+
+Christoph Moench-Tegeder (1):
+      make Linux diskstats plugin comaptible with Linux 4.19+
+
+Dmitry Marakasov (6):
+      Specify minimum value for tuples
+      Specify minimal value for postgres scans
+      Specify minimal value for bgwriter
+      Speficy minimal value for PostgreSQL checkpoints
+      Specify minimal value for postgresql buffer cache
+      Fix CDEF variable substitution
+
+Hans de Graaff (1):
+      Fix syntax error in make install sh code
+
+Hiroaki Abe (1):
+      plugins/freebsd/{df,df_inode}: exclude cd9660 file systems.
+
+Jose-Marcio Martins da Cruz (1):
+      Update ntp_states.in
+
+Kenyon Ralph (3):
+      add Transport Domain environment variable for Munin::Plugin::SNMP
+      add SNMP domain to tests
+      munin-node-configure: allow setting SNMP domain
+
+Kim B. Heino (7):
+      ProcessManager: remove \n from output before it's logged
+      plugins/squeezebox: add missing graph_vlabel
+      plugins/bind9: use category "dns" as in other similar plugins, not "BIND"
+      plugins/nginx_request: stats are for all ports (80+443), never for single port
+      plugins/squid_traffic: allow negative numbers
+      munin-asyncd: retry connection to node once in startup
+      munin-asyncd: sync munin-cron and munin-asyncd runtimes to not overlap
+
+Lars Kruse (212):
+      Plugin postfix_mailvolume: calculate separate volume for delivered mails
+      move debug plugin 'sincos' to debug plugin directory
+      plugin smart_: fix flake8 warnings
+      plugin threads (Linux): use "find" instead of globbing; handle zero threads
+      plugins postgres_*: unify commas in arrays and hashes
+      plugins postgres_*: unify end of plugin
+      Makefile: "build-man" depends on "infiles"
+      dynazoom: cleanup whitespace
+      dynazoom: add missing closing tags
+      dynazoom: fix validation issues and mark as XHTML 1.1
+      dynazoom: cgi-based template adapted to cron-based template
+      Template 'problemview': fix HTML validation problems
+      Template 'serviceview': use double quotes for tag attributes
+      plugin postfix_mailvolume: do not use hashs with save_state/restore_state
+      dynazoom: temporarily remove doctype line
+      plugin hddtemp_smartctl: handle missing 'smartctl' gracefully
+      Java compilation: change source and target specification from 1.5 to 1.7
+      getversion: replace '$(...)' with backticks (for portability)
+      getversion: unify whitespace
+      getversion: improve shell style
+      getversion: fix or override shellcheck warnings
+      plugin quota_usage_: backport changes from master
+      mysql_innodb: fix version string comparisons for v10.x (or later)
+      memory (freebsd): add new "laundry" counter
+      plugin bonding_err_: improve input parsing
+      plugin bonding_err_: separate interface name parsing
+      plugin bonding_err_: separate BONDINGIF assembly
+      plugin bonding_err_: separate misconfiguration warning; exit with error
+      plugin bonding_err_: rename variable 'if' to 'if_name'
+      plugin bonding_err_: fix remaining shellcheck issues
+      plugin iostat_ios: fix major block device number for filtering LVM
+      plugin iostat_ios: clarify documentation (only low-level devices are tracked)
+      plugin ipmi_sensor_: handle lines without values
+      plugin ipmi_sensor_: indicate possible symlink names in case of error
+      plugin ipmi_sensor_: unify whitespace
+      plugin ipmi_sensor_: python3 compatibility
+      plugin ipmi_sensor_: fix flake8 style issues
+      plugin ipmi_sensor_: decoding for python3
+      plugin ipmi_: add hint for "power", support %-based fan speed
+      Python plugin: Python3 compatibility
+      plugin df_inode_ (FreeBSD): adjust filesystem exclusion to 'df' plugin
+      plugin df_ (FreeBSD): ignore /sys via the filesystem type
+      plugin df_inode (FreeBSD): exclude sysfs
+      HTML: escape ampersand in URL
+      plugin ntp_: reduce DNS timeout to 5 seconds
+      plugin netstat: unify the two sets of netstat plugins
+      Makefile: clarify plugin order comment
+      Makefile: simplify HP-UX-specific plugin handling
+      switch default python interpreter for plugins to python3
+      COPYING: remove obsolete reference to Bitstream Vera Mono
+      update COPYING based on commits
+      plugin samba: improve documentation formatting
+      plugin samba: warn if run as non-root
+      plugin samba: improve formatting, fix shellcheck issue
+      dev_scripts: enforce non-symlink path for rrdcached
+      nginx example: use the same fcgi socket path as for 2.0
+      Makefile: quote DESTDIR and INSTALLDIRS
+      Makefile: handle empty DESTDIR
+      plugin postfix_mailvolume: handle statefile upgrade from previous version
+      plugin threads: tolerate SELinux policies and other read errors
+      Makefile / dev_scripts: simplify variables
+      Fix shellcheck issues in dev_scripts/
+      Plugin cpuspeed: fix documentation of 'scaleto100' configuration
+      Plugins for Linux: fix shellcheck issues
+      Plugin tcp: fix autoconf exit code
+      Makefile: add lint check for Linux plugins
+      Plugin cpu: configurable 'scaleto100'
+      Plugins for Linux: fix more shellcheck issues
+      Plugin snort_pkts: remove dependency on 'bc'
+      Plugins: fix shellcheck issues for bash plugins
+      Plugins: fix MUNIN_LIBDIR source quoting
+      Plugin qmailqstat: fix misspelled configuration documentation
+      Plugin foldingathome: improve path handling
+      Plugin ipac-ng: return "U" in case of errors
+      Plugin multiping: remove unusable symlink detection
+      Plugins: fix more trivial shellcheck issues
+      Plugins: a bit more complicated fixes for shellcheck issues
+      Plugins: fix trivial quoting issues for non-Linux platforms
+      'make lint': add more platforms for shell checks and add python checks
+      'make lint': add python plugins
+      travis: add 'make lint' for style checks
+      Makefile: improve robustness of "Defaults" variable substitution
+      Makefile: unify usage of whitespace
+      Makefile: prevent repeated substitution of "Defaults.pm" during "install"
+      Makefile: remove obsolete 'build-common-prime' target
+      Makefile: prevent repetitive rebuild of man pages
+      Makefile: prevent repetitive substitutions for generated files
+      Travis: add 'liblog-log4perl-perl' dependency
+      Makefile: handle filenames with colons even with old versions of Make
+      Travis: reduce set of perl versions for CI
+      Plugin postfix_mailvolume: handle long queue IDs
+      Plugins postfix_*: unify whitespace
+      Makefile: add current directory to perl include path
+      Improve database connection handling
+      dev_scripts/run: fail with error message on unknown command
+      Plugin digitemp_: unify whitespace
+      Plugin digitemp_: fix shellcheck issues; clarify error message
+      Plugin digitemp_: reduce code duplication
+      Plugin digitemp_: implement "autoconf" and "suggest"
+      Plugin digitemp_: mention the configuration file
+      Plugin hddtemp_smartctl: unify whitespace
+      Plugin sensors_: enable 'auto' family
+      Plugin smart_: unify state file access
+      Plugin smart_: pythonize expressions
+      Plugin smart_: simplify output parser
+      Plugin smart_: remove hard disk list weirdness
+      Plugin smart_: simplify 'SunOS' disk handling
+      Plugin smart_: unify code for guessing of full path
+      Plugin smart_: assemble environment configuration at the beginning
+      Plugin smart_: use 'subprocess' for safe command execution
+      Plugin smart_: improve exit code handling
+      Plugin smart_: avoid global variables and clarify data structure
+      Plugin smart_: update version information
+      Revert "fix warning on node list operation"
+      Prevent usage of undef variable
+      Plugin digitemp_: fix shellcheck issue
+      postfix_mailsts plugin: add 'milter-reject' event
+      Makefile: add targets "tar-signed" and "tar-upload"
+      Update release checklist
+      Plugin postgres_users: ignore undefined usename
+      Makefile: fix "tar" target
+      Makefile: increase compression level for 'tar' target
+      Plugins: fix shellcheck issues
+      Plguin multigraph_huge: fix handling of "dirty config"
+      Plugins jenkins_*: shellcheck issues and update interval handling
+      Plugins jenkins_*: replace separate plugins with a single multigraph plugin
+      Plugin jenkins_builds_and_jobs: allow build names without underscore
+      Plugins jenkins_builds_and_jobs: ignore symlinks in job directories
+      Plugin jenkins_builds_and_jobs: add support for "dirty config"
+      Plugins: replace all absolute references to shells with placeholders
+      Plugin http_loadtime: fix shellcheck issue
+      Whitespace cleanup: remove trailing and unify some spaces/tabs
+      Revert "Whitespace cleanup: remove trailing and unify some spaces/tabs"
+      Whitespace cleanup: remove trailing and unify some spaces/tabs
+      Remove remainder and reverse dependencies of "munin_overwrite"
+      Remove remaining references to "munin_dumpconfig_as_str"
+      Remove obsolete references and documentation from M::M::Utils
+      Plugin jenkins_builds_and_jobs: partial multigraph split (losing history)
+      Plugin jenkins_builds_and_jobs: remove superfluous details from labels
+      Plugin cpuspeed: add support for 'intel_pstate' driver
+      Plugin cpuspeed: minor cleanup; support capability DIRTYCONFIG
+      Plugin cpuspeed: fix data type for "intel_pstate" driver
+      Build.PL: define a 'module_name' and a proper version string
+      Partly remove explicit database disconnect calls
+      Nagios command format: ensure non-empty plugin output
+      dev_scripts: fix processing of configuration files
+      munin-node: set default port if not mentioned in config file
+      Plugin apc_nis: autoconf tests connection to socket
+      Plugin acp_nis: unify whitespace
+      limits: fix erroneous merge regarding 'undefined $state'
+      limits: replace remaining '$onfield' references
+      limits: simplify the handling of changes to "unknown"
+      Replace CGITMPDIR placeholder during build
+      Plugin apt_all: simplify conditional expression for "update" operation
+      Plugin apt_all: update the current status before calculating the summary
+      munin-asyncd: improve messages in case of failed connections to munin-node
+      Plugins apache_: add documentation for HTTPS connections
+      Plugin acpi: prevent error message for missing thermal sys directory
+      Fix Module::Build instance parameters for master and node
+      Retrieve version number for modules "Munin::Common" and "Munin::Plugins"
+      Module description: set contact to mailing list address
+      getversion: hide error message for detached HEAD
+      getversion: prevent localized output format for "git branch"
+      getversion: fix shellcheck issue
+      getversion: treat all states unrelated to branches equally
+      getversion: use commit tag if possible; update documentation
+      Makefile: add "lint-spelling" target
+      travis: switch to the Makefile-based "codespell" call
+      Fix many spelling mistakes
+      codespell: ignore misdetected spelling issues
+      Clarify conditional usage of the CGI workaround
+      Plugin bind9_rndc: stabilize order of values in graph
+      Plugin smart_: fix variable handling during first run
+      doc: fix old gallery links containing "svn"
+      doc: improve wordning of plugin gallery description
+      Unify encoding of ChangeLog
+      Fix spelling issues in ChangeLog
+      Remove trailing whitespace from ChangeLog
+      Fix spelling issues
+      Update master configuration test
+      Revive "_extract_name_from_greeting" for tests
+      Fix test for output of munin-node-configure
+      Use unique CNs for test TLS certificates
+      Remove trailing whitespace from openssl.cnf file
+      Remove outdated "md5" hash from OpenSSL configuration for tests
+      Recreate TLS certificate for tests
+      Enable evaluation of test results for test-common and test-plugins
+      Fix remaining broken master tests
+      travis: add missing dependency
+      travis: ignore result of "test-master"
+      Use "Alien::RRDtool" for travis tests
+      Disable the failing "proxyspooler" test for "test-node"
+      munindoc: output reasonable error message if plugin is not found
+      munindoc: prevent stderr output from perldoc
+      Plugin amavis: improve reasons for failed "autoconf"
+      Plugin amavis: determine path of "logtail" for "autoconf"
+      Plugin amavis: only enable via "autoconf" if amavisd is installed
+      Plugin apt_all: allow status update after "apt-get update"
+      Plugin apt_all: fix "apt-get update" call
+      Tests: allow to run tests as root
+      Tests: allow to run in an autopkgtest environment lacking a FQDN
+      Tests: skip the tests around the effective user ID for root
+      Munin::Node::Service: accept zero (root) as defuser/defgroup
+      Remove obsolete patch enabling IPv6 for Net::Server
+      Fix incomplete comment sentence
+      Fix spelling mistakes
+
+Mathieu Arnold (1):
+      Fix when using more than one swap device.
+
+RenWal (2):
+      Narrowed down voltage regex
+      Narrow down regex for all modes
+
+Robert (1):
+      Fix argument size too big in threads plugin when there are too many processes.
+
+SeeSchloss (1):
+      smartctl_exit_status should be a single number and not a range (fixes #1100)
+
+Steve Mokris (2):
+      Update "special_stack" (removed in 2009) to "stack"
+      Only apply Perl 5.20 CGI workaround when needed
+
+Steve Schnepp (65):
+      master: fix warning when updating
+      m/update: fix warning when graph_order is empty
+      m/update: pass RRD creation as INFO
+      m/update: always create RRD 12h in the past
+      t: disable 2nd run for spoolfetch
+      limits: Fix spelling in comment
+      utils: massive code remova
+      utils: Remove more code
+      update: adding an uncoverable tag on carbon sub
+      t: add a node without address
+      t: Updated test since added 1 node in config
+      t: testing address-less resolution
+      Update coverage badge
+      adding a dropping table command
+      master: Use finer transactions
+      t: Run 2 times the update
+      update: Commit only when in transaction
+      t: adding a spoolfetch version of the update
+      update: Enable the child process to report errors
+      update: Fix typo in INFO message
+      update: Removing Carbon Server connection
+      update: Removing Carbon Server connection
+      t: Use an official in-memory temp filesystem
+      debug: Remove the warnings in the node
+      update: Correctly ignore empty lines
+      update: Remove $self arg in Node::spoolfetch()
+      update: Do not ignore seen plugins when spoolfetch
+      update: Create RRD 12h in the past
+      t: limit the horizon of the spoolfetch test
+      t: limit the log level to info
+      t: Use a PID-driven directory.
+      t: limit the log level to info
+      t: use a different root directory based on the test
+      update: handle fields ordering
+      update: fix the graph_order
+      update: merging graph_order & field_order
+      p/procfs: use the same field ordering for cpu
+      update: adding some debug for callback
+      update: ident uses tabs
+      update: remove all the prepared statements
+      node: fix the plugin names even in multigraph
+      update: we want to have multiple fetch values
+      travis: no need to "make && make test" anymore
+      travis: using perlcritic instead of python
+      t: disable TestingAndDebugging::ProhibitNoWarnings
+      travis: refactor order
+      limit the scope of the "no critic"
+      travis shortcut failure
+      lint: plugins cannot be linted right now
+      fix perl critic warnings
+      travis: adding CPAN deps
+      remove the usage of List::Util::any()
+      async: enable negative timestamp
+      update: storing the spoolfetch state in the DB
+      async: remove unused cat_file()
+      m: remove unused Master::Node::_node_read_fast()
+      async: avoid sending half complete spools
+      contrib: fix node-debug when spoolfetch is empty
+      master: Fix Node::spoolfetch() using old code path
+      master: fix warning upon successful spoolfetch
+      t/spoolfetch: make 3 different runs
+      master: remove old code paths
+      move util function dump_to_file
+      master: remove more obsolete code
+      m/node: leverage the port from the munin protocol
+
+Tom Hendrikx (1):
+      Add a lower limit of 0 to postgres database size
+
+Tomohiro Hosaka (1):
+      Do not set database=undef when paramdatabase.
+
+Zenon Mousmoulas (2):
+      Fix munin-asyncd fork bomb
+      Do not bump spoolfetch timestamp from non-timestamped values
+
+bunder2015 (1):
+      Fix paths on nutups_
+
+leeclemens (2):
+      Graph system peer's stratum
+      Add missing parens around $syspeer_stratum_value
+
+
 munin-2.999.9, 2018-06-26
 
 -------
