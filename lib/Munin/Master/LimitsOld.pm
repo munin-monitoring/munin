@@ -71,7 +71,7 @@ my %default_text = (
     "nagios" =>
         '${var:host}\t${var:graph_title}\t${var:worstid}\t${strtrunc:350 ${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}}',
     "old-nagios" =>
-        '${var:host}\t${var:plugin}\t${var:worstid}\t${strtrunc:350 ${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}}'
+        '${var:host}\t${var:plugin}\t${var:worstid}\t${strtrunc:350 ${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}}',
 );
 
 sub limits_startup {
@@ -241,8 +241,8 @@ Options:
 
 # Get the host of the service in question
 sub get_host_node {
-    my $service = shift || return undef;
-    my $parent  = munin_get_parent($service) || return undef;
+    my $service = shift || return;
+    my $parent  = munin_get_parent($service) || return;
 
     if (munin_has_subservices($parent)) {
 	return get_host_node($parent);
@@ -265,7 +265,7 @@ sub get_notify_name {
 
 # Joined "sub-path" under host level
 sub get_full_service_name {
-    my $service    = shift || return undef;
+    my $service    = shift || return;
     my $parent     = munin_get_parent($service);
     my $name       = get_notify_name($service);
 
@@ -279,7 +279,7 @@ sub get_full_service_name {
 
 # Joined group path above host level
 sub get_full_group_path {
-    my $group      = shift || return undef;
+    my $group      = shift || return;
     my $parent     = munin_get_parent($group);
     my $name       = get_notify_name($group);
 
@@ -326,8 +326,9 @@ sub process_service {
     my $datafilename = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile.sqlite";
     my $datafilename_state = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile-state.sqlite";
     DEBUG "[DEBUG] opening sql $datafilename";
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
-    my $dbh_state = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+    my $dbh = Munin::Master::Update::get_dbh();
+    # XXX - It is in the same DB for now
+    my $dbh_state = Munin::Master::Update::get_dbh();
     my $sth_state = $dbh_state->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm FROM state WHERE id = ? and type = ?');
     my $sth_state_upt = $dbh_state->prepare('UPDATE state SET alarm = ? WHERE id = ? and type = ?');
     my $sth_ds = $dbh->prepare('SELECT id FROM url WHERE path = ? and type = ?');
@@ -345,7 +346,6 @@ sub process_service {
         my $field   = munin_get_node($hash, [$fname]);
         next if (!defined $field or ref($field) ne "HASH");
         my $fpath   = munin_get_node_loc($field);
-        my $oldstate = 'ok';
 
         my ($warn, $crit, $unknown_limit) = get_limits($field);
 
@@ -357,12 +357,14 @@ sub process_service {
 	my ($ds_id) = $sth_ds->fetchrow_array;
 
         DEBUG "[DEBUG] processing field: " . join('::', @$fpath);
-        DEBUG "[DEBUG] field: " . munin_dumpconfig_as_str($field);
-	my $value;
-    	{
-		my $rrd_filename = munin_get_rrd_filename($field, $path);
-		my ($current_updated_timestamp, $current_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{current} || [ ] };
-		my ($previous_updated_timestamp, $previous_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{previous} || [ ] };
+        my $value;
+        $sth_state->execute($ds_id, "ds");
+        my ($current_updated_timestamp, $current_updated_value,
+            $previous_updated_timestamp, $previous_updated_value,
+            $old_state, $old_num_unknowns) = $sth_state->fetchrow_array;
+
+        $old_state ||= 'ok';
+        $old_num_unknowns ||= 0;
 
 		my $heartbeat = 600; # XXX - $heartbeat is a fixed 10 min (2 runs of 5 min).
 		if (! defined $current_updated_value || $current_updated_value eq "U") {
@@ -381,7 +383,7 @@ sub process_service {
 			# Old value does not exist or is too old. Report unknown.
 			$value = "U";
 		} elsif ($field->{type} eq "ABSOLUTE") {
-			# The previous value is unimportant, as if ABSOLUTE, the counter is reset everytime the value is read
+			# The previous value is unimportant, as if ABSOLUTE, the counter is reset every time the value is read
 			$value = $current_updated_value / ($current_updated_timestamp - $previous_updated_timestamp);
 		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
 			# COUNTER never decrease. Report unknown.
@@ -391,7 +393,6 @@ sub process_service {
 			# compute the value per timeunit
 			$value = ($current_updated_value - $previous_updated_value) / ($current_updated_timestamp - $previous_updated_timestamp);
 		}
-	}
 
     # De-taint.
     if ( !defined $value || $value eq "U" ) {
@@ -438,43 +439,27 @@ sub process_service {
                     : "Value is unknown.";
             my $num_unknowns;
 
-            if ( $oldstate ne "unknown") {
-                $hash->{'state_changed'} = 1;
-            }
-            else {
+            if ($old_state ne "unknown") {
+                # The user may want to ignore a few unknown values before
+                # they should be reported. Thus we need to track the number
+                # of recently received unknown values before we admit that
+                # the value is really "unknown". Thus we may want to postpone
+                # a "change" notification until we reach the limit.
+                if ($old_num_unknowns >= $unknown_limit) {
+                    # The limit is reached - we should report "unknown".
+                    $hash->{'state_changed'} = 1;
+                } else {
+                    # Don't change the state to UNKNOWN yet.
+                    $hash->{'state_changed'} = 0;
+                    $state = $old_state;
+                    $extinfo = $field->{"extinfo"} || "";
+                    # Increment the number of UNKNOWN values seen.
+                    $num_unknowns = $old_num_unknowns + 1;
+                }
+            } else {
                 $hash->{'state_changed'} = 0;
             }
 
-            # First we'll need to check whether the user wants to ignore
-            # a few UNKNOWN values before actually changing the state to
-            # UNKNOWN.
-            if ($unknown_limit > 1) {
-                if (defined $onfield and defined $onfield->{"state"}) {
-                    if ($onfield->{"state"} ne "unknown") {
-                        if (defined $onfield->{"num_unknowns"}) {
-                            if ($onfield->{"num_unknowns"} < $unknown_limit) {
-                                # Don't change the state to UNKNOWN yet.
-                                $hash->{'state_changed'} = 0;
-                                $state = $onfield->{"state"};
-                                $extinfo = $onfield->{$state};
-
-                                # Increment the number of UNKNOWN values seen.
-                                $num_unknowns = $onfield->{"num_unknowns"} + 1;
-                            }
-                        }
-                        else {
-                            # Don't change the state to UNKNOWN yet.
-                            $hash->{'state_changed'} = 0;
-                            $state = $onfield->{"state"};
-                            $extinfo = $onfield->{$state};
-                            
-                            # Start counting the number of consecutive UNKNOWN
-                            # values seen.
-                            $num_unknowns = 1;
-                        }
-                    }
-                }
-            }
 
             if ($state eq "unknown") {
                 $hash->{'worst'} = "UNKNOWN" if $hash->{"worst"} eq "OK";
@@ -521,7 +506,7 @@ sub process_service {
                         . ") exceeded"
                 ));
 
-            if ( $oldstate ne "critical") {
+            if ($old_state ne "critical") {
                 $hash->{'state_changed'} = 1;
             }
         }
@@ -544,7 +529,7 @@ sub process_service {
                         . ") exceeded"
                 ));
 
-            if ( $oldstate ne "warning") {
+            if ($old_state ne "warning") {
                 $hash->{'state_changed'} = 1;
             }
         }
@@ -552,8 +537,8 @@ sub process_service {
             munin_set_var_loc(\%notes, [@$fpath, "state"], "ok");
             munin_set_var_loc(\%notes, [@$fpath, "ok"],    "OK");
 
-	    if ($oldstate ne 'ok') {
-                if ($oldstate eq 'unknown' && munin_get_bool($hobj, 'ignore_unknown', 'false')) {
+	    if ($old_state ne 'ok') {
+                if ($old_state eq 'unknown' && munin_get_bool($hobj, 'ignore_unknown', 'false')) {
                     DEBUG("[DEBUG] ignoring transition from UNKNOWN to OK");
                 } else {
 		    $hash->{'state_changed'} = 1;
@@ -563,7 +548,7 @@ sub process_service {
         }
 
 	# Replicate the state into the SQL DB
-	my $new_state = $onfield->{"state"};
+	my $new_state = $old_state;
 	$sth_state_upt->execute($new_state, $ds_id, "ds");
     }
     generate_service_message($hash);
@@ -640,16 +625,17 @@ sub generate_service_message {
         'warning'  => [],
         'unknown'  => [],
         'foks'     => [],
-        'ok'       => []);
+        'ok'       => [],
+    );
 
     my $contacts = munin_get_children(munin_get_node($config, ["contact"]));
 
     DEBUG "[DEBUG] generating service message: "
 	. join('::', @{munin_get_node_loc($hash)});
 
-    my $children = 
+    my $children =
 	munin_get_children(
-	    munin_get_node(\%notes, 
+	    munin_get_node(\%notes,
 			   munin_get_node_loc($hash)));
 
     if ( defined($children) ) {
@@ -669,6 +655,16 @@ sub generate_service_message {
     $hash->{'ufields'}  = join " ", @{$stats{'unknown'}};
     $hash->{'fofields'} = join " ", @{$stats{'foks'}};
     $hash->{'ofields'}  = join " ", @{$stats{'ok'}};
+    # The "fofields" (datasets that changed state from "failed" to "OK") can be empty under certain
+    # legitimate circumstances (e.g. "munin-limits --force" sends messages also for unchanged "OK"
+    # states).  But we may never allow the fourth output field for NSCA to be empty - otherwise the
+    # recipient (nagios/icinga) cannot determine, which fields are affected (and thus which test
+    # succeeded).  Thus we need to make sure, that "fofields" is always defined (since our
+    # self-made trivial template language does not support expressions like "fofields || ofields").
+    # Here "ofields" is a reasonable fallback value: it contains all datasets with status "OK".
+    if ($hash->{'fofields'} eq '') {
+        $hash->{'fofields'} = $hash->{'ofields'};
+    }
     $hash->{'numcfields'}  = scalar @{$stats{'critical'}};
     $hash->{'numwfields'}  = scalar @{$stats{'warning'}};
     $hash->{'numufields'}  = scalar @{$stats{'unknown'}};

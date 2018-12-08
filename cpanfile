@@ -20,6 +20,7 @@ requires 'List::Util';
 requires 'Log::Dispatch';
 requires 'Log::Dispatch::Screen';
 requires 'Log::Dispatch::Syslog';
+requires 'Log::Log4perl';
 requires 'MIME::Base64';
 requires 'Module::Build';
 requires 'Net::DNS';

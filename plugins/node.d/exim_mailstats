@@ -1,5 +1,8 @@
 #!/usr/bin/perl -w
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 exim_mailstats - Plugin to monitor the number of mails received and
@@ -66,7 +69,6 @@ GPLv2
 # In most installations the "use lib" can be removed as the Munin
 # modules are installed in perls module path.
 
-use strict;
 use lib $ENV{'MUNIN_LIBDIR'};
 use Munin::Plugin;
 
@@ -137,7 +139,7 @@ my $logfile;
 if ($ARGV[0] and $ARGV[0] eq "autoconf") {
     if (defined($LOGDIR)) {
         if (! -d $LOGDIR) {
-            print "no (logdir does not exist)\n";
+            print "no (logdir '$LOGDIR' does not exist)\n";
             exit 0;
         }
         $logfile = $LOGDIR . '/' . ($LOGNAME || 'mainlog');

@@ -117,84 +117,90 @@ if [ "$1" = "suggest" ]; then
 	#
 fi
 
-VSERVERS="$vservers"
+VSERVERS="${vservers:-}"
 
-INFO=(`sed 's/.*:\t//' /proc/virtual/info 2>/dev/null || echo '<none>'`)
-KCIN="$[ 16#${INFO[2]} ]";
+# shellcheck disable=SC2207
+INFO=($(sed 's/.*:\t//' /proc/virtual/info 2>/dev/null || echo '<none>'))
+KCIN=$(( 16#${INFO[2]} ))
 
 # If this is 1, then VCI_SPACES is present in the kernel (new in 2.6.19)
-if [ $[ (KCIN >> 10) & 1 ] -eq 1 ]
-then 
+if [ $(( (KCIN >> 10) & 1 )) -eq 1 ]
+then
     NAMELOC="nsproxy"
-else 
+else
     NAMELOC="cvirt"
 fi
 
 if [ -z "$VSERVERS" ] ; then
-    XIDS=`find /proc/virtual/* -type d -exec basename {} \;`
+    XIDS=$(find /proc/virtual/* -type d -exec basename {} \;)
 else
     # it's really more performant to specify vservers by ids or by linking but not in the configuration-file by name
     XIDS=""
     for i in $VSERVERS ; do
-	if [ -d /proc/virtual/$i ] ; then
-	    XIDS="${XIDS}${i} "
-	else
-	    for j in `find /proc/virtual/* -type d -exec basename {} \;` ; do
-		if [ "$i" = "`cat /proc/virtual/$j/$NAMELOC |grep NodeName |cut -f2`" ] ; then
-		    XIDS="${XIDS}${j} "
-		fi
-	    done
-	fi
+        if [ -d "/proc/virtual/$i" ]; then
+            XIDS="${XIDS}${i} "
+        else
+            # shellcheck disable=SC2044
+            for j in $(find /proc/virtual/* -type d -exec basename {} \;); do
+                if [ "$i" = "$(grep "NodeName" "/proc/virtual/$j/$NAMELOC" | cut -f 2)" ] ; then
+                    XIDS="${XIDS}${j} "
+                fi
+            done
+        fi
     done
 fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -r /proc/virtual/info ]; then
 	        for i in $XIDS ; do
-			LABEL=`cat /proc/virtual/$i/$NAMELOC |grep NodeName |cut -f2`
-			echo $LABEL
+			LABEL=$(grep "NodeName" "/proc/virtual/$i/$NAMELOC" | cut -f 2)
+			echo "$LABEL"
 		done
 		exit 0
 	fi
 fi
 
-BASEPARAM=`basename $0 | sed 's/^vserver_//'`
-MODE=`echo $BASEPARAM | sed 's/^hold.*//'`
+# shellcheck disable=SC2001
+BASEPARAM=$(basename "$0" | sed 's/^vserver_//')
+# shellcheck disable=SC2001
+MODE=$(echo "$BASEPARAM" | sed 's/^hold.*//')
 
-#debug=true
+debug=${debug:-}
 
 if [ -z "$MODE" ] ; then
 	MODE=hold
-	TARGET=`echo $BASEPARAM | sed 's/^hold_//'`
-else 
+	# shellcheck disable=SC2001
+	TARGET=$(echo "$BASEPARAM" | sed 's/^hold_//')
+else
 	MODE=cpu
-	TARGET=`echo $BASEPARAM | sed 's/^cpu_//'`
+	# shellcheck disable=SC2001
+	TARGET=$(echo "$BASEPARAM" | sed 's/^cpu_//')
 fi
 
 CPU1=0
 if [ -n "$TARGET" ] ; then
-	if [ "${#TARGET}" == 1 ] ; then 
-		if [ $debug ] ; then echo $MODE, only on cpu $TARGET, for all vservers ; fi
+	if [ "${#TARGET}" == 1 ] ; then
+		if [ -n "$debug" ]; then echo "$MODE, only on cpu $TARGET, for all vservers"; fi
 		WHAT=ALLVSERVER
 		CPU1=$TARGET
-	else 
-		if [ $debug ] ; then echo $MODE on all cpus together, only for vserver $TARGET ; fi
+	else
+		if [ -n "$debug" ]; then echo "$MODE on all cpus together, only for vserver $TARGET"; fi
 		WHAT=VSERVER
 	fi
 else
-	if [ $debug ] ; then echo $MODE for all cpus, for all vservers ; fi
+	if [ -n "$debug" ] ; then echo "$MODE for all cpus, for all vservers"; fi
 	WHAT=ALLVSERVER
 fi
 
-CPUS=$[ `grep ^processor /proc/cpuinfo|wc -l` -1 ]
-CPUS=`seq $CPU1 $CPUS`
+CPUS=$(( $(grep ^processor /proc/cpuinfo | wc -l) - 1 ))
+CPUS=$(seq "$CPU1" "$CPUS")
 
-if [ $debug ] ; then
-	echo cpus= $CPUS
-	echo baseparam= $BASEPARAM
-	echo mode= $MODE 
-	echo target= $TARGET
-	echo what= $WHAT
+if [ -n "$debug" ] ; then
+	echo "cpus= $CPUS"
+	echo "baseparam= $BASEPARAM"
+	echo "mode= $MODE "
+	echo "target= $TARGET"
+	echo "what= $WHAT"
 fi
 
 if [ "$1" = "config" ]; then
@@ -202,29 +208,31 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000'
 	if [ "$MODE" == "cpu" ] ; then
 		echo 'graph_title Vserver cpu usage'
+		# shellcheck disable=SC2016
 		echo 'graph_vlabel jiffies used per cpu per ${graph_period}'
 		echo 'graph_info Shows jiffies used per cpu on each vserver.'
 	else
 		echo 'graph_title Vserver cpu on hold'
+		# shellcheck disable=SC2016
 		echo 'graph_vlabel jiffies on hold per cpu per ${graph_period}'
 		echo 'graph_info Shows jiffies on hold used per cpu on each vserver.'
 	fi
 
- 	for j in $CPUS ; do 
+ 	for j in $CPUS ; do
 		A=0
-	        for i in $XIDS ; do 
-			LABEL=`cat /proc/virtual/$i/$NAMELOC |grep NodeName |cut -f2`
+	        for i in $XIDS ; do
+			LABEL=$(grep "NodeName" "/proc/virtual/$i/$NAMELOC" | cut -f 2)
 			if [ "$WHAT" == "ALLVSERVER" ] || [ "$TARGET" == "$LABEL" ] ; then
-				NAME=`echo $LABEL | cut -d. -f1 |  tr '-' '_'`
+				NAME=$(echo "$LABEL" | cut -d. -f1 |  tr '-' '_')
 	    			if [ "$MODE" == "cpu" ] ; then
 					echo "${NAME}_$j.label cpu usage for cpu $j on $LABEL"
 					echo "${NAME}_$j.info cpu usage for cpu $j on $LABEL."
-				else 
+				else
 					echo "${NAME}_$j.label on hold for cpu $j on $LABEL"
 					echo "${NAME}_$j.info on hold for cpu $j on $LABEL."
 				fi
 				echo "${NAME}_$j.type COUNTER"
-				if [ "$A" == 0 ] ; then 
+				if [ "$A" == 0 ] ; then
 					echo "${NAME}_$j.draw AREA"
 					A=1
 				else
@@ -236,19 +244,19 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-for j in $CPUS ; do 
+for j in $CPUS ; do
 	for i in $XIDS ; do
-		LABEL=`cat /proc/virtual/$i/$NAMELOC |grep NodeName |cut -f2`
+		LABEL=$(grep "NodeName" "/proc/virtual/$i/$NAMELOC" | cut -f 2)
 		if [ "$WHAT" == "ALLVSERVER" ] || [ "$TARGET" == "$LABEL" ] ; then
-			NAME=`echo $LABEL | cut -d. -f1 |  tr '-' '_'`
+			NAME=$(echo "$LABEL" | cut -d. -f1 |  tr '-' '_')
 			echo -n "${NAME}_$j.value "
 			if [ "$MODE" == "cpu" ] ; then
-				USERCPU=`cat /proc/virtual/$i/sched |grep "cpu $j:"| cut -d' ' -f3`
-				SYSCPU=`cat /proc/virtual/$i/sched |grep "cpu $j:"| cut -d' ' -f4`
-	 			echo $[$USERCPU + $SYSCPU]
+				USERCPU=$(grep "cpu $j:" "/proc/virtual/$i/sched" | cut -d' ' -f 3)
+				SYSCPU=$(grep "cpu $j:" "/proc/virtual/$i/sched" | cut -d' ' -f 4)
+				echo $((USERCPU + SYSCPU))
 			else
-				cat /proc/virtual/$i/sched |grep "cpu $j:"| cut -d' ' -f5
+				grep "cpu $j:" "/proc/virtual/$i/sched" | cut -d ' ' -f 5
 			fi
-		fi	
+		fi
 	done
 done

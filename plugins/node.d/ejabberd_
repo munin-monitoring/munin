@@ -113,7 +113,7 @@ vhosts=${vhosts:-}
 configfile=${configfile:-}
 
 
-EJCTL=$(which ejabberdctl 2>/dev/null)
+EJCTL=$(which ejabberdctl 2>/dev/null) || true
 # get ejabberd PID
 # in GNU/Linux Debian Lenny release the pidof command can be executed only by root
 #EJPID=$(pidof -s /usr/lib/erlang/erts-5.6.3/bin/beam.smp)
@@ -148,9 +148,9 @@ parse_vhosts_from_config_yaml() {
     local vhosts
     # try to parse a single-line yaml list, e.g.:
     #   hosts: ["foo.example.org", 'bar.example.com']
-    vhosts=$(grep -E "^hosts:\s*\[" "$filename" \
+    vhosts=$(grep -E '^hosts:\s*\[' "$filename" \
         | sed -E 's/^.*\[(.+)].*$/\1/' \
-        | tr "," "\n" \
+        | tr ',' '\n' \
         | sed -E 's/^.*["'\''](.+)["'\''].*$/\1/')
     if [ -z "$vhosts" ]; then
         # try to parse a multi-line yaml list, e.g.:
@@ -159,7 +159,7 @@ parse_vhosts_from_config_yaml() {
         #      - 'bar.example.com'
         vhosts=$(grep -vE '^(\s*#|$)' "$filename" \
             | sed -n '/^hosts:$/,/^\w/p;' \
-            | grep "^\s*-" \
+            | grep '^\s*-' \
             | sed -E 's/^.+["'\''](.*)["'\'']\s*$/\1/')
     fi
     echo "$vhosts"
@@ -206,7 +206,7 @@ parse_vhosts_from_config() {
         return 1
     else
         # we found a config (or its location was specified)
-        if echo "$configfile" | grep -qi "\.cfg$"; then
+        if echo "$configfile" | grep -qi '\.cfg$'; then
             vhosts=$(parse_vhosts_from_config_cfg "$configfile")
         else
             vhosts=$(parse_vhosts_from_config_yaml "$configfile")

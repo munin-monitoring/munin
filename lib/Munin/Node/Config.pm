@@ -198,10 +198,10 @@ sub parse_plugin_config_file {
 	if $self->{DEBUG};
 
     eval { $self->parse_plugin_config($CONF) };
-    if ($EVAL_ERROR) {
+    if ($@) {
         carp sprintf(
             '%s at %s line %d. Skipping the rest of the file',
-            $EVAL_ERROR,
+            $@,
             $file,
             $INPUT_LINE_NUMBER,
         );
@@ -268,6 +268,7 @@ sub _parse_plugin_line {
     elsif ($var_name eq 'command') {
     	# Don't split on escaped whitespace. Also support escaping the escape character.
     	# Better implementations welcome :).
+	## no critic qw(ControlStructures::ProhibitMutatingListFunctions)
         return (command => [reverse map {s/\\(.)/$1/g; scalar reverse} split /\s+(?=(?:\\\\)*(?!\\))/, reverse $var_value]);
     }
     elsif ($var_name eq 'host_name') {
@@ -278,6 +279,9 @@ sub _parse_plugin_line {
     }
     elsif ($var_name eq 'update_rate') {
         return (update_rate => $var_value);
+    }
+    elsif ($var_name eq 'disable_autoconf') {
+        return (disable_autoconf => _convert_bool($var_value));
     }
     elsif (index($var_name, 'env.') == 0) {
         return (env => { substr($var_name, length 'env.') => $var_value});
@@ -336,6 +340,15 @@ sub _apply_wildcard_to_service {
 
     $self->{sconf}{$service} = $sconf;
     return;
+}
+
+
+sub _convert_bool {
+    my ($arg) = @_;
+
+    return 1 if grep(/^$arg$/x, qw(true True TRUE));
+    return 0 if grep(/^$arg$/x, qw(false False FALSE));
+    croak "Invalid boolean value '$arg'";
 }
 
 

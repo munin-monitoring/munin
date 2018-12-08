@@ -99,7 +99,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 		${$this}[0] =~ tr#_#/#;
 		print "${$this}[0]\n";
 	}
-	
+
         exit 0;
 }
 

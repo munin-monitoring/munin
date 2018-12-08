@@ -26,9 +26,6 @@
 use strict;
 use warnings;
 
-# Trust PERL5LIB from environment
-use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
-
 use Getopt::Long;
 
 use Munin::Common::Defaults;
@@ -36,6 +33,8 @@ use Munin::Node::Config;
 use Munin::Node::OS;
 use Munin::Node::Service;
 use Munin::Node::Server;
+
+use English qw(-no_match_vars);
 
 my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 my $sconfdir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
@@ -89,11 +88,6 @@ sub main
         syslog_ident => 'munin-node',
         conf_file    => $conffile,
     );
-
-    # Untaint $0 after Munin::Node::Server has had a chance of getting
-    # the original value
-    $0 =~ /([^\/]*)$/;
-    $0 = $1;
 
     return 0;
 }

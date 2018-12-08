@@ -26,6 +26,8 @@ use warnings;
 
 package Munin::Master::Graph;
 
+use English qw(-no_match_vars);
+
 use Time::HiRes;
 
 use POSIX;
@@ -39,11 +41,10 @@ use Data::Dumper;
 
 # Hash of available palettes
 my %PALETTE;
-# Array of actuall colours to use
+# Array of colours to use
 my @COLOUR;
 
 {
-	no warnings;
 	# This is the old munin palette. Note that it lacks contrast.
 	$PALETTE{'old'} = [
 		qw(22ff22 0022ff ff0000 00aaaa ff00ff
@@ -85,7 +86,7 @@ my %resolutions = (
 	"day"   => "300",
 	"week"  => "1500",
 	"month" => "7200",
-	"year"  => "86400"
+	"year"  => "86400",
 );
 
 my %CONTENT_TYPES = (
@@ -104,7 +105,7 @@ my %CONTENT_TYPES = (
 sub is_ext_handled
 {
 	my $ext = shift;
-	return undef unless $ext;
+	return unless $ext;
 	return defined $CONTENT_TYPES{uc($ext)};
 }
 
@@ -270,8 +271,6 @@ sub handle_request
 	my @rrd_gfx_negatives;
 	my @rrd_legend;
 	my @rrd_sum;
-
-	my %negatives;
 
 	push @rrd_gfx, "COMMENT:\\t";
 	push @rrd_gfx, "COMMENT:Cur\\t";
@@ -612,7 +611,7 @@ sub handle_request
 	{
 		my $buffer;
 		# No buffering wanted when sending the file
-		local $| = 1;
+		local $OUTPUT_AUTOFLUSH = 1;
 		while (sysread($rrd_fh, $buffer, 40 * 1024)) { print $buffer; }
 	}
 
@@ -664,27 +663,6 @@ sub RRDs_graph {
 	# when called the second time.
 	#
 	return RRDs::graph(@_);
-
-	use IPC::Open3;
-	use IO::String;
-
-	# We just revert to spawning a full featured rrdtool cmd for now.
-	my $chld_out = new IO::String();
-	my $chld_in = new IO::String();
-	my $chld_err = new IO::String();
-
-	local $ENV{PATH} = $1 if $ENV{PATH} =~ /(.*)/;
-
-	my $chld_pid = open3($chld_out, $chld_in, $chld_err, "rrdtool", "graphv", @_);
-
-	DEBUG "[DEBUG] RRDs_graph(chld_out=".${$chld_out->string_ref}.")";
-	DEBUG "[DEBUG] RRDs_graph(chld_err=".${$chld_err->string_ref}.")";
-
-	waitpid( $chld_pid, 0 );
-
-	my $child_exit_status = ($? >> 8);
-
-	return $child_exit_status;
 }
 
 sub RRDs_graph_or_dump {
@@ -776,6 +754,7 @@ sub RRDs_graph_or_dump {
 		print $out_fh "        \"columns\": " . (scalar @$columns) . ",\n";
 		print $out_fh "        \"legend\": [\n";
 		my $index = 0;
+		## no critic qw(ControlStructures::ProhibitMutatingListFunctions)
 		my @json_columns = map { s/\\l$//; $_; } @{ $columns }; # Remove trailing "\l"
 		for my $column ( @json_columns ) {
 			print $out_fh "            \"$column\"";

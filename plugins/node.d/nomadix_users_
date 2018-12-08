@@ -97,7 +97,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
 # Checking if snmpwalk is found and executable
 if(! -x ${snmpwalk}){
         ${status}=2;
-        print STDERR "Error: " . ${snmpwalk} . " not found.\n"; 
+        print STDERR "Error: " . ${snmpwalk} . " not found.\n";
         if(${debug}){
                 print "Exit code: " . ${status} . "\n";
         }

@@ -36,7 +36,7 @@ sub _get_xid {
     }
 }
 
-sub get_fq_hostname { 
+sub get_fq_hostname {
     return hostfqdn || "unknown";
 }
 

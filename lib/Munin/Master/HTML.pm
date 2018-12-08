@@ -115,7 +115,7 @@ sub handle_request
 		MUNIN_VERSION   => $Munin::Common::Defaults::MUNIN_VERSION,
 		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
 		R_PATH          => '',
-		GRAPH_EXT       => $graph_ext
+		GRAPH_EXT       => $graph_ext,
 	);
 
 
@@ -688,8 +688,9 @@ sub _get_params_services_for_comparison {
 		my @nodes;
 		$sth_node->execute($service_name, $grp_id);
 		while (my ($node_name, $node_url, $srv_url, $srv_label) = $sth_node->fetchrow_array) {
-			my $_srv_url = "$srv_url.html" if defined $srv_url;
-			my $_img_url = "/$srv_url-$comparison.$graph_ext" if defined $srv_url;
+			my ($_srv_url, $_img_url);
+			$_srv_url = "$srv_url.html" if defined $srv_url;
+			$_img_url = "/$srv_url-$comparison.$graph_ext" if defined $srv_url;
 			push @nodes, {
 				R_PATH => '',
 				NODENAME => $node_name,
@@ -771,8 +772,8 @@ sub _get_params_services {
 		# Skip unrelated graphs if in multigraph
 		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
-		$n_warnings += $_state_warning;
-		$n_criticals += $_state_critical;
+		$n_warnings += $_state_warning || 0;
+		$n_criticals += $_state_critical || 0;
 
 		my %imgs = map { ("IMG$_" => "/$_url-$_.$graph_ext") } @times;
 		push @$services, {
@@ -839,10 +840,8 @@ sub get_param
 	# Ok, now SQL is needed to go further
         use DBI;
 	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
-        my $dbh = DBI->connect("dbi:Pg:dbname=munin","","") or die $DBI::errstr;
-
+	my $dbh = Munin::Master::Update::get_dbh();
 	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
-
 	return $value;
 }
 

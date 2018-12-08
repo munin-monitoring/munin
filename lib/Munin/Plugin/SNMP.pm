@@ -54,6 +54,8 @@ package Munin::Plugin::SNMP;
 use strict;
 use warnings;
 
+use English qw(-no_match_vars);
+
 use Net::SNMP;
 use Munin::Plugin;
 

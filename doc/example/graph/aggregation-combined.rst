@@ -12,7 +12,7 @@
  Loaning data combined with sum and cdef
 ========================================
 
-Different arithmetics may be combined to create the graphs you want.
+Different arithmetic operations may be combined to create the graphs you want.
 Insert appropriate lines in the Munin Master configuration file :ref:`munin.conf <munin.conf>`.
 
 The first example shows how to create a graph by loaning data from other sources, then adding an average value from five other data sources using :ref:`sum <fieldname.sum>` and :ref:`cdef <fieldname.cdef>`. The data in the example uses the following types of temperature measurements

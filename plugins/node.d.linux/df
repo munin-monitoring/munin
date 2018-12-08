@@ -1,5 +1,8 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 df - Munin plugin to monitor disk or inode usage
@@ -95,8 +98,6 @@ GPLv2
 
 =cut
 
-use strict;
-use warnings;
 use Munin::Plugin;
 
 need_multigraph();
@@ -194,7 +195,7 @@ my @df_output = grep(defined($_), map(split_and_skip, split("\n", `df $dfopts 2>
 
 
 if ($mode eq 'autoconf' ) {
-  if ( scalar(@df_output) ) {
+  if ( scalar(@df_output) == 0) {
     print "no (no device to monitor)\n";
   } else {
     print "yes\n";

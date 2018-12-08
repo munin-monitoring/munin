@@ -20,6 +20,7 @@
 use strict;
 use warnings;
 
+use English qw(-no_match_vars);
 use IO::Socket;
 use IO::File;
 use File::Path qw(mkpath);
@@ -85,14 +86,24 @@ $minrate = $update_rate if ! defined $minrate;
 $verbose = 1 if $debug;
 
 unless (-d $SPOOLDIR) {
-	mkpath($SPOOLDIR, { verbose => $verbose, } ) 
+	mkpath($SPOOLDIR, { verbose => $verbose, } )
 		or LOGCROAK("Cannot create '$SPOOLDIR': $!");
 }
+
+my $process_name = "main";
 
 my $sock = new IO::Socket::INET(
 	PeerAddr        => "$host",
 	Proto   => 'tcp'
-) || LOGCROAK("Error creating socket: $!");
+);
+if (!$sock) {
+	print STDERR "[$$][$process_name] Failed to connect to munin-node - trying again in a few seconds ...\n" if $verbose;
+	sleep 20;
+	$sock = new IO::Socket::INET(
+		PeerAddr => "$host",
+		Proto => 'tcp'
+	) || LOGCROAK("Error connecting to munin node ($host): $!");
+}
 my $nodeheader = <$sock>;
 print STDERR "[sock][>] nodes\n" if $debug;
 print $sock "nodes\n";
@@ -102,6 +113,11 @@ while(my $line = <$sock>) {
 	chomp($line);
 	print STDERR "[sock][<] $line\n" if $debug;
 	last if $line =~ /^\./;
+
+	# un-taint nodename TODO: too strict?
+	$line =~ /^([\w.]+)$/x;
+	$line = $1;
+
 	push(@nodes, $line);
 }
 
@@ -125,15 +141,13 @@ foreach my $node (@nodes) {
 
 $0 = "munin-asyncd [$metahostname] [idle]";
 
-my $process_name = "main";
-
 my $plugins = {};
 {
 	INFO("[$$][$process_name] Reading config from $host");
-	my $sock = new IO::Socket::INET( 
-		PeerAddr	=> "$host", 
+	my $sock = new IO::Socket::INET(
+		PeerAddr	=> "$host",
 		Proto	=> 'tcp'
-	) || die "Error creating socket: $!"; 
+	) || die "Error creating socket: $!";
 
 	local $0 = "munin-asyncd [$metahostname] [list]";
 	DEBUG("[sock][>] cap multigraph dirtyconfig");
@@ -155,13 +169,18 @@ my $plugins = {};
 			print $fh_list $plugins_line;
 			print $fh_list "\n";
 		}
+
+		#un-taint plugin_line TODO: more strict?
+		$plugins_line =~ /^(.*)$/x;
+		$plugins_line = $1;
+
 		$plugins->{$node} = [ split(/ /, $plugins_line) ];
 	}
 }
 
 my $keepgoing = 1;
 
-sub termhandler() {
+sub termhandler {
 	$keepgoing = 0;
 }
 
@@ -180,7 +199,13 @@ MAIN: while($keepgoing) {
 
 	my $process_name_orig = $process_name;
 
-	my $when_next = $when + $timeout; # wake up at least every $timeout sec
+	# start the next run close to the end of a munin-node update operation
+	# (i.e. try to avoid overlapping activities)
+	my $when_next = int((int($when / $minrate) + 0.75) * $minrate);
+	while ($when_next <= $when) {
+		$when_next = $when_next + $minrate;
+	}
+
 	foreach my $node (@nodes)
 	{
 		my $sock;
@@ -368,4 +393,4 @@ munin-asyncd [options]
         --screen                Log to screen instead of syslog
         --debug                 Log debug messages
      -v --verbose               Be verbose
-     -h --help                  View this message	
+     -h --help                  View this message

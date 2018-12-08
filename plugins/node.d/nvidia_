@@ -104,7 +104,7 @@ sub collect_and_print ($$) {
     if (/^-- (.*) --/) {
       $section=$1;
 
-      # Remove the "info" or "informaiton" part
+      # Remove the "info" or "information" part
       $section =~ s/\s+info.*//;
 
       next;

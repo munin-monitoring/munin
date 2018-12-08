@@ -54,9 +54,9 @@ our \$MUNIN_SPOOLDIR   = '$MUNIN_SPOOLDIR';
 # our \$MUNIN_MANDIR     = '';
 our \$MUNIN_LOGDIR     = '$MUNIN_LOGDIR';
 our \$MUNIN_STATEDIR   = '$MUNIN_STATEDIR';
-our \$MUNIN_USER       = \$^O eq 'MSWin32' ? '' : getpwuid \$EUID;
-our \$MUNIN_GROUP      = \$^O eq 'MSWin32' ? '' : getgrgid \$EGID;
-our \$MUNIN_PLUGINUSER = \$^O eq 'MSWin32' ? '' : getpwuid \$EUID;
+our \$MUNIN_USER       = \$OSNAME eq 'MSWin32' ? '' : getpwuid \$EUID;
+our \$MUNIN_GROUP      = \$OSNAME eq 'MSWin32' ? '' : getgrgid \$EGID;
+our \$MUNIN_PLUGINUSER = \$OSNAME eq 'MSWin32' ? '' : getpwuid \$EUID;
 our \$MUNIN_VERSION    = '$MUNIN_VERSION';
 our \$MUNIN_PERL       = '/usr/bin/perl';
 # our \$MUNIN_PERLLIB    = '';
@@ -73,16 +73,13 @@ print $fh <<'EOF';
 sub get_defaults {
     my ($class) = @_;
 
-    ## no critic
 
-    no strict 'refs';
+    no strict 'refs'; ## no critic qw( ProhibitNoStrict )
     my $defaults = {};
     for my $g ( keys %{"Munin::Common::Defaults::"} ) {
         next unless $g =~ /MUNIN_/;
         $defaults->{$g} = ${ *$g{'SCALAR'} };
     }
-
-    ## use critic
 
     return $defaults;
 }
@@ -148,7 +145,7 @@ Export all the package variables to the environment.
   $class->print_as_sed_substitutions()
 
 Output an expression suitable for "sed". This expression can be used to
-substitude placeholders (e.g. "@@SPOOLDIR") in munin's source files
+substitute placeholders (e.g. "@@SPOOLDIR") in munin's source files
 during an installation procedure.
 
 =back

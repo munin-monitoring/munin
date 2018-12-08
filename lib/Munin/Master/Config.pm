@@ -377,9 +377,9 @@ sub _concat_config_line_ok {
     eval {
 	$self->_split_config_line_ok($longkey);
     };
-    if ($EVAL_ERROR) {
+    if ($@) {
 	# _split_config_line_ok already logged the problem.
-	my $err_msg = "[ERROR] config error under [$prefix] for '$key $value' : $EVAL_ERROR";
+	my $err_msg = "[ERROR] config error under [$prefix] for '$key $value' : $@";
 	ERROR $err_msg;
 	die $err_msg;
     }
@@ -544,7 +544,7 @@ sub look_up {
 	    $value = $value->{groups}{$group};
 
 	} else {
-	    return undef;
+	    return;
 	}
     }
 
@@ -555,7 +555,7 @@ sub look_up {
 	return $value->{hosts}{$host};
     };
 
-    return undef;
+    return;
 }
 
 

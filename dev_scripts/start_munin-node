@@ -9,4 +9,11 @@ FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 echo "Starting munin-node"
 ./dev_scripts/run munin-node
 
+echo ""
+echo "**************************************************"
+echo "* Listening to "
+echo "* ${SANDBOX}/var/log/munin-node.log"
+echo "* ..."
+echo "**************************************************"
+echo ""
 tail -f "${SANDBOX}/var/log/munin-node.log"

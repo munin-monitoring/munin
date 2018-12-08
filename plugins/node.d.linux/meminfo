@@ -45,7 +45,7 @@ values).  Graphs are split to 8 groups, every group has sub graphs:
     Low and high memory                            - subj :)
   Slab objects size                                - subj :)
     Slabs size [GroupName1]                          v
-    ...                                            - show slabs size. I try split fields by this types. 
+    ...                                            - show slabs size. I try split fields by this types.
     Slabs size [GroupNameX]                          ^
     Slabs sizes of groups                          - "Groups" sizes
     Slab objects                                   - Active/inactive objects
@@ -92,7 +92,7 @@ group name
 Default: undefined
 
 Examples:
-  
+
   env.applications_group ^(firefox|chrome|opera|konqu|arora):Browsers;(^lx|openbox|menu|gnome|slim|^X):X;^(hal|console-kit|syslog|cron|dhcp|udev|dbus|bluetoo|agett|login|automount):System;
 
 And you can select time to display data after application close (all
@@ -107,7 +107,7 @@ Example:
 
 =head2 PERMISSIONS NOTE
 
-Please check, can your munin user read files such as 
+Please check, can your munin user read files such as
 
   /proc/meminfo
   /proc/slabinfo
@@ -127,7 +127,7 @@ If no access, just write in plugin-config
 You can set warning and critical levels for *each* of the data
 series the plugin reports.
 
-Template for limits: 
+Template for limits:
 
   env.limit_%field% (warning_num:crytical_num|critical_num)[kMG]
 
@@ -848,7 +848,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Mapped',
-      'info'  => 'Files which have been mmaped, such as libraries'
+      'info'  => 'Files which have been mapped, such as libraries'
     }
   },
   # ----------------------------------------------
@@ -1425,7 +1425,7 @@ my $application_fields =
     'VmSwap' => 'AREA',
     'VmHWM'  => 'LINE2',
     'VmPeak' => 'LINE2'
-    
+
    },
    'color' =>
    {
@@ -1968,10 +1968,9 @@ sub append_field
 
 sub append_formula_field
 {
-  my ($field_name, $formula, $label, $info) = @_[0..4];
+  my ($field_name, $formula, $label, $info) = @_[0..3];
   unless (exists($fields_source->{$field_name}))
   {
-    $name = "$formula" unless defined $name && $name ne '';
     $fields_source->{$field_name} =
     {
       'src'   => { 'calculated' => $formula },

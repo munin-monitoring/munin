@@ -127,4 +127,4 @@ $conn->add_global_handler('luserchannels', \&luserchannels);
 
 while(1) {
     $irc->do_one_loop();
-}		 
+}

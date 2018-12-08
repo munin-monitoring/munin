@@ -8,7 +8,7 @@ memory - Show memory stats based on top output
 
 =head1 Applicable systems
 
-Solaris systems with the package SUNWtop or other package containint
+Solaris systems with the package SUNWtop or other package containing
 top installed.
 
 =head1 CONFIGURATION
@@ -58,7 +58,7 @@ Fixme: Using kstat would be much better
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 TOP=${top:-/usr/local/bin/top}
 

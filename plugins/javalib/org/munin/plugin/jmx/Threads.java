@@ -10,7 +10,7 @@ import org.munin.plugin.jmx.AbstractAnnotationGraphsProvider.Graph;
 public class Threads extends AbstractAnnotationGraphsProvider {
 
 	private ThreadMXBean threadMXBean;
-	
+
 	public Threads(Config config) {
 		super(config);
 	}

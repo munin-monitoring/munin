@@ -131,6 +131,9 @@ sub write
         print {$fh} $line, "\n" or ERROR("Error writing results: $!");
     }
 
+    # Synchronously write the timestamp for that plugin
+    $self->set_metadata("last-timestamp.$service", $timestamp);
+
     return;
 }
 

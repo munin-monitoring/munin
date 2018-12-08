@@ -11,7 +11,7 @@
 #
 # If multiple memcache instances are running memcached_INSTANCE_DATASET can be
 # used and INSTANCE can be any instance name that will show up in the title.
-# In thise case your config should specify a different port/host for each like
+# In this case your config should specify a different port/host for each like
 # using the following in plugin configuration file:
 #
 # [memcached_pages_*]
@@ -38,17 +38,17 @@
 #%# family=auto
 #%# capabilities=suggest autoconf
 use strict;
-my $ret = undef; 
+my $ret = undef;
 if (! eval "require Cache::Memcached;") {
 	$ret = "Cache::Memcached not found";
-} 
+}
 my $HOST = exists $ENV{'host'} ? $ENV{'host'} : "127.0.0.1";
-my $PORT = exists $ENV{'port'} ? $ENV{'port'} : 11211; 
+my $PORT = exists $ENV{'port'} ? $ENV{'port'} : 11211;
 if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 	if ($ret) {
 		print "no ($ret)\n";
 		exit 0;
-	} 
+	}
 # Todo: we can always connect to a memcache server without any errors so I cannot really
 # find a way to detect the presence of a memcache instance. Maybe a forced write/read/delete
 # but there should be a better way somewhere...
@@ -64,7 +64,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "suggest" ) {
 if($ret) {
 	print "no ($ret)\n";
 	exit 1;
-} 
+}
 
 # We do everything by this array
 my %all_vars = (
@@ -244,7 +244,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" ) {
 		}
 	}
 	exit 0;
-} 
+}
 my $mc = new Cache::Memcached { 'servers' => [ "$HOST:$PORT" ] };
 my $stats = $mc->stats ('misc');
 

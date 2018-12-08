@@ -67,8 +67,8 @@ if [ "$1" = "config" ]; then
 	echo 'system.max 5000'
 	echo 'system.type DERIVE'
 	echo 'system.min 0'
-#	echo "system.warning $SYSWARNING" 
-#	echo "system.critical $SYSCRITICAL" 
+#	echo "system.warning $SYSWARNING"
+#	echo "system.critical $SYSCRITICAL"
 	echo 'system.info CPU time spent by the kernel in system activities'
 	echo "system.cdef system,$CDEF"
 	echo 'interrupt.label interrupt'

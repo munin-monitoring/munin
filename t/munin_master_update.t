@@ -21,14 +21,21 @@ sleep(5);
 my $config = Munin::Master::Config->instance()->{"config"};
 $config->parse_config_from_file("t/config/munin.conf");
 
+$config->{dbdir} .= "/update/$$";
+
+system("mkdir", "-p", $config->{dbdir});
+
 Munin::Common::Logger::configure(
 	"output" => "screen",
-	"level" => "debug",
+	"level" => "info",
 );
 
 
 my $update = Munin::Master::Update->new();
-ok($update->run() == 3);
+ok($update->run() == 5);
+
+# Run a second time, with an already populated database
+ok($update->run() == 5);
 
 kill('TERM', $pid_debug_node);
 wait();

@@ -344,7 +344,7 @@ only to that node.
 
    If set, changes the name by which the node presents itself when warning through :ref:`munin-limits`.
 
-.. note:: This directive can also be used on hiearchy level plugin to change the name by which the plugin presents itself when warning through ``munin-limits``.
+.. note:: This directive can also be used on hierarchy level plugin to change the name by which the plugin presents itself when warning through ``munin-limits``.
 
 .. option:: ignore_unknown <yes|no>
 
@@ -446,7 +446,7 @@ A virtual node definition. Disable update, and make a graph consisting of data f
    update no
    load.graph_title Total load
    load.sum_load.label load
-   load.sum_load.special_stack mail=mail.example.com web=web.example.com munin=munin.example.com
+   load.sum_load.stack mail=mail.example.com web=web.example.com munin=munin.example.com
 
 .. _address-schemes:
 

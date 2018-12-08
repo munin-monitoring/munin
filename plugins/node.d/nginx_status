@@ -110,10 +110,10 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" ) {
 
 my $response = $UA->get($URL);
 
-#Active connections: 1845 
+#Active connections: 1845
 #server accepts handled requests
-# 4566318 4566318 84218236 
-# Reading: 2 Writing: 278 Waiting: 1565 
+# 4566318 4566318 84218236
+# Reading: 2 Writing: 278 Waiting: 1565
 if ($response->content =~ /Active connections:\s+(\d+).*Reading:\s+(\d+).*Writing:\s+(\d+).*Waiting:\s+(\d+)/s) {
     print "total.value $1\n";
     print "reading.value $2\n";

@@ -139,9 +139,9 @@ sub fetch_stat() {
 	    $devs{$name} =
 	      {
 	       name => $name,
-	       rio => $3, 
+	       rio => $3,
 	       rsect => $4,
-	       wio => $5, 
+	       wio => $5,
 	       wsect => $6
 	      };
 	}
@@ -183,7 +183,7 @@ sub fetch_detailed() {
 
 		next if ($include_only ne "" and $include_only !~ $tmpnam);
 
-		$devs{"dev".$major."_".&get_disk_count($major)} = 
+		$devs{"dev".$major."_".&get_disk_count($major)} =
 		  {
 		   major => $major,
 		   name => $tmpnam,

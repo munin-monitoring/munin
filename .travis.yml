@@ -7,6 +7,8 @@ branches:
     - stable-2.0
     - master
 addons:
+  hosts:
+    - testing.acme.com
   apt:
     packages:
       - codespell
@@ -26,6 +28,7 @@ addons:
       - libio-stringy-perl
       - liblist-moreutils-perl
       - liblog-dispatch-perl
+      - liblog-log4perl-perl
       - libmodule-build-perl
       - libnet-dns-perl
       - libnet-ip-perl
@@ -46,6 +49,8 @@ addons:
       - libxml-dumper-perl
       - libxml-libxml-perl
       - libxml-parser-perl
+      - python3-flake8
+      - shellcheck
 notifications:
   email: false
   irc:
@@ -64,12 +69,20 @@ env:
   - TEST_MEDIUM=1
 
 before_install:
-  cpanm -n Devel::Cover::Report::Coveralls
+  - cpanm -n Devel::Cover::Report::Coveralls
+  - cpanm --quiet --installdeps --notest .
 
-script:
+install:
+  - perl Build.PL
+  - ./Build build
+  # We want to lint first, to avoid expensive tests if code isn't clean
+  - make lint-munin
+  # Plugins are currently not compliant
+  - make lint-plugins || true
   # check for potential spelling mistakes
-  - codespell --quiet-level=3 --skip=ChangeLog,Announce-2.0,*.js,memory,jmx_,jmx_tomcat_dbpools,netstat_multi,munin_node_os.t
-  - perl Build.PL && ./Build build && cover -test -report coveralls
+  - make lint-spelling
+script:
+  - cover -test -report coveralls
 
 # Using the container-based infrastructure
 sudo: false

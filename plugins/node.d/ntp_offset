@@ -36,6 +36,10 @@ Loosely based on ntp_ plugin, but reworked to shell.
 
 =cut
 
+
+nodelay=${nodelay:-}
+
+
 do_autoconf () {
     ntpq -c help >/dev/null 2>&1 || { echo 'no (no ntpq program)'; exit 0; }
 
@@ -58,6 +62,7 @@ do_autoconf () {
 do_config () {
     syspeer="$(ntpq -n -p | grep '^[*o]')"
 
+    # shellcheck disable=SC2086
     set - $syspeer
 
     peer=$1
@@ -87,6 +92,7 @@ do_ () {
     # Fetch operation
     syspeer="$(ntpq -n -p | grep '^[*o]')"
 
+    # shellcheck disable=SC2086
     set - $syspeer
 
     # peer=$1
@@ -104,7 +110,7 @@ EOF
 
 case $1 in
     autoconf|config|'')
-       do_$1
+       "do_$1"
        exit $?
        ;;
     *)

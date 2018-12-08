@@ -26,9 +26,9 @@ my $current_timeout_epoch;
 sub do_with_timeout {
     my ($timeout, $block) = @_;
 
-    croak 'Argument exception: $timeout' 
+    croak 'Argument exception: $timeout'
         unless $timeout && $timeout =~ /^\d+$/;
-    croak 'Argument exception: $block' 
+    croak 'Argument exception: $block'
         unless ref $block eq 'CODE';
 
     my $new_timeout_epoch = time + $timeout;
@@ -41,7 +41,7 @@ sub do_with_timeout {
 
     if ($new_timeout_epoch <= time) {
     	# Yey ! Time's up already, don't do anything, just : "farewell !"
-        return undef;
+        return;
     }
 
     # Ok, going under new timeout setting
@@ -54,7 +54,7 @@ sub do_with_timeout {
         alarm ($new_timeout_epoch - time);
         $ret_value = $block->();
     };
-    my $err = $EVAL_ERROR;
+    my $err = $@;
 
     # Restore the old $current_timeout_epoch...
     $current_timeout_epoch = $old_current_timeout_epoch;
@@ -75,7 +75,7 @@ sub do_with_timeout {
 
     # And handle the return code
     if ($err) {
-        return undef if $err eq "alarm\n";
+        return if $err eq "alarm\n";
         die $err; # Propagate any other exceptions
     }
 

@@ -80,14 +80,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 use strict;
 use Munin::Plugin;
+use Munin::Plugin::Framework;
 use IO::Socket::INET;
 
 
 my $plugin = Munin::Plugin::Framework->new;
 
-$plugin->hostname = $1 if $Munin::Plugin::me =~ /_([^_]+)$/;
+$plugin->{hostname} = $1 if $Munin::Plugin::me =~ /_([^_]+)$/;
 
-my $peeraddr = $ENV{'host'} || $plugin->hostname || '127.0.0.1';
+my $peeraddr = $ENV{'host'} || $plugin->{hostname} || '127.0.0.1';
 my $peerport = $ENV{'port'} || '3128';
 
 my $username = $ENV{'username'};
@@ -131,11 +132,14 @@ sub getobject {
 
 sub get_icp {
   my $server_list = getobject('server_list');
-  if ( $server_list->content =~ /There are no neighbors/ ) {
+  if ( not defined $server_list ) {
+    return undef;
+  }
+  if ( $server_list->{content} =~ /There are no neighbors/ ) {
     return undef;
   }
 
-  my @lines = split(/\r\n/, $server_list->content);
+  my @lines = split(/\r\n/, $server_list->{content});
 
   my $ret;
   my $id = "";
@@ -164,13 +168,13 @@ my $info     = getobject('info');
 my $icp_data = get_icp;
 
 if ( $requirements ) {
-  $plugin->autoconf = "no ($requirements)";
+  $plugin->{autoconf} = "no ($requirements)";
 } elsif ( !$counters->is_success ) {
-  $plugin->autoconf = "no ($counters->status_line)";
-  $plugin->autoconf =~ s/[\r\n]//g;
+  $plugin->{autoconf} = "no ($counters->status_line)";
+  $plugin->{autoconf} =~ s/[\r\n]//g;
 }
 
-if ( $counters->is_success ) {
+if ( defined $counters && $counters->{is_success} ) {
   my $hits =
     ($counters->content =~ /client_http\.hits = ([0-9]+)/) ? $1 : "U";
   my $errors =
@@ -255,7 +259,7 @@ if ( $counters->is_success ) {
     );
 }
 
-if ( $storedir->is_success ) {
+if ( defined $storedir && $storedir->is_success ) {
   my $max =
     ($storedir->content =~ /Maximum (?:Swap )?Size\s*:\s*([0-9]+) KB/) ? ($1 * 1024) : "U";
   my $current =
@@ -278,7 +282,7 @@ if ( $storedir->is_success ) {
     );
 }
 
-if ( $info->is_success ) {
+if ( defined $info && $info->is_success ) {
   my $size = 'U';
   if ( $info->content =~ /Mean Object Size:\s*([0-9.]+) ([KMG])B/i ) {
     $size = $1;

@@ -58,7 +58,7 @@ Exemples will consider the shared folder /nfs/munin.
 Running munin-update
 ====================
 
-Cange the ``munin-cron`` to only run ``munin-update`` (and
+Change the ``munin-cron`` to only run ``munin-update`` (and
 ``munin-limits``, if you have alerts you want to be managed directly on
 those masters).
 
@@ -96,9 +96,6 @@ them.
 
 If you have ``munin-limits`` also running on update-masters, it generate
 a ``limits`` files, those are also plain text.
-
-In order to make that part easier, a ``munin-mergedb.pl`` is provided in
-contrib.
 
 Merging rrd tree
 ----------------

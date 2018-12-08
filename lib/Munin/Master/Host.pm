@@ -20,7 +20,7 @@ sub new {
         port          => 4949,
         update        => 1,
         use_node_name => 0,
-        
+
         %$attributes,
     };
 
@@ -113,7 +113,7 @@ Returns the full nested named path of the host object (eg. "group1;group2;hostna
   $host->add_attributes_if_not_exists(\%attrs);
 
 Merges the new attributes from %attrs into the host object, without
-overwriting any existing   
+overwriting any existing attributes.
 
 =item B<get_canned_ds_config>
 

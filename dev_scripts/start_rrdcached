@@ -12,8 +12,12 @@ set -x
 
 install -d "${SANDBOX}/var/spool/rrdcached"
 
+# rrdcached does not tolerate symlinks within base_dir
+# These may happen if XDG_RUNTIME_DIR is defined (see devscripts/install).
+rrdcached_base_dir=$(realpath "${SANDBOX}/var/lib")
+
 rrdcached -g -B -F -m 0660 \
     -p "${SANDBOX}/var/run/rrdcached.pid" \
-    -b "${SANDBOX}/var/lib" \
+    -b "$rrdcached_base_dir" \
     -j "${SANDBOX}/var/spool/rrdcached" \
     -l "unix:${SANDBOX}/var/run/rrdcached.sock"

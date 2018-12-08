@@ -433,8 +433,10 @@ sub read_sysfs {
 
         my @elems = split /\s+/, $line;
 
-        croak "'$stats_file' doesn't contain exactly 11 values. Aborting"
-          if ( @elems != 11 );
+        # before linux 4.19, /sys/block/<dev>/stat had 11 fields.
+        # in 4.19, four fields for tracking DISCARDs have been added
+        croak "'$stats_file' contains the wrong amount of values. Aborting"
+          if ( @elems != 11 && @elems != 15 );
 
         # Translate the devicename back before storing the information
         $cur_device =~ tr#!#/#;
@@ -831,7 +833,7 @@ EOF
 multigraph ${plugin_name}_iops
 graph_title Disk IOs per device
 graph_args --base 1000
-graph_vlabel IOs/\${graph_period} read (-) / write (+) 
+graph_vlabel IOs/\${graph_period} read (-) / write (+)
 graph_category disk
 $extra_graph_settings
 EOF

@@ -5,17 +5,17 @@
 #
 # Author: Trygve Vea <tv@redpill-linpro.com>
 # Author: Kristian Lyngstøl <kristian@redpill-linpro.com>
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -26,13 +26,13 @@ proc - Munin plugin to monitor various aspects of named processes
 
 =head1 APPLICABLE SYSTEMS
 
-Processes running under Linux for a longer timespan. 
+Processes running under Linux for a longer timespan.
 
 =head1 CONFIGURATION
 
 The plugin needs to be able to parse the /proc-filesystem.
 
-The plugin is configured by supplying a pipe-delimitered list of parameters 
+The plugin is configured by supplying a pipe-delimitered list of parameters
 through environment variables.
   [proc]
      env.procname proc1|proc2|proc3
@@ -41,10 +41,10 @@ through environment variables.
      env.procaspect cpu|memory|ctxt_switches|threads|processes|io
 
 
-env.procname defines the processname as seen inside the parenthesis of the 
+env.procname defines the processname as seen inside the parenthesis of the
 second column in /proc/<PID>/stat. If you don't get the data you expect, you
-can check if the value is what you expect here. This is what's used for the 
-first filter, and args/user-filters are then applied on top of this filter. 
+can check if the value is what you expect here. This is what's used for the
+first filter, and args/user-filters are then applied on top of this filter.
 Note that <PID> is the PID of the process that you are interested in.
 For process names including non-alphanumeric characters (like space, dash,
 etc.) please see Special Process Names below.
@@ -56,7 +56,7 @@ argument list if there's only one key option you care about filtering on.
 env.procuser defines the user the process has to run as. If nothing is
 provided, processes ran by any user are included.
 
-env.procaspect defines which graphs to render. Per default, all graphs are 
+env.procaspect defines which graphs to render. Per default, all graphs are
 included. You don't have to set this unless you want to exclude graphs.
 
 =head1 SPECIAL PROCESS NAMES
@@ -112,8 +112,8 @@ Kristian Lyngstol <kristian@varnish-software.com>
 
 =head1 THANKS
 
-Thanks to Kristian Lyngstol, I stole most of the initial code in this plugin 
-from his varnish_-plugin, which is a really nice outline of how a 
+Thanks to Kristian Lyngstol, I stole most of the initial code in this plugin
+from his varnish_-plugin, which is a really nice outline of how a
 wildcardplugin should look like. I've added some weird hacks to make it output
 multigraph. It's pretty ugly, but it works.
 
@@ -160,13 +160,13 @@ my @field_parameters = ('graph', 'min', 'max', 'draw', 'cdef', 'warning',
                         'colour', 'info', 'type', 'negative');
 # Data structure that defines all possible graphs (aspects) and how they
 # are to be plotted. Every top-level entry is a graph/aspect. Each top-level graph
-# MUST have title set and 'values'. 
-# 
+# MUST have title set and 'values'.
+#
 # 'rpn' on values allows easy access to graphs consisting of multiple
 # values from procstats. (Reverse polish notation). The RPN
 # implementation only accepts +-*/ and procstats-values.
 #
-# Any value left undefined will be left up to Munin to define/ignore/yell 
+# Any value left undefined will be left up to Munin to define/ignore/yell
 # about.
 #
 # See munin documentation or rrdgraph/rrdtool for more information.
@@ -424,7 +424,7 @@ sub print_if_exist
 }
 
 # Walk through the relevant aspect and print all top-level configuration
-# values and value-definitions. 
+# values and value-definitions.
 sub get_config
 {
     my $graph = $_[0];
@@ -571,7 +571,7 @@ sub set_run
     }
 }
 
-# Read and verify the aspect ($self). 
+# Read and verify the aspect ($self).
 sub set_aspect
 {
     $self = $0;
@@ -672,7 +672,7 @@ print "multigraph proc_$asp\n";
 foreach (@procname) {
     if ( $asp eq 'cpu' ) {
         print "$procuniq[$i].value " .
-              ($procstats{$procuniq[$i]}{'utime'} + 
+              ($procstats{$procuniq[$i]}{'utime'} +
                $procstats{$procuniq[$i]}{'stime'})."\n";
     }
     if ( $asp eq 'ctxt_switches' ) {

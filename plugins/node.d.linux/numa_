@@ -79,14 +79,14 @@ fi
 
 if [ "$1" = "suggest" ]; then
   node=0
-  while [ 1 ]; do
+  while true; do
     if [ -r "/sys/devices/system/node/node${node}/numastat" ]; then
       echo "${node}_process"
       echo "${node}_memory"
     else
       exit 0
     fi
-    node=$(( $node + 1 ))
+    node=$(( node + 1 ))
   done
 fi
 
@@ -101,9 +101,10 @@ if [ "$1" = "config" ]; then
       echo 'graph_order local_node other_node'
       echo "graph_title NUMA allocations from processes running on node ${NODE}"
       echo 'graph_args -l 0'
+      # shellcheck disable=SC2016
       echo 'graph_vlabel pages/${graph_period}'
       echo 'graph_info Shows where processes on this node got memory.'
-    	echo 'graph_category system'
+      echo 'graph_category system'
       echo "local_node.label local_node"
       echo "local_node.info A process ran on this node and got memory from it."
       echo "local_node.type DERIVE"
@@ -117,9 +118,10 @@ if [ "$1" = "config" ]; then
       echo 'graph_order numa_hit numa_miss numa_foreign interleave_hit'
       echo "graph_title NUMA Memory allocations against node ${NODE}"
       echo 'graph_args -l 0'
+      # shellcheck disable=SC2016
       echo 'graph_vlabel pages/${graph_period}'
       echo 'graph_info Status of memory allocation requests of this node'
-    	echo 'graph_category system'
+      echo 'graph_category system'
       echo "numa_hit.label numa_hit"
       echo "numa_hit.info A process wanted to allocate memory from this node and succeeded."
       echo "numa_hit.type DERIVE"
@@ -138,7 +140,7 @@ if [ "$1" = "config" ]; then
       echo "interleave_hit.min 0"
       ;;
   *)
-      echo "$RESOURCE not defined."
+      echo >&2 "Empty or unknown resource requested: $RESOURCE"
       exit 1
       ;;
   esac
@@ -152,7 +154,7 @@ interleave_hit=U
 local_node=U
 other_node=U
 
-while read line ; do
+while read -r line; do
   key=${line%% *}
   value=${line##* }
   case "${key}" in
@@ -163,8 +165,8 @@ while read line ; do
     numa_miss=$value
     ;;
   numa_foreign)
-  	numa_foreign=$value
-  	;;
+    numa_foreign=$value
+    ;;
   interleave_hit)
     interleave_hit=$value
     ;;
@@ -175,7 +177,7 @@ while read line ; do
     other_node=$value
     ;;
   esac
-done < /sys/devices/system/node/node${NODE}/numastat 
+done < "/sys/devices/system/node/node${NODE}/numastat"
 
 case "$RESOURCE" in
   process)
@@ -189,6 +191,7 @@ case "$RESOURCE" in
     echo "interleave_hit.value $interleave_hit"
     ;;
   *)
+    echo >&2 "Empty or unknown resource requested: $RESOURCE"
     exit 1
     ;;
 esac

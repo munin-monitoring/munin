@@ -1,4 +1,8 @@
 package Munin::Common::SyncDictFile;
+
+use strict;
+use warnings;
+
 require Tie::Hash;
 our @ISA = qw(Tie::Hash);
 
@@ -28,7 +32,7 @@ sub STORE {
 	my ($self, $key, $value) = @_;
 	DEBUG("STORE($key, $value)");
 	$key = escape_key($key);
-	
+
 
 	use IO::File;
 	my $fh = _lock_write($self->{filename}, "r");
@@ -41,7 +45,7 @@ sub STORE {
 		# Print the read line, but ignore the key we are currently storing
 		print $fh_tmp "$line\n" unless $line =~ m/^$key:/;
 	}
-	
+
 	# Print the stored key at the end
 	DEBUG("Print the stored $key:$value");
 	print $fh_tmp "$key:$value\n";
@@ -73,7 +77,7 @@ sub FETCH {
 
 # Return the first key in the hash.
 sub FIRSTKEY {
-	my ($self) = @_; 
+	my ($self) = @_;
 	DEBUG("FIRSTKEY()");
 	my $fh = _lock_read($self->{filename});
 
@@ -88,11 +92,11 @@ sub FIRSTKEY {
 
 # Return the next key in the hash.
 sub NEXTKEY {
-	my ($self, $lastkey) = @_;
-	DEBUG("NEXTKEY($lastkey)");
+	my ($self, $key) = @_;
+	DEBUG("NEXTKEY($key)");
 	$key = escape_key($key);
 	my $fh = _lock_read($self->{filename});
-	
+
 	# Read the file to find a key
 	while(my $line = <$fh>) {
 		chomp($line);
@@ -105,7 +109,7 @@ sub NEXTKEY {
 			return $1;
 		} else {
 			# EOF
-			return undef;
+			return;
 		}
 	}
 }
@@ -139,16 +143,16 @@ sub DELETE {
 
 # Clear all values from the tied hash this.
 sub CLEAR {
-	my ($self) = @_; 
+	my ($self) = @_;
 	DEBUG("CLEAR()");
 	my $fh = $self->_lock_write();
 }
 
 sub SCALAR {
-	my ($self) = @_; 
+	my ($self) = @_;
 	DEBUG("SCALAR()");
 	my $fh = _lock_read($self->{filename});
-	
+
 	# Read the file to read the number of lines
 	my $nb_lines = 0;
 	while(my $line = <$fh>) {
@@ -177,15 +181,15 @@ sub _lock_write {
 
 	use Fcntl qw(:flock);
 	use IO::File;
-	
-	my $fh = IO::File->new($filename, $mode) 
+
+	my $fh = IO::File->new($filename, $mode)
 		or die "Cannot open tied file '$filename' - $!";
 	flock($fh, LOCK_EX) or die "Cannot lock tied file '$filename' - $!";
 	return $fh;
 }
 
 sub DEBUG {
-	print STDOUT "[DEBUG] @_" . "\n" if $DEBUG_ENABLED; 
+	print STDOUT "[DEBUG] @_" . "\n" if $DEBUG_ENABLED;
 }
 
 # XXX - collision if there is a ____
