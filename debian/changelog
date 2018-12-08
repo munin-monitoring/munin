@@ -1,3 +1,9 @@
+munin (2.999.10-1) UNRELEASED; urgency=medium
+
+  * New upstream beta release (2.999.10), Closes: #860899
+
+ -- Lars Kruse <devel@sumpfralle.de>  Sun, 09 Dec 2018 00:53:03 +0100
+
 munin (2.999.9-3) experimental; urgency=medium
 
   [ Lars Kruse ]
