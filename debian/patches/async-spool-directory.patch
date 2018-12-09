@@ -5,16 +5,16 @@ owned by the munin user.
 
 --- a/script/munin-async
 +++ b/script/munin-async
-@@ -34,7 +34,7 @@ use Munin::Common::Utils qw( is_valid_ho
+@@ -35,7 +35,7 @@ use Munin::Common::Utils qw( is_valid_ho
  # Disable buffering
- $| = 1;
+ $OUTPUT_AUTOFLUSH = 1;
  
 -my $SPOOLDIR = $Munin::Common::Defaults::MUNIN_SPOOLDIR;
 +my $SPOOLDIR = $Munin::Common::Defaults::MUNIN_SPOOLDIR . "/async";
  my $hostname;
  my $overridehost;
  
-@@ -162,7 +162,7 @@ munin-async - A program to replay spoole
+@@ -150,7 +150,7 @@ munin-async - A program to replay spoole
  munin-async [options]
  
   Options:
@@ -25,7 +25,7 @@ owned by the munin user.
       --cleanupandexit           Clean up the spooldir and exit (non-interactive)
 --- a/script/munin-asyncd
 +++ b/script/munin-asyncd
-@@ -34,7 +34,7 @@ use Munin::Common::Logger;
+@@ -35,7 +35,7 @@ use Munin::Common::Logger;
  
  my $host = "localhost:4949";
  my $metahostname;
@@ -34,7 +34,7 @@ owned by the munin user.
  my $intervalsize = 86400;
  my $timeout = 3600;
  my $minrate;
-@@ -355,7 +355,7 @@ munin-asyncd [options]
+@@ -380,7 +380,7 @@ munin-asyncd [options]
  
   Options:
          --host <hostname:port>  Connect to this munin-node [localhost:4949]
