@@ -1,0 +1,14 @@
+Description: Work around the implicit dependency of a test on a
+ travis-like testing environment.
+ .
+ Upstream will fix this issue in the next release
+ (probably: 2.999.11).
+Author: Lars Kruse <devel@sumpfralle.de>
+--- a/t/config/munin.conf
++++ b/t/config/munin.conf
+@@ -21,4 +21,5 @@ graph_data_size debug
+ [localhost]
+      port 24949
+ [testing.acme.com]
++     address 127.0.0.1
+      port 24950
