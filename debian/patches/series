@@ -1,5 +1,4 @@
 use-configured-database.patch
-limitsold-missing-state-onfield.patch
 async-spool-directory.patch
 manpage-master-limitsold
 Makefile.javaplugin-INSTALL-variable.patch
