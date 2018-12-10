@@ -70,7 +70,7 @@ my $pg = Munin::Plugin::Pgsql->new(
                 LEFT JOIN
                  (SELECT CASE WHEN wait_event_type IS NOT NULL THEN 'waiting' WHEN state='idle' THEN 'idle' WHEN state LIKE 'idle in transaction%' THEN 'idletransaction' WHEN state='disabled' THEN 'unknown' WHEN query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END AS mstate,
                  count(*) AS count
-                 FROM pg_stat_activity WHERE pid != pg_backend_pid() %%FILTER%%
+                 FROM pg_stat_activity WHERE pid != pg_backend_pid() AND backend_type = 'client connection' %%FILTER%%
                  GROUP BY CASE WHEN wait_event_type IS NOT NULL THEN 'waiting' WHEN state='idle' THEN 'idle' WHEN state LIKE 'idle in transaction%' THEN 'idletransaction' WHEN state='disabled' THEN 'unknown' WHEN query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END
                  ) AS tmp2
                 ON tmp.mstate=tmp2.mstate
