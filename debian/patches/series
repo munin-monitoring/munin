@@ -3,3 +3,4 @@ manpage-master-limitsold
 Makefile.javaplugin-INSTALL-variable.patch
 limitsold-load-config.patch
 shortcut-travis-dependent-tests.patch
+disable-munin-limits.patch
