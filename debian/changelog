@@ -7,6 +7,7 @@ munin (2.0.49-2) UNRELEASED; urgency=medium
   * Remove upstart configuration files that are still present (and unchanged).
     The upstart files were removed from the package in 2.0.33-1.
   * Increase compatibility level from 11 to 12.
+  * Tests: also check availability of multigraph plugins.
 
  -- Holger Levsen <holger@debian.org>  Sun, 07 Jul 2019 18:28:54 +0200
 
