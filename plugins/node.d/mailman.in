@@ -55,7 +55,7 @@ elsif (-f "$logfile.01")
 }
 else
 {
-    $rotlogfile = $logfile . ".0";
+    $rotlogfile = undef;
 }
 
 if($ARGV[0] and $ARGV[0] eq "config") {
@@ -80,8 +80,7 @@ if($ARGV[0] and $ARGV[0] eq "autoconf") {
 
 if(! -f $logfile &&
    ! -d $libdir &&
-   ! -x $lister &&
-   ! -f $rotlogfile) {
+   ! -x $lister) {
     print "posts.value U\n";
     print "posts.extinfo Can't find any log files\n";
     print "members.value U\n";
@@ -104,7 +103,9 @@ if(!defined $pos) {
     $startsize = 0;
 } elsif($startsize < $pos) {
     # Log rotated
-    parseMailmanLog($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    if(defined $rotlogfile) {
+	parseMailmanLog($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    }
     $pos = 0;
 }
 
