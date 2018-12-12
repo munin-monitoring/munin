@@ -57,17 +57,12 @@ if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
 
     if (! -e $munin_update_location) {
         print "no (munin-update was not found at $munin_update_location)\n";
-        exit 0;
-   }
-
-   if (! -x $munin_update_location) {
+    } elsif (! -x $munin_update_location) {
         print "no ($munin_update_location was found, but is not executable)\n";
-        exit 0;
-   }
-   else {
+    } else {
         print "yes\n";
-        exit 0;
-   }
+    }
+    exit 0;
 }
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
