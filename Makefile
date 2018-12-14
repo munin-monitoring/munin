@@ -71,11 +71,12 @@ lint-munin:
 	perlcritic --profile .perlcriticrc lib/ script/
 
 lint-plugins:
-
 	@# SC1008: ignore our weird shebang (substituted later)
 	@# SC1090: ignore sourcing of files with variable in path
 	@# SC2009: do not complain about "ps ... | grep" calls (may be platform specific)
 	@# SC2126: tolerate "grep | wc -l" (simple and widespread) instead of "grep -c"
+	@# SC2230: tolerate "which" instead of "command -v".  The latter does not output a full
+	#          path. Thus executable tests ("-x") would fail.  This would need a bit of work.
 	# TODO: fix the remaining shellcheck issues for the missing platforms:
 	#       aix, darwin, netbsd, sunos
 	#       (these require tests with their specific shell implementations)
@@ -84,10 +85,10 @@ lint-plugins:
 			plugins/node.d.debug/ \
 			plugins/node.d.linux/ -type f -print0 \
 		| xargs -0 grep -l --null '^#!.*/bin/sh' \
-			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell dash
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126,SC2230 --shell dash
 	find plugins/ -type f -print0 \
 		| xargs -0 grep -l --null "^#!.*/bin/bash" \
-			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell bash
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126,SC2230 --shell bash
 	find plugins/ -type f -print0 \
 		| xargs -0 grep -l --null "^#!.*python" \
 			| xargs -0 $(PYTHON_LINT_CALL)
