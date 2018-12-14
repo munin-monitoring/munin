@@ -247,14 +247,6 @@ sub list_plugins {
         ? $self->{node_name}
         : $self->{host};
 
-    my $use_default_node = defined($self->{configref}{use_default_node})
-        ? $self->{configref}{use_default_node}
-        : $config->{use_default_node};
-
-    if (! $use_default_node && ! $host) {
-	die "[ERROR] Couldn't find out which host to list on $host.\n";
-    }
-
     my $host_list = ($use_node_name && $use_node_name eq "ignore") ? "" : $host;
     $self->_node_write_single("list $host_list\n");
     my $list = $self->_node_read_single();
