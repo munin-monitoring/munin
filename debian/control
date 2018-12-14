@@ -45,8 +45,6 @@ Recommends:
  munin-plugins-extra,
  procps,
 Suggests:
- libcrypt-ssleay-perl,
- libwww-perl,
  munin,
  munin-plugins-java,
 Replaces: munin-doc (<< 2.0.37-3)
