@@ -36,13 +36,14 @@ Vcs-Browser: https://salsa.debian.org/debian/munin
 Package: munin-node
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
- gawk,
  libnet-server-perl,
  lsb-base (>= 4.1),
  munin-common (>= ${binary:Version}),
  munin-plugins-core,
+Recommends:
+ gawk,
+ munin-plugins-extra,
  procps,
-Recommends: munin-plugins-extra
 Suggests:
  libcrypt-ssleay-perl,
  libwww-perl,
