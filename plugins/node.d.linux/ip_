@@ -162,7 +162,7 @@ if [[ "$1" == "config" ]]; then
     if [[ "$hostname" ]]; then
         title="$hostname"
     fi
-    echo "graph_title $title traffic"
+    echo "graph_title Interface $title traffic"
     echo 'graph_args --base 1000'
     # shellcheck disable=SC2016
     echo 'graph_vlabel bits per ${graph_period}'
