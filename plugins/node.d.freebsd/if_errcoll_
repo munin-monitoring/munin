@@ -42,7 +42,7 @@ fi
 
 if [ "$1" = "config" ]; then
 	echo "graph_order ierrors oerrors collisions"
-	echo "graph_title $INTERFACE Errors & Collisions"
+	echo "graph_title Interface $INTERFACE errors & collisions"
 	echo 'graph_args --base 1000'
 	echo 'graph_vlabel events / ${graph_period}'
 	echo 'graph_category network'
