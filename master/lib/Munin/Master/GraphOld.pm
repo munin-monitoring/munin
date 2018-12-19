@@ -1169,26 +1169,13 @@ sub process_service {
             elsif (my $tmpwarn = munin_get($negfield, "warning")) {
 
                 my ($warn_min, $warn_max) = split(':', $tmpwarn,2);
+                my $warn_colour = $single_value ? "ff0000" : $colour;
 
                 if (defined($warn_min) and $warn_min ne '') {
-                    unshift(
-                        @rrd,
-                        "HRULE:" 
-                            . $warn_min
-                            . "#" . (
-                            $single_value
-                            ? "ff0000"
-                            : $COLOUR[($field_count - 1) % @COLOUR]));
+                    unshift(@rrd, "HRULE:$warn_min#$warn_colour");
                 }
                 if (defined($warn_max) and $warn_max ne '') {
-                    unshift(
-                        @rrd,
-                        "HRULE:" 
-                            . $warn_max
-                            . "#" . (
-                            $single_value
-                            ? "ff0000"
-                            : $COLOUR[($field_count - 1) % @COLOUR]));
+                    unshift(@rrd, "HRULE:$warn_max#$warn_colour");
                 }
             }
 
