@@ -1,5 +1,46 @@
 -*- text -*-
 
+munin-2.0.44, 2018-12-19
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Kim B. Heino (2):
+      plugins/mailman: fix to return values if there is no rotated logfile
+      plugins/postfix_mailvolume: fix typo in queue ID expire
+
+Lars Kruse (18):
+      Fix spelling issues
+      Plugin ipmi_sensor_: fix python2/3 migration issue with "decode"
+      Revert "p/ipmi_sensor_: fix fan thresholds"
+      "lint" target: tolerate shellcheck's "SC2230"
+      Plugin ipmi_sensor_: use explicit raw string for regular expression
+      Plugin ipmi_sensor_: handle devices without assertions
+      Avoid reliance on network access in tests
+      Makefile: avoid duplicate processing of Makefile.config
+      Makefile: handle test for user existence for multiple platforms
+      Remove obsolete Makefile.config-maint
+      Fix dependencies for configurable Makefile location
+      Remove "get_fq_hostname" test
+      Plugin memory (linux): use fixed colors for all fields
+      Plugin mysql_: remove non-working (AREA|LINE)STACK backwards compatibility
+      Plugin apt_all: automatically determine 'releases'
+      Plugin postfix_mailstats: fixed various variable handling issues
+      Respect custom color for warning thresholds
+      Plugin smart_: ignore invalid threshold data
+
+Stefan Huehner (2):
+      Split query as preparation for specific change applicable
+      Fix issue with PostgreSQL 10. Only count lines related to client
+
+
 munin-2.0.43, 2018-11-16
 
 -------
