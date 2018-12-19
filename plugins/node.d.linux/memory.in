@@ -102,48 +102,61 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "apps.label apps\n";
     print "apps.draw AREA\n";
     print "apps.info Memory used by user-space applications.\n";
+    print "apps.colour COLOUR0\n";
     print "buffers.label buffers\n";
     print "buffers.draw STACK\n";
     print "buffers.info Block device (e.g. harddisk) cache. ",
       "Also where \"dirty\" blocks are stored until written.\n";
+    print "buffers.colour COLOUR5\n";
     print "swap.label swap\n";
     print "swap.draw STACK\n";
     print "swap.info Swap space used.\n";
+    # Fixed color for swap: red. Otherwise the above conditional fields could
+    # lead to color shifts due to changes of the kernel or other environment
+    # situations.
+    print "swap.colour COLOUR7\n";
     print "cached.label cache\n";
     print "cached.draw STACK\n";
     print "cached.info Parked file data (file content) cache.\n";
+    print "cached.colour COLOUR4\n";
     print "free.label unused\n";
     print "free.draw STACK\n";
     print "free.info Wasted memory. Memory that is not ",
       "used for anything at all.\n";
+    print "free.colour COLOUR6\n";
     if (exists $mems{'Shmem'}) {
 	print "shmem.label shmem\n";
 	print "shmem.draw STACK\n";
 	print "shmem.info Shared Memory (SYSV SHM segments, tmpfs).\n";
+	print "shmem.colour COLOUR9\n";
     }
     if (exists $mems{'Slab'}) {
 	print "slab.label slab_cache\n";
 	print "slab.draw STACK\n";
 	print "slab.info Memory used by the kernel (major users ",
 	  " are caches like inode, dentry, etc).\n";
+	print "slab.colour COLOUR3\n";
     }
     if (exists $mems{'SwapCached'}) {
 	print "swap_cache.label swap_cache\n";
 	print "swap_cache.draw STACK\n";
 	print "swap_cache.info A piece of memory that keeps track of pages ",
 	  "that have been fetched from swap but not yet been modified.\n";
+	print "swap_cache.colour COLOUR2\n";
     }
     if (exists $mems{'PageTables'}) {
 	print "page_tables.label page_tables\n";
 	print "page_tables.draw STACK\n";
 	print "page_tables.info Memory used to map between virtual and ",
-	  "physical memory addresses.\n"
+	  "physical memory addresses.\n";
+	print "page_tables.colour COLOUR1\n";
     }
     if (exists $mems{'VmallocUsed'}) {
 	print "vmalloc_used.label vmalloc_used\n";
 	# print "vmalloc_used.draw STACK\n";
 	print "vmalloc_used.draw LINE2\n";
-	print "vmalloc_used.info 'VMalloc' (kernel) memory used\n"
+	print "vmalloc_used.info 'VMalloc' (kernel) memory used\n";
+	print "vmalloc_used.colour COLOUR8\n";
     }
     if (exists $mems{'Committed_AS'}) {
 	print "committed.label committed\n";
@@ -156,51 +169,61 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	# print "committed.warning ", $mems{'SwapTotal'} + $mems{'MemTotal'}, "\n";
 	print "committed.info The amount of memory allocated to programs. ",
 	  "Overcommitting is normal, but may indicate memory leaks.\n";
+	print "committed.colour COLOUR10\n";
     }
     if (exists $mems{'Mapped'}) {
 	print "mapped.label mapped\n";
 	print "mapped.draw LINE2\n";
 	print "mapped.info All mmap()ed pages.\n";
+	print "mapped.colour COLOUR11\n";
     }
     if (exists $mems{'Active'}) {
 	print "active.label active\n";
 	print "active.draw LINE2\n";
 	print "active.info Memory recently used. Not reclaimed unless ",
 	  "absolutely necessary.\n";
+	print "active.colour COLOUR12\n";
     }
     if (exists $mems{'ActiveAnon'}) {
 	print "active_anon.label active_anon\n";
 	print "active_anon.draw LINE1\n";
+	print "active_anon.colour COLOUR13\n";
     }
     if (exists $mems{'ActiveCache'}) {
 	print "active_cache.label active_cache\n";
 	print "active_cache.draw LINE1\n";
+	print "active_cache.colour COLOUR14\n";
     }
     if (exists $mems{'Inactive'}) {
 	print "inactive.label inactive\n";
 	print "inactive.draw LINE2\n";
 	print "inactive.info Memory not currently used.\n";
+	print "inactive.colour COLOUR15\n";
     }
     if (exists $mems{'Inact_dirty'}) {
 	print "inact_dirty.label inactive_dirty\n";
 	print "inact_dirty.draw LINE1\n";
 	print "inact_dirty.info Memory not currently used, but in need of ",
 	  "being written to disk.\n";
+	print "inact_dirty.colour COLOUR16\n";
     }
     if (exists $mems{'Inact_laundry'}) {
 	print "inact_laundry.label inactive_laundry\n";
 	print "inact_laundry.draw LINE1\n";
+	print "inact_laundry.colour COLOUR17\n";
     }
     if (exists $mems{'Inact_clean'}) {
 	print "inact_clean.label inactive_clean\n";
 	print "inact_clean.draw LINE1\n";
 	print "inact_clean.info Memory not currently used.\n";
+	print "inact_clean.colour COLOUR18\n";
     }
     if (exists $mems{'KSM'}) {
     print "ksm_sharing.label KSM sharing\n";
     print "ksm_sharing.draw LINE2\n";
     print "ksm_sharing.colour FFBFFF\n";
     print "ksm_sharing.info Memory saved by KSM sharing\n";
+    print "ksm_sharing.colour COLOUR19\n";
     }
     for my $field (qw(apps buffers swap cached free slab swap_cache page_tables vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean shmem)) {
     	my ($warning, $critical) = get_thresholds($field);
