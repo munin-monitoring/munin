@@ -1,3 +1,17 @@
+munin (2.0.44-1) unstable; urgency=medium
+
+  * New upstream bugfix release.
+
+  [ Lars Kruse ]
+  * Move plugin-related "Suggests" from "munin-node" to plugin packages.
+    Closes: #755257
+  * munin-node:
+    - move "gawk" and "procps" from Depends to Recommends.
+    - move "libnet-snmp-perl" from "Recommends" to "Suggests".
+    - remove suggests "libcrypt-ssleay-perl" and "libwww-perl".
+
+ -- Holger Levsen <holger@debian.org>  Fri, 21 Dec 2018 15:59:09 +0100
+
 munin (2.0.43-3) unstable; urgency=medium
 
   [ Lars Kruse ]
