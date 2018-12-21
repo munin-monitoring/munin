@@ -51,10 +51,14 @@ file and log tailing.
 
 =cut
 
+use strict;
+
+use Munin::Plugin;
+
 my $statefile = $ENV{'MUNIN_PLUGSTATE'} . "/munin-plugin-postfix_mailstats.state";
 my $pos;
 my $delivered = 0;
-my $rejects = {};
+my %rejects = ();
 my $LOGDIR  = $ENV{'logdir'}  || '/var/log';
 my $LOGFILE = $ENV{'logfile'} || 'mail.log';
 
@@ -101,7 +105,7 @@ if ( -f $statefile)
     {
         if (/^([0-9a-z.\-]+):(\d+)$/)
         {
-            $rejects->{$1} = $2;
+            $rejects{$1} = $2;
         }
     }
     close IN;
@@ -119,7 +123,7 @@ if (! -f $logfile)
 }
 
 
-$startsize = (stat $logfile)[7];
+my $startsize = (stat $logfile)[7];
 
 if (!defined $pos)
 {
@@ -158,7 +162,7 @@ print "delivered.value $delivered\n";
 foreach my $reason (sort keys %rejects)
 {
     my $fieldname = clean_fieldname("r$reason");
-    print "$fieldname.value ", $rejects->{$reason}, "\n";
+    print "$fieldname.value ", $rejects{$reason}, "\n";
 }
 
 if(-l $statefile) {
@@ -166,9 +170,9 @@ if(-l $statefile) {
 }
 open (OUT, '>', $statefile) or die "Unable to open statefile: $!\n";
 print OUT "$pos:$delivered\n";
-foreach my $i (sort keys %{$rejects})
+foreach my $i (sort keys %rejects)
 {
-    print OUT "$i:", $rejects->{$i}, "\n";
+    print OUT "$i:", $rejects{$i}, "\n";
 }
 close OUT;
 
@@ -194,7 +198,7 @@ sub parseLogfile
                $line =~ /postfix\/cleanup.* reject: (\S+)/ ||
                $line =~ /postfix\/cleanup.* milter-reject: \S+ \S+ \S+ (\S+)/)
         {
-            $rejects->{$1}++;
+            $rejects{$1}++;
         }
     }
     close(LOGFILE) or warn "Error closing $fname: $!\n";

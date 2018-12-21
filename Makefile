@@ -4,13 +4,15 @@
 #
 # $Id$
 
-# Defaults/paths. Allows $(CONFIG) to be overrided by
+# Defaults/paths. Allows $(CONFIG) to be overridden by
 # make command line
 DEFAULTS = Makefile.config
 CONFIG = Makefile.config
 
 include $(DEFAULTS)
-include $(CONFIG)
+ifneq ($(DEFAULTS),$(CONFIG))
+    include $(CONFIG)
+endif
 
 ifeq ($(JCVALID),yes)
 JAVA_BUILD=build-plugins-java
@@ -39,6 +41,7 @@ CONFVAR_SUBSTITUTION_FILES = \
 	node/blib/sbin/munin-run \
 	node/blib/sbin/munin-sched \
 	build/doc/munin-node.conf.5
+MAKEFILES        := Makefile $(DEFAULTS) $(CONFIG)
 
 # TODO: remove this fallback code for "make v3.x" (up to Debian Wheezy / Ubuntu Trusty) as soon as
 #       the CI supports a more modern distribution
@@ -91,7 +94,7 @@ tags:
 
 install: install-master-prime install-common-prime install-node-prime install-plugins-prime $(JAVA_INSTALL) install-man install-async-prime
 
-install-pre: Makefile Makefile.config
+install-pre: $(MAKEFILES)
 	@$(CHECKUSER)
 	mkdir -p $(LOGDIR)
 	mkdir -p $(STATEDIR)
@@ -153,7 +156,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 
 install-node-plugins: install-plugins-prime
 
-install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
+install-plugins-prime: install-plugins build $(PLUGINS) $(MAKEFILES)
 	@$(CHECKGROUP)
 
 	mkdir -p $(CONFDIR)/plugins
@@ -209,7 +212,7 @@ install-node-pre: build/node/munin-node.conf install-pre
 install-common-prime: build-common install-common
 
 
-install-man: build-man Makefile Makefile.config
+install-man: build-man $(MAKEFILES)
 	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
 	$(INSTALL) -m 0644 build/doc/munin-node.conf.5 $(MANDIR)/man5/
 	$(INSTALL) -m 0644 build/doc/munin.conf.5 $(MANDIR)/man5/
@@ -368,13 +371,13 @@ substitute-build-defaults-inline:
 		common/lib/Munin/Common/Defaults.pm >common/blib/lib/Munin/Common/Defaults.pm
 
 
-build-doc: build-doc-stamp Makefile Makefile.config
+build-doc: build-doc-stamp $(MAKEFILES)
 
 build-doc-stamp:
 	touch build-doc-stamp
 	mkdir -p build/doc
 
-build-man: build-man-stamp Makefile Makefile.config
+build-man: build-man-stamp $(MAKEFILES)
 
 build-man-stamp: $(INFILES)
 	mkdir -p build/doc
@@ -542,6 +545,7 @@ lint:
 	@# SC1090: ignore sourcing of files with variable in path
 	@# SC2009: do not complain about "ps ... | grep" calls (may be platform specific)
 	@# SC2126: tolerate "grep | wc -l" (simple and widespread) instead of "grep -c"
+	@# SC2230: do not complain about "which" (instead of "command -v")
 	# TODO: fix the remaining shellcheck issues for the missing platforms:
 	#       aix, darwin, netbsd, sunos
 	#       (these require tests with their specific shell implementations)
@@ -550,10 +554,10 @@ lint:
 			plugins/node.d.debug/ \
 			plugins/node.d.linux/ -type f -print0 \
 		| xargs -0 grep -l --null "@@GOODSH@@" \
-			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell dash
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126,SC2230 --shell dash
 	find plugins/ -type f -print0 \
 		| xargs -0 grep -l --null "@@BASH@@" \
-			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell bash
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126,SC2230 --shell bash
 	find plugins/ -type f -print0 \
 		| xargs -0 grep -l --null "@@PYTHON@@" \
 			| xargs -0 $(PYTHON_LINT_CALL)

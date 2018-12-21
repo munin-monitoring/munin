@@ -110,7 +110,7 @@ def parse_data(data):
             continue
         if line.startswith("Sensor ID"):
             label, data = line.split(":", 1)
-            idm = re.match("(.*) \((0x.*)\)", data)
+            idm = re.match(r"(.*) \((0x.*)\)", data)
             if not idm:
                 continue
             id = idm.group(1).strip()
@@ -221,7 +221,6 @@ UNITS_TO_SENSORS = {
 
 if access(CONFIG, R_OK):
     for line in open(CONFIG):
-        line = line.decode()
         if line.strip().startswith('#'):
             continue
         data = line.split('=', 1)
@@ -254,7 +253,13 @@ def config_unit(unit):
         nname = normalize_sensor(lbl)
 
         print("%s.label %s" % (nname, lbl))
-        assertions = values['assertions enabled'].split()
+        # detect warning and critical ranges
+        try:
+            assertions = values['assertions enabled'].split()
+        except KeyError:
+            # Some devices do not provide assertions (e.g. power supplies).  Thus there is no way
+            # to guess their warning/critical ranges.  We can skip these.
+            continue
         warn_l = warn_u = crit_l = crit_u = ""
         if 'lcr-' in assertions:
             crit_l = values['lower critical'].replace("na", "")
@@ -264,15 +269,8 @@ def config_unit(unit):
             crit_u = values['upper critical'].replace("na", "")
         if 'unc+' in assertions:
             warn_u = values['upper non-critical'].replace("na", "")
-
-        # TODO add 'fans'
-        if 'rpm' == unit:
-            warn = "%s:%s" % (warn_u, warn_l)
-            crit = "%s:%s" % (crit_u, crit_l)
-        else:
-            warn = "%s:%s" % (warn_l, warn_u)
-            crit = "%s:%s" % (crit_l, crit_u)
-
+        warn = "%s:%s" % (warn_l, warn_u)
+        crit = "%s:%s" % (crit_l, crit_u)
         if warn != ":":
             print("%s.warning %s" % (nname, warn))
         if crit != ":":
