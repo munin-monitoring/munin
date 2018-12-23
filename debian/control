@@ -40,6 +40,7 @@ Depends: ${misc:Depends}, ${perl:Depends},
  lsb-base (>= 4.1),
  munin-common (>= ${binary:Version}),
  munin-plugins-core,
+ netbase,
 Recommends:
  gawk,
  munin-plugins-extra,
