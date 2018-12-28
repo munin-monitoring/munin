@@ -1,3 +1,9 @@
+munin (2.0.44-1~bpo9+1) stretch-backports; urgency=medium
+
+  * Rebuild for stretch-backports.
+
+ -- Holger Levsen <holger@debian.org>  Fri, 28 Dec 2018 19:28:51 +0100
+
 munin (2.0.44-1) unstable; urgency=medium
 
   * New upstream bugfix release.
