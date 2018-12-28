@@ -1,6 +1,6 @@
 munin (2.0.44-2) UNRELEASED; urgency=medium
 
-  * 
+  * Bump Standards-Version to 4.3.0, no changes needed.
 
  -- Holger Levsen <holger@debian.org>  Fri, 28 Dec 2018 19:36:56 +0100
 
