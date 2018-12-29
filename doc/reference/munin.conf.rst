@@ -336,7 +336,13 @@ only to that node.
 
 .. option:: use_node_name <yes|no>
 
-   Overrides the name supplied by the node. Allowed values: "yes" and "no". Defaults to "no".
+   If "yes", when querying the node, the master will trust the name the node reports for itself, and ask for plugins associated with that name. This means that it will fetch metrics from plugins running on the node itself, which is usually what you want.
+
+   If "no", the master will ignore the name reported by the node when it connects, and ask for plugins associated with the name configured in munin.conf. This is generally what you want when the node is collecting metrics on behalf of other systems, e.g. via SNMP plugins.
+
+   When you have one node that collects metrics from several systems (e.g. querying multiple routers via SNMP), it's common to have multiple entries for it in munin.conf with the same ``address``, different node names, and ``use_node_name no``.
+
+   See also :ref:`Using SNMP Plugins <tutorial-snmp>`.
 
 .. option:: notify_alias <node name>
 
