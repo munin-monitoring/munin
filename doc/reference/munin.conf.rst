@@ -227,6 +227,10 @@ otherwise.
    Munin sends 1 email for each warning/critical. Useful when relaying messages to external processes
    that may handle a limited number of simultaneous warnings.
 
+.. option:: contact.your_contact_name.always_send <critical|warning|ok|unknown...>
+
+   If there are alerts of the given severities, send them to this contact every time :ref:`munin-limits` runs, even if they haven't changed since last time.
+
 .. option:: ssh_command <command>
 
    The name of the secure shell command to use.  Can be fully
