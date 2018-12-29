@@ -29,6 +29,7 @@ Group and host sections are defined by declaring the group or host name in brack
         It will not work if you place them in later sections of the config file.
         We recommend to use the delivered munin.conf file and adapt it to your needs.
 
+Comments can be included by prefacing them with ``#``. A literal ``#`` in a configuration value can be escaped with a backslash: ``\#``. Long lines can be wrapped by ending them with ``\``. Note that ``\`` has no special meaning otherwise, nor do any other characters; in particular, quotes have no special meaning, so a line like ``contact.irc.command irc-notify "#munin-alerts"`` will be parsed as ``contact.irc.command irc-notify "`` unless the ``#`` is escaped.
 
 .. _master-conf-global-directives:
 
