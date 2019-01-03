@@ -1,3 +1,9 @@
+munin (2.999.10-2) UNRELEASED; urgency=medium
+
+  * Bump Standards-Version to 4.3.0, no changes needed.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 03 Jan 2019 14:12:07 +0100
+
 munin (2.999.10-1) experimental; urgency=medium
 
   [ Lars Kruse ]
