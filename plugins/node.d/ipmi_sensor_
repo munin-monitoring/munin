@@ -73,6 +73,7 @@ CACHEFILE = "plugin-ipmi_sensor.cache"
 CACHEAGE = 120
 CONFIG = '/etc/munin/ipmi'
 
+
 def normalize_sensor(name):
     name = name.lower().replace("-", "M").replace("+", "P")
     name = re.sub("[^a-z0-9A-Z]", "_", name)

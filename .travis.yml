@@ -76,11 +76,9 @@ install:
   - perl Build.PL
   - ./Build build
   # We want to lint first, to avoid expensive tests if code isn't clean
-  - make lint-munin
-  # Plugins are currently not compliant
-  - make lint-plugins || true
-  # check for potential spelling mistakes
-  - make lint-spelling
+  # The "PYTHON_LINT_CALL" environment variable works around an old version of python3-flake8 that
+  # is available in the travis environment.
+  - PYTHON_LINT_CALL="python3 -m flake8.main" make lint
 script:
   - cover -test -report coveralls
 
