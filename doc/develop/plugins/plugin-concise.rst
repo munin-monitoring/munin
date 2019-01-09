@@ -207,7 +207,7 @@ To run a plugin with an additional group:
   [example]
    group somegroup
 
- 
+
 Environment variables
 ---------------------
 

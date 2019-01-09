@@ -30,7 +30,7 @@ Remember to supply config for these data series in the usual way.
 
 =item 95 is the percentile to compute
 
-=back  
+=back
 
 The returned value is stuffed in in95th(day|week|month|year).value and
 the value is graphed as usual.
@@ -61,7 +61,7 @@ sub percentile($;$$) {
     # duration should be 1day, 1week, 1month or 1year.
     $duration ||= "1week";
     $n_th ||= 95; # can't have 0th percentile
-    my ($start,$step,$names,$data) = 
+    my ($start,$step,$names,$data) =
 	RRDs::fetch($rrdfile,"MAX","-s","-$duration");
     my @sums = ();
     my $timestamp = $start;
@@ -75,7 +75,7 @@ sub percentile($;$$) {
 	push(@sums,$sum);
     }
     my $which = int(scalar(@sums)*($n_th)/100);
-    @sums = sort{$a<=>$b}(@sums); 
+    @sums = sort{$a<=>$b}(@sums);
     return $sums[$which];
 }
 

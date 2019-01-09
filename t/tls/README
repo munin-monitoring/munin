@@ -5,7 +5,7 @@ http://www.debian-administration.org/articles/284
 * Configuration
 
 See openssl.cnf
-             
+
 
 * Establish a CA (Self signe root certificate)
 
@@ -13,11 +13,11 @@ See openssl.cnf
 
   mkdir CA
   cd CA
-  mkdir newcerts private 
+  mkdir newcerts private
   echo '01' > serial
   touch index.txt
 
-** Create key and certificate. 
+** Create key and certificate.
 
 Don't need to encrypt the key since this is just for testing.
 

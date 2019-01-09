@@ -48,7 +48,7 @@ The ``nagios.cmd`` is a named pipe on which Nagios accepts external input.
 Configuring NSCA, server side
 -----------------------------
 
-NSCA is run through some kind of (x)inetd. 
+NSCA is run through some kind of (x)inetd.
 
 Using inetd
 ++++++++++++

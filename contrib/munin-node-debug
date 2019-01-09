@@ -1,8 +1,8 @@
 #! /usr/bin/perl
-# Munin node that presents as many virtual hosts, plugins & fields 
-# as needed to be able to : 
+# Munin node that presents as many virtual hosts, plugins & fields
+# as needed to be able to:
 # - emulate a HUGE network to stress the munin-master server
-# - serve as a basis for protocol debugging 
+# - serve as a basis for protocol debugging
 #
 # Copyright (C) 2010 Steve Schnepp
 #
@@ -45,7 +45,7 @@ my $arg_ret = GetOptions(
 	"startint-port|p=i" => \$starting_port,
 
 	"listen=s" => \$listen,
-	
+
 	"update-rate=i" => \$update_rate,
 	"spoolfetch" => \$spoolfetch,
 	"spoolfetch-rate=i" => \$spoolfetch_rate,
@@ -68,19 +68,19 @@ Options:
     -v --nb-servers-port <int> Number of virtual servers per port [1]
     -p --start-port <int>      Starting TCP listening port [24949]
 
-    -n --nb-plugins <int>     Number of plugins per server [30] 
+    -n --nb-plugins <int>     Number of plugins per server [30]
     -f --nb-fields  <int>     Number of fields per plugins [5]
     --update-rate <int>       Update rate of plugins (in seconds) [10]
 
-       --listen    <host>     Which IP to bind [localhost]. 
+       --listen    <host>     Which IP to bind [localhost].
                               Use '' or '*' to bind to every interface.
 
     --spoolfetch              Be spoolfetch capable
     --starting-epoch          Starting epoch: no data will available before.
-                               Can be relative to now if negative [-3600] 
+                               Can be relative to now if negative [-3600]
 
     -d --dump                 Only dump a generated munin.conf part [no]
-       --debug                Print debug information [no] 
+       --debug                Print debug information [no]
 
 };
 	exit 0;
@@ -104,7 +104,7 @@ if ($dump_config) {
 			print "\n";
 		}
 	}
-	
+
 	# Only dump config
 	exit;
 }
@@ -217,7 +217,7 @@ sub service
 
 			# Sends spools strictly > LastSpooled
 			for (my $epoch = ($timestamp - $timestamp % $update_rate + $update_rate);
-				$epoch < time; $epoch += $update_rate) { 
+				$epoch < time; $epoch += $update_rate) {
 			for (my $plugin_number = 0; $plugin_number < $nb_plugins; $plugin_number ++) {
 				my $plugin_name = get_service($plugin_number);
 				print $client "multigraph $plugin_name\n";
@@ -253,16 +253,16 @@ sub service
 	}
 }
 
-sub get_plugin_number 
+sub get_plugin_number
 {
 	my $plugin_name = shift;
 	my $plugin_number = $services{$plugin_name};
 	return $plugin_number || 0;
 }
 
-sub debug 
+sub debug
 {
-	print join(" ", @_) . "\n" if $is_debug; 
+	print join(" ", @_) . "\n" if $is_debug;
 }
 
 sub _get_from_array
