@@ -283,7 +283,8 @@ TODO: {
         )
     ), 'Callback takes longer than the interval');
 }
-{
+TODO: {
+    local $TODO = "select/ualarm interaction needs investigation";
     my $ii = 10;
     my @times;
 
