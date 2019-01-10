@@ -93,10 +93,10 @@ sub prepare_plugin_environment
 
     # Some locales use "," as decimal separator. This can mess up a lot
     # of plugins.
-    $ENV{LC_ALL} = 'C';
+    $ENV{LC_ALL} = 'C.UTF-8';
 
     # LC_ALL should be enough, but some plugins don't follow specs (#1014)
-    $ENV{LANG} = 'C';
+    $ENV{LANG} = 'C.UTF-8';
 
     # PATH should be *very* sane by default. Can be overrided via 
     # config file if needed (Closes #863 and #1128).
