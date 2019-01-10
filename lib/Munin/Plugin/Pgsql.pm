@@ -521,7 +521,8 @@ sub get_version {
     my $v = $r->[0]->[0];
     die "Unable to detect PostgreSQL version\n"
         unless ($v =~ /^(\d+)\.(\d+).*\b/);
-    $self->{detected_version} = "$1.$2";
+    # from PostgreSQL 10 on only the major version is needed
+    $self->{detected_version} = $1 >= 10 ? "$1" : "$1.$2";
 }
 
 sub get_versioned_query {
