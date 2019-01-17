@@ -242,11 +242,12 @@ sub _db_url {
 		$path = "$p_path/$path" if $p_path;
 	}
 
-	my $sth_d_url = $dbh->prepare_cached("DELETE FROM url WHERE type = ? AND id = ?");
-	$sth_d_url->execute($type, $id);
-
-	my $sth_url = $dbh->prepare_cached('INSERT INTO url (type, id, path) VALUES (?, ?, ?)');
-	$sth_url->execute($type, $id, $path);
+	my $sth_u_url = $dbh->prepare_cached("UPDATE url SET path = ? WHERE type = ? AND id = ?");
+	my $nb_rows_affected = $sth_u_url->execute($path, $type, $id);
+	unless ($nb_rows_affected > 0) {
+		my $sth_url = $dbh->prepare_cached('INSERT INTO url (type, id, path) VALUES (?, ?, ?)');
+		$sth_url->execute($type, $id, $path);
+	}
 }
 
 sub _db_mkgrp {
