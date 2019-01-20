@@ -300,6 +300,7 @@ sub _db_params_update {
 		$old_params{$_name} = $_value;
 	}
 
+	$dbh->begin_work();
 	$dbh->do('DELETE FROM param');
 
 	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
@@ -310,6 +311,7 @@ sub _db_params_update {
 		$sth_param->execute($key, $params->{$key});
 	}
 
+	$dbh->commit();
 	return \%old_params;
 }
 
