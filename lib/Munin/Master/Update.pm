@@ -246,6 +246,8 @@ sub _db_init {
 	$db_serial_type = "SERIAL" if $db_driver eq "Pg";
 
 	# Create DB
+	$dbh->begin_work();
+	$dbh->do("SET LOCAL client_min_messages = error");
 	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id $db_serial_type PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS r_g_grp ON grp (p_id, name)");
@@ -284,6 +286,7 @@ sub _db_init {
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
 		$dbh->do("INSERT INTO grp (id) VALUES (0);");
 	}
+	$dbh->commit();
 }
 
 sub _db_params_update {
