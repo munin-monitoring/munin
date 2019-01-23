@@ -109,6 +109,9 @@ sub _do_connect {
 	    # Open a triple pipe
    	    use IPC::Open3;
 
+	    # PATH has to be clean
+	    local $ENV{PATH} = '/usr/sbin:/usr/bin:/sbin:/bin';
+
 	    $self->{reader} = new IO::Handle();
 	    $self->{writer} = new IO::Handle();
 	    $self->{stderr} = new IO::Handle();
@@ -123,6 +126,9 @@ sub _do_connect {
 
 	    # Open a triple pipe
    	    use IPC::Open3;
+
+	    # PATH has to be clean
+	    local $ENV{PATH} = '/usr/sbin:/usr/bin:/sbin:/bin';
 
 	    $self->{reader} = new IO::Handle();
 	    $self->{writer} = new IO::Handle();
