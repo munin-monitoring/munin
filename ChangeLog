@@ -1,3 +1,54 @@
+munin-2.999.11, 2019-01-23
+
+-------
+Summary
+-------
+
+That release is the 11th beta of the 3.0 series. It is versioned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that.
+Packagers can use that versioning or 3.0b11
+
+It contains several fixes for data loss bugs.
+
+------------------
+Detailed Changelog
+------------------
+
+Kim B. Heino (2):
+      plugins/if, ip: include "Interface" to graph_title for better grouping
+      plugins.linux/vlan: unify more graph_titles for network interface plugins
+
+Lars Kruse (20):
+      Makefile.javaplugin: specify missing INSTALL variable
+      M:Master:LimitsOld: fix perldoc header
+      Plugin munin_stats: simplify flow of autoconf responses
+      Plugin munin_stats: carefully load the dependency
+      Plugin df_abs (Linux): set documented default for "dfopts" to "-P -l"
+      Plugin df_abs (Linux): respect 'exclude_re' in 'config'
+      Plugin df_abs (Linux): unify whitespace
+      Plugin gp_gbl_mem_util (HP-UX): remove unused MUNIN_RUN variable
+      Plugins for HP-UX: fix or override shellcheck warnings
+      Plugin ipmi_sensor: fix flake8 warning
+      travis: respect result of "make lint-plugins" during tests
+      Add missing test for multigraph capabilities to plugins
+      Makefile target "lint-plugins": add test for multigraph check
+      travis: use a "flake8" call suitable for the old version used by travis
+      lint-plugins: shellcheck should tolerate "which"
+      Node: "list" handles empty node name even with mixed-case own node_name
+      Unify more graph_titles for network interface plugins
+      Remove trailing whitespace
+      Add new dependency "lint-whitespace" to "lint" target
+      munin-node: announce UTF-8 to locale-aware plugin interpreters
+
+Steve Schnepp (6):
+      update: fix the duplicate key error on "url" table
+      update: fix the duplicate key error on "url" table
+      node: avoid using tainted $PATH
+      update: create the tables transactionnaly
+      update: params are updated transactionally
+      update: only emit PG specific code if db is PG
+
+
 munin-2.999.10, 2018-12-08
 
 -------
