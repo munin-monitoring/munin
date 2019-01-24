@@ -84,7 +84,7 @@ __END__
 =head1 NAME
 
 Munin::Master::Host - Holds information on hosts we are interested in
-collecting data from. 
+collecting data from.
 
 =head1 DESCRIPTION
 

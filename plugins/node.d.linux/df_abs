@@ -55,72 +55,78 @@ EOF
 . "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 if [ "$1" = "autoconf" ]; then
-        echo yes
-        exit 0
+    echo yes
+    exit 0
 fi
 
 # Append $mnt in case $dev is not a real block device
 get_fieldname() {
-        local dev="$1"
-        local mnt="$2"
-        case "$dev" in
-                /* )
-                        clean_fieldname "$dev"
-                        ;;
-                * )
-                        clean_fieldname "$dev $mnt"
-                        ;;
-        esac
+    local dev="$1"
+    local mnt="$2"
+    case "$dev" in
+        /* )
+            clean_fieldname "$dev"
+            ;;
+        * )
+            clean_fieldname "$dev $mnt"
+            ;;
+    esac
+}
+
+# Test whether the given text (first parameter) matches one of the given regular expressions
+# (second parameter; space separated list). Returns success (0) in case of a match.
+check_for_regex_match() {
+    local text="$1"
+    local list_of_regex="$2"
+    local re
+    for re in $list_of_regex; do
+        if [[ "$text" =~ $re ]]; then
+            return 0
+        fi
+    done
+    # no expression matched the text
+    return 1
 }
 
 total=${total:-on}
 
+dfopts=${dfopts:-"-P -l"}
+exclude_re=${exclude_re:-}
 exclude=${exclude:-iso9660}
 exclude=$(echo "$exclude" | sed -r -e 's/ +/ -x /g' -e 's/^/-x /')
 
 if [ "$1" = "config" ]; then
-
-        echo 'graph_title Filesystem usage (in bytes)'
-        echo 'graph_args --base 1024 --lower-limit 0'
-        echo 'graph_vlabel bytes'
-        echo 'graph_category disk'
-        if [ "$total" = "on" ]; then
-                echo 'graph_total Total'
+    echo 'graph_title Filesystem usage (in bytes)'
+    echo 'graph_args --base 1024 --lower-limit 0'
+    echo 'graph_vlabel bytes'
+    echo 'graph_category disk'
+    if [ "$total" = "on" ]; then
+        echo 'graph_total Total'
+    fi
+    # shellcheck disable=SC2086
+    df $dfopts $exclude | sed 1d | grep -v "//" |
+            while read -r dev size used avail cap mnt; do
+        check_for_regex_match "$dev" "$exclude_re" && continue
+        check_for_regex_match "$mnt" "$exclude_re" && continue
+        name="$(get_fieldname "$dev" "$mnt")"
+        echo "$name.label $mnt"
+        echo "$name.cdef $name,1024,*"
+        warn=$(get_warning "$name")
+        crit=$(get_critical "$name")
+        if [ -n "$warn" ]; then
+            echo "$name.warning $((size * warn / 100))"
         fi
-        # shellcheck disable=SC2086
-        df $dfopts $exclude | sed 1d | grep -v "//" |
-        while read -r dev size used avail cap mnt; do
-                name="$(get_fieldname "$dev" "$mnt")"
-                echo "$name.label $mnt"
-                echo "$name.cdef $name,1024,*"
-                warn=$(get_warning "$name")
-                crit=$(get_critical "$name")
-                if [ -n "$warn" ]; then
-                        echo "$name.warning $((size * warn / 100))"
-                fi
-                if [ -n "$crit" ]; then
-                        echo "$name.critical $((size * crit / 100))"
-                fi
-        done
-        exit 0
-		for re in $exclude_re
-		do
-			if [[ "$dev" =~ $re ]] || [[ "$mnt" =~ $re ]]
-			then
-				continue 2
-			fi
-		done
+        if [ -n "$crit" ]; then
+            echo "$name.critical $((size * crit / 100))"
+        fi
+    done
+    exit 0
 fi
 
 # shellcheck disable=SC2034,SC2086
 df $dfopts $exclude | sed 1d | grep -v "//" |
-	while read -r dev size used avail cap mnt; do
-		for re in $exclude_re
-		do
-			if [[ "$dev" =~ $re ]] || [[ "$mnt" =~ $re ]]
-			then
-				continue 2
-			fi
-		done
-		echo "$(get_fieldname "$dev" "$mnt").value $used"
+        while read -r dev size used avail cap mnt; do
+    check_for_regex_match "$dev" "$exclude_re" && continue
+    check_for_regex_match "$mnt" "$exclude_re" && continue
+    echo "$(get_fieldname "$dev" "$mnt").value $used"
 done

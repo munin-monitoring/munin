@@ -21,6 +21,9 @@ JAVA_CLASSES     := $(patsubst %.java,%.class,$(JAVA_FILES))
 JC     := javac
 JFLAGS  = -g -sourcepath $(JAVA_SRCDIR) -d $(JAVA_DSTDIR)
 
+INSTALL ?= install
+
+
 .PHONY: build-plugins-java
 
 build-plugins-java: $(JAVA_DSTDIR)/munin-jmx-plugins.jar

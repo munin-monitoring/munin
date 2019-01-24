@@ -17,12 +17,12 @@
 #%# capabilities=autoconf suggest
 
 PATH=/usr/bin:/usr/sbin
-INTERFACE=$(basename $0 | sed 's/^if_err_//g')
+INTERFACE=$(basename "$0" | sed 's/^if_err_//g')
 LANADMIN=/usr/sbin/lanadmin
 LANSCAN=/usr/sbin/lanscan
 
 if [[ $1 = autoconf ]]; then
-    if ! uname -s|grep -qEi hp-?ux; then
+    if ! uname -s|grep -qEi "hp-?ux"; then
 	echo "no (OS doesn't seem to be HP-UX but reports as '$(uname -s)')"
 	exit 0
     fi
@@ -54,8 +54,9 @@ fi
 
 if [[ $1 = config ]]; then
     echo "graph_order inbound outbound"
-    echo "graph_title $INTERFACE errors"
+    echo "graph_title Interface $INTERFACE errors"
     echo 'graph_args --base 1000'
+    # shellcheck disable=SC2016
     echo 'graph_vlabel packets per ${graph_period} in (-) / out (+)'
     echo 'graph_category network'
     echo 'inbound.label packets'
@@ -69,5 +70,5 @@ if [[ $1 = config ]]; then
     exit 0
 fi
 
-$LANADMIN -g mibstats ${INTERFACE#lan} \
+$LANADMIN -g mibstats "${INTERFACE#lan}" \
     |awk '/(In|Out)bound Errors/{printf"%s.value %d\n",tolower($1),$NF}'

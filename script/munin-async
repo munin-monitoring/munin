@@ -88,8 +88,8 @@ if ( $verbose || $debug || $screen ) {
     Munin::Common::Logger::configure(%log);
 }
 
-# Use STDIN/STDOUT, in order to be : 
-# 1. secure over internet (SSH), munin-node needs only 
+# Use STDIN/STDOUT, in order to be:
+# 1. secure over internet (SSH), munin-node needs only
 #    to listen on localhost:4949
 # 2. very simple to launch
 
@@ -157,11 +157,11 @@ munin-async [options]
 
      --spoolfetch               Enables the "spool" capability [no]
      --vectorfetch              Enables the "vectorized" fetching capability [no]
-                                  Note that without this flag, the "fetch" 
+                                  Note that without this flag, the "fetch"
 				  command is disabled.
 
      --screen                   Log to screen instead of syslog
      --debug                    Log debug messages
      -v --verbose               Be verbose
-     -h --help                  View this message	
+     -h --help                  View this message
 

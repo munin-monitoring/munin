@@ -46,7 +46,7 @@ Global attributes
 :Attribute: **graph_category**
 :Value: string (Allowed characters: [a-z0-9-.])
 :Type: optional
-:Description: 
+:Description:
   | Name of the category used to sort the graphs on the generated index web page.
   | Lower case string as we like a consistent view and want to avoid duplicates.
   | No whitespace as this makes the build of Munin Gallery a lot easier.

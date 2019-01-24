@@ -55,6 +55,7 @@ build_process_regex=${build_process_regex:-/tmp/hudson}
 
 plugin_name=$(basename "$0")
 
+is_multigraph
 
 if [ "${1:-}" = "autoconf" ]; then
 	if [ -d "$jenkins_job_dir" ]; then

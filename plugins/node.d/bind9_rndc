@@ -62,6 +62,7 @@ License not documented.
 =cut
 
 use strict;
+use Munin::Plugin;
 
 my $rndc = defined($ENV{rndc}) ? $ENV{rndc} : '/usr/sbin/rndc';
 my $rndc_options = defined($ENV{rndc_options}) ? $ENV{rndc_options} : '';
@@ -69,6 +70,8 @@ my $querystats = $ENV{querystats} || '/var/run/named.stats';
 my %IN;
 my %QUERIES;
 my %IP;
+
+need_multigraph();
 
 # attempt to create log file if it doesn't exist
 if ( ! -r $querystats ) {

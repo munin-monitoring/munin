@@ -24,9 +24,11 @@
 use strict;
 use warnings;
 
-use File::ReadBackwards;
-
 use Munin::Plugin;
+
+
+my $missing_module = undef;
+$missing_module = "File::ReadBackwards" unless (eval "require File::ReadBackwards");
 
 my @logs = qw/update graph html limits/;
 my $logdir = ($ENV{'logdir'} || $ENV{'MUNIN_LOGDIR'} || '/var/log/munin');
@@ -57,17 +59,14 @@ if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
 
     if (! -e $munin_update_location) {
         print "no (munin-update was not found at $munin_update_location)\n";
-        exit 0;
-   }
-
-   if (! -x $munin_update_location) {
+    } elsif (! -x $munin_update_location) {
         print "no ($munin_update_location was found, but is not executable)\n";
-        exit 0;
-   }
-   else {
+    } elsif (defined($missing_module)) {
+        print "no (missing Perl module: '$missing_module')\n";
+    } else {
         print "yes\n";
-        exit 0;
-   }
+    }
+    exit 0;
 }
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
@@ -87,6 +86,11 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
         print "$log.critical 285\n";
     }
     exit 0;
+}
+
+
+if (defined($missing_module)) {
+    die "Failed to run due to mising Perl module '$missing_module'";
 }
 
 foreach my $log (@logs) {

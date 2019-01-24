@@ -76,7 +76,7 @@ sub _do_connect {
     # If address is only "ssh://host/" $params will not get set
     $params = "" unless defined $params;
 
-    # If the scheme is not defined, it's a plain host. 
+    # If the scheme is not defined, it's a plain host.
     # Prefix it with munin:// to be able to parse it like others
     $uri = new URI("munin://" . $url) unless $uri->scheme;
     LOGCROAK("[FATAL] '$url' is not a valid address!") unless $uri->scheme;
@@ -109,6 +109,9 @@ sub _do_connect {
 	    # Open a triple pipe
    	    use IPC::Open3;
 
+	    # PATH has to be clean
+	    local $ENV{PATH} = '/usr/sbin:/usr/bin:/sbin:/bin';
+
 	    $self->{reader} = new IO::Handle();
 	    $self->{writer} = new IO::Handle();
 	    $self->{stderr} = new IO::Handle();
@@ -123,6 +126,9 @@ sub _do_connect {
 
 	    # Open a triple pipe
    	    use IPC::Open3;
+
+	    # PATH has to be clean
+	    local $ENV{PATH} = '/usr/sbin:/usr/bin:/sbin:/bin';
 
 	    $self->{reader} = new IO::Handle();
 	    $self->{writer} = new IO::Handle();
@@ -332,8 +338,8 @@ sub spoolfetch {
     };
     my $lines = $self->_node_read($callback);
 
-    # using the multigraph parsing. 
-    # Using "__root__" as a special plugin name. 
+    # using the multigraph parsing.
+    # Using "__root__" as a special plugin name.
     return $last_timestamp;
 }
 

@@ -158,7 +158,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 
 
 	print "graph_order ", join (' ', @in_fields, @out_fields), "\n";
-	print "graph_title VLAN $INTERFACE internet usage\n";
+	print "graph_title Interface $INTERFACE internet usage\n";
 	print "graph_total total\n";
 	print "graph_args --base 1000\n";
 	print "graph_vlabel bits per \${graph_period} in (-) / out (+)\n";

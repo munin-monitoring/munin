@@ -31,7 +31,7 @@ for line in open("/proc/net/arp").readlines():
         p[dev].value = 0
         p[dev].label = dev
         p[dev].draw = "AREA"
-    
+
     p[dev].value += 1
 
 # Run it!

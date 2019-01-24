@@ -10,9 +10,9 @@ our $DEBUG_ENABLED;
 
 use IO::File;
 
-# The method invoked by the command tie %hash, classname. 
-# Associates a new hash instance with the specified class. 
-# LIST would represent additional arguments (along the lines 
+# The method invoked by the command tie %hash, classname.
+# Associates a new hash instance with the specified class.
+# LIST would represent additional arguments (along the lines
 # of AnyDBM_File and compatriots) needed to complete the association.
 sub TIEHASH {
 	my $classname = shift;

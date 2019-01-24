@@ -51,7 +51,7 @@ Media links within the templates are absolute (e.g. /static/...) - thus you need
 3. Setup a daily cronjob
 ------------------------
 
-Place a file with content like this under /etc/cron.d/ 
+Place a file with content like this under /etc/cron.d/
 
 ------ 8< ------
 # Create fresh build of the Munin Plugin Gallery

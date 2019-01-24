@@ -1,6 +1,11 @@
 package Munin::Master::LimitsOld;
 
-=begin comment
+=head1 NAME
+
+Munin::Master::LimitsOld - Process collected values and thresholds
+
+
+=head1 SYNOPSIS
 
 This is Munin::Master::LimitsOld, a minimal package shell to make
 munin-limits modular (so it can be loaded persistently in a daemon for
@@ -8,6 +13,8 @@ example) without making it object oriented yet.  The non-'old' module
 will feature proper object orientation like munin-update and will
 have to wait until later.
 
+
+=head1 LICENSE
 
 Copyright (C) 2004-2009 Jimmy Olsen
 
@@ -25,8 +32,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
-=end comment
 
 =cut
 
@@ -225,13 +230,13 @@ Options:
     --force		Alias for \"--always-send ok,warning,critical,unknown\".
                         Overrides --always-send command line, as well as the
                         always_send contact configuration options.
-    --service <service>	Limit notified services to <service>. Multiple 
+    --service <service>	Limit notified services to <service>. Multiple
     			--service options may be supplied.
-    --host <host>	Limit notified hosts to <host>. Multiple --host 
+    --host <host>	Limit notified hosts to <host>. Multiple --host
     			options may be supplied.
-    --contact <contact>	Limit notified contacts to <contact>. Multiple 
+    --contact <contact>	Limit notified contacts to <contact>. Multiple
     			--contact options may be supplied.
-    --config <file>	Use <file> as configuration file. 
+    --config <file>	Use <file> as configuration file.
     			[/etc/munin/munin.conf]
 
 ";
@@ -606,7 +611,7 @@ sub get_limits {
         $unknown_limit = $1 if defined $1;
         if (defined $unknown_limit) {
             if ($unknown_limit < 1) {
-                # Zero and negative numbers are not valid.  
+                # Zero and negative numbers are not valid.
                 $unknown_limit = 1;
             }
         }
@@ -872,7 +877,11 @@ sub message_expand {
     return join('', @res);
 }
 
-=pod
+=head1 SUBROUTINES
+
+=over
+
+=item validate_severities
 
 Get a list of severities, and return a sorted, lower cased, unique and
 validated list of severities.
@@ -881,6 +890,8 @@ Expects and returns an array reference.
 
 If none of the severities given are on the allowed_severities list, it
 will return a reference to an empty array.
+
+=back
 
 =cut
 

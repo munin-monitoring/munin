@@ -110,8 +110,8 @@ Munin does redefine some system environment vars :
 
 
 ``LC_ALL`` & ``LANG``
-	This is redefined to ease the work of plugin authors. It enables a
-	standard output when parsing common commands output.
+	This is redefined (to ``C.UTF-8``) to ease the work of plugin authors.
+	It enables a non-localized output when parsing common commands output.
 
 See also
 ========
