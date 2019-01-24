@@ -58,6 +58,7 @@ Depends: ${perl:Depends}, ${misc:Depends},
  libnet-server-perl,
  libmunin-node-perl,
  munin-common (>= ${binary:Version}),
+ netbase,
 Recommends:
  munin-plugins-core,
 Suggests:
@@ -469,6 +470,7 @@ Depends: ${perl:Depends}, ${misc:Depends},
  liburi-perl,
  libxml-dumper-perl,
  munin-common (>= ${binary:Version}),
+ netbase,
  rrdcached,
  rrdtool,
 Recommends: munin-node, munin-doc
