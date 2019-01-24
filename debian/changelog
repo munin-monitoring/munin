@@ -2,7 +2,8 @@ munin (2.999.11-1) UNRELEASED; urgency=medium
 
   * Bump Standards-Version to 4.3.0, no changes needed.
   * Add netbase to munin's and munin-node's depends.
-  * New upstream version, drop debian/patches/manpage-master-limitsold.
+  * New upstream version, drop debian/patches/manpage-master-limitsold and
+    debian/patches/Makefile.javaplugin-INSTALL-variable.patch.
 
  -- Holger Levsen <holger@debian.org>  Thu, 03 Jan 2019 14:12:07 +0100
 
