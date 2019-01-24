@@ -1,11 +1,11 @@
-munin (2.999.11-1) UNRELEASED; urgency=medium
+munin (2.999.11-1) experimental; urgency=medium
 
-  * Bump Standards-Version to 4.3.0, no changes needed.
-  * Add netbase to munin's and munin-node's depends.
   * New upstream version, drop debian/patches/manpage-master-limitsold and
     debian/patches/Makefile.javaplugin-INSTALL-variable.patch.
+  * Add netbase to munin's and munin-node's depends.
+  * Bump Standards-Version to 4.3.0, no changes needed.
 
- -- Holger Levsen <holger@debian.org>  Thu, 03 Jan 2019 14:12:07 +0100
+ -- Holger Levsen <holger@debian.org>  Thu, 24 Jan 2019 13:37:23 +0100
 
 munin (2.999.10-1) experimental; urgency=medium
 
