@@ -40,6 +40,7 @@ Depends: ${misc:Depends}, ${perl:Depends},
  lsb-base (>= 4.1),
  munin-common (>= ${binary:Version}),
  munin-plugins-core,
+ netbase,
 Recommends:
  gawk,
  munin-plugins-extra,
@@ -170,6 +171,7 @@ Depends: ${misc:Depends}, ${perl:Depends},
  libtime-hires-perl,
  liburi-perl,
  munin-common (>= ${binary:Version}),
+ netbase,
  rrdtool,
 Recommends: munin-node, munin-doc, libcgi-fast-perl
 Suggests: www-browser, httpd, libnet-ssleay-perl, libapache2-mod-fcgid
