@@ -15,9 +15,16 @@ The following environment variables are used by this plugin
    [http_loadtime]
    env.target http://localhost.de,http://localhost.de/some-site.html
    env.requisites true
+   env.username user
+   env.password opensesame
 
  Do not enable the download of page requisites (env.requisites) for https
  sites since wget needs incredible long to perform this on big sites...
+
+ If a username and password are provided, these will be sent to the server
+ as an HTTP basic auth header, regardless of whether the server sends a
+ challenge. A temporary file will be written to securely pass these options
+ to wget. This could incur a noticable time delay, depending on the system.
 
 =head1 AUTHOR
 
@@ -42,7 +49,18 @@ urls=$(echo "$target" | tr ',' '\n')
 
 
 request_url() {
-    wget --user-agent "Munin - http_loadtime" --no-cache --quiet --output-document=/dev/null "$@" 2>/dev/null
+    wget_auth_opt=""
+    if [ -n "$username" ]; then
+        if [ -z "$password" ]; then
+            >&2 echo "Invalid configuration: username specified without password"
+            exit 1
+        fi
+        wget_config_file=$(mktemp) || exit 1
+        echo -n "http-user=$username\nhttp-password=$password\nauth-no-challenge=on\n" > $wget_config_file
+        wget_auth_opt="--config $wget_config_file"
+    fi
+    wget $wget_auth_opt --user-agent "Munin - http_loadtime" --no-cache --quiet --output-document=/dev/null "$@" 2>/dev/null
+    rm -f $wget_config_file
 }
 
 
