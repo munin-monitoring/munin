@@ -62,12 +62,17 @@ if($ARGV[0] and $ARGV[0] eq 'autoconf' ) {
 
 my $logfile = "$LOGDIR/$LOGFILE";
 my $rotlogfile = $logfile . ".0";
+my $rotlogfile_last_sunday = $logfile . "-" . `date --date="last sunday" +%Y%m%d`;
+chomp($rotlogfile_last_sunday);
+
 if (-f "$logfile.0") {
     $rotlogfile = $logfile . ".0";
 } elsif (-f "$logfile.1") {
     $rotlogfile = $logfile . ".1";
 } elsif (-f "$logfile.01") {
     $rotlogfile = $logfile . ".01";
+} elsif (-f "$rotlogfile_last_sunday") {
+    $rotlogfile = $rotlogfile_last_sunday;
 }
 
 if (! -f $logfile and ! -f $rotlogfile) {
@@ -119,6 +124,7 @@ close(STATFILE);
 if($ARGV[0] and $ARGV[0] eq "config") {
     print "host_name $ENV{FQDN}\n";
     print "graph_title CUPS pages printed\n";
+    print "graph_category printing\n";
     print "graph_args --base 1000 -l 0\n";
     print "graph_vlabel pages/\${graph_period}\n";
     foreach my $printer (sort(keys %printers)) {
