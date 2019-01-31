@@ -131,7 +131,7 @@ if [ "$1" = "config" ]; then
 
     # OS specific flags
     if [ "$OPERSYS" = "Linux" ]; then
-        echo "graph_order sleeping stopped zombie dead paging uninterruptible runnable processes"
+        echo "graph_order sleeping idle stopped zombie dead paging uninterruptible runnable processes"
         echo "dead.label dead"
         echo "dead.draw STACK"
         echo "dead.colour $DEAD"
@@ -245,7 +245,20 @@ if [ "$1" = "config" ]; then
         echo "sleeping.info The number of processes that are sleeping for less than about 20 seconds."
         print_warning sleeping
         print_critical sleeping
-    elif [ "$OPERSYS" = "Linux" ] || [ "$OPERSYS" = "SunOS" ] || [ "$OPERSYS" = "HP-UX" ]; then
+    elif [ "$OPERSYS" = "Linux" ]; then
+        echo "idle.label idle"
+        echo "idle.draw STACK"
+        echo "idle.colour $IDLE"
+        echo "idle.info The number of idle kernel threads (>= 4.2 kernels only)."
+        print_warning idle
+        print_critical idle
+        echo "sleeping.label sleeping"
+        echo "sleeping.draw AREA"
+        echo "sleeping.colour $SLEEPING"
+        echo "sleeping.info The number of sleeping processes."
+        print_warning sleeping
+        print_critical sleeping
+    elif [ "$OPERSYS" = "SunOS" ] || [ "$OPERSYS" = "HP-UX" ]; then
         echo "sleeping.label sleeping"
         echo "sleeping.draw AREA"
         echo "sleeping.colour $SLEEPING"
@@ -313,6 +326,7 @@ print "processes.value "        0+processes;
 print "uninterruptible.value "  0+stat["D"];
 print "runnable.value "         0+stat["R"];
 print "sleeping.value "         0+stat["S"];
+print "idle.value "             0+stat["I"];
 print "stopped.value "          0+stat["T"];
 print "paging.value "           0+stat["W"];
 print "dead.value "             0+stat["X"];
