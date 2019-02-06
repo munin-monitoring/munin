@@ -1,3 +1,9 @@
+munin (2.0.45-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Holger Levsen <holger@debian.org>  Wed, 06 Feb 2019 21:54:43 +0100
+
 munin (2.0.44-2) unstable; urgency=medium
 
   [ Lars Kruse ]
