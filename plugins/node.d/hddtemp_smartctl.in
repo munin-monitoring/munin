@@ -171,10 +171,18 @@ if ($^O eq 'linux') {
     opendir(SCSI, '/sys/block/');
     @drivesSCSI = grep /sd[a-z]/, readdir SCSI;
     closedir(SCSI);
-   }
+  }
+
+  # Look for NVMe drives in /sys
+  my @drivesNVME;
+  if (-d '/sys/block/') {
+    opendir(NVME, '/sys/block/');
+    @drivesNVME = grep /nvme[0-9]+n[0-9]+/, readdir NVME;
+    closedir(NVME);
+  }
 
   # Get list of all drives we found
-  @drives=(@drivesIDE,@drivesSCSI);
+  @drives=(@drivesIDE,@drivesSCSI,@drivesNVME);
 
 } elsif ($^O eq 'freebsd') {
   opendir(DEV, '/dev');
@@ -278,6 +286,8 @@ foreach my $drive (@drives) {
   } elsif ($output =~ /^(190 (Airflow_Temperature_Cel|Temperature_Case).*)/m) {
     my @F = split ' ', $1;
     print "$drive.value $F[9]\n";
+  } elsif ($output =~ /Temperature:\s*(\d+) Celsius/) {
+     print "$drive.value $1\n";
   } else {
       print "$drive.value U\n";
       print "$drive.extinfo Temperature not detected in smartctl output\n";

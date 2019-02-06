@@ -98,6 +98,12 @@ sub prepare_plugin_environment
     # LC_ALL should be enough, but some plugins don't follow specs (#1014)
     $ENV{LANG} = 'C';
 
+    # Force UTF-8 encoding for stdout in Python3. This is only relevant for
+    # Python3 before 3.7 (which will use UTF-8 anyway, if possible).
+    # This override allows python3-based plugins as well as any indrectly
+    # executed python3-based commands to output UTF-8 characters.
+    $ENV{PYTHONIOENCODING} = 'utf8:replace';
+
     # PATH should be *very* sane by default. Can be overrided via 
     # config file if needed (Closes #863 and #1128).
     $ENV{PATH} = '/usr/sbin:/usr/bin:/sbin:/bin';
