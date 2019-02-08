@@ -70,7 +70,6 @@ env:
 
 before_install:
   - cpanm -n Devel::Cover::Report::Coveralls
-  - cpanm --quiet --installdeps --notest .
 
 install:
   - perl Build.PL
