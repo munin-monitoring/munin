@@ -1,4 +1,5 @@
 ---
+dist: xenial
 language: perl
 ### perl:
 ###   - "5.20"
@@ -35,6 +36,7 @@ addons:
       - libnet-server-perl
       - libnet-snmp-perl
       - libnet-ssleay-perl
+      - libparallel-forkmanager-perl
       - libparams-validate-perl
       - librrds-perl
       - libtest-class-perl
@@ -80,6 +82,3 @@ install:
   - PYTHON_LINT_CALL="python3 -m flake8.main" make lint
 script:
   - cover -test -report coveralls
-
-# Using the container-based infrastructure
-sudo: false
