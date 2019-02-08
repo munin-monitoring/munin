@@ -61,6 +61,3 @@ script:
   # the old travis environment requires an old flake8 invocation
   - PYTHON_LINT_CALL="python3 -m flake8.main" make lint
   - make test
-
-# Using the container-based infrastructure
-sudo: false
