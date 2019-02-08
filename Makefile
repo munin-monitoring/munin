@@ -554,10 +554,10 @@ lint:
 			plugins/node.d.debug/ \
 			plugins/node.d.linux/ -type f -print0 \
 		| xargs -0 grep -l --null "@@GOODSH@@" \
-			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126,SC2230 --shell dash
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126,SC2230,SC2239 --shell dash
 	find plugins/ -type f -print0 \
 		| xargs -0 grep -l --null "@@BASH@@" \
-			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126,SC2230 --shell bash
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126,SC2230,SC2239 --shell bash
 	find plugins/ -type f -print0 \
 		| xargs -0 grep -l --null "@@PYTHON@@" \
 			| xargs -0 $(PYTHON_LINT_CALL)
