@@ -51,7 +51,6 @@ use Munin::Plugin;
 
 my $pos;
 my $delivered;
-my $rejects = ();
 my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
 my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.log');
 

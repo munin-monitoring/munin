@@ -13,7 +13,9 @@ CONFIG = Makefile.config
 PYTHON_LINT_CALL ?= python3 -m flake8
 
 include $(DEFAULTS)
-include $(CONFIG)
+ifneq ($(DEFAULTS),$(CONFIG))
+    include $(CONFIG)
+endif
 
 # the perl script is used for most perl related activities
 BUILD_SCRIPT = ./Build

@@ -19,6 +19,15 @@ your /etc/apt.conf defaults.
 [apt_all]
 env.MUNIN_APT_RELEASES = stable,testing,unstable
 env.options -o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false
+env.releases stable experimental
+
+"options" is empty by default.
+"releases" is a space separated list of release names.  It defaults to
+the empty string.  This default triggers the automatic detection of
+available distributions from the URLs of all configured repositories.
+
+If "MUNIN_APT_RELEASES" is non-empty (a comma separated list of releases),
+then it overrides "releases".  This setting is deprecated.
 
 Note that apt is called with no extra options by default, so it fully honors
 your /etc/apt.conf defaults.
@@ -63,8 +72,27 @@ $ENV{'LC_ALL'}="C";
 # APT cache directory
 my $aptcache = '/var/cache/apt';
 my $dpkgstatus = '/var/lib/dpkg/status';
-# Releases to monitor
-my @releases = split(",", ($ENV{MUNIN_APT_RELEASES} || "stable,testing,unstable"));
+
+# try to determine the currently available distributions by inspecting the repository URLs
+sub guess_releases() {
+    open(my $fh, "-|", "apt-get update --print-uris")
+        or die("Failed to determine distribution releases via 'apt-get update --print-uris");
+    my %release_names;
+    my $line;
+    while ( ! eof($fh) ) {
+        defined( $line = readline $fh ) or die "Failed to read line from output of 'apt-get': $!";
+        # example line:
+        #     'http://ftp.debian.org/debian/dists/stable/InRelease' ftp.debian.org_debian_dists_stable_InRelease 0
+        if ($line =~ m'^.*/dists/([^/]+)/.*$') {
+            $release_names{$1} = 1;
+        }
+    }
+    return keys %release_names;
+}
+
+# use a given 'releases' environment variable (space separated names) or inspect the repository URLs
+my @releases = split(",", ($ENV{MUNIN_APT_RELEASES} || "")) || split(/\s/, ($ENV{releases} || "")) || guess_releases();
+
 
 # Print the apt state, regenerating the state cache if necessary
 sub print_state() {

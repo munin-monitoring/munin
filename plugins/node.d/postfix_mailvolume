@@ -100,7 +100,7 @@ sub parseLogfile {
             push @expired_queue_ids, $key;
         }
     }
-    delete(@expired_queue_ids{@expired_queue_ids});
+    delete(@volumes_per_queue_id{@expired_queue_ids});
     return tail_close($LOGFILE);
 }
 
