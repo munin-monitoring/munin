@@ -355,7 +355,7 @@ if [ "$1" = "config" ]; then
 		;;
 	esac
 
-	if [ ! -z "$LIMITS" ] && [ "$LIMITS" = 1 ]; then
+	if [ -n "$LIMITS" ] && [ "$LIMITS" = 1 ]; then
 	    LIMIT=$(grep "$RESOURCE" "/proc/virtual/$xid/limit" | cut -f 4)
 	    if [ "${LIMIT:-0}" -gt 0 ]; then
 		echo "$NAME.critical $LIMIT"
