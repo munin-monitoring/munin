@@ -85,7 +85,7 @@ mktemp_command="${mktemp_command:-/bin/mktemp}"
 if [ "$1" = "autoconf" ]; then
 	if [ ! -f "$AMAVIS_LOG" ]; then
 		echo "no (file '$AMAVIS_LOG' not found)"
-	elif [ ! -n "$LOGTAIL" ]; then
+	elif [ -z "$LOGTAIL" ]; then
 		echo "no (executable 'logtail' not found)"
 	elif [ ! -x "$LOGTAIL" ]; then
 		echo "no ('$LOGTAIL' is not executable)"
