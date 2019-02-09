@@ -68,7 +68,8 @@ matrix:
   fast_finish: true
 
 env:
-  - TEST_MEDIUM=1
+  # specify test level and announce cpanm's installation directory
+  - TEST_MEDIUM=1 PERLLIB=/home/travis/perl5/lib/perl5
 
 before_install:
   - cpanm -n Devel::Cover::Report::Coveralls
