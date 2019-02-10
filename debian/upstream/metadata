@@ -7,3 +7,4 @@ FAQ: http://guide.munin-monitoring.org/en/latest/tutorial/troubleshooting.html
 Name: Munin
 Repository: https://github.com/munin-monitoring/munin.git
 Repository-Browse: https://github.com/munin-monitoring/munin
+Webservice: http://demo.munin-monitoring.org/
