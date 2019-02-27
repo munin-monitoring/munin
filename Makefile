@@ -39,7 +39,6 @@ CONFVAR_SUBSTITUTION_FILES = \
 	node/blib/sbin/munin-node-configure \
 	node/blib/sbin/munin-node \
 	node/blib/sbin/munin-run \
-	node/blib/sbin/munin-sched \
 	build/doc/munin-node.conf.5
 MAKEFILES        := Makefile $(DEFAULTS) $(CONFIG)
 

@@ -6,7 +6,6 @@ FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 
 if [ $# -ne 0 ]; then
     ./dev_scripts/stop_munin-node
-    ./dev_scripts/stop_munin-sched
 
     rm -rf sandbox
     mkdir sandbox
