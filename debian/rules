@@ -44,7 +44,6 @@ override_dh_auto_install:
 	rm -f debian/munin-doc/usr/share/man/man1/munin-node.1p \
 		debian/munin-doc/usr/share/man/man1/munin-node-configure.1p \
 		debian/munin-doc/usr/share/man/man1/munin-run.1p \
-		debian/munin-doc/usr/share/man/man1/munin-sched.1p \
 		debian/munin-doc/usr/share/man/man1/munindoc.1p
 	rmdir debian/munin-doc/usr/share/man/man1
 	# we do not expect other manpages in munin-doc (except for perl module documentation)
@@ -108,6 +107,7 @@ override_dh_auto_install:
 	# exist, this directory needs to be shipped with "munin-node". Since "munin-async" depends
 	# on "munin-node", the above warning caused by munin-async's postinst script is inevitable
 	# under the current circumstances.
+	# TODO: "munin-sched" was removed by upstream. Maybe the above complexity can be reduced.
 	# Thus we can remove the directory from the package "munin", but we need to continue
 	# shipping it as part of "munin-node" in order to ensure that "munin-sched" works.
 	# The warning "directory already exists" in munin-async's postinst script is annoying, but
