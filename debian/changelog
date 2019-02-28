@@ -1,7 +1,12 @@
-munin (2.0.45-2) UNRELEASED; urgency=medium
+munin (2.0.46-1) UNRELEASED; urgency=medium
 
   [ Lars Kruse ]
+  * New upstream version 2.0.46, Closes: #715141
   * Add 'Webservice' field to upstream metadata.
+  * munin-node.README.Debian: update plugin customization hints
+  * munin-node.README.Debian: mention behavioural changes due to systemd
+    (Closes: #921985)
+  * Remove references to "munin-sched" (removed by upstream)
 
  -- Holger Levsen <holger@debian.org>  Sun, 10 Feb 2019 13:35:18 +0100
 
