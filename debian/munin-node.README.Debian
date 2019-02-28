@@ -11,12 +11,13 @@ Debian-specific information regarding the Munin node
     You'll find more plugins in /usr/share/munin/plugins, which you can
     enable by creating symlinks into /etc/munin/plugins as appropriate.
 
-    Creating your own plugins is very easy.  Read the rest of the included
-    documents, take a look at the provided plugins, and write your own.  
-    Please use Latin-1 as file encoding since munin expects only Latin-1
-    characters. Place it in /etc/munin/plugins/, and restart the client.
-    The core process will automatically notice the new service, and start
-    graphing it.
+    Creating your own plugins is very easy.
+    See <http://guide.munin-monitoring.org/en/latest/develop/plugins/howto-write-plugins.html>
+    and enjoy the simplicity of the design.
+    Place your custom plugin in /etc/munin/plugins/, test their behaviour
+    with "munin-run PLUGIN_NAME" and restart the munin-node service.
+    The munin master process will automatically notice the new plugin and
+    start graphing it.
 
   Locally modified plugins
   ------------------------
@@ -24,14 +25,9 @@ Debian-specific information regarding the Munin node
     If you wish to change the behaviour of the provided plugins, you are
     strongly encouraged to make a copy of the plugin as installed in
     /usr/share/munin/plugins/, and place it in /etc/munin/plugins/. Then,
-    make your modifications in the copy.  I strenously stress that it is
-    discouraged to make local modifications directly in plugins found in the
-    /usr/share/munin/plugin/ directories, as these files are managed by
-    dpkg - changes may very well be overwritten on upgrades. Also, such
-    changes will likely break intrusion detection systems which relies
-    on dpkg's database for reference.
+    make your modifications in the copy.
 
-    It is worth noting that many things can be overridden in the core process'
+    It is worth noting that many things can be overridden in the munin master
     configuration file, so it is quite possible that a modification is not
     necessary.
 
@@ -50,7 +46,7 @@ Debian-specific information regarding the Munin node
   Find the upstream source
   ------------------------
     This Debian package uses the upstream tarball located here:
-    http://sourceforge.net/projects/munin .
+    http://downloads.munin-monitoring.org/ .
 
     It also uses quilt to apply some debian specific patches located in
     ./debian/patches/
