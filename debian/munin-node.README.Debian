@@ -31,6 +31,20 @@ Debian-specific information regarding the Munin node
     configuration file, so it is quite possible that a modification is not
     necessary.
 
+  Systemd, munin-node and plugins
+  -------------------------------
+
+    The systemd service specification for munin-node imposes a few
+    restrictions on the context of plugin execution.
+    This may cause confusion, as the plugins' behaviour will depend on
+    whether they are executed manually in "munin-run" (for debugging) or
+    indirectly via "munin-node" (when being queried by the munin master).
+    For example plugins are not allowed to read /home (may be relevant for
+    the "df*" plugins) and they use a private /tmp directory.
+    See /lib/systemd/system/munin-node.service for the default settings of
+    the munin-node service.  All settings can be overridden permanently
+    via "systemctl edit munin-node".
+
   Suggestions? Impressions? Questions? Fanmail? Love letters? Murder threats?
   ---------------------------------------------------------------------------
 
