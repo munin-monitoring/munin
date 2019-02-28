@@ -61,6 +61,7 @@ run apt-get update
 # Now for the real work...
 
 use strict;
+use Munin::Plugin;
 
 $ENV{'LANG'}="C";
 $ENV{'LC_ALL'}="C";
@@ -105,8 +106,9 @@ sub print_state() {
 	or die("Couldn't open state file $statefile for reading.");
     while (my $line = <STATE>) {
         foreach my $release (@releases) {
+            my $release_cleaned = clean_fieldname($release);
             # print only lines that are exected for the currently requested releases
-            print $line if ($line =~ /^(hold|pending)_$release\.(value|extinfo)/);
+            print $line if ($line =~ /^(hold|pending)_$release_cleaned\.(value|extinfo)/);
             last;
         }
     }
@@ -180,12 +182,13 @@ sub update_state() {
 	    push (@pending, @remove ) if @remove;
 	    close APT;
 
-	    print STATE "pending_$release.value ", scalar (@pending), "\n";
+            my $release_cleaned = clean_fieldname($release);
+            print STATE "pending_$release_cleaned.value ", scalar (@pending), "\n";
 	    if (@pending)
 	    {
-		    print STATE "pending_$release.extinfo ", join (' ', @pending), "\n";
+                print STATE "pending_$release_cleaned.extinfo ", join (' ', @pending), "\n";
 	    }
-	    print STATE "hold_$release.value $hold\n";
+            print STATE "hold_$release_cleaned.value $hold\n";
 
 	}
 	close(STATE);
@@ -224,9 +227,10 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_category system\n";
 
     foreach my $release (@releases) {
-	print "pending_$release.label pending ($release)\n";
-	print "pending_$release.warning 0:0\n";
-	print "hold_$release.label hold ($release)\n";
+        my $release_cleaned = clean_fieldname($release);
+        print "pending_$release_cleaned.label pending ($release)\n";
+        print "pending_$release_cleaned.warning 0:0\n";
+        print "hold_$release_cleaned.label hold ($release)\n";
     }
     exit 0;
 }
