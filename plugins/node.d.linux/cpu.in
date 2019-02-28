@@ -174,7 +174,7 @@ if [ "$1" = "config" ]; then
 		echo "nice.cdef nice,$NCPU,/"
 		echo "idle.cdef idle,$NCPU,/"
 	fi
-	if [ ! -z "$extinfo" ]
+	if [ -n "$extinfo" ]
 	then
 		echo 'iowait.label iowait'
 		echo 'iowait.draw STACK'
@@ -201,7 +201,7 @@ if [ "$1" = "config" ]; then
 		done
 	fi
 
-	if [ ! -z "$extextinfo" ]
+	if [ -n "$extextinfo" ]
 	then
 		echo 'steal.label steal'
 		echo 'steal.draw STACK'
@@ -214,7 +214,7 @@ if [ "$1" = "config" ]; then
 		print_adjusted_thresholds "steal" "$graphlimit"
 	fi
 
-	if [ ! -z "$extextextinfo" ]
+	if [ -n "$extextextinfo" ]
 	then
 		echo 'guest.label guest'
 		echo 'guest.draw STACK'
@@ -233,11 +233,11 @@ fi
 # Note: Counters/derive need to report integer values.  Also we need
 # to avoid 10e+09 and the like %.0f should do this.
 
-if [ ! -z "$extextextinfo" ]; then
+if [ -n "$extextextinfo" ]; then
 	awk -v "hz=$HZ" '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\nsteal.value %.0f\nguest.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz, $9*100/hz, $10*100/hz }' < /proc/stat
-elif [ ! -z "$extextinfo" ]; then
+elif [ -n "$extextinfo" ]; then
 	awk -v "hz=$HZ" '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\nsteal.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz, $9*100/hz }' < /proc/stat
-elif [ ! -z "$extinfo" ]; then
+elif [ -n "$extinfo" ]; then
 	awk -v "hz=$HZ" '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz }' < /proc/stat
 else
 	awk -v "hz=$HZ" '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz }' < /proc/stat

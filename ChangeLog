@@ -1,5 +1,35 @@
 -*- text -*-
 
+munin-2.0.46, 2019-02-28
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (9):
+      travis: switch to Ubuntu Xenial and add missing dependencies
+      shellcheck: ignore interpreter warnings (SC2239)
+      shellcheck: simplify inverted tests (SC2236)
+      travis: switch to Linux virtualization infrastructure
+      Unify whitespace formatting
+      Plugin apt_all: handle configured list of "releases" properly
+      Plugin apt_all: filter the stored state for wanted releases
+      Plugin apt_all: improve readability of labels
+      Plugin apt_all: escape release name for field name
+
+Steve Schnepp (1):
+      Remove munin-sched
+
+lonepsycho (1):
+      fix idle connections showing as waiting for lock
+
+
 munin-2.0.45, 2019-02-06
 
 -------
