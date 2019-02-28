@@ -1,5 +1,21 @@
 -*- text -*-
 
+munin-2.0.47, 2019-02-28
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (2):
+      fix t/munin_master_update.t warning
+      t: remove munin_master_processmanager.t
+
 munin-2.0.46, 2019-02-28
 
 -------
