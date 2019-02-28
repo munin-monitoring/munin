@@ -1,4 +1,7 @@
-munin (2.0.46-1) UNRELEASED; urgency=medium
+munin (2.0.47-1) UNRELEASED; urgency=medium
+
+  [ Holger Levsen ]
+  * New upstream version 2.0.47.
 
   [ Lars Kruse ]
   * New upstream version 2.0.46, Closes: #715141
