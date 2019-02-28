@@ -103,7 +103,13 @@ sub print_state() {
     }
     open(STATE, "$statefile")
 	or die("Couldn't open state file $statefile for reading.");
-    print while <STATE>;
+    while (my $line = <STATE>) {
+        foreach my $release (@releases) {
+            # print only lines that are exected for the currently requested releases
+            print $line if ($line =~ /^(hold|pending)_$release\.(value|extinfo)/);
+            last;
+        }
+    }
     close STATE;
 }
 
