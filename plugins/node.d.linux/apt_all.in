@@ -224,9 +224,9 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_category system\n";
 
     foreach my $release (@releases) {
-	print "pending_$release.label pending_$release\n";
+	print "pending_$release.label pending ($release)\n";
 	print "pending_$release.warning 0:0\n";
-	print "hold_$release.label hold_$release\n";
+	print "hold_$release.label hold ($release)\n";
     }
     exit 0;
 }
