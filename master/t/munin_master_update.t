@@ -67,6 +67,7 @@ $mockconfig->mock(get_groups_and_hosts => sub { return () });
     open my $fh, '>', \$result or die $OS_ERROR;
     $update->_write_new_service_configs($fh);
 
+    no warnings 'once';
     my $expected = "version $Munin::Common::Defaults::MUNIN_VERSION\n" .
 	remove_indentation(q{
         g1;host1:service1.graph_title service1
