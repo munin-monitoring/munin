@@ -87,7 +87,8 @@ sub guess_releases() {
 
 
 # use a given 'releases' environment variable (space separated names) or inspect the repository URLs
-my @releases = split(/\s/, ($ENV{releases} || "")) || guess_releases();
+my @releases = split(/\s/, ($ENV{releases} || ""));
+@releases = guess_releases() unless @releases;
 
 
 sub print_state() {
