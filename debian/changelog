@@ -8,14 +8,14 @@ munin (2.0.47-1) unstable; urgency=medium
   * Add 'Webservice' field to upstream metadata.
   * munin-node.README.Debian: update plugin customization hints
   * munin-node.README.Debian: mention behavioural changes due to systemd
-    (Closes: #921985)
+    (Closes: #918851, #921985)
   * Remove references to "munin-sched" (removed by upstream)
 
  -- Holger Levsen <holger@debian.org>  Thu, 28 Feb 2019 16:06:07 +0100
 
 munin (2.0.45-1) unstable; urgency=medium
 
-  * New upstream release.
+  * New upstream release. (Closes: #918105)
 
  -- Holger Levsen <holger@debian.org>  Thu, 07 Feb 2019 00:10:46 +0100
 
@@ -32,7 +32,7 @@ munin (2.0.44-2) unstable; urgency=medium
 
 munin (2.0.44-1) unstable; urgency=medium
 
-  * New upstream bugfix release.
+  * New upstream bugfix release. (Closes: #914138, #914156)
 
   [ Lars Kruse ]
   * Move plugin-related "Suggests" from "munin-node" to plugin packages.
@@ -63,7 +63,7 @@ munin (2.0.43-2) unstable; urgency=medium
 munin (2.0.43-1) unstable; urgency=medium
 
   [ Lars Kruse ]
-  * New upstream version 2.0.43, Closes: #913661
+  * New upstream version 2.0.43, Closes: #913661, #914157
   * Remove duplicate systemd-tmpfiles line for /run/munin from munin-node.
     Thanks to Vincas Dargis (Closes: #913784)
   * Add autopktest for default user context of plugins.
@@ -239,7 +239,7 @@ munin (2.0.37-2) unstable; urgency=medium
 munin (2.0.37-1) unstable; urgency=medium
 
   * New upstream version 2.0.37.
-  * New upstream version 2.0.36, Closes: #894017.
+  * New upstream version 2.0.36, Closes: #806172, #862240, #894017
   * New upstream version 2.0.35, fixing various issues, including bugs in:
     - plugin http_loadtime: Closes: #798258, #862794, #886517
     - plugin netstat: Closes: #861851
@@ -352,15 +352,16 @@ munin (2.0.29-1) unstable; urgency=medium
 
 munin (2.0.28-1) unstable; urgency=medium
 
-  * New upstream version. (Closes: #846391, #598554), see upstream ChangeLog
-    for details.
+  * New upstream version. (Closes: #846391, #598554, #682782), see
+    upstream ChangeLog for details.
 
  -- Holger Levsen <holger@debian.org>  Tue, 06 Dec 2016 13:15:50 +0100
 
 munin (2.0.27-1) unstable; urgency=medium
 
-  * New upstream version, (Closes: #767032, #768553, #825136, #834194), see
-    upstream ChangeLog for details.
+  * New upstream version,
+    (Closes: #640168, #698302, #767032, #768553, #825136, #834194),
+    see upstream ChangeLog for details.
 
  -- Holger Levsen <holger@debian.org>  Mon, 31 Oct 2016 21:59:54 +0100
 
@@ -607,7 +608,7 @@ munin (2.0.15-1) unstable; urgency=low
     your work, Tom and Steve!
 
   [ Stig Sandbeck Mathisen ]
-  * New upstream version (Closes: #710527, #710529)
+  * New upstream version (Closes: #710527, #710528, #710529)
   * Add dep8 autopkg tests
   * Remove /var/lib/munin-node/ when purging munin-node
 
@@ -657,7 +658,7 @@ munin (2.0.11-1) experimental; urgency=low
 
 munin (2.0.10-1) experimental; urgency=low
 
-  * New upstream release (Closes: #615957, #671448)
+  * New upstream release (Closes: #615957, #671448, #703149)
 
  -- Stig Sandbeck Mathisen <ssm@debian.org>  Thu, 10 Jan 2013 11:07:33 +0100
 
