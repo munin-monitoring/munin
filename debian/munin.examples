@@ -1,1 +1,2 @@
 debian/examples/nginx
+debian/examples/systemd-fastcgi
