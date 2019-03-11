@@ -329,7 +329,7 @@ sub parse_service_config {
 	if ($line =~ m{\A multigraph \s+ (.+) }xms) {
 	    push_graphorder($service);
 
-	    $service = $1;
+	    $service = $self->_sanitise_plugin_name($1);
 
 	    if ($service eq 'multigraph') {
 		ERROR "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
