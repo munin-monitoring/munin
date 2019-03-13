@@ -141,7 +141,7 @@ if [ "$1" = "config" ]; then
         print_warning "cpu$N"
         print_critical "cpu$N"
 
-    done
+    done | sort -V
     if [ "${MUNIN_CAP_DIRTYCONFIG:-0}" != 1 ]; then exit 0; fi
 fi
 
