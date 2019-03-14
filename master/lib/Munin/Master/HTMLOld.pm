@@ -285,6 +285,9 @@ sub emit_comparison_template {
     # or even worse within a category inside it. We strip out the
     # extra '../' that is used to generate a relative path which is no
     # longer valid.
+    # Sadly this change is permanent and will influence successive
+    # responses in a permanent execution environment like fcgid or
+    # as a systemd socket service.  Thus we need to revert it later.
     foreach my $cat(@{$key->{'comparecategories'}}) {
         foreach my $service(@{$cat->{'services'}}) {
             foreach my $node(@{$service->{'nodes'}}) {
@@ -292,6 +295,8 @@ sub emit_comparison_template {
                               cimgday cimgweek cimgmonth cimgyear
                               zoomday zoomweek zoommonth zoomyear)) {
                     next unless defined($node->{$imgsrc});
+                    # keep a copy of the original value (to be restored below)
+                    $node->{"orig_$imgsrc"} = $node->{$imgsrc};
                     $node->{$imgsrc} =~ s|^\.\./\.\./(?:\.\./)?|../|;
                 }
             }
@@ -322,6 +327,23 @@ sub emit_comparison_template {
 									NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
 									NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
     );
+
+    # restore the paths to their original value
+    foreach my $cat(@{$key->{'comparecategories'}}) {
+        foreach my $service(@{$cat->{'services'}}) {
+            foreach my $node(@{$service->{'nodes'}}) {
+                foreach my $imgsrc(qw(imgday imgweek imgmonth imgyear
+                              cimgday cimgweek cimgmonth cimgyear
+                              zoomday zoomweek zoommonth zoomyear)) {
+                    next unless defined($node->{$imgsrc});
+                    # keep a copy of the original value (to be restored below)
+                    $node->{$imgsrc} = $node->{"orig_$imgsrc"};
+                    delete($node->{"orig_$imgsrc"});
+                }
+            }
+        }
+    }
+
     if($emit_to_stdout){
 		print $comparisontemplates{$t}->output;
 	} else {
@@ -402,12 +424,18 @@ sub emit_category_template {
 
     DEBUG "[DEBUG] Creating global category page ".$filename;
 
+    # Manipulate the relative paths for the requested root-level context.
+    # Sadly this change is permanent and will influence successive
+    # responses in a permanent execution environment like fcgid or
+    # as a systemd socket service.  Thus we need to revert it later.
     foreach my $graphs(@{$key->{'graphs'}}) {
         foreach my $graph(@{$graphs->{'graphs'}}) {
             foreach my $imgsrc(qw(imgday imgweek imgmonth imgyear
                               cimgday cimgweek cimgmonth cimgyear
                               zoomday zoomweek zoommonth zoomyear)) {
-                $graph->{$imgsrc} =~ s|^(?:\.\./)+||
+                # keep a copy of the original value (to be restored below)
+                $graph->{"orig_$imgsrc"} = $graph->{$imgsrc};
+                $graph->{$imgsrc} =~ s|^(?:\.\./)+||;
             }
         }
     }
@@ -431,6 +459,18 @@ sub emit_category_template {
 						  NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
 						  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
                          );
+
+    # restore the paths to their original value
+    foreach my $graphs(@{$key->{'graphs'}}) {
+        foreach my $graph(@{$graphs->{'graphs'}}) {
+            foreach my $imgsrc(qw(imgday imgweek imgmonth imgyear
+                              cimgday cimgweek cimgmonth cimgyear
+                              zoomday zoomweek zoommonth zoomyear)) {
+                $graph->{$imgsrc} = $graph->{"orig_$imgsrc"};
+                delete($graph->{"orig_$imgsrc"});
+            }
+        }
+    }
 
     if($emit_to_stdout){
 		print $graphtemplate->output;
