@@ -16,6 +16,8 @@ All other directives in munin-node.conf are passed through to the Perl
 module Net::Server. Depending on the version installed, you may have
 different settings available.
 
+Line wrapping and comments work in the same manner as :ref:`munin.conf`.
+
 DIRECTIVES
 ==========
 
