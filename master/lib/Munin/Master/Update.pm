@@ -81,7 +81,8 @@ sub _read_old_service_configs {
 	    return {};
 	}
 	eval {
-	    $oldconfig->parse_config($file);
+            # parse file but skip malformed lines
+            $oldconfig->parse_config($file, 1);
 	};
 	if ($EVAL_ERROR) {
 	    WARN "[Warning] Could not parse datafile $datafile: $EVAL_ERROR";
