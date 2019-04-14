@@ -207,3 +207,11 @@ tar-upload: tar tar-signed
 		echo "mkdir $(UPLOAD_DIR)/$(VERSION)"; \
 		echo "put munin-$(VERSION).tar.gz* $(UPLOAD_DIR)/$(VERSION)/"; \
 	} | sftp -b - "$(UPLOAD_HOST)"
+
+.PHONY: docker
+docker:
+	./getversion > RELEASE.docker
+	docker build -t munin:dev .
+	docker rm -f munin || true
+	docker run --name munin -p 4948:4948 -itd --security-opt seccomp:unconfined munin:dev bash
+	docker exec -it munin bash
