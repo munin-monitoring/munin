@@ -278,7 +278,7 @@ sub _db_init {
 	$dbh_state->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
 		last_epoch INTEGER, last_value VARCHAR,
 		prev_epoch INTEGER, prev_value VARCHAR,
-		alarm VARCHAR, num_unknowns INTEGER
+		alarm VARCHAR, num_unknowns INTEGER DEFAULT 0
 		)");
 	$dbh_state->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
 
