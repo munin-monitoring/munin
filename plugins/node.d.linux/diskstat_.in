@@ -502,8 +502,8 @@ sub read_sysfs {
 
         my @elems = split /\s+/, $line;
 
-        croak "'$stats_file' doesn't contain exactly 11 values. Aborting"
-            if ( @elems != 11 );
+        croak "'$stats_file' contains less than 11 values. Aborting"
+            if ( @elems < 11 );
 
         # Translate the devicename back before storing the information
         $cur_device =~ tr#!#/#;
