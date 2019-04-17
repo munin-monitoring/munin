@@ -238,14 +238,14 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "recv.cdef recv,8,*\n";
     print "recv.max $speed\n";
     print "recv.min 0\n";
-    print "recv.warning ", ($warn), "\n" if defined $warn;
+    print "recv.warning ", ($warn), "\n" if defined $warn && ($warn != 0);
     print "send.label bps\n";
     print "send.type DERIVE\n";
     print "send.negative recv\n";
     print "send.cdef send,8,*\n";
     print "send.max $speed\n";
     print "send.min 0\n";
-    print "send.warning $warn\n" if defined $warn;
+    print "send.warning $warn\n" if defined $warn && ($warn != 0);
     exit 0;
 }
 
