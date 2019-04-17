@@ -104,10 +104,8 @@ sub do_work {
 
 
 		$self->{dbh}->begin_work() if $self->{dbh}->{AutoCommit};
-		$self->{dbh_state}->begin_work() if $self->{dbh_state}->{AutoCommit};
 
 		my $dbh = $self->{dbh};
-		my $dbh_state = $self->{dbh_state};
 
 		# Handle spoolfetch, one call to retrieve everything
 		if (grep /^spool$/, @node_capabilities) {
@@ -191,8 +189,6 @@ NODE_END:
 
 	    # We want to commit to avoid leaking transactions
 	    $dbh->commit() unless $dbh->{AutoCommit};
-	    $dbh_state->commit() unless $dbh_state->{AutoCommit};
-
 	}; # eval
 
 	# kill the remaining process if needed

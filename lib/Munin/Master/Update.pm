@@ -51,7 +51,7 @@ sub run {
 	# Create the DB, using a local block to close the DB cnx
 	{
 		my $dbh = get_dbh();
-		$self->_db_init($dbh, $dbh);
+		$self->_db_init($dbh);
 		$config_old = $self->_db_params_update($dbh, $config);
 	}
 
@@ -184,15 +184,12 @@ sub _run_workers {
 		eval {
 			# Inject the 2 dbh (meta + state)
 			$worker->{dbh} = get_dbh();
-			# XXX - It is in the same DB for now
-			$worker->{dbh_state} = get_dbh();
 
 			# do_work fails hard on a number of conditions
 			$res = $worker->do_work();
 		};
 
 		$worker->{dbh}->disconnect();
-		$worker->{dbh_state}->disconnect();
 
 		my $worker_id = $worker->{ID};
 		if (! defined($res) || $@) {
@@ -239,7 +236,7 @@ sub _handle_worker_result {
 }
 
 sub _db_init {
-	my ($self, $dbh, $dbh_state) = @_;
+	my ($self, $dbh) = @_;
 
 	my $db_serial_type = "INTEGER";
 	my $db_driver = $ENV{MUNIN_DBDRIVER} || "$config->{dbdriver}";
@@ -275,12 +272,12 @@ sub _db_init {
 
 	# Note, this table is referenced by composite key (type,id) in order to be
 	# able to have any kind of states. Such as whole node states for example.
-	$dbh_state->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
+	$dbh->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
 		last_epoch INTEGER, last_value VARCHAR,
 		prev_epoch INTEGER, prev_value VARCHAR,
 		alarm VARCHAR, num_unknowns INTEGER DEFAULT 0
 		)");
-	$dbh_state->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
 
 	# Initialise the grp _root_ node if not present
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
