@@ -20,6 +20,56 @@ guidelines when developing a plugin:
  * A descriptive message should be written to STDERR.  On a deployed plugin, this message will appear in munin-node.log.  When invoked via munin-run, it'll appear in the console.
 
 
+.. _plugin-field-thresholds:
+
+Field thresholds (warning and critical)
+=======================================
+
+The :ref:`.warning <fieldname.warning>` and :ref:`.critical <fieldname.critical>` attributes are
+used to detect unwanted situations, e.g. a disk being almost full.
+
+Some plugins may want to supply default thresholds, while allowing these values to be overridden by
+the user.
+
+Munin's plugin modules for Perl and Shell provide helper functions for this purpose. They allow the
+user to override the plugin's thresholds via the environment variables ``FIELDNAME_warning`` or
+``warning`` (likewise for "critical") in :ref:`munin.conf <munin.conf>`.
+
+
+Example shell plugin
+--------------------
+
+::
+
+  ...
+
+  . "$MUNIN_LIBDIR/plugins/plugin.sh"
+
+  ...
+
+  warning=${warning:-0.80} critical=${critical:-0.95} print_thresholds "$fieldname"
+
+  ...
+
+
+Example perl plugin
+-------------------
+
+::
+
+  ...
+
+  use Munin::Plugin;
+
+  ...
+
+  print_thresholds("$fieldname", undef, undef, 0.80, 0.95);
+
+  ...
+
+See ``man Munin::Plugin`` for details.
+
+
 Handling temporary files
 ========================
 
