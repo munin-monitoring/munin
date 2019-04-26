@@ -109,10 +109,10 @@ adjust_threshold () {
 # for criticals (see the second argument to get_critical).
 #
 # This is a convenience function for plugins that don't need to do anything
-# special for warnings vs criticals.
+# special for warnings vs. criticals.
 #
 # Usage:
-#   warning='20' critical='40' print_thresholds user
+#   warning=${warning:-20} critical=${critical:-40} print_thresholds user
 # Returns:
 #   user.warning 20
 #   user.critical 40

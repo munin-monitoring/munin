@@ -330,7 +330,7 @@ sub _restore_state_raw {
     return @state;
 }
 
-=head3 ($warning, $critical) = get_thresholds($field, [$warning_env, [$critical_env]])
+=head3 ($warning, $critical) = get_thresholds($field, [$warning_env, [$critical_env, [$warning_default_value, [$critical_default_value]]]])
 
 Look up the thresholds for the specified field from the environment
 variables named after the field: "$field_warning" and
@@ -341,6 +341,9 @@ $field_warning or $field_critical values then look for the variables
 If the second and/or third arguments are specified then they will be
 used to specify the name of variables giving the warning and
 critical levels.
+
+If the fourth and/or the fifth arguments are specified, then they
+will be used as default values for warning and critical levels.
 
 If no values are found for a threshold then undef is returned.
 
@@ -370,7 +373,7 @@ sub get_thresholds {
     return ($warning, $critical);
 }
 
-=head3 print_thresholds($field, [$warning_env, [$critical_env]])
+=head3 print_thresholds($field, [$warning_env, [$critical_env, [$warning_default_value, [$critical_default_value]]]])
 
 If $field has warning or critical thresholds set for it, prints them in the
 default fashion (eg. 'field.warning 42').
