@@ -91,7 +91,9 @@ sub guess_releases() {
 }
 
 # use a given 'releases' environment variable (space separated names) or inspect the repository URLs
-my @releases = split(",", ($ENV{MUNIN_APT_RELEASES} || "")) || split(/\s/, ($ENV{releases} || "")) || guess_releases();
+my @releases = split(",", ($ENV{MUNIN_APT_RELEASES} || ""));
+@releases = split(/\s/, ($ENV{releases} || "")) unless @releases;
+@releases = guess_releases() unless @releases;
 
 
 # Print the apt state, regenerating the state cache if necessary
