@@ -82,8 +82,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 
 	next unless $log eq "update" || $log eq "graph";
 
-	print "$log.warning 240\n";
-        print "$log.critical 285\n";
+        print_thresholds("$log", undef, undef, 240, 285);
     }
     exit 0;
 }
