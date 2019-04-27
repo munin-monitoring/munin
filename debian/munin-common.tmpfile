@@ -5,5 +5,6 @@
 # See tmpfiles.d(5) for details
 #
 
+# keep in sync with debian/munin.init (non-systemd)
 d /run/munin 0755 munin root
 d /var/cache/munin/www 0755 munin munin

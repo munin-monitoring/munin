@@ -6,8 +6,8 @@
 # Required-Stop:     $network $named $local_fs $remote_fs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Create /run/munin on boot
-# Description:       Create /run/munin on boot. Munin itself runs as CGI and has no extra startscript...
+# Short-Description: Create munin master directories on boot
+# Description:       Create munin master directories on boot. Munin itself runs as CGI or via cron and does not run a separate daemon.
 ### END INIT INFO
 
 
@@ -19,7 +19,8 @@ test -d /run/systemd/system && exit 0
 
 case "$1" in
   start|restart|force-reload)
-	# Create various dirs
+	# Create various directories
+	# keep in sync with debian/munin-common.tmpfile (systemd-only)
 	mkdir -p /run/munin && chown munin /run/munin
 	mkdir -p /var/cache/munin/www && chown munin. /var/cache/munin/www && chmod 755 /var/cache/munin/www
 	exit $?
