@@ -6,3 +6,4 @@
 #
 
 d /run/munin 0755 munin root
+d /var/cache/munin/www 0755 munin munin
