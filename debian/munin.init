@@ -21,7 +21,7 @@ case "$1" in
   start|restart|force-reload)
 	# Create various directories
 	# keep in sync with debian/munin-common.tmpfile (systemd-only)
-	mkdir -p /run/munin && chown munin /run/munin
+	mkdir -p /run/munin && chown munin /run/munin && chmod 755 /run/munin
 	mkdir -p /var/cache/munin/www && chown munin. /var/cache/munin/www && chmod 755 /var/cache/munin/www
 	exit $?
 	;;
