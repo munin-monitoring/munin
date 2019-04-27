@@ -27,7 +27,6 @@ interrupts
 irqstats
 load
 memory
-netstat
 open_files
 open_inodes
 proc_pri
@@ -50,6 +49,9 @@ EOF
     if [ -x /usr/sbin/conntrack ] || [ -e /proc/net/nf_conntrack ] || [ -e /proc/net/ip_conntrack ]; then
       echo fw_conntrack
       echo fw_forwarded_local
+    fi
+    if [ -x /bin/netstat ]; then
+      echo netstat
     fi
   } | sort >expected_plugins
   test_cmp expected_plugins all_without_network_interfaces
