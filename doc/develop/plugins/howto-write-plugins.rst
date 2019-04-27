@@ -47,7 +47,10 @@ Also, munin wants the value in a more structured form:
 
 Here the ``load`` is called the field or field name, ``value`` the attribute, and the number is of course the value. (See our :ref:`complete overview of Munin specific terminology <nomenclature>`).
 
-Note that internally, any number at the start of a field name is interpreted as an underscore: `4h_average` becomes `_h_average`. This can be problematic if you have multiple field names with the leading number as the only difference, in which case values may be overwritten. It is therefore best to avoid starting a field name with a number (e.g. use `average_4h` instead).
+Note that field name may not start with a digit or special characters
+(see :ref:`notes on field names <notes-on-fieldnames>` for details).  Thus it is recommended to
+prepend a prefix in front of dynamically discovered field names (e.g. names of network interfaces
+or services). Otherwise a uniqe part of the field name may get lost due to name munging.
 
 That was the hard part of the plugin.  The rest is just book-keeping.
 
