@@ -144,7 +144,7 @@ EOC
     my $dir = tempdir( CLEANUP => 1 );
     my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
 
-    $writer->write(1234567890, 'fnord', [
+    $writer->write(1234567890, 'fnord-foo', [
         'multigraph fnord',
         'graph_title CPU usage',
         'system.label system',
@@ -155,7 +155,7 @@ EOC
         'subsystem.value 123',
     ]);
 
-    my $data_file = "$dir/munin-daemon.fnord.1234483200" . "." . Munin::Node::SpoolWriter::DEFAULT_TIME;
+    my $data_file = "$dir/munin-daemon.fnord_foo.1234483200" . "." . Munin::Node::SpoolWriter::DEFAULT_TIME;
     ok( -r $data_file, 'spool file is readable') or last;
 
     my $data = read_file($data_file);

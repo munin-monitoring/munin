@@ -38,52 +38,52 @@ use Munin::Node::SpoolWriter;
     my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
 
     # write some data
-    $writer->write(1234567890, 'fnord', [
+    $writer->write(1234567890, 'fnord-foo', [
         'graph_title CPU usage',
         'system.label system',
         'system.value 1',
     ]);
 
-    $writer->write(1234567900, 'fnord', [
+    $writer->write(1234567900, 'fnord-foo', [
         'graph_title CPU usage',
         'system.label system',
         'system.value 2',
     ]);
 
-    $writer->write(1234567910, 'fnord', [
+    $writer->write(1234567910, 'fnord-foo', [
         'graph_title CPU usage',
         'system.label system',
         'system.value 3',
     ]);
 
     is_string($reader->fetch(1234567899), <<EOS, 'Fetched data since the write');
-multigraph fnord
+multigraph fnord_foo
 graph_title CPU usage
 system.label system
 system.value 1234567900:2
-multigraph fnord
+multigraph fnord_foo
 graph_title CPU usage
 system.label system
 system.value 1234567910:3
 EOS
 
     is_string($reader->fetch(1234567900), <<EOS, 'Start timestamp is not inclusive');
-multigraph fnord
+multigraph fnord_foo
 graph_title CPU usage
 system.label system
 system.value 1234567910:3
 EOS
 
     is_string($reader->fetch(1), <<EOS, 'Timestamp predates all result: all results are returned');
-multigraph fnord
+multigraph fnord_foo
 graph_title CPU usage
 system.label system
 system.value 1234567890:1
-multigraph fnord
+multigraph fnord_foo
 graph_title CPU usage
 system.label system
 system.value 1234567900:2
-multigraph fnord
+multigraph fnord_foo
 graph_title CPU usage
 system.label system
 system.value 1234567910:3
@@ -97,7 +97,7 @@ EOS
     my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
 
     # write some data
-    $writer->write(1234567890, 'fnord', [
+    $writer->write(1234567890, 'fnord-foo', [
         'graph_title CPU usage',
         'system.label system',
         '',
@@ -106,7 +106,7 @@ EOS
     ]);
 
     is_string($reader->fetch(1), <<EOS, 'Blank lines are ignored');
-multigraph fnord
+multigraph fnord_foo
 graph_title CPU usage
 system.label system
 system.value 1234567890:1
@@ -119,7 +119,7 @@ EOS
     my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
 
     # write results for two different plugins
-    $writer->write(1234567890, 'fnord', [
+    $writer->write(1234567890, 'fnord-foo', [
         'graph_title CPU usage',
         'system.label system',
         'system.value 3',
@@ -134,7 +134,7 @@ EOS
     ok(my $fetched = $reader->fetch(1234567800), 'Several services to fetch');
 
     my $f1 = <<EOT;
-multigraph fnord
+multigraph fnord_foo
 graph_title CPU usage
 system.label system
 system.value 1234567890:3
@@ -162,13 +162,13 @@ EOS
     my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
 
     # write two sets of results, with a slightly different config
-    $writer->write(1234567890, 'fnord', [
+    $writer->write(1234567890, 'fnord-foo', [
         'graph_title CPU usage',
         'system.label system',
         'system.value 3',
     ]);
 
-    $writer->write(1234567990, 'fnord', [
+    $writer->write(1234567990, 'fnord-foo', [
         'graph_title CPU usage!',  # this line has changed
         'system.label system',
         'system.value 4',
@@ -177,13 +177,13 @@ EOS
     ok(my $fetched = $reader->fetch(1234567800), 'Several sets of results to fetch');
 
     my $f1 = <<EOT;
-multigraph fnord
+multigraph fnord_foo
 graph_title CPU usage
 system.label system
 system.value 1234567890:3
 EOT
     my $f2 = <<EOT;
-multigraph fnord
+multigraph fnord_foo
 graph_title CPU usage!
 system.label system
 system.value 1234567990:4
@@ -203,7 +203,7 @@ EOT
     is($reader->list, "\n", 'No spooled plugins to list');
 
     # write "results" for several plugins
-    $writer->write(1234567890, 'fnord', [
+    $writer->write(1234567890, 'fnord-foo', [
         'graph_title CPU usage',
         'system.label system',
         'system.value 1',
@@ -228,7 +228,7 @@ EOT
     print $cruft "rubbish\n";
     close $cruft;
 
-    is_deeply([ sort $reader->_get_spooled_plugins ], [ sort qw( fnord floop blort ) ], 'Retrieved list of spooled plugins');
-    is($reader->list, "blort floop fnord\n", 'Retrieved stringified list of spooled plugins');
+    is_deeply([ sort $reader->_get_spooled_plugins ], [ sort qw( fnord_foo floop blort ) ], 'Retrieved list of spooled plugins');
+    is($reader->list, "blort floop fnord_foo\n", 'Retrieved stringified list of spooled plugins');
 }
 
