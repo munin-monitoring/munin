@@ -138,6 +138,7 @@ sub _parse_line {
           deny
           cidr_allow
           cidr_deny
+          reverse_lookups
      );
 
     sub _handled_by_net_server {
