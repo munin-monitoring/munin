@@ -53,11 +53,7 @@ if [ "$1" = "config" ]; then
 	p_critical=$(print_critical used)
 	[ -z "$p_warning" ] && echo "used.warning $computed_warning" || echo "$p_warning"
 	[ -z "$p_critical" ] && echo "used.critical $computed_critical" || echo "$p_critical"
-	echo 'max.label max open files'
-	echo 'max.info The maximum supported number of open files. Tune by modifying /proc/sys/fs/file-max.'
-	print_warning max
-	print_critical max
 	exit 0
 fi
 
-awk '{print "used.value " $1-$2 "\nmax.value " $3}' < /proc/sys/fs/file-nr
+awk '{print "used.value " $1-$2}' < /proc/sys/fs/file-nr
