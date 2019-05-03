@@ -1,3 +1,15 @@
+munin (2.0.49-1) UNRELEASED; urgency=medium
+
+  * New upstream version 2.0.49.
+  * New upstream version 2.0.48, fixing various issues, including bugs in:
+    - Accept DNS names in "allow" (Closes: #483617)
+    - Natural sort output on cpuspeed plugin (Closes: #924366)
+    - postgres_connections_ "Query failed!" (Closes: #924424)
+    - diskstat_ plugin fails with 4.19 kernels (Closes: #926146)
+    - open_files max is 18 quintillion, obscuring graph (Closes: #928211)
+
+ -- Lars Kruse <devel@sumpfralle.de>  Thu, 09 May 2019 05:55:54 +0200
+
 munin (2.0.47-1) unstable; urgency=medium
 
   [ Holger Levsen ]
