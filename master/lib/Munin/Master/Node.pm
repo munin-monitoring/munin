@@ -17,6 +17,9 @@ use Log::Log4perl qw( :easy );
 use Time::HiRes qw( gettimeofday tv_interval );
 use IO::Socket::INET6;
 
+# Used as a timestamp value, this declares none was found
+use constant NO_TIMESTAMP => -1;
+
 my $config = Munin::Master::Config->instance()->{config};
 
 # Quick version, to enable "DEBUG ... if $debug" constructs
@@ -318,9 +321,6 @@ sub parse_service_config {
 
     new_service($service);
 
-    # every 'N' has the same value. Should not take parsing time into the equation
-    my $now = time;
-
     for my $line (@$lines) {
 
 	DEBUG "[CONFIG from $plugin] $line" if $debug;
@@ -368,7 +368,7 @@ sub parse_service_config {
         } elsif ($line =~ m{\A ([^\.]+)\.value \s+ (.+?) \s* $}xms) {
 	    $correct++;
 	    # Special case for dirtyconfig
-            my ($ds_name, $value, $when) = ($1, $2, $now);
+            my ($ds_name, $value, $when) = ($1, $2, NO_TIMESTAMP);
             
 	    $ds_name = $self->_sanitise_fieldname($ds_name);
 	    if ($value =~ /^(\d+):(.+)$/) {
