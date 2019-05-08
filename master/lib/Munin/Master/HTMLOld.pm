@@ -328,6 +328,9 @@ sub emit_comparison_template {
 									NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
     );
 
+    # store template output before reverting links
+    my $template_output = $comparisontemplates{$t}->output;
+
     # restore the paths to their original value
     foreach my $cat(@{$key->{'comparecategories'}}) {
         foreach my $service(@{$cat->{'services'}}) {
@@ -336,7 +339,6 @@ sub emit_comparison_template {
                               cimgday cimgweek cimgmonth cimgyear
                               zoomday zoomweek zoommonth zoomyear)) {
                     next unless defined($node->{$imgsrc});
-                    # keep a copy of the original value (to be restored below)
                     $node->{$imgsrc} = $node->{"orig_$imgsrc"};
                     delete($node->{"orig_$imgsrc"});
                 }
@@ -345,12 +347,12 @@ sub emit_comparison_template {
     }
 
     if($emit_to_stdout){
-		print $comparisontemplates{$t}->output;
+        print $template_output;
 	} else {
 		ensure_dir_exists($file);
 	    open(my $FILE, '>', $file)
     	    or die "Cannot open $file for writing: $!";
-	    print $FILE $comparisontemplates{$t}->output;
+        print $FILE $template_output;
     	close $FILE;
 	}
 }
@@ -460,6 +462,9 @@ sub emit_category_template {
 						  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
                          );
 
+    # store template output before reverting links
+    my $template_output = $graphtemplate->output;
+
     # restore the paths to their original value
     foreach my $graphs(@{$key->{'graphs'}}) {
         foreach my $graph(@{$graphs->{'graphs'}}) {
@@ -473,12 +478,12 @@ sub emit_category_template {
     }
 
     if($emit_to_stdout){
-		print $graphtemplate->output;
+        print $template_output;
 	} else {
 		ensure_dir_exists($filename);
 	    open(my $FILE, '>', $filename)
 			or die "Cannot open $filename for writing: $!";
-    	print $FILE $graphtemplate->output;
+        print $FILE $template_output;
 	    close $FILE;
 	}
 }
