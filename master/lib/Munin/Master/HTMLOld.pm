@@ -510,6 +510,23 @@ sub emit_problem_template {
 
     INFO "[INFO] Creating problem page ".$filename;
 
+    # Manipulate the relative paths for the requested root-level context.
+    # Sadly this change is permanent and will influence successive
+    # responses in a permanent execution environment like fcgid or
+    # as a systemd socket service.  Thus we need to revert it later.
+    foreach my $problem_graphs (values %{$htmlconfig->{"problems"}}) {
+        foreach my $graph(@$problem_graphs) {
+            foreach my $imgsrc(qw(imgday imgweek imgmonth imgyear
+                                  cimgday cimgweek cimgmonth cimgyear
+                                  zoomday zoomweek zoommonth zoomyear)) {
+                next unless defined($graph->{$imgsrc});
+                # keep a copy of the original value (to be restored below)
+                $graph->{"orig_$imgsrc"} = $graph->{$imgsrc};
+                $graph->{$imgsrc} =~ s|^(?:\.\./)+||;
+            }
+        }
+    }
+
     $graphtemplate->param(
                           CSS_NAME    => get_css_name(),
                           R_PATH      => ".",
@@ -528,13 +545,29 @@ sub emit_problem_template {
 						  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
                          );
 
+    # store template output before reverting links
+    my $template_output = $graphtemplate->output;
+
+    # restore the paths to their original value
+    foreach my $problem_graphs (values %{$htmlconfig->{"problems"}}) {
+        foreach my $graph(@$problem_graphs) {
+            foreach my $imgsrc(qw(imgday imgweek imgmonth imgyear
+                                  cimgday cimgweek cimgmonth cimgyear
+                                  zoomday zoomweek zoommonth zoomyear)) {
+                next unless defined($graph->{$imgsrc});
+                $graph->{$imgsrc} = $graph->{"orig_$imgsrc"};
+                delete($graph->{"orig_$imgsrc"});
+            }
+        }
+    }
+
     if($emit_to_stdout){
-		print $graphtemplate->output;
+        print $template_output;
 	} else {
 		ensure_dir_exists($filename);
 	    open(my $FILE, '>', $filename)
 			or die "Cannot open $filename for writing: $!";
-    	print $FILE $graphtemplate->output;
+        print $FILE $template_output;
 	    close $FILE;
 	}
 }
