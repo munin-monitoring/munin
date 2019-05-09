@@ -1,5 +1,60 @@
 -*- text -*-
 
+munin-2.0.49, 2019-05-09
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (2):
+      Fix the reversal of path manipulation
+      Add image path manipulation for "problems" graphs
+
+
+munin-2.0.48, 2019-05-03
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (10):
+      munin-cgi-html: avoid accidental permanent path manipulation
+      Plugins: use natural order for numbered items with multiple digits
+      Ignore malformed lines when parsing "datafile"
+      Plugin snmp__if: handle broken "zero" speed announcements
+      Plugin diskstat_: accept block device information of newer kernel
+      tests: verify name munging of remote plugins via async
+      Plugin open_files: remove "max" field from graph
+      Allow node-specific TLS settings on the master
+      Add support for the Net::Server option "reverse_lookups"
+
+Matthew Gabeler-Lee (1):
+      fix(nutups): make frequency chart aware of input, output, not polling
+
+Valentin Lorentz (1):
+      Sanitise plugin names in munin-asyncd.
+
+Vincas Dargis (1):
+      Remove stray comment in postgresql_connections_
+
+Zenon Mousmoulas (3):
+      Let the server use max timestamp rather than now for non-timestamped
+      Do not fall back to current timestamp for spoolfetch
+      Use a named constant rather than hardcoding -1
+
+
 munin-2.0.47, 2019-02-28
 
 -------
@@ -15,6 +70,7 @@ Detailed Changelog
 Steve Schnepp (2):
       fix t/munin_master_update.t warning
       t: remove munin_master_processmanager.t
+
 
 munin-2.0.46, 2019-02-28
 

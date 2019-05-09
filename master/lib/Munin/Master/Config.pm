@@ -470,17 +470,26 @@ sub _split_config_line_ok {
 
 sub _parse_config_line {
     # Parse and save contents of random user configuration.
-    my ($self, $prefix, $key, $value) = @_;
-    
-    my $longkey = $self->_concat_config_line_ok($prefix,$key,$value);
+    my ($self, $prefix, $key, $value, $skip_on_error) = @_;
+    my $longkey;
 
+    if ($skip_on_error) {
+        eval { $longkey = $self->_concat_config_line_ok($prefix, $key, $value); };
+        # Skip single malformed lines (error messages were emitted before).
+        # This is suitable for fault tolerant parsing of "datafile".
+        return if $EVAL_ERROR;
+    } else {
+        # A problem with a malformed line is allowed to rise to the file level.
+        # This is suitable for configuration files.
+        $longkey = $self->_concat_config_line_ok($prefix, $key, $value);
+    }
     $self->set_value($longkey,$value);
 }
 
 
 sub parse_config {
-    my ($self, $io) = @_;
-        
+    my ($self, $io, $skip_line_on_error) = @_;
+
     my $section = undef;
 
     my $continuation = '';
@@ -513,7 +522,7 @@ sub parse_config {
 	    $prefix = $1;
 	} else {
 	    my($key,$value) = split(/\s+/,$line,2);
-	    $self->_parse_config_line($prefix,$key,$value);
+	    $self->_parse_config_line($prefix, $key, $value, $skip_line_on_error);
         }
     }
 }

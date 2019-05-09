@@ -50,7 +50,7 @@ GPLv2
 
 # directories containing thermal zone information
 if [ -d /sys/class/thermal/ ]; then
-    ATZ=$(find /sys/class/thermal/ -maxdepth 1 -name "thermal_zone*")
+    ATZ=$(find /sys/class/thermal/ -maxdepth 1 -name "thermal_zone*" | sort -V)
 else
     ATZ=
 fi

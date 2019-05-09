@@ -17,6 +17,9 @@ use Log::Log4perl qw( :easy );
 use Time::HiRes qw( gettimeofday tv_interval );
 use IO::Socket::INET6;
 
+# Used as a timestamp value, this declares none was found
+use constant NO_TIMESTAMP => -1;
+
 my $config = Munin::Master::Config->instance()->{config};
 
 # Quick version, to enable "DEBUG ... if $debug" constructs
@@ -151,13 +154,19 @@ sub _do_connect {
     return 1;
 }
 
+
+sub _get_node_or_global_setting {
+    my ($self, $key) = @_;
+    return exists $self->{configref}->{$key} ? $self->{configref}->{$key} : $config->{$key};
+}
+
+
 sub _run_starttls_if_required {
     my ($self) = @_;
 
     # TLS should only be attempted if explicitly enabled. The default
     # value is therefore "disabled" (and not "auto" as before).
-    my $tls_requirement = exists $self->{configref}->{tls} ?
-                                   $self->{configref}->{tls} : $config->{tls};
+    my $tls_requirement = $self->_get_node_or_global_setting("tls");
     DEBUG "TLS set to \"$tls_requirement\".";
     return if $tls_requirement eq 'disabled';
     my $logger = Log::Log4perl->get_logger("Munin::Master");
@@ -166,13 +175,13 @@ sub _run_starttls_if_required {
         logger       => sub { $logger->warn(@_) },
         read_fd      => fileno($self->{reader}),
         read_func    => sub { _node_read_single($self) },
-        tls_ca_cert  => $config->{tls_ca_certificate},
-        tls_cert     => $config->{tls_certificate},
-        tls_paranoia => $tls_requirement, 
-        tls_priv     => $config->{tls_private_key},
-        tls_vdepth   => $config->{tls_verify_depth},
-        tls_verify   => $config->{tls_verify_certificate},
-        tls_match    => $config->{tls_match},
+        tls_ca_cert  => $self->_get_node_or_global_setting("tls_ca_certificate"),
+        tls_cert     => $self->_get_node_or_global_setting("tls_certificate"),
+        tls_paranoia => $tls_requirement,
+        tls_priv     => $self->_get_node_or_global_setting("tls_private_key"),
+        tls_vdepth   => $self->_get_node_or_global_setting("tls_verify_depth"),
+        tls_verify   => $self->_get_node_or_global_setting("tls_verify_certificate"),
+        tls_match    => $self->_get_node_or_global_setting("tls_match"),
         write_fd     => fileno($self->{writer}),
         write_func   => sub { _node_write_single($self, @_) },
     });
@@ -312,9 +321,6 @@ sub parse_service_config {
 
     new_service($service);
 
-    # every 'N' has the same value. Should not take parsing time into the equation
-    my $now = time;
-
     for my $line (@$lines) {
 
 	DEBUG "[CONFIG from $plugin] $line" if $debug;
@@ -362,7 +368,7 @@ sub parse_service_config {
         } elsif ($line =~ m{\A ([^\.]+)\.value \s+ (.+?) \s* $}xms) {
 	    $correct++;
 	    # Special case for dirtyconfig
-            my ($ds_name, $value, $when) = ($1, $2, $now);
+            my ($ds_name, $value, $when) = ($1, $2, NO_TIMESTAMP);
             
 	    $ds_name = $self->_sanitise_fieldname($ds_name);
 	    if ($value =~ /^(\d+):(.+)$/) {
