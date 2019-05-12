@@ -223,7 +223,7 @@ MAIN: while($keepgoing) {
 
 	# Sleep until next plugin exec.
 	my $sleep_sec = $when_next - time;
-
+	# "sleep" expects an unsigned integer - thus we may not let a wrapped number splip through.
 	if ($sleep_sec > 0) {
 		print STDERR "[$$][$process_name] Sleeping $sleep_sec sec\n" if $verbose;
 		sleep $sleep_sec;
