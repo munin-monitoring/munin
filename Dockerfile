@@ -17,9 +17,6 @@ RUN touch /var/log/cron.log
 # Install Munin
 
 RUN apt-get install -y librrds-perl
-COPY dev_scripts/deps /tmp/deps
-WORKDIR /tmp
-RUN sh -x deps
 
 WORKDIR /
 RUN apt-get install -y make
@@ -31,10 +28,17 @@ RUN apt-get install -y git
 RUN apt-get install -y strace ltrace
 RUN apt-get install -y procps
 # Slimming the install
-RUN apt-get clean autoclean && apt-get autoremove --yes && rm -rf /var/lib/{apt,dpkg,cache,log}/
+#RUN apt-get clean autoclean && apt-get autoremove --yes && rm -rf /var/lib/{apt,dpkg,cache,log}/
 
-RUN useradd munin
+RUN useradd munin -G sudo -p '$6$F9v4FpTZ$FkyF0eM21Ua2OPe.7ADETMSqt/H9/qlAxAInYw7OXilqUXwh3VWWdxgz45SmUgc7uynCsYfP7yGEclp.JJXug0'
+
 RUN mkdir -p /var/run/munin /var/lib/munin && chown munin /var/run/munin /var/lib/munin
+
+# Install Munin Deps
+WORKDIR /tmp
+COPY dev_scripts/deps /tmp/deps
+RUN sh -x deps
+WORKDIR /
 
 COPY . /munin
 COPY RELEASE.docker /munin/RELEASE
