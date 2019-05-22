@@ -149,6 +149,8 @@ use Munin::Plugin;
                 if the plugin should be run on this machine. Must return a single
                 row, two columns columns. The first one is a boolean field
                 representing yes or no, the second one a reason for "no".
+ warning        The warning low and/or high thresholds.
+ critical       The critical low and/or high thresholds.
  graphdraw      The draw parameter for the graph. The default is LINE1. This
                 can be an array, see "Specifying graphdraw" section for details.
  graphtype      The type parameter for the graph. The default is GAUGE.
@@ -234,6 +236,8 @@ sub new {
         title          => $args{title},
         info           => $args{info},
         vlabel         => $args{vlabel},
+        warning        => $args{warning},
+        critical       => $args{critical},
         graphdraw      => $args{graphdraw},
         graphtype      => $args{graphtype},
         graphperiod    => $args{graphperiod},
@@ -323,6 +327,8 @@ sub Config {
         }
         print "$l.min $self->{graphmin}\n" if (defined $self->{graphmin});
         print "$l.max $self->{graphmax}\n" if (defined $self->{graphmax});
+        print "$l.warning $self->{warning}\n" if (defined $self->{warning});
+        print "$l.critical $self->{critical}\n" if (defined $self->{critical});
         $firstrow = 0;
     }
 }
