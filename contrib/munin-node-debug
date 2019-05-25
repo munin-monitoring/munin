@@ -180,6 +180,13 @@ sub service
 			my $aligned = ($plugin_number == 1) ? " aligned" : "";
 			$aligned = ($plugin_number == 2) ? " garbled" : "";
 			print $client "update_rate $update_rate$aligned\n";
+
+			my $graph_data_size;
+			$graph_data_size = "normal" if $plugin_number == 1;
+			$graph_data_size = "huge" if $plugin_number == 2;
+			$graph_data_size = "custom 10,5 10,10 10" if $plugin_number == 3;
+			$graph_data_size = "custom 10,5 for 10, 100s for 10d" if $plugin_number == 4;
+			print $client "graph_data_size $graph_data_size\n" if $graph_data_size;
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				my $ds = get_ds($plugin_number, $i);
 				my $ds_info = get_ds_info($plugin_number, $i);
