@@ -602,9 +602,9 @@ sub uw_handle_config {
 	my @fetch_data;
 
 	# Parse the output to a simple HASH
-	my %service_attr;
-	my %fields;
-	my @field_order;
+	my %service_attr = ();
+	my %fields = ();
+	my @field_order = ();
 	for my $line (@$data) {
 		DEBUG "uw_handle_config: $line";
 		# Barbaric regex to parse the output of the config
