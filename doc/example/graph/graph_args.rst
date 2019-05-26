@@ -60,3 +60,14 @@ Axis
 
   Force rrdgraph y-axis scale to the set upper and lower limit.
   Usually, the graph scale can `overrun`. (also seen as: ``-r``)
+
+
+Legend
+======
+
+.. options:: --legend-direction <value>
+
+    The default value ``topdown`` causes the legend items to be written in the same order as the
+    items are drawn in the graph.  For stacked graphs this means, that the area in the bottom of
+    the graph is the topmost entry in the legend.  Thus it may be useful to specify ``bottomup``
+    for a stacked graph in order to reverse the order of the legend items.
