@@ -294,7 +294,7 @@ my $gname = getgrgid $gid;
         },
     }, "Checking sconf");
 
-    $conf->apply_wildcards(qw| Foo Fnord |);
+    $conf->apply_wildcards(qw| Foo Fnord boF |);
     is_deeply($conf, {
         sconfdir => $sconfdir,
         sconf=>{

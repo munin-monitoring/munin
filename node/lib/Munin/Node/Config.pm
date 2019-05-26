@@ -291,19 +291,19 @@ sub _parse_plugin_line {
 
 sub apply_wildcards {
     my ($self, @services) = @_;
-    my $ws;
+    my $wildcard_regex;
 
     # Need to sort the keys in descending order so that more specific
     # wildcards take precedence.
     for my $wildservice (grep { /\*$/ || /^\*/ } reverse sort keys %{$self->{sconf}}) {
         if ($wildservice =~ /\*$/) {
-            $ws = substr $wildservice, 0, -1;
+            $wildcard_regex = qr{^} . substr($wildservice, 0, -1);
         } else {
-            $ws = substr $wildservice, 1;
+            $wildcard_regex = substr($wildservice, 1) . qr{$};
         }
 
         for my $service (@services) {
-            next unless $service =~ /^$ws/ || $service =~ /$ws$/;
+            next unless $service =~ /$wildcard_regex/;
             $self->_apply_wildcard_to_service($self->{sconf}{$wildservice},
                                               $service);
         }
