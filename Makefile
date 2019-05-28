@@ -149,21 +149,23 @@ $(BUILD_SCRIPT): Build.PL
 ######################################################################
 # testing
 
+TEST_FILES_ARG = $(addprefix --test_files , $(TEST_FILES))
+
 .PHONY: test
 test: $(BUILD_SCRIPT)
-	"$(BUILD_SCRIPT)" test
+	"$(BUILD_SCRIPT)" test $(TEST_FILES_ARG)
 
 .PHONY: testcover
 testcover: $(BUILD_SCRIPT)
-	"$(BUILD_SCRIPT)" testcover
+	"$(BUILD_SCRIPT)" testcover $(TEST_FILES_ARG)
 
 .PHONY: testpod
 testpod: $(BUILD_SCRIPT)
-	"$(BUILD_SCRIPT)" testpod
+	"$(BUILD_SCRIPT)" testpod $(TEST_FILES_ARG)
 
 .PHONY: testpodcoverage
 testpodcoverage: $(BUILD_SCRIPT)
-	"$(BUILD_SCRIPT)" testpodcoverage
+	"$(BUILD_SCRIPT)" testpodcoverage $(TEST_FILES_ARG)
 
 
 ######################################################################
