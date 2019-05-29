@@ -7,7 +7,6 @@ use warnings;
 use Carp;
 use Exporter;
 use English qw(-no_match_vars);
-use Fcntl qw(:DEFAULT :flock);
 use File::Path;
 use IO::Handle;
 use Munin::Common::Defaults;
@@ -26,9 +25,6 @@ our (@ISA, @EXPORT);
 
 @ISA = ('Exporter');
 @EXPORT = qw(
-	   munin_removelock
-	   munin_runlock
-	   munin_getlock
 	   munin_get_bool
 	   munin_get
 	   munin_get_rrd_filename
@@ -77,65 +73,6 @@ my @COPY_FIELDS    = ("label", "draw", "drawstyle", "type", "rrdfile", "fieldnam
 
 my @dircomponents = split('/',$0);
 my $me = pop(@dircomponents);
-
-
-sub munin_removelock {
-    # Remove lock or die trying.
-    my ($lockname) = @_;
-
-    unlink $lockname or
-      LOGCROAK("[FATAL ERROR] Error deleting lock $lockname: $!\n");
-}
-
-
-sub munin_runlock {
-    my ($lockname) = @_;
-    unless (munin_getlock($lockname)) {
-	LOGCROAK("[FATAL ERROR] Lock already exists: $lockname. Dying.\n");
-    }
-    return 1;
-}
-
-
-sub munin_getlock {
-    my ($lockname) = @_;
-
-    if (sysopen (LOCK, $lockname, O_RDWR | O_CREAT)) {
-	DEBUG "[DEBUG] Create/open lock : $lockname succeeded\n";
-    } else {
-	LOGCROAK("Could not open $lockname for read/write: $!\n");
-    }
-    my $pid = <LOCK>;
-
-    if (defined($pid)) {
-
-	DEBUG "[DEBUG] Lock contained pid '$pid'";
-
-        # Make sure it's a proper pid
-	if ($pid =~ /^(\d+)$/ and $1 != 1) {
-	    $pid = $1;
-	    kill(0, $pid);
-	    # Ignore ESRCH as not found is as good as if it worked
-	    if ($! == EPERM) {
-		LOGCROAK("[FATAL ERROR] kill -0 $pid attempted - it is still alive and we can't kill it. Locking failed.\n");
-		close LOCK;
-	        return 0;
-	    }
-	    INFO "[INFO] Process $pid is dead, stealing lock";
-	} else {
-	    INFO "[INFO] PID in lock file is bogus.";
-	}
-        seek(LOCK, 0, 0);
-    }
-    DEBUG "[DEBUG] Writing out PID to lock file $lockname";
-    print LOCK $$; # we want the pid inside for later use
-    if (defined($pid) && length $$ < length $pid) {
-	# Since pid was defined we need to truncate in case len($) < len($pid)
-	truncate(LOCK, tell(LOCK))
-    }
-    close LOCK;
-    return 1;
-}
 
 sub munin_mkdir_p {
     my ($dirname, $umask) = @_;
@@ -199,10 +136,6 @@ Parameters:
 Returns:
  - Success: $to
  - Failure: undef
-
-
-=item B<munin_createlock>
-
 
 
 =item B<munin_delete>
@@ -315,10 +248,6 @@ Returns:
 
 
 
-=item B<munin_getlock>
-
-
-
 =item B<munin_has_subservices>
 
   munin_has_subservices($hash);
@@ -356,14 +285,6 @@ Parameters:
 Returns:
  - Success: A ref to an array with the loc
  - Failure: undef
-
-
-=item B<munin_removelock>
-
-
-
-=item B<munin_runlock>
-
 
 
 =item B<munin_set>

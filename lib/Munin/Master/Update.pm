@@ -28,7 +28,6 @@ sub new {
     my $gah = $config->get_groups_and_hosts();
 
     my $self = bless {
-        STATS               => undef,
         old_service_configs => {},
         old_version         => undef,
         service_configs     => {},
@@ -45,7 +44,7 @@ sub run {
 
     $self->_create_rundir_if_missing();
 
-    $self->_do_with_lock_and_timing(sub {
+    $self->_do_with_timing(sub {
         INFO "[INFO]: Starting munin-update";
 
 	# Create the DB, using a local block to close the DB cnx
@@ -120,33 +119,32 @@ sub _create_workers {
 }
 
 
-sub _do_with_lock_and_timing {
+sub _do_with_timing {
     my ($self, $block) = @_;
 
-    my $lock = "$config->{rundir}/munin-update.lock";
-    munin_runlock($lock);
-
-    my $update_time = Time::HiRes::time;
-    if (!open ($self->{STATS}, '>', "$config->{dbdir}/munin-update.stats.tmp")) {
-        WARN "[WARNING] Could not open STATS to $config->{dbdir}/munin-update.stats.tmp: $!";
-        # Use /dev/null instead - if the admin won't fix he won't care
-        open($self->{STATS}, '>', "/dev/null") or
-	    LOGCROAK "[FATAL] Could not open STATS to /dev/null (fallback for not being able to open $config->{dbdir}/munin-update.stats.tmp): $!";
-    }
-
+    my $start_time = Time::HiRes::time;
     # Place global munin-update timeout here.
     my $retval = $block->();
 
-    $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
-    print { $self->{STATS} } "UT|$update_time\n";
-    close ($self->{STATS});
-    $self->{STATS} = undef;
-    rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
+    my $update_time = Time::HiRes::time - $start_time;
+
+    # Store the timings in the DB
+    $self->_db_stats('UT', "", 	$update_time);
+
+    my $update_time_string = sprintf("%.2f", $update_time);
     INFO "[INFO]: Munin-update finished ($update_time sec)";
 
-    munin_removelock($lock);
-
     return $retval;
+}
+
+sub _db_stats {
+	my ($self, $type, $name, $duration) = @_;
+
+	$self->{runid} = time() unless $self->{runid};
+	my $runid = $self->{runid};
+	my $dbh = $self->{dbh} || get_dbh(); # Reuse any existing connection, or open a temporary one
+	my $sth_i = $dbh->prepare_cached("INSERT INTO stats (runid, tstp, type, name, duration) VALUES (?, ?, ?, ?, ?);");
+	$sth_i->execute($runid, time(), $type, $name, $duration);
 }
 
 
@@ -225,12 +223,7 @@ sub _handle_worker_result {
 
     my $update_time = sprintf("%.2f", $time_used);
     INFO "[INFO]: Munin-update finished for node $worker_id ($update_time sec)";
-    if (! defined $self->{STATS} ) {
-	# This is may only be the case when we get connection refused
-	ERROR "[BUG!] Did not collect any stats for $worker_id.  If this message appears in your logs a lot please email munin-users.  Thanks.";
-    } else {
-	printf { $self->{STATS} } "UD|%s|%.2f\n", $worker_id, $time_used;
-    }
+    $self->_db_stats("UD", $worker_id, $time_used);
 
     $self->{service_configs}{$worker_id} = $service_configs;
 }
@@ -278,6 +271,9 @@ sub _db_init {
 		alarm VARCHAR, num_unknowns INTEGER DEFAULT 0
 		)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
+
+	# Munin stats
+	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp DATETIME, type VARCHAR, name VARCHAR, duration NUMERIC)");
 
 	# Initialise the grp _root_ node if not present
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
