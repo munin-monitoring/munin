@@ -73,17 +73,25 @@ my $pg = Munin::Plugin::Pgsql->new(
     info      => 'Number of connections',
     vlabel    => 'Connections',
     basequery => [
-        "SELECT tmp.mstate AS state,COALESCE(count,0) FROM
+        "SELECT tmp.mstate AS state, COALESCE(count,0) FROM
                  (VALUES ('active'),('waiting'),('idle'),('idletransaction'),('unknown')) AS tmp(mstate)
                 LEFT JOIN
-                 (SELECT CASE WHEN wait_event_type IS NOT NULL THEN 'waiting' WHEN state='idle' THEN 'idle' WHEN state LIKE 'idle in transaction%' THEN 'idletransaction' WHEN state='disabled' THEN 'unknown' WHEN query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END AS mstate,
+                 (SELECT CASE
+                     WHEN a.wait_event_type IS NOT NULL AND a.locked AND state NOT LIKE 'idle in transaction%' THEN 'waiting'
+                     WHEN state='idle' THEN 'idle'
+                     WHEN state LIKE 'idle in transaction%' THEN 'idletransaction'
+                     WHEN state='disabled' THEN 'unknown'
+                     WHEN query='<insufficient privilege>' THEN 'unknown'
+                     ELSE 'active' END AS mstate,
                  count(*) AS count
-                 FROM pg_stat_activity WHERE pid != pg_backend_pid() AND backend_type = 'client backend' %%FILTER%%
-                 GROUP BY CASE WHEN wait_event_type IS NOT NULL THEN 'waiting' WHEN state='idle' THEN 'idle' WHEN state LIKE 'idle in transaction%' THEN 'idletransaction' WHEN state='disabled' THEN 'unknown' WHEN query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END
+                 FROM (SELECT act.state, act.wait_event_type, EXISTS (SELECT FROM pg_locks AS l WHERE l.pid = act.pid) AS locked, act.query
+                       FROM pg_stat_activity AS act
+                       WHERE act.pid != pg_backend_pid() AND act.backend_type = 'client backend' /*%%FILTER%%*/)
+                 AS a GROUP BY 1
                  ) AS tmp2
                 ON tmp.mstate=tmp2.mstate
                 ORDER BY 1;
-		",
+                ",
             [ 9.6, "SELECT tmp.mstate AS state,COALESCE(count,0) FROM
                  (VALUES ('active'),('waiting'),('idle'),('idletransaction'),('unknown')) AS tmp(mstate)
                 LEFT JOIN
