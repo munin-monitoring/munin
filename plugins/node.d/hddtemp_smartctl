@@ -329,8 +329,6 @@ sub command_for_drive_device {
 sub get_drive_id {
     my ($drive, $fulldev, $use_nocheck) = @_;
 
-    print STDERR "ID of $drive\n";
-
     my $cmd = $smartctl.' -i ';
     $cmd .= '--nocheck=standby ' if $use_nocheck;
     $cmd .= $fulldev;
@@ -358,5 +356,4 @@ sub get_drive_id {
     $id = "Drive is a" . $id if $id;
     
     return $id;
-    exit 1;
 }
