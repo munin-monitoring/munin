@@ -227,8 +227,6 @@ if (defined $ARGV[0]) {
         print $d . ".critical 60\n";
 	my $id = get_drive_id($_, device_for_drive($_), $use_nocheck);
 	print $d . ".info $id\n";
-
-
     }
     exit 0;
   }
@@ -296,7 +294,6 @@ foreach my $drive (@drives) {
   } else {
       print "$drive.value U\n";
       print "$drive.extinfo Temperature not detected in smartctl output.\n";
-      return;
   }
 }
 
