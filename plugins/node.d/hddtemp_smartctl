@@ -277,7 +277,6 @@ foreach my $drive (@drives) {
     }
     next;
   }
-  
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
     print "$drive.value $1\n";
   } elsif ($output =~ /^(194 Temperature_(Celsius|Internal).*)/m) {
