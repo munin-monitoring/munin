@@ -382,6 +382,14 @@ These directives follow a node definition and are of the form "plugin.directive 
 Using these directives you can override various directives for a plugin, such as its contacts, and
 can also be used to create graphs containing data from other plugins.
 
+.. option:: graph_title <value>
+
+   Override the title of a specific graph.
+
+.. option:: graph_category <value>
+
+   Override the category of a specific service.
+
 .. option:: graph_height <value>
 
    The graph height for a specific service. Default is 200.
