@@ -219,11 +219,14 @@ if (defined $ARGV[0]) {
     print "graph_category sensors\n";
     print "graph_info This graph shows the temperature in degrees Celsius of the hard drives in the machine.\n";
     foreach (@drives) {
+        my $d = clean_fieldname($_);
         my @dirs = splitdir($_);
-        print clean_fieldname($_) . ".label " . $dirs[-1] . "\n";
-        print clean_fieldname($_) . ".max 100\n";
-        print clean_fieldname($_) . ".warning 57\n";
-        print clean_fieldname($_) . ".critical 60\n";
+        print $d . ".label " . $dirs[-1] . "\n";
+        print $d . ".max 100\n";
+        print $d . ".warning 57\n";
+        print $d . ".critical 60\n";
+        my $id = get_drive_id($_, device_for_drive($_), $use_nocheck);
+        print $d . ".info $id\n";
     }
     exit 0;
   }
@@ -288,8 +291,8 @@ foreach my $drive (@drives) {
   } elsif ($output =~ /Temperature:\s*(\d+) Celsius/) {
      print "$drive.value $1\n";
   } else {
-      print "$drive.value U\n";
-      print "$drive.extinfo Temperature not detected in smartctl output\n";
+    print "$drive.value U\n";
+    print "$drive.extinfo Temperature not detected in smartctl output.\n";
   }
 }
 
@@ -316,4 +319,37 @@ sub command_for_drive_device {
     $cmd .= '-d '.$ENV{'type_'.$drive}.' ' if exists $ENV{'type_'.$drive};
     $cmd .= $fulldev;
 
+}
+
+
+sub get_drive_id {
+    my ($drive, $fulldev, $use_nocheck) = @_;
+
+    my $cmd = $smartctl.' -i ';
+    $cmd .= '--nocheck=standby ' if $use_nocheck;
+    $cmd .= $fulldev;
+
+    my ($family, $model, $serial, $wwn) = ('', '', '', '');
+
+    my $output = `$cmd`;
+
+    foreach (split(/\n/m, $output)) {
+	chomp;
+	my ($label, $value) = split (/:\s+/);
+	next if ! defined $label or ! $label or
+	    ! defined $value or ! $value;
+	$family = $value if $label eq 'Model Family';
+	$model  = $value if $label eq 'Device Model';
+	$serial = $value if $label eq 'Serial Number';
+	$wwn    = $value if $label eq 'LU WWN Device Id';
+    }
+
+    my $id = '';
+    $id .= ' '. $family if $family;
+    $id .= ' '. "Model: $model" if $model;
+    $id .= ' '. "S/N: $serial" if $serial;
+    $id .= ' '. "WWN: $wwn" if $wwn;
+    $id = "Drive is a" . $id if $id;
+
+    return $id;
 }
