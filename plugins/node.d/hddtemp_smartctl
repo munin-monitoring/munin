@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -wd
 
 use strict;
 use warnings;
@@ -274,6 +274,9 @@ foreach my $drive (@drives) {
     }
     next;
   }
+  
+  my $id = get_drive_id($drive, $fulldev, $use_nocheck);
+
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
     print "$drive.value $1\n";
   } elsif ($output =~ /^(194 Temperature_(Celsius|Internal).*)/m) {
@@ -289,8 +292,10 @@ foreach my $drive (@drives) {
      print "$drive.value $1\n";
   } else {
       print "$drive.value U\n";
-      print "$drive.extinfo Temperature not detected in smartctl output\n";
+      print "$drive.extinfo Temperature not detected in smartctl output. $id\n";
+      return;
   }
+  print "$drive.extinfo $id\n";
 }
 
 
@@ -316,4 +321,40 @@ sub command_for_drive_device {
     $cmd .= '-d '.$ENV{'type_'.$drive}.' ' if exists $ENV{'type_'.$drive};
     $cmd .= $fulldev;
 
+}
+
+
+sub get_drive_id {
+    my ($drive, $fulldev, $use_nocheck) = @_;
+
+    print STDERR "ID of $drive\n";
+
+    my $cmd = $smartctl.' -i ';
+    $cmd .= '--nocheck=standby ' if $use_nocheck;
+    $cmd .= $fulldev;
+
+    my ($family, $model, $serial, $wwn) = ('', '', '', '');
+
+    my $output = `$cmd`;
+
+    foreach (split(/\n/m, $output)) {
+	chomp;
+	my ($label, $value) = split (/:\s+/);
+	next if ! defined $label or ! $label or
+	    ! defined $value or ! $value;
+	$family = $value if $label eq 'Model Family';
+	$model  = $value if $label eq 'Device Model';
+	$serial = $value if $label eq 'Serial Number';
+	$wwn    = $value if $label eq 'LU WWN Device Id';
+    }
+	
+    my $id = '';
+    $id .= ' '. $family if $family;
+    $id .= ' '. "Model: $model" if $model;
+    $id .= ' '. "S/N: $serial" if $serial;
+    $id .= ' '. "WWN: $wwn" if $wwn;
+    $id = "Drive is a " . $id if $id;
+    
+    return $id;
+    exit 1;
 }
