@@ -1,4 +1,4 @@
-#!/usr/bin/perl -wd
+#!/usr/bin/perl -w
 
 use strict;
 use warnings;
@@ -219,11 +219,16 @@ if (defined $ARGV[0]) {
     print "graph_category sensors\n";
     print "graph_info This graph shows the temperature in degrees Celsius of the hard drives in the machine.\n";
     foreach (@drives) {
+	my $d = clean_fieldname($_);
         my @dirs = splitdir($_);
-        print clean_fieldname($_) . ".label " . $dirs[-1] . "\n";
-        print clean_fieldname($_) . ".max 100\n";
-        print clean_fieldname($_) . ".warning 57\n";
-        print clean_fieldname($_) . ".critical 60\n";
+        print $d . ".label " . $dirs[-1] . "\n";
+        print $d . ".max 100\n";
+        print $d . ".warning 57\n";
+        print $d . ".critical 60\n";
+	my $id = get_drive_id($_, device_for_drive($_), $use_nocheck);
+	print $d . ".info $id\n";
+
+
     }
     exit 0;
   }
@@ -275,8 +280,6 @@ foreach my $drive (@drives) {
     next;
   }
   
-  my $id = get_drive_id($drive, $fulldev, $use_nocheck);
-
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
     print "$drive.value $1\n";
   } elsif ($output =~ /^(194 Temperature_(Celsius|Internal).*)/m) {
@@ -292,10 +295,9 @@ foreach my $drive (@drives) {
      print "$drive.value $1\n";
   } else {
       print "$drive.value U\n";
-      print "$drive.extinfo Temperature not detected in smartctl output. $id\n";
+      print "$drive.extinfo Temperature not detected in smartctl output.\n";
       return;
   }
-  print "$drive.extinfo $id\n";
 }
 
 
@@ -353,7 +355,7 @@ sub get_drive_id {
     $id .= ' '. "Model: $model" if $model;
     $id .= ' '. "S/N: $serial" if $serial;
     $id .= ' '. "WWN: $wwn" if $wwn;
-    $id = "Drive is a " . $id if $id;
+    $id = "Drive is a" . $id if $id;
     
     return $id;
     exit 1;
