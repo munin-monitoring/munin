@@ -151,7 +151,8 @@ sub do_work {
 		DEBUG "[DEBUG] config $plugin";
 
 		local $0 = "$0 c($plugin)";
-		my $last_timestamp = $node->fetch_service_config($plugin, sub { $self->uw_handle_config( @_ ); });
+		my $update_rate = "300"; # Default
+		my $last_timestamp = $node->fetch_service_config($plugin, sub { $self->uw_handle_config( @_, \$update_rate); });
 
 		# Ignoring if $last_timestamp is undef, as we don't have config
 		if (! defined ($last_timestamp)) {
@@ -159,12 +160,15 @@ sub do_work {
 			next;
 		}
 
+		if ($update_rate ne "300") {
+			INFO "[INFO] $plugin did change update_rate to $update_rate";
+		}
+
 		# Done with this plugin on dirty config (we already have a timestamp for data)
 		# --> Note that dirtyconfig plugin are always polled every run,
 		#     as we don't have a way to know yet.
 		next if ($last_timestamp);
 
-		my $update_rate = 300; # XXX - hard coded
 
 		my $now = time;
 		my $is_fresh_enough = $self->is_fresh_enough($update_rate, $last_timestamp, $now);
@@ -587,7 +591,7 @@ sub round_to_granularity {
 #
 # Returns the last updated timestamp
 sub uw_handle_config {
-	my ($self, $plugin, $now, $data, $last_timestamp) = @_;
+	my ($self, $plugin, $now, $data, $last_timestamp, $update_rate_ptr) = @_;
 
 	# Protect oneself against multiple, conflicting multigraphs
 	if (defined $self->{__SEEN_PLUGINS__} && $self->{__SEEN_PLUGINS__}{$plugin} ++) {
@@ -631,6 +635,8 @@ sub uw_handle_config {
 		push @field_order, $arg1;
 	}
 
+	$$update_rate_ptr = $service_attr{"update_rate"} if $service_attr{"update_rate"};
+
 	# Merging graph_order & field_order
 	{
 		my @graph_order = split(/ /, $service_attr{"graph_order"} || "");
@@ -670,7 +676,7 @@ sub uw_handle_config {
 	$last_timestamp = 0 unless defined $last_timestamp;
 
 	# Delegate the FETCH part
-	my $update_rate = "300"; # XXX - should use the correct version
+	my $update_rate = $service_attr{"update_rate"} || 300;
 	my $timestamp;
 	$timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
 	$last_timestamp = $timestamp if $timestamp && $timestamp > $last_timestamp;
