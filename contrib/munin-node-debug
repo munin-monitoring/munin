@@ -177,9 +177,14 @@ sub service
 			my $plugin_name = get_service($plugin_number);
 			print $client "graph_title " . get_service_title($plugin_number) . "\n";
 			print $client "graph_category " . get_service_category($plugin_number) . "\n";
-			my $aligned = ($plugin_number == 1) ? " aligned" : "";
-			$aligned = ($plugin_number == 2) ? " garbled" : "";
-			print $client "update_rate $update_rate$aligned\n";
+
+			print $client "update_rate $update_rate";
+			if ($plugin_number % 4 == 1) {
+				print $client " aligned";
+			} elsif ($plugin_number % 4 == 2) {
+				print $client " garbled";
+			}
+			print $client "\n";
 
 			my $graph_data_size;
 			$graph_data_size = "normal" if $plugin_number == 1;
@@ -265,8 +270,8 @@ sub service
 sub get_plugin_number
 {
 	my $plugin_name = shift;
-	my $plugin_number = $services{$plugin_name};
-	return $plugin_number || 0;
+	my $plugin_number = $services{$plugin_name} || 0;
+	return ($plugin_number+0);
 }
 
 sub debug
