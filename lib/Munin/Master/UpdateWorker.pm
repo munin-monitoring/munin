@@ -858,11 +858,9 @@ sub _create_rrd_file {
         # Parsing resolution to achieve computer format as defined on the RFC :
         # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB
         my @resolutions_computer = parse_custom_resolution($1, $update_rate);
+        my @enlarged_resolutions = enlarged_resolutions(@resolutions_computer);
         foreach my $resolution_computer(@resolutions_computer) {
             my ($multiplier, $multiplier_nb) = @{$resolution_computer};
-	    # Always add 10% to the RRA size, as specified in
-	    # http://munin-monitoring.org/wiki/format-graph_data_size
-	    $multiplier_nb += int ($multiplier_nb / 10) || 1;
             push (@args,
                 "RRA:AVERAGE:0.5:$multiplier:$multiplier_nb",
                 "RRA:MIN:0.5:$multiplier:$multiplier_nb",
@@ -886,6 +884,23 @@ sub _create_rrd_file {
     if (my $ERROR = RRDs::error) {
         ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";
     }
+}
+
+sub enlarge_custom_resolution {
+	my @enlarged_resolutions;
+        foreach my $resolution_computer(@_) {
+            my ($multiplier, $multiplier_nb) = @{$resolution_computer};
+	    # Always add 10% to the RRA size, as specified in
+	    # http://munin-monitoring.org/wiki/format-graph_data_size
+	    $multiplier_nb += int ($multiplier_nb / 10) || 1;
+
+	    push @enlarged_resolutions, [
+		$multiplier,
+		$multiplier_nb,
+	    ];
+	}
+
+	return @enlarged_resolutions;
 }
 
 sub parse_custom_resolution {
