@@ -3,7 +3,7 @@
 
 =head1 NAME
 
-port_ - Munin wildcard plugin to monitor netwok port usage.
+port_ - Munin wildcard plugin to monitor network port usage.
 
 =head1 CONFIGURATION
 
