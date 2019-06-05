@@ -131,6 +131,15 @@ for (my $i = 0; $i < $nb_servers; $i ++) {
 debug("Ignoring SIG_CHILD");
 $SIG{CHLD} = 'IGNORE';
 
+# Init the plugin names
+for (my $i = 0; $i < $nb_plugins; $i ++) {
+	my $service = get_service($i);
+
+	# Save the number to retrieve it later, since
+	# it's no longer encoded in the plugin name
+	$services{$service} = $i;
+}
+
 my $select = IO::Select->new(@servers);
 while (my @ready = $select->can_read()) {
 	foreach my $ready_fh (@ready) {
@@ -159,14 +168,7 @@ sub service
 		chomp($line);
 		debug("[$$] client of $hostname asked : $line");
 		if ($line =~ m/^list$/ || $line =~ m/^list /) {
-			for (my $i = 0; $i < $nb_plugins; $i ++) {
-				my $service = get_service($i);
-				print $client get_service($i) . " ";
-
-				# Save the number to retrieve it later, since
-				# it's no longer encoded in the plugin name
-				$services{$service} = $i;
-			}
+			print $client join(" ", keys(%services));
 			print $client "\n";
 		} elsif ($line =~ m/^cap (\w+)/) {
 			my @caps = "multigraph";
@@ -175,9 +177,25 @@ sub service
 		} elsif ($line =~ m/^config (\w+)/) {
 			my $plugin_number = get_plugin_number($1);
 			my $plugin_name = get_service($plugin_number);
+			debug("[$$] plugin asked:$1, number:$plugin_number, name:$plugin_name");
 			print $client "graph_title " . get_service_title($plugin_number) . "\n";
 			print $client "graph_category " . get_service_category($plugin_number) . "\n";
-			print $client "update_rate $update_rate\n";
+
+			print $client "update_rate $update_rate";
+			if ($plugin_number % 4 == 1) {
+				print $client " aligned";
+			} elsif ($plugin_number % 4 == 2) {
+				print $client " garbled";
+			}
+			print $client "\n";
+
+			my $graph_data_size;
+			$graph_data_size = "debug" if $plugin_number % 5 == 0;
+			$graph_data_size = "normal" if $plugin_number % 5 == 1;
+			$graph_data_size = "huge" if $plugin_number % 5 == 2;
+			$graph_data_size = "custom 10,5 10,10 10" if $plugin_number % 5 == 3;
+			$graph_data_size = "custom 10,5 for 10, 100s for 10d" if $plugin_number % 5 == 4;
+			print $client "graph_data_size $graph_data_size\n" if $graph_data_size;
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				my $ds = get_ds($plugin_number, $i);
 				my $ds_info = get_ds_info($plugin_number, $i);
@@ -256,8 +274,10 @@ sub service
 sub get_plugin_number
 {
 	my $plugin_name = shift;
-	my $plugin_number = $services{$plugin_name};
-	return $plugin_number || 0;
+	$plugin_name =~ s/^(\s+)//;
+	$plugin_name =~ s/(\s+)$//;
+	my $plugin_number = $services{$plugin_name} || 0;
+	return ($plugin_number+0);
 }
 
 sub debug

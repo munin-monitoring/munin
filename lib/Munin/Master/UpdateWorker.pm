@@ -104,10 +104,8 @@ sub do_work {
 
 
 		$self->{dbh}->begin_work() if $self->{dbh}->{AutoCommit};
-		$self->{dbh_state}->begin_work() if $self->{dbh_state}->{AutoCommit};
 
 		my $dbh = $self->{dbh};
-		my $dbh_state = $self->{dbh_state};
 
 		# Handle spoolfetch, one call to retrieve everything
 		if (grep /^spool$/, @node_capabilities) {
@@ -153,7 +151,8 @@ sub do_work {
 		DEBUG "[DEBUG] config $plugin";
 
 		local $0 = "$0 c($plugin)";
-		my $last_timestamp = $node->fetch_service_config($plugin, sub { $self->uw_handle_config( @_ ); });
+		my $update_rate = "300"; # Default
+		my $last_timestamp = $node->fetch_service_config($plugin, sub { $self->uw_handle_config( @_, \$update_rate); });
 
 		# Ignoring if $last_timestamp is undef, as we don't have config
 		if (! defined ($last_timestamp)) {
@@ -161,12 +160,15 @@ sub do_work {
 			next;
 		}
 
+		if ($update_rate ne "300") {
+			INFO "[INFO] $plugin did change update_rate to $update_rate";
+		}
+
 		# Done with this plugin on dirty config (we already have a timestamp for data)
 		# --> Note that dirtyconfig plugin are always polled every run,
 		#     as we don't have a way to know yet.
 		next if ($last_timestamp);
 
-		my $update_rate = 300; # XXX - hard coded
 
 		my $now = time;
 		my $is_fresh_enough = $self->is_fresh_enough($update_rate, $last_timestamp, $now);
@@ -191,8 +193,6 @@ NODE_END:
 
 	    # We want to commit to avoid leaking transactions
 	    $dbh->commit() unless $dbh->{AutoCommit};
-	    $dbh_state->commit() unless $dbh_state->{AutoCommit};
-
 	}; # eval
 
 	# kill the remaining process if needed
@@ -495,27 +495,14 @@ sub _db_state_update {
 	DEBUG "_db_state_update.ds_id:$ds_id";
 	$sth_ds->finish();
 
-	my $sth_state = $dbh->prepare_cached("SELECT last_epoch, last_value FROM state WHERE id = ? AND type = ?");
-	$sth_state->execute($ds_id, "ds");
-	my ($last_epoch, $last_value) = $sth_state->fetchrow_array();
-	$sth_state->finish();
-
-	{
-		# $last_epoch might be null
-		no warnings; ## no critic qw( ProhibitNoWarnings )
-		DEBUG "_db_state_update.last_epoch:$last_epoch";
-		DEBUG "_db_state_update.last_value:$last_value";
-	}
-
-	if (! defined $last_epoch) {
+	# Update the state with the new values
+	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
+	my $rows_u = $sth_state_u->execute($when, $value, $ds_id, "ds");
+	if ($rows_u eq "0E0") {
 		# No line exists yet. Create It.
 		my $sth_state_i = $dbh->prepare_cached("INSERT INTO state (id, type) VALUES (?, ?)");
 		$sth_state_i->execute($ds_id, "ds");
 	}
-
-	# Update the state with the new values
-	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
-	$sth_state_u->execute($when, $value, $ds_id, "ds");
 
 	return $ds_id;
 }
@@ -604,7 +591,7 @@ sub round_to_granularity {
 #
 # Returns the last updated timestamp
 sub uw_handle_config {
-	my ($self, $plugin, $now, $data, $last_timestamp) = @_;
+	my ($self, $plugin, $now, $data, $last_timestamp, $update_rate_ptr) = @_;
 
 	# Protect oneself against multiple, conflicting multigraphs
 	if (defined $self->{__SEEN_PLUGINS__} && $self->{__SEEN_PLUGINS__}{$plugin} ++) {
@@ -619,9 +606,9 @@ sub uw_handle_config {
 	my @fetch_data;
 
 	# Parse the output to a simple HASH
-	my %service_attr;
-	my %fields;
-	my @field_order;
+	my %service_attr = ();
+	my %fields = ();
+	my @field_order = ();
 	for my $line (@$data) {
 		DEBUG "uw_handle_config: $line";
 		# Barbaric regex to parse the output of the config
@@ -647,6 +634,8 @@ sub uw_handle_config {
 		# Using an array since, obviously, the order is important.
 		push @field_order, $arg1;
 	}
+
+	$$update_rate_ptr = $service_attr{"update_rate"} if $service_attr{"update_rate"};
 
 	# Merging graph_order & field_order
 	{
@@ -687,7 +676,7 @@ sub uw_handle_config {
 	$last_timestamp = 0 unless defined $last_timestamp;
 
 	# Delegate the FETCH part
-	my $update_rate = "300"; # XXX - should use the correct version
+	my $update_rate = $service_attr{"update_rate"} || 300;
 	my $timestamp;
 	$timestamp = $self->uw_handle_fetch($plugin, $now, $update_rate, \@fetch_data) if (@fetch_data);
 	$last_timestamp = $timestamp if $timestamp && $timestamp > $last_timestamp;
@@ -869,11 +858,9 @@ sub _create_rrd_file {
         # Parsing resolution to achieve computer format as defined on the RFC :
         # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB
         my @resolutions_computer = parse_custom_resolution($1, $update_rate);
+        my @enlarged_resolutions = enlarged_resolutions(@resolutions_computer);
         foreach my $resolution_computer(@resolutions_computer) {
             my ($multiplier, $multiplier_nb) = @{$resolution_computer};
-	    # Always add 10% to the RRA size, as specified in
-	    # http://munin-monitoring.org/wiki/format-graph_data_size
-	    $multiplier_nb += int ($multiplier_nb / 10) || 1;
             push (@args,
                 "RRA:AVERAGE:0.5:$multiplier:$multiplier_nb",
                 "RRA:MIN:0.5:$multiplier:$multiplier_nb",
@@ -897,6 +884,23 @@ sub _create_rrd_file {
     if (my $ERROR = RRDs::error) {
         ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";
     }
+}
+
+sub enlarge_custom_resolution {
+	my @enlarged_resolutions;
+        foreach my $resolution_computer(@_) {
+            my ($multiplier, $multiplier_nb) = @{$resolution_computer};
+	    # Always add 10% to the RRA size, as specified in
+	    # http://munin-monitoring.org/wiki/format-graph_data_size
+	    $multiplier_nb += int ($multiplier_nb / 10) || 1;
+
+	    push @enlarged_resolutions, [
+		$multiplier,
+		$multiplier_nb,
+	    ];
+	}
+
+	return @enlarged_resolutions;
 }
 
 sub parse_custom_resolution {

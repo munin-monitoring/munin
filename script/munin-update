@@ -97,6 +97,12 @@ sub parse_args {
         "version!",
     ) or pod2usage(1);
 
+    # We let the call shoot himself in the foot with cli args
+    my $config_file = $args{config_file};
+    if ($config_file) {
+        $args{config_file} = $1 if $config_file =~ m/(.*)/;
+    }
+
     delete $args{version};
 
     $args{limit_hosts} = { map { $_ => 1 } @{$args{host}} };
