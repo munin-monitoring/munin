@@ -78,8 +78,7 @@ sub get_dbh {
 		$dbh->{RaiseError} = 1;
 		use Carp;
 		$dbh->{HandleError} = sub { confess(shift) };
-	 }
-
+	}
 
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
