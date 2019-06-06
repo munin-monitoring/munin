@@ -5,6 +5,8 @@ use lib qw(t/lib);
 
 
 use Test::More;
+use Test::Differences;
+
 use Munin::Master::UpdateWorker;
 
 # parse_update_rate

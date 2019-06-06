@@ -150,14 +150,6 @@ my %legal = map { $_ => 1 } qw(
 
 my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
 
-sub cl_is_keyword {
-    # Class-less version of is_keyword for legacy code.
-    my ($word) = @_;
-
-    return defined $legal{$word};
-}
-
-
 sub is_keyword {
     my ($self, $word) = @_;
 
@@ -253,20 +245,6 @@ Don't use it directly. See L<Munin::Master::Config> and L<Munin::Node::Config>.
 Parses the configuration in $file_name.
 
 =item is_keyword ($keyword)
-
-Returns true if $keyword is a valid configuration keyword.
-
-Returns false if $keyword is not a valid configuration keyword.
-
-=back
-
-=head1 FUNCTIONS
-
-=over
-
-=item cl_is_keyword ($keyword)
-
-A "classless" version of B<is_keyword>.
 
 Returns true if $keyword is a valid configuration keyword.
 

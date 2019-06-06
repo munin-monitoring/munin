@@ -5,6 +5,7 @@ use lib qw(t/lib);
 
 
 use Test::More;
+use Test::Differences;
 
 require_ok( 'Munin::Master::Update' );
 require_ok( 'Munin::Master::Config' );
