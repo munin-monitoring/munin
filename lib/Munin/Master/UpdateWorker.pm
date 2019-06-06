@@ -932,6 +932,14 @@ sub parse_custom_resolution {
 			my $multiplier = int ($nb_sec / $update_rate);
                         my $multiplier_nb = int ($for_sec / $nb_sec);
 
+			# Log & ignore if having a 0
+			unless ($multiplier && $multiplier_nb) {
+				ERROR "$elem"
+					. " -> nb_sec:$nb_sec, for_sec:$for_sec"
+					. " -> multiplier:$multiplier, multiplier_nb:$multiplier_nb";
+				next;
+			}
+
 			DEBUG "[DEBUG] $elem"
 				. " -> nb_sec:$nb_sec, for_sec:$for_sec"
 				. " -> multiplier:$multiplier, multiplier_nb:$multiplier_nb"
