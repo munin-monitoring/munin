@@ -513,7 +513,7 @@ sub is_fresh_enough {
 
 	DEBUG "is_fresh_enough($update_rate, $last_timestamp, $now)";
 
-	my ($is_update_aligned, $update_rate_in_sec) = parse_update_rate($update_rate);
+	my ($update_rate_in_sec, $is_update_aligned) = parse_update_rate($update_rate);
 
 	DEBUG "update_rate_in_sec:$update_rate_in_sec";
 

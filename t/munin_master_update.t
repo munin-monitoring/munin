@@ -41,6 +41,10 @@ ok($update->run() == 5);
 kill('TERM', $pid_debug_node);
 wait();
 
+# cleanup the update dir
+system("rm", "-Rvf", $config->{dbdir});
+
+
 done_testing();
 
 1;
