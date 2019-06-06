@@ -858,7 +858,7 @@ sub _create_rrd_file {
         # Parsing resolution to achieve computer format as defined on the RFC :
         # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB
         my @resolutions_computer = parse_custom_resolution($1, $update_rate);
-        my @enlarged_resolutions = enlarged_resolutions(@resolutions_computer);
+        my @enlarged_resolutions = enlarge_custom_resolution(@resolutions_computer);
         foreach my $resolution_computer(@resolutions_computer) {
             my ($multiplier, $multiplier_nb) = @{$resolution_computer};
             push (@args,
