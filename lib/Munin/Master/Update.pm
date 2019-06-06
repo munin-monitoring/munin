@@ -234,9 +234,12 @@ sub _db_init {
 	my $db_driver = $ENV{MUNIN_DBDRIVER} || "$config->{dbdriver}";
 	$db_serial_type = "SERIAL" if $db_driver eq "Pg";
 
-	# Create DB
-	$dbh->begin_work();
+	# Sets some session vars
+	$dbh->do("PRAGMA journal_mode=WAL;") if $db_driver eq "SQLite";
 	$dbh->do("SET LOCAL client_min_messages = error") if $db_driver eq "Pg";
+
+	# Initialize DB Schema
+	$dbh->begin_work();
 	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id $db_serial_type PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS r_g_grp ON grp (p_id, name)");
