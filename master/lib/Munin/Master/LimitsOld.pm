@@ -402,7 +402,11 @@ sub process_service {
             $value = "unknown";
         }
         else {
-            $value = sprintf "%.2f", $value;
+            my $formatted_value = sprintf "%.2f", $value;
+            if (($formatted_value == 0) && !looks_like_number($value)) {
+                warn "Failed to interpret expected numeric value of field '$fname' (host '$host'): '$value'";
+            }
+            $value = $formatted_value;
         }
 
         # Some fields that are nice to have in the plugin output
