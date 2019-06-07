@@ -116,7 +116,12 @@ sub do_work {
 		# updates, as we don't want to slurp the whole spoolfetched output
 		# and process it later. It will surely timeout, and use a truckload
 		# of RSS.
-		my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub { $self->uw_handle_config( @_ ); } );
+		my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub {
+				my ($plugin, $now, $data, $last_timestamp, $update_rate_ptr) = @_;
+				INFO "spoolfetch config ($plugin, $now)";
+				local $0 = "$0 t($now) c($plugin)";
+				$self->uw_handle_config( @_ );
+		} );
 
 		# update the timestamp if we spoolfetched something
 		$self->set_spoolfetch_timestamp($timestamp) if $timestamp;
