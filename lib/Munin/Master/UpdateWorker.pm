@@ -116,7 +116,12 @@ sub do_work {
 		# updates, as we don't want to slurp the whole spoolfetched output
 		# and process it later. It will surely timeout, and use a truckload
 		# of RSS.
-		my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub { $self->uw_handle_config( @_ ); } );
+		my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub {
+				my ($plugin, $now, $data, $last_timestamp, $update_rate_ptr) = @_;
+				INFO "spoolfetch config ($plugin, $now)";
+				local $0 = "$0 t($now) c($plugin)";
+				$self->uw_handle_config( @_ );
+		} );
 
 		# update the timestamp if we spoolfetched something
 		$self->set_spoolfetch_timestamp($timestamp) if $timestamp;
@@ -513,7 +518,7 @@ sub is_fresh_enough {
 
 	DEBUG "is_fresh_enough($update_rate, $last_timestamp, $now)";
 
-	my ($is_update_aligned, $update_rate_in_sec) = parse_update_rate($update_rate);
+	my ($update_rate_in_sec, $is_update_aligned) = parse_update_rate($update_rate);
 
 	DEBUG "update_rate_in_sec:$update_rate_in_sec";
 
@@ -931,6 +936,14 @@ sub parse_custom_resolution {
 
 			my $multiplier = int ($nb_sec / $update_rate);
                         my $multiplier_nb = int ($for_sec / $nb_sec);
+
+			# Log & ignore if having a 0
+			unless ($multiplier && $multiplier_nb) {
+				ERROR "$elem"
+					. " -> nb_sec:$nb_sec, for_sec:$for_sec"
+					. " -> multiplier:$multiplier, multiplier_nb:$multiplier_nb";
+				next;
+			}
 
 			DEBUG "[DEBUG] $elem"
 				. " -> nb_sec:$nb_sec, for_sec:$for_sec"

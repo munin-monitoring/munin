@@ -5,6 +5,7 @@ use lib qw(t/lib);
 
 
 use Test::More;
+use Test::Differences;
 
 require_ok( 'Munin::Master::Update' );
 require_ok( 'Munin::Master::Config' );
@@ -39,6 +40,10 @@ ok($update->run() == 5);
 
 kill('TERM', $pid_debug_node);
 wait();
+
+# cleanup the update dir
+system("rm", "-Rvf", $config->{dbdir});
+
 
 done_testing();
 
