@@ -56,7 +56,7 @@ Add a new virtualhost, using the following example:
      RewriteRule ^/(.*)          /usr/lib/munin/cgi/munin-cgi-html/$1 [L]
 
      # Images
-     RewriteRule ^/(.*) /usr/lib/munin/cgi/munin-cgi-graph/$1 [L]
+     RewriteRule ^/munin-cgi/munin-cgi-graph/(.*) /usr/lib/munin/cgi/munin-cgi-graph/$1 [L]
 
      # Ensure we can run (fast)cgi scripts
      <Directory "/usr/lib/munin/cgi">
