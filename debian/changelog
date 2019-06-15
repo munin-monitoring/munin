@@ -1,4 +1,7 @@
-munin (2.999.11-2) UNRELEASED; urgency=medium
+munin (2.999.12-1) UNRELEASED; urgency=medium
+
+  [ Holger Levsen ]
+  * New upstream release.
 
   [ Lars Kruse ]
   * Add 'Webservice' field to upstream metadata.
