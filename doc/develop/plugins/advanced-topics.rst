@@ -1,3 +1,5 @@
+.. _advanced-plugin-dev:
+
 ======================================
 Advanced Topics for Plugin Development
 ======================================
@@ -16,6 +18,56 @@ guidelines when developing a plugin:
 
  * A non-zero exit code must be issued
  * A descriptive message should be written to STDERR.  On a deployed plugin, this message will appear in munin-node.log.  When invoked via munin-run, it'll appear in the console.
+
+
+.. _plugin-field-thresholds:
+
+Field thresholds (warning and critical)
+=======================================
+
+The :ref:`.warning <fieldname.warning>` and :ref:`.critical <fieldname.critical>` attributes are
+used to detect unwanted situations, e.g. a disk being almost full.
+
+Some plugins may want to supply default thresholds, while allowing these values to be overridden by
+the user.
+
+Munin's plugin modules for Perl and Shell provide helper functions for this purpose. They allow the
+user to override the plugin's thresholds via the environment variables ``FIELDNAME_warning`` or
+``warning`` (likewise for "critical") in :ref:`munin.conf <munin.conf>`.
+
+
+Example shell plugin
+--------------------
+
+::
+
+  ...
+
+  . "$MUNIN_LIBDIR/plugins/plugin.sh"
+
+  ...
+
+  warning=${warning:-0.80} critical=${critical:-0.95} print_thresholds "$fieldname"
+
+  ...
+
+
+Example perl plugin
+-------------------
+
+::
+
+  ...
+
+  use Munin::Plugin;
+
+  ...
+
+  print_thresholds("$fieldname", undef, undef, 0.80, 0.95);
+
+  ...
+
+See ``man Munin::Plugin`` for details.
 
 
 Handling temporary files
@@ -108,3 +160,39 @@ Python Plugins
 Python2 is approaching its end-of-life in 2020 and Python3 was released 2008. Thus new plugins should be written in Python3 only.
 
 Core modules (included in CPython) should be preferred over external modules, whenever possible (e.g. use `urllib <https://docs.python.org/3/library/urllib>`_ instead of `requests <http://python-requests.org>`_).
+
+
+Remote Monitoring
+=================
+
+Remote monitoring plugins are plugins that run on one node, but collect metrics from a different node. They are typically used to collect metrics from systems that can't have munin-node installed on them directly, but still export useful metrics over the network (via, e.g., SNMP or HTTP). SNMP is the most common protocol used for these plugins; for details on using SNMP specifically, including the ``Munin::Plugin::SNMP`` module, see :ref:`HOWTO write SNMP plugins <howto-write-snmp-plugins>`.
+
+Naming
+------
+
+Remote monitoring plugins should use the naming format ``[protocol]__[metric]``, or ``[protocol]__[metric]_`` for remote wildcard plugins, e.g. ``snmp__uptime`` or ``snmp__if_`` -- note the double underscore. When instantiated the name of the host to monitor will go between those underscores, e.g. ``snmp_printserver_uptime`` or ``snmp_gateway_if_eth0``.
+
+``config``
+----------
+
+The plugin should figure out the name of the host being monitored by inspecting its own filename, e.g. ``HOST=$(basename "$0" | cut -d_ -f2)``. If that's ``localhost``, it should behave like any other (non-remote) plugin; otherwise it should emit ``host_name $HOST`` before any other configuration data. This lets the node know which plugins collect local metrics and which ones collect metrics from remote hosts -- and, for the latter, which hosts they collect from.
+
+``fetch``
+---------
+
+Nothing special is needed here! Figure out ``$HOST`` as above, then fetch metrics for it and emit them like any other plugin.
+
+``munin.conf``
+--------------
+
+Specify the host as normal, but set ``use_node_name no``, and set ``address`` to the address of the node the remote monitoring plugins run on, not the address of the host being monitored. For example, if you have some networking gear, ``gate1`` and ``gate2``, monitored via SNMP by the node on ``netmon``, you would write something like:
+
+::
+
+  [network;gate1]
+  use_node_name no
+  address netmon
+
+  [network;gate2]
+  use_node_name no
+  address netmon

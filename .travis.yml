@@ -1,4 +1,5 @@
 ---
+dist: xenial
 language: perl
 ### perl:
 ###   - "5.20"
@@ -35,11 +36,13 @@ addons:
       - libnet-server-perl
       - libnet-snmp-perl
       - libnet-ssleay-perl
+      - libparallel-forkmanager-perl
       - libparams-validate-perl
       - librrds-perl
       - libtest-class-perl
       - libtest-deep-perl
       - libtest-differences-perl
+      - libtest-exception-perl
       - libtest-longstring-perl
       - libtest-mockmodule-perl
       - libtest-mockobject-perl
@@ -66,11 +69,11 @@ matrix:
   fast_finish: true
 
 env:
-  - TEST_MEDIUM=1
+  # specify test level and announce cpanm's installation directory
+  - TEST_MEDIUM=1 PERLLIB=/home/travis/perl5/lib/perl5
 
 before_install:
   - cpanm -n Devel::Cover::Report::Coveralls
-  - cpanm --quiet --installdeps --notest .
 
 install:
   - perl Build.PL
@@ -81,6 +84,3 @@ install:
   - PYTHON_LINT_CALL="python3 -m flake8.main" make lint
 script:
   - cover -test -report coveralls
-
-# Using the container-based infrastructure
-sudo: false

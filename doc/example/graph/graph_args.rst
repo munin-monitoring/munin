@@ -3,9 +3,9 @@
    single: graph_args
    pair: example; graph_args
 
-=======================
- Recommended graph_args
-=======================
+======================
+Recommended graph_args
+======================
 
 
 Set arguments for the rrd grapher with attribute :ref:`graph_args <graph_args>`.
@@ -14,6 +14,7 @@ This is used to control how the generated graph looks, and how values are interp
 You can override plugin defaults on Munin master via your own settings on plugin level in :ref:`munin.conf`.
 
 See `rrdgraph man page <https://oss.oetiker.ch/rrdtool/doc/rrdgraph.en.html>`_ for more details.
+
 
 Scale
 =====
@@ -30,6 +31,7 @@ Scale
    Logarithmic has been tested on netstat (connection count)
    and some other graphs with good results.
 
+
 Units
 =====
 
@@ -45,6 +47,7 @@ See :ref:`Best Current Practices for good plugin graphs <plugin-bcp-graphscaling
 
    Set to **3** force display unit to K, **-6** would force display in u/micro.
 
+
 Axis
 ====
 
@@ -58,5 +61,16 @@ Axis
 
 .. option:: --rigid
 
-  Force rrdgraph y-axis scale to the set upper and lower limit.
-  Usually, the graph scale can `overrun`. (also seen as: ``-r``)
+   Force rrdgraph y-axis scale to the set upper and lower limit.
+   Usually, the graph scale can `overrun`. (also seen as: ``-r``)
+
+
+Legend
+======
+
+.. options:: --legend-direction <value>
+
+    The default value ``topdown`` causes the legend items to be written in the same order as the
+    items are drawn in the graph.  For stacked graphs this means, that the area in the bottom of
+    the graph is the topmost entry in the legend.  Thus it may be useful to specify ``bottomup``
+    for a stacked graph in order to reverse the order of the legend items.

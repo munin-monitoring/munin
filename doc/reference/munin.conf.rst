@@ -29,6 +29,7 @@ Group and host sections are defined by declaring the group or host name in brack
         It will not work if you place them in later sections of the config file.
         We recommend to use the delivered munin.conf file and adapt it to your needs.
 
+Comments can be included by prefacing them with ``#``. A literal ``#`` in a configuration value can be escaped with a backslash: ``\#``. Long lines can be wrapped by ending them with ``\``. Note that ``\`` has no special meaning otherwise, nor do any other characters; in particular, quotes have no special meaning, so a line like ``contact.irc.command irc-notify "#munin-alerts"`` will be parsed as ``contact.irc.command irc-notify "`` unless the ``#`` is escaped.
 
 .. _master-conf-global-directives:
 
@@ -226,6 +227,10 @@ otherwise.
    Munin sends 1 email for each warning/critical. Useful when relaying messages to external processes
    that may handle a limited number of simultaneous warnings.
 
+.. option:: contact.your_contact_name.always_send <critical|warning|ok|unknown...>
+
+   If there are alerts of the given severities, send them to this contact every time :ref:`munin-limits` runs, even if they haven't changed since last time.
+
 .. option:: ssh_command <command>
 
    The name of the secure shell command to use.  Can be fully
@@ -336,7 +341,13 @@ only to that node.
 
 .. option:: use_node_name <yes|no>
 
-   Overrides the name supplied by the node. Allowed values: "yes" and "no". Defaults to "no".
+   If "yes", when querying the node, the master will trust the name the node reports for itself, and ask for plugins associated with that name. This means that it will fetch metrics from plugins running on the node itself, which is usually what you want.
+
+   If "no", the master will ignore the name reported by the node when it connects, and ask for plugins associated with the name configured in munin.conf. This is generally what you want when the node is collecting metrics on behalf of other systems, e.g. via SNMP plugins.
+
+   When you have one node that collects metrics from several systems (e.g. querying multiple routers via SNMP), it's common to have multiple entries for it in munin.conf with the same ``address``, different node names, and ``use_node_name no``.
+
+   See also :ref:`Using SNMP Plugins <tutorial-snmp>`.
 
 .. option:: notify_alias <node name>
 
@@ -370,6 +381,14 @@ These directives follow a node definition and are of the form "plugin.directive 
 
 Using these directives you can override various directives for a plugin, such as its contacts, and
 can also be used to create graphs containing data from other plugins.
+
+.. option:: graph_title <value>
+
+   Override the title of a specific graph.
+
+.. option:: graph_category <value>
+
+   Override the category of a specific service.
 
 .. option:: graph_height <value>
 

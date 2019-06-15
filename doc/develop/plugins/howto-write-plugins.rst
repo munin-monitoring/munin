@@ -47,6 +47,11 @@ Also, munin wants the value in a more structured form:
 
 Here the ``load`` is called the field or field name, ``value`` the attribute, and the number is of course the value. (See our :ref:`complete overview of Munin specific terminology <nomenclature>`).
 
+Note that field name may not start with a digit or special characters
+(see :ref:`notes on field names <notes-on-fieldnames>` for details).  Thus it is recommended to
+prepend a prefix in front of dynamically discovered field names (e.g. names of network interfaces
+or services). Otherwise a uniqe part of the field name may get lost due to name munging.
+
 That was the hard part of the plugin.  The rest is just book-keeping.
 
 Munin plugin config command
@@ -138,7 +143,7 @@ The ``-l 0`` sets the lowest value to 0.  If all readings of a plugin were betwe
 
 Pick a suitable ``graph_category`` from the :ref:`list of well-known categories <plugin-graph-category>`.
 
-The :ref:`.warning <fieldname.warning>` and :ref:`.critical <fieldname.critical>` attributes are used to issue status messages.  In the case of load average they're probably set statically by the plugin author.  A plugin may also examine the system on which it runs to determine good values for these.  The best way is for the plugin author provide defaults, and then code the plugin to get defaults from environment variables such as ``$warning`` and ``$critical``.
+The :ref:`.warning <fieldname.warning>` and :ref:`.critical <fieldname.critical>` attributes are used to detect unwanted situations.  In the case of load average they're probably set statically by the plugin author.  A plugin may also examine the system on which it runs to determine good values for these.  The best way is for the plugin author provide defaults, and then code the plugin to get defaults from environment variables such as ``$warning`` and ``$critical``.  See :ref:`configurable field thresholds <plugin-field-thresholds>` for implementation hints.
 
 The values :ref:`graph_info <graph_info>` attribute and each of the :ref:`.info <fieldname.info>` field-attributes are added as text on the html page under the graphs.  They serve as legends for the graphs shown.  In the case of this plugin there is not much to say - in other cases, when presenting output from more complex systems (much) more explanation is in order.  Imagine writing for a person that knows Unix/networks/operating systems in general but not the specific sub-system the plugin measures in particular.
 

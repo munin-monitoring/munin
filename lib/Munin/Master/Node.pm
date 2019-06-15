@@ -167,26 +167,32 @@ sub _extract_name_from_greeting {
     }
  }
 
+
+sub _get_node_or_global_setting {
+    my ($self, $key) = @_;
+    return defined($self->{configref}->{$key}) ? $self->{configref}->{$key} : $config->{$key};
+}
+
+
 sub _run_starttls_if_required {
     my ($self) = @_;
 
     # TLS should only be attempted if explicitly enabled. The default
     # value is therefore "disabled" (and not "auto" as before).
-    my $tls_requirement = exists $self->{configref}->{tls} ?
-                                   $self->{configref}->{tls} : $config->{tls};
+    my $tls_requirement = $self->_get_node_or_global_setting("tls");
     DEBUG "TLS set to \"$tls_requirement\".";
     return if $tls_requirement eq 'disabled';
     $self->{tls} = Munin::Common::TLSClient->new({
         DEBUG        => $config->{debug},
         read_fd      => fileno($self->{reader}),
         read_func    => sub { _node_read_single($self) },
-        tls_ca_cert  => $config->{tls_ca_certificate},
-        tls_cert     => $config->{tls_certificate},
+        tls_ca_cert  => $self->_get_node_or_global_setting("tls_ca_certificate"),
+        tls_cert     => $self->_get_node_or_global_setting("tls_certificate"),
         tls_paranoia => $tls_requirement,
-        tls_priv     => $config->{tls_private_key},
-        tls_vdepth   => $config->{tls_verify_depth},
-        tls_verify   => $config->{tls_verify_certificate},
-        tls_match    => $config->{tls_match},
+        tls_priv     => $self->_get_node_or_global_setting("tls_private_key"),
+        tls_vdepth   => $self->_get_node_or_global_setting("tls_verify_depth"),
+        tls_verify   => $self->_get_node_or_global_setting("tls_verify_certificate"),
+        tls_match    => $self->_get_node_or_global_setting("tls_match"),
         write_fd     => fileno($self->{writer}),
         write_func   => sub { _node_write_single($self, @_) },
     });

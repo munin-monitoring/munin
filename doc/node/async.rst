@@ -193,7 +193,11 @@ authorized_keys file for this user.
 
 ::
 
+  # more than one master may fetch data
   command="/usr/share/munin/munin-async --spoolfetch" ssh-rsa AAAA[...] munin@master
+  # only a single master is expected to fetch data
+  command="/usr/share/munin/munin-async --spoolfetch && /usr/share/munin/munin-async --cleanupandexit" ssh-rsa AAAA[...] munin@master
+
 
 The following options are recommended for security, but are strictly
 not necessary for the munin-async connection to work

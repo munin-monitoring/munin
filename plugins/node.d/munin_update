@@ -105,8 +105,7 @@ if [ "$1" = "config" ]; then
 	while read -r i j; do
             name="$(clean_fieldname "$i")"
 	    echo "$name.label $i"
-	    echo "$name.warning 240"
-	    echo "$name.critical 285"
+	    warning=${warning:-240} critical=${critical:-285} print_thresholds "$name"
 	done
 	exit 0
 fi

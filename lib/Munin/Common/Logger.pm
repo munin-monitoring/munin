@@ -43,7 +43,7 @@ my $screen_format = sub {
     my $level   = $args{level};
     my $message = $args{message};
 
-    $message = _remove_label($message);
+    $message = _remove_label($message) if $message =~ /^\[(DEBUG|INFO|NOTICE|WARNING|ERROR)\][\s:]*/;
 
     chomp $message;
 

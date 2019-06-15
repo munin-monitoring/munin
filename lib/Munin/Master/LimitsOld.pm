@@ -332,10 +332,8 @@ sub process_service {
     my $datafilename_state = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile-state.sqlite";
     DEBUG "[DEBUG] opening sql $datafilename";
     my $dbh = Munin::Master::Update::get_dbh();
-    # XXX - It is in the same DB for now
-    my $dbh_state = Munin::Master::Update::get_dbh();
-    my $sth_state = $dbh_state->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm FROM state WHERE id = ? and type = ?');
-    my $sth_state_upt = $dbh_state->prepare('UPDATE state SET alarm = ? WHERE id = ? and type = ?');
+    my $sth_state = $dbh->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm FROM state WHERE id = ? and type = ?');
+    my $sth_state_upt = $dbh->prepare('UPDATE state SET alarm = ? WHERE id = ? and type = ?');
     my $sth_ds = $dbh->prepare('SELECT id FROM url WHERE path = ? and type = ?');
 
     my %seen = ();

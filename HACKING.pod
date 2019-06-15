@@ -12,99 +12,134 @@ This is the guide for Munin internals contributors (developers,
 testers, documenters.)
 
 If you are looking for more information on how to I<use> Munin you
-probably want L<http://munin-monitoring.org/wiki/Documentation>
-instead.
+probably want L<http://guide.munin-monitoring.org/> instead.
 
-The munin code is marked by years on the battle front. You will
+You can find some additional contributing information at
+L<http://guide.munin-monitoring.org/en/latest/others/index.html#contributing>.
+
+The Munin code is marked by years on the battle front. You will
 therefore find code that deviates from the guidelines defined
 here. However, all new code should be made to comply.
 
 
 =head1 GETTING STARTED
 
-In the dev_script directory you will find scripts that are meant to be
-useful for developing. Most of them are tools for creating and using
-munin in a sandbox.
+
+=head2 GITHUB
+
+The main development of Munin is happening on L<https://github.com>. After
+registering an account you can report feature requests and issues
+(L<https://github.com/munin-monitoring/munin/issues/new/choose>) and create
+pull requests (L<https://github.com/munin-monitoring/munin/pulls>).
+
+There are two interesting branches:
+
+=over
+
+=item I<stable-2.0>
+
+As the name suggests this is the stable branch for versions (currently 2.0.x).
+Please base your bug-fix patches (for core and plugins) on this branch.
+They will get merged by time into master.
+
+=item I<master>
+
+This is the development branch of munin.
+Please base your non bug-fix patches, like new features/plugins, rewrites,
+cleanup etc., on this branch.
+
+=back
+
 
 =head2 THE SANDBOX
+
+In the B<dev_scripts> directory you will find scripts that are meant to be
+useful for developing. Most of them are tools for creating and using
+Munin in a sandbox.
 
 =over
 
 =item B<install>
 
-To make a clean rebuild of the sandbox
+To make a clean rebuild of the sandbox:
 
- ./dev_scripts/install 1
+  ./dev_scripts/install clean
+  ./dev_scripts/install node
 
-To just install the latest changes
+To just install the latest changes:
 
- ./dev_scripts/install
+  ./dev_scripts/install
 
 =item B<enable/disable tls>
 
 To test TLS, you can enable a paranoid TLS configuration by running:
 
- ./dev_scripts/enable_tls
+  ./dev_scripts/enable_tls
 
 And disable it with:
 
- ./dev_scripts/disable_tls
+  ./dev_scripts/disable_tls
 
 =item B<start/stop munin-node>
 
- ./dev_scripts/start_munin-node [munin-node params ...]
+  ./dev_scripts/start_munin-node [munin-node params ...]
 
 And
 
- ./dev_scripts/stop_munin-node
+  ./dev_scripts/stop_munin-node
 
 To do both:
 
- ./dev_scripts/restart_munin-node [munin-node params ...]
-
+  ./dev_scripts/restart_munin-node [munin-node params ...]
 
 =item B<query_munin_node>
 
 Use this command to query the munin-node directly:
 
- ./dev_scripts/query_munin_node list
+  ./dev_scripts/query_munin_node list
 
 =item B<run>
 
-To run Munin master programs (munin-update, munin-cron, etc) use the run
-command.
+To run Munin programs (munin-update, munin-cron, munin-node-configure,
+munin-run etc.), use this command.
+It ensures a correct invocation in relation to perl's taint mode.
 
- ./dev_scripts/run CMD [CMD args ...]
+  ./dev_scripts/run CMD [CMD args ...]
 
+=item B<start munin-httpd>
+
+To start the Munin http web front-end, run the following:
+
+  ./dev_scripts/start_munin-httpd
+
+This will start the web server on port 4946.
+
+Make sure to run B<munin-update> at least once before visiting the site.
 
 =back
 
 
-=head1 PUNCTUATION VARIABLES
+=head1 CODING STYLE
 
-Don't use punctuation variables (see Perl Best Practices page 79.)
-
- use English qw(-no_match_vars);
-
-We'll add an exception for $_, and $! as they should be fairly widely
-recognized.
-
-
-=head1 FORMATTING
+=head2 GENERAL
 
 =over 12
 
-=item C<Tabs>
+=item C<Strictness and Warnings>
 
-We prefer indentation via tabs. Space-based indentation is usually relying on
-editor magic to ease the pain.  That said, nothing should be vertical-aligned.
-Only indentated correctly.
+Perl code should be written in tainted-mode with the settings I<use strict;>
+and I<use warnings;>.
 
-When a subblock is started, always use one level.
+There should be no perl warnings when running Munin.
 
-=item C<Braces>
+=item C<Spaces vs Tabs>
 
-Braces should go on the same line.
+In general we prefer indentation via tabs.
+
+But due to many space based indentations in the current codebase is it
+sufficient to follow the overall style of the file in question.
+
+When a sub-block is started, always use one level.
 
 =item C<Wrapping>
 
@@ -118,37 +153,76 @@ helps. ASCII art is a must ;-)
 =item C<1 stmt/line>
 
 Only put 1 statement per line. If the expression is complex, break it in
-elementary subexpressions, with meaniful temp vars.
+elementary sub-expressions, with meaningful temporary variables.
 
-=head1 TESTS AND COVERAGE
+=item C<exception handling>
 
-Use test-driven devolopment.
+Currently there is no unified approach to handling exceptions. Use L<Carp>?
 
-In node, server, or common:
+  use Carp;
+  croak("Foo happened!");
 
- perl Build.PL
- ./Build test
-
-
-=head1 EXCEPTION HANDLING
-
-Currently there is no unified approach to handling exceptions. Use
-L<Carp>?
-
- use Carp;
- croak("Foo happened!");
-
- confess("Foo happened!"); # With stack trace
+  confess("Foo happened!"); # With stack trace
 
 Exceptions are caught with an eval:
 
- eval {
-     # Exceptionally scary code
- };
- if ($@) {
-     # Handle exception
- }
+  eval {
+    # Exceptionally scary code
+  };
+  if ($@) {
+    # Handle exception
+  }
 
+=item C<punctuation variables>
+
+Don't use punctuation variables (see Perl Best Practices page 79.). Use the
+English clear names:
+
+  use English qw(-no_match_vars);
+
+We'll add an exception for $_, $!, $0, $@ and $$ as they should be fairly widely
+recognised.
+
+=back
+
+
+=head2 PERLTIDY [inactive]
+
+We use B<perltidy> to automatically format perl code. This ensures a consistent
+style and a tool-based enforcement. The exact configuration can be seen in the
+file I<.perltidyrc>. Please try to use it before any contribution by running
+C<make apply-formatting>.
+
+B<TODO>: discuss perltidy style, see #1014
+
+
+=head2 PERLCRITIC
+
+B<perlcritic> is used to comply to some wide-spread recommendations. The exact
+configuration can be seen in the file I<.perlcriticrc>. Please try to comply
+with those rules by running c<make lint>.
+
+B<TODO>: discuss perlcritc style, see #1051
+
+
+=head2 Commit messages
+
+Please use the present tense ("Add feature" not "Added feature"), the
+imperative mood ("Move cursor to..." not "Moves cursor to...") and some
+standard commit formatting (look at the one already made).
+
+
+=head1 TESTS AND COVERAGE
+
+Use test-driven development.
+
+In node, server, or common:
+
+  perl Build.PL
+  ./Build test
+
+Munin uses L<https://travis-ci.org/> to automatically build after each commit.
+Make sure your pull-requests succeeds.
 
 
 =head1 DOCUMENTATION
@@ -158,9 +232,39 @@ for more on POD.
 
 More is on L<http://munin-monitoring.org/wiki/Documentation>
 
+
 =head2 WRITING
 
 The POD should be defined all in one place. For plugins you place it at
 the top, else at the bottom.
+
+For scripts the recommend headers are (in this order):
+
+  NAME, SYNOPSIS, DESCRIPTION, REQUIRED ARGUMENTS, OPTIONS, EXIT STATUS,
+  CONFIGURATION, FILES, VERSION, BUGS AND LIMITATIONS, AUTHOR,
+  LICENSE AND COPYRIGHT
+
+  B<TODO>: discuss
+
+For modules the recommend headers are (in this order):
+
+  NAME, SYNOPSIS, DESCRIPTION, SUBROUTINES/METHODS,
+  CONFIGURATION AND ENVIRONMENT, DEPENDENCIES, BUGS AND LIMITATIONS, AUTHOR,
+  LICENSE AND COPYRIGHT
+
+  B<TODO>: discuss
+
+For plugins the recommend headers are (in this order):
+
+  NAME, APPLICABLE SYSTEMS, CONFIGURATION, USAGE, MAGIC MARKERS, BUGS, AUTHOR,
+  LICENSE AND COPYRIGHT
+
+  B<TODO>: discuss
+
+
+=head1 END
+
+If you find any code not matching these recommendations,
+feel free to contribute a patch.
 
 =cut

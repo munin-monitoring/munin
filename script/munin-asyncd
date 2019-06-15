@@ -166,7 +166,9 @@ my $plugins = {};
 				"$SPOOLDIR/$node/munin-daemon.list",
 				"w",
 			);
-			print $fh_list $plugins_line;
+			my $sanitised_plugins_line = $plugins_line;
+			$sanitised_plugins_line =~ s/[^_A-Za-z0-9 ]/_/g;
+			print $fh_list $sanitised_plugins_line;
 			print $fh_list "\n";
 		}
 

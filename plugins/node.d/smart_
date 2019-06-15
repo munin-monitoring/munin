@@ -256,6 +256,10 @@ v2.3 2018-08-10
 
     - Improve readability, reduce code duplication, avoid shell expansion.
 
+v2.4 2018-12-19
+
+    - Ignore invalid threshold data
+
 =head1 BUGS
 
 None known
@@ -293,7 +297,10 @@ smartctl_ignore_exitcode_bitmask = int(os.getenv('ignoreexit', 0))
 report_warnings = True
 # You may not modify anything below this line
 
-plugin_version = "2.2"
+plugin_version = "2.4"
+
+# some disks report invalid threshold values
+INVALID_THRESHOLDS_BLACKLIST = {"---"}
 
 
 SmartCtlParseResult = collections.namedtuple("SmartCtlParseResult",
@@ -360,7 +367,7 @@ def read_values(hard_drive):
                 tokens = line.split()
                 key = tokens[1].replace('-', '_')
                 value = tokens[3]
-                threshold = tokens[5]
+                threshold = None if tokens[5] in INVALID_THRESHOLDS_BLACKLIST else tokens[5]
                 smart_values[key] = {"value": value, "threshold": threshold}
             last_output_line = line
         real_exit_code = proc.returncode
@@ -453,7 +460,10 @@ def print_config(hard_drive):
     for key, content in smart_values_state.items():
         print('{}.label {}'.format(key, key))
         if report_warnings:
-            if key == 'smartctl_exit_status':
+            if content["threshold"] is None:
+                # we did not parse a valid threshold
+                pass
+            elif key == 'smartctl_exit_status':
                 level = 'warning'
                 print('{}.{} {}'.format(key, level, content["threshold"]))
             else:
