@@ -1,4 +1,4 @@
-munin (2.999.12-1) UNRELEASED; urgency=medium
+munin (2.999.12-1) experimental; urgency=medium
 
   [ Holger Levsen ]
   * New upstream release.
@@ -6,7 +6,7 @@ munin (2.999.12-1) UNRELEASED; urgency=medium
   [ Lars Kruse ]
   * Add 'Webservice' field to upstream metadata.
 
- -- Holger Levsen <holger@debian.org>  Sun, 10 Feb 2019 13:37:10 +0100
+ -- Holger Levsen <holger@debian.org>  Sat, 15 Jun 2019 13:24:55 +0200
 
 munin (2.999.11-1) experimental; urgency=medium
 
