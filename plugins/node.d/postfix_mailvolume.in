@@ -145,7 +145,7 @@ my $logfile = "$LOGDIR/$LOGFILE";
 
 if (! -f $logfile) {
     print "volume.value U\n";
-    exit 1;
+    exit 0;
 }
 
 # load the stored data
