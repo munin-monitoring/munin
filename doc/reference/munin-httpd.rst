@@ -6,6 +6,8 @@
  munin-httpd
 =============
 
+.. note:: munin-httpd was introduced in the munin 3.0 release series.
+
 DESCRIPTION
 ===========
 

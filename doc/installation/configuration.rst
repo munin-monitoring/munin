@@ -25,25 +25,30 @@ Access
 ------
 
 The munin node listens on all interfaces by default, but has a
-restrictive access list. You need to add your master's IP address.
+restrictive access list. You need to add your master's IP address
+to ``/etc/munin/munin-node.conf``.
 
-The "cidr_allow", "cidr_deny", "allow" and "deny" statements are used.
+The ``cidr_allow``, ``cidr_deny``, ``allow`` and ``deny`` directives
+are related to access control.
 
-cidr_allow uses the following syntax (the /32 is not implicit, so for
+``cidr_allow`` expects the following notation:
+syntax (the /32 is not implicit, so for
 a single host, you need to add it):
 
     | cidr_allow 127.0.0.0/8
     | cidr_allow 192.0.2.1/32
 
-allow uses regular expression matching against the client IP address.
+Please note, that the prefix length (e.g. ``/32``) is mandatory for
+``cidr_allow`` and ``cidr_deny``.
+
+``allow`` uses regular expression matching against the client IP address.
 
     | allow '^127\.'
     | allow '^192\.0\.2\.1$'
 
 For specific information about the syntax, see `Net::Server
 <http://search.cpan.org/dist/Net-Server/lib/Net/Server.pod>`_. Please
-keep in mind that cidr_allow is a recent addition, and may not be
-available on all systems.
+keep in mind that ``cidr_allow`` requires the ``Net::CIDR`` perl module.
 
 Startup
 -------

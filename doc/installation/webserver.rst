@@ -12,6 +12,9 @@ On the master, you need to configure a web server.
 
 If you have installed "munin" through distribution
 packages, a webserver may have been configured for you already.
+Details of such packaged setups depend on your distribution.
+For example in Debian (or derivatives) you may want to take a look
+at ``/usr/share/doc/munin/README.Debian``.
 
 If you installed from source, you may want to take a look at the following examples:
 
