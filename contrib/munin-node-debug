@@ -192,9 +192,8 @@ sub service
 			my $graph_data_size;
 			$graph_data_size = "debug" if $plugin_number % 5 == 0;
 			$graph_data_size = "normal" if $plugin_number % 5 == 1;
-			$graph_data_size = "huge" if $plugin_number % 5 == 2;
-			$graph_data_size = "custom 10,5 10,10 10" if $plugin_number % 5 == 3;
-			$graph_data_size = "custom 10,5 for 10, 5m for 10d" if $plugin_number % 5 == 4;
+			$graph_data_size = "custom 10,10 5,10 10" if $plugin_number % 5 == 3;
+			$graph_data_size = "custom 10,10 for 5, 5m for 1d" if $plugin_number % 5 == 4;
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				my $ds = get_ds($plugin_number, $i);
 				my $ds_info = get_ds_info($plugin_number, $i);
