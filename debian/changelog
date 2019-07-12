@@ -1,8 +1,9 @@
-munin (2.999.12-2) UNRELEASED; urgency=medium
+munin (2.999.13-1) experimental; urgency=medium
 
+  * New upstream release.
   * Bump standards version to 4.4.0, no changes needed.
 
- -- Holger Levsen <holger@debian.org>  Sun, 07 Jul 2019 18:28:05 +0200
+ -- Holger Levsen <holger@debian.org>  Fri, 12 Jul 2019 19:38:08 +0200
 
 munin (2.999.12-1) experimental; urgency=medium
 
