@@ -1,3 +1,28 @@
+munin-2.999.13, 2019-07-11
+
+-------
+Summary
+-------
+
+That release is the 13th beta of the 3.0 series. It is versioned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that.
+Packagers can use that versioning or 3.0b13
+
+It contains some features & fixes. It also syncs back with 2.0.x.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (1):
+      doc: improve description of configuration and access control
+
+Nicolai Langfeldt (1):
+      Don't "exit 1"
+
+Steve Schnepp (1):
+      t: avoid using "huge" to limit tmpfs usage
+
 munin-2.999.12, 2019-06-08
 
 -------
