@@ -255,24 +255,24 @@ sub list_plugins {
     my $use_node_name = defined($self->{configref}{use_node_name})
         ? $self->{configref}{use_node_name}
         : $config->{use_node_name};
-    my $host = Munin::Master::Config->_parse_bool($use_node_name, 0)
-        ? $self->{node_name}
-        : $self->{host};
 
-    my $use_default_node = defined($self->{configref}{use_default_node})
-        ? $self->{configref}{use_default_node}
-        : $config->{use_default_node};
+    # "use_node_name" was allowed to be "ignore" for some time.  This usage is discouraged and
+    # treated as "yes", since the effect of "ignore" and "yes" did not differ.
+    $use_node_name = "yes" if ($use_node_name eq "ignore");
 
-    if (! $use_default_node && ! $host) {
-	die "[ERROR] Couldn't find out which host to list on $host.\n";
+    my $list_request_description;
+    if (Munin::Master::Config->_parse_bool($use_node_name, 0)) {
+        $self->_node_write_single("list\n");
+        $list_request_description = "local services";
+    } else {
+        $self->_node_write_single("list $self->{host}\n");
+        $list_request_description = "services for '$self->{host}'";
     }
 
-    my $host_list = ($use_node_name && $use_node_name eq "ignore") ? "" : $host;
-    $self->_node_write_single("list $host_list\n");
     my $list = $self->_node_read_single();
 
     if (not $list) {
-        WARN "[WARNING] Config node $self->{host} listed no services for '$host_list'.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
+        WARN "[WARNING] Config node $self->{host} listed no $list_request_description.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
     }
 
     return split / /, $list;
