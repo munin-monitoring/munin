@@ -717,6 +717,9 @@ sub uw_handle_fetch {
 			$value = $2;
 		}
 
+		use Scalar::Util qw(looks_like_number);
+		WARN "asked to parse '$line' and got value=$value" unless looks_like_number($value) || $value eq "U";
+
 		# Always round the $when if plugin asks for. Rounding the plugin-provided
 		# time is weird, but we are doing it to follow the "least surprise principle".
 		$when = round_to_granularity($when, $update_rate_in_seconds) if $is_update_aligned;
