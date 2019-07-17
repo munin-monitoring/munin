@@ -269,7 +269,7 @@ sub list_plugins {
 
     my $host_list = ($use_node_name && $use_node_name eq "ignore") ? "" : $host;
     $self->_node_write_single("list $host_list\n");
-    my $list = $self->_node_read_single();
+    my $list = $self->_node_read_single("true");
 
     if (not $list) {
         WARN "[WARNING] Config node $self->{host} listed no services for '$host_list'.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
@@ -420,7 +420,7 @@ sub _node_write_single {
 
 
 sub _node_read_single {
-    my ($self) = @_;
+    my ($self, $ignore_empty) = @_;
 
 RESTART:
 
@@ -450,9 +450,9 @@ RESTART:
     }
 
     # If the line is empty, just read another line
-    goto RESTART unless $res;
+    goto RESTART unless $res || $ignore_empty;
 
-    DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\"." if $debug;
+    DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\".";
 
     return $res;
 }
