@@ -443,6 +443,12 @@ RESTART:
     $res =~ s/\n$// if defined $res;
     $res =~ s/\r$// if defined $res;
 
+    # Trim all whitespace
+    if (defined $res) {
+	$res =~ s/^\s+//;
+	$res =~ s/\s+$//;
+    }
+
     # If the line is empty, just read another line
     goto RESTART unless $res;
 
