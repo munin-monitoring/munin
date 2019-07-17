@@ -652,6 +652,8 @@ sub uw_handle_config {
 		$service_attr{"graph_order"} = join(" ", @graph_order);
 	}
 
+	# Always provide a default graph_title
+	$service_attr{graph_title} = $plugin unless defined $service_attr{graph_title};
 
 	# Sync to database
 	# Create/Update the service
