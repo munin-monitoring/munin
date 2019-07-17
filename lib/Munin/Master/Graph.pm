@@ -499,7 +499,7 @@ sub handle_request
 		my $end_text = localtime($end);
 		$title = "from $start_text to $end_text";
 	} else {
-		$title = "by " . $time;
+		$title = "for the last " . $time;
 	}
 
 	my $width = $cgi->url_param("size_x") || 400;  # We aligned our RRA to 400px
