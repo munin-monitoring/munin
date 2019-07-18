@@ -1,3 +1,27 @@
+munin-2.999.14, 2019-07-18
+
+-------
+Summary
+-------
+
+That release is the 14th beta of the 3.0 series. It is versioned 2.999.x so
+numeric only sorting works, as we do have distro that rely on that.
+
+It contains a proper fix for the master hanging when there is not
+services listed.
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (6):
+      Use a better title for the graphs
+      Provide a default graph_title
+      Trim whitespace in the protocol
+      Add a warning when parsing fetch not valid
+      Revert "Send "." after a list cmd"
+      Handle the cmds that only emit 1 line to be empty
+
 munin-2.999.13, 2019-07-11
 
 -------
