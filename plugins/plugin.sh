@@ -43,8 +43,7 @@ get_warning () {
 
 
 # Usage:
-#   warning=${warning:-92}
-#   print_warning "$name"
+#   warning=${warning:-92} print_warning "$name"
 
 print_warning () {
     warnout=$(get_warning $1 $2)
@@ -75,6 +74,10 @@ get_critical () {
         return
     fi
 }
+
+
+# Usage:
+#   critical=${critical:-98} print_critical "$name"
 
 print_critical () {
     critout=$(get_critical $1 $2)
