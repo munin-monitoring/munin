@@ -3,6 +3,8 @@ munin (2.999.14-1) UNRELEASED; urgency=medium
   * New upstream release.
   * Re-export upstream signing key without extra signatures.
     (thanks, lintian-brush)
+  * Add lintian override for uses-dpkg-database-directly of a plugin
+    in munin-plugins-core.  (thanks, lintian)
 
  -- Lars Kruse <devel@sumpfralle.de>  Wed, 31 Jul 2019 19:47:33 +0200
 

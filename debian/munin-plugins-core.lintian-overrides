@@ -1,0 +1,2 @@
+# the plugin uses only the timestamp of the dpkg status file as a hint (no internals are used)
+uses-dpkg-database-directly usr/share/munin/plugins/apt_all
