@@ -1138,6 +1138,8 @@ sub _does_resolve
 
 __END__
 
+=encoding utf8
+
 =head1 NAME
 
 Munin::Master::UpdateWorker - FIX
