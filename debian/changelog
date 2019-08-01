@@ -7,6 +7,8 @@ munin (2.999.14-1) UNRELEASED; urgency=medium
     in munin-plugins-core.  (thanks, lintian)
   * Change Vcs-Git to canonical URL (adding trailing ".git").
     (thanks, lintian)
+  * Replace "dpkg-parsechangelog" call in d/rules with SOURCE_DATE_EPOCH.
+    (thanks, lintian)
 
  -- Lars Kruse <devel@sumpfralle.de>  Wed, 31 Jul 2019 19:47:33 +0200
 

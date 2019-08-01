@@ -6,8 +6,7 @@ include /usr/share/dpkg/pkg-info.mk
 # export DH_VERBOSE=1
 
 MAKEOPTS = INSTALLDIRS=vendor
-LAST_CHANGE=$(shell dpkg-parsechangelog -S Date)
-BUILD_DATE=$(shell LC_ALL=C date -u "+%B %d, %Y" -d "$(LAST_CHANGE)")
+BUILD_DATE = $(shell LC_ALL=C date -u "+%B %d, %Y" -d "@$(SOURCE_DATE_EPOCH)")
 
 %:
 	dh $@
