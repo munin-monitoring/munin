@@ -355,7 +355,6 @@ sub _list_services {
         _net_write($session, join(" ", @services));
     }
     _net_write($session, "\n");
-    _net_write($session, ".\n");
 }
 
 

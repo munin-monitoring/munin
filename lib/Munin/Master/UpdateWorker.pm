@@ -652,6 +652,8 @@ sub uw_handle_config {
 		$service_attr{"graph_order"} = join(" ", @graph_order);
 	}
 
+	# Always provide a default graph_title
+	$service_attr{graph_title} = $plugin unless defined $service_attr{graph_title};
 
 	# Sync to database
 	# Create/Update the service
@@ -714,6 +716,9 @@ sub uw_handle_fetch {
 			$when_is_now = 0;
 			$value = $2;
 		}
+
+		use Scalar::Util qw(looks_like_number);
+		WARN "asked to parse '$line' and got value=$value" unless looks_like_number($value) || $value eq "U";
 
 		# Always round the $when if plugin asks for. Rounding the plugin-provided
 		# time is weird, but we are doing it to follow the "least surprise principle".
