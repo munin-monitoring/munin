@@ -48,7 +48,7 @@ Build-Depends: debhelper-compat (=11), libmodule-build-perl
 Rules-Requires-Root: no
 Standards-Version: 4.4.0
 Homepage: http://munin-monitoring.org
-Vcs-Git: https://salsa.debian.org/debian/munin -b debian-experimental
+Vcs-Git: https://salsa.debian.org/debian/munin.git -b debian-experimental
 Vcs-Browser: https://salsa.debian.org/debian/munin
 
 Package: munin-node
