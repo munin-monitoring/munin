@@ -1,4 +1,4 @@
-munin (2.999.14-1) UNRELEASED; urgency=medium
+munin (2.999.14-1) experimental; urgency=medium
 
   * New upstream release.
   * Re-export upstream signing key without extra signatures.
@@ -13,7 +13,7 @@ munin (2.999.14-1) UNRELEASED; urgency=medium
   [ Holger Levsen ]
   * Bump debhelper-compat to 12.
 
- -- Lars Kruse <devel@sumpfralle.de>  Wed, 31 Jul 2019 19:47:33 +0200
+ -- Holger Levsen <holger@debian.org>  Thu, 01 Aug 2019 16:48:33 -0300
 
 munin (2.999.13-1) experimental; urgency=medium
 
