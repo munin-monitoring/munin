@@ -10,6 +10,9 @@ munin (2.999.14-1) UNRELEASED; urgency=medium
   * Replace "dpkg-parsechangelog" call in d/rules with SOURCE_DATE_EPOCH.
     (thanks, lintian)
 
+  [ Holger Levsen ]
+  * Bump debhelper-compat to 12.
+
  -- Lars Kruse <devel@sumpfralle.de>  Wed, 31 Jul 2019 19:47:33 +0200
 
 munin (2.999.13-1) experimental; urgency=medium
