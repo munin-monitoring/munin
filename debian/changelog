@@ -35,6 +35,7 @@ munin (2.0.49-1) unstable; urgency=medium
   * Ensure that /var/cache/munin/www exists.
     Thanks to Marvin Gülker (Closes: #927692)
   * Keep permission of /run/munin in sync for systemd and sysvinit
+  * Fix autopkgtests for hosts without net-tools. (Closes: #926977)
 
  -- Holger Levsen <holger@debian.org>  Thu, 16 May 2019 01:21:08 +0200
 
