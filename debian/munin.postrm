@@ -2,6 +2,11 @@
 
 set -e
 
+if [ -e /usr/share/debconf/confmodule ]; then
+	. /usr/share/debconf/confmodule
+fi
+
+
 # workaround for bug #198522
 delete_dir_if_empty() {
 	if [ -d "$1" ]; then
@@ -13,7 +18,21 @@ delete_dir_if_empty() {
 
 if [ "$1" = "purge" ]; then
 
-	echo "The generated web site or accumulated data won't be removed."
+	removed_rrd_files="no"
+	if [ -d /var/lib/munin ] && [ -e /usr/share/debconf/confmodule ]; then
+		db_input high munin/postrm_remove_rrd_files || true
+		db_go || true
+		db_get munin/postrm_remove_rrd_files || true
+		if [ "$RET" = "true" ]; then
+			find /var/lib/munin -mindepth 2 -type f -name "*.rrd" -delete
+			# remove directories of hosts and groups if all RRDs files within were removed
+			find /var/lib/munin -mindepth 1 -type d -not -name "lost+found" -empty -delete
+			removed_rrd_files="yes"
+		fi
+	fi
+	if [ "$removed_rrd_files" = "no" ]; then
+		echo "The generated web site or accumulated data won't be removed."
+	fi
 
 	rm -f /var/lib/munin/datafile
 	rm -f /var/lib/munin/limits
