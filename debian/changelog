@@ -8,6 +8,8 @@ munin (2.0.49-2) UNRELEASED; urgency=medium
     The upstart files were removed from the package in 2.0.33-1.
   * Increase compatibility level from 11 to 12.
   * Tests: also check availability of multigraph plugins.
+  * Examples: adapt socket paths in nginx configuration example according
+    to the included systemd socket example.
 
  -- Holger Levsen <holger@debian.org>  Sun, 07 Jul 2019 18:28:54 +0200
 
