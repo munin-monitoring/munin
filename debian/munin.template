@@ -1,0 +1,9 @@
+Template: munin/postrm_remove_rrd_files
+Type: boolean
+Default: false
+Description: Remove all RRD database files?
+ The /var/lib/munin directory which contains the RRD files with the
+ data accumulated by munin is about to be removed.
+ .
+ If you want to install munin later again or if you want to use the
+ content of the RRD files for other purposes, the data should be kept.

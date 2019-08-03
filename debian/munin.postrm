@@ -4,10 +4,10 @@ set -e
 
 # workaround for bug #198522
 delete_dir_if_empty() {
-	if [ ! -d "$1" ]; then
-		return 0;
+	if [ -d "$1" ]; then
+		# the removal may fail in case of a mountpoint or a symlink
+		rmdir --ignore-fail-on-non-empty "$1" || true
 	fi
-	rmdir --ignore-fail-on-non-empty $1;
 }
 
 

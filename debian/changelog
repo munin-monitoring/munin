@@ -11,6 +11,7 @@ munin (2.0.49-2) UNRELEASED; urgency=medium
   * Examples: adapt socket paths in nginx configuration example according
     to the included systemd socket example.
   * Add documentation for socket activation combined with nginx.
+  * postrm: do not fail if /var/lib/munin is a mountpoint or symlink.
 
  -- Holger Levsen <holger@debian.org>  Sun, 07 Jul 2019 18:28:54 +0200
 
