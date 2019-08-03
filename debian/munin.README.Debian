@@ -52,6 +52,33 @@ Debian-specific information regarding Munin
       * restart apache2 and visit http://localhost/munin/
 
 
+  Using a different webserver (e.g. nxinx)
+  ----------------------------------------
+
+    Apache2 is preconfigured for the munin master web interface when
+    installing the munin pacakge.  Alternatively you may choose to
+    serve the munin web interface with a different webserver.
+    In this case you may want to configure socket activation for HTML
+    and graph generation:
+
+        cp /usr/share/doc/munin/examples/systemd-fastcgi/munin-* /etc/systemd/system/
+        systemctl daemon-reload
+        systemctl enable munin-graph.socket
+        systemctl enable munin-html.socket
+        systemctl start munin-graph.socket
+        systemctl start munin-html.socket
+
+    In case of nginx you can start with the included example
+    configuration file:
+
+        cp /usr/share/doc/munin/examples/nginx/munin.nginx.conf /etc/nginx/sites-available/munin.conf
+        ln -s ../sites-available/munin.conf /etc/nginx/sites-enabled/
+        service nginx restart
+
+    Probably you should tweak the "listen" and "server_name" settings
+    in this configuration file according to your needs.
+
+
   Find the upstream source
   ------------------------
 
