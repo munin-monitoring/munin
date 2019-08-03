@@ -14,6 +14,8 @@ munin (2.0.49-2) UNRELEASED; urgency=medium
   * postrm: do not fail if /var/lib/munin is a mountpoint or symlink.
   * postrm: ask during purge whether the RRD files should be removed
     (default: no). Previously these files always remained.
+  * postrm: remove "storable" files below /var/lib/munin during purge.
+    These files are written by munin since v2.0.0.
 
  -- Holger Levsen <holger@debian.org>  Sun, 07 Jul 2019 18:28:54 +0200
 

@@ -37,6 +37,7 @@ if [ "$1" = "purge" ]; then
 	rm -f /var/lib/munin/datafile
 	rm -f /var/lib/munin/limits
 	rm -f /var/lib/munin/*.stats
+	rm -f /var/lib/munin/*.storable
 	rm -f /var/lib/munin/*/*.ok
 
 	rm -f /var/log/munin/munin-update.log*
