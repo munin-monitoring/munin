@@ -25,7 +25,7 @@ Build-Depends-Indep:
  libtest-mockobject-perl,
  perl,
 Build-Depends:
- debhelper-compat (=11),
+ debhelper-compat (=12),
  libmodule-build-perl,
 Rules-Requires-Root: no
 Standards-Version: 4.4.0
