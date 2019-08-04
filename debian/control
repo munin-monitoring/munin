@@ -36,6 +36,7 @@ Vcs-Browser: https://salsa.debian.org/debian/munin
 
 Package: munin-node
 Architecture: all
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${perl:Depends},
  libnet-server-perl,
  lsb-base (>= 4.1),
@@ -157,6 +158,7 @@ Description: network-wide graphing framework (java plugins for node)
 
 Package: munin
 Architecture: all
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${perl:Depends},
  lsb-base (>= 4.1),
  cron | cron-daemon | systemd-sysv,
@@ -218,6 +220,7 @@ Description: network-wide graphing framework (common)
 
 Package: munin-async
 Architecture: all
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${perl:Depends},
  lsb-base (>= 4.1),
  adduser,
