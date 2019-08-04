@@ -56,7 +56,7 @@ Debian-specific information regarding Munin
   ----------------------------------------
 
     Apache2 is preconfigured for the munin master web interface when
-    installing the munin pacakge.  Alternatively you may choose to
+    installing the munin package.  Alternatively you may choose to
     serve the munin web interface with a different webserver.
     In this case you may want to configure socket activation for HTML
     and graph generation:
