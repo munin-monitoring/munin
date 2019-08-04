@@ -27,6 +27,7 @@ Build-Depends-Indep:
 Build-Depends:
  debhelper-compat (=12),
  libmodule-build-perl,
+ po-debconf,
 Rules-Requires-Root: no
 Standards-Version: 4.4.0
 Homepage: http://munin-monitoring.org

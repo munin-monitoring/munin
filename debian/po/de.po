@@ -1,0 +1,27 @@
+#. Type: boolean
+#. Description
+#: ../munin.templates:1001
+msgid "Remove all RRD database files?"
+msgstr "Löschung der RRD-Datenbank-Dateien?"
+
+#. Type: boolean
+#. Description
+#: ../munin.templates:1001
+msgid ""
+"The /var/lib/munin directory which contains the RRD files with the data "
+"accumulated by munin is about to be removed."
+msgstr ""
+"Das Verzeichnis /var/lib/munin enthält RRD-Dateien mit den Daten, die "
+"durch Munin gesammelt wurden. Diese RRD-Dateien können beim Entfernen "
+"des Pakets gelöscht werden."
+
+#. Type: boolean
+#. Description
+#: ../munin.templates:1001
+msgid ""
+"If you want to install munin later again or if you want to use the content "
+"of the RRD files for other purposes, the data should be kept."
+msgstr ""
+"Falls Sie Munin später erneut installieren oder die RRD-Dateien in einem "
+"anderen Zusammenhang nutzen wollen, dann sollten Sie die RRD-Dateien nicht "
+"löschen."
