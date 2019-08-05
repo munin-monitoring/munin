@@ -13,7 +13,7 @@ collect data from all nodes, and graph the results. When starting with
 Munin, it should be enough to install the Munin master on one server.
 
 The munin master runs :ref:`munin-httpd` which is a basic webserver
-which provides the munin web interface on port 4948/tcp.
+which provides the munin web interface on port 4949/tcp.
 
 Install "munin-node" on the machines that shall be monitored by Munin.
 
