@@ -1,6 +1,6 @@
 [Unit]
 Description=Munin Node
-Documentation=man:munin-node(1) http://munin.readthedocs.org/en/stable-2.0/reference/munin-node.html
+Documentation=man:munin-node(1) http://guide.munin-monitoring.org/en/stable-2.0/reference/munin-node.html
 After=network-online.target
 
 [Service]

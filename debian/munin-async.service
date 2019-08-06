@@ -1,6 +1,6 @@
 [Unit]
 Description=Munin Node - asynchronous proxy
-Documentation=man:munin-asyncd http://munin.readthedocs.org/en/stable-2.0/reference/munin-asyncd.html
+Documentation=man:munin-asyncd http://guide.munin-monitoring.org/en/stable-2.0/reference/munin-asyncd.html
 Wants=munin-node.service
 After=munin-node.service
 
