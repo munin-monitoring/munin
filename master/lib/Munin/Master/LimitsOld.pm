@@ -1,7 +1,11 @@
 package Munin::Master::LimitsOld;
 # -*- perl  -*-
 
-=begin comment
+=head1 NAME
+
+Munin::Master::LimitsOld - Abstract base class for workers.
+
+=head1 SYNOPSIS
 
 This is Munin::Master::LimitsOld, a minimal package shell to make
 munin-limits modular (so it can be loaded persistently in a daemon for
@@ -9,6 +13,8 @@ example) without making it object oriented yet.  The non-'old' module
 will feature proper object orientation like munin-update and will
 have to wait until later.
 
+
+=begin comment
 
 Copyright (C) 2004-2009 Jimmy Olsen
 
@@ -25,8 +31,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-$Id$
 
 =end comment
 
