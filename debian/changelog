@@ -6,6 +6,7 @@ munin (2.0.49-3) UNRELEASED; urgency=medium
     (required for compatibility level 12).
   * Override lintian warning for "no-debconf-config", since debconf is only
     used for a postrm confirmation.
+  * Fix documentation links for munin-asyncd service.
 
  -- Holger Levsen <holger@debian.org>  Mon, 05 Aug 2019 19:48:36 +0200
 
