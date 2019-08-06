@@ -9,6 +9,13 @@ Type=simple
 Restart=always
 User=munin-async
 ExecStart=/usr/share/munin/munin-asyncd
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
 
 [Install]
 WantedBy=multi-user.target
