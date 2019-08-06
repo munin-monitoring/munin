@@ -1,3 +1,10 @@
+munin (2.0.49-4) UNRELEASED; urgency=medium
+
+  [ Lars Kruse ]
+  * Add meta header and encoding to German debconf translation.
+
+ -- Holger Levsen <holger@debian.org>  Tue, 06 Aug 2019 22:02:47 +0200
+
 munin (2.0.49-3) unstable; urgency=medium
 
   [ Lars Kruse ]
