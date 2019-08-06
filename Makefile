@@ -571,6 +571,7 @@ lint-spelling:
 	find . -type f -print0 \
 		| grep --null-data -vE '^\./(\.git|\.pc|doc/_build|blib|.*/blib|build|sandbox|web/static/js|contrib/plugin-gallery/www/static/js)/' \
 		| grep --null-data -vE '\.(svg|png|gif|ico|css|woff|woff2|ttf|eot)$$' \
+		| grep --null-data -vE '^\./(contrib|master|node|resources|plugins)/' \
 		| xargs -0 -r codespell --exclude-file=.codespell.exclude
 
 clean-%: %/Build build-common-defaults-stamp
