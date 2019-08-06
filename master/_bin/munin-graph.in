@@ -3,6 +3,10 @@
 
 =encoding utf8
 
+=head1 NAME
+
+munin-graph - generate graphs from RRD files
+
 =begin comment
 
 Copyright (C) 2004-2010 Jimmy Olsen, Steve Schnepp
@@ -19,8 +23,6 @@ General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-$Id$
 
 =end comment
 
