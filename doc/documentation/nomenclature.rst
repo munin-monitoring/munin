@@ -34,7 +34,7 @@ Common terms
 +--------------+--------------------------------------------+------------------------------+
 | Attribute    | Description found in output from plugins,  |                              |
 |              | both general (global) to the plugin, and   |                              |
-|              | also specific ot each Field.               |                              |
+|              | also specific for each Field.              |                              |
 +--------------+--------------------------------------------+------------------------------+
 | Environment  | Set up by munin node, used to control      |                              |
 | variable     | plugin behaviour.  Found in the plugin     |                              |
@@ -90,7 +90,7 @@ configures the plugins graph.
 Datasource specific plugin attribute
 ------------------------------------
 
-These are found both in the config outout of a plugin and in the
+These are found both in the config output of a plugin and in the
 normal readings of a plugin. A plugin may provide data from one or
 more data sources. Each data source needs its own set of
 field.attribute tuples to define how the data source should be

@@ -123,7 +123,7 @@ These are the most common Net::Server options used in
 .. option:: cidr_allow
 
    Allowed hosts given in CIDR notation (192.0.2.1/32). Replaces or
-   complements “allow”. Requires the precense of Net::Server, but is
+   complements “allow”. Requires the presence of Net::Server, but is
    not supported by old versions of this module.
 
 .. option:: cidr_deny

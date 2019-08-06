@@ -60,7 +60,7 @@ otherwise.
 .. option:: palette <default|old>
 
    The palette used by :ref:`munin-graph` and :ref:`munin-cgi-graph`
-   to colour the graphs. The "default" palete has more colours and
+   to colour the graphs. The "default" palette has more colours and
    better contrast than the "old" palette.
 
    Affects: :ref:`munin-graph`

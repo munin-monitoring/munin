@@ -6,7 +6,7 @@ package Munin::Master::LimitsOld;
 This is Munin::Master::LimitsOld, a minimal package shell to make
 munin-limits modular (so it can be loaded persistently in a daemon for
 example) without making it object oriented yet.  The non-'old' module
-will feature propper object orientation like munin-update and will
+will feature proper object orientation like munin-update and will
 have to wait until later.
 
 
@@ -103,7 +103,7 @@ sub limits_startup {
     @always_send = qw{ok warning critical unknown} if $force;
 
     munin_readconfig_base($conffile);
-    # XXX: check if it does actualy need that part
+    # XXX: check if it does actually need that part
     $config = munin_readconfig_part('datafile', 0);
 
     logger_open($config->{'logdir'});
@@ -385,7 +385,7 @@ sub process_service {
 			# Old value does not exist or is too old. Report unknown.
 			$value = "U";
 		} elsif ($field->{type} eq "ABSOLUTE") {
-			# The previous value is unimportant, as if ABSOLUTE, the counter is reset everytime the value is read
+			# The previous value is unimportant, as if ABSOLUTE, the counter is reset every time the value is read
 			$value = $current_updated_value / ($current_updated_timestamp - $previous_updated_timestamp);
 		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
 			# COUNTER never decrease. Report unknown.

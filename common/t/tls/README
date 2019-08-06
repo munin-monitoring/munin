@@ -24,7 +24,7 @@ Don't need to encrypt the key since this is just for testing.
   openssl req -new -nodes -x509 -extensions v3_ca -keyout CA/private/ca_key.pem -out CA/ca_cert.pem -days 3650 -config ./openssl.cnf
 
 
-* Create and signe sertificates for each peer
+* Create and sign certificates for each peer
 
 ** Create keys and certificate requests
 

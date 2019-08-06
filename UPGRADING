@@ -16,10 +16,10 @@ The most important change is the CGI requirement.
    default is still to run "munin-html" from cron after every update.
 
 If you install from SVN or tar ball please make sure you read the
-INSTALL file VERY carefuly. 
+INSTALL file VERY carefully.
 
 If you install from a packaged (DEB, RPM, ...) version, please make 
-sure you read the specific INSTALL file VERY carefuly, as there might 
+sure you read the specific INSTALL file VERY carefully, as there might 
 be some particularities.
 
 From Munin 1.4
@@ -34,7 +34,7 @@ might be a few exceptions, so YMMV.
 
 In terms of ordering I would upgrade the master first.  If you do not
 use a packaging system you may have to look around for old .pm files
-and purge them to get 2.0 work propperly.  Do NOT purge the RRD
+and purge them to get 2.0 work properly.  Do NOT purge the RRD
 files or the configuration.
 
 After the master is upgraded upgrade the nodes one by one.  Please see

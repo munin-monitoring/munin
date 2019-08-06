@@ -33,25 +33,25 @@ to have **all** nodes in groups.
 Overview
 ========
 
-Munin-Master runs differents scripts via the cron script (munin-cron).
+Munin-Master runs different scripts via the cron script (munin-cron).
 
 ``munin-update``
-	is the only part actualy connecting to the nodes. It gathers
+	is the only part actually connecting to the nodes. It gathers
 	information and updates the rrd (you'll probably need rrdcached,
-	especialy via nfs).
+	especially via nfs).
 
 ``munin-limits``
 	checks what was collected, compared to the limits and places
 	warning and criticals.
 
 ``munin-html``
-	takes the informations gathered by update and limits, and
-	generate the actual html files (if don't have cgi-html).
-	It currently still generate some data needed by the cgi.
+	takes the information gathered by update and limits, and
+	generates the actual html files (if don't have cgi-html).
+	It currently still generates some data needed by the cgi.
 
 ``munin-graph``
 	generate the graphs. If you are thinking about getting many
-	masters, you probably have alot of graph, and don't want to
+	masters, you probably have a lot of graph, and don't want to
 	generate them every 5 minutes, but you would rather use
 	cgi-graph.
 
@@ -73,7 +73,7 @@ Exemples will consider the shared folder /nfs/munin.
 Running munin-update
 ====================
 
-Cange the ``munin-cron`` to only run ``munin-update`` (and
+Change the ``munin-cron`` to only run ``munin-update`` (and
 ``munin-limits``, if you have alerts you want to be managed directly on
 those masters). The cron should NOT launch munin-html or munin-graph.
 
@@ -129,7 +129,7 @@ nfs storage.)
 As we deal with groups, we could just link top level groups to a common
 rrd tree.
 
-Exemple, if you have two updaters (update1 and update2), and 4 groups
+Example, if you have two updaters (update1 and update2), and 4 groups
 (customer1, customer2, customer3, customer4), you could make something
 like that::
 

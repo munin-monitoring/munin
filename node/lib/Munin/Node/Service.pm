@@ -104,7 +104,7 @@ sub prepare_plugin_environment
     # executed python3-based commands to output UTF-8 characters.
     $ENV{PYTHONIOENCODING} = 'utf8:replace';
 
-    # PATH should be *very* sane by default. Can be overrided via 
+    # PATH should be *very* sane by default. Can be overridden via
     # config file if needed (Closes #863 and #1128).
     $ENV{PATH} = '/usr/sbin:/usr/bin:/sbin:/bin';
 
