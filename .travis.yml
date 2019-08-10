@@ -13,6 +13,7 @@ branches:
 addons:
   apt:
     packages:
+      - codespell
       - devscripts
       - libpango1.0-dev
       - libfile-copy-recursive-perl
