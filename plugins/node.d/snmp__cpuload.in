@@ -95,7 +95,7 @@ graph_args --upper-limit 100 -l 0
 graph_vlabel %
 graph_info This graph shows the CPU load on the system.
 EOC
-	foreach my $cpu (keys %cpus) {
+	foreach my $cpu (sort(keys %cpus)) {
 		# CPU #1 will have $fieldname "cpu" to retain compatability with
 		# old snmp_cpuload plugin.
 		my $cpun = $cpu;
