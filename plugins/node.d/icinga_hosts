@@ -1,0 +1,51 @@
+#!/bin/sh
+
+##%# family=auto
+
+#%# capabilities=autoconf 
+
+if [ "$1" = "autoconf" ]; then
+    if [ -r /usr/bin/icingacli ]; then
+        echo yes
+        exit 0
+    else
+        echo "no (could not found icingacli)"
+        exit 1
+    fi
+fi
+
+export TERM=vt100
+
+if [ "$1" = "config" ]; then
+
+    echo "graph_title Icinga Hosts"
+    echo 'graph_args --base 1000'
+    echo 'graph_vlabel Count'
+    echo 'graph_category icinga'
+   
+    echo "up.label Up"
+    echo "down.label Down"
+    echo "unreachable.label Unreachable"
+    echo "pending.label Pending"
+
+
+    echo "up.draw AREA"    
+    echo "down.draw STACK"
+    echo "unreachable.draw STACK"
+    echo "pending.draw STACK"
+
+    exit 0
+fi
+
+
+output=$(icingacli monitoring list hosts)
+host_up=$(echo -e "$output"   | egrep -v   "├|└" | egrep  "^   UP "| wc -l  )
+host_down=$(echo -e "$output" | egrep -v   "├|└" | egrep  "^   DOWN "| wc -l  )
+host_pend=$(echo -e "$output" | egrep -v   "├|└" | egrep  "^   PEND "| wc -l  )
+host_unre=$(echo -e "$output" | egrep -v   "├|└" | egrep  "^   UNRE "| wc -l  )
+
+
+echo "up.value $host_up"
+echo "down.value $host_down"
+echo "unreachable.value $host_unre"
+echo "pending.value $host_pend"
