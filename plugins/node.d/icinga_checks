@@ -27,8 +27,8 @@ GPLv3
 
 =cut
 
-ICINGACLI=${ICINGACLI:-$(which icingacli)}
-JQ=${JQ:-$(which jq)}
+ICINGACLI=${ICINGACLI:-$(which icingacli 2> /dev/null)}
+JQ=${JQ:-$(which jq 2> /dev/null)}
 
 
 if [ "$1" = "autoconf" ] ; then
