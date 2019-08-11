@@ -1,7 +1,5 @@
 #!/bin/sh
 
-set -e
-
 : << =cut
 
 =head1 NAME
@@ -27,8 +25,8 @@ GPLv3
 
 =cut
 
-ICINGACLI=${ICINGACLI:-$(which icingacli 2> /dev/null)}
-JQ=${JQ:-$(which jq 2> /dev/null)}
+ICINGACLI=${ICINGACLI:-$(command -v icingacli)}
+JQ=${JQ:-$(command -v  jq)}
 
 
 if [ "$1" = "autoconf" ] ; then
@@ -41,6 +39,8 @@ if [ "$1" = "autoconf" ] ; then
     fi
     exit
 fi
+
+set -e
 
 if [ "$1" = "config" ]; then
 
@@ -76,6 +76,14 @@ if [ "$1" = "config" ]; then
     echo "pending.draw STACK"
 
     exit
+fi
+
+if [ ! -x "$ICINGACLI" ]; then
+    echo "could not find 'icingacli'"
+    exit 1
+elif [ ! -x "$JQ" ]; then
+    echo "could not find 'jq'"
+    exit 1
 fi
 
 output=$("$ICINGACLI" monitoring list hosts --format=json)
