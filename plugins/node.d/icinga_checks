@@ -1,0 +1,105 @@
+#!/bin/sh
+
+set -e
+
+: << =cut
+
+=head1 NAME
+
+icinga_checks - Plugin to monitor results of icinga monitoring
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+mafri with a lot of help by sumpfralle 
+
+=head1 LICENSE
+
+GPLv3
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+ICINGACLI=${ICINGACLI:-$(which icingacli)}
+JQ=${JQ:-$(which jq)}
+
+
+if [ "$1" = "autoconf" ] ; then
+    if [ ! -x "$ICINGACLI" ]; then
+        echo "no (could not find 'icingacli')"
+    elif [ ! -x "$JQ" ]; then
+        echo "no (could not find 'jq')"
+    else
+        echo "yes"
+    fi
+    exit
+fi
+
+if [ "$1" = "config" ]; then
+
+    echo "multigraph icinga_host_checks"
+    echo "graph_title Icinga Host Checks"
+    echo 'graph_args --base 1000'
+    echo 'graph_vlabel Count'
+    echo 'graph_category icinga'
+    echo "up.label Up"
+    echo "down.label Down"
+    echo "unreachable.label Unreachable"
+    echo "pending.label Pending"
+    echo "up.draw AREA"    
+    echo "down.draw STACK"
+    echo "unreachable.draw STACK"
+    echo "pending.draw STACK"
+
+
+    echo "multigraph icinga_service_checks"
+    echo "graph_title Icinga Service Checks"
+    echo 'graph_args --base 1000'
+    echo 'graph_vlabel Count'
+    echo 'graph_category icinga'
+    echo "ok.label Ok"
+    echo "warning.label Warning"
+    echo "critical.label Critical"
+    echo "unknown.label Unknown"
+    echo "pending.label Pending"
+    echo "ok.draw AREA"
+    echo "warning.draw STACK"
+    echo "critical.draw STACK"
+    echo "unknown.draw STACK"
+    echo "pending.draw STACK"
+
+    exit
+fi
+
+output=$("$ICINGACLI" monitoring list hosts --format=json)
+host_up=$(    echo "$output" | "$JQ" -r '.[] | select(.host_state == 0) | .host_name'  | wc -l )
+host_down=$(  echo "$output" | "$JQ" -r '.[] | select(.host_state == 1) | .host_name'  | wc -l )
+host_pend=$(  echo "$output" | "$JQ" -r '.[] | select(.host_state == 2) | .host_name'  | wc -l )
+host_unre=$(  echo "$output" | "$JQ" -r '.[] | select(.host_state == 3) | .host_name'  | wc -l )
+
+echo "multigraph icinga_host_checks"
+echo "up.value $host_up"
+echo "down.value $host_down"
+echo "pending.value $host_pend"
+echo "unreachable.value $host_unre"
+
+output=$("$ICINGACLI" monitoring list services --format=json)
+service_ok=$(  echo "$output" | "$JQ" -r '.[] | select(.service_state == 0) | .host_name + .service_name'  | wc -l )
+service_warn=$(echo "$output" | "$JQ" -r '.[] | select(.service_state == 1) | .host_name + .service_name'  | wc -l )
+service_crit=$(echo "$output" | "$JQ" -r '.[] | select(.service_state == 2) | .host_name + .service_name'  | wc -l )
+service_pend=$(echo "$output" | "$JQ" -r '.[] | select(.service_state == 3) | .host_name + .service_name'  | wc -l )
+service_unkn=$(echo "$output" | "$JQ" -r '.[] | select(.service_state == 4) | .host_name + .service_name'  | wc -l )
+
+echo "multigraph icinga_service_checks"
+echo "ok.value $service_ok"
+echo "warning.value $service_warn"
+echo "critical.value $service_crit"
+echo "unknown.value $service_unkn"
+echo "pending.value $service_pend"
