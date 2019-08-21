@@ -37,7 +37,7 @@
 
 
 testfun () {
-	TEMP_FILE=`eval $MKTEMP 2>/dev/null`
+	TEMP_FILE=`eval $MKTEMP $1 2>/dev/null`
 	STATUS=$?
 	if [ $STATUS = 0 -a -n "$TEMP_FILE" -a -f "$TEMP_FILE" ]; then
 		rm -f $TEMP_FILE
@@ -53,7 +53,7 @@ MKTEMP='mktemp -p /tmp/ $1'
 testfun temp.XXXXXX
 
 # FreeBSD way
-MKTEMP="mktemp -t /tmp"
+MKTEMP="mktemp -t $1"
 testfun temp.XXXXXX
 
 # Plain mktemp
