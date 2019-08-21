@@ -16,14 +16,24 @@
 # implied warranties, including, without limitation, the implied
 # warranties of merchantability and fitness for a particular
 # purpose.
+
+# Needs following minimal configuration in plugin-conf.d/munin-node:
+#   [mbmon_*]
+#   env.mbmonpath /usr/local/bin/mbmon
+#   env.mbmonargs -I -pit87
+#
+# Parameters
+#       mbmonpath     - Specify path to smartctl program
+#       mbmonargs     - Added argument passed to mbmon with '-c 1 -r '+mbmonargs
+#
+# If it is not automatically recognized, the individual parameters are appended.
 #
 
 #%# family=contrib
 #%# capabilities=autoconf suggest
 
 what=$(basename "$0" | sed 's/^mbmon_//g')
-mbmon=${mbmon:-$(which mbmon)}
-
+mbmon="${mbmonpath:-$(which mbmon)} -c1 -r ${mbmonargs}"
 
 if [ "$1" = "suggest" ]; then
 	echo 'TEMP'
@@ -42,8 +52,6 @@ if [ "$1" = "autoconf" ]; then
 	fi
 	exit 0
 fi
-
-
 
 if [ "$1" = "config" ]; then
 case $what in
@@ -88,15 +96,15 @@ fi
 
 case $what in
 	TEMP)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep TEMP
+		$mbmon | sed -e "s/ *: */.value /" | grep TEMP
 		exit 0
 		;;
 	Voltage)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep V
+		$mbmon | sed -e "s/ *: */.value /" | grep V
 		exit 0
 		;;
 	FAN)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep FAN
+		$mbmon | sed -e "s/ *: */.value /" | grep FAN
 		exit 0
 		;;
 esac
