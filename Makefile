@@ -34,7 +34,7 @@ PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/muni
 PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 PYTHON_LINT_CALL ?= python3 -m flake8
 CONFVAR_SUBSTITUTION_FILES = \
-	master/blib/libdoc/Munin\:\:Master\:\:HTMLOld.3pm \
+	master/blib/libdoc/Munin\:\:Master\:\:HTMLOld.3 \
 	master/blib/lib/Munin/Master/HTMLOld.pm \
 	node/blib/sbin/munin-node-configure \
 	node/blib/sbin/munin-node \
