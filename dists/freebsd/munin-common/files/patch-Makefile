@@ -1,0 +1,174 @@
+--- Makefile.orig	2019-02-28 14:43:36 UTC
++++ Makefile
+@@ -95,60 +95,47 @@ install: install-master-prime install-common-prime ins
+ 
+ install-pre: $(MAKEFILES)
+ 	@$(CHECKUSER)
+-	mkdir -p $(LOGDIR)
+-	mkdir -p $(STATEDIR)
+-	mkdir -p $(SPOOLDIR)
+-	mkdir -p $(CONFDIR)
+-	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(SPOOLDIR)
++	mkdir -p $(DESTDIR)$(CONFDIR)
+ 
+ install-master-prime: $(INFILES_MASTER) install-pre install-master
+-	mkdir -p $(CONFDIR)/templates
+-	mkdir -p $(CONFDIR)/static
+-	mkdir -p $(CONFDIR)/templates/partial
+-	mkdir -p $(CONFDIR)/munin-conf.d
+-	mkdir -p $(LIBDIR)
+-	mkdir -p $(BINDIR)
+-	mkdir -p $(PERLLIB)
+-	mkdir -p $(PERLLIB)/Munin/Master
+-	mkdir -p $(HTMLDIR)
+-	mkdir -p $(DBDIR)
+-	mkdir -p $(DBDIR)/cgi-tmp
+-	mkdir -p $(CGIDIR)
++	mkdir -p $(DESTDIR)$(CONFDIR)/templates
++	mkdir -p $(DESTDIR)$(CONFDIR)/static
++	mkdir -p $(DESTDIR)$(CONFDIR)/templates/partial
++	mkdir -p $(DESTDIR)$(CONFDIR)/munin-conf.d
++	mkdir -p $(DESTDIR)$(LIBDIR)
++	mkdir -p $(DESTDIR)$(BINDIR)
++	mkdir -p $(DESTDIR)$(HTMLDIR)
++	mkdir -p $(DESTDIR)$(DBDIR)/cgi-tmp
++	mkdir -p $(DESTDIR)$(CGIDIR)
+ 
+-	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR)
+-	$(CHMOD) 0755 $(DBDIR)
+-
+-	$(CHOWN) $(CGIUSER) $(DBDIR)/cgi-tmp
+-	$(CHMOD) 0755 $(DBDIR)/cgi-tmp
+-
+ 	for p in master/www/*.tmpl ;  do \
+-		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
++		$(INSTALL) -m 0644 "$$p" $(DESTDIR)$(CONFDIR)/templates/ ; \
+ 	done
+ 
+ 	for p in master/static/* ; do \
+-		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/static/ ; \
++		$(INSTALL) -m 0644 "$$p" $(DESTDIR)$(CONFDIR)/static/ ; \
+ 	done
+ 
+ 	for p in master/www/partial/*.tmpl; do \
+-		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/partial/ ; \
++		$(INSTALL) -m 0644 "$$p" $(DESTDIR)$(CONFDIR)/templates/partial/ ; \
+ 	done
+ 
+-	$(INSTALL) -m 0644 master/DejaVuSansMono.ttf $(LIBDIR)/
+-	$(INSTALL) -m 0644 master/DejaVuSans.ttf $(LIBDIR)/
++	$(INSTALL) -m 0644 master/DejaVuSansMono.ttf $(DESTDIR)$(LIBDIR)/
++	$(INSTALL) -m 0644 master/DejaVuSans.ttf $(DESTDIR)$(LIBDIR)/
+ 
+-	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/master/www/munin-htaccess $(HTMLDIR)/.htaccess
+-	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/master/munin.conf $(CONFDIR)/
++	$(INSTALL) -m 0644 build/master/www/munin-htaccess $(DESTDIR)$(HTMLDIR)/.htaccess
++	$(INSTALL) -m 0644 build/master/munin.conf $(DESTDIR)$(CONFDIR)/
+ 
+-	$(INSTALL) -m 0755 build/master/_bin/munin-cron $(BINDIR)/
+-	$(INSTALL) -m 0755 build/master/_bin/munin-check $(BINDIR)/
+-	$(INSTALL) -m 0755 build/master/_bin/munin-update $(LIBDIR)/
+-	$(INSTALL) -m 0755 build/master/_bin/munin-html $(LIBDIR)/
+-	$(INSTALL) -m 0755 build/master/_bin/munin-graph $(LIBDIR)/
+-	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
+-	$(INSTALL) -m 0755 build/master/_bin/munin-datafile2storable $(LIBDIR)/
+-	$(INSTALL) -m 0755 build/master/_bin/munin-storable2datafile $(LIBDIR)/
+-	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/munin-cgi-graph
+-	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-html $(CGIDIR)/munin-cgi-html
++	$(INSTALL) -m 0755 build/master/_bin/munin-cron $(DESTDIR)$(BINDIR)/
++	$(INSTALL) -m 0755 build/master/_bin/munin-check $(DESTDIR)$(BINDIR)/
++	$(INSTALL) -m 0755 build/master/_bin/munin-update $(DESTDIR)$(LIBDIR)/
++	$(INSTALL) -m 0755 build/master/_bin/munin-html $(DESTDIR)$(LIBDIR)/
++	$(INSTALL) -m 0755 build/master/_bin/munin-graph $(DESTDIR)$(LIBDIR)/
++	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(DESTDIR)$(LIBDIR)/
++	$(INSTALL) -m 0755 build/master/_bin/munin-datafile2storable $(DESTDIR)$(LIBDIR)/
++	$(INSTALL) -m 0755 build/master/_bin/munin-storable2datafile $(DESTDIR)$(LIBDIR)/
++	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(DESTDIR)$(CGIDIR)/munin-cgi-graph
++	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-html $(DESTDIR)$(CGIDIR)/munin-cgi-html
+ 
+ # Not ready to be installed yet
+ # $(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
+@@ -158,36 +145,30 @@ install-node-plugins: install-plugins-prime
+ install-plugins-prime: install-plugins build $(PLUGINS) $(MAKEFILES)
+ 	@$(CHECKGROUP)
+ 
+-	mkdir -p $(CONFDIR)/plugins
+-	mkdir -p $(CONFDIR)/plugin-conf.d
+-	mkdir -p $(LIBDIR)/plugins
+-	mkdir -p $(PLUGSTATE)
++	mkdir -p $(DESTDIR)$(CONFDIR)/plugins
++	mkdir -p $(DESTDIR)$(CONFDIR)/plugin-conf.d
++	mkdir -p $(DESTDIR)$(LIBDIR)/plugins
++	mkdir -p $(DESTDIR)$(PLUGSTATE)
+ 
+-	$(CHOWN) root:root $(PLUGSTATE)
+-	$(CHMOD) 0755 $(PLUGSTATE)
+-	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
+-
+ 	@# Process the OS specific plugins at the end. Otherwise they would be overridden by the
+ 	@# generic ones.
+ 	for p in build/plugins/node.d/* build/plugins/node.d.$(OSTYPE)/* ; do \
+ 		if test -f "$$p"; then \
+ 			echo Installing $$p; \
+-			$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/; \
++			$(INSTALL) -m 0755 $$p $(DESTDIR)$(LIBDIR)/plugins/;     \
+ 		fi \
+ 	done
+-	@# Some HP-UX plugins need *.adv support files in LIBDIR
+-	if [ "$(OSTYPE)" = "hp-ux" ]; then mv $(LIBDIR)/plugins/*.adv $(LIBDIR); fi
+-	$(INSTALL) -m 0644 build/plugins/plugins.history $(LIBDIR)/plugins/
+-	$(INSTALL) -m 0644 build/plugins/plugin.sh $(LIBDIR)/plugins/
++	$(INSTALL) -m 0644 build/plugins/plugins.history $(DESTDIR)$(LIBDIR)/plugins/
++	$(INSTALL) -m 0644 build/plugins/plugin.sh $(DESTDIR)$(LIBDIR)/plugins/
+ 
+ install-plugins-java: build-plugins-java
+-	mkdir -p $(JAVALIBDIR)
+-	$(INSTALL) -m 0644 build/plugins/javalib/munin-jmx-plugins.jar $(JAVALIBDIR)/
+-	mkdir -p $(LIBDIR)/plugins
++	mkdir -p $(DESTDIR)$(JAVALIBDIR)
++	$(INSTALL) -m 0644 build/plugins/javalib/munin-jmx-plugins.jar $(DESTDIR)$(JAVALIBDIR)/
++	mkdir -p $(DESTDIR)$(LIBDIR)/plugins
+ 	for p in build/plugins/node.d.java/*; do \
+ 		if test -f "$$p"; then \
+ 			echo Installing $$p; \
+-			$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/; \
++			$(INSTALL) -m 0755 $$p $(DESTDIR)$(LIBDIR)/plugins/;     \
+ 		fi \
+ 	done
+ 
+@@ -198,14 +179,14 @@ install-plugins-java: build-plugins-java
+ install-async-prime: install-async
+ 
+ install-async:
+-	mkdir -p $(LIBDIR)
+-	$(INSTALL) -m 0755 build/node/_bin/munin-async $(LIBDIR)/
+-	$(INSTALL) -m 0755 build/node/_bin/munin-asyncd $(LIBDIR)/
++	mkdir -p $(DESTDIR)$(LIBDIR)
++	$(INSTALL) -m 0755 build/node/_bin/munin-async $(DESTDIR)$(LIBDIR)/
++	$(INSTALL) -m 0755 build/node/_bin/munin-asyncd $(DESTDIR)$(LIBDIR)/
+ 
+ install-node-prime: install-node-pre install-node
+ 
+ install-node-pre: build/node/munin-node.conf install-pre
+-	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
++	test -f "$(DESTDIR)$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(DESTDIR)$(CONFDIR)/
+ 
+ 
+ install-common-prime: build-common install-common
+@@ -518,7 +499,7 @@ t/install:
+ 
+ # This builds */Build from Build.PL
+ %/Build: %/Build.PL
+-	cd $* && $(PERL) -I. Build.PL
++	cd $* && $(PERL) -I. Build.PL --config perl=$(PERL)
+ 
+ build-%: %/Build
+ 	cd $* && $(PERL) Build
+@@ -534,6 +515,7 @@ install-%: %/Build
+ 		--install_path script=$(BINDIR) \
+ 		--install_path sbin=$(SBINDIR) \
+ 		--install_path bindoc=$(MANDIR)/man1 \
++		--destdir=$(DESTDIR) \
+ 		--install_path libdoc=$(MANDIR)/man3
+ 
+ test-%: %/Build

@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# $FreeBSD: head/sysutils/munin-node/plugins/zfs_compress 419615 2016-08-04 14:26:56Z mat $
+
+set -e
+set -u
+
+cat <<'EOM'
+graph_title ZFS dataset compression ratio 
+graph_vlabel ratio 
+graph_category ZFS
+graph_info This graph shows the ZFS dataset compression ratio
+EOM
+
+listing=$(zfs get -t filesystem -H compressratio)
+
+while read -r label _ ratio _; do
+	clean_label=$(echo "${label}" | sed -e 's|/|__|g')
+	echo "${clean_label}.label ${label}"
+	echo "${clean_label}.value ${ratio%x}"
+done <<eot
+${listing}
+eot
+
+exit 0
+
+

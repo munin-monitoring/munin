@@ -1,138 +1,264 @@
-@exec mkdir -p %D/etc/munin/plugins
-@exec mkdir -p %D/etc/munin/plugin-conf.d && chmod 755 %D/etc/munin/plugin-conf.d
-@exec mkdir -p %D/var/munin/plugin-state && chgrp munin %D/var/munin/plugin-state && chmod 775 %D/var/munin/plugin-state
-@unexec rm %D/bin/munin-node-revive 2>/dev/null || true
-@comment etc/munin/VERSION.node must remain for upgrade version check
-@unexec if cmp -s %D/etc/munin/munin-node.conf %D/etc/munin/munin-node.conf.sample; then rm -f %D/etc/munin/munin-node.conf; fi
-etc/munin/munin-node.conf.sample
-@unexec if cmp -s %D/etc/munin/plugin-conf.d/plugins.conf %D/etc/munin/plugin-conf.d/plugins.conf.sample; then rm -f %D/etc/munin/plugin-conf.d/plugins.conf; fi
-etc/munin/plugin-conf.d/plugins.conf.sample
-@unexec rm %D/etc/rc.d/munin-node.sh 2>/dev/null || true
+bin/munindoc
+@sample %%ETCDIR%%/munin-node.conf.sample
+@dir %%ETCDIR%%/plugin-conf.d
+@sample %%ETCDIR%%/plugins.conf.sample %%ETCDIR%%/plugin-conf.d/plugins.conf
+@comment the directory exists in STAGEDIR because it is present in
+@comment BSD.local.dist but if not registered here, it will not exist in PREFIX
+@comment when the package is installed.
+@dir etc/newsyslog.conf.d
+@sample %%ETCDIR%%/munin-node.newsyslog etc/newsyslog.conf.d/munin-node.conf
+%%SITE_PERL%%/Munin/Node/Config.pm
+%%SITE_PERL%%/Munin/Node/Configure/Debug.pm
+%%SITE_PERL%%/Munin/Node/Configure/History.pm
+%%SITE_PERL%%/Munin/Node/Configure/HostEnumeration.pm
+%%SITE_PERL%%/Munin/Node/Configure/Plugin.pm
+%%SITE_PERL%%/Munin/Node/Configure/PluginList.pm
+%%SITE_PERL%%/Munin/Node/Logger.pm
+%%SITE_PERL%%/Munin/Node/OS.pm
+%%SITE_PERL%%/Munin/Node/SNMPConfig.pm
+%%SITE_PERL%%/Munin/Node/Server.pm
+%%SITE_PERL%%/Munin/Node/Service.pm
+%%SITE_PERL%%/Munin/Node/Session.pm
+%%SITE_PERL%%/Munin/Node/SpoolReader.pm
+%%SITE_PERL%%/Munin/Node/SpoolWriter.pm
+%%SITE_PERL%%/Munin/Node/Utils.pm
+%%SITE_PERL%%/Munin/Plugin.pm
+%%SITE_PERL%%/Munin/Plugin/Pgsql.pm
+%%SITE_PERL%%/Munin/Plugin/SNMP.pm
+man/man1/munin-node-configure.1.gz
+man/man1/munin-node.1.gz
+man/man1/munin-run.1.gz
+man/man1/munindoc.1.gz
+man/man3/Munin::Node::Config.3.gz
+man/man3/Munin::Node::Configure::Debug.3.gz
+man/man3/Munin::Node::Configure::History.3.gz
+man/man3/Munin::Node::Configure::HostEnumeration.3.gz
+man/man3/Munin::Node::Configure::Plugin.3.gz
+man/man3/Munin::Node::Configure::PluginList.3.gz
+man/man3/Munin::Node::Logger.3.gz
+man/man3/Munin::Node::OS.3.gz
+man/man3/Munin::Node::SNMPConfig.3.gz
+man/man3/Munin::Node::Server.3.gz
+man/man3/Munin::Node::Service.3.gz
+man/man3/Munin::Node::Session.3.gz
+man/man3/Munin::Node::SpoolReader.3.gz
+man/man3/Munin::Node::SpoolWriter.3.gz
+man/man3/Munin::Node::Utils.3.gz
+man/man3/Munin::Plugin.3.gz
+man/man3/Munin::Plugin::Pgsql.3.gz
+man/man3/Munin::Plugin::SNMP.3.gz
+man/man5/munin-node.conf.5.gz
+man/man8/munin.8.gz
 sbin/munin-node
 sbin/munin-node-configure
-sbin/munin-node-configure-snmp
 sbin/munin-run
-%%DATADIR%%/plugins/acpi
+%%DATADIR%%/munin-async
+%%DATADIR%%/munin-asyncd
+%%JAVA%%%%DATADIR%%/munin-jmx-plugins.jar
 %%DATADIR%%/plugins/amavis
 %%DATADIR%%/plugins/apache_accesses
 %%DATADIR%%/plugins/apache_processes
 %%DATADIR%%/plugins/apache_volume
 %%DATADIR%%/plugins/apc_envunit_
 %%DATADIR%%/plugins/apc_nis
+%%DATADIR%%/plugins/asterisk_channels
+%%DATADIR%%/plugins/asterisk_channelstypes
+%%DATADIR%%/plugins/asterisk_codecs
+%%DATADIR%%/plugins/asterisk_meetme
+%%DATADIR%%/plugins/asterisk_meetmeusers
+%%DATADIR%%/plugins/asterisk_sipchannels
+%%DATADIR%%/plugins/asterisk_sippeers
+%%DATADIR%%/plugins/asterisk_voicemail
 %%DATADIR%%/plugins/bind9
 %%DATADIR%%/plugins/bind9_rndc
+%%DATADIR%%/plugins/cmc_tc_sensor_
+%%DATADIR%%/plugins/coretemp
 %%DATADIR%%/plugins/courier_
 %%DATADIR%%/plugins/courier_mta_mailqueue
 %%DATADIR%%/plugins/courier_mta_mailstats
 %%DATADIR%%/plugins/courier_mta_mailvolume
 %%DATADIR%%/plugins/cpu
 %%DATADIR%%/plugins/cupsys_pages
+%%DATADIR%%/plugins/dev_cpu_
 %%DATADIR%%/plugins/df
 %%DATADIR%%/plugins/df_inode
 %%DATADIR%%/plugins/dhcpd3
+%%DATADIR%%/plugins/digitemp_
+%%DATADIR%%/plugins/ejabberd_
 %%DATADIR%%/plugins/exim_mailqueue
 %%DATADIR%%/plugins/exim_mailqueue_alt
 %%DATADIR%%/plugins/exim_mailstats
+%%DATADIR%%/plugins/fail2ban
 %%DATADIR%%/plugins/foldingathome
 %%DATADIR%%/plugins/foldingathome_rank
 %%DATADIR%%/plugins/foldingathome_wu
+%%DATADIR%%/plugins/freeradius_acct
+%%DATADIR%%/plugins/freeradius_auth
+%%DATADIR%%/plugins/freeradius_proxy_acct
+%%DATADIR%%/plugins/freeradius_proxy_auth
+%%DATADIR%%/plugins/haproxy_
+%%DATADIR%%/plugins/haproxy_ng
 %%DATADIR%%/plugins/hddtemp
 %%DATADIR%%/plugins/hddtemp2
 %%DATADIR%%/plugins/hddtemp_smartctl
 %%DATADIR%%/plugins/hddtempd
+%%PERL%%%%DATADIR%%/plugins/hp2000_
+%%DATADIR%%/plugins/http_loadtime
 %%DATADIR%%/plugins/if_
 %%DATADIR%%/plugins/if_errcoll_
+%%DATADIR%%/plugins/if_packets_
+%%DATADIR%%/plugins/ifx_concurrent_sessions_
+%%DATADIR%%/plugins/iostat
 %%DATADIR%%/plugins/ipac-ng
+%%DATADIR%%/plugins/ipmi_
+%%PYTHON%%%%DATADIR%%/plugins/ipmi_sensor_
 %%DATADIR%%/plugins/ircu
+%%JAVA%%%%DATADIR%%/plugins/jmx_
+%%JAVA%%%%DATADIR%%/plugins/jmx_tomcat_dbpools
 %%DATADIR%%/plugins/load
 %%DATADIR%%/plugins/loggrep
+%%DATADIR%%/plugins/lpstat
 %%DATADIR%%/plugins/mailman
 %%DATADIR%%/plugins/mailscanner
 %%DATADIR%%/plugins/mbmon_
+%%DATADIR%%/plugins/memcached_
 %%DATADIR%%/plugins/memory
 %%DATADIR%%/plugins/mhttping
+%%DATADIR%%/plugins/multiping
 %%DATADIR%%/plugins/multips
-%%DATADIR%%/plugins/munin_graph
+%%DATADIR%%/plugins/multips_memory
+%%DATADIR%%/plugins/munin_stats
 %%DATADIR%%/plugins/munin_update
+%%DATADIR%%/plugins/mysql_
 %%DATADIR%%/plugins/mysql_bytes
+%%DATADIR%%/plugins/mysql_innodb
 %%DATADIR%%/plugins/mysql_isam_space_
 %%DATADIR%%/plugins/mysql_queries
 %%DATADIR%%/plugins/mysql_slowqueries
 %%DATADIR%%/plugins/mysql_threads
 %%DATADIR%%/plugins/named
+%%DATADIR%%/plugins/netopia
 %%DATADIR%%/plugins/netstat
-%%DATADIR%%/plugins/ntp_
-%%DATADIR%%/plugins/ntp_states
+%%DATADIR%%/plugins/nginx_request
+%%DATADIR%%/plugins/nginx_status
+%%DATADIR%%/plugins/nomadix_users_
+%%PERL%%%%DATADIR%%/plugins/ntp_
+%%DATADIR%%/plugins/ntp_kernel_err
+%%DATADIR%%/plugins/ntp_kernel_pll_freq
+%%DATADIR%%/plugins/ntp_kernel_pll_off
+%%DATADIR%%/plugins/ntp_offset
+%%PERL%%%%DATADIR%%/plugins/ntp_states
 %%DATADIR%%/plugins/nut_misc
 %%DATADIR%%/plugins/nut_volts
+%%DATADIR%%/plugins/nutups_
+%%DATADIR%%/plugins/nvidia_
 %%DATADIR%%/plugins/open_files
+%%DATADIR%%/plugins/openvpn
 %%DATADIR%%/plugins/perdition
+%%PERL%%%%DATADIR%%/plugins/pgbouncer_connections
+%%PERL%%%%DATADIR%%/plugins/pgbouncer_requests
 %%DATADIR%%/plugins/ping_
+%%DATADIR%%/plugins/plugin.sh
 %%DATADIR%%/plugins/plugins.history
 %%DATADIR%%/plugins/pm3users_
 %%DATADIR%%/plugins/pop_stats
 %%DATADIR%%/plugins/postfix_mailqueue
 %%DATADIR%%/plugins/postfix_mailstats
 %%DATADIR%%/plugins/postfix_mailvolume
+%%PERL%%%%DATADIR%%/plugins/postgres_autovacuum
+%%PERL%%%%DATADIR%%/plugins/postgres_bgwriter
+%%PERL%%%%DATADIR%%/plugins/postgres_cache_
+%%PERL%%%%DATADIR%%/plugins/postgres_checkpoints
+%%PERL%%%%DATADIR%%/plugins/postgres_connections_
+%%PERL%%%%DATADIR%%/plugins/postgres_connections_db
+%%PERL%%%%DATADIR%%/plugins/postgres_locks_
+%%PERL%%%%DATADIR%%/plugins/postgres_oldest_prepared_xact_
+%%PERL%%%%DATADIR%%/plugins/postgres_prepared_xacts_
+%%PERL%%%%DATADIR%%/plugins/postgres_querylength_
+%%PERL%%%%DATADIR%%/plugins/postgres_scans_
+%%PERL%%%%DATADIR%%/plugins/postgres_size_
+%%PERL%%%%DATADIR%%/plugins/postgres_streaming_
+%%PERL%%%%DATADIR%%/plugins/postgres_transactions_
+%%PERL%%%%DATADIR%%/plugins/postgres_tuples_
+%%PERL%%%%DATADIR%%/plugins/postgres_users
+%%PERL%%%%DATADIR%%/plugins/postgres_xlog
 %%DATADIR%%/plugins/processes
+%%DATADIR%%/plugins/proxy_plugin
 %%DATADIR%%/plugins/ps_
 %%DATADIR%%/plugins/psu_
+%%DATADIR%%/plugins/qmailqstat
+%%DATADIR%%/plugins/qmailscan
+%%DATADIR%%/plugins/qmailscan-simple
 %%DATADIR%%/plugins/samba
 %%DATADIR%%/plugins/sendmail_mailqueue
 %%DATADIR%%/plugins/sendmail_mailstats
 %%DATADIR%%/plugins/sendmail_mailtraffic
-%%DATADIR%%/plugins/smart_
-%%DATADIR%%/plugins/snmp__df
-%%DATADIR%%/plugins/snmp__fc_if_
-%%DATADIR%%/plugins/snmp__fc_if_err_
-%%DATADIR%%/plugins/snmp__if_
-%%DATADIR%%/plugins/snmp__if_err_
-%%DATADIR%%/plugins/snmp__load
-%%DATADIR%%/plugins/snmp__processes
-%%DATADIR%%/plugins/snmp__sensors_fsc_bx_fan
-%%DATADIR%%/plugins/snmp__sensors_fsc_bx_temp
-%%DATADIR%%/plugins/snmp__sensors_fsc_fan
-%%DATADIR%%/plugins/snmp__sensors_fsc_temp
-%%DATADIR%%/plugins/snmp__sensors_mbm_fan
-%%DATADIR%%/plugins/snmp__sensors_mbm_temp
-%%DATADIR%%/plugins/snmp__sensors_mbm_volt
-%%DATADIR%%/plugins/snmp__users
+%%DATADIR%%/plugins/slapd_
+%%DATADIR%%/plugins/slapd_bdb_cache_
+%%PERL%%%%DATADIR%%/plugins/slony_lag_
+%%PYTHON%%%%DATADIR%%/plugins/smart_
+%%SNMP%%%%DATADIR%%/plugins/snmp__cpuload
+%%SNMP%%%%DATADIR%%/plugins/snmp__df
+%%SNMP%%%%DATADIR%%/plugins/snmp__df_ram
+%%SNMP%%%%DATADIR%%/plugins/snmp__fc_if_
+%%SNMP%%%%DATADIR%%/plugins/snmp__fc_if_err_
+%%SNMP%%%%DATADIR%%/plugins/snmp__if_
+%%SNMP%%%%DATADIR%%/plugins/snmp__if_err_
+%%SNMP%%%%DATADIR%%/plugins/snmp__if_multi
+%%SNMP%%%%DATADIR%%/plugins/snmp__load
+%%SNMP%%%%DATADIR%%/plugins/snmp__memory
+%%SNMP%%%%DATADIR%%/plugins/snmp__netapp_diskusage_
+%%SNMP%%%%DATADIR%%/plugins/snmp__netapp_inodeusage_
+%%SNMP%%%%DATADIR%%/plugins/snmp__netstat
+%%SNMP%%%%DATADIR%%/plugins/snmp__print_pages
+%%SNMP%%%%DATADIR%%/plugins/snmp__print_supplies
+%%SNMP%%%%DATADIR%%/plugins/snmp__processes
+%%SNMP%%%%DATADIR%%/plugins/snmp__rdp_users
+%%SNMP%%%%DATADIR%%/plugins/snmp__sensors_fsc_bx_fan
+%%SNMP%%%%DATADIR%%/plugins/snmp__sensors_fsc_bx_temp
+%%SNMP%%%%DATADIR%%/plugins/snmp__sensors_fsc_fan
+%%SNMP%%%%DATADIR%%/plugins/snmp__sensors_fsc_temp
+%%SNMP%%%%DATADIR%%/plugins/snmp__sensors_mbm_fan
+%%SNMP%%%%DATADIR%%/plugins/snmp__sensors_mbm_temp
+%%SNMP%%%%DATADIR%%/plugins/snmp__sensors_mbm_volt
+%%SNMP%%%%DATADIR%%/plugins/snmp__swap
+%%SNMP%%%%DATADIR%%/plugins/snmp__uptime
+%%SNMP%%%%DATADIR%%/plugins/snmp__users
+%%SNMP%%%%DATADIR%%/plugins/snmp__winload
+%%SNMP%%%%DATADIR%%/plugins/snmp__winmem
+%%DATADIR%%/plugins/snort_alerts
+%%DATADIR%%/plugins/snort_bytes_pkt
+%%DATADIR%%/plugins/snort_drop_rate
+%%DATADIR%%/plugins/snort_pattern_match
+%%DATADIR%%/plugins/snort_pkts
+%%DATADIR%%/plugins/snort_traffic
 %%DATADIR%%/plugins/spamstats
+%%DATADIR%%/plugins/squeezebox_
 %%DATADIR%%/plugins/squid_cache
 %%DATADIR%%/plugins/squid_icp
+%%DATADIR%%/plugins/squid_objectsize
 %%DATADIR%%/plugins/squid_requests
 %%DATADIR%%/plugins/squid_traffic
 %%DATADIR%%/plugins/surfboard
 %%DATADIR%%/plugins/swap
 %%DATADIR%%/plugins/sybase_space
+%%DATADIR%%/plugins/systat
+%%DATADIR%%/plugins/tomcat_
+%%DATADIR%%/plugins/tomcat_access
+%%DATADIR%%/plugins/tomcat_jvm
+%%DATADIR%%/plugins/tomcat_threads
+%%DATADIR%%/plugins/tomcat_volume
+%%DATADIR%%/plugins/uptime
+%%DATADIR%%/plugins/users
+%%PERL%%%%DATADIR%%/plugins/varnish_
 %%DATADIR%%/plugins/vmstat
-@unexec rm -f /var/run/munin/munin-node.pid
-@unexec rmdir /var/run/munin 2>/dev/null || true
-@unexec rmdir %D/var/munin/plugin-state 2>/dev/null || true
-@unexec rmdir %D/var/munin 2>/dev/null || true
-@unexec rmdir %D/%%DATADIR%%/plugins 2>/dev/null || true
-@unexec rmdir %D/%%DATADIR%% 2>/dev/null || true
-@unexec rmdir %D/etc/munin/plugin-conf.d 2>/dev/null || true
-@unexec rmdir %D/etc/munin 2>/dev/null || true
-@unexec rmdir %%LOCALBASE%%/%%SITE_PERL%%/Munin/Plugin 2>/dev/null || true
-@unexec rmdir %%LOCALBASE%%/%%SITE_PERL%%/Munin 2>/dev/null || true
-@unexec echo
-@unexec echo '********************************************************************'
-@unexec echo "If you want to *completely* remove munin-node, you have to"
-@unexec echo
-@unexec echo "    rm -rf %D/etc/munin/VERSION.node %D/etc/munin/plugins \\"
-@unexec if [ -d %D/var/munin/plugin-state ]; then echo "           %D/var/munin/plugin-state \\"; fi
-@unexec if [ -f %D/etc/munin/munin-node.conf ]; then echo "           %D/etc/munin/munin-node.conf \\"; fi
-@unexec if [ -d %D/var/munin/plugin-state ]; then echo "           %D/var/munin/plugin-state \\"; fi
-@unexec if [ -d %%LOCALBASE%%/%%SITE_PERL%%/Munin/Plugin ]; then echo "           %%LOCALBASE%%/%%SITE_PERL%%/Munin/Plugin \\"; fi
-@unexec if [ -d %%LOCALBASE%%/%%SITE_PERL%%/Munin ]; then echo "           %%LOCALBASE%%/%%SITE_PERL%%/Munin/Plugin \\"; fi
-@unexec echo "           /var/log/munin-node.log*"
-@unexec echo
-@unexec echo "If you have already deinstalled munin-main, you can also"
-@unexec echo
-@unexec echo "    rmdir %D/etc/munin %D/var/munin"
-@unexec echo
-@unexec echo "These files and directories have to be left on the system because"
-@unexec echo "you may be performing an update. This process can't tell."
-@unexec echo '********************************************************************'
-@unexec echo
+%%DATADIR%%/plugins/zfs_arc_compression
+%%DATADIR%%/plugins/zfs_compress
+%%DATADIR%%/plugins/zimbra_
+%%DATADIR%%/plugins/zpool_chksum
+%%DATADIR%%/plugins/zpool_dedup
+@dir(%%USER%%,%%GROUP%%,) %%DBDIRNODE%%/plugin-state
+@dir %%ETCDIR%%/plugins
+@dir(%%USER%%,%%GROUP%%,) %%SPOOLDIR%%/async
+@comment @dir %%SPOOLDIR%%
+@comment @dir %%DBDIRNODE%%

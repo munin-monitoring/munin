@@ -8,6 +8,7 @@ intervals, and asks them for data. It then stores the data in RRD-files,
 and (if needed) updates the graphs. One of the main goals have been ease
 of creating own "plugins" (graphs).
 
-This is the node part. It is used on all machines Munin shall watch.
+This are the common components to drive both the server and the node components
+of munin.
 
 WWW: http://munin-monitoring.org/

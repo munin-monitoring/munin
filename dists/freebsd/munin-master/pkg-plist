@@ -1,0 +1,89 @@
+bin/munin-check
+bin/munin-cron
+@sample %%ETCDIR%%/munin.conf.sample
+@sample %%ETCDIR%%/static/definitions.html.sample
+@sample %%ETCDIR%%/static/dynazoom.html.sample
+@sample %%ETCDIR%%/static/favicon.ico.sample
+@sample %%ETCDIR%%/static/formatdate.js.sample
+@sample %%ETCDIR%%/static/logo-h.png.sample
+@sample %%ETCDIR%%/static/logo.png.sample
+@sample %%ETCDIR%%/static/querystring.js.sample
+@sample %%ETCDIR%%/static/style-1.2.css.sample
+@sample %%ETCDIR%%/static/style-new.css.sample
+@sample %%ETCDIR%%/static/style.css.sample
+@sample %%ETCDIR%%/static/zoom.js.sample
+@sample %%ETCDIR%%/templates/munin-categoryview.tmpl.sample
+@sample %%ETCDIR%%/templates/munin-comparison-day.tmpl.sample
+@sample %%ETCDIR%%/templates/munin-comparison-month.tmpl.sample
+@sample %%ETCDIR%%/templates/munin-comparison-week.tmpl.sample
+@sample %%ETCDIR%%/templates/munin-comparison-year.tmpl.sample
+@sample %%ETCDIR%%/templates/munin-domainview.tmpl.sample
+@sample %%ETCDIR%%/templates/munin-dynazoom.tmpl.sample
+@sample %%ETCDIR%%/templates/munin-nodeview.tmpl.sample
+@sample %%ETCDIR%%/templates/munin-overview.tmpl.sample
+@sample %%ETCDIR%%/templates/munin-problemview.tmpl.sample
+@sample %%ETCDIR%%/templates/munin-serviceview.tmpl.sample
+@sample %%ETCDIR%%/templates/partial/bottom_navigation.tmpl.sample
+@sample %%ETCDIR%%/templates/partial/footer.tmpl.sample
+@sample %%ETCDIR%%/templates/partial/generated_by.tmpl.sample
+@sample %%ETCDIR%%/templates/partial/head.tmpl.sample
+@sample %%ETCDIR%%/templates/partial/logo_navigation.tmpl.sample
+@sample %%ETCDIR%%/templates/partial/logo_navigation_comparison.tmpl.sample
+@sample %%ETCDIR%%/templates/partial/logo_navigation_problem.tmpl.sample
+@sample %%ETCDIR%%/templates/partial/logo_path.tmpl.sample
+@sample %%ETCDIR%%/templates/partial/navigation.tmpl.sample
+@sample %%ETCDIR%%/templates/partial/path.tmpl.sample
+@comment the directory exists in STAGEDIR because it is present in
+@comment BSD.local.dist but if not registered here, it will not exist in PREFIX
+@comment when the package is installed.
+@dir etc/newsyslog.conf.d
+@sample %%ETCDIR%%/munin-master.newsyslog etc/newsyslog.conf.d/munin-master.conf
+%%SITE_PERL%%/Munin/Master/Config.pm
+%%SITE_PERL%%/Munin/Master/GraphOld.pm
+%%SITE_PERL%%/Munin/Master/Group.pm
+%%SITE_PERL%%/Munin/Master/GroupRepository.pm
+%%SITE_PERL%%/Munin/Master/HTMLConfig.pm
+%%SITE_PERL%%/Munin/Master/HTMLOld.pm
+%%SITE_PERL%%/Munin/Master/Host.pm
+%%SITE_PERL%%/Munin/Master/LimitsOld.pm
+%%SITE_PERL%%/Munin/Master/Logger.pm
+%%SITE_PERL%%/Munin/Master/Node.pm
+%%SITE_PERL%%/Munin/Master/ProcessManager.pm
+%%SITE_PERL%%/Munin/Master/Update.pm
+%%SITE_PERL%%/Munin/Master/UpdateWorker.pm
+%%SITE_PERL%%/Munin/Master/Utils.pm
+%%SITE_PERL%%/Munin/Master/Worker.pm
+man/man3/Munin::Master::Config.3.gz
+man/man3/Munin::Master::Group.3.gz
+man/man3/Munin::Master::GroupRepository.3.gz
+man/man3/Munin::Master::HTMLOld.3.gz
+man/man3/Munin::Master::Host.3.gz
+man/man3/Munin::Master::LimitsOld.3.gz
+man/man3/Munin::Master::Logger.3.gz
+man/man3/Munin::Master::Node.3.gz
+man/man3/Munin::Master::ProcessManager.3.gz
+man/man3/Munin::Master::Update.3.gz
+man/man3/Munin::Master::UpdateWorker.3.gz
+man/man3/Munin::Master::Utils.3.gz
+man/man3/Munin::Master::Worker.3.gz
+man/man5/munin.conf.5.gz
+man/man8/munin-cron.8.gz
+man/man8/munin-graph.8.gz
+man/man8/munin-html.8.gz
+man/man8/munin-limits.8.gz
+man/man8/munin-update.8.gz
+%%DATADIR%%/DejaVuSans.ttf
+%%DATADIR%%/DejaVuSansMono.ttf
+%%DATADIR%%/munin-datafile2storable
+%%DATADIR%%/munin-graph
+%%DATADIR%%/munin-html
+%%DATADIR%%/munin-limits
+%%DATADIR%%/munin-storable2datafile
+%%DATADIR%%/munin-update
+www/cgi-bin/munin-cgi-graph
+www/cgi-bin/munin-cgi-html
+@sample %%WWWDIR%%/.htaccess.sample
+@dir %%ETCDIR%%/munin-conf.d
+@dir(%%USER%%,%%GROUP%%,) %%WWWDIR%%
+@dir(%%WWWOWN%%,%%WWWGRP%%,) %%DBDIR%%/cgi-tmp
+@comment @dir %%DBDIR%%

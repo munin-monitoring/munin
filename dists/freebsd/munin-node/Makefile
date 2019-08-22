@@ -1,68 +1,95 @@
-# New ports collection makefile for:	munin-node
-# Date created:				25 January 2004
-# Whom:					Lupe Christoph <lupe@lupe-christoph.de>
-#
-# $FreeBSD: ports/sysutils/munin-node/Makefile,v 1.12 2004/12/14 01:43:10 sem Exp $
-#
+# Created by: Lupe Christoph <lupe@lupe-christoph.de>
+# $FreeBSD: head/sysutils/munin-node/Makefile 507372 2019-07-26 20:46:53Z gerald $
 
 PORTNAME=	munin
-PORTVERSION=	1.2.2
+PORTVERSION=	${MUNIN_VERSION}
+PORTREVISION=	2
 CATEGORIES=	sysutils perl5
-MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
-MASTER_SITE_SUBDIR=	munin
+MASTER_SITES=	${MUNIN_SITES}
 PKGNAMESUFFIX=	-node
-DISTNAME=	${PORTNAME}_${PORTVERSION:S/.r/rc/}
 
-MAINTAINER=	lupe@lupe-christoph.de
+MAINTAINER=	mat@FreeBSD.org
 COMMENT=	Node-specific part of Munin
 
-RUN_DEPENDS=	${SITE_PERL}/Net/Server/Fork.pm:${PORTSDIR}/net/p5-Net-Server
-BUILD_DEPENDS=	${RUN_DEPENDS}
+BUILD_DEPENDS=	p5-Module-Build>=0:devel/p5-Module-Build \
+		p5-DateTime-HiRes>=0:devel/p5-DateTime-HiRes \
+		munin-common>=${MUNIN_VERSION}:sysutils/munin-common \
+		p5-Net-Server>=0:net/p5-Net-Server \
+		bash:shells/bash
+RUN_DEPENDS=	p5-Cache-Cache>=0:devel/p5-Cache-Cache \
+		p5-DateTime-HiRes>=0:devel/p5-DateTime-HiRes \
+		munin-common>=${MUNIN_VERSION}:sysutils/munin-common \
+		p5-Net-Server>=0:net/p5-Net-Server \
+		p5-List-MoreUtils>0:lang/p5-List-MoreUtils \
+		p5-Net-CIDR>=0:net-mgmt/p5-Net-CIDR \
+		p5-libwww>=0:www/p5-libwww \
+		bash:shells/bash
 
-.include <bsd.port.pre.mk>
+USES=		gmake perl5 shebangfix cpe
+REINPLACE_ARGS=	-i ""
+SHEBANG_FILES=	node/bin/munindoc node/sbin/munin-node \
+		node/sbin/munin-run node/sbin/munin-node-configure
 
-.if ${OSVERSION} < 500000
-RUN_DEPENDS=	${LOCALBASE}/etc/rc.subr:${PORTSDIR}/sysutils/rc_subr
-.endif
+.include "${.CURDIR}/../munin-common/munin.mk"
 
-.if ${PERL_LEVEL} < 500800
-RUN_DEPENDS+=	${SITE_PERL}/Net/Domain.pm:${PORTSDIR}/net/p5-Net
-.endif
+ALL_TARGET=	build-node build-plugins build/node/_bin/munin-async build/node/_bin/munin-asyncd
+INSTALL_TARGET=	install-node-prime install-async-prime install-plugins-prime
+NO_ARCH=	yes
 
-USE_GMAKE=	yes
-PATCH_STRIP=	-p1
-WRKSRC=		${WRKDIR}/${PORTNAME}-${PORTVERSION:S/.r/rc/}
-PKGMESSAGE=	${WRKDIR}/pkg-message
-ALL_TARGET=	DATADIR=${DATADIR} PERL=${PERL} build build-man
-INSTALL_TARGET=	DATADIR=${DATADIR} PERL=${PERL} INSTALL_PLUGINS="auto manual snmpauto" install-node install-node-plugins
-MAKE_ENV=	LANG=C
+OPTIONS_DEFINE=	SNMP PERL PYTHON JAVA
+OPTIONS_DEFAULT=	SNMP PERL PYTHON
+OPTIONS_SUB=	yes
+SNMP_DESC=	Include SNMP plugins
+PERL_DESC=	Include all Perl modules (adds dependencies)
+JAVA_DESC=	Include JAVA plugins
+PYTHON_DESC=	Include Python plugins
 
-MAN5=		munin-node.conf.5
-MAN8=		munin-node-configure.8 munin-node.8 munin-run.8
+SNMP_BUILD_DEPENDS=	p5-Net-SNMP>=0:net-mgmt/p5-Net-SNMP
+SNMP_RUN_DEPENDS=	p5-Net-SNMP>=0:net-mgmt/p5-Net-SNMP
+PERL_RUN_DEPENDS=	p5-DBD-Pg>=0:databases/p5-DBD-Pg \
+		p5-Net-DNS>=0:dns/p5-Net-DNS \
+		p5-Net-IP>=0:net-mgmt/p5-Net-IP \
+		p5-XML-Parser>=0:textproc/p5-XML-Parser \
+		p5-XML-LibXML>=0:textproc/p5-XML-LibXML
+PYTHON_USES=	python
+JAVA_USE=	java=yes
+JAVA_INSTALL_TARGET=	install-plugins-java
+JAVA_BUILD=	yes
+JAVA_RUN=	yes
 
-SUB_FILES=	pkg-message munin-node.sh munin-node-revive.sh
-SUB_LIST=	RC_SUBR=${RC_SUBR}
-USE_RC_SUBR=	YES
+SUB_FILES=	pkg-message plugins.conf
+USE_RC_SUBR=	munin-asyncd munin-node
 
-pre-install:
-	@PKG_PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} PRE-INSTALL
+PORTSCOUT=	ignore:1
+
+post-patch:
+	@${REINPLACE_CMD} -e 's|%%PREFIX%%|${PREFIX}|g' \
+		${WRKSRC}/node/sbin/munin-node \
+		${WRKSRC}/node/sbin/munin-node-configure \
+		${WRKSRC}/node/sbin/munin-run
+	@${REINPLACE_CMD} \
+		-e 's|^\(BASH[[:space:]]*:=\).*|\1 ${bash_CMD}|' \
+		-e 's|^\(JAVARUN[[:space:]]*:=\).*|\1 ${java_CMD}|' \
+		-e 's|^\(PERL[[:space:]]*:=\).*|\1 ${perl_CMD}|' \
+		-e 's|^\(PYTHON[[:space:]]*:=\).*|\1 ${python_CMD}|' \
+		-e 's|^\(RUBY[[:space:]]*:=\).*|\1 ${ruby_CMD}|' \
+		${WRKSRC}/Makefile.config
+	@${FIND} ${WRKSRC}/node/sbin -type f -name "*.orig" -delete
 
 post-install:
-	${INSTALL_SCRIPT} ${WRKDIR}/munin-node.sh ${PREFIX}/etc/rc.d/munin-node.sh
-.if ${PERL_LEVEL} < 500800
-	${INSTALL_SCRIPT} ${WRKDIR}/munin-node-revive.sh ${PREFIX}/bin/munin-node-revive
-.endif
-	${INSTALL_DATA} ${WRKSRC}/build/node/munin-node.conf ${PREFIX}/etc/munin/munin-node.conf.sample
-	${INSTALL_DATA} files/plugins.conf ${PREFIX}/etc/munin/plugin-conf.d/plugins.conf.sample
-	@if [ ! -f ${PREFIX}/etc/munin/plugin-conf.d/plugins.conf ]; then \
-		${INSTALL_DATA} ${PREFIX}/etc/munin/plugin-conf.d/plugins.conf.sample ${PREFIX}/etc/munin/plugin-conf.d/plugins.conf; \
-	fi
-	@${CAT} ${PKGMESSAGE}
-	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-node.conf.5 ${PREFIX}/man/man5
-	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-node-configure.8 ${PREFIX}/man/man8
-	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-node.8 ${PREFIX}/man/man8
-	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-run.8 ${PREFIX}/man/man8
-	@PKG_PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} POST-INSTALL
-	@${ECHO} ${DISTNAME} | ${SED} -e 's/munin_//' > ${PREFIX}/etc/munin/VERSION.node
+	${MKDIR} ${STAGEDIR}${DBDIR}/plugin-state ${STAGEDIR}${SPOOLDIR}/async
+	${INSTALL_SCRIPT} ${.CURDIR}/plugins/* ${STAGEDIR}${DATADIR}/plugins/
+	${INSTALL_DATA} ${WRKSRC}/build/node/munin-node.conf \
+		${STAGEDIR}${ETCDIR}/munin-node.conf.sample
+	${INSTALL_DATA} ${WRKDIR}/plugins.conf \
+		${STAGEDIR}${ETCDIR}/plugins.conf.sample
+	(cd ${WRKSRC}/node/blib/bindoc; \
+		${INSTALL_MAN} munin-node-configure.1 munin-node.1 munin-run.1 munindoc.1 ${STAGEDIR}${MAN1PREFIX}/man/man1; \
+	)
+	(cd ${WRKSRC}/build/doc; \
+		${INSTALL_MAN} munin-node.conf.5 ${STAGEDIR}${MAN5PREFIX}/man/man5; \
+		${INSTALL_MAN} munin.8 ${STAGEDIR}${MAN8PREFIX}/man/man8; \
+	)
+	${INSTALL_DATA} ${FILESDIR}/newsyslog ${STAGEDIR}${ETCDIR}/munin-node.newsyslog
 
-.include <bsd.port.post.mk>
+.include <bsd.port.mk>

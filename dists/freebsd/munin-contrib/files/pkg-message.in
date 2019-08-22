@@ -1,0 +1,18 @@
+[
+{
+message: <<EOD
+To avoid having too many plugins activating at once when this port
+is installed, the contributed plugins from this port are NOT installed
+in munin's plugins directory.
+
+The best way to use a contributed plugin is to make a symlink to
+it to munin's plugins directory, for example:
+
+  ln -s %%EXAMPLESDIR%%/plugins/cyrus/cyrus-imapd %%PREFIX%%/share/munin/plugins/
+
+Note that as this is a "contrib" port, some plugins may need some
+dependencies to run that are not provided by this port.
+EOD
+type: install
+}
+]

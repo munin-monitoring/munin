@@ -1,0 +1,18 @@
+%%SITE_PERL%%/Munin/Common/Config.pm
+%%SITE_PERL%%/Munin/Common/Defaults.pm
+%%SITE_PERL%%/Munin/Common/DictFile.pm
+%%SITE_PERL%%/Munin/Common/SyncDictFile.pm
+%%SITE_PERL%%/Munin/Common/TLS.pm
+%%SITE_PERL%%/Munin/Common/TLSClient.pm
+%%SITE_PERL%%/Munin/Common/TLSServer.pm
+%%SITE_PERL%%/Munin/Common/Timeout.pm
+man/man3/Munin::Common::Config.3.gz
+man/man3/Munin::Common::Defaults.3.gz
+man/man3/Munin::Common::TLS.3.gz
+man/man3/Munin::Common::TLSClient.3.gz
+man/man3/Munin::Common::TLSServer.3.gz
+man/man3/Munin::Common::Timeout.3.gz
+@dir(%%USER%%,%%GROUP%%,) %%LOGDIR%%
+@dir(%%USER%%,%%GROUP%%,) %%STATEDIR%%
+@dir(%%USER%%,%%GROUP%%,) %%SPOOLDIR%%
+@dir(%%USER%%,%%GROUP%%,) %%DBDIR%%

@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# $FreeBSD: head/sysutils/munin-node/plugins/zfs_arc_compression 453622 2017-11-06 14:39:47Z mat $
+
+set -e
+set -u
+
+UNCOMP_ARC=$(sysctl -n kstat.zfs.misc.arcstats.uncompressed_size)
+COMP_ARC=$(sysctl -n kstat.zfs.misc.arcstats.compressed_size)
+
+value=$(bc -e scale=2 -e "$UNCOMP_ARC/$COMP_ARC" -e quit)
+
+cat <<EOM
+graph_title ZFS ARC compression ratio
+graph_vlabel ratio
+graph_category ZFS
+graph_info This graph shows the ZFS ARC compression (uncompressed vs. compressed) ratio
+ratio.label ratio
+ratio.value $value
+EOM
+
+exit 0

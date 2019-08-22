@@ -1,0 +1,25 @@
+--- plugins/node.d.freebsd/iostat.in.orig	2014-11-24 21:46:24 UTC
++++ plugins/node.d.freebsd/iostat.in
+@@ -41,7 +41,7 @@ fi
+ if [ "$1" = "config" ]; then
+     echo 'graph_title IOstat by bytes'
+     echo 'graph_args --base 1024 -l 0'
+-    echo 'graph_vlabel MB per ${graph_period} read+written'
++    echo 'graph_vlabel kB per ${graph_period} read+written'
+     echo 'graph_category disk'
+     echo 'graph_info This graph shows the I/O to and from block devices'
+     # We don't give a XXXX about device or extended
+@@ -56,13 +56,11 @@ if [ "$1" = "config" ]; then
+     for d in $drives; do
+        echo "${d}_read.label ${d}"
+        echo "${d}_read.type DERIVE"
+-       echo "${d}_read.max 2000"
+        echo "${d}_read.min 0"
+        echo "${d}_read.graph no"
+        echo "${d}_write.label ${d}"
+        echo "${d}_write.info I/O on device ${d}"
+        echo "${d}_write.type DERIVE"
+-       echo "${d}_write.max 2000"
+        echo "${d}_write.min 0"
+        echo "${d}_write.negative ${d}_read"
+     done

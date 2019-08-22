@@ -1,0 +1,100 @@
+#! /bin/sh
+# ex:sw=4 sts=4
+
+ask() {
+    local question default answer
+
+    question=$1
+    default=$2
+    if [ -z "${PACKAGE_BUILDING}" -a -z "${BATCH}" ]
+    then
+        read -p "${question} [${default}]? " answer
+    fi
+    if [ x${answer} = x ]
+    then
+        answer=${default}
+    fi
+    echo ${answer}
+}
+
+yesno() {
+    local dflt question answer
+
+    question=$1
+    dflt=$2
+    while :; do
+        answer=$(ask "${question}" "${dflt}")
+        case "${answer}" in
+        [Yy]*)          return 0;;
+        [Nn]*)          return 1;;
+        esac
+        echo "Please answer yes or no."
+    done
+}
+
+create_crontab_entries() {
+    local b e
+    b=$1
+    e=$2
+
+    if crontab -u munin -l > /dev/null 2>&1
+    then
+	if ! crontab -u munin -l | grep -q MANUAL_MUNIN_CRONTAB
+	then
+	    TMPFILE=`mktemp -t munin` || exit 1
+	    cat > $TMPFILE
+	    crontab -u munin -l | sed -e "/^$b$/,/^$e$/d" | \
+		cat - $TMPFILE | crontab -u munin -
+	    rm $TMPFILE
+	fi
+    else
+	crontab -u munin -
+    fi
+}
+
+move_www_dir() {
+    if [ -d ${PKG_PREFIX}/www/data/munin -a ! -d ${PKG_PREFIX}/www/munin ]
+    then
+	echo Migrating ${PKG_PREFIX}/www/data/munin to ${PKG_PREFIX}/www/munin
+	mv ${PKG_PREFIX}/www/data/munin ${PKG_PREFIX}/www/munin
+    fi
+}
+
+move_newsyslog_conf() {
+    oldfile=${PKG_PREFIX}/etc/newsyslog.conf.d/munin-master
+    newfile=${PKG_PREFIX}/etc/newsyslog.conf.d/munin-master.conf
+    samplefile=${PKG_PREFIX}/etc/munin/munin-master.newsyslog
+    if [ -f ${oldfile} ]; then
+	echo "Configuration file found in old location: ${oldfile}"
+	if cmp -s ${samplefile} ${newfile} > /dev/null; then
+	    echo "Configuration file in new location has not been modified from the default: ${newfile}"
+	    echo " => Moving old configuration file to new location"
+	    mv -f ${oldfile} ${newfile}
+	else
+	    echo "Configuration file in new location has been modified from the default: ${newfile}"
+	    echo " => Deleting old configuration file"
+	    rm ${oldfile}
+	fi
+    fi
+}
+
+########################################################################
+
+case $2 in
+    PRE-INSTALL)
+	move_www_dir # at some point in the installation, the www dir is created
+	;;
+    POST-INSTALL)
+	if [ -z "${PACKAGE_BUILDING}" ]
+	then
+	    create_crontab_entries '#BEGIN_MUNIN_MAIN' '#END_MUNIN_MAIN' <<EOT
+#BEGIN_MUNIN_MAIN
+MAILTO=root
+
+*/5 * * * *     ${PKG_PREFIX}/bin/munin-cron
+#END_MUNIN_MAIN
+EOT
+	fi
+	move_newsyslog_conf
+	;;
+esac

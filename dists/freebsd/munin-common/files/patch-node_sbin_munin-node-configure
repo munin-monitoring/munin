@@ -1,0 +1,13 @@
+--- node/sbin/munin-node-configure.orig	2014-11-24 21:46:24 UTC
++++ node/sbin/munin-node-configure
+@@ -23,6 +23,10 @@ use warnings;
+ 
+ use Getopt::Long;
+ 
++# plugins run in taint mode because the uid is changed, so the path
++# must not contain writable directories.
++$ENV{PATH}='/bin:/sbin:/usr/bin:/usr/sbin:%%PREFIX%%/bin:%%PREFIX%%/sbin';
++
+ use Munin::Common::Defaults;
+ use Munin::Node::Configure::PluginList;
+ use Munin::Node::Configure::Debug;

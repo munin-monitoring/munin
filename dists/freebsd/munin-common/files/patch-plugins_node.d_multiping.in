@@ -1,0 +1,10 @@
+--- plugins/node.d/multiping.in.orig	2018-12-19 20:56:49 UTC
++++ plugins/node.d/multiping.in
+@@ -58,6 +58,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Bos
+ host=${host:-www.google.com}
+ 
+ 
++site=0
+ if [ "$1" = "config" ]; then
+     echo graph_title Ping times
+     echo 'graph_args --base 1000 -l 0'

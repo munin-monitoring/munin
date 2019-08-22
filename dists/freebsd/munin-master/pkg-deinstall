@@ -1,0 +1,63 @@
+#! /bin/sh
+# ex:sw=4 sts=4
+
+ask() {
+    local question default answer
+
+    question=$1
+    default=$2
+    if [ -z "${PACKAGE_BUILDING}" -a -z "${BATCH}" ]
+    then
+	read -p "${question} [${default}]? " answer
+    fi
+    if [ x${answer} = x ]
+    then
+	answer=${default}
+    fi
+    echo ${answer}
+}
+
+yesno() {
+    local dflt question answer
+
+    question=$1
+    dflt=$2
+    while :; do
+	answer=$(ask "${question}" "${dflt}")
+	case "${answer}" in
+	[Yy]*)		return 0;;
+	[Nn]*)		return 1;;
+	esac
+	echo "Please answer yes or no."
+    done
+}
+
+delete_crontab_entries() {
+    local b e
+    b=$1
+    e=$2
+
+    TMPFILE=`mktemp -t munin` || exit 1
+    crontab -u munin -l | sed -e "/^$b\$/,/^$e\$/d" -e '/^[ 	]*#/d' -e '/^$/d' > $TMPFILE
+    if [ -s $TMPFILE ]
+    then
+	crontab -u munin -l | sed -e "/^$b\$/,/^$e\$/d" | crontab -u munin -
+	echo "The crontab for user munin had manually created entries."
+	echo "Only the automatically created entries have been removed."
+	echo "These are the remaining lines:"
+	crontab -u munin -l
+    else
+	echo y | crontab -u munin -r
+	echo "crontab for user munin removed"
+    fi
+    rm $TMPFILE
+}
+
+case $2 in
+    DEINSTALL)
+	if [ -z "${PACKAGE_BUILDING}" ]
+	then
+	    delete_crontab_entries '#BEGIN_MUNIN_MAIN' '#END_MUNIN_MAIN'
+	fi
+	;;
+esac

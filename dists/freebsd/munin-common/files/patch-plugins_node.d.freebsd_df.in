@@ -1,0 +1,11 @@
+--- plugins/node.d.freebsd/df.in.orig	2018-06-29 00:50:01 UTC
++++ plugins/node.d.freebsd/df.in
+@@ -24,7 +24,7 @@ if [ "$1" = "autoconf" ]; then
+ 	exit 0
+ fi
+ 
+-EXCLUDEDFS="-t noprocfs,devfs,fdescfs,linprocfs,linsysfs,sysfs,nfs,nullfs,cd9660"
++EXCLUDEDFS="-t noprocfs,devfs,fdescfs,linprocfs,linsysfs,sysfs,nfs,nullfs,cd9660,autofs"
+ 
+ if [ $(uname -s) = "GNU/kFreeBSD" ]; then
+ 	# Debian ships df from GNU coreutils

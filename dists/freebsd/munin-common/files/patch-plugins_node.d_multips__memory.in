@@ -1,0 +1,11 @@
+--- plugins/node.d/multips_memory.in.orig	2018-09-21 02:11:11 UTC
++++ plugins/node.d/multips_memory.in
+@@ -137,7 +137,7 @@ fi
+ for name in $names; do
+         fieldname="$(clean_fieldname "$name")"
+ 
+-	ps -eo "$monitor,comm" | gawk '
++	ps -eo "$monitor,comm" | awk '
+ BEGIN              { total = "U"; } # U = Unknown.
+ /grep/             { next; }
+ $2 ~ /^'"$name"'$/ { total = total + ($1*1024); }

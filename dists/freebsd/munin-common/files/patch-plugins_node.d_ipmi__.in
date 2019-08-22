@@ -1,0 +1,11 @@
+--- plugins/node.d/ipmi_.in.orig	2017-01-18 20:25:20 UTC
++++ plugins/node.d/ipmi_.in
+@@ -73,7 +73,7 @@ export CONFIG MEASURE
+ 
+ #### Work is done in this awk script
+ 
+-ipmitool sensor | gawk -F'|' '
++ipmitool sensor | awk -F'|' '
+ BEGIN {
+     FANS = "";
+     TEMPS = "";

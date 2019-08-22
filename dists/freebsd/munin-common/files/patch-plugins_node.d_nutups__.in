@@ -1,0 +1,31 @@
+--- plugins/node.d/nutups_.in.orig	2018-07-24 11:34:38 UTC
++++ plugins/node.d/nutups_.in
+@@ -7,21 +7,25 @@
+ #
+ # usage: nutups_upsid_function
+ #
++#   env.upsc    <command>   (default: "/bin/upsc")
++#   env.upsconf <filename>  (default: "/etc/nut/ups.conf")
++#
+ #%# family=contrib
+ #%# capabilities=autoconf suggest
+ 
+ UPS=$(basename "$0" | cut -d_ -f2)
+ FUNCTION=$(basename "$0" | cut -d_ -f3)
+ UPSC=$(command -v upsc)
++UPSCONF=${upsconf:-/etc/nut/ups.conf}
+ 
+ if [ "$1" = "autoconf" ]; then
+-	[ -x "$UPSC" ] && [ -r /etc/nut/ups.conf ] && echo yes && exit 0
+-	echo "no (upsc or /etc/nut/ups.conf not found)"
++	[ -x "$UPSC" ] && [ -r "$UPSCONF" ] && echo yes && exit 0
++	echo "no ($UPSC or $UPSCONF not found)"
+ 	exit 0
+ fi
+ 
+ if [ "$1" = "suggest" ]; then
+-	grep '^\[[^]]*\]$' /etc/nut/ups.conf \
++	grep '^\[[^]]*\]$' "$UPSCONF" \
+ 		| tr -d '][' \
+ 		| while read -r ups; do
+ 			for i in voltages freq charge current; do

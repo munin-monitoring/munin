@@ -1,0 +1,19 @@
+--- node/munin-node.conf.in.orig	2014-11-24 21:46:24 UTC
++++ node/munin-node.conf.in
+@@ -10,7 +10,7 @@ background 1
+ setsid 1
+ 
+ user root
+-group root
++group wheel
+ 
+ # This is the timeout for the whole transaction.
+ # Units are in sec. Default is 15 min
+@@ -30,6 +30,7 @@ ignore_file %$
+ ignore_file \.dpkg-(tmp|new|old|dist)$
+ ignore_file \.rpm(save|new)$
+ ignore_file \.pod$
++ignore_file \.sample$
+ 
+ # Set this if the client doesn't report the correct hostname when
+ # telnetting to localhost, port 4949

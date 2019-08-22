@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# $FreeBSD: head/sysutils/munin-node/files/munin-asyncd.in 479194 2018-09-07 14:46:19Z mat $
+#
+
+# PROVIDE: munin-asyncd
+# REQUIRE: DAEMON munin-node
+# BEFORE:  cron
+# KEYWORD: shutdown
+
+#
+# Add the following lines to /etc/rc.conf to enable munin-asyncd:
+# munin_asyncd_enable (bool):   Set to "NO" by default.
+#                               Set it to "YES" to enable munin-asyncd
+# munin_asyncd_spool:           The spool directory, default:
+#                               %%DBDIR%%/async
+# munin_asyncd_host:            Host to connect to, default: localhost:4949
+# munin_asyncd_args:            Extra args to pass to munin-asyncd
+#
+
+. /etc/rc.subr
+
+name=munin_asyncd
+desc="munin asynchronous gathering daemon"
+rcvar=munin_asyncd_enable
+
+load_rc_config $name
+
+command="%%DATADIR%%/munin-asyncd"
+pidfile="/var/run/${name}.pid"
+start_cmd=start_cmd
+stop_cmd='pkill -${sig_stop:-TERM} -U %%USER%% -F ${pidfile}'
+
+munin_asyncd_enable=${munin_asyncd_enable:-NO}
+munin_asyncd_spool=${munin_asyncd_spool:-%%SPOOLDIR%%/async}
+munin_asyncd_host=${munin_asyncd_host:-localhost:4949}
+
+start_cmd()
+{
+        check_startmsgs && echo "Starting ${name}."
+        daemon -u %%USER%% -f -p ${pidfile} "%%LOCALBASE%%/bin/perl" ${command} --spool ${munin_asyncd_spool} --host ${munin_asyncd_host} ${munin_asyncd_args}
+}
+
+run_rc_command $1

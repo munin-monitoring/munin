@@ -1,0 +1,36 @@
+[
+{
+message: <<EOT
+Unless this file already existed, a sample configuration file
+has been placed in %%ETCDIR%%/munin.conf.
+
+Please edit it according to your needs.
+
+The Munin server will be run from cron under the user 'munin'.
+
+If you need to customize the munin crontab, remove the lines
+containing #BEGIN_MUNIN_MAIN and #END_MUNIN_MAIN, and add a line
+with #MANUAL_MUNIN_CRONTAB.
+EOT
+type: install
+}
+{
+message: <<EOT
+The munin-master newsyslog.conf(5) filename has been changed:
+  OLD: ${PREFIX}/etc/newsyslog.conf.d/munin-master
+  NEW: ${PREFIX}/etc/newsyslog.conf.d/munin-master.conf
+
+Any file found at the old location has been automatically moved to
+the new location. This was done to ensure log rotation continued to
+work after change r340318 made to FreeBSD base, where the default
+newsyslog configuration now only includes filenames that end with
+'.conf' and do not begin with '.'.
+
+If you use provisioning/configuration management tools to create or
+edit this file, you will need to change their configuration to use
+the new filename.
+EOT
+type: upgrade
+maximum_version: "2.0.43_1"
+}
+]

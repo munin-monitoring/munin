@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# $FreeBSD: head/sysutils/munin-node/plugins/zpool_dedup 419615 2016-08-04 14:26:56Z mat $
+
+set -e
+set -u
+
+cat <<'EOM'
+graph_title ZFS deduplication ratio
+graph_vlabel ratio
+graph_category ZFS
+graph_info This graph shows the ZFS pool deduplication ratio
+EOM
+
+listing=$(zpool get -H dedup)
+
+while read -r label _ ratio _; do
+	echo "${label}.label ${label}"
+	echo "${label}.value ${ratio%x}"
+done <<eot
+${listing}
+eot
+
+exit 0
+

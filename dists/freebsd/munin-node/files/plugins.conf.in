@@ -1,0 +1,85 @@
+# $FreeBSD: head/sysutils/munin-node/files/plugins.conf.in 431883 2017-01-19 15:45:22Z mat $
+#
+######################################################################
+# This file is installed by the sysutils/munin-node port, you should #
+# not change it, you should create a local.conf file in the same     #
+# directory with your local changes.                                 #
+######################################################################
+#
+# This file contains configuration options for the plugins. Three
+# options are understood by munin-node itself:
+#
+#   user <user>         # Set the user to run the plugin as
+#   group <group>       # Set the group to run the plugin as
+#   command <command>   # Run <command> instead of the plugin. %c
+#                         expands to what would normally be run.
+#   env.<variable>      # Sets <variable> in the plugin's environment, see the
+#                         individual plugins to find out which variables they
+#                         care about.
+#
+# Note that many of the environment variables are just guesses
+# because the port maintainer did not bother to install all the
+# software that the Munin plugins can monitor. Please don't hesitate
+# to file a PR against the munin-node port if you find an error.
+
+# The logtail program used by many plugins is installed with the
+# port security/logcheck. The munin-node port has no dependency on
+# that port because most plugins do not require it.
+
+[*]
+env.PATH %%LOCALBASE%%/sbin:%%LOCALBASE%%/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+[amavis]
+env.amavislog /var/log/maillog
+env.logtail %%LOCALBASE%%/bin/logtail
+
+[courier_*]
+env.logfile /var/log/maillog
+env.logtail %%LOCALBASE%%/bin/logtail
+
+[dhcp3]
+env.configfile %%LOCALBASE%%/etc/dhcpd.conf
+env.leasefile /var/db/dhcpd.leases
+
+[exim*]
+group mail
+env.exim %%LOCALBASE%%/sbin/exim
+
+[fail2ban*]
+user root
+env.client %%LOCALBASE%%/bin/fail2ban-client
+
+[hddtemp_smartctl]
+user root
+group operator
+env.smartctl %%LOCALBASE%%/sbin/smartctl
+
+[ipmi_*]
+user root
+
+[mbmon*]
+env.mbmon %%LOCALBASE%%/bin/mbmon
+
+[mysql*]
+env.mysql %%LOCALBASE%%/bin/mysql
+env.mysqladmin %%LOCALBASE%%/bin/mysqladmin
+env.mysqlshow %%LOCALBASE%%/bin/mysqlshow
+
+[nut*]
+env.upsc    %%LOCALBASE%%/bin/upsc
+env.upsconf %%LOCALBASE%%/etc/nut/ups.conf
+
+[postfix*]
+user root
+env.logfile maillog
+
+[sendmail*]
+group wheel
+env.mspqueue /var/spool/clientmqueue
+env.mailstats /usr/sbin/mailstats
+
+[smart_*]
+user root
+group operator
+env.smartpath %%LOCALBASE%%/sbin/smartctl
+
