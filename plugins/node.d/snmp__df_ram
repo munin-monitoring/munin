@@ -198,7 +198,8 @@ foreach my $storage (keys %$stor_id)
 
 foreach my $part (keys %partitions)
 {
-    print (&get_name_by_mp ($part), ".value ", ($partitions{$part}{used}*100/$partitions{$part}{size}), "\n");
+    print &get_name_by_mp ($part), ".value ", ($partitions{$part}{used}*100/$partitions{$part}{size}), "\n"
+      if (defined $partitions{$part}{used} && $partitions{$part}{size});
 }
 
 sub get_single
