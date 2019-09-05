@@ -177,9 +177,9 @@ if ARGV[0] == "config"
             puts "used.draw AREA";
             puts "max.label maximum bytes";
             puts "max.draw LINE2";
-            puts "OldGenMax.label CMS Old Gen maximum bytes";
+            puts "OldGenMax.label Old Gen maximum bytes";
             puts "OldGenMax.draw LINE2";
-            puts "OldGenUsed.label CMS Old Gen used bytes";
+            puts "OldGenUsed.label Old Gen used bytes";
             puts "OldGenUsed.draw LINE1";
         when "access"
             puts "graph_title Tomcat accesses"
@@ -268,7 +268,7 @@ w["jvm"]["max"] = node.attributes["max"]
 w["jvm"]["used"] = node.attributes["total"].to_i - node.attributes["free"].to_i
 w["jvm"]["free"] = node.attributes["free"]
 
-node = REXML::XPath.first(doc, "//status/jvm/memorypool[@name='CMS Old Gen']")
+node = REXML::XPath.first(doc, "//status/jvm/memorypool[contains(@name,' Old Gen')]")
 w["jvm"]["OldGenMax"] = node.attributes["usageMax"]
 w["jvm"]["OldGenUsed"] = node.attributes["usageUsed"]
 
