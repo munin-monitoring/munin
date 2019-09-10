@@ -58,6 +58,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 . "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 case $0 in
+    *ping4_*)
+        PING=ping4
+        file_host=${0##*/ping4_}
+        V=IPv4
+        ;;
     *ping6_*)
         PING=ping6
         file_host=${0##*/ping6_}
