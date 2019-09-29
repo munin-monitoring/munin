@@ -698,6 +698,7 @@ sub emit_service_template {
                             INFO_OPTION => 'Graphs in same category',
                             SERVICES  => [$srv],
                             PATH      => $pathnodes, 
+                            NAME      => $pathnodes->[-1]{'pathname'},
                             PEERS     => $peers,
                             LARGESET  => decide_largeset($peers), 
                             R_PATH => $srv->{'root_path'},
