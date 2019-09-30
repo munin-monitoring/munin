@@ -83,7 +83,7 @@ if (defined $ARGV[0] and $ARGV[0] eq "config") {
 
 	print "host_name $host\n" unless ($host eq 'localhost');
 	print <<'EOC';
-graph_title CPU usage in percent
+graph_title CPU usage
 graph_category system
 graph_args --upper-limit 100 -l 0
 graph_vlabel %

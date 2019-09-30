@@ -76,10 +76,10 @@ if (defined $ARGV[0] and $ARGV[0] eq "config") {
 graph_title Number of Processes
 graph_args --base 1000 -l 0
 graph_vlabel number of processes
-graph_category system
+graph_category processes
 graph_info This graph shows the number of processes running on the system.
 processes.label processes
-processes.draw LINE2
+processes.draw STACK
 processes.info The number of processes.
 EOC
 	exit 0;
