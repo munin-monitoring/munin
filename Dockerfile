@@ -1,4 +1,4 @@
-FROM debian:stretch-slim
+FROM debian:buster-slim
 RUN echo 'APT::Install-Suggests "0";' > /etc/apt/apt.conf.d/99-nosuggest.conf \
 	&& echo 'APT::Install-Recommends "0";' >> /etc/apt/apt.conf.d/99-nosuggest.conf
 #RUN echo 'deb http://deb.debian.org/debian experimental main' > /etc/apt/sources.list.d/experimental.list
@@ -47,6 +47,7 @@ WORKDIR /
 COPY . /munin
 COPY RELEASE.docker /munin/RELEASE
 RUN chown -R munin /munin
+RUN mkdir -p /var/log/munin && chown -R munin /var/log/munin
 USER munin
 WORKDIR /munin
 RUN dev_scripts/install node
