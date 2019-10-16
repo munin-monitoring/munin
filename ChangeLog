@@ -1,5 +1,58 @@
 -*- text -*-
 
+munin-2.0.50, 2019-10-16
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Alexander Moisseev (1):
+      snmp__df_ram: handle undef and zero values
+
+Kenyon Ralph (1):
+      doc: fix example apache virtualhost RewriteRule
+
+Lars Kruse (20):
+      Add comment regarding munin-async timing
+      meminfo plugin: fix "phisical/physical" typo in descriptions
+      Fix link anchors for problems page
+      Avoid erroneous wildcard matching when parsing plugin configurations
+      Remove trailing whitespace
+      plugin bind9_rndc: fix documentation
+      Plugin ejabberd_: remove "usersindays" feature
+      Improve log output in case of broken numeric content
+      Improve error message in case privilege dropping problems
+      Fix some spelling errors
+      Makefile: add lint checks for spelling
+      Makefile: ignore spelling errors in multiple directories
+      Fix perldoc header in Munin::Master::LimitsOld
+      Fix perldoc header in munin-graph
+      Move manpages for munin-node and munin-run to section 8 (admin)
+      Add empty codespell exclusion file
+      Plugin snmp__cpuload: use deterministic order for CPU fields
+      Fix travis setup for new codespell linting
+      Multiple snmp__* plugins: use deterministic order of fields
+      Prevent duplicate timestamps in async spool data
+
+Nicolai Langfeldt (1):
+      Don't "exit 1"
+
+Tobias Kronthaler (1):
+      Fix spelling of "network" in port_
+
+mafri (1):
+      Fixed iteration at apt_all
+
+moisseev (1):
+      snmp__processes: handle undefined values
+
+
 munin-2.0.49, 2019-05-09
 
 -------
