@@ -20,8 +20,8 @@ If the channel is all quiet, try again some time later, we do have
 lives, families and jobs to deal with also.
 
 You are more than welcome to just hang out, and while we don't mind
-the occational intrusion of the real world into the flow, keep it
-mostly on topic, and dont paste random links unless they are *really*
+the occasional intrusion of the real world into the flow, keep it
+mostly on topic, and do not paste random links unless they are *really*
 spectacular and intelligent.
 
 .. _pastebin: https://gist.github.com/

@@ -148,7 +148,12 @@ sub _cat_multigraph_file
                 next;
             }
 
-            if (m/^(\w+)\.value\s+(?:N:)?(.+)$/) {
+            # Prepend the currently active timestamp, if neither a specific (numeric) nor an
+            # undefined ("N") epoch is included in the value line.  The regular expression is
+            # supposed to match the following types of content:
+            #     foo.value 12.3
+            #     bar.value N:45.7
+            if (m/^(\w+)\.value\s+(?:N:)?([^:]+)$/) {
                 $_ = "$1.value $epoch:$2";
             }
 

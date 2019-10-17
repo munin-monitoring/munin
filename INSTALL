@@ -259,13 +259,13 @@ and so on.
 
 If you need to install Munin on a host with no Internet access you can
 use CPAN shell on a host _with_ Internet access and use the "get"
-command to retrive the needed modules.  One problem: The dependencies
+command to retrieve the needed modules.  One problem: The dependencies
 of modules will change over time so the list above may not be correct
 6 months after it was last updated.  SO: If you want to make sure you
 get all the needed modules you can do a full install of munin on a
 Internet connected system and then transfer all the modules to the
 non-connected system after.  All the modules that the CPAN shell
-retrived can be found like this:
+retrieved can be found like this:
 
   # cd ~/.cpan/sources
   # find . -name '*.tar.gz

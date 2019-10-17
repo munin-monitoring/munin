@@ -42,4 +42,4 @@ files, lock files, and possibly sockets.
 logdir
 ======
 
-Contains the log files for each munin progam.
+Contains the log files for each munin program.

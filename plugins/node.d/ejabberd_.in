@@ -27,8 +27,6 @@ ejabberd_uptime
 
 ejabberd_users
 
-ejabberd_usersindays
-
 
 If the autodetect-feature for vhosts breaks, you can set
 
@@ -49,17 +47,6 @@ For monitoring user statuses - define statuses environment variable:
 
   [ejabberd_*]
     env.statuses available away chat xa
-
-=back
-
-For usersindays statistics define days environment variable.  Be
-careful on high loaded servers, because it will plot all days in one
-graph.
-
-=over 4
-
-  [ejabberd_*]
-    env.days 1 7 30
 
 =back
 
@@ -103,8 +90,6 @@ set -eu
 
 
 # configurable environment variables
-# list of days (space-separated) for the graph "usersindays"
-days=${days:-"1 7 30"}
 # list of client statuses (space-separated) for the graph "statuses"
 statuses=${statuses:-"available away chat xa"}
 # statically configured list of vhosts provided by the ejabberd server
@@ -119,7 +104,7 @@ EJCTL=$(which ejabberdctl 2>/dev/null) || true
 # in GNU/Linux Debian Lenny release the pidof command can be executed only by root
 #EJPID=$(pidof -s /usr/lib/erlang/erts-5.6.3/bin/beam.smp)
 EJPID=$(ps -ef | awk '/ejabberd/ && /\/bin\/beam(.smp)?/ {print $2}')
-SUPPORTED_MODES="connections users registrations statuses memory threads usersindays uptime"
+SUPPORTED_MODES="connections users registrations statuses memory threads uptime"
 
 # shellcheck disable=SC1090
 . "$MUNIN_LIBDIR/plugins/plugin.sh"
@@ -293,16 +278,6 @@ if [ "${1:-}" = "config" ]; then
             echo 'graph_vlabel threads'
             echo "ejabberd_threads.label number of threads"
             echo "ejabberd_threads.info Number of threads of ejabberd process"
-        elif [ "$MODE" = "usersindays" ]; then
-            echo 'graph_title Active users in last days'
-            echo 'graph_vlabel users'
-            for host in $vhosts; do
-                for num in $days; do
-                    formathost=$(clean_fieldname "$host")
-                    echo "usersindays_${formathost}_${num}.label active users on $host in last $num days"
-                    echo "usersindays_${formathost}_${num}.info Number of users active on $host in last $num days"
-                done
-            done
         elif [ "$MODE" = "uptime" ]; then
             echo 'graph_title Uptime of ejabberd server'
             echo 'graph_vlabel uptime in days'
@@ -356,16 +331,6 @@ fi
 
 if [ "$MODE" = "threads" ]; then
     echo "ejabberd_threads.value $(awk '/Threads/ {print $2}' "/proc/${EJPID}/status")"
-    exit 0
-fi
-
-if [ "$MODE" = "usersindays" ]; then
-    for host in $vhosts; do
-        for num in $days; do
-            formathost=$(clean_fieldname "$host")
-            echo "usersindays_${formathost}_${num}.value $("$EJCTL" num-active-users "$host" "$num")"
-        done
-    done
     exit 0
 fi
 

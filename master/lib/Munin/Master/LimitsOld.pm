@@ -1,14 +1,20 @@
 package Munin::Master::LimitsOld;
 # -*- perl  -*-
 
-=begin comment
+=head1 NAME
+
+Munin::Master::LimitsOld - Abstract base class for workers.
+
+=head1 SYNOPSIS
 
 This is Munin::Master::LimitsOld, a minimal package shell to make
 munin-limits modular (so it can be loaded persistently in a daemon for
 example) without making it object oriented yet.  The non-'old' module
-will feature propper object orientation like munin-update and will
+will feature proper object orientation like munin-update and will
 have to wait until later.
 
+
+=begin comment
 
 Copyright (C) 2004-2009 Jimmy Olsen
 
@@ -25,8 +31,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-$Id$
 
 =end comment
 
@@ -103,7 +107,7 @@ sub limits_startup {
     @always_send = qw{ok warning critical unknown} if $force;
 
     munin_readconfig_base($conffile);
-    # XXX: check if it does actualy need that part
+    # XXX: check if it does actually need that part
     $config = munin_readconfig_part('datafile', 0);
 
     logger_open($config->{'logdir'});
@@ -385,7 +389,7 @@ sub process_service {
 			# Old value does not exist or is too old. Report unknown.
 			$value = "U";
 		} elsif ($field->{type} eq "ABSOLUTE") {
-			# The previous value is unimportant, as if ABSOLUTE, the counter is reset everytime the value is read
+			# The previous value is unimportant, as if ABSOLUTE, the counter is reset every time the value is read
 			$value = $current_updated_value / ($current_updated_timestamp - $previous_updated_timestamp);
 		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
 			# COUNTER never decrease. Report unknown.
@@ -402,7 +406,11 @@ sub process_service {
             $value = "unknown";
         }
         else {
-            $value = sprintf "%.2f", $value;
+            my $formatted_value = sprintf "%.2f", $value;
+            if (($formatted_value == 0) && !looks_like_number($value)) {
+                warn "Failed to interpret expected numeric value of field '$fname' (host '$host'): '$value'";
+            }
+            $value = $formatted_value;
         }
 
         # Some fields that are nice to have in the plugin output

@@ -108,8 +108,10 @@ sub print_state() {
         foreach my $release (@releases) {
             my $release_cleaned = clean_fieldname($release);
             # print only lines that are exected for the currently requested releases
-            print $line if ($line =~ /^(hold|pending)_$release_cleaned\.(value|extinfo)/);
-            last;
+	    if ($line =~ /^(hold|pending)_$release_cleaned\.(value|extinfo)/) {
+	    	print $line ;
+            	last;
+	    }
         }
     }
     close STATE;

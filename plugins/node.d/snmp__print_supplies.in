@@ -103,7 +103,7 @@ if(defined $ARGV[0] and $ARGV[0] eq "config") {
     print "graph_category print\n";
     print "graph_info This graph represents supplies level\n";
 
-    foreach my $supply (keys(%supplies)) {
+    foreach my $supply (sort(keys(%supplies))) {
         print "supply$supply.label ".(length($supplies{$supply}{desc})<=$MAXLABEL ?
 	    $supplies{$supply}{desc} : substr($supplies{$supply}{desc},0,($MAXLABEL-3))."...");
 	print "\n";

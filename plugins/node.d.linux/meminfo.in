@@ -36,7 +36,7 @@ values).  Graph splitted to 8 groups, every group has child graphs:
      Node X, zone ZZZ                              - Chunks for each zone
   External fragmentation: Page type info           - Page type info, summary node-zone-type pages
     Node X, zone ZZZ, type TTT                     - Free pages per node-zone-page by order
-  Physical memory usage                            - Main graph, show phisical memory usage
+  Physical memory usage                            - Main graph, show physical memory usage
     Active/Inactive memory                         - subj :)
     Memory usage by cashes and buffers             - subj :)
     mmap                                           - mmapp'ed memory
@@ -759,7 +759,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Total',
-      'info'  => 'Total phisical memory'
+      'info'  => 'Total physical memory'
     }
   },
   # ----------------------------------------------

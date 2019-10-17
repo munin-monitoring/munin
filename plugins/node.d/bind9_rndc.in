@@ -9,14 +9,14 @@ bind9_rndc - Plugin to monitor usage of bind 9 servers using rndc stats
 
 The following environment variables are used by this plugin
 
-  [bind_rndc]
+  [bind9_rndc]
     env.rndc		/usr/sbin/rndc
     env.rndc_options
     env.querystats      /var/run/named.stats
 
 The user/group that runs the plugin must have read access to the stats
 file.  To change user or group (usually Munin plugins are run as
-nobody) add this to the [bind_rndc] stanza if the "bind" user runs
+nobody) add this to the [bind9_rndc] stanza if the "bind" user runs
 BIND:
 
     user bind

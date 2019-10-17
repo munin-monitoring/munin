@@ -185,7 +185,7 @@ my @init_limit_hosts = @limit_hosts;
 my @init_limit_services = @limit_services;
 
 sub process_pinpoint {
-    my ($pinpoint, $arg_name, $arg_value) = @_;     
+    my ($pinpoint, $arg_name, $arg_value) = @_;
     # XXX - Special hack^h^h^h^h treatment for --pinpoint
     if ($arg_value && $arg_value =~ m/^(\d+),(\d+)$/ ) {
 	# "pinpoint" replaces all the other timing options
@@ -319,13 +319,13 @@ sub graph_startup {
 
     $max_running = &munin_get($config, "max_graph_jobs", $max_running);
 
-    if ($config->{"rrdcached_socket"}) { 
+    if ($config->{"rrdcached_socket"}) {
 	    if ($RRDs::VERSION >= 1.3){
 		# Using the RRDCACHED_ADDRESS environnement variable, as
                 # it is way less intrusive than the command line args.
                 $ENV{RRDCACHED_ADDRESS} = $config->{"rrdcached_socket"};
-	    } else { 
-		    ERROR "[ERROR] RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION; 
+	    } else {
+		    ERROR "[ERROR] RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION;
 	    }
     }
 
@@ -367,7 +367,7 @@ sub graph_main {
     # The loaded $config is stale within 5 minutes.
     # So, we need to reread it when this happens.
     $config = munin_readconfig_part('datafile');
-   
+
     # Reset an eventual custom size
     $size_x 	    = undef;
     $size_y         = undef;
@@ -585,7 +585,7 @@ sub expand_specials {
     # Test if already expanded
     {
         my $cached = $service->{"#%#expand_specials"};
-	if (defined $cached) { 
+	if (defined $cached) {
 		DEBUG "[DEBUG] expand_specials(): already processed " . munin_dumpconfig_as_str($cached);
         	return $cached;
 	}
@@ -1221,7 +1221,7 @@ sub process_service {
             $label =~ s/:/\\:/g if defined $label;
             unshift(
                 @rrd,
-                "HRULE:" 
+                "HRULE:"
                     . $number
                     . (
                     $ldcolour ? "#$ldcolour"
@@ -1238,7 +1238,7 @@ sub process_service {
             if (defined($warn_min) and $warn_min ne '') {
                 unshift(
                     @rrd,
-                    "HRULE:" 
+                    "HRULE:"
                         . $warn_min
                         . "#" . (
                         $single_value
@@ -1248,7 +1248,7 @@ sub process_service {
             if (defined($warn_max) and $warn_max ne '') {
                 unshift(
                     @rrd,
-                    "HRULE:" 
+                    "HRULE:"
                         . $warn_max
                         . "#" . (
                         $single_value
@@ -1596,7 +1596,7 @@ sub handle_trends {
         my $fieldname = munin_get_node_name($field);
 	my $colour = $single_colour;
 
-	# Skip virtual fieldnames, otherwise beware of $hash->{foo}{bar}. 
+	# Skip virtual fieldnames, otherwise beware of $hash->{foo}{bar}.
 	#
 	# On a sidenote, what's the output of the following code ?
 	# perl -e '$a = {}; if ($a->{foo}{bar}) { print "Found Foo/Bar\n"; } \
@@ -1605,8 +1605,8 @@ sub handle_trends {
 
         if (defined $service->{$fieldname}{'colour'}) {
             $colour = "$service->{$fieldname}{'colour'}66";
-        }                                                                                                                                                    
-                                                                                                                                                             
+        }
+
         my $rrd_fieldname = get_field_name($fieldname);
 
         my $cdef = "";
@@ -1636,7 +1636,7 @@ sub handle_trends {
 
     push(@complete,
         "COMMENT:Last update$RRDkludge: "
-        . RRDescape(scalar localtime($lastupdate))                                                                                                   
+        . RRDescape(scalar localtime($lastupdate))
         . "\\r");
 
     # If pinpointing, --end should *NOT* be changed
@@ -1780,9 +1780,9 @@ sub expand_cdef {
         my $fieldname = munin_get_node_name($field);
         my $rrdname = &orig_to_cdef($service, $fieldname);
         if ($cdef =~ /\b$fieldname\b/) {
-            $max =~ s/(?<=[,=(])$fieldname(?=[,=)]|$)/a$rrdname/g;                                                                                                                                                                                                    
-            $min =~ s/(?<=[,=(])$fieldname(?=[,=)]|$)/i$rrdname/g;                                                                                                                                                                                                    
-            $avg =~ s/(?<=[,=(])$fieldname(?=[,=)]|$)/g$rrdname/g;                                                                                                                                                                                                    
+            $max =~ s/(?<=[,=(])$fieldname(?=[,=)]|$)/a$rrdname/g;
+            $min =~ s/(?<=[,=(])$fieldname(?=[,=)]|$)/i$rrdname/g;
+            $avg =~ s/(?<=[,=(])$fieldname(?=[,=)]|$)/g$rrdname/g;
         }
     }
 

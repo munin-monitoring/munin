@@ -1,5 +1,5 @@
 # New ports collection makefile for:	munin-main
-# Date created:				25 Januar 2004
+# Date created:				25 January 2004
 # Whom:					Lupe Christoph <lupe@lupe-christoph.de>
 #
 # $FreeBSD: ports/sysutils/munin-main/Makefile,v 1.7 2004/12/14 01:43:10 sem Exp $

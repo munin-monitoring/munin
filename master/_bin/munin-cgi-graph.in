@@ -486,7 +486,7 @@ sub draw_graph {
 sub draw_graph_or_complain {
     my $t0 = [ gettimeofday ];
 
-    # Actuall work done here.
+    # Actual work done here.
     my $ret = draw_graph(@_);
 
     my $graph_duration = tv_interval($t0);

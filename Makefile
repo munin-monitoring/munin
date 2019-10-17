@@ -539,7 +539,11 @@ install-%: %/Build
 test-%: %/Build
 	cd $* && $(PERL) Build test --verbose=0
 
-lint:
+
+.PHONY: lint lint-plugins lint-spelling
+lint: lint-plugins lint-spelling
+
+lint-plugins:
 	@# SC1008: ignore our weird shebang (substituted later)
 	@# SC1090: ignore sourcing of files with variable in path
 	@# SC2009: do not complain about "ps ... | grep" calls (may be platform specific)
@@ -561,6 +565,14 @@ lint:
 		| xargs -0 grep -l --null "@@PYTHON@@" \
 			| xargs -0 $(PYTHON_LINT_CALL)
 	# TODO: perl plugins currently fail with perlcritic
+
+lint-spelling:
+	# codespell misdetections may be ignored by adding the full line of text to the file .codespell.exclude
+	find . -type f -print0 \
+		| grep --null-data -vE '^\./(\.git|\.pc|doc/_build|blib|.*/blib|build|sandbox|web/static/js|contrib/plugin-gallery/www/static/js)/' \
+		| grep --null-data -vE '\.(svg|png|gif|ico|css|woff|woff2|ttf|eot)$$' \
+		| grep --null-data -vE '^\./(contrib|master|node|resources|plugins)/' \
+		| xargs -0 -r codespell --exclude-file=.codespell.exclude
 
 clean-%: %/Build build-common-defaults-stamp
 	cd $* && $(PERL) Build realclean

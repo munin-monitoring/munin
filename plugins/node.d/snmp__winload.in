@@ -46,7 +46,7 @@ graph_info This graph shows the CPU load of a windows system.
 ";
     my $draw='AREA';
 
-    foreach my $key (keys %{$result}) {
+    foreach my $key (sort(keys %{$result})) {
 	($cpu) = ( $key =~ m/\.(\d+)$/ );
 	print "cpu$cpu.label CPU $cpu\n";
 	print "cpu$cpu.info Load on CPU $cpu\n";
