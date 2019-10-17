@@ -50,6 +50,7 @@ use Getopt::Long;
 use Time::HiRes;
 use Text::Balanced qw ( extract_bracketed );
 use Log::Log4perl qw ( :easy );
+use Scalar::Util qw( looks_like_number );
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
