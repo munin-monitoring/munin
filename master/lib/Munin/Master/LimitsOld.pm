@@ -330,7 +330,7 @@ sub process_service {
     $hash->{'graph_title'} = get_full_service_name($hash);
     $hash->{'host'}  = $hostalias;
     $hash->{'group'} = get_full_group_path($hparentobj);
-    $hash->{'worst'} = "ok";
+    $hash->{'worst'} = "OK";
     $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
     $hash->{'recovered'} = {};
 
