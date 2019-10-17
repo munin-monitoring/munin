@@ -438,13 +438,6 @@ sub process_service {
                     : "Value is unknown.";
             my $num_unknowns;
 
-            if ( $oldstate ne "unknown") {
-                $hash->{'state_changed'} = 1;
-            }
-            else {
-                $hash->{'state_changed'} = 0;
-            }
-
             # First we'll need to check whether the user wants to ignore
             # a few UNKNOWN values before actually changing the state to
             # UNKNOWN.
@@ -454,7 +447,6 @@ sub process_service {
                         if (defined $onfield->{"num_unknowns"}) {
                             if ($onfield->{"num_unknowns"} < $unknown_limit) {
                                 # Don't change the state to UNKNOWN yet.
-                                $hash->{'state_changed'} = 0;
                                 $state = $onfield->{"state"};
                                 $extinfo = $onfield->{$state};
 
@@ -464,7 +456,6 @@ sub process_service {
                         }
                         else {
                             # Don't change the state to UNKNOWN yet.
-                            $hash->{'state_changed'} = 0;
                             $state = $onfield->{"state"};
                             $extinfo = $onfield->{$state};
                             
@@ -474,6 +465,11 @@ sub process_service {
                         }
                     }
                 }
+            }
+
+            # the state only changes if the above "unknown" counter is not used (i.e. the limit is not reached, yet)
+            if (($oldstate ne "unknown") and !defined($num_unknowns)) {
+                $hash->{'state_changed'} = 1;
             }
 
             if ($state eq "unknown") {
