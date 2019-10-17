@@ -331,7 +331,7 @@ sub process_service {
     $hash->{'host'}  = $hostalias;
     $hash->{'group'} = get_full_group_path($hparentobj);
     $hash->{'worst'} = "OK";
-    $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
+    $hash->{'worstid'} = 0;
     $hash->{'recovered'} = {};
 
     my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $host);
