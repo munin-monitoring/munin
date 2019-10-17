@@ -696,7 +696,7 @@ sub generate_service_message {
         if (!$hash->{'state_changed'} and !$obsess) {
             next;    # No need to send notification
         }
-        INFO("[INFO] state has changed, notifying $c");
+        INFO("[INFO] state of $hash->{'group'}::$hash->{'host'}::$hash->{'plugin'} has changed to $hash->{'worst'}, notifying $c");
         my $precmd = munin_get($contactobj, "command", undef);
         if(!defined $precmd) {
             WARN("[WARNING] Missing command option for contact $c; skipping");
