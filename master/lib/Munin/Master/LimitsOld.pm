@@ -432,7 +432,7 @@ sub process_service {
             $crit->[0] ||= "";
             $crit->[1] ||= "";
 
-            my $state = "unknown";
+            my $newstate = "unknown";
             my $extinfo = defined $field->{"extinfo"}
                     ? "unknown: " . $field->{"extinfo"}
                     : "Value is unknown.";
@@ -443,8 +443,8 @@ sub process_service {
             # UNKNOWN.
             if (($oldstate ne "unknown") and ($unknown_limit > 1)) {
                  if (!defined($onfield->{"num_unknowns"}) or ($onfield->{"num_unknowns"} < $unknown_limit)) {
-                     $state = $oldstate;
-                     $extinfo = $onfield->{$state};
+                     $newstate = $oldstate;
+                     $extinfo = $onfield->{$newstate};
 
                      if (defined($onfield->{"num_unknowns"})) {
                          # Increment the number of UNKNOWN values seen.
@@ -461,21 +461,21 @@ sub process_service {
                 $hash->{'state_changed'} = 1;
             }
 
-            if ($state eq "unknown") {
+            if ($newstate eq "unknown") {
                 $hash->{'worst'} = "UNKNOWN" if $hash->{"worst"} eq "OK";
                 $hash->{'worstid'} = 3 if $hash->{"worstid"} == 0;
             }
-            elsif ($state eq "critical") {
+            elsif ($newstate eq "critical") {
                 $hash->{'worst'} = "CRITICAL";
                 $hash->{'worstid'} = 2;
             }
-            elsif ($state eq "warning") {
+            elsif ($newstate eq "warning") {
                 $hash->{'worst'} = "WARNING" if $hash->{"worst"} ne "CRITICAL";
                 $hash->{'worstid'} = 1 if $hash->{"worstid"} != 2;
             }
 
-            munin_set_var_loc(\%notes, [@$fpath, "state"], $state);
-            munin_set_var_loc(\%notes, [@$fpath, $state], $extinfo);
+            munin_set_var_loc(\%notes, [@$fpath, "state"], $newstate);
+            munin_set_var_loc(\%notes, [@$fpath, $newstate], $extinfo);
             if (defined $num_unknowns) {
                 munin_set_var_loc(\%notes, [@$fpath, "num_unknowns"],
                         $num_unknowns);
