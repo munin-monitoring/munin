@@ -444,24 +444,17 @@ sub process_service {
             if ($unknown_limit > 1) {
                 if (defined $onfield and defined $onfield->{"state"}) {
                     if ($onfield->{"state"} ne "unknown") {
-                        if (defined $onfield->{"num_unknowns"}) {
-                            if ($onfield->{"num_unknowns"} < $unknown_limit) {
-                                # Don't change the state to UNKNOWN yet.
-                                $state = $onfield->{"state"};
-                                $extinfo = $onfield->{$state};
-
-                                # Increment the number of UNKNOWN values seen.
-                                $num_unknowns = $onfield->{"num_unknowns"} + 1;
-                            }
-                        }
-                        else {
-                            # Don't change the state to UNKNOWN yet.
+                        if (!defined($onfield->{"num_unknowns"}) || ($onfield->{"num_unknowns"} < $unknown_limit)) {
                             $state = $onfield->{"state"};
                             $extinfo = $onfield->{$state};
-                            
-                            # Start counting the number of consecutive UNKNOWN
-                            # values seen.
-                            $num_unknowns = 1;
+
+                            if (defined($onfield->{"num_unknowns"})) {
+                                # Increment the number of UNKNOWN values seen.
+                                $num_unknowns = $onfield->{"num_unknowns"} + 1;
+                            } else {
+                                # Start counting the number of consecutive UNKNOWN values seen.
+                                $num_unknowns = 1;
+                            }
                         }
                     }
                 }
