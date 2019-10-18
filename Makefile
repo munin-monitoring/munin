@@ -112,12 +112,15 @@ lint-plugins:
 			echo '[ERROR] Some plugins lack a "multigraph" check (e.g. "needs_multigraph();" or "is_multigraph"):'; \
 			echo "$$plugins_without_multigraph_check" | sed 's/^/\t/'; false; fi >&2
 
+lint-spelling: CODESPELL_ARGS += --exclude-file=.codespell.exclude
+# codespell introduced "--ignore-words" in v1.14 (Debian Buster)
+lint-spelling: CODESPELL_ARGS += $(shell if codespell --help | grep -q " --ignore-words "; then echo "--ignore-words=.codespell.ignore-words"; fi)
 lint-spelling:
 	# codespell misdetections may be ignored by adding the full line of text to the file .codespell.exclude
 	find . -type f -print0 \
 		| grep --null-data -vE '^\./(\.git|\.pc|doc/_build|blib|.*/blib|build|sandbox|web/static/js|contrib/plugin-gallery/www/static/js)/' \
 		| grep --null-data -vE '\.(svg|png|gif|ico|css|woff|woff2|ttf|eot)$$' \
-		| xargs -0 -r codespell --exclude-file=.codespell.exclude --ignore-words=.codespell.ignore-words
+		| xargs -0 -r codespell $(CODESPELL_ARGS)
 
 lint-whitespace: FILES_WITH_TRAILING_WHITESPACE = $(shell grep -r -l --binary-files=without-match \
 				--exclude-dir=.git --exclude-dir=sandbox '\s$$' . \
