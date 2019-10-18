@@ -94,6 +94,16 @@ Note that the warning/critical exception is raised
 only if the value is outside the defined value.
 E.g. ``foo.warning 100:200`` will raise a warning only
 if the value is outside the range of 100 to 200.
+A single number is interpreted as the maximum allowed
+value (without a lower limit).
+
+Example limits configuration emitted by a plugin:
+
+::
+
+  foo.label some data
+  foo.warning 0:100
+  foo.critical 150
 
 Reformatting the output message
 ===============================
