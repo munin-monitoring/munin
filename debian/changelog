@@ -1,3 +1,9 @@
+munin (2.0.51-1) unstable; urgency=medium
+
+  * New upstream bugfix release.
+
+ -- Holger Levsen <holger@debian.org>  Sat, 19 Oct 2019 01:03:20 +0200
+
 munin (2.0.50-1) unstable; urgency=medium
 
   [ Holger Levsen ]
