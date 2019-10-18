@@ -89,7 +89,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 
 
 if (defined($missing_module)) {
-    die "Failed to run due to mising Perl module '$missing_module'";
+    die "Failed to run due to missing Perl module '$missing_module'";
 }
 
 foreach my $log (@logs) {

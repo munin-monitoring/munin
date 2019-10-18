@@ -152,7 +152,7 @@ The availability of the following tools can be assumed:
   * `grep <https://www.gnu.org/software/grep>`_
   * `sed <https://www.gnu.org/software/sed>`_
 
-In order to avoid external tools (e.g. `bc` or `dc`), the shell's arithmetic substition (e.g. `a=$((b + 3))`) should be used for integer operations and `awk` (e.g. `awk '{print $1/1000}'`) for non-trivial calculations.
+In order to avoid external tools (e.g. `bc` or `dc`), the shell's arithmetic substitution (e.g. `a=$((b + 3))`) should be used for integer operations and `awk` (e.g. `awk '{print $1/1000}'`) for non-trivial calculations.
 
 Python Plugins
 --------------

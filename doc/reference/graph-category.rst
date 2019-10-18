@@ -302,7 +302,7 @@ retrieval is an important and critical demand here.
 :graph_category: **security**
 :Description: Security information
 :Examples: login failures, number of pending update packages for OS, number of CVEs
-           in the running kernel fixed by the lastest installed
+           in the running kernel fixed by the latest installed
            kernel, firewall counters.
 
 ----

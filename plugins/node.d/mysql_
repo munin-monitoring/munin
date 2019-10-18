@@ -96,7 +96,7 @@ For example:
 =item Cache::Cache
 
 The plugin uses shared memory to cache the statistics gathered from
-MySQL. This ensures minimal inpact on the MySQL server.
+MySQL. This ensures minimal impact on the MySQL server.
 
 =item DBD::mysql
 
@@ -1716,7 +1716,7 @@ sub suggest {
 sub config {
     my $graph_name = shift;
 
-    # In MySQL 5.1 (and probably erlier versions as well) status
+    # In MySQL 5.1 (and probably earlier versions as well) status
     # variables are unique when looking at the last 19 characters.
     #
     #   SELECT RIGHT(variable_name, 19), COUNT(*)

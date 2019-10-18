@@ -18,3 +18,11 @@ diSabler (1):
 * linux/tcp: Add contributed plugin from Tim Small
   * Fix typo "contigious"
  * Postgres plugins enhanced by Tim Retout - thanks (closes #541)
+      Fix fofields always having the same entries as ofields. fofields now contains only entries that had a state change to OK (fo = fixed ok)
+    open(my $HIST, '<', $self->{history_file})
+    while (my $line = <$HIST>) {
+    close $HIST;
+                    91:ef:8e:26:96:6c:aa:fa:ba:95:6a:a7:25:8b:8f:
+                    02:16:a4:ee:2a:a6:fc:da:e6:31:ba:54:ac:26:96:
+multigraph multigraph_tester.tre
+multigraph multigraph_tester.tre

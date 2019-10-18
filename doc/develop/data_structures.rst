@@ -36,7 +36,7 @@ Plugin Configuration
 --------------------
 
 During the startup of the Munin Node server, the list of plugins (e.g. below
-``/etc/munin/plugins``) ist collected once.  Additionally the plugin configuration files
+``/etc/munin/plugins``) is collected once.  Additionally the plugin configuration files
 (e.g. below ``/etc/munin/plugin-conf.d``) are parsed.  Afterwards all configuration settings
 (including wildcard configurations) for all locally enabled plugins are stored in the hash
 ``$config->{sconf}``.

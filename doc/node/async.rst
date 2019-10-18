@@ -84,7 +84,7 @@ here non-existent, since munin-async stores all the values by plainly
 appending them in text files without any processing. The files are
 defined as one per plugin, rotated per a timeframe.
 
-Theses files are later read by munin-async client part that is
+These files are later read by munin-async client part that is
 typically accessed via ssh from munin-update. Here again no fancy
 processing is done, just plainly read back to the calling
 munin-update to be processed there. This way the overhead on the node

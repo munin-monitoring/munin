@@ -186,7 +186,7 @@ Steve Schnepp (28):
       Adding "round_to_granularity" tests
       Refactoring the 10% extra for RRA
       t: Add Test::Differences
-      u: fixed whitspace
+      u: fixed whitespace
       u: add some db specific session vars
       u: ignore when mutiplier is "0"
       u: Fixed mixed return args in is_fresh_enough()
@@ -301,7 +301,7 @@ Christian Göttsche (64):
       fix warning on node list operation
       drop Alien::RRDtool dependency
       fix warning on munin-update
-      fix uninitialized varibales in munin-httpd
+      fix uninitialized variables in munin-httpd
       [plugins] fix squid autoconf errors
       [plugins] give reasons for inactive plugins
       [dev_scripts] remove unavailable plugins on ./install node
@@ -354,13 +354,13 @@ Christian Göttsche (64):
       [munin-httpd] update listen option
 
 Christoph Moench-Tegeder (1):
-      make Linux diskstats plugin comaptible with Linux 4.19+
+      make Linux diskstats plugin compatible with Linux 4.19+
 
 Dmitry Marakasov (6):
       Specify minimum value for tuples
       Specify minimal value for postgres scans
       Specify minimal value for bgwriter
-      Speficy minimal value for PostgreSQL checkpoints
+      Specify minimal value for PostgreSQL checkpoints
       Specify minimal value for postgresql buffer cache
       Fix CDEF variable substitution
 
@@ -401,7 +401,7 @@ Lars Kruse (212):
       dynazoom: cgi-based template adapted to cron-based template
       Template 'problemview': fix HTML validation problems
       Template 'serviceview': use double quotes for tag attributes
-      plugin postfix_mailvolume: do not use hashs with save_state/restore_state
+      plugin postfix_mailvolume: do not use hashes with save_state/restore_state
       dynazoom: temporarily remove doctype line
       plugin hddtemp_smartctl: handle missing 'smartctl' gracefully
       Java compilation: change source and target specification from 1.5 to 1.7
@@ -6751,7 +6751,7 @@ munin 1.4.2, r3167:3231, 2009-12-16
 * munin_update: Update to work correctly with 1.4, document and enhance a bit
 * munin_stats: Provide better graph_info and set some warning and
   critical levels at 4 minutes and 4m45s
-* Improove colors contrast in jmx plugins which have Max area, to make
+* Improve colors contrast in jmx plugins which have Max area, to make
   them more readable + fix some indentation
 * ntp_offset: make info into graph_info
 * Munin-(node|run): Make group name resolution lazy, enhance error
@@ -7760,7 +7760,7 @@ munin (1.3.3, r910-r1236)
   * users plugin: Move to platform independent directory
   * users plugin: change family to auto, make generic
   * linux/memory: Further adjustments w.r.t. correct handling of vmalloc_used
-  * Fix typo "contigious"
+  * Fix typo "contiguous"
   * munin-node-simple: Fix @@ variable typos
   * SunOS df plugins: use @@GOODSH@@
   * Define GOODSH and BASH in Makefile.config to be used by shell plugins
@@ -7797,7 +7797,7 @@ munin (1.3.3, r910-r1236)
   * Makefile: Create plugin state directory with correct ownership and
 	permissions
   * port_ plugin did not use @@PLUGSTATE@@ for plugin state
-  * ipmi plugin: Incorrect handeling of 'autoconf' method
+  * ipmi plugin: Incorrect handling of 'autoconf' method
   * YUM plugin did not autoconf correctly
   * install-node-plugins now installs all plugins in the distribution -
 	no matter if they existed already - how else do we get bugfixed
@@ -8287,7 +8287,7 @@ munin (1.1.1)
     field.
   * Added plugin options "graph_info" and "<field>.info", which can be used
     to describe the graph/fields in the above mentioned table.
-  * Bugfix in the linux/df_inode plugin, regarding filesystems withouth
+  * Bugfix in the linux/df_inode plugin, regarding filesystems without
     inodes.
   * Added warning and critical statuses to the info table in the service view.
   * Added "info"-fields to linux/cpu and linux/load plugins, to demonstrate
