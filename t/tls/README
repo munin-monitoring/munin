@@ -7,7 +7,7 @@ http://www.debian-administration.org/articles/284
 See openssl.cnf
 
 
-* Establish a CA (Self signe root certificate)
+* Establish a CA (Self signed root certificate)
 
 ** Create database
 

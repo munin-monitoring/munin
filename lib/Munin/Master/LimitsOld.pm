@@ -402,7 +402,11 @@ sub process_service {
         $value = "unknown";
     }
     elsif ( looks_like_number($value) ) {
-        $value = sprintf "%.6f", $value;
+        my $formatted_value = sprintf "%.6f", $value;
+        if (($formatted_value == 0) && !looks_like_number($value)) {
+            warn "Failed to interpret expected numeric value of field '$fname' (host '$host'): '$value'";
+        }
+        $value = $formatted_value;
     }
     else {
         WARNING(  "Expected number, got \""

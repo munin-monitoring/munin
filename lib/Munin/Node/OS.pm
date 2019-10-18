@@ -240,7 +240,7 @@ sub _set_xid {
     # a system call. So we need to check $! for errors.
     $! = undef;
     $$x = $id;
-    croak $! if $!;
+    croak "$!" if $!;
 }
 
 
