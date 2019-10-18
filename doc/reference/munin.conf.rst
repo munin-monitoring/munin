@@ -417,7 +417,7 @@ warning and critical levels or graph names.
 .. option:: warning <value>
 
    The value at which munin-limits will mark the service as being in a warning state. Value can be a
-   single number to specify a limit that must be passed or they can be a comma separated pair of
+   single number to specify a limit that must be passed or they can be a colon separated pair of
    numbers defining a valid range of values.
 
    Affects: :ref:`munin-limits`.
@@ -425,7 +425,7 @@ warning and critical levels or graph names.
 .. option:: critical <value>
 
    The value at which munin-limits will mark the service as being in a critical state. Value can be
-   a single number to specify a limit that must be passed or they can be a comma separated pair of
+   a single number to specify a limit that must be passed or they can be a colon separated pair of
    numbers defining a valid range of values.
 
    Affects: :ref:`munin-limits`.
