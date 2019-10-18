@@ -320,8 +320,8 @@ sub process_service {
     $hash->{'graph_title'} = get_full_service_name($hash);
     $hash->{'host'}  = $hostalias;
     $hash->{'group'} = get_full_group_path($hparentobj);
-    $hash->{'worst'} = "ok";
-    $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
+    $hash->{'worst'} = "OK";
+    $hash->{'worstid'} = 0;
     $hash->{'recovered'} = {};
 
     my $service_url = sprintf ('%s/%s', $hash->{group}, $host);
@@ -452,21 +452,22 @@ sub process_service {
                 # of recently received unknown values before we admit that
                 # the value is really "unknown". Thus we may want to postpone
                 # a "change" notification until we reach the limit.
-                if ($old_num_unknowns >= $unknown_limit) {
-                    # The limit is reached - we should report "unknown".
-                    $hash->{'state_changed'} = 1;
-                } else {
+                if ($old_num_unknowns < $unknown_limit) {
                     # Don't change the state to UNKNOWN yet.
-                    $hash->{'state_changed'} = 0;
                     $state = $old_state;
                     $extinfo = $field->{"extinfo"} || "";
                     # Increment the number of UNKNOWN values seen.
                     $num_unknowns = $old_num_unknowns + 1;
                 }
-            } else {
-                $hash->{'state_changed'} = 0;
             }
 
+            if ($old_state ne $state) {
+                if (munin_get_bool($hobj, 'ignore_unknown', "false")) {
+                    DEBUG("[DEBUG] ignoring unknown value");
+                } else {
+                    $hash->{'state_changed'} = 1;
+                }
+            }
 
             if ($state eq "unknown") {
                 $hash->{'worst'} = "UNKNOWN" if $hash->{"worst"} eq "OK";
@@ -479,11 +480,6 @@ sub process_service {
             elsif ($state eq "warning") {
                 $hash->{'worst'} = "WARNING" if $hash->{"worst"} ne "CRITICAL";
                 $hash->{'worstid'} = 1 if $hash->{"worstid"} != 2;
-            }
-
-            if (munin_get_bool($hobj, 'ignore_unknown', "false")) {
-                DEBUG("[DEBUG] ignoring unknown value");
-                $hash->{'state_changed'} = 0;
             }
 
             munin_set_var_loc(\%notes, [@$fpath, "state"], $state);
@@ -721,7 +717,7 @@ sub generate_service_message {
         if (!$hash->{'state_changed'} and !$obsess) {
             next;    # No need to send notification
         }
-        INFO("[INFO] state has changed, notifying $c");
+        INFO("[INFO] state of $hash->{'group'}::$hash->{'host'}::$hash->{'plugin'} has changed to $hash->{'worst'}, notifying $c");
         my $precmd = munin_get($contactobj, "command", undef);
         if(!defined $precmd) {
             WARN("[WARNING] Missing command option for contact $c; skipping");
