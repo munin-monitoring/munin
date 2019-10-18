@@ -200,6 +200,18 @@ These are directly available.
 :Syntax: ``${var:graph_category}``
 :Reference: Plugin's category as declared via config protocol or set in munin.conf.
 
+============
+
+:Variable: **worst**
+:Syntax: ``${var:worst}``
+:Reference: The name of the worst status detected in this run of munin-limits. From best to worst, the statuses are OK, UNKNOWN, WARNING, and CRITICAL.
+
+============
+
+:Variable: **worstid**
+:Syntax: ``${var:worstid}``
+:Reference: A numeric equivalent of **worst**; 0 for OK, 1 for WARNING, 2 for CRITICAL, and 3 for UNKNOWN. Note that this is not the same as the order of severity.
+
 .. _alert_variable_data:
 
 Data source related variables
@@ -275,18 +287,6 @@ Iteration follows the syntax defined in the Perl module `Text::Balanced <http://
 :Variable: **numufields**, **numcfields**, **numwfields**, **numfofields**, **numofields**
 :Syntax: ``${var:numufields}``, etc
 :Reference: The number of fields that are unknown, critical, warning, freshly OK, and OK, respectively.
-
-============
-
-:Variable: **worst**
-:Syntax: ``${var:worst}``
-:Reference: The name of the worst status detected in this run of munin-limits. From best to worst, the statuses are OK, UNKNOWN, WARNING, and CRITICAL.
-
-============
-
-:Variable: **worstid**
-:Syntax: ``${var:worstid}``
-:Reference: A numeric equivalent of **worst**; 0 for OK, 1 for WARNING, 2 for CRITICAL, and 3 for UNKNOWN. Note that this is not the same as the order of severity.
 
 How variables are expanded
 --------------------------
