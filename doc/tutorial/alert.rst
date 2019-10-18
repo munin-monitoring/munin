@@ -35,7 +35,7 @@ To send email alerts directly from Munin use a command such as this:
 
 ::
 
- contact.email.command mail -s "Munin-notification for ${var:group} :: ${var:host}" your@email.address.here
+ contact.email.command mail -s "Munin ${var:worst}: ${var:group}::${var:host}::${var:plugin}" your@email.address.here
 
 
 Syslog Alert
