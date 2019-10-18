@@ -4,8 +4,8 @@
 Let Munin croak alarm
 =====================
 
-As of Munin 1.2 there is a generic interface for sending warnings
-and errors from Munin. If a Munin plugin discovers that a plugin has
+Munin offers a generic interface for sending warnings and errors.
+If a Munin plugin discovers that a plugin has
 a data source breaching its defined limits, Munin is able to alert
 the administrator either through simple command line invocations
 or through a monitoring system like Nagios or Icinga.
@@ -16,8 +16,6 @@ a limited number of messages at the time, the configuration directive
 
 When sending alerts, you might find good use in the
 :ref:`Munin alert variables <alert_variables>`.
-
-.. note:: Alerts not working? For some versions 1.4 and less, note that having `more than one contact defined <http://munin-monitoring.org/ticket/732>`_ can cause munin-limits to hang.
 
 Sending alerts through Nagios
 =============================
