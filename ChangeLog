@@ -1,5 +1,27 @@
 -*- text -*-
 
+munin-2.0.51, 2019-10-18
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (7):
+      limits: add missing module import
+      limits: prevent hiding of state changes due to subsequent fields
+      limits: reduce code duplication for counting unknown values
+      limits: send notification if the first emitted value of a plugin is unknown
+      limits: mention worst state change in log message
+      limits: use uppercase"OK" instead of "ok" in notifications
+      limits: remove unused conditional
+
+
 munin-2.0.50, 2019-10-16
 
 -------
