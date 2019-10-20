@@ -32,6 +32,9 @@ my $config = Munin::Node::Config->instance();
 my @all_families     = qw/auto manual contrib/;
 my @default_families = qw/auto/;
 
+# Untaint $ENV{PATH}
+$ENV{PATH} = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
+
 sub main
 {
 	parse_args();
