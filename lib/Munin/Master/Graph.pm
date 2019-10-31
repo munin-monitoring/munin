@@ -788,7 +788,7 @@ sub RRDs_graph_or_dump {
 		print $out_fh "}\n";
 	}
 
-	my $rrd_error = RRDs::error();
+	my $rrd_error = RRDs::error;
 	return $rrd_error;
 }
 
