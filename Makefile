@@ -213,5 +213,7 @@ docker:
 	./getversion > RELEASE.docker
 	docker build -t munin:dev .
 	docker rm -f munin || true
-	docker run --name munin -p 4948:4948 -itd --security-opt seccomp:unconfined munin:dev bash
+	docker run --name munin --shm-size=256M -p 4948:4948 -itd --security-opt seccomp:unconfined munin:dev dev_scripts/noop
+
+docker-connect:
 	docker exec -it munin bash
