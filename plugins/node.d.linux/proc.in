@@ -342,7 +342,7 @@ sub populate_stats
             next STATLINE if $procargs[$i] and $cmdline !~ /$procargs[$i]/;
             next STATLINE if defined $procuid and $cmduid != $procuid;
 
-            if ($line =~ /^\d+ \(.*\) . \-?\d+ \-?\d+ \-?\d+ \-?\d+ \-?\d+ \d+ \d+ \d+ \d+ \d+ (\d+) (\d+) \d+ \d+ \-?\d+ \d+ (\d+) \-?\d+ \d+ (\d+) (\d+)/) {
+            if ($line =~ /^\d+ \(.*\) . \-?\d+ \-?\d+ \-?\d+ \-?\d+ \-?\d+ \d+ \d+ \d+ \d+ \d+ (\d+) (\d+) \d+ \d+ \-?\d+ \-?\d+ (\d+) \-?\d+ \d+ (\d+) (\d+)/) {
                 $procstats{$procuniq[$i]}{"utime"} += $1;
                 $procstats{$procuniq[$i]}{"stime"} += $2;
                 $procstats{$procuniq[$i]}{"threads"} += $3;
