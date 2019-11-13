@@ -29,7 +29,7 @@ INFILES_MASTER   := $(shell find master -name '*.in' | sed 's/\(.*\)\.in$$/build
 CLASSFILES       := $(shell find plugins/javalib -name '*.java' | sed 's/\(.*\)\.java$$/build\/\1.class/')
 PLUGINS          := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/* $(JAVA_PLUGINS))
 MANCENTER        := "Munin Documentation"
-MAN8             := master/_bin/munin-update master/_bin/munin-limits master/_bin/munin-html master/_bin/munin-graph
+MAN8             := master/_bin/munin-update master/_bin/munin-limits master/_bin/munin-html master/_bin/munin-graph node/_bin/munin-get
 PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 PYTHON_LINT_CALL ?= python3 -m flake8
@@ -277,6 +277,10 @@ build-confvar-substitution-stamp: $(CONFVAR_SUBSTITUTION_DEP_FILES)
 
 
 $(CONFVAR_SUBSTITUTION_DEP_FILES): build-master build-node build-man
+
+
+# the build process depends on the substituted script (see node/Build.PL)
+build-node: build/node/_bin/munin-get
 
 
 substitute-confvar-inline:

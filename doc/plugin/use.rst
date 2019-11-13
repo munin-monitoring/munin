@@ -81,3 +81,17 @@ To test if the plugin works when executed by munin, you can use the
    # munin-run myplugin config
 
    # munin-run myplugin
+
+
+Download munin plugins
+======================
+
+The munin project maintains a set of core plugins that are distributed in munin's releases.
+Additionally the munin project maintains the
+`contrib <https://github.com/munin-monitoring/contrib>`_ repository. It contains more than a
+thousand plugins contributed by a wide range of people.
+In order to use these plugins they can either be downloaded manually or managed via the
+:ref:`munin-get` plugin tool.
+
+Additionally the munin plugins in the `contrib <https://github.com/munin-monitoring/contrib>`_
+repository can be browsed via the `Munin Plugin Gallery <http://gallery.munin-monitoring.org>`_.

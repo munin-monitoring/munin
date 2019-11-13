@@ -18,6 +18,7 @@ Man pages
    munin-cgi-html.rst
    munin-check.rst
    munin-cron.rst
+   munin-get.rst
    munin-graph.rst
    munin-html.rst
    munin-limits.rst
