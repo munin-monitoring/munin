@@ -150,9 +150,6 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/munin-cgi-graph
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-html $(CGIDIR)/munin-cgi-html
 
-# Not ready to be installed yet
-# $(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
-
 install-node-plugins: install-plugins-prime
 
 install-plugins-prime: install-plugins build $(PLUGINS) $(MAKEFILES)
