@@ -70,9 +70,10 @@ apply-formatting:
 
 lint: lint-munin lint-plugins lint-spelling lint-whitespace
 
-lint-munin:
+lint-munin: build
 	# Scanning munin code
 	perlcritic --profile .perlcriticrc lib/ script/
+	shellcheck --shell dash getversion script/munin-get script/munin-cron
 
 lint-plugins:
 	@# SC1008: ignore our weird shebang (substituted later)
