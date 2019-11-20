@@ -113,7 +113,7 @@ METADATA_CACHE_BASE_DIR="$MUNIN_GET_CACHE_DIR/metadata"
 REPOSITORY_CONFIG_DIR="$MUNIN_GET_CONFIG_DIR/repositories"
 # default plugin repository (mainainted by the munin community)
 DEFAULT_REPO_MUNIN_CONTRIB_CONFIG='{"remote_url": "https://github.com/munin-monitoring/contrib.git", "branch": "master", "plugins_dir": "plugins"}'
-# location of "installed" munin plugins (i.e. available at an accesible location - but maybe not installed, yet)
+# location of "installed" munin plugins (i.e. available at an accessible location - but maybe not installed, yet)
 PLUGINS_INSTALL_DIR=${PLUGINS_INSTALL_DIR:-/var/lib/munin/munin-get-plugins}
 # location of "enabled" munin plugins (munin-node uses this directory by default)
 PLUGINS_ENABLE_DIR=${PLUGINS_ENABLE_DIR:-/etc/munin/plugins}
@@ -211,7 +211,7 @@ add_repository() {
 }
 
 
-# Check wether a local git repository exists.
+# Check whether a local git repository exists.
 verify_repository() {
     local repo_name="$1"
     [ -d "$REPOSITORY_CACHE_BASE_DIR/$repo_name/.git" ] \
@@ -219,7 +219,7 @@ verify_repository() {
 }
 
 
-# Test wether a local git repository exists.  Create the repository based on the previously stored
+# Test whether a local git repository exists.  Create the repository based on the previously stored
 # configuration, if the repository is not cloned, yet.
 verify_or_create_repository() {
     local repo_name="$1"
@@ -316,7 +316,7 @@ get_plugin_metadata_value() {
 }
 
 
-# Retrive the full filename of a plugin in a mirrored repository.
+# Retrieve the full filename of a plugin in a mirrored repository.
 get_repository_plugin_filename() {
     local repo_name="$1"
     local plugin_name="$2"
@@ -337,7 +337,7 @@ update_repository() {
 }
 
 
-# Test wether a target file is older than its dependency.
+# Test whether a target file is older than its dependency.
 compiled_file_needs_update() {
     local source_file="$1"
     local target_file="$2"
