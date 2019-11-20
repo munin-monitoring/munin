@@ -15,7 +15,7 @@ Description
 The munin plugin helper allows to search, download and use munin plugins from external
 repositories easily.
 
-A common source of munin plugins is the 
+A common source of munin plugins is the
 `contrib <https://github.com/munin-monitoring/contrib>`_ repository (maintained by the munin
 project).
 
