@@ -43,6 +43,7 @@ help:
 
 .PHONY: build
 build: $(BUILD_SCRIPT)
+	$(BUILD_SCRIPT)
 
 .PHONY: doc
 doc:
