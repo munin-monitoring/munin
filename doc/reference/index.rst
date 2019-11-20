@@ -33,6 +33,7 @@ Man pages
    munin-cgi-graph.rst
    munin-cgi-html.rst
    munin-cron.rst
+   munin-get.rst
    munin-graph.rst
    munin-html.rst
    munin-httpd.rst

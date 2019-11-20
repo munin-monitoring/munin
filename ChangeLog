@@ -4186,6 +4186,34 @@ tsaavik (1):
       dynazoom: added logo and backlink
 
 
+munin-2.0.52, 2019-11-20
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Alexander Moisseev (1):
+      snmp__if_: handle undefined values
+
+Christian Gut (1):
+      Make date parsing work in Safari
+
+Lars Kruse (7):
+      sample config: improve notification mail subject
+      limits: do not redefine variable used in outer scope
+      Plugin ntp_states: fix missing required output
+      Plugin proc: count processes with a negative nice level
+      Plugin sensors_: add support for voltage output with unit prefix (mV)
+      Remove remaining traces of munin-gather
+      Add minimal local plugin management tool ("munin-get")
+
+
 munin-2.0.51, 2019-10-18
 
 -------
