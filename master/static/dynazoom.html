@@ -225,17 +225,19 @@ function majDates(event) {
 	
 	var dateRegex = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}).(\d{4})/;
 	
-	if (dateRegex.test(start_manual)) {
-		var date_parsed = new Date(start_manual.replace(dateRegex, "$2 $3, $1 $4:$5:$6"));
-		form.start_epoch.value = date_parsed.getTime() / 1000;
-	}
+    if (dateRegex.test(start_manual)) {
+        var dateparts = start_manual.match(dateRegex);
+        var date_parsed = new Date(dateparts[1], dateparts[2] - 1, dateparts[3],
+                                    dateparts[4], dateparts[5], dateparts[6]);
+        form.start_epoch.value = date_parsed.getTime() / 1000;
+    }
 
-	if (dateRegex.test(stop_manual)) {
-		var date_parsed = new Date(stop_manual.replace(dateRegex, "$2 $3, $1 $4:$5:$6"));
-		form.stop_epoch.value = date_parsed.getTime() / 1000;
-	}
-
-	form.submit();
+    if (dateRegex.test(stop_manual)) {
+        var dateparts = stop_manual.match(dateRegex);
+        var date_parsed = new Date(dateparts[1], dateparts[2] - 1, dateparts[3],
+                                    dateparts[4], dateparts[5], dateparts[6]);
+        form.stop_epoch.value = date_parsed.getTime() / 1000;
+    }                                                                                                                                                               form.submit();
 }
 
 // Sets the onClick handler

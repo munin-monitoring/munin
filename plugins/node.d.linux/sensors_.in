@@ -64,7 +64,7 @@ my $SENSORS = $ENV{'sensors'} || 'sensors';
 # fan5:          0 RPM  (min = 1054 RPM, div = 128)  ALARM
 #
 # ^^^^        ^^^^             ^^^^
-#  $1          $2               $3
+#  $+{label}    $+{value}      $+{threshold1}
 #
 # --------------------------------
 #
@@ -77,7 +77,7 @@ my $SENSORS = $ENV{'sensors'} || 'sensors';
 # AUX Temp:    +39.0 C  (high = +80.0 C, hyst = +75.0 C)  sensor = thermistor
 #
 # ^^^^^^^^      ^^               ^^              ^^
-#   $1          $2               $3              $4
+#   $+{label}   $+{value}        $+{threshold1}  $+{threshold2}
 #
 # ---------------------------------------
 #
@@ -88,7 +88,7 @@ my $SENSORS = $ENV{'sensors'} || 'sensors';
 # in1:        +12.14 V  (min = +10.51 V, max =  +2.38 V)   ALARM
 #
 # ^^^         ^^^              ^^^              ^^
-# $1          $2               $3               $4
+# $+{label}   $+{value}        $+{threshold1}   $+{threshold2}
 #
 #
 # ------------------------------------
@@ -98,8 +98,7 @@ my %config = (
     fan => {
         regex => qr/
             ^ # String must start with:
-            ([^:\n]*)  # Match any non-whitespace char, except ':' and new line
-                       # (Match label as \$1)
+            (?<label>[^:\n]*) # Match any non-whitespace char, except ':' and new line
             \s*        # Zero or more spaces followed by
             :          # : character
             \s*        # Zero or more spaces followed by
@@ -108,11 +107,11 @@ my %config = (
                        # This can be probably be removed as the
                        # sensors program never prints a + char in front of
                        # RPM values. Verified in lm-sensors-3-3.1.2
-            (\d+)      # Match one or more digits (Match current value as \$2)
+            (?<value>\d+) # Match one or more digits (Match current value)
             \s         # Exactly one space followed by
             (?:        # a optional group, which might contain the minimum value:
               RPM.*?   # RPM string, and then any chars (but no newlines)
-              (\d+)    # Match one or more digits (Match minimum value as \$3)
+              (?<threshold1>\d+)    # Match one or more digits (Match minimum value)
               \s       # Exactly one space followed by
             )?         # end of optional group
             RPM        # RPM string
@@ -126,16 +125,15 @@ my %config = (
     temp => {
         regex => qr/
             ^          # String must start with:
-            ([^:\n]*)  # Match any non-whitespace char, except ':' and new line
-                       # (Match label as \$1)
+            (?<label>[^:\n]*) # Match any non-whitespace char, except ':' and new line
             \s*        # Zero or more spaces followed by
             :          # ':' character
             \s*        # Zero or more spaces followed by
             \+?        # Zero or one '+' char followed by
 
-            (-?        # Match zero or one '-' char
+            (?<value>-? # Match zero or one '-' char
             \d+        # Match one or more digits
-                       # (Match current value as \$2) followed by
+                       # (Match current value) followed by
 
             (?:\.\d+)?)# Zero or one match of '.' char followed by one or more
                        # digits. '?:' means it is not a numbered capture group.
@@ -151,8 +149,8 @@ my %config = (
             \s*=\s*    # Match zero or more spaces and then '=' char and then
                        # zero or more spaces, followed by
             \+?        # Zero or one '+' char
-            (\d+       # Match one or more digits
-                       # (Match high value as \$3) followed by
+            (?<threshold1>\d+ # Match one or more digits
+                       # (Match high value) followed by
 
             (?:\.\d+)?)# Zero or one match of '.' char followed by one or more
                        # digits. '?:' means it is not a numbered capture group.
@@ -164,8 +162,8 @@ my %config = (
             \s*=\s*    # Match zero or more spaces and then '=' char and then
                        # zero or more spaces, followed by
             \+?        # Zero or one '+' char
-            (\d+       # Match one or more digits
-                       # (Match hyst value as \$4) followed by
+            (?<threshold2>\d+ # Match one or more digits
+                       # (Match hyst value) followed by
             (?:\.\d+)?)# Zero or one match of '.' char followed by one or more
                        # digits. '?:' means it is not a numbered capture group.
             [°\s]C     # Match degree char or space char, and then 'C' char
@@ -182,19 +180,18 @@ my %config = (
     volt => {
         regex => qr/
             ^           # String must start with:
-            ([^:\n]*)   # Match any non-whitespace char, except ':' and new line
+            (?<label>[^:\n]*) # Match any non-whitespace char, except ':' and new line
                         # one space in front of them.
-                        # (match the label as \$1)
 
             \s*:\s*     # Zero or more spaces followed by ':' and
                         # zero or more spaces followed by
             \+?         # Zero or one '+' char followed by
-            (-?         # Match zero or one '-' char
+            (?<value>-? # Match zero or one '-' char
             \d+         # Match one or more digits
-                        # (match the current voltage as \$2) followed by
+                        # (match the current voltage) followed by
             (?:\.\d+)?) # Zero or one match of '.' char followed by one or more digits.
                         # '?:' means it is not a numbered capture group.
-            \sV         # one space, 'V' char
+            \s(?<unit_prefix_value>[m])?V # one space, 'V' char
 
             (?:         # >>>>Match the following statement.
                         # '?:' means it is not a numbered capture group.
@@ -204,24 +201,24 @@ my %config = (
             \s*=\s*     # Match zero or more spaces and then '=' char and
                         # then zero or more spaces, followed by
             \+?         # Zero or one '+' char
-            (-?         # Match zero or one '-' char
+            (?<threshold1>-?   # Match zero or one '-' char
             \d+         # Match one or more digits
-                        # (Match the minimum value as \$3) followed by
+                        # (Match the minimum value) followed by
             (?:\.\d+)?) # Zero or one match of '.' char followed by one or more
                         # digits. '?:' means it is not a numbered capture group.
-            \sV,\s*     # One space char, 'V,' string followed by zero or
+            \s(?<unit_prefix_threshold1>[m])?V,\s* # One space char, 'V,' string followed by zero or
                         # more spaces
 
             max         # Match 'max' string
             \s*=\s*     # Match zero or more spaces and then '=' char and
                         # then zero or more spaces, followed by
             \+?         # Zero or one '+' char
-            (-?         # Match zero or one '-' char
+            (?<threshold2>-? # Match zero or one '-' char
             \d+         # Match one or more digits
-                        # (Match the max value as \$4) followed by
+                        # (Match the max value) followed by
             (?:\.\d+)?) # Zero or one match of '.' char followed by one or more digits.
                         # '?:' means passive group (does not match)
-            \sV         # one space, 'V' char
+            \s(?<unit_prefix_threshold2>[m])?V # one space, 'V' char
             \)          # ')' char
             )?          # >>>>end of statement
         /xm,            # Use extended regular expressions and treat string as multiple lines.
@@ -235,14 +232,13 @@ my %config = (
     power => {
         regex => qr/
             ^           # String must start with:
-            ([^:\n]*)   # Match any non-whitespace char, except ':' and new line
+            (?<label>[^:\n]*) # Match any non-whitespace char, except ':' and new line
                         # one space in front of them.
-                        # (match the label as \$1)
 
             \s*:\s*     # Zero or more spaces followed by ':' and
                         # zero or more spaces followed by
-            (\d+        # Match one or more digits
-                        # (match the power as \$2) followed by
+            (?<value>\d+ # Match one or more digits
+                        # (match the power) followed by
             (?:\.\d+)?) # Zero or one match of '.' char followed by one or more digits.
                         # '?:' means it is not a numbered capture group.
             \sW         # one space, 'W' char
@@ -254,8 +250,8 @@ my %config = (
             crit        # Match crit string
             \s*=\s*     # Match zero or more spaces and then '=' char and
                         # then zero or more spaces, followed by
-            (\d+         # Match one or more digits
-                        # (Match the minimum value as \$3) followed by
+            (?<threshold1>\d+         # Match one or more digits
+                        # (Match the minimum value) followed by
             (?:\.\d+)?) # Zero or one match of '.' char followed by one or more
                         # digits. '?:' means it is not a numbered capture group.
             \sW\s*     # One space char, 'W' character followed by zero or
@@ -312,9 +308,10 @@ if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
   my $text = `$SENSORS`;
   my $sensor = 1;
   while ($text =~ /$config{$func}->{regex}/g) {
-    my ($label, undef, $max, $min) = ($1, $2, $3, $4);
-    print "$func$sensor.label $label\n";
-    $config{$func}->{print_threshold}->($func.$sensor, $3, $4);
+    print "$func$sensor.label $+{label}\n";
+    my $threshold1 = convert_unit_value($+{threshold1}, $+{unit_prefix_threshold1});
+    my $threshold2 = convert_unit_value($+{threshold2}, $+{unit_prefix_threshold2});
+    $config{$func}->{print_threshold}->($func.$sensor, $threshold1, $threshold2);
     print "$func$sensor.graph no\n" if exists $ENV{"ignore_$func$sensor"};
     $sensor++;
   }
@@ -324,7 +321,8 @@ if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
 my $text = `$SENSORS`;
 my $sensor = 1;
 while ($text =~ /$config{$func}->{regex}/g) {
-  print "$func$sensor.value $2\n";
+  my $value = convert_unit_value($+{value}, $+{unit_prefix_value});
+  print "$func$sensor.value $value\n";
   $sensor++;
 }
 
@@ -376,6 +374,19 @@ sub power_threshold {
 
   printf "$name.warning :%.2f\n", $crit * (100-$warn_percent)/100;
   printf "$name.critical :$crit\n";
+}
+
+sub convert_unit_value {
+  my $value = shift;
+  my $unit_prefix = shift;
+  if (defined $unit_prefix) {
+    if ($unit_prefix eq "m") {
+      $value /= 1000;
+    } else {
+      warn "Unknown value prefix: '$unit_prefix'";
+    }
+  }
+  return $value;
 }
 
 # vim:syntax=perl

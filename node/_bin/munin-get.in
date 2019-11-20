@@ -1,0 +1,677 @@
+#!/bin/sh
+
+: << =cut
+
+=head1 Name
+
+munin-get - a simple tool for managing plugins from remote repositories
+
+
+=head1 Features
+
+The small management tool "munin-get" supports the following actions:
+
+=over
+
+=item clone one or more git repositories containing munin plugins
+
+=item multiple remote repositories can be used
+
+=item list all found plugins (including change timestamp and description)
+
+=item "install" a plugin (by default to: @@DBDIR@@/munin-get-plugins)
+
+=item "enable" a plugin (create a symlink to @@CONFDIR@@/plugins/)
+
+=item upgrade plugins (and review changes before)
+
+=back
+
+The primary purpose of this tool is the simplification of the process of using plugins from munin's
+contrib repository.
+
+
+=head1 Usage
+
+All actions except "install", "enable" and "disable" can be run as a regular user.  Please note
+that the non-privileged commands use directories relative to $HOME by default (can be overridden).
+Thus sudo or a similar tool should be used for gaining privileges.  Of course, everything can also
+be done as root.
+
+The separate "install" step works around potential problems with systemd hardening flags or other
+security policies, which may prevent files in /root/ or below /home/ from being accessed by
+the "munin-node" service process.
+
+
+=head1 Examples
+
+=head2 Discover, inspect, install, enable and test a plugin
+
+    munin-get update
+    munin-get list
+    munin-get search throughput
+    munin-get doc contrib/traffic
+    munin-get install contrib/traffic
+    munin-get enable contrib/traffic
+    munin-run traffic
+    service munin-node restart   # for systemd: systemctl restart munin-node
+
+=head2 Review and apply changes from the upstream repository
+
+    munin-get update
+    munin-get list-upgradeable
+    munin-get diff-upgradeable
+    munin-get upgrade
+
+=head2 Add custom 3rd party git repositories
+
+    munin-get add-repository foo http://example.org/repos/munin-plugins.git
+    munin-get add-repository bar http://example.org/repos/munin-stuff.git branch-tested plugins/
+    munin-get update
+
+
+=head1 Internals
+
+Repositories are cloned below ~/.cache/munin/munin-get/repositories (see REPOSITORY_CACHE_BASE_DIR).
+
+Manual changes in the cloned repositories should be avoided.
+
+The separate "install" and "enable" procedure is necessary due to possible process namespace /
+hardening features enabled for "munin-node". Thus the target of the symlink is located in a path
+that can be expected to be usable even for a restricted "munin-node" process.
+
+Additionally the separate "install" location allows the manual review of upstream changes before
+applying these locally.
+
+
+=head1 Author
+
+Lars Kruse <devel@sumpfralle.de>
+
+
+=head1 License
+
+  GPLv3+
+
+=cut
+
+
+set -eu
+
+
+# cache directory (can be removed without harm)
+MUNIN_GET_CACHE_DIR=${MUNIN_GET_CACHE_DIR:-$HOME/.cache/munin/munin-get}
+# configuration directory
+MUNIN_GET_CONFIG_DIR=${MUNIN_GET_CONFIG_DIR:-$HOME/.local/share/munin/munin-get}
+# location for mirrored munin plugin repositories
+REPOSITORY_CACHE_BASE_DIR="$MUNIN_GET_CACHE_DIR/repositories"
+# location for generated man pages
+MANPAGE_CACHE_BASE_DIR="$MUNIN_GET_CACHE_DIR/manpages"
+# location for assembled meta data
+METADATA_CACHE_BASE_DIR="$MUNIN_GET_CACHE_DIR/metadata"
+# location for configuration files describing the specified munin plugin repositories
+REPOSITORY_CONFIG_DIR="$MUNIN_GET_CONFIG_DIR/repositories"
+# default plugin repository (mainainted by the munin community)
+DEFAULT_REPO_MUNIN_CONTRIB_CONFIG='{"remote_url": "https://github.com/munin-monitoring/contrib.git", "branch": "master", "plugins_dir": "plugins"}'
+# location of "installed" munin plugins (i.e. available at an accesible location - but maybe not installed, yet)
+PLUGINS_INSTALL_DIR=${PLUGINS_INSTALL_DIR:-@@DBDIR@@/munin-get-plugins}
+# location of "enabled" munin plugins (munin-node uses this directory by default)
+PLUGINS_ENABLE_DIR=${PLUGINS_ENABLE_DIR:-@@CONFDIR@@/plugins}
+
+
+# emit an error message and exit with an error
+error_die() {
+    local text="$1"
+    printf >&2 'ERROR: %s\n' "$text"
+    exit 1
+}
+
+
+# emit a warning message to stderr
+log_warning() {
+    local text="$1"
+    printf >&2 'WARNING: %s\n' "$text"
+}
+
+
+log_info() {
+    local text="$1"
+    printf '%s\n' "$text"
+}
+
+
+check_missing_executable() {
+    local executable="$1"
+    local package="$2"
+    if ! command -v "$executable" >/dev/null; then
+        error_die "Failed to find executable '$executable'. Please install the package '$package'."
+    fi
+}
+
+
+check_dependencies() {
+    check_missing_executable git git
+    check_missing_executable jo jo
+    check_missing_executable jq jq
+}
+
+
+check_doc_dependencies() {
+    check_missing_executable man man
+    if ! perldoc -V >/dev/null 2>&1; then
+        error_die "Failed to run 'perldoc'. Please install the package 'perl-doc'."
+    fi
+}
+
+
+# check a name (e.g. for a repository) for invalid characters
+verify_simple_name() {
+    local label_name="$1"
+    local text="$2"
+    echo "$text" | grep -q '^[[:alnum:]-]\+$' \
+        || error_die "The '$label_name' parameter contains invalid characters. Only letters and numbers are allowed."
+}
+
+
+# create a minimized clone of a git repository
+git_clone_minimal() {
+    # The minimal set would include "--depth=1" - but we need the revisions in order to determine
+    # the date of change for each plugin.
+    git clone --quiet --single-branch --no-tags "$@"
+}
+
+
+# write the output of a given command to a file
+# The output is not written, if the command fails.
+write_safely_to_file() {
+    local filename="$1"
+    local output
+    shift
+    if output="$("$@")"; then
+        if echo "$output" >"$filename.tmp"; then
+            mv "$filename.tmp" "$filename"
+        else
+            rm -f "$filename.tmp"
+        fi
+        return 0
+    else
+        return 1
+    fi
+}
+
+
+# Store the description of a plugin repository.  The repository is not cloned in this step.
+add_repository() {
+    local repo_name="$1"
+    local remote_url="$2"
+    local branch="$3"
+    local plugins_dir="${4:-}"
+    write_safely_to_file "$REPOSITORY_CONFIG_DIR/$repo_name.json" \
+        jo -p name="$repo_name" remote_url="$remote_url" branch="$branch" plugins_dir="$plugins_dir"
+}
+
+
+# Check wether a local git repository exists.
+verify_repository() {
+    local repo_name="$1"
+    [ -d "$REPOSITORY_CACHE_BASE_DIR/$repo_name/.git" ] \
+        || error_die "there is no git repository ('$repo_name') at its expected location ($REPOSITORY_CACHE_BASE_DIR/$repo_name). Maybe you want to run 'munin-get update'?"
+}
+
+
+# Test wether a local git repository exists.  Create the repository based on the previously stored
+# configuration, if the repository is not cloned, yet.
+verify_or_create_repository() {
+    local repo_name="$1"
+    local remote_url target_dir branch
+    [ -d "$REPOSITORY_CACHE_BASE_DIR/$repo_name/.git" ] && return 0
+    if [ -n "$(get_repository_config_json "$repo_name")" ]; then
+        remote_url=$(get_repository_config_value "$repo_name" "remote_url")
+        branch=$(get_repository_config_value "$repo_name" "branch")
+        log_info "Cloning git repository ..."
+        create_repository "$remote_url" "$REPOSITORY_CACHE_BASE_DIR/$repo_name" "$branch"
+    else
+        error_die "Missing configuration for repository '$repo_name'"
+    fi
+}
+
+
+# Test whether a specific plugin exists as a file in a repository.  No error messages are emitted.
+exists_repository_plugin() {
+    local repo_name="$1"
+    local plugin_name="$2"
+    [ -f "$(get_repository_plugin_filename "$repo_name" "$plugin_name")" ]
+}
+
+
+# Carefully check the existence of a plugin in a repository.  Failure messages are reported.
+verify_repository_plugin() {
+    local repo_name="$1"
+    local plugin_name="$2"
+    local relative_plugin_filename absolute_plugin_filename
+    verify_repository "$repo_name"
+    relative_plugin_filename=$(get_plugin_metadata_value "$repo_name" "$plugin_name" "filename")
+    [ -z "$relative_plugin_filename" ] && error_die "Failed to determine filename of given plugin ($repo_name/$plugin_name). Maybe it does not exist?"
+    absolute_plugin_filename="$REPOSITORY_CACHE_BASE_DIR/$repo_name/$relative_plugin_filename"
+    [ -e "$absolute_plugin_filename" ] || error_die "Failed to find plugin file ($absolute_plugin_filename). Maybe the repository cache needs to be updated?"
+}
+
+
+# List the names of configured repositories.
+get_repository_names() {
+    {
+        echo "contrib"
+        if [ -d "$REPOSITORY_CONFIG_DIR" ]; then
+            find "$REPOSITORY_CONFIG_DIR" -type d -mindepth 1 -maxdepth 1 -print0 \
+                | xargs --null --no-run-if-empty basename --multiple \
+                | grep -x '^[[:alnum:]-]\+$'
+        fi
+    } | sort | uniq
+}
+
+
+# Clone a git repository in the cache directory.
+create_repository() {
+    local remote_url="$1"
+    local target_dir="$2"
+    local branch="$3"
+    if [ -n "$branch" ]; then
+        git_clone_minimal --branch="$branch" "$remote_url" "$target_dir"
+    else
+        git_clone_minimal "$remote_url" "$target_dir"
+    fi
+}
+
+
+# Retrieve the repository configuration as JSON.
+get_repository_config_json() {
+    local repo_name="$1"
+    local filename="$REPOSITORY_CONFIG_DIR/$repo_name.json"
+    if [ -e "$filename" ]; then
+        cat "$filename"
+    elif [ "$repo_name" = "contrib" ]; then
+        echo "$DEFAULT_REPO_MUNIN_CONTRIB_CONFIG"
+    else
+        true
+    fi
+}
+
+
+# Retrieve a value from the configuration of a repository.
+get_repository_config_value() {
+    local repo_name="$1"
+    local key="$2"
+    get_repository_config_json "$repo_name" | jq -r '.'"$key"'//""'
+}
+
+
+# Retrieve a value from the meta data of a plugin.
+get_plugin_metadata_value() {
+    local repo_name="$1"
+    local plugin_name="$2"
+    local key="$3"
+    local metadata_filename="$METADATA_CACHE_BASE_DIR/$repo_name/$plugin_name.json"
+    [ -e "$metadata_filename" ] || return 0
+    jq -r '.'"$key"'//""' <"$metadata_filename"
+}
+
+
+# Retrive the full filename of a plugin in a mirrored repository.
+get_repository_plugin_filename() {
+    local repo_name="$1"
+    local plugin_name="$2"
+    echo "$REPOSITORY_CACHE_BASE_DIR/$repo_name/$(get_plugin_metadata_value "$repo_name" "$plugin_name" "filename")"
+}
+
+
+# Synchronize the local plugin repository repository mirror with the upstream repository.
+# Users are not supposed to interfere with these mirrored repositories.
+update_repository() {
+    local repo_name="$1"
+    verify_or_create_repository "$repo_name"
+    cd "$REPOSITORY_CACHE_BASE_DIR/$repo_name"
+    log_info "Updating local git repository ..."
+    git pull --quiet --ff-only
+    log_info "Assembling meta data ..."
+    update_repository_metadata "$repo_name"
+}
+
+
+# Test wether a target file is older than its dependency.
+compiled_file_needs_update() {
+    local source_file="$1"
+    local target_file="$2"
+    [ ! -e "$target_file" ] || [ -n "$(find "$source_file" -newer "$target_file")" ]
+}
+
+
+# Regenerate the manpage of a plugin via perldoc.
+update_plugin_manpage() {
+    local plugin_filename="$1"
+    local manpage_filename="$2"
+    # TODO: set "date"
+    write_safely_to_file "$manpage_filename" \
+        perldoc -o nroff -w "center:Munin Plugin ($repo_name)" -T -F "$plugin_filename"
+}
+
+
+# Update the meta data of a plugin (e.g. tile, update timestamp and description).
+update_plugin_metadata() {
+    local repo_name="$1"
+    local plugin_name="$2"
+    local relative_plugin_filename="$3"
+    local metadata_filename="$4"
+    local summary_cache_file="$5"
+    local change_time description summary
+    if compiled_file_needs_update "$relative_plugin_filename" "$metadata_filename"; then
+        cd "$REPOSITORY_CACHE_BASE_DIR/$repo_name"
+        change_time=$(git log -1 --format=%at "$relative_plugin_filename")
+	description=$(perldoc -o nroff -T -F "$relative_plugin_filename" | sed '/^\.Vb [12]/d' | grep -A 1 '^.SH "NAME"$' | tail -1 | sed 's/^\(\\& *\)\?[^ ]* \\- \+//' | sed 's/\\//g')
+        summary=$(printf '%s/%-30s %s %s\n' "$repo_name" "$plugin_name" "$(date +%Y-%m-%d --date="@$change_time")" "$description")
+        write_safely_to_file "$metadata_filename" \
+            jo -p -- "timestamp=$change_time" -s "description=$description" -s "summary=$summary" -s "filename=$relative_plugin_filename"
+        # update the entry in the summary cache file
+        [ -e "$summary_cache_file" ] || touch "$summary_cache_file"
+        sed -i "#^$repo_name/$plugin_name #d" "$summary_cache_file"
+        printf '%s\n' "$summary" >>"$summary_cache_file"
+    fi
+}
+
+
+# Update the meta data of a repository. This includes the plugin's meta data and generated man
+# pages.
+update_repository_metadata() {
+    local repo_name="$1"
+    local plugin_name relative_plugin_filename
+    mkdir -p "$MANPAGE_CACHE_BASE_DIR/$repo_name"
+    mkdir -p "$METADATA_CACHE_BASE_DIR/$repo_name"
+    list_repository_plugin_files "$repo_name" | while read -r relative_plugin_filename; do
+        plugin_name=$(basename "$relative_plugin_filename")
+        update_plugin_metadata "$repo_name" "$plugin_name" "$relative_plugin_filename" "$METADATA_CACHE_BASE_DIR/$repo_name/$plugin_name.json" "$METADATA_CACHE_BASE_DIR/$repo_name/_summary_cache.txt"
+    done
+}
+
+
+# Show the man page of a plugin (via "man").
+show_plugin_manpage() {
+    local repo_name="$1"
+    local plugin_name="$2"
+    local manpage_filename="$MANPAGE_CACHE_BASE_DIR/$repo_name/$plugin_name"
+    local plugin_filename
+    plugin_filename=$(get_repository_plugin_filename "$repo_name" "$plugin_name")
+    if compiled_file_needs_update "$plugin_filename" "$manpage_filename"; then
+        log_info "Generating man page for $repo_name/$plugin_name ..."
+        update_plugin_manpage "$plugin_filename" "$manpage_filename" \
+            || error_die "Failed to generate man page: $repo_name/$plugin_name"
+    fi
+    man --local-file "$manpage_filename"
+}
+
+
+# Execute a given action for one or multiple repositories.  If no repositories are given, then the
+# action is executed for all repositories.  This function is useful for command line handling.
+do_for_some_or_all_repositories() {
+    local action="$1"
+    local repo_name
+    shift
+    if [ $# -gt 0 ]; then
+        for repo_name in "$@"; do
+            verify_simple_name "name" "$repo_name"
+            "$action" "$repo_name"
+        done
+    else
+        get_repository_names | while read -r repo_name; do
+            "$action" "$repo_name"
+        done
+    fi
+}
+
+
+# List all plugin files found in a mirrored repository.
+list_repository_plugin_files() {
+    local repo_name="$1"
+    local plugins_dir
+    verify_repository "$repo_name"
+    plugins_dir=$(get_repository_config_value "$repo_name" "plugins_dir")
+    [ -z "$plugins_dir" ] && plugins_dir="."
+    cd "$REPOSITORY_CACHE_BASE_DIR/$repo_name"
+    find "$plugins_dir" -type f -executable | sed 's#^\./##' | sort
+}
+
+
+# List all plugins in a repository.  The output includes the last change timestamp and a plugin
+# description.
+list_repository_plugins() {
+    local repo_name="$1"
+    local relative_plugin_filename plugin_name summary_cache_filename
+    summary_cache_filename="$METADATA_CACHE_BASE_DIR/$repo_name/_summary_cache.txt"
+    if [ -e "$summary_cache_filename" ]; then
+        sort "$summary_cache_filename"
+    else
+        list_repository_plugin_files "$repo_name" | while read -r relative_plugin_filename; do
+            plugin_name=$(basename "$relative_plugin_filename")
+            summary=$(get_plugin_metadata_value "$repo_name" "$plugin_name" "summary")
+            echo "${summary:-$repo_name/$plugin_name}"
+        done
+    fi
+}
+
+
+# Split the input parameter into two tokens (separated by a slash).  The two tokens are output in
+# separate lines.
+split_slashed_repo_plugin_name() {
+    local full_name="$1"
+    local repo_name plugin_name
+    echo "$full_name" | grep -q "/" || error_die "Invalid plugin name in repository ('$full_name'). Use REPOSITORY/PLUGIN instead."
+    repo_name=$(echo "$full_name" | cut -f 1 -d /)
+    plugin_name=$(echo "$full_name" | cut -f 2- -d /)
+    verify_simple_name "name" "$repo_name"
+    [ -n "$plugin_name" ] || error_die "Empty plugin name"
+    echo "$repo_name"
+    echo "$plugin_name"
+}
+
+
+ACTION=${1:-help}
+[ $# -gt 0 ] && shift
+
+case "$ACTION" in
+    add-repository)
+        [ $# -lt 2 ] && error_die "at least two parameters (name and remote_url) are required"
+        [ $# -gt 4 ] && error_die "not more than four parameters (name, remote_url, branch, base_dir) are allowed"
+        repo_name="$1"
+        remote_url="$2"
+        branch="${3:-}"
+        plugins_dir="${4:-.}"
+        check_dependencies
+        verify_simple_name "name" "$repo_name"
+        add_repository "$repo_name" "$remote_url" "$branch" "$plugins_dir"
+        ;;
+    remove-repository)
+        [ $# -ne 1 ] && error_die "exactly one parameter (name) is required"
+        repo_name="$1"
+        check_dependencies
+        verify_simple_name "name" "$repo_name"
+        verify_repository "$repo_name"
+        rm -rf "${REPOSITORY_CACHE_BASE_DIR:?}/$repo_name"
+        rm -rf "${MANPAGE_CACHE_BASE_DIR:?}/$repo_name"
+        rm -rf "${METADATA_CACHE_BASE_DIR:?}/$repo_name"
+        rm -f "$REPOSITORY_CONFIG_DIR/$repo_name.json"
+        ;;
+    update)
+        check_dependencies
+        do_for_some_or_all_repositories "update_repository" "$@"
+        ;;
+    search)
+        [ $# -ne 1 ] && error_die "exactly one parameter (a regular expression) is required"
+        regex=$1
+        check_dependencies
+        get_repository_names | while read -r repo_name; do
+            plugins_dir=$(get_repository_config_value "$repo_name" "plugins_dir")
+            find "$REPOSITORY_CACHE_BASE_DIR/$repo_name/$plugins_dir" -type f -executable -print0 \
+                | xargs --null -r grep --files-with-matches "$regex" \
+                | xargs -r basename --multiple | sed "s#^#$repo_name #"
+        done | sort | while read -r repo_name plugin_name; do
+            summary=$(get_plugin_metadata_value "$repo_name" "$plugin_name" "summary")
+            printf '%s\n' "$summary"
+        done
+        ;;
+    list-repositories)
+        check_dependencies
+        get_repository_names
+        ;;
+    list)
+        check_dependencies
+        do_for_some_or_all_repositories "list_repository_plugins" "$@"
+        ;;
+    list-installed)
+        check_dependencies
+        get_repository_names | while read -r repo_name; do
+            [ -d "$PLUGINS_INSTALL_DIR/$repo_name" ] || continue
+            find "$PLUGINS_INSTALL_DIR/$repo_name" -type f -executable -print0 \
+                | xargs -r -0 -n 100 basename --multiple \
+                | sed "s#^#$repo_name/#"
+        done
+        ;;
+    list-enabled)
+        check_dependencies
+        [ -d "$PLUGINS_ENABLE_DIR" ] || exit 0
+        find "$PLUGINS_ENABLE_DIR" -type l | while read -r plugin_symlink; do
+            target=$(readlink --canonicalize-missing "$plugin_symlink")
+            repo_plugin_path=${target#${PLUGINS_INSTALL_DIR%/}/}
+            [ "$repo_plugin_path" = "$target" ] && continue
+            parsed=$(split_slashed_repo_plugin_name "$repo_plugin_path")
+            repo_name=$(echo "$parsed" | sed -n 1p)
+            plugin_name=$(echo "$parsed" | sed -n 2p)
+            exists_repository_plugin "$repo_name" "$plugin_name" || continue
+            echo "$repo_name/$plugin_name"
+        done
+        ;;
+    list-upgradeable|diff-upgradeable)
+        check_dependencies
+        "$0" list-installed | while read -r repo_plugin_path; do
+            parsed=$(split_slashed_repo_plugin_name "$repo_plugin_path")
+            repo_name=$(echo "$parsed" | sed -n 1p)
+            plugin_name=$(echo "$parsed" | sed -n 2p)
+            plugin_filename=$(get_repository_plugin_filename "$repo_name" "$plugin_name")
+            install_target_filename="$PLUGINS_INSTALL_DIR/$repo_name/$plugin_name"
+            if [ ! -e "$plugin_filename" ]; then
+                log_warning "Missing plugin file in repository cache ($plugin_filename)"
+                continue
+            fi
+            if [ ! -e "$install_target_filename" ]; then
+                log_warning "Missing installed plugin file ($install_target_filename)"
+                continue
+            fi
+            case "$ACTION" in
+                list-upgradeable)
+                    cmp --silent "$plugin_filename" "$install_target_filename" || echo "$repo_name/$plugin_name"
+                    ;;
+                diff-upgradeable)
+                    diff -ruN "$install_target_filename" "$plugin_filename"
+                    ;;
+                *)
+                    ;;
+            esac
+        done
+        ;;
+    doc|install|upgrade|uninstall|enable|disable)
+        # the special action "upgrade" may be used without parameters
+        if [ "$ACTION" = "upgrade" ] && [ $# -eq 0 ]; then
+            "$0" list-upgradeable | while read -r repository_plugin; do
+                "$0" upgrade "$repository_plugin"
+            done
+            exit 0
+        fi
+        [ $# -ne 1 ] && error_die "exactly one parameter (plugin name in repository) is required"
+        repo_plugin_path="$1"
+        check_dependencies
+        parsed=$(split_slashed_repo_plugin_name "$repo_plugin_path")
+        repo_name=$(echo "$parsed" | sed -n 1p)
+        plugin_name=$(echo "$parsed" | sed -n 2p)
+        verify_repository_plugin "$repo_name" "$plugin_name"
+        source_filename=$(get_repository_plugin_filename "$repo_name" "$plugin_name")
+        install_target_filename="$PLUGINS_INSTALL_DIR/$repo_name/$plugin_name"
+        enabled_symlink="$PLUGINS_ENABLE_DIR/$plugin_name"
+        not_installed_message="Plugin is not installed ($install_target_filename)."
+        not_installed_message_with_hint="$not_installed_message Run '$(basename "$0") install $repo_plugin_path' before."
+        not_enabled_message="Plugin is not enabled ($enabled_symlink)."
+        case "$ACTION" in
+            doc)
+                check_doc_dependencies
+                show_plugin_manpage "$repo_name" "$plugin_name"
+                ;;
+            install)
+                if [ -e "$install_target_filename" ]; then
+                    log_warning "Plugin is already installed ($install_target_filename)"
+                else
+                    mkdir -p "$PLUGINS_INSTALL_DIR/$repo_name"
+                    cp "$source_filename" "$install_target_filename"
+                fi
+                ;;
+            uninstall)
+                if [ -e "$enabled_symlink" ]; then
+                    error_die "Refusing to uninstall plugin, while it is enabled ($enabled_symlink)"
+                elif [ -e "$install_target_filename" ]; then
+                    rm "$install_target_filename"
+                else
+                    log_warning "$not_installed_message"
+                fi
+                ;;
+            upgrade)
+                if [ -e "$install_target_filename" ]; then
+                    cp "$source_filename" "$install_target_filename"
+                else
+                    error_die "$not_installed_message_with_hint"
+                fi
+                ;;
+            enable)
+                if [ -e "$enabled_symlink" ]; then
+                    log_warning "Plugin is already enabled ($enabled_symlink)"
+                else
+                    [ -e "$install_target_filename" ] || error_die "$not_installed_message_with_hint"
+                    ln -s "$install_target_filename" "$enabled_symlink"
+                fi
+                ;;
+            disable)
+                if [ -e "$enabled_symlink" ]; then
+                    rm "$enabled_symlink"
+                else
+                    log_warning "$not_enabled_message"
+                fi
+                ;;
+            *)
+                error_die "Internal error - unexpected action: $ACTION"
+                ;;
+        esac
+        ;;
+    clean)
+        rm -rf "${REPOSITORY_CACHE_BASE_DIR:?}"
+        rm -rf "${MANPAGE_CACHE_BASE_DIR:?}"
+        rm -rf "${METADATA_CACHE_BASE_DIR:?}"
+        ;;
+    help|--help)
+        echo "Syntax:  $(basename "$0") ACTION [ARGS [..]]"
+        echo "    add-repository      NAME REMOTE_URL [BRANCH [PLUGINS_DIR]]"
+        echo "    remove-repository   NAME"
+        echo "    list-repositories"
+        echo "    list-upgradeable"
+        echo "    diff-upgradeable"
+        echo "    update              [REPOSITORY [..]]"
+        echo "    list                [REPOSITORY [..]]"
+        echo "    search              REGULAR_EXPRESSION"
+        echo "    doc                 REPOSITORY/PLUGIN_NAME"
+        echo "    install             REPOSITORY/PLUGIN_NAME"
+        echo "    uninstall           REPOSITORY/PLUGIN_NAME"
+        echo "    upgrade             [REPOSITORY/PLUGIN_NAME]"
+        echo "    enable              REPOSITORY/PLUGIN_NAME"
+        echo "    disable             REPOSITORY/PLUGIN_NAME"
+        echo "    clean"
+        echo "    help"
+        echo
+        ;;
+    *)
+        "$0" help >&2
+        exit 1
+        ;;
+esac

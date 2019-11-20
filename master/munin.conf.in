@@ -87,8 +87,8 @@ includedir @@CONFDIR@@/munin-conf.d
 
 # Drop somejuser@fnord.comm and anotheruser@blibb.comm an email everytime
 # something changes (OK -> WARNING, CRITICAL -> OK, etc)
-#contact.someuser.command mail -s "Munin notification" somejuser@fnord.comm
-#contact.anotheruser.command mail -s "Munin notification" anotheruser@blibb.comm
+#contact.someuser.command mail -s "Munin ${var:worst}: ${var:group}::${var:host}::${var:plugin}" somejuser@fnord.comm
+#contact.anotheruser.command mail -s "Munin ${var:worst}: ${var:group}::${var:host}::${var:plugin}" anotheruser@blibb.comm
 #
 # For those with Nagios, the following might come in handy. In addition,
 # the services must be defined in the Nagios server as well.
