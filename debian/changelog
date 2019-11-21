@@ -5,6 +5,8 @@ munin (2.0.52-1) UNRELEASED; urgency=medium
     - sensors_ plugin unable to parse millivolt (Closes: #943577)
   * Add Russian translation for debconf strings.
     (thanks, Lev Lamberov, Closes: #942638)
+  * Add Portuguese translation for debconf strings.
+    (thanks, Américo Monteiro, Closes: #942697)
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Nov 2019 00:49:29 +0100
 
