@@ -19,11 +19,16 @@ set -eu
 if [ -d /run/systemd/system ]; then
   if [ ! -x /tmp/autopkgtest-reboot ]; then
     echo "SKIP: testbed does not support reboot"
-    exit 0
+    exit 77
   fi
   if [ -n "${ADT_REBOOT_MARK:-}" ]; then
     echo "SKIP: Reboot with sysvinit-core still runs systemd; using init= ?"
-    exit 0
+    exit 77
+  fi
+  if ! apt-cache show sysvinit-core >/dev/null 2>&1; then
+    # for example Ubuntu does not contain sysvinit-core anymore (see #926979)
+    echo "SKIP: this distribution does not support sysvinit-core"
+    exit 77
   fi
   echo "Installing sysvinit-core..."
   # stderr: silence message "delaying package configuration" (due to missing apt-utils)
