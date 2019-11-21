@@ -12,6 +12,7 @@ munin (2.0.52-1) UNRELEASED; urgency=medium
   * Add Recommends for new "munin-get" tool.
   * Patch: fix missing "munindoc" in build process.
   * Tests: compatibility with systemd-only derivatives (Closes: #926979)
+  * Tests: simplify handling of different init systems.
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Nov 2019 00:49:29 +0100
 

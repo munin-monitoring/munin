@@ -1,5 +1,6 @@
 #!/bin/sh
 
+. debian/tests/switch_init_helper.inc
 . debian/tests/enable_cgi_strategy.inc
 
 verbose=t prove -v debian/tests/munin-master/*.t

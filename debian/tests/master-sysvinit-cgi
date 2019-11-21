@@ -1,6 +1,0 @@
-#!/bin/sh
-
-. debian/tests/enable_sysvinit.inc
-. debian/tests/enable_cgi_strategy.inc
-
-verbose=t prove -v debian/tests/munin-master/*.t
