@@ -41,7 +41,8 @@ override_dh_auto_install:
 	# Instead: remove them here and rely on dh_installman.
 	# We cannot split the MANDIR target for manpages and module documentation. Thus the
 	# separation has to be done manually.
-	rm -f debian/munin-doc/usr/share/man/man1/munin-node.1p \
+	rm -f debian/munin-doc/usr/share/man/man1/munin-get.1p \
+		debian/munin-doc/usr/share/man/man1/munin-node.1p \
 		debian/munin-doc/usr/share/man/man1/munin-node-configure.1p \
 		debian/munin-doc/usr/share/man/man1/munin-run.1p \
 		debian/munin-doc/usr/share/man/man1/munindoc.1p
