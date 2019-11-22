@@ -45,7 +45,12 @@ Depends: ${misc:Depends}, ${perl:Depends},
  netbase,
 Recommends:
  gawk,
+ git,
+ jo,
+ jq,
+ man,
  munin-plugins-extra,
+ perl-doc,
  procps,
 Suggests:
  munin,
