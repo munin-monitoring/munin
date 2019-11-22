@@ -1,0 +1,31 @@
+Description: add "munindoc" to upstream's build of node
+Author: Lars Kruse <devel@sumpfralle.de>
+Applied-Upstream: 81aba3e19367f81c996415d575b06c34e1370d9a
+
+
+commit 81aba3e19367f81c996415d575b06c34e1370d9a
+Author: Lars Kruse <devel@sumpfralle.de>
+Date:   Fri Nov 22 04:26:30 2019 +0100
+
+    Add missing "munindoc" to the node build process
+    
+    Before 42b711fe6 this script was implicitly included in the node build
+    process.  Due to the introduction of "munin-get" it needs to be
+    explicitly mentioned now.
+
+diff --git a/node/Build.PL b/node/Build.PL
+index 63cb67b8..481b338c 100644
+--- a/node/Build.PL
++++ b/node/Build.PL
+@@ -12,7 +12,10 @@ my $build = NodeBuilder->new(
+     dist_author    => 'The Munin Team <munin-users@lists.sourceforge.net>',
+     dist_abstract  => 'The Munin Node',
+     license        => 'gpl',
+-    script_files   => '../build/node/_bin/munin-get',
++    script_files   => [
++        '../build/node/_bin/munin-get',
++        'bin/munindoc',
++    ],
+     requires       => {
+         perl            => '5',
+         'Net::Server'   => 0,

@@ -10,6 +10,7 @@ munin (2.0.52-1) UNRELEASED; urgency=medium
   * Add Dutch translation for debconf strings.
     (thanks, Frans Spiesschaert, Closes: #945359)
   * Add Recommends for new "munin-get" tool.
+  * Patch: fix missing "munindoc" in build process.
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Nov 2019 00:49:29 +0100
 
