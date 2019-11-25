@@ -26,7 +26,7 @@ Restrictions: needs-root, breaks-testbed, isolation-container
 # sysvinit-core
 Tests: master-cron, master-cgi
 Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness, sysvinit-core
-Restrictions: needs-root, breaks-testbed, isolation-machine, needs-reboot, skip-not-installable
+Restrictions: needs-root, breaks-testbed, isolation-container, needs-reboot, skip-not-installable
 
 
 # Tests for munin-node:
@@ -45,7 +45,7 @@ Restrictions: needs-root, breaks-testbed, isolation-container
 # sysvinit-core
 Tests: node
 Depends: munin-node, netcat-openbsd, sharness, sysvinit-core
-Restrictions: needs-root, breaks-testbed, isolation-machine, needs-reboot, skip-not-installable
+Restrictions: needs-root, breaks-testbed, isolation-container, needs-reboot, skip-not-installable
 
 
 # verify that all binary packages can be installed at the same time (without conflicts)
