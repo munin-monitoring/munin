@@ -1,0 +1,47 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the munin package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: munin_2.0.51-1\n"
+"Report-Msgid-Bugs-To: munin@packages.debian.org\n"
+"POT-Creation-Date: 2019-08-04 17:40+0200\n"
+"PO-Revision-Date: 2019-11-11 20:44+0100\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Last-Translator: Frans Spiesschaert <Frans.Spiesschaert@yucom.be>\n"
+"Language-Team: Debian Dutch l10n Team <debian-l10n-dutch@lists.debian."
+"org>\n"
+"X-Generator: Poedit 1.8.11\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Type: boolean
+#. Description
+#: ../munin.templates:1001
+msgid "Remove all RRD database files?"
+msgstr "Alle RRD databasebestanden verwijderen?"
+
+#. Type: boolean
+#. Description
+#: ../munin.templates:1001
+msgid ""
+"The /var/lib/munin directory which contains the RRD files with the data "
+"accumulated by munin is about to be removed."
+msgstr ""
+"De map /var/lib/munin, welke de RRD-bestanden met de door munin "
+"geaccumuleerde data bevat, wordt verwijderd."
+
+#. Type: boolean
+#. Description
+#: ../munin.templates:1001
+msgid ""
+"If you want to install munin later again or if you want to use the content "
+"of the RRD files for other purposes, the data should be kept."
+msgstr ""
+"Indien u munin later opnieuw wilt installeren of indien u de inhoud van de "
+"RRD-bestanden voor andere doeleinden wilt gebruiken, zouden de data "
+"behouden moeten worden."
