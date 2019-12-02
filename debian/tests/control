@@ -15,6 +15,10 @@
 #   * sharness: test framework
 #
 # Additional specified "restrictions" for SysV init tests:
+#   * allow-stderr: apache2 emits the warning message
+#     "Could not reliably determine the server's fully qualified domain name".  It is harmless.
+#     The message is only emitted with SysV init. With systemd a slightly different name resolution
+#     seems to be in effect.  Thus we can ignore this output on stderr.
 #   * skip-not-installable: some distributions (e.g. Ubuntu) do not ship sysvinit-core.  They
 #     should be allowed to skip these tests.
 
@@ -27,7 +31,7 @@ Restrictions: needs-root, breaks-testbed, isolation-container
 # sysvinit-core
 Tests: master-cron, master-cgi
 Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness, sysvinit-core, cron
-Restrictions: needs-root, breaks-testbed, isolation-container, needs-reboot, skip-not-installable
+Restrictions: needs-root, breaks-testbed, isolation-container, needs-reboot, allow-stderr, skip-not-installable
 
 
 # Tests for munin-node:
@@ -46,7 +50,7 @@ Restrictions: needs-root, breaks-testbed, isolation-container
 # sysvinit-core
 Tests: node
 Depends: munin-node, netcat-openbsd, sharness, sysvinit-core, cron
-Restrictions: needs-root, breaks-testbed, isolation-container, needs-reboot, skip-not-installable
+Restrictions: needs-root, breaks-testbed, isolation-container, needs-reboot, allow-stderr, skip-not-installable
 
 
 # verify that all binary packages can be installed at the same time (without conflicts)
