@@ -4,6 +4,7 @@
 #
 # Dependencies:
 #   * apache2: handle HTTP requests
+#   * cron (only sysV init): manually enforce a dependency conflict when switching to sysvinit-core
 #   * curl: HTTP requests for munin-httpd
 #   * daemontools: for "setuidgid"
 #   * file: determine mime type of HTTP responses
@@ -25,7 +26,7 @@ Restrictions: needs-root, breaks-testbed, isolation-container
 
 # sysvinit-core
 Tests: master-cron, master-cgi
-Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness, sysvinit-core
+Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness, sysvinit-core, cron
 Restrictions: needs-root, breaks-testbed, isolation-container, needs-reboot, skip-not-installable
 
 
@@ -44,7 +45,7 @@ Restrictions: needs-root, breaks-testbed, isolation-container
 
 # sysvinit-core
 Tests: node
-Depends: munin-node, netcat-openbsd, sharness, sysvinit-core
+Depends: munin-node, netcat-openbsd, sharness, sysvinit-core, cron
 Restrictions: needs-root, breaks-testbed, isolation-container, needs-reboot, skip-not-installable
 
 
