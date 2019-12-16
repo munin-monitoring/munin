@@ -1,0 +1,203 @@
+#!@@PERL@@ -w
+# -*- perl -*-
+
+use strict;
+
+=head1 NAME
+
+freeradius_sqlippools_ - Plugin to monitor IP pool utilisation
+
+=head1 CONFIGURATION
+
+This is a wildcard plugin to support fetching the status of multiple sqlippool
+instances.
+
+It can also be linked directly (as with a non-wildcard plugin) to present a
+combined graph showing the percentage utilisation of all pools.
+
+It is likely that a common configuration will apply to all plugins but this
+doesn't have to be so:
+
+    [freeradius_sqlippools_*]
+        env.fr_driver mysql
+        env.fr_host 192.0.2.1
+        env.fr_port 3306
+        env.fr_db radius
+        env.fr_user radius
+        env.fr_pass radpass
+
+fr_driver is the name of the Perl DBI driver used in the DSN connection string.
+The corresponding DBD module for the driver must be installed.
+
+You should omit fr_pass and specify fr_passfile to avoid placing the password
+in a plugin configuration file that is world accessible, e.g.:
+
+    [freeradius_sqlippools_mypool]
+        user radmonitor
+        group radmonitor
+        env.fr_driver Pg
+        env.fr_host 192.0.2.2
+        env.fr_port 5432
+        env.fr_db radius
+        env.fr_user radmonitor
+        env.fr_passfile /home/radmonitor/db_pass.txt
+
+=head1 AUTHORS
+
+Original Author: Network RADIUS
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+
+use File::Basename;
+use Storable qw(lock_store lock_retrieve);
+use DBI;
+
+use constant STATEFILE => "$ENV{MUNIN_PLUGSTATE}/freeradius_sqlippools.state";
+
+use constant SQL => <<'EOF';
+SELECT
+	DISTINCT pool_name AS pool_name,
+	COUNT(id) OVER (PARTITION BY pool_name) AS total,
+	SUM(CASE WHEN expiry_time > NOW() THEN 1 ELSE 0 END) OVER (PARTITION BY pool_name) AS used
+FROM radippool
+EOF
+
+my $script = basename($0);
+(my $instance) = $script =~ /freeradius_sqlippools_(.+)/;
+my $command = $ARGV[0] || 'show';
+
+autoconf() if $command eq 'autoconf';
+suggest() if $command eq 'suggest';
+config_instance($instance) if $command eq 'config' && defined $instance;
+config_combined() if $command eq 'config' && !defined $instance;
+show_instance($instance) if $command eq 'show' && defined $instance;
+show_combined() if $command eq 'show' && !defined $instance;
+
+exit;
+
+
+sub autoconf {
+	my $results;
+	eval {
+		$results = get_pools(1);
+	};
+	if ($results) {
+		print "yes\n";
+	} else {
+		print "no (Failed to read pool status from database)\n";
+	}
+}
+
+sub suggest {
+	my $pools = get_pools(1);
+	return unless defined $pools;
+	print "$_\n" foreach keys %{$pools};
+}
+
+sub config_instance {
+	my $instance = shift;
+
+	print <<EOF;
+graph_title FreeRADIUS SQL IP pool ($instance)
+graph_category Other
+graph_args -l 0
+total.label Total IPs
+total.draw AREA
+used.label Allocated IPs
+used.draw AREA
+EOF
+}
+
+sub config_combined {
+
+	print <<EOF;
+graph_title FreeRADIUS SQL IP pools
+graph_category Other
+graph_args -l 0 -u 100
+graph_vlabel Utilisation (%)
+EOF
+
+	my $pools = get_pools();
+	foreach (keys %{$pools}) {
+		print "$_.label Pool: $_\n";
+		print "$_.warning 90\n";
+		print "$_.critical 95\n";
+	}
+}
+
+sub show_instance {
+	my $instance = shift;
+	my $pool = get_pools()->{$instance};
+	print "total.value $pool->{total}\n";
+	print "used.value $pool->{used}\n";
+}
+
+sub show_combined {
+	my $pools = get_pools();
+	foreach (keys %{$pools}) {
+		my $util = $pools->{$_}->{used} * 100 / $pools->{$_}->{total};
+		print "$_.value $util\n";
+	}
+}
+
+sub get_pools {
+
+	my $no_cache = shift;  # Ensure that caching doesn't interfere with reconfiguration
+
+	# Read results from the cache unless stale or told not to
+	if (!$no_cache && -e STATEFILE && -M STATEFILE < 60/86400) {
+		return lock_retrieve(STATEFILE);
+	}
+
+	my $driver   = $ENV{'fr_driver'} || 'mysql';
+	my $host     = $ENV{'fr_host'}   || '127.0.0.1';
+	my $port     = $ENV{'fr_port'}   || '3306';
+	my $db       = $ENV{'fr_db'}     || 'radius';
+	my $user     = $ENV{'fr_user'}   || 'radius';
+	my $pass     = $ENV{'fr_pass'}   || 'radpass';
+	my $passfile = $ENV{'fr_passfile'};
+
+	# Read password from a file
+	if (!defined $pass && defined $passfile) {
+		open (my $FH, '<', $passfile) || die "Failed to open fr_passfile: $passfile";
+		$pass = <$FH>;
+		chomp $pass;
+		close $FH;
+	}
+
+	my $dsn;
+	if ($driver eq 'Oracle') {
+		$dsn = "DBI:$driver:$db";
+	} else {
+		$dsn = "DBI:$driver:database=$db;host=$host";
+	}
+	$dsn .= ";port=$port" if $port;
+
+	# Read the results by running our query against the database
+	my $dbh = DBI->connect($dsn, $user, $pass, { RaiseError => 1, PrintError => 0, AutoCommit => 1 });
+	my $sth = $dbh->prepare(SQL);
+	$sth->execute();
+	my $results=$sth->fetchall_hashref('pool_name');
+	$sth->finish();
+	$dbh->disconnect();
+
+	# Cache the results
+	if (!$no_cache && $results) {
+		lock_store($results,STATEFILE);
+	}
+
+	return $results;
+
+}
+
+# vim:syntax=perl
