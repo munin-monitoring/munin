@@ -11,8 +11,8 @@ Additional plugins can be easily developed and contributed.
 See the `Plugin Gallery <http://gallery.munin-monitoring.org/>`_ for a wide
 range of more than a thousand community supported plugins.
 
-Munin is distributed under the GNU GPL version 2.  Munin is copyrighted
-2002-2018 by its various authors as identified in the source files.
+Munin is distributed under the `GNU GPL version 2 <https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html>`_.  Munin is copyrighted
+2002-2020 by its various authors as identified in the source files.
 
 
 Resources
