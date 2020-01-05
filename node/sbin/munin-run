@@ -49,7 +49,7 @@ sub main
     # that the environment is insecure, but we want to let admins shoot themselves
     # in the foot with it, if they want to.
     foreach my $key (keys %ENV) {
-        $ENV{$key} =~ /^(.*)$/;
+        $ENV{$key} =~ /^(.*)$/s;
         $ENV{$key} = $1;
     }
 
