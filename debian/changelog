@@ -15,6 +15,7 @@ munin (2.0.52-1) UNRELEASED; urgency=medium
   * Tests: simplify handling of different init systems.
   * Tests: reduce environment requirements for sysvinit tests from
     "isolation-machine" to "isolation-container"
+  * Mention systemd restrictions in README.PluginConfiguration.
 
  -- Lars Kruse <devel@sumpfralle.de>  Thu, 21 Nov 2019 00:49:29 +0100
 

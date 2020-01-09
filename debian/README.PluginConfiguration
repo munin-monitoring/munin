@@ -60,3 +60,12 @@ debugging, as root, (like "sudo munin-run -d someplugin") and check the output.
 If you do not execute "munin-run" as root, you may not be able to read the
 plugin configuration files, and debugging your plugins may be harder than
 necessary.
+
+Please note that the "munin-node" process may be restricted if it is executed
+via systemd.  This may include access to certain directories (e.g. /home or
+/tmp) as well as write access to unusual locations.
+See /lib/systemd/system/munin-node.service for the packaging defaults of such
+restrictions.  Use "systemctl edit munin-node" for overriding specific settings
+locally.
+The output of "munin-run" may differ from the output of the munin-node service
+due to these restrictions.
