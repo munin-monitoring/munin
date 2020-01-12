@@ -1172,10 +1172,10 @@ sub process_service {
                 my ($warn_min, $warn_max) = split(':', $tmpwarn,2);
 
                 if (defined($warn_min) and $warn_min ne '') {
-                    unshift(@rrd, "HRULE:$warn_min#$warn_colour");
+                    unshift(@rrd, "HRULE:${warn_min}#${warn_colour}:dashes");
                 }
                 if (defined($warn_max) and $warn_max ne '') {
-                    unshift(@rrd, "HRULE:$warn_max#$warn_colour");
+                    unshift(@rrd, "HRULE:${warn_max}#${warn_colour}:dashes");
                 }
             }
 
@@ -1236,10 +1236,10 @@ sub process_service {
             my ($warn_min, $warn_max) = split(':', $tmpwarn,2);
 
             if (defined($warn_min) and $warn_min ne '') {
-                unshift(@rrd, "HRULE:$warn_min#$warn_colour");
+                unshift(@rrd, "HRULE:${warn_min}#${warn_colour}:dashes");
             }
             if (defined($warn_max) and $warn_max ne '') {
-                unshift(@rrd, "HRULE:$warn_max#$warn_colour");
+                unshift(@rrd, "HRULE:${warn_max}#${warn_colour}:dashes");
             }
         }
     }
