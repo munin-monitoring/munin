@@ -25,6 +25,11 @@ my $DEBUG    = 0;
 my $PIDEBUG  = 0;
 my $paranoia = 0;
 my $ignore_systemd_properties = 0;
+# The following parameters of "systemd-run" require rather recent systemd versions:
+#   --wait: 232 or later
+#   --pipe: 235 or later
+#   --collect: 236 or later
+my $required_systemd_version = 236;
 
 # See "man systemd.exec" for the list of all systemd properties.
 # The following properties belong to the relevant sections "Capabilities",
@@ -126,23 +131,29 @@ sub main
     $config->parse_config_from_file($conffile);
 
     # Run directly or execute recursively via "systemd-run".
-    if ($ignore_systemd_properties) {
+    if (($ignore_systemd_properties) || (! -d "/run/systemd/system")) {
         return execute_plugin($plugin, $arg);
     } else {
-        my @munin_node_hardening_flags;
-        my $parse_flags_success = 0;
-        eval {
-            @munin_node_hardening_flags = get_systemd_hardening_flags();
-            $parse_flags_success = 1;
-        };
-        if ($parse_flags_success) {
-            return run_via_systemd(\@munin_node_hardening_flags,
-                                   \@original_argv, $config->{DEBUG});
-        } else {
-            # Failed to retrieve systemd properties of munin-node service.
-            # Probable causes: systemd is not installed/enabled or the
-            # service unit does not exist.
+        my $systemd_version = get_systemd_version();
+        if ((not defined $systemd_version) or ($systemd_version < $required_systemd_version)) {
+            print STDERR "Skipping systemd properties simulation due to required systemd version ($required_systemd_version)\n" if $config->{DEBUG};
             return execute_plugin($plugin, $arg);
+        } else {
+            my @munin_node_hardening_flags;
+            my $parse_flags_success = 0;
+            eval {
+                @munin_node_hardening_flags = get_systemd_hardening_flags();
+                $parse_flags_success = 1;
+            };
+            if ($parse_flags_success) {
+                return run_via_systemd(\@munin_node_hardening_flags,
+                                       \@original_argv, $config->{DEBUG});
+            } else {
+                # Failed to retrieve systemd properties of munin-node service.
+                # Probable causes: systemd is not installed/enabled or the
+                # service unit does not exist.
+                return execute_plugin($plugin, $arg);
+            }
         }
     }
 }
@@ -153,7 +164,6 @@ sub main
 # The result of the function is a list of strings like the following:
 #    ProtectHome=yes
 sub get_systemd_hardening_flags {
-    die "systemd is not enabled" unless (-d "/run/systemd/system");
     # retrieve all active properties except for soft (runtime) limits
     my @munin_service_properties = grep !/^Limit\w+Soft=/, `systemctl show munin-node 2>/dev/null`;
     die "no systemd enabled or failed to retrieve unit properties" unless ($? >> 8 == 0);
@@ -177,6 +187,17 @@ sub quote_for_systemd_environment_file {
     # escape double quotes
     $value =~ s/"/\\"/;
     return $key . '="' . $value . "\"\n";
+}
+
+
+sub get_systemd_version {
+    my @version_output = `systemd --version 2>/dev/null`;
+    foreach my $line (@version_output) {
+        if ($line =~ /^systemd\s+(\d+).*$/) {
+            return int($1);
+        }
+    }
+    return;
 }
 
 
