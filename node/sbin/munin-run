@@ -191,9 +191,9 @@ sub quote_for_systemd_environment_file {
 
 
 sub get_systemd_version {
-    my @version_output = `systemd --version 2>/dev/null`;
+    my @version_output = `systemd-run --version 2>/dev/null`;
     foreach my $line (@version_output) {
-        if ($line =~ /^systemd\s+(\d+).*$/) {
+        if ($line =~ /^systemd(?:-run)?\s+(\d+).*$/) {
             return int($1);
         }
     }
