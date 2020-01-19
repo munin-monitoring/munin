@@ -84,6 +84,9 @@ if ($RRDs::VERSION >= 1.3) {
     $AddNAN = 'ADDNAN';
 }
 
+# the ":dashes" syntax for LINEs is supported since rrdtool 1.5.3
+my $RRDLineThresholdAttribute = ($RRDs::VERSION < 1.50003) ? '' : ':dashes';
+
 # Force drawing of "graph no".
 my $force_graphing = 0;
 my $force_lazy     = 1;
@@ -1172,10 +1175,10 @@ sub process_service {
                 my ($warn_min, $warn_max) = split(':', $tmpwarn,2);
 
                 if (defined($warn_min) and $warn_min ne '') {
-                    unshift(@rrd, "HRULE:${warn_min}#${warn_colour}:dashes");
+                    unshift(@rrd, "HRULE:${warn_min}#${warn_colour}${RRDLineThresholdAttribute}");
                 }
                 if (defined($warn_max) and $warn_max ne '') {
-                    unshift(@rrd, "HRULE:${warn_max}#${warn_colour}:dashes");
+                    unshift(@rrd, "HRULE:${warn_max}#${warn_colour}${RRDLineThresholdAttribute}");
                 }
             }
 
@@ -1236,10 +1239,10 @@ sub process_service {
             my ($warn_min, $warn_max) = split(':', $tmpwarn,2);
 
             if (defined($warn_min) and $warn_min ne '') {
-                unshift(@rrd, "HRULE:${warn_min}#${warn_colour}:dashes");
+                unshift(@rrd, "HRULE:${warn_min}#${warn_colour}${RRDLineThresholdAttribute}");
             }
             if (defined($warn_max) and $warn_max ne '') {
-                unshift(@rrd, "HRULE:${warn_max}#${warn_colour}:dashes");
+                unshift(@rrd, "HRULE:${warn_max}#${warn_colour}${RRDLineThresholdAttribute}");
             }
         }
     }
