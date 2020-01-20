@@ -1,5 +1,49 @@
 -*- text -*-
 
+munin-2.0.54, 2020-01-20
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (2):
+      munin-run: skip exection via "systemd-run" for systemd before v236
+      Disable "dashed" threshold lines for rrdtool version before 1.5.3
+
+Steve Schnepp (1):
+      munin-run: Use directly systemd-run
+
+
+munin-2.0.53, 2020-01-15
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (6):
+      Add missing "munindoc" to the node build process
+      Respect custom color for warning thresholds
+      Visualize warning thresholds as dashed line
+      munin-run: allow multi-line environment values
+      munin-run: remove duplicated copyright/license statement
+      munin-run: apply systemd properties configured for "munin-node.service"
+
+Terry Burton (1):
+      Plugin postgres_streaming_: Use modern WAL status function names
+
+
 munin-2.0.52, 2019-11-20
 
 -------

@@ -1,23 +1,7 @@
 #!/usr/bin/perl -T
 # -*- perl -*-
 #
-# Copyright (C) 2004-2009
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; version 2 dated June,
-# 1991.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-# $Id$
+# Copyright and license: see bottom of file
 #
 
 use strict;
@@ -26,6 +10,7 @@ use warnings;
 # Trust PERL5LIB from environment
 use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 
+use File::Temp;
 use Getopt::Long;
 
 use Munin::Common::Defaults;
@@ -39,6 +24,84 @@ my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $DEBUG    = 0;
 my $PIDEBUG  = 0;
 my $paranoia = 0;
+my $ignore_systemd_properties = 0;
+# The following parameters of "systemd-run" require rather recent systemd versions:
+#   --wait: 232 or later
+#   --pipe: 235 or later
+#   --collect: 236 or later
+my $required_systemd_version = 236;
+
+# See "man systemd.exec" for the list of all systemd properties.
+# The following properties belong to the relevant sections "Capabilities",
+# "Security", "Mandatory Access Control", "Process Properties",
+# "Sandboxing" and "System Call Filtering".
+# These properties will be imported from the specification of
+# "munin-node.service" if systemd is enabled.
+# See "--ignore-systemd-properties" for details.
+my @SYSTEMD_PROPERTY_IMPORT_PATTERNS = qw(
+    AmbientCapabilities
+    AppArmorProfile
+    CapabilityBoundingSet
+    DynamicUser
+    Environment
+    EnvironmentFile
+    Group
+    Limit\w+
+    LockPersonality
+    MemoryDenyWriteExecute
+    MountFlags
+    NetworkNamespacePath
+    NoNewPrivileges
+    PassEnvironment
+    Private\w+
+    Protect\w+
+    Restrict\w+
+    SecureBits
+    SELinuxContext
+    SmackProcessLabel
+    SystemCallArchitectures
+    SystemCallFilter
+    TemporaryFileSystem
+    UMask
+    UnsetEnvironment
+    User
+    \w+Directory
+    \w+Paths
+);
+
+# The following environment variables are assigned automatically by
+# systemd-run (see "man systemd.exec").  We should not override them
+# when calling "systemd-run".
+# See "--ignore-systemd-properties" for details.
+my %ENVIRONMENT_IGNORE_HASH = map { $_ => 1 } qw(
+    PATH
+    LANG
+    USER
+    HOME
+    SHELL
+    LOGNAME
+    INVOCATION_ID
+    XDG_RUNTIME_DIR
+    RUNTIME_DIRECTORY
+    STATE_DIRECTORY
+    CACHE_DIRECTORY
+    LOGS_DIRECTORY
+    CONFIGURATION_DIRECTORY
+    MAINPID
+    MANAGERPID
+    LISTEN_FDS
+    LISTEN_PID
+    LISTEN_FDNAMES
+    NOTIFY_SOCKET
+    WATCHDOG_PID
+    WATCHDOG_USEC
+    TERM
+    JOURNAL_STREAM
+    SERVICE_RESULT
+    EXIT_CODE
+    EXIT_STATUS
+    PIDFILE
+);
 
 my $config = Munin::Node::Config->instance();
 
@@ -49,13 +112,14 @@ sub main
     # that the environment is insecure, but we want to let admins shoot themselves
     # in the foot with it, if they want to.
     foreach my $key (keys %ENV) {
-        $ENV{$key} =~ /^(.*)$/;
+        $ENV{$key} =~ /^(.*)$/s;
         $ENV{$key} = $1;
     }
 
     $0 =~ /^(.*)$/;
     $0 = $1;
 
+    my @original_argv = @ARGV;
     my ($plugin, $arg) = parse_args();
 
     # Loads the settings from munin-node.conf.
@@ -65,6 +129,158 @@ sub main
 
     my $config = Munin::Node::Config->instance();
     $config->parse_config_from_file($conffile);
+
+    # Run directly or execute recursively via "systemd-run".
+    if (($ignore_systemd_properties) || (! -d "/run/systemd/system")) {
+        return execute_plugin($plugin, $arg);
+    } else {
+        my $systemd_version = get_systemd_version();
+        if ((not defined $systemd_version) or ($systemd_version < $required_systemd_version)) {
+            print STDERR "Skipping systemd properties simulation due to required systemd version ($required_systemd_version)\n" if $config->{DEBUG};
+            return execute_plugin($plugin, $arg);
+        } else {
+            my @munin_node_hardening_flags;
+            my $parse_flags_success = 0;
+            eval {
+                @munin_node_hardening_flags = get_systemd_hardening_flags();
+                $parse_flags_success = 1;
+            };
+            if ($parse_flags_success) {
+                return run_via_systemd(\@munin_node_hardening_flags,
+                                       \@original_argv, $config->{DEBUG});
+            } else {
+                # Failed to retrieve systemd properties of munin-node service.
+                # Probable causes: systemd is not installed/enabled or the
+                # service unit does not exist.
+                return execute_plugin($plugin, $arg);
+            }
+        }
+    }
+}
+
+
+# Retrieve the locally configured hardening flags for the "munin-node" systemd
+# service.
+# The result of the function is a list of strings like the following:
+#    ProtectHome=yes
+sub get_systemd_hardening_flags {
+    # retrieve all active properties except for soft (runtime) limits
+    my @munin_service_properties = grep !/^Limit\w+Soft=/, `systemctl show munin-node 2>/dev/null`;
+    die "no systemd enabled or failed to retrieve unit properties" unless ($? >> 8 == 0);
+    my $flag_name_regex = '^((?:' . join("|", @SYSTEMD_PROPERTY_IMPORT_PATTERNS) . ')=.*)$';
+    my @flag_list;
+    foreach my $property_definition (@munin_service_properties) {
+        push @flag_list, $1 if $property_definition =~ /$flag_name_regex/;
+    }
+    return @flag_list;
+}
+
+
+# "man systemd.exec" describes the quoting rules for EnvironmentFile.
+# We apply the following steps:
+#     1) escape all double quotes with a backslash
+#     2) surround the value with double quotes
+# This combination ensures that even line breaks are properly parsed by
+# systemd-run.
+sub quote_for_systemd_environment_file {
+    my ($key, $value) = @_;
+    # escape double quotes
+    $value =~ s/"/\\"/;
+    return $key . '="' . $value . "\"\n";
+}
+
+
+sub get_systemd_version {
+    my @version_output = `systemd-run --version 2>/dev/null`;
+    foreach my $line (@version_output) {
+        if ($line =~ /^systemd(?:-run)?\s+(\d+).*$/) {
+            return int($1);
+        }
+    }
+    return;
+}
+
+
+# Recursively execute this script ("munin-run") via "systemd-run".
+# This allows to apply the hardening properties defined in "munin-node.service".
+# Thus the behavior of "munin-run" should be the same as the behavior of
+# munin-node service itself.  This is less surprising for users.
+sub run_via_systemd {
+    my ($systemd_properties_ref, $original_argv_ref, $debug_enabled) = @_;
+    my @call_args;
+    push @call_args, "systemd-run";
+    # discard the transient service even in case of errors
+    push @call_args, "--collect";
+    # use our stdin/stdout/stderr for the created process
+    push @call_args, "--pipe";
+    push @call_args, "--quiet";
+    # wait for the end of the command execution
+    push @call_args, "--wait";
+    # Preserve the environment (e.g. manual plugin configuration applied by
+    # the user).
+    # We use systemd-run's property "EnvironmentFile" for transferring the
+    # environment of the current process to the new process.  The following
+    # simpler approaches ("properties") are not suitable:
+    #    * Environment: would expose the private environment of the calling
+    #      user to all other users (via the commandline).
+    #    * PassEnvironment: the variables are only transferred from the
+    #      system manager (PID 1) instead of the calling process.
+    # This approach causes a problem
+    my $environment_file = File::Temp->new();
+    # The order of systemd-run's environment variable processing may cause
+    # problems, if "munin-node.service" specifies "Environment" properties,
+    # which exist in the caller's environment.  Such variables (being written
+    # to the temporary EnvironmentFile) take precedence over the ones defined
+    # in "munin-node.service".  There does not seem to be a clean generic
+    # workaround for this issue.
+    foreach my $key (keys %ENV) {
+        next if exists($ENVIRONMENT_IGNORE_HASH{$key});
+        print $environment_file quote_for_systemd_environment_file($key, $ENV{$key});
+    }
+    push @call_args, "--property";
+    push @call_args, "EnvironmentFile=" . $environment_file->filename;
+    # enable the hardening flags of the munin-node service
+    foreach my $key_value (@$systemd_properties_ref) {
+        push @call_args, "--property";
+        push @call_args, $key_value;
+    }
+    push @call_args, "--";
+    # append the untainted name/path of "munin-run" itself
+    $0 =~ /^(.*)$/s;
+    push @call_args, $1;
+    push @call_args, "--ignore-systemd-properties";
+    foreach my $arg (@$original_argv_ref) {
+        # untaint our arguments
+        $arg =~ /^(.*)$/s;
+        push @call_args, $1;
+    }
+    if ($debug_enabled) {
+        print STDERR ("Running 'munin-run' via 'systemd-run' with systemd "
+                      . "properties based on 'munin-node.service'.\n");
+        my $command_printable = "";
+        foreach my $token (@call_args) {
+            $command_printable .= " " if ($command_printable);
+            if ($token =~ /\s/) {
+                $command_printable .= "'$token'";
+            } else {
+                $command_printable .= "$token";
+            }
+        }
+        print STDERR "Command invocation: $command_printable\n";
+    }
+    # We need to use "system" instead of "exec in order to remove the EnvironmentFile
+    # afterwards.  This is indirectly handled by the object cleanup from File::Temp.
+    my $result = system(@call_args);
+    if ($result == -1) {
+        die "Failed to execute 'munin-run' via 'systemd-run'.";
+    } else {
+        return $result >> 8;
+    }
+}
+
+
+sub execute_plugin {
+    my ($plugin, $arg) = @_;
 
     $services = Munin::Node::Service->new(
         servicedir => $servicedir,
@@ -111,6 +327,7 @@ sub parse_args
             "sconfdir=s"   => \$sconfdir,
             "sconffile=s"  => \$sconffile,
             "paranoia!"    => \$paranoia,
+            "ignore-systemd-properties" => \$ignore_systemd_properties,
             "version"      => \&print_version_and_exit,
             "help"         => \&print_usage_and_exit,
     );
@@ -207,6 +424,14 @@ Use E<lt>fileE<gt> as plugin configuration. Overrides sconfdir.  [undefined]
 
 Only run plugins owned by root and check permissions.  [disabled]
 
+=item B<--ignore-systemd-properties >
+
+Do not try to detect and enforce the locally configured hardening flags of the
+"munin-node" service unit. This detection is skipped, if systemd is not enabled.
+The hardening flags may cause subtile surprises.
+For example "ProtectHome=yes" prevents the "df" plugin from determining the
+state of the "home" partition.  [disabled]
+
 =item B<--help >
 
 View this help message.
@@ -228,6 +453,29 @@ Show version information.
 
 =back
 
+=head1 NOTES FOR SYSTEMD USERS
+
+The "munin-node" service is usually started by systemd via a
+"munin-node.service" definition.  Some distributions enable hardening
+settings in this service file in order to restrict the allowed set of
+activities for the "munin-node" process.
+This may cause surprising differences between the result of "munin-run"
+and the real "munin-node" service.
+
+A popular example of such a surprising restriction is "ProtectHome=yes"
+combined with the "df" plugin.  The restriction silently prevents the
+plugin from determining the status of mountpoints below /home.
+
+"munin-run" tries to mimic this behavior of "munin-node" automatically.
+Thus the execution of "munin-run df" should provide the same output as
+"echo fetch df | nc localhost munin".
+
+If you want to debug potential issues of systemd restrictions, then you
+may want to use the parameters "--ignore-systemd-properties" and
+"--debug".  Permanent overrides of systemd properties can be configured
+locally via "systemctl edit munin-node".
+See "man systemd.exec" for the documentation of systemd's properties.
+
 =head1 FILES
 
     @@CONFDIR@@/munin-node.conf
@@ -240,11 +488,10 @@ Show version information.
 
 This is munin-run (munin-node) v@@VERSION@@
 
-$Id$
-
 =head1 AUTHORS
 
-Audun Ytterdal, Jimmy Olsen, Tore Anderson, Nicolai Langfeldt.
+Audun Ytterdal, Jimmy Olsen, Tore Anderson, Nicolai Langfeldt,
+Lars Kruse.
 
 =head1 BUGS
 
@@ -254,12 +501,22 @@ Please see L<http://munin-monitoring.org/report/1>.
 
 Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
 Nicolai Langfeldt / Linpro AS.
+Copyright (C) 2020 Lars Kruse
 
-This is free software; see the source for copying conditions. There is
-NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
 
-This program is released under the GNU General Public License
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301 USA.
 
 =cut
 

@@ -12,7 +12,10 @@ my $build = NodeBuilder->new(
     dist_author    => 'The Munin Team <munin-users@lists.sourceforge.net>',
     dist_abstract  => 'The Munin Node',
     license        => 'gpl',
-    script_files   => '../build/node/_bin/munin-get',
+    script_files   => [
+        '../build/node/_bin/munin-get',
+        'bin/munindoc',
+    ],
     requires       => {
         perl            => '5',
         'Net::Server'   => 0,

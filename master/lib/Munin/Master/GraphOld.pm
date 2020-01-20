@@ -84,6 +84,9 @@ if ($RRDs::VERSION >= 1.3) {
     $AddNAN = 'ADDNAN';
 }
 
+# the ":dashes" syntax for LINEs is supported since rrdtool 1.5.3
+my $RRDLineThresholdAttribute = ($RRDs::VERSION < 1.50003) ? '' : ':dashes';
+
 # Force drawing of "graph no".
 my $force_graphing = 0;
 my $force_lazy     = 1;
@@ -1111,6 +1114,7 @@ sub process_service {
 	
 	# Select a default colour if no explict one
 	$colour ||= ($single_value) ? $single_colour : $COLOUR[$field_count % @COLOUR];
+        my $warn_colour = $single_value ? "ff0000" : $colour;
 
         # colour needed for transparent predictions and trends
         munin_set($field, "colour", $colour);
@@ -1169,13 +1173,12 @@ sub process_service {
             elsif (my $tmpwarn = munin_get($negfield, "warning")) {
 
                 my ($warn_min, $warn_max) = split(':', $tmpwarn,2);
-                my $warn_colour = $single_value ? "ff0000" : $colour;
 
                 if (defined($warn_min) and $warn_min ne '') {
-                    unshift(@rrd, "HRULE:$warn_min#$warn_colour");
+                    unshift(@rrd, "HRULE:${warn_min}#${warn_colour}${RRDLineThresholdAttribute}");
                 }
                 if (defined($warn_max) and $warn_max ne '') {
-                    unshift(@rrd, "HRULE:$warn_max#$warn_colour");
+                    unshift(@rrd, "HRULE:${warn_max}#${warn_colour}${RRDLineThresholdAttribute}");
                 }
             }
 
@@ -1236,24 +1239,10 @@ sub process_service {
             my ($warn_min, $warn_max) = split(':', $tmpwarn,2);
 
             if (defined($warn_min) and $warn_min ne '') {
-                unshift(
-                    @rrd,
-                    "HRULE:"
-                        . $warn_min
-                        . "#" . (
-                        $single_value
-                        ? "ff0000"
-                        : $COLOUR[($field_count - 1) % @COLOUR]));
+                unshift(@rrd, "HRULE:${warn_min}#${warn_colour}${RRDLineThresholdAttribute}");
             }
             if (defined($warn_max) and $warn_max ne '') {
-                unshift(
-                    @rrd,
-                    "HRULE:"
-                        . $warn_max
-                        . "#" . (
-                        $single_value
-                        ? "ff0000"
-                        : $COLOUR[($field_count - 1) % @COLOUR]));
+                unshift(@rrd, "HRULE:${warn_max}#${warn_colour}${RRDLineThresholdAttribute}");
             }
         }
     }
