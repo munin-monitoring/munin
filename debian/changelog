@@ -1,6 +1,7 @@
-munin (2.0.52-2) unstable; urgency=medium
+munin (2.0.54-1) unstable; urgency=medium
 
-  * New upstream release.
+  * New upstream release, drop debian/patches merged upstream.
+
 
  -- Holger Levsen <holger@debian.org>  Mon, 20 Jan 2020 20:42:10 +0100
 
