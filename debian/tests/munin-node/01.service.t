@@ -36,6 +36,9 @@ test_expect_success "status (after start)" '
   service munin-node status
 '
 
+# wait 5 sec for the node to startup correctly
+sleep 5
+
 test_expect_success "munin node port listening" '
   echo quit | nc localhost 4949
 '
