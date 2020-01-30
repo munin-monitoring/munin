@@ -1,3 +1,9 @@
+munin (2.0.54-2) UNRELEASED; urgency=medium
+
+  * Bump standards version to 4.5.0, no changes needed.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 30 Jan 2020 11:59:02 +0100
+
 munin (2.0.54-1) unstable; urgency=medium
 
   * New upstream release, drop debian/patches merged upstream.

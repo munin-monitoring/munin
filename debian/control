@@ -29,7 +29,7 @@ Build-Depends:
  libmodule-build-perl,
  po-debconf,
 Rules-Requires-Root: no
-Standards-Version: 4.4.1
+Standards-Version: 4.5.0
 Homepage: http://munin-monitoring.org
 Vcs-Git: https://salsa.debian.org/debian/munin.git -b debian
 Vcs-Browser: https://salsa.debian.org/debian/munin
