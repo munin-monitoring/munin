@@ -275,9 +275,17 @@ sub run_via_systemd {
     # afterwards.  This is indirectly handled by the object cleanup from File::Temp.
     my $result = system(@call_args);
     if ($result == -1) {
-        die "Failed to execute 'munin-run' via 'systemd-run'.";
+        die "Failed to execute the 'systemd-run' wrapper. Maybe try '--ignore-systemd-properties'.";
     } else {
-        return $result >> 8;
+        my $exitcode = $result >> 8;
+        if ($exitcode != 0) {
+            # Sadly problems with "systemd-run" are only visible in the log (no error output).
+            print STDERR ("Warning: the execution of 'munin-run' via 'systemd-run' returned an "
+                          . "error. This may either be caused by a problem with the plugin to be "
+                          . "executed or a failure of the 'systemd-run' wrapper. Details of the "
+                          . "latter can be found via 'journalctl'.\n");
+        }
+        return $exitcode;
     }
 }
 
