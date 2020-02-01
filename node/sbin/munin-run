@@ -170,6 +170,9 @@ sub get_systemd_hardening_flags {
     my $flag_name_regex = '^((?:' . join("|", @SYSTEMD_PROPERTY_IMPORT_PATTERNS) . ')=.*)$';
     my @flag_list;
     foreach my $property_definition (@munin_service_properties) {
+        # "systemd show" does not output the EnvironmentFile property in a readable format.
+        # See https://github.com/systemd/systemd/issues/14723.
+        next if ($property_definition =~ /^EnvironmentFiles?=(.*) \(ignore_errors=(yes|no)\)$/);
         push @flag_list, $1 if $property_definition =~ /$flag_name_regex/;
     }
     return @flag_list;
