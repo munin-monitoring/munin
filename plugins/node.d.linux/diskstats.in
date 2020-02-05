@@ -387,10 +387,14 @@ sub read_procfs {
         # There are situations where only _some_ lines (e.g.
         # partitions on older 2.6 kernels) have fewer stats
         # numbers, therefore we'll skip them silently
-        if ( @elems != 14 ) {
+        # - Until before Linux 4.19, there were 14 fields
+        # - Linux 4.19 extended /proc/diskstat to 18 fields
+        # - Linux 5.5 added another two fields (to a total of 20)
+        if ( @elems < 14 ) {
             next;
         }
-        push @lines, \@elems;
+        # Currently, we're only interested in the first 14 fields
+        push @lines, [splice @elems, 0, 14];
     }
 
     close $statfh or croak "Failed to close '/proc/diskstats': $!";
@@ -429,8 +433,9 @@ sub read_sysfs {
 
         # before linux 4.19, /sys/block/<dev>/stat had 11 fields.
         # in 4.19, four fields for tracking DISCARDs have been added
-        croak "'$stats_file' contains the wrong amount of values. Aborting"
-          if ( @elems != 11 && @elems != 15 );
+        # in 5.5, two fields tracking flush requests have been added
+        croak "'$stats_file' contains less than 11 values. Aborting"
+          if ( @elems < 11 );
 
         # Translate the devicename back before storing the information
         $cur_device =~ tr#!#/#;
