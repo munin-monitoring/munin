@@ -136,7 +136,7 @@ sub main
     } else {
         my $systemd_version = get_systemd_version();
         if ((not defined $systemd_version) or ($systemd_version < $required_systemd_version)) {
-            print STDERR "Skipping systemd properties simulation due to required systemd version ($required_systemd_version)\n" if $config->{DEBUG};
+            print STDERR "# Skipping systemd properties simulation due to required systemd version ($required_systemd_version)\n" if $config->{DEBUG};
             return execute_plugin($plugin, $arg);
         } else {
             my @munin_node_hardening_flags;
@@ -170,6 +170,9 @@ sub get_systemd_hardening_flags {
     my $flag_name_regex = '^((?:' . join("|", @SYSTEMD_PROPERTY_IMPORT_PATTERNS) . ')=.*)$';
     my @flag_list;
     foreach my $property_definition (@munin_service_properties) {
+        # "systemd show" does not output the EnvironmentFile property in a readable format.
+        # See https://github.com/systemd/systemd/issues/14723.
+        next if ($property_definition =~ /^EnvironmentFiles?=(.*) \(ignore_errors=(yes|no)\)$/);
         push @flag_list, $1 if $property_definition =~ /$flag_name_regex/;
     }
     return @flag_list;
@@ -255,7 +258,7 @@ sub run_via_systemd {
         push @call_args, $1;
     }
     if ($debug_enabled) {
-        print STDERR ("Running 'munin-run' via 'systemd-run' with systemd "
+        print STDERR ("# Running 'munin-run' via 'systemd-run' with systemd "
                       . "properties based on 'munin-node.service'.\n");
         my $command_printable = "";
         foreach my $token (@call_args) {
@@ -266,15 +269,23 @@ sub run_via_systemd {
                 $command_printable .= "$token";
             }
         }
-        print STDERR "Command invocation: $command_printable\n";
+        print STDERR "# Command invocation: $command_printable\n";
     }
     # We need to use "system" instead of "exec in order to remove the EnvironmentFile
     # afterwards.  This is indirectly handled by the object cleanup from File::Temp.
     my $result = system(@call_args);
     if ($result == -1) {
-        die "Failed to execute 'munin-run' via 'systemd-run'.";
+        die "Failed to execute the 'systemd-run' wrapper. Maybe try '--ignore-systemd-properties'.";
     } else {
-        return $result >> 8;
+        my $exitcode = $result >> 8;
+        if ($exitcode != 0) {
+            # Sadly problems with "systemd-run" are only visible in the log (no error output).
+            print STDERR ("Warning: the execution of 'munin-run' via 'systemd-run' returned an "
+                          . "error. This may either be caused by a problem with the plugin to be "
+                          . "executed or a failure of the 'systemd-run' wrapper. Details of the "
+                          . "latter can be found via 'journalctl'.\n");
+        }
+        return $exitcode;
     }
 }
 

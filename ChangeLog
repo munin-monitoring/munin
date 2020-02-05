@@ -1,5 +1,27 @@
 -*- text -*-
 
+munin-2.0.55, 2020-02-05
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (3):
+      munin-run: prepend new systemd-related messages with "#"
+      munin-run: work around systemd's serialization of EnvironmentFile
+      munin-run: emit a warning if execution failed
+
+Olivier Mehani (3):
+      Expose NAME in all services HTML templates
+      Put host name or service (NAME) first in <title>
+
+
 munin-2.0.54, 2020-01-20
 
 -------
