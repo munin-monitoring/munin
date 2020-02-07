@@ -1,7 +1,3 @@
-# The munin init script only creates /run/munin.
-# This is covered by debian/munin.tmpfiles for systemd. Thus there is no need for a service.
-missing-systemd-service-for-init.d-script munin
-
 # Lintian tells us that a "templates" file is usually accompanied by a "config" file.  But we use
 # debconf only during package removal (approving file deletion for purge).  Thus we do not need a
 # "config" file (only needed if input during installation is required).
