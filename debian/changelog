@@ -1,13 +1,14 @@
-munin (2.0.55-1) UNRELEASED; urgency=medium
+munin (2.0.56-1) unstable; urgency=medium
 
   [ Holger Levsen ]
+  * New upstream bugfix release, 2.0.56.
   * Bump standards version to 4.5.0, no changes needed.
 
   [ Lars Kruse ]
-  * New upstream bugfix release.
+  * New upstream bugfix release, 2.0.55.
   * Disable test of munin-node with sysvinit. Closes: #949887.
 
- -- Lars Kruse <devel@sumpfralle.de>  Wed, 05 Feb 2020 21:46:57 +0100
+ -- Holger Levsen <holger@debian.org>  Sat, 08 Feb 2020 00:08:10 +0100
 
 munin (2.0.54-1) unstable; urgency=medium
 
