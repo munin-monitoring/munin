@@ -1,4 +1,23 @@
 -*- text -*-
+munin-2.0.56, 2020-02-07
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Moench-Tegeder (1):
+      extend linux diskstat plugins for kernel 5.5
+
+Kim B. Heino (2):
+      head.tmpl: remove trailing white spaces
+      head.tmpl: add missing </TMPL_IF>
+
 
 munin-2.0.55, 2020-02-05
 

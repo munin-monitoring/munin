@@ -460,10 +460,14 @@ sub read_diskstats {
         # There are situations where only _some_ lines (e.g.
         # partitions on older 2.6 kernels) have fewer stats
         # numbers, therefore we'll skip them silently
-        if ( @elems != 14 ) {
+        # - Until before Linux 4.19, there were 14 fields
+        # - Linux 4.19 extended /proc/diskstat to 18 fields
+        # - Linux 5.5 added another two fields (to a total of 20)
+        if ( @elems < 14 ) {
             next;
         }
-        push @lines, \@elems;
+        # Currently, we're only interested in the first 14 fields
+        push @lines, [splice @elems, 0, 14];
     }
 
     close STAT or croak "Failed to close '/proc/diskstats': $!";
