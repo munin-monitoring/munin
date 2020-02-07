@@ -5,7 +5,7 @@ munin (2.0.55-1) UNRELEASED; urgency=medium
 
   [ Lars Kruse ]
   * New upstream bugfix release.
-  * Disable test of munin-node with sysvinit.
+  * Disable test of munin-node with sysvinit. Closes: #949887.
 
  -- Lars Kruse <devel@sumpfralle.de>  Wed, 05 Feb 2020 21:46:57 +0100
 
