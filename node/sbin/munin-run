@@ -29,7 +29,8 @@ my $ignore_systemd_properties = 0;
 #   --wait: 232 or later
 #   --pipe: 235 or later
 #   --collect: 236 or later
-my $required_systemd_version = 236;
+
+my $REQUIRED_SYSTEMD_VERSION = 236;
 
 # See "man systemd.exec" for the list of all systemd properties.
 # The following properties belong to the relevant sections "Capabilities",
@@ -135,8 +136,8 @@ sub main
         return execute_plugin($plugin, $arg);
     } else {
         my $systemd_version = get_systemd_version();
-        if ((not defined $systemd_version) or ($systemd_version < $required_systemd_version)) {
-            print STDERR "# Skipping systemd properties simulation due to required systemd version ($required_systemd_version)\n" if $config->{DEBUG};
+        if ((not defined $systemd_version) or ($systemd_version < $REQUIRED_SYSTEMD_VERSION)) {
+            print STDERR "# Skipping systemd properties simulation due to required systemd version ($REQUIRED_SYSTEMD_VERSION)\n" if $config->{DEBUG};
             return execute_plugin($plugin, $arg);
         } else {
             my @munin_node_hardening_flags;
