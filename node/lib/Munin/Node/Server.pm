@@ -10,6 +10,7 @@ use warnings;
 use English qw(-no_match_vars);
 
 use Munin::Node::Config;
+use Munin::Common::Daemon;
 use Munin::Common::Defaults;
 use Munin::Common::Timeout;
 use Munin::Common::TLSServer;
@@ -52,6 +53,8 @@ sub pre_loop_hook {
 
     $services->prepare_plugin_environment(keys %services);
     _add_services_to_nodes(keys %services);
+    # the port is bound, the service is prepared: we can start accepting requests
+    Munin::Common::Daemon::emit_sd_notify_message();
     return $self->SUPER::pre_loop_hook();
 }
 
