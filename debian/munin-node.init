@@ -12,8 +12,8 @@
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/munin-node
-PIDFILE=/run/munin/munin-node.pid
-CONFFILE=/etc/munin/munin-node.conf
+PIDFILE=$(sed -nE 's/^\s*pid_file\s+//p' /etc/munin/munin-node.conf)
+PIDFILE=${PIDFILE:-/run/munin/munin-node.pid}
 DAEMON_ARGS=
 
 . /lib/lsb/init-functions
@@ -22,21 +22,7 @@ DAEMON_ARGS=
 if [ ! -x $DAEMON ]; then
 	log_failure_msg "Munin-Node appears to be uninstalled."
 	exit 5
-elif [ ! -e $CONFFILE ]; then
-	log_failure_msg "Munin-Node appears to be unconfigured."
-	exit 6
 fi
-
-# Figure out if the pid file is in a non-standard location
-while read line; do
-	line=${line%%\#*} # get rid of comments
-	set -f
-	line=$(echo $line) # get rid of extraneous blanks
-	set +f
-	if [ "$line" != "${line#pid_file }" ]; then
-		PIDFILE=${line#pid_file }
-	fi
-done < $CONFFILE
 
 verify_superuser() {
 	action=$1
