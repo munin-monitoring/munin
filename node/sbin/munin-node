@@ -41,6 +41,7 @@ my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $DEBUG    = 0;
 my $PIDEBUG  = 0;
 my $paranoia = 0;
+my $foreground = 0;
 
 sub main
 {
@@ -81,10 +82,21 @@ sub main
         paranoia => $paranoia,
     });
 
-    Munin::Node::Server->run(
+    my %server_params = (
         syslog_ident => 'munin-node',
         conf_file    => $conffile,
     );
+    # Optionally force foreground mode (overriding settings in the configuration file).
+    # This is necessary for using the optional "sd_notify" feature:
+    #     * Net::Server::Fork goes into background before the socket is ready.  Thus we need to
+    #       prevent it from daemonizing.
+    #     * start-stop-daemon supports '--notify-await' only combined with '--background'. Thus
+    #       munin-node may not daemonize on its own.
+    if ($foreground) {
+        $server_params{background} = 0;
+        $server_params{setsid} = 0;
+    }
+    Munin::Node::Server->run(%server_params);
 
     # Untaint $0 after Munin::Node::Server has had a chance of getting
     # the original value
@@ -103,6 +115,7 @@ sub parse_args
         "config=s"     => \$conffile,
         "debug!"       => \$DEBUG,
         "pidebug!"     => \$PIDEBUG,
+        "foreground!"  => \$foreground,
         "paranoia!"    => \$paranoia,
         "version"      => \&print_version_and_exit,
         "help"         => \&print_usage_and_exit,
