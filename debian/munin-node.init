@@ -24,13 +24,19 @@ if [ ! -x $DAEMON ]; then
 	exit 5
 fi
 
+
+do_start_prepare() {
+    mkdir -p /run/munin /var/log/munin
+    chown munin:root /run/munin
+    chown munin:adm /var/log/munin
+    chmod 0755 /run/munin
+    chmod 0755 /var/log/munin
+}
+
+
 start() {
 	log_daemon_msg "Starting Munin-Node"
-	mkdir -p /run/munin /var/log/munin
-	chown munin:root /run/munin
-	chown munin:adm /var/log/munin
-	chmod 0755 /run/munin
-	chmod 0755 /var/log/munin
+	do_start_prepare
 	if pidofproc -p $PIDFILE $DAEMON >/dev/null; then
 		log_progress_msg "started beforehand"
 		log_end_msg 0
