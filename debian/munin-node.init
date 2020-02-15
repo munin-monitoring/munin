@@ -24,14 +24,6 @@ if [ ! -x $DAEMON ]; then
 	exit 5
 fi
 
-verify_superuser() {
-	action=$1
-	[ $EUID -eq 0 ] && return
-	log_failure_msg "Superuser privileges required for the" \
-			"\"$action\" action."
-	exit 4
-}
-
 start() {
 	log_daemon_msg "Starting Munin-Node"
 	mkdir -p /run/munin /var/log/munin
@@ -103,23 +95,19 @@ fi
 
 case "$1" in
   start)
-  	verify_superuser $1
   	start
 	exit $?
 	;;
   stop)
-  	verify_superuser $1
   	stop
 	exit $?
 	;;
   restart|force-reload)
-  	verify_superuser $1
   	stop || exit $?
 	start
 	exit $?
 	;;
   try-restart)
-  	verify_superuser $1
 	pidofproc -p $PIDFILE $DAEMON >/dev/null
 	if [ $? -eq 0 ]; then
 		stop || exit $?

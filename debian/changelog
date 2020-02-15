@@ -3,6 +3,7 @@ munin (2.0.57-1) UNRELEASED; urgency=medium
   * New upstream release, 2.0.57, fixing the following issue:
     - munin-run: ignore DropInPaths property (Closes: #951095)
   * munin-node sysvinit: simplify detection of "pid_file" location
+  * munin-node sysvinit: remove check for root user
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 09 Mar 2020 03:28:34 +0100
 
