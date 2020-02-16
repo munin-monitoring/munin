@@ -5,7 +5,7 @@ Wants=munin-node.service
 After=munin-node.service
 
 [Service]
-Type=simple
+Type=notify
 Restart=always
 User=munin-async
 ExecStart=/usr/share/munin/munin-asyncd

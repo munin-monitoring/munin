@@ -7,6 +7,8 @@ munin (2.0.57-1) UNRELEASED; urgency=medium
   * munin-node sysvinit: separate code for start preparation
   * sysvinit for munin/munin-async/munin-node: use "init-d-system"
     instead of "init-functions"
+  * sysvinit/systemd for munin-async/munin-node: wait for "sd_notify"
+    signal
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 09 Mar 2020 03:28:34 +0100
 

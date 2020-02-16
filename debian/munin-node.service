@@ -5,9 +5,9 @@ After=network-online.target
 
 [Service]
 EnvironmentFile=-/etc/default/munin-node
-Type=forking
+Type=notify
 Restart=always
-ExecStart=/usr/sbin/munin-node $DAEMON_ARGS
+ExecStart=/usr/sbin/munin-node --foreground $DAEMON_ARGS
 PIDFile=/run/munin/munin-node.pid
 # Plugins like "smart_" require access to devices
 PrivateDevices=false

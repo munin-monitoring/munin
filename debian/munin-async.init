@@ -15,7 +15,7 @@ DAEMON=/usr/share/munin/munin-asyncd
 PIDFILE=/run/munin/munin-asyncd.pid
 DAEMON_USER="munin-async"
 DAEMON_ARGS=""
-START_ARGS="--chuid $DAEMON_USER --make-pidfile --pidfile $PIDFILE --background"
+START_ARGS="--chuid $DAEMON_USER --make-pidfile --pidfile $PIDFILE --background --notify-await --notify-timeout 15"
 STOP_ARGS="--user $DAEMON_USER"
 
 

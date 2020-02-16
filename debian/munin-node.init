@@ -14,7 +14,10 @@ DESC="Munin-Node service"
 DAEMON=/usr/sbin/munin-node
 PIDFILE=$(sed -nE 's/^\s*pid_file\s+//p' /etc/munin/munin-node.conf)
 PIDFILE=${PIDFILE:-/run/munin/munin-node.pid}
-DAEMON_ARGS=
+# arguments for "start-stop-daemon"
+START_ARGS="--background --notify-await --notify-timeout 15"
+# arguments for "munin-node"
+DAEMON_ARGS="--foreground"
 
 
 do_start_prepare() {
