@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/usr/bin/env /lib/init/init-d-script
 
 ### BEGIN INIT INFO
 # Provides:          munin
@@ -10,28 +10,21 @@
 # Description:       Create munin master directories on boot. Munin itself runs as CGI or via cron and does not run a separate daemon.
 ### END INIT INFO
 
+DESC="Preparing munin directories"
+DAEMON=/usr/share/munin/munin-update
+NAME=munin
 
-# systemd creates the necessary directories (see /usr/lib/tmpfiles.d/munin-common.conf)
-test -d /run/systemd/system && exit 0
+
+# keep in sync with debian/munin-common.tmpfile (systemd-only)
+do_start_prepare() {
+    mkdir -p /run/munin /var/cache/munin/www
+    chown munin /run/munin
+    chown munin. /var/cache/munin/www
+    chmod 755 /run/munin
+    chmod 755 /var/cache/munin/www
+}
 
 
-. /lib/lsb/init-functions
-
-case "$1" in
-  start|restart|force-reload)
-	# Create various directories
-	# keep in sync with debian/munin-common.tmpfile (systemd-only)
-	mkdir -p /run/munin && chown munin /run/munin && chmod 755 /run/munin
-	mkdir -p /var/cache/munin/www && chown munin. /var/cache/munin/www && chmod 755 /var/cache/munin/www
-	exit $?
-	;;
-  stop)
-	# Nothing to do
-	exit $?
-	;;
-  *)
-	echo "Usage: /etc/init.d/munin" \
-			"{start|stop}"
-	exit 2
-	;;
-esac
+# there is no process to be started or stopped ("munin-update" is executed via cron)
+do_stop_cmd_override() true
+do_start_cmd_override() true
