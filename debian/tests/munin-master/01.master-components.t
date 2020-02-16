@@ -9,6 +9,23 @@ test_description="munin-master components"
 MUNIN_TEST_CGI_ENABLED=${MUNIN_TEST_CGI_ENABLED:-0}
 
 
+# some preparations
+(
+    set +e
+    # Disable cron: we need to avoid parallel execution of cron-based tasks interfering with our
+    # manually triggered executions.
+    service cron stop
+    systemctl stop cron.target
+    # Kill any possible "munin-update" process (triggered by cron a few moments before).
+    pkill munin-update
+    # Clean up any possibly created results of cron executions happening between system setup and
+    # the start of the tests.
+    find /var/cache/munin/www/ -type f -delete
+    find /var/cache/munin/www/ -mindepth 1 -type d -empty -delete
+    true
+) >/dev/null 2>&1
+
+
 test_expect_success "munin-update" '
   setuidgid munin /usr/share/munin/munin-update
 '

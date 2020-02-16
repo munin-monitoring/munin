@@ -12,6 +12,7 @@
 #   * munin-node: provide data to be retrieved by the munin master
 #   * munin-plugins-core: required for requesting plugin graphs via munin-httpd
 #   * netcat-openbsd: test local tcp connection
+#   * psmisc: "killall" for cleanup before master tests
 #   * sharness: test framework
 #
 # Additional specified "restrictions" for SysV init tests:
@@ -25,12 +26,12 @@
 
 # systemd
 Tests: master-cron, master-cgi
-Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness, systemd-sysv
+Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, psmisc, sharness, systemd-sysv
 Restrictions: needs-root, breaks-testbed, isolation-container
 
 # sysvinit-core
 Tests: master-cron, master-cgi
-Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, sharness, sysvinit-core, cron
+Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, psmisc, sharness, sysvinit-core, cron
 Restrictions: needs-root, breaks-testbed, isolation-container, needs-reboot, allow-stderr, skip-not-installable
 
 
