@@ -30,6 +30,7 @@ use Pod::Usage;
 
 use List::Util qw(min max);
 
+use Munin::Common::Daemon;
 use Munin::Node::SpoolWriter;
 
 my $host = "localhost:4949";
@@ -151,6 +152,8 @@ $SIG{TERM} = 'termhandler';
 # ... but each plugin in its own process to avoid delay-leaking
 my %last_updated;
 my $last_cleanup=0;
+# all preparations are finished: we can notify our caller, that we are ready
+Munin::Common::Daemon::emit_sd_notify_message();
 MAIN: while($keepgoing) {
 	my $when = time;
 
