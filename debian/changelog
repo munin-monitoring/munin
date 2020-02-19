@@ -9,6 +9,8 @@ munin (2.0.57-1) UNRELEASED; urgency=medium
     instead of "init-functions"
   * sysvinit/systemd for munin-async/munin-node: wait for "sd_notify"
     signal
+  * munin sysvinit: reduce dependencies and suggest to start before cron
+    (otherwise cron could execute "munin-update" before /run/munin/ is ready)
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 09 Mar 2020 03:28:34 +0100
 
