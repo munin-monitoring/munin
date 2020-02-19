@@ -148,7 +148,7 @@ fi
 for c in /sys/devices/system/cpu/cpu[0-9]*; do
     N=${c##*/cpu}
     if [ -r "$ACPI_CPUFREQ_INDICATOR_FILENAME" ]; then
-        value=$(awk '{ cycles += $1 * $2 } END { print(cycles / 100); }' "$c/cpufreq/stats/time_in_state")
+        value=$(awk '{ cycles += $1 * $2 } END { printf("%.0f", cycles / 100); }' "$c/cpufreq/stats/time_in_state")
     elif [ -r "$INTEL_PSTATE_INDICATOR_FILENAME" ]; then
         value=$(cat "$c/cpufreq/scaling_cur_freq")
     else
