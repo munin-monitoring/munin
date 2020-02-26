@@ -39,6 +39,7 @@ env:
 
 before_install:
   - cpanm -n Devel::Cover::Report::Coveralls
+  - cpanm -n Alien::RRDtool
   - cpanm --quiet --installdeps --notest .
 
 install:
