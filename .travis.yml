@@ -13,8 +13,7 @@ addons:
   apt:
     packages:
       - codespell
-      - librrd4
-      - librrd-dev
+      - librrds-perl
       - rrdtool
       - devscripts
       - libpango1.0-dev
