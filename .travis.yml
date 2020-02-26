@@ -1,8 +1,8 @@
 ---
-dist: bionic
+dist: xenial
 language: perl
-### perl:
-###   - "5.20"
+perl:
+  - "5.22"
 branches:
   only:
     - stable-2.0
