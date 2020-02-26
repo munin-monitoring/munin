@@ -11,6 +11,8 @@ munin (2.0.57-1) UNRELEASED; urgency=medium
     signal
   * munin sysvinit: reduce dependencies and suggest to start before cron
     (otherwise cron could execute "munin-update" before /run/munin/ is ready)
+  * d/tests: use unique names for tests with systemd and sysvinit.
+    (thanks, Michael Biebl, Closes: #949889)
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 09 Mar 2020 03:28:34 +0100
 
