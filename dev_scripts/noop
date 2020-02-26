@@ -1,0 +1,7 @@
+#! /bin/sh
+
+# Sleep forever
+while true
+do
+	sleep 100
+done
