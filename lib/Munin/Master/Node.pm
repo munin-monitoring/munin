@@ -15,7 +15,7 @@ use Data::Dumper;
 use Munin::Common::Logger;
 
 use Time::HiRes qw( gettimeofday tv_interval );
-use IO::Socket::INET6;
+use IO::Socket::IP;
 
 use English qw(-no_match_vars);
 my $config = Munin::Master::Config->instance()->{config};
@@ -82,7 +82,7 @@ sub _do_connect {
     LOGCROAK("[FATAL] '$url' is not a valid address!") unless $uri->scheme;
 
     if ($uri->scheme eq "munin") {
-        $self->{reader} = $self->{writer} = IO::Socket::INET6->new(
+        $self->{reader} = $self->{writer} = IO::Socket::IP->new(
 		PeerAddr  => $uri->host,
 		PeerPort  => $self->{port} || $uri->{port},
 		LocalAddr => $config->{local_address},
