@@ -45,6 +45,7 @@ RUN sh -x deps
 WORKDIR /
 
 RUN apt-get install -y eatmydata
+RUN apt-get install -y tcc libc6-dev
 
 COPY . /munin
 COPY RELEASE.docker /munin/RELEASE
