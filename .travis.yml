@@ -13,6 +13,9 @@ addons:
   apt:
     packages:
       - codespell
+      - librrd4
+      - librrd-dev
+      - rrdtool
       - devscripts
       - libpango1.0-dev
       - python3-flake8
