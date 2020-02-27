@@ -78,11 +78,11 @@ env:
   - TEST_MEDIUM=1
 
 before_install:
-  - cd /tmp && wget https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.13.tar.gz
-  - cd /tmp && tar zxvf Devel-Cover-Report-Coveralls-0.13.tar.gz
-  - cd /tmp && dh-make-perl make --build Devel-Cover-Report-Coveralls-0.13
-  - cd /tmp && sudo dpkg -i libdevel-cover-report-coveralls-perl*.deb
-  - cd /tmp && sudo apt-get install -yf
+  - ( cd /tmp && wget https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.13.tar.gz )
+  - ( cd /tmp && tar zxvf Devel-Cover-Report-Coveralls-0.13.tar.gz )
+  - ( cd /tmp && dh-make-perl make --build Devel-Cover-Report-Coveralls-0.13 )
+  - ( cd /tmp && sudo dpkg -i libdevel-cover-report-coveralls-perl*.deb )
+  - ( cd /tmp && sudo apt-get install -yf )
 
 install:
   - perl Build.PL
