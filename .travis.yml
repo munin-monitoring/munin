@@ -78,6 +78,7 @@ env:
   - TEST_MEDIUM=1
 
 before_install:
+  - yes "" | cpan
   - cpan2deb Devel::Cover::Report::Coveralls
   - dpkg -i libdevel-cover-report-coveralls-perl*.deb
   - apt-get install -yf
