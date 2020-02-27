@@ -1,8 +1,6 @@
 ---
 dist: xenial
-language: perl
-### perl:
-###   - "5.20"
+language: minimal
 branches:
   only:
     - stable-2.0
@@ -54,6 +52,13 @@ addons:
       - libxml-parser-perl
       - python3-flake8
       - shellcheck
+      - dh-make-perl
+      - libdevel-cover-perl
+      - libhttp-tiny-perl
+      - libio-socket-ssl-perl
+      - libjson-pp-perl
+      - libyaml-perl
+      - libmodule-build-tiny-perl
 notifications:
   email: false
   irc:
@@ -70,10 +75,12 @@ matrix:
 
 env:
   # specify test level and announce cpanm's installation directory
-  - TEST_MEDIUM=1 PERLLIB=/home/travis/perl5/lib/perl5
+  - TEST_MEDIUM=1
 
 before_install:
-  - cpanm -n Devel::Cover::Report::Coveralls
+  - cpan2deb Devel::Cover::Report::Coveralls
+  - dpkg -i libdevel-cover-report-coveralls-perl*.deb
+  - apt-get install -yf
 
 install:
   - perl Build.PL
