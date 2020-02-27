@@ -81,8 +81,8 @@ before_install:
   - wget https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.13.tar.gz
   - tar zxvf Devel-Cover-Report-Coveralls-0.13.tar.gz
   - dh-make-perl make --build Devel-Cover-Report-Coveralls-0.13
-  - dpkg -i libdevel-cover-report-coveralls-perl*.deb
-  - apt-get install -yf
+  - sudo dpkg -i libdevel-cover-report-coveralls-perl*.deb
+  - sudo apt-get install -yf
 
 install:
   - perl Build.PL
