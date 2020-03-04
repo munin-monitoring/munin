@@ -168,7 +168,10 @@ sub service
 		chomp($line);
 		debug("[$$] client of $hostname asked : $line");
 		if ($line =~ m/^list$/ || $line =~ m/^list /) {
-			print $client join(" ", keys(%services));
+			for (my $i = 0; $i < $nb_plugins; $i ++) {
+				my $service = get_service($i);
+				print $client "$service ";
+			}
 			print $client "\n";
 		} elsif ($line =~ m/^cap (\w+)/) {
 			my @caps = "multigraph";
@@ -189,11 +192,11 @@ sub service
 			}
 			print $client "\n";
 
-			my $graph_data_size;
-			$graph_data_size = "debug" if $plugin_number % 5 == 0;
-			$graph_data_size = "normal" if $plugin_number % 5 == 1;
-			$graph_data_size = "custom 10,10 5,10 10" if $plugin_number % 5 == 3;
-			$graph_data_size = "custom 10,10 for 5, 5m for 1d" if $plugin_number % 5 == 4;
+			my $graph_data_size = "debug";
+			$graph_data_size = "normal" if $plugin_number == 0;
+			$graph_data_size = "custom 10,10 5,10 10" if $plugin_number == 1;
+			$graph_data_size = "custom 10,10 for 5, 5m for 1d" if $plugin_number == 2;
+			$graph_data_size = "huge" if $plugin_number == 3;
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				my $ds = get_ds($plugin_number, $i);
 				my $ds_info = get_ds_info($plugin_number, $i);
