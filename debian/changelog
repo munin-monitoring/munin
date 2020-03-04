@@ -13,6 +13,7 @@ munin (2.0.57-1) UNRELEASED; urgency=medium
     (otherwise cron could execute "munin-update" before /run/munin/ is ready)
   * d/tests: use unique names for tests with systemd and sysvinit.
     (thanks, Michael Biebl, Closes: #949889)
+  * d/tests: enable test "node-sysv" again
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 09 Mar 2020 03:28:34 +0100
 
