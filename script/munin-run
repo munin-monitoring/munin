@@ -34,7 +34,6 @@ use Munin::Node::Service;
 
 use English qw(-no_match_vars);
 
-my $services;
 my $servicedir;
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $DEBUG    = 0;
@@ -53,10 +52,9 @@ sub main
     # @ARGV, the latter takes precedence.
     $paranoia = $config->{paranoia};
 
-    my $config = Munin::Node::Config->instance();
     $config->parse_config_from_file($conffile);
 
-    $services = Munin::Node::Service->new(
+    my $services = Munin::Node::Service->new(
         servicedir => $servicedir,
         defuser    => $config->{defuser},
         defgroup   => $config->{defgroup},
@@ -64,7 +62,7 @@ sub main
     );
 
     $config->reinitialize({
-        %$config,
+        %{$config},    ## no critic qw(ValuesAndExpressions::ProhibitCommaSeparatedStatements)
         paranoia   => $paranoia,
     });
 
@@ -109,21 +107,24 @@ sub parse_args
     print_usage_and_exit() unless $ARGV[0];
 
     # Detaint the plugin name
-    ($plugin) = ($ARGV[0] =~ m/^([-\w.:]+)$/) or die "# ERROR: Invalid plugin name '$ARGV[0].\n";
+    ($plugin) = ($ARGV[0] =~ m/^([-\w.:]+)$/x) or die "# ERROR: Invalid plugin name '$ARGV[0]'.\n";
     if ($ARGV[1]) {
-        ($arg) = ($ARGV[1] =~ m/^(\w+)$/)
+        ($arg) = ($ARGV[1] =~ m/^(\w+)$/x)
             or die "# ERROR: Invalid characters in argument '$ARGV[1]'.\n";
+        die "# ERROR: Invalid plugin argument '$ARGV[1]'.\n"
+          unless grep(/^$ARGV[1]$/x, qw(autoconf config suggest));
     }
 
-    # Detaint service directory.  FIXME: do more strict detainting?
+    # Detaint service directory.
     if ($servicedir) {
-        $servicedir =~ /(.*)/;
-        $servicedir = $1;
+        die "# ERROR: Invalid servicedir supplied.\n" unless -d $servicedir;
+        $servicedir =~ /(.*)/x;
+        $servicedir = $1;    ## no critic qw(RegularExpressions::ProhibitCaptureWithoutTest)
     }
 
     # Update the config
     $config->reinitialize({
-        %$config,
+        %{$config},      ## no critic qw(ValuesAndExpressions::ProhibitCommaSeparatedStatements)
 
         sconfdir   => $sconfdir,
         conffile   => $conffile,
