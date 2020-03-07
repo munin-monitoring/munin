@@ -4221,7 +4221,7 @@ Detailed Changelog
 ------------------
 
 Lars Kruse (2):
-      munin-run: skip exection via "systemd-run" for systemd before v236
+      munin-run: skip execution via "systemd-run" for systemd before v236
       Disable "dashed" threshold lines for rrdtool version before 1.5.3
 
 Steve Schnepp (1):
