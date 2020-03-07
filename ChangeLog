@@ -4186,6 +4186,26 @@ tsaavik (1):
       dynazoom: added logo and backlink
 
 
+munin-2.0.54, 2020-01-20
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (2):
+      munin-run: skip exection via "systemd-run" for systemd before v236
+      Disable "dashed" threshold lines for rrdtool version before 1.5.3
+
+Steve Schnepp (1):
+      munin-run: Use directly systemd-run
+
+
 munin-2.0.53, 2020-01-15
 
 -------
