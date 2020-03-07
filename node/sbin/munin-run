@@ -10,6 +10,7 @@ use warnings;
 # Trust PERL5LIB from environment
 use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 
+use English qw(-no_match_vars);
 use File::Temp;
 use Getopt::Long;
 
@@ -168,7 +169,7 @@ sub main
 sub get_systemd_hardening_flags {
     # retrieve all active properties except for soft (runtime) limits
     my @munin_service_properties = grep !/^Limit\w+Soft=/, `systemctl show munin-node 2>/dev/null`;
-    die "no systemd enabled or failed to retrieve unit properties" unless ($? >> 8 == 0);
+    die "no systemd enabled or failed to retrieve unit properties" unless ($CHILD_ERROR >> 8 == 0);
     my $flag_name_regex = '^((?:' . join("|", @SYSTEMD_PROPERTY_IMPORT_PATTERNS) . ')=.*)$';
     my @flag_list;
     foreach my $property_definition (@munin_service_properties) {
