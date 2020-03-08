@@ -14,4 +14,13 @@ if dpkg -l sysvinit-core | grep -q ^ii; then
             true
         fi
     fi
+
+    # wait for the boot process being finished (all init scripts need to be executed)
+    # This should be done by autopkgtest in the future:
+    #     https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=953655
+    timeout=60
+    while ps -ef | grep -q "/etc/init\.d/rc" && [ "$timeout" -gt 0 ]; do
+        sleep 1
+        timeout=$((timeout - 1))
+    done
 fi
