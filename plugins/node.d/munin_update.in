@@ -83,7 +83,7 @@ MUNIN_UPDATE_LOCATION=${MUNIN_UPDATE_LOCATION:-$MUNIN_LIBDIR/munin-update}
 
 if [ "$1" = "autoconf" ]; then
 	if [ -e "$MUNIN_UPDATE_LOCATION" ] ; then
-	    echo "yes";
+	    echo "yes"
 	else
 	    echo "no ($MUNIN_UPDATE_LOCATION is not present so this is not a munin-master)"
 	fi

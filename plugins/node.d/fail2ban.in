@@ -66,7 +66,7 @@ config_dir=${config_dir:-/etc/fail2ban}
 
 # Run fail2ban
 run_fail2ban() {
-    "$client" -c "$config_dir" "$@";
+    "$client" -c "$config_dir" "$@"
 }
 
 # List jails, one on each line

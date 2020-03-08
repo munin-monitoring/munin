@@ -94,7 +94,7 @@ if [ "$1" = "config" ]; then
     print_warning trans
     print_critical trans
     exit 0
-fi;
+fi
 
 # Escape dots in the interface name (eg. vlans) before using it as a regex
 if [ -r "/sys/class/net/$INTERFACE/statistics/rx_bytes" ]; then

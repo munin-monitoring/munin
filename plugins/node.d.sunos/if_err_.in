@@ -86,7 +86,7 @@ if [ "$1" = "config" ]; then
 	print_warning collisions
 	print_critical collisions
 	exit 0
-fi;
+fi
 
 kstat -p -m '/^(?!unix)/' -n $INTERFACE -s '/^([io]errors|collisions)$/' | awk -F: '
 {
