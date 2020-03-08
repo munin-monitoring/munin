@@ -34,7 +34,7 @@ RUN apt-get install -y procps libdbd-pg-perl libdbd-sqlite3-perl libdbi-perl lib
 # Slimming the install
 #RUN apt-get clean autoclean && apt-get autoremove --yes && rm -rf /var/lib/{apt,dpkg,cache,log}/
 
-RUN useradd munin -G sudo -p '$6$F9v4FpTZ$FkyF0eM21Ua2OPe.7ADETMSqt/H9/qlAxAInYw7OXilqUXwh3VWWdxgz45SmUgc7uynCsYfP7yGEclp.JJXug0'
+RUN useradd munin -G sudo && echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/010_sudo-nopasswd
 
 RUN mkdir -p /var/run/munin /var/lib/munin && chown munin /var/run/munin /var/lib/munin
 
