@@ -29,7 +29,7 @@ RUN apt-get install -y strace ltrace
 RUN apt-get install -y procps
 RUN apt-get install -y procps
 
-RUN apt-get install -y procps libdbd-pg-perl libdbd-sqlite3-perl libdbi-perl libdevel-cover-perl libdevel-nytprof-perl libfile-copy-recursive-perl libfile-readbackwards-perl libfile-slurp-perl libhtml-template-perl libhtml-template-pro-perl libhttp-server-simple-perl libio-socket-inet6-perl libio-stringy-perl liblist-moreutils-perl liblog-dispatch-perl libmodule-build-perl libnet-dns-perl libnet-ip-perl libnet-server-perl libnet-snmp-perl libnet-ssleay-perl libparallel-forkmanager-perl libparams-validate-perl librrds-perl libtest-class-perl libtest-deep-perl libtest-differences-perl libtest-longstring-perl libtest-mockmodule-perl libtest-mockobject-perl libtest-perl-critic-perl liburi-perl libwww-perl libxml-dumper-perl libxml-libxml-perl libxml-parser-perl python3-sphinx rrdtool rrdcached sqlite3 wget
+RUN apt-get install -y procps libdbd-pg-perl libdbd-sqlite3-perl libdbi-perl libdevel-cover-perl libdevel-nytprof-perl libfile-copy-recursive-perl libfile-readbackwards-perl libfile-slurp-perl libhtml-template-perl libhtml-template-pro-perl libhttp-server-simple-perl libio-socket-ip-perl libio-stringy-perl liblist-moreutils-perl liblog-dispatch-perl libmodule-build-perl libnet-dns-perl libnet-ip-perl libnet-server-perl libnet-snmp-perl libnet-ssleay-perl libparallel-forkmanager-perl libparams-validate-perl librrds-perl libtest-class-perl libtest-deep-perl libtest-differences-perl libtest-longstring-perl libtest-mockmodule-perl libtest-mockobject-perl libtest-perl-critic-perl liburi-perl libwww-perl libxml-dumper-perl libxml-libxml-perl libxml-parser-perl python3-sphinx rrdtool rrdcached sqlite3 wget
 
 # Slimming the install
 #RUN apt-get clean autoclean && apt-get autoremove --yes && rm -rf /var/lib/{apt,dpkg,cache,log}/
@@ -45,6 +45,8 @@ RUN sh -x deps
 WORKDIR /
 
 RUN apt-get install -y eatmydata
+# for noop
+RUN apt-get install -y tcc libc6-dev
 
 COPY . /munin
 COPY RELEASE.docker /munin/RELEASE
