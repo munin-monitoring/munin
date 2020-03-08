@@ -1,0 +1,6 @@
+#! /bin/sh
+
+# Sleep forever
+cd "$(mktmp -d)"
+echo 'int main(){ pause(); }' > pause.c; make pause
+exec ./pause
