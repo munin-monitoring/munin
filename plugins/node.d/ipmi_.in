@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-ipmi_ - Plugin to monitor temperature or fan speed using IPMI
+ipmi_ - Plugin to monitor temperature, fan speed, watts or volts using IPMI
 
 =head1 CONFIGURATION
 
@@ -15,8 +15,9 @@ This plugin does not use environment variables
 
 =head2 WILDCARD PLUGIN
 
-This plugin should be linked as ipmi_temp or ipmi_fans, and will show
-either temperatures or fan speeds based on its link name.
+This plugin should be linked as ipmi_temp, ipmi_fans, ipmi_power or ipmi_volts,
+and will show either temperatures, fan speeds, watts or volts based on its link
+name.
 
 =head1 NOTE
 
@@ -57,7 +58,8 @@ case $1 in
     suggest) echo fans
              echo temp
              echo power
-	     exit 0;;
+             echo volts
+             exit 0;;
     config)  CONFIG=config;;
 esac
 
@@ -65,7 +67,8 @@ case $0 in
     *_temp) MEASURE=temp;;
     *_fans) MEASURE=fans;;
     *_power) MEASURE=power;;
-    *) echo "Please invoke as ipmi_temp, ipmi_fans or ipmi_power" >&2
+    *_volts) MEASURE=volts;;
+    *) echo "Please invoke as ipmi_temp, ipmi_fans, ipmi_power or ipmi_volts" >&2
        exit 1;;
 esac
 
@@ -78,9 +81,11 @@ BEGIN {
     FANS = "";
     TEMPS = "";
     POWER = "";
+    VOLTS = "";
     CFANS = "graph_title Fan speeds based on IPMI\ngraph_vlabel RPM or %\ngraph_category Sensors\n";
     CTEMPS = "graph_title Machine temperature based on IPMI\ngraph_vlabel Degrees celcius\ngraph_category Sensors\n";
     CPOWER = "graph_title Power usage based on IPMI\ngraph_vlabel W\ngraph_category Sensors\n";
+    CVOLTS = "graph_title Volts based on IPMI\ngraph_vlabel V\ngraph_category Sensors\n";
 }
 
 # Remove extraneous spaces to make output prettyer
@@ -156,6 +161,21 @@ BEGIN {
     CPOWER = sprintf("%s%s.label %s\n",CPOWER,NAME,THING);
 }
 
+/Volts/ {
+    NAME=THING=$1
+    gsub(/[^A-Za-z0-9]/,"",NAME);
+    VOLTS_SENSOR=$2;
+
+    # Find unique name
+    while (NAMES[NAME] >= 1) {
+        NAME=sprintf("%si",NAME);
+    }
+    NAMES[NAME]=1;
+
+    VOLTS = sprintf("%s%s.value %s\n",VOLTS,NAME,VOLTS_SENSOR);
+    CVOLTS = sprintf("%s%s.label %s\n",CVOLTS,NAME,THING);
+}
+
 END {
     if (ENVIRON["MEASURE"] == "temp") {
         VALUE=TEMPS;
@@ -163,6 +183,9 @@ END {
     } else if (ENVIRON["MEASURE"] == "power") {
         VALUE=POWER;
         CONFIG=CPOWER;
+    } else if (ENVIRON["MEASURE"] == "volts") {
+        VALUE=VOLTS;
+        CONFIG=CVOLTS;
     } else {
         VALUE=FANS;
         CONFIG=CFANS;
