@@ -330,12 +330,14 @@ sub populate_stats
         foreach my $line(`fgrep -h '($procname[$i])' /proc/[0-9]*/stat`) {
             my ($pid) = $line =~ /^(\d+)/;
 
-            my $cmdline = slurp("/proc/$pid/cmdline") or next STATLINE;
-            $cmdline =~ tr{\0}{ };
-
             my $cmduid = (lstat("/proc/$pid"))[4];
 
-            next STATLINE if $procargs[$i] and $cmdline !~ /$procargs[$i]/;
+            if ( $procargs[$i] ) {
+              my $cmdline = slurp("/proc/$pid/cmdline") or next STATLINE;
+              $cmdline =~ tr{\0}{ };
+
+              next STATLINE if $procargs[$i] and $cmdline !~ /$procargs[$i]/;
+            }
             next STATLINE if defined $procuid and $cmduid != $procuid;
 
             if ($line =~ /^\d+ \(.*\) . \-?\d+ \-?\d+ \-?\d+ \-?\d+ \-?\d+ \d+ \d+ \d+ \d+ \d+ (\d+) (\d+) \d+ \d+ \-?\d+ \-?\d+ (\d+) \-?\d+ \d+ (\d+) (\d+)/) {
