@@ -1,4 +1,46 @@
 -*- text -*-
+
+munin-2.0.57, 2020-03-09
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Moench-Tegeder (1):
+
+Bas Couwenberg (1):
+      Add support for multiple fail2ban instances.
+
+Christoph Moench-Tegeder (1):
+      extend linux diskstat plugins for kernel 5.5
+
+Kim B. Heino (2):
+      head.tmpl: remove trailing white spaces
+      head.tmpl: add missing </TMPL_IF>
+
+Lars Kruse (9):
+      munin-run: improve formatting of constant value
+      munin-run: ignore DropInPaths property
+      Fix spelling and perl style issues
+      Ignore misinterpreted codespell errors
+      Ignore the content of certificate files
+      Remove superfluous trailing semicolons from shell-based plugins
+      Implement "sd_notify" interface for munin-node
+      munin-node: allow to force "foreground" mode via commandline arguments
+      Implement "sd_notify" interface for munin-asyncd
+
+Rowan (1):
+      Fixed broken link to multicpu1sec
+
+Steve Schnepp (2):
+      2.0.56
+      travis: using system perl install
+
 munin-2.0.56, 2020-02-07
 
 -------
@@ -54,7 +96,7 @@ Detailed Changelog
 ------------------
 
 Lars Kruse (2):
-      munin-run: skip exection via "systemd-run" for systemd before v236
+      munin-run: skip execution via "systemd-run" for systemd before v236
       Disable "dashed" threshold lines for rrdtool version before 1.5.3
 
 Steve Schnepp (1):

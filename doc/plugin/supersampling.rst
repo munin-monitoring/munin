@@ -97,7 +97,7 @@ Sample implementation
 The canonical sample implementation is multicpu1sec_, a contrib plugin
 on github. It is also a so-called streaming plugin.
 
-.. _multicpu1sec: https://github.com/munin-monitoring/contrib/tree/master/plugins/system/multicpu1sec
+.. _multicpu1sec: https://github.com/munin-monitoring/contrib/blob/master/plugins/cpu/multicpu1sec
 
 Streaming plugins
 =================

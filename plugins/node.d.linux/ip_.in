@@ -181,7 +181,7 @@ if [[ "$1" == "config" ]]; then
     print_warning in
     print_critical in
     exit 0
-fi;
+fi
 
 # Escape .'s so they don't match _everything_?
 escaped_ip=${IP//./\\.}

@@ -1,10 +1,5 @@
 dist: xenial
-language: perl
-perl:
-  - "5.20"
-  - "5.18"
-  - "5.16"
-  - "5.14"
+language: minimal
 branches:
  only:
   - stable-2.0
@@ -37,6 +32,13 @@ addons:
       - libtest-mockobject-perl
       - python3-flake8
       - shellcheck
+      - dh-make-perl
+      - libdevel-cover-perl
+      - libhttp-tiny-perl
+      - libio-socket-ssl-perl
+      - libjson-pp-perl
+      - libyaml-perl
+      - libmodule-build-tiny-perl
 notifications:
   email: false
   irc:
@@ -55,7 +57,11 @@ env:
   - TEST_MEDIUM=1
 
 before_install:
-  cpanm -n Devel::Cover::Report::Coveralls
+  - ( cd /tmp && wget https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.13.tar.gz )
+  - ( cd /tmp && tar zxvf Devel-Cover-Report-Coveralls-0.13.tar.gz )
+  - ( cd /tmp && dh-make-perl make --build Devel-Cover-Report-Coveralls-0.13 )
+  - ( cd /tmp && sudo dpkg -i libdevel-cover-report-coveralls-perl*.deb )
+  - ( cd /tmp && sudo apt-get install -yf )
 
 script:
   - make

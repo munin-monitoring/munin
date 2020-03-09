@@ -10,6 +10,7 @@ use warnings;
 # Trust PERL5LIB from environment
 use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 
+use English qw(-no_match_vars);
 use File::Temp;
 use Getopt::Long;
 
@@ -29,7 +30,8 @@ my $ignore_systemd_properties = 0;
 #   --wait: 232 or later
 #   --pipe: 235 or later
 #   --collect: 236 or later
-my $required_systemd_version = 236;
+
+my $REQUIRED_SYSTEMD_VERSION = 236;
 
 # See "man systemd.exec" for the list of all systemd properties.
 # The following properties belong to the relevant sections "Capabilities",
@@ -38,6 +40,7 @@ my $required_systemd_version = 236;
 # These properties will be imported from the specification of
 # "munin-node.service" if systemd is enabled.
 # See "--ignore-systemd-properties" for details.
+# See "get_systemd_hardening_flags" for a few exceptions from the list below.
 my @SYSTEMD_PROPERTY_IMPORT_PATTERNS = qw(
     AmbientCapabilities
     AppArmorProfile
@@ -135,8 +138,8 @@ sub main
         return execute_plugin($plugin, $arg);
     } else {
         my $systemd_version = get_systemd_version();
-        if ((not defined $systemd_version) or ($systemd_version < $required_systemd_version)) {
-            print STDERR "# Skipping systemd properties simulation due to required systemd version ($required_systemd_version)\n" if $config->{DEBUG};
+        if ((not defined $systemd_version) or ($systemd_version < $REQUIRED_SYSTEMD_VERSION)) {
+            print STDERR "# Skipping systemd properties simulation due to required systemd version ($REQUIRED_SYSTEMD_VERSION)\n" if $config->{DEBUG};
             return execute_plugin($plugin, $arg);
         } else {
             my @munin_node_hardening_flags;
@@ -166,10 +169,14 @@ sub main
 sub get_systemd_hardening_flags {
     # retrieve all active properties except for soft (runtime) limits
     my @munin_service_properties = grep !/^Limit\w+Soft=/, `systemctl show munin-node 2>/dev/null`;
-    die "no systemd enabled or failed to retrieve unit properties" unless ($? >> 8 == 0);
+    die "no systemd enabled or failed to retrieve unit properties" unless ($CHILD_ERROR >> 8 == 0);
     my $flag_name_regex = '^((?:' . join("|", @SYSTEMD_PROPERTY_IMPORT_PATTERNS) . ')=.*)$';
     my @flag_list;
     foreach my $property_definition (@munin_service_properties) {
+        # The effect of files referenced in "DropInPaths" (e.g. files overriding the properties of
+        # a service) is already applied to the output of "systemd-show".
+        # Thus we can safely ignore this property (which is not accepted by "systemd-run" anyway).
+        next if ($property_definition =~ /^DropInPaths=/);
         # "systemd show" does not output the EnvironmentFile property in a readable format.
         # See https://github.com/systemd/systemd/issues/14723.
         next if ($property_definition =~ /^EnvironmentFiles?=(.*) \(ignore_errors=(yes|no)\)$/);
