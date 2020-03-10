@@ -215,7 +215,7 @@ sub service
 		} elsif ($line =~ m/^fetch (\w+)/) {
 			my $plugin_number = get_plugin_number($1);
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
-				my $value = sin( (time / 3600) * $plugin_number + $i);
+				my $value = sin( (time / 3600) * $plugin_number + $i) * (4 ** $plugin_number);
 
 				$value = int($value * 1024) if ($plugin_number + $i) % 3;
 				print $client get_ds($plugin_number, $i) . ".value $value\n";
