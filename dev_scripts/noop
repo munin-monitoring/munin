@@ -2,5 +2,13 @@
 
 # Sleep forever
 cd "$(mktmp -d)"
-echo 'int main(){ pause(); }' > pause.c; make pause
+cat > pause.c <<EOF
+#include <signal.h>
+#include <unistd.h>
+int main() {
+	signal(SIGCHLD, SIG_IGN); /* Reap zombie processes, useful if PID=1 in Docker */
+	pause();
+}
+EOF
+cc -o pause pause.c
 exec ./pause
