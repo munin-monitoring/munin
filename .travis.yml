@@ -84,6 +84,8 @@ env:
   - TEST_MEDIUM=1
 
 before_install:
+  - git config --global user.email "travis@munin-monitoring.org"
+  - git config --global user.name "Travis CI user for the Munin Project"
   - ( cd /tmp && wget https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.13.tar.gz )
   - ( cd /tmp && tar zxvf Devel-Cover-Report-Coveralls-0.13.tar.gz )
   - ( cd /tmp && dh-make-perl make --build Devel-Cover-Report-Coveralls-0.13 )
