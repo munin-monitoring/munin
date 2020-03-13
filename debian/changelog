@@ -14,7 +14,7 @@ munin (2.0.57-1) UNRELEASED; urgency=medium
   * d/tests: use unique names for tests with systemd and sysvinit.
     (thanks, Michael Biebl, Closes: #949889)
   * d/tests: enable test "node-sysv" again
-  * d/tests (sysvinit): wait for all init init scripts to be finished before
+  * d/tests (sysvinit): wait for all init scripts to be finished before
     starting any tests (Closes: #949887)
 
  -- Lars Kruse <devel@sumpfralle.de>  Mon, 09 Mar 2020 03:28:34 +0100
