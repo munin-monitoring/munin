@@ -1,5 +1,6 @@
-munin (2.0.57-1) UNRELEASED; urgency=medium
+munin (2.0.57-1) unstable; urgency=medium
 
+  [ Lars Kruse ]
   * New upstream release, 2.0.57, fixing the following issue:
     - munin-run: ignore DropInPaths property (Closes: #951095)
   * munin-node sysvinit: simplify detection of "pid_file" location
@@ -17,7 +18,7 @@ munin (2.0.57-1) UNRELEASED; urgency=medium
   * d/tests (sysvinit): wait for all init scripts to be finished before
     starting any tests (Closes: #949887)
 
- -- Lars Kruse <devel@sumpfralle.de>  Mon, 09 Mar 2020 03:28:34 +0100
+ -- Holger Levsen <holger@debian.org>  Sat, 14 Mar 2020 18:59:29 +0100
 
 munin (2.0.56-1) unstable; urgency=medium
 
