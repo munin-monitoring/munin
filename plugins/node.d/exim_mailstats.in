@@ -47,10 +47,6 @@ Need some input from an exim postmaster here.
 
 None known
 
-=head1 VERSION
-
-  $Id$
-
 =head1 AUTHOR
 
 Copyright (C) 2000-2009 Torstein Svendsen, Henrik Grindal Bakken,

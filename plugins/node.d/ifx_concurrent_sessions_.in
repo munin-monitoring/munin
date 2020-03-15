@@ -34,10 +34,6 @@ command:
 The value of INFORMIXSERVER usually equals to that of DBSERVERNAME in
 the $INFORMIXDIR/etc/onconfig file.
 
-=head1 VERSION
-
- $Id$
-
 =head1 BUGS
 
 This plugin hangs during autoconf - at least on systems without

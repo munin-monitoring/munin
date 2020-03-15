@@ -11,8 +11,6 @@
 #       warning  Percentage at which to give warning, default 92
 #       critical Percentage at which to give critical, default 98
 #
-# $Id$
-#
 # This package has added support for NetBSD, via a number of new plugin
 # scripts where specific steps needs to be taken to collect information.
 #

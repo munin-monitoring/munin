@@ -1,7 +1,5 @@
 package Munin::Node::SpoolWriter;
 
-# $Id$
-
 use strict;
 use warnings;
 

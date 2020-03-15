@@ -66,10 +66,6 @@ Each graph uses data from the proc filesystem.
  #%# family=auto
  #%# capabilities=autoconf multigraph
 
-=head1 VERSION
-
- $Id$
-
 =head1 BUGS
 
 The graphs will be misleading in an event where you have multiple

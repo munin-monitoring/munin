@@ -2,7 +2,6 @@
 #
 # Gnu make only.  Seriously.
 #
-# $Id$
 
 # Defaults/paths. Allows $(CONFIG) to be overridden by
 # make command line

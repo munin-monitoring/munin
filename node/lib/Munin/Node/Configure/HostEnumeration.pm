@@ -1,7 +1,5 @@
 package Munin::Node::Configure::HostEnumeration;
 
-# $Id$
-
 use strict;
 use warnings;
 

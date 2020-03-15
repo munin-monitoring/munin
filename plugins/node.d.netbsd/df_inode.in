@@ -7,8 +7,6 @@
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
 #
-# $Id$
-#
 # Magic markers (optional - used by munin-config and installation
 # scripts):
 #

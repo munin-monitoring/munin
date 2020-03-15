@@ -1,7 +1,5 @@
 #!@@GOODSH@@
 #
-# $Id$
-#
 # Plugin to monitor inode-usage.
 #
 # Parameters understood:

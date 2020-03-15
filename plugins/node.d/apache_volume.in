@@ -70,10 +70,6 @@ some kind of bandwidth limit on your outgoing connection.
   #%# family=auto
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 Does not support digest authentication.

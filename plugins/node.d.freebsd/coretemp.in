@@ -26,8 +26,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id$
-#
 
 # This plugin's functionality has been replaced by the dev_cpu_ plugin.
 #%# family=legacy

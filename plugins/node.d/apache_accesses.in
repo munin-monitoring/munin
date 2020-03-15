@@ -69,10 +69,6 @@ globally on the Apache server.
   #%# family=auto
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 Does not support digest authentication.

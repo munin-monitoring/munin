@@ -1291,10 +1291,6 @@ information about the C<numbers> involved in this module.
 L<http://www.westnet.com/~gsmith/content/linux-pdflush.htm> has a nice
 writeup about the pdflush daemon.
 
-=head1 VERSION
-
-  $Id$
-
 =head1 MAGIC MARKERS
 
   #%# family=auto

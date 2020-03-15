@@ -34,10 +34,6 @@ Only tested extensively on Linux.
   #%# family=auto
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 AUTHOR
 
 Copyright (C) 2004-2008.

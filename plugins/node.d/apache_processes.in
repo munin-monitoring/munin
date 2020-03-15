@@ -81,10 +81,6 @@ memory.
 
 Does not support digest authentication.
 
-=head1 VERSION
-
-  $Id$
-
 =head1 AUTHOR
 
 Unknown

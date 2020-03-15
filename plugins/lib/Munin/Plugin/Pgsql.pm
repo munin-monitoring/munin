@@ -21,8 +21,6 @@
 # perlpod.
 
 
-# $Id$
-
 =head1 NAME
 
 Munin::Plugin::Pgsql - Base module for PostgreSQL plugins for Munin

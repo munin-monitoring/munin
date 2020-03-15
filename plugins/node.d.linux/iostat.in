@@ -35,10 +35,6 @@ To be written...
  #%# family=legacy
  #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 AUTHOR
 
 This plugin has been in Munin since it was called "LRRD".  The log for

@@ -32,10 +32,6 @@ Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
 
 None known.
 
-=head1 VERSION
-
-  $Id$
-
 =head1 AUTHOR
 
 Brian De Wolf

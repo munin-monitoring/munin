@@ -34,10 +34,6 @@ other I/O, this is normal.
   #%# family=auto
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 None known

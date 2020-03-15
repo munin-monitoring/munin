@@ -25,8 +25,6 @@
 # pattern.  Please maintain it in the same way.
 
 
-# $Id$
-
 =encoding utf-8
 
 =head1 NAME

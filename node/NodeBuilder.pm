@@ -1,7 +1,5 @@
 package NodeBuilder;
 
-# $Id$
-
 use base qw(Module::Build);
 
 use warnings;
