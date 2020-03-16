@@ -546,6 +546,7 @@ test-plugins-autoconf: clean
 	sandbox_dir="$$(mktemp -d)" \
 		&& trap 'rm -rf "$${sandbox_dir}"; make clean >/dev/null 2>&1' EXIT \
 		&& DESTDIR="$${sandbox_dir}" dev_scripts/install \
+		&& for plugin in ntp_ ntp_states mysql_ varnish_; do echo "***** $$plugin *****"; ln -s "$${sandbox_dir}/opt/munin/lib/plugins/$$plugin" "$${sandbox_dir}/etc/opt/munin/plugins/"; DESTDIR="$${sandbox_dir}" dev_scripts/run munin-run "$$plugin" autoconf; done; true \
 		&& DESTDIR="$${sandbox_dir}" dev_scripts/run munin-node-configure --suggest
 
 
