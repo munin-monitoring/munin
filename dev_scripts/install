@@ -14,7 +14,21 @@ if [ $# -ne 0 ]; then
 fi
 
 make "DESTDIR=$DESTDIR" "HTMLDIR=$DESTDIR/www/munin" || exit
-fakeroot make install-common-prime install-master-prime install-node-prime install-plugins-prime install-man install-async "DESTDIR=$DESTDIR" "HTMLDIR=$DESTDIR/www/munin" || exit
+# Override users and groups with the current user - otherwise "install" fails, if these users
+# and groups are missing in the local system.
+fakeroot make \
+        install-common-prime \
+        install-master-prime \
+        install-node-prime \
+        install-plugins-prime \
+        install-man install-async \
+        "DESTDIR=$DESTDIR" \
+        "HTMLDIR=$DESTDIR/www/munin" \
+        "USER=$(id -u)" \
+        "CGIUSER=$(id -u)" \
+        "PLUGINUSER=$(id -u)" \
+        "GROUP=$(id -g)" \
+    || exit
 
 
 if [ $# -ne 0 ]; then
