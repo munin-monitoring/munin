@@ -435,8 +435,9 @@ sub read_sysfs {
 
         # before linux 4.19, /sys/block/<dev>/stat had 11 fields.
         # in 4.19, four fields for tracking DISCARDs have been added
+        # in 5.5, two fields for tracking flush requests have been added
         croak "'$stats_file' contains the wrong amount of values. Aborting"
-          if ( @elems != 11 && @elems != 15 );
+          if ( @elems != 11 && @elems != 15 && @elems != 17 );
 
         # Translate the devicename back before storing the information
         $cur_device =~ tr#!#/#;
