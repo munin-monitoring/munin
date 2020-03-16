@@ -654,53 +654,53 @@ populate_stats;
 
 foreach (@procaspect) {
     my $asp = $_;
-$i = 0;
-print "multigraph proc_$asp\n";
-foreach (@procname) {
-    if ( $asp eq 'cpu' ) {
-        print "$procuniq[$i].value " .
-              ($procstats{$procuniq[$i]}{'utime'} +
-               $procstats{$procuniq[$i]}{'stime'})."\n";
-    }
-    if ( $asp eq 'ctxt_switches' ) {
-        print "$procuniq[$i].value " .
-              ($procstats{$procuniq[$i]}{'voluntary_ctxt_switches'} +
-               $procstats{$procuniq[$i]}{'nonvoluntary_ctxt_switches'})."\n";
-    }
-    if ( $asp eq 'threads' ) {
-        print "$procuniq[$i].value $procstats{$procuniq[$i]}{'threads'}\n";
-    }
-    if ( $asp eq 'processes' ) {
-        print "$procuniq[$i].value $procstats{$procuniq[$i]}{'processes'}\n";
-    }
-    if ( $asp eq 'memory' ) {
-        print "$procuniq[$i].value $procstats{$procuniq[$i]}{'VmRSS'}\n";
-    }
-    if ( $asp eq 'io' ) {
-        print "$procuniq[$i]_rchar.value $procstats{$procuniq[$i]}{'rchar'}\n";
-        print "$procuniq[$i]_wchar.value $procstats{$procuniq[$i]}{'wchar'}\n";
-    }
-    $i++;
-}
-print "\n";
-$i = 0;
-# Print the individual graph statistics
-foreach (@procname) {
-    print "multigraph proc_$asp.$procuniq[$i]\n";
-    foreach my $value (sort keys %{$ASPECTS{$asp}{'values'}}) {
-        if (defined($ASPECTS{$asp}{'values'}{$value}{'rpn'})) {
-            print "$value.value ";
-            rpn($ASPECTS{$asp}{'values'}{$value}{'rpn'});
-        } else {
-            print "$value.value ";
-            if (!defined($procstats{$procuniq[$i]}{$value})) {
-                print "0\n";
-                next;
-            }
-            print "$procstats{$procuniq[$i]}{$value}\n";
+    $i = 0;
+    print "multigraph proc_$asp\n";
+    foreach (@procname) {
+        if ( $asp eq 'cpu' ) {
+            print "$procuniq[$i].value " .
+                  ($procstats{$procuniq[$i]}{'utime'} +
+                   $procstats{$procuniq[$i]}{'stime'})."\n";
         }
+        if ( $asp eq 'ctxt_switches' ) {
+            print "$procuniq[$i].value " .
+                  ($procstats{$procuniq[$i]}{'voluntary_ctxt_switches'} +
+                   $procstats{$procuniq[$i]}{'nonvoluntary_ctxt_switches'})."\n";
+        }
+        if ( $asp eq 'threads' ) {
+            print "$procuniq[$i].value $procstats{$procuniq[$i]}{'threads'}\n";
+        }
+        if ( $asp eq 'processes' ) {
+            print "$procuniq[$i].value $procstats{$procuniq[$i]}{'processes'}\n";
+        }
+        if ( $asp eq 'memory' ) {
+            print "$procuniq[$i].value $procstats{$procuniq[$i]}{'VmRSS'}\n";
+        }
+        if ( $asp eq 'io' ) {
+            print "$procuniq[$i]_rchar.value $procstats{$procuniq[$i]}{'rchar'}\n";
+            print "$procuniq[$i]_wchar.value $procstats{$procuniq[$i]}{'wchar'}\n";
+        }
+        $i++;
     }
     print "\n";
-    $i++;
-}
+    $i = 0;
+    # Print the individual graph statistics
+    foreach (@procname) {
+        print "multigraph proc_$asp.$procuniq[$i]\n";
+        foreach my $value (sort keys %{$ASPECTS{$asp}{'values'}}) {
+            if (defined($ASPECTS{$asp}{'values'}{$value}{'rpn'})) {
+                print "$value.value ";
+                rpn($ASPECTS{$asp}{'values'}{$value}{'rpn'});
+            } else {
+                print "$value.value ";
+                if (!defined($procstats{$procuniq[$i]}{$value})) {
+                    print "0\n";
+                    next;
+                }
+                print "$procstats{$procuniq[$i]}{$value}\n";
+            }
+        }
+        print "\n";
+        $i++;
+    }
 }
