@@ -104,10 +104,10 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
         exit 0;
 }
 
-my $srcadr;
-my $delay;
-my $offset;
-my $jitter;
+my $srcadr = "";
+my $delay = "U";
+my $offset = "U";
+my $jitter = "U";
 my @associations = `ntpq -c associations`;
 
 foreach my $line (@associations) {
