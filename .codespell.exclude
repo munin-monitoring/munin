@@ -26,3 +26,5 @@ diSabler (1):
                     02:16:a4:ee:2a:a6:fc:da:e6:31:ba:54:ac:26:96:
 multigraph multigraph_tester.tre
 multigraph multigraph_tester.tre
+     'A program to fix permissions of munin directories and files',
+     'Create graphs from RRD files',
