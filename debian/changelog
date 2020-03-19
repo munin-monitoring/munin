@@ -13,6 +13,8 @@ munin (2.0.63-1) UNRELEASED; urgency=medium
       interfere with the plugin operation (Closes: #761190)
     - apt_all plugin: rename state file in order to avoid confusion
       (Closes: #863231)
+  * munin sysvinit: fix bash-incompatibility of init script
+    (thanks, Craig Sanders, Closes: #954234)
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 15 Mar 2020 15:01:38 +0100
 

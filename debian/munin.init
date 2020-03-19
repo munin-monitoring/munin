@@ -27,5 +27,5 @@ do_start_prepare() {
 
 
 # there is no process to be started or stopped ("munin-update" is executed via cron)
-do_stop_cmd_override() true
-do_start_cmd_override() true
+do_stop_cmd_override() { true; }
+do_start_cmd_override() { true; }
