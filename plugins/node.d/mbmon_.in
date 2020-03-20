@@ -12,6 +12,17 @@ mbmon_ - monitor motherboard temparature using mbmon
 The software "mbmon" is required:
  http://www.nt.phys.kyushu-u.ac.jp/shimizu/download/download.html
 
+=head1 CONFIGURATION
+
+The following details can be configured (e.g. below /etc/munin/plugin-conf.d/):
+  [mbmon_*]
+  env.mbmon /usr/local/bin/mbmon
+  env.mbmonargs -I -pit87
+
+Parameters
+  mbmonpath  - path to the mbmon program (default: automatic detection)
+  mbmonargs  - additional arguments given to mbmon
+
 =head1 AUTHOR
 
 Copyright (c) 2005 Arne Schwabe
@@ -38,10 +49,12 @@ purpose.
 
 what=$(basename "$0" | sed 's/^mbmon_//g')
 mbmon=${mbmon:-$(which mbmon)}
+mbmonargs=${mbmonargs:-}
 
 
 run_mbmon() {
-	"$mbmon" -c 1 -r
+	# shellcheck disable=SC2086
+	"$mbmon" -c 1 -r $mbmonargs
 }
 
 
