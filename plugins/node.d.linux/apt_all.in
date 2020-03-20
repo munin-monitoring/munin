@@ -83,7 +83,7 @@ sub guess_releases() {
             $release_names{$1} = 1;
         }
     }
-    return keys %release_names;
+    return sort keys %release_names;
 }
 
 
