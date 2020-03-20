@@ -79,8 +79,12 @@ sub guess_releases() {
         defined( $line = readline $fh ) or die "Failed to read line from output of 'apt-get': $!";
         # example line:
         #     'http://ftp.debian.org/debian/dists/stable/InRelease' ftp.debian.org_debian_dists_stable_InRelease 0
-        if ($line =~ m'^.*/dists/([^/]+)/.*$') {
-            $release_names{$1} = 1;
+        if ($line =~ m#^.*/dists/([^']+)/[^/]+/[^/]+/Packages#) {
+            my $release_name = $1;
+            # The security updates are named like "buster/updates". The first part (before the
+            # slash) is sufficient to mach these packages.
+            $release_name =~ s|/updates$||;
+            $release_names{$release_name} = 1;
         }
     }
     return sort keys %release_names;
