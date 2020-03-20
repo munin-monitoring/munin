@@ -40,6 +40,11 @@ what=$(basename "$0" | sed 's/^mbmon_//g')
 mbmon=${mbmon:-$(which mbmon)}
 
 
+run_mbmon() {
+	"$mbmon" -c 1 -r
+}
+
+
 if [ "$1" = "suggest" ]; then
 	echo 'TEMP'
 	echo 'FAN'
@@ -103,15 +108,15 @@ fi
 
 case $what in
 	TEMP)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep TEMP
+		run_mbmon | sed -e "s/ *: */.value /" | grep TEMP
 		exit 0
 		;;
 	Voltage)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep V
+		run_mbmon | sed -e "s/ *: */.value /" | grep V
 		exit 0
 		;;
 	FAN)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep FAN
+		run_mbmon | sed -e "s/ *: */.value /" | grep FAN
 		exit 0
 		;;
 esac
