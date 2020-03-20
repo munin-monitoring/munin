@@ -200,9 +200,9 @@ sub update_helpandexit() {
 	print("apt update <maxinterval> <probability> -- update apt databases randomly\n\n",
 	      " maxinterval:\n",
 	      "  Enforce the updating of the apt database if it has\n",
-	      "  been more than (maxinterval many seconds since the last update.\n\n",
+	      "  been more than 'maxinterval' many seconds since the last update.\n\n",
 	      " probability:\n",
-	      "  There's a 1 in (probability) chance that the database\n",
+	      "  There's a 1 in 'probability' chance that the database\n",
 	      "  will be updated.\n");
 	exit(1);
 }
