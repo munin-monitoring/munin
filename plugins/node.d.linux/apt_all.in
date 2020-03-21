@@ -77,7 +77,13 @@ use Munin::Plugin;
 $ENV{'LANG'}="C";
 $ENV{'LC_ALL'}="C";
 
-my $statefile = ($ENV{MUNIN_PLUGSTATE} || '@@PLUGSTATE@@/nobody/') . "/plugin-apt.state";
+# The plugin is called in two ways:
+#     - via a cron job (without the munin environment provided by "munin-run")
+#     - as a regular plugin
+# Thus the location evaluation below relies on the following assumptions:
+#     - the plugin is configured to run as "nobody"
+#     - the munin plugin state directory location was not reconfigured
+my $statefile = ($ENV{MUNIN_PLUGSTATE} || '@@PLUGSTATE@@/nobody/') . "/plugin-apt_all.state";
 my $apt_options = $ENV{options} || "-o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false";
 
 
