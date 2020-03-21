@@ -41,6 +41,19 @@ ok($update->run() == 5);
 kill('TERM', $pid_debug_node);
 wait();
 
+# Launch httpd
+my $pid_debug_httpd = 0;
+unless (($pid_debug_httpd = fork())) {
+        exec("script/munin-httpd", "--debug");
+}
+
+# query well known URLS
+use LWP::UserAgent;
+my $ua = LWP::UserAgent->new(timeout => 10);
+
+my $response = $ua->get('http://localhost:4948/');
+ok($response->is_success);
+
 # cleanup the update dir
 system("rm", "-Rvf", $config->{dbdir});
 
