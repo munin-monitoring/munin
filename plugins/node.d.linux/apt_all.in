@@ -17,17 +17,28 @@ graphs.
 You can add some extra options to the apt call, in order to override
 your /etc/apt.conf defaults.
 
-[apt_all]
-env.options -o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false
-env.releases stable experimental
+  [apt_all]
+  env.options -o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false
+  env.releases stable experimental
 
-"options" is empty by default.
-"releases" is a space separated list of release names.  It defaults to
-the empty string.  This default triggers the automatic detection of
-available distributions from the URLs of all configured repositories.
+=head2 options
 
-Note that apt is called with no extra options by default, so it fully honors
-your /etc/apt.conf defaults.
+This settings defaults to the example given above.
+
+This default overrides potential local customization within
+/etc/apt.conf, which could interfere with the intended operation of
+apt or the output format required for this plugin.
+
+Please note that "apt" honors your /etc/apt.conf defaults.
+Thus you may need to override specific options, if you adjusted your
+local apt.conf setup.
+
+=head2 releases
+
+This configuration may contain a space separated list of release names.
+It defaults to the empty string.  This default triggers the automatic
+detection of available distributions from the URLs of all configured
+repositories.
 
 =head1 USAGE
 
@@ -67,11 +78,12 @@ $ENV{'LANG'}="C";
 $ENV{'LC_ALL'}="C";
 
 my $statefile = ($ENV{MUNIN_PLUGSTATE} || '@@PLUGSTATE@@/nobody/') . "/plugin-apt.state";
+my $apt_options = $ENV{options} || "-o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false";
 
 
 # try to determine the currently available distributions by inspecting the repository URLs
 sub guess_releases() {
-    open(my $fh, "-|", "apt-get update --print-uris")
+    open(my $fh, "-|", "apt-get $apt_options update --print-uris")
         or die("Failed to determine distribution releases via 'apt-get update --print-uris");
     my %release_names;
     my $line;
@@ -128,8 +140,7 @@ sub update_state() {
     open(STATE, ">$statefile")
         or die("Couldn't open state file $statefile for writing.");
     foreach my $release (@releases) {
-        my $options = $ENV{options} || "";
-        my $apt="apt-get $options -u dist-upgrade --print-uris --yes -t $release |";
+        my $apt="apt-get $apt_options -u dist-upgrade --print-uris --yes -t $release |";
         open (APT, "$apt") or exit 22;
 
         my @pending = ();
