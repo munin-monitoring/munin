@@ -41,6 +41,10 @@ my $intervalsize = 86400;
 my $timeout = 3600;
 my $minrate;
 my $retaincount = 7;
+# Asyncd collects data from plugins periodically.  We want to avoid skipping the next value due to
+# slight deviations of this period.  Thus we tolerate a slightly shorter time distance between two
+# successive requests for values from a plugin.
+my $min_update_rate_threshold = 0.75;
 my $nocleanup;
 my $do_fork;
 my $verbose;
@@ -217,11 +221,15 @@ MAIN: while($keepgoing) {
 		PLUGIN: foreach my $plugin ( @{$plugins->{$node}} ) {
 			# See if this plugin should be updated
 			my $plugin_rate = $spoolwriter{$node}->get_metadata("plugin_rates/$plugin") || 300;
-			my $plugin_next = ($last_updated{$plugin} || 0) + $plugin_rate;
-			if ($when < $plugin_next) {
+			# the perfect time for the plugin
+			my $wanted_plugin_next = ($last_updated{$plugin} || 0) + $plugin_rate;
+			# It is acceptable that plugins are executed slightly too early.
+			# (tolerating slight deviations of the request period)
+			my $minimum_plugin_next = ($last_updated{$plugin} || 0) + ($plugin_rate * $min_update_rate_threshold);
+			if ($when < $minimum_plugin_next) {
 				# not yet, wake me up later, and see next plugin
-				if ($plugin_next < $when_next) {
-					$when_next = $plugin_next;
+				if ($wanted_plugin_next < $when_next) {
+					$when_next = $wanted_plugin_next;
 				}
 
 				next;

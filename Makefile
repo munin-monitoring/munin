@@ -37,6 +37,7 @@ help:
 	@echo "    lint"
 	@echo "    test"
 	@echo "    testcover"
+	@echo "    testpluginsautoconf"
 	@echo "    testpod"
 	@echo "    testpodcoverage"
 	@echo
@@ -163,6 +164,16 @@ test: $(BUILD_SCRIPT)
 .PHONY: testcover
 testcover: $(BUILD_SCRIPT)
 	"$(BUILD_SCRIPT)" testcover $(TEST_FILES_ARG)
+
+.PHONY: testpluginsautoconf
+testpluginsautoconf: clean
+	@# SANDBOX is used by the sandbox scripts as the (optional) location of the sandbox
+	@# The "clean" operation is necessary, since the build process spoils the content of the
+	@# "build/" directory. Sadly this location is not configurable.
+	sandbox_dir="$$(mktemp -d)" \
+		&& trap 'rm -rf "$${sandbox_dir}"; make clean >/dev/null 2>&1' EXIT \
+		&& SANDBOX="$${sandbox_dir}" dev_scripts/install \
+		&& SANDBOX="$${sandbox_dir}" dev_scripts/run munin-node-configure --suggest
 
 .PHONY: testpod
 testpod: $(BUILD_SCRIPT)

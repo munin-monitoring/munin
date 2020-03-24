@@ -6,16 +6,18 @@ use strict;
 
 use English;
 use IO::Socket;
+use Log::Log4perl qw(:easy);
 
-use Munin::Node::Logger qw(logger);
+
+Log::Log4perl->easy_init($WARN);
 
 
 sub emit_sd_notify_message {
     eval {
-        logger("sd_notify: looking for NOTIFY_SOCKET environment variable");
+        DEBUG "sd_notify: looking for NOTIFY_SOCKET environment variable";
         my $socket_path = $ENV{NOTIFY_SOCKET};
         if (defined $socket_path) {
-            logger("sd_notify: preparing connection to '$socket_path'");
+            DEBUG "sd_notify: preparing connection to '$socket_path'";
             # Prevent children from talking to the socket provided solely for us.
             delete $ENV{NOTIFY_SOCKET};
             # A socket path starting with "@" is interpreted as a Linux abstract namespace socket.
@@ -23,13 +25,13 @@ sub emit_sd_notify_message {
             # See "Address format: abstract" in "man 7 unix".
             $socket_path =~ s/^@/\0/;
             my $socket = IO::Socket::UNIX->new(Type => SOCK_DGRAM, Peer => $socket_path);
-            logger("sd_notify: connected to socket '$socket_path'");
+            DEBUG "sd_notify: connected to socket '$socket_path'";
             if (defined $socket) {
-                logger("sd_notify: sending READY signal to '$socket_path'");
+                DEBUG "sd_notify: sending READY signal to '$socket_path'";
                 print($socket "READY=1\n");
                 close($socket);
             } else {
-                logger("sd_notify: failed to connect to socket '$socket_path'");
+                WARN "sd_notify: failed to connect to socket '$socket_path'";
             }
         }
     }
