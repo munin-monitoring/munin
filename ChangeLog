@@ -4186,6 +4186,23 @@ tsaavik (1):
       dynazoom: added logo and backlink
 
 
+munin-2.0.59, 2020-03-24
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Moench-Tegeder (1):
+
+Lars Kruse (1):
+      Fix syntax error in munin-asyncd
+
+
 munin-2.0.58, 2020-03-23
 -------
 Summary
