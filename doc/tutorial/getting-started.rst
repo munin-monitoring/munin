@@ -25,7 +25,7 @@ yum command is left as an exercise to the reader, but should not be very hard
 to get.
 
 We cannot speak about every other OS, but any UNIX-like have been reported to
-work. Your safest best should still to stick to a supported OS if you don't
+work. Your safest bet should be to stick to a supported OS if you don't
 feel adventurous.
 
 Also, you should need a dedicated server for the master role, as it mostly
