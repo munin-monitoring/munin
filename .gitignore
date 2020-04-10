@@ -33,3 +33,8 @@ local/
 # CSS SASS files
 *.sass-cache*
 *.css.map
+
+# Docker generated files
+/RELEASE.docker
+/.bash_history
+/.viminfo
