@@ -4,7 +4,7 @@
  lighttpd Proxy Configuration
 ==============================
 
-This example describes how to use `lighttpd <http://lighttpd.org>`_ in front of :ref:`munin-httpd`.
+This example describes how to use `lighttpd <https://www.lighttpd.net/>`_ in front of :ref:`munin-httpd`.
 
 
 Webserver configuration
