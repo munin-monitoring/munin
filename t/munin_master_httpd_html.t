@@ -3,24 +3,50 @@ use warnings;
 
 use lib qw(t/lib);
 
-
 use Test::More;
 use Test::Differences;
 use Test::MockModule;
 
-my $cgi = Test::MockModule->new('CGI');
+our ($path_info, %url_param); # Simply Override it later
 
-# Include
-my ($path_info, %url_param); # Simply Override it later
-$cgi->redefine("path_info", sub { return $path_info } );
-$cgi->redefine("url_param", sub { return $url_param{$_} });
+package CGI;
 
-# Output
-$cgi->mock("header", sub {  });
+sub new {
+	return bless {}, shift;
+}
 
-$cgi->path_info();
+sub path_info {
+	return $path_info;
+}
+
+sub url_param {
+	return $url_param{$_};
+}
+
+sub header {
+	shift;
+	use Data::Dumper;
+	print Dumper(@_);
+}
+
+sub url {
+	return "";
+}
+
+BEGIN
+{
+	# mocking the load
+	$INC{'CGI.pm'} = "/usr/lib/perl5/site_perl/5.10.0/CGI.pm";
+}
+
+package main;
+
+my $cgi = new CGI();
 
 require_ok( 'Munin::Master::HTML' );
+
+
+$path_info = "/";
 Munin::Master::HTML::handle_request($cgi);
 
 done_testing();
