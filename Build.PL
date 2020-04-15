@@ -154,6 +154,7 @@ my $build = Module::Build->new(
             )
     ],
     test_requires => {
+        'Devel::Confess'      => '0',
         'IO::Scalar'          => '0',
         'Test::Class'         => '0',
         'Test::Differences'   => '0.62',

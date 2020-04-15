@@ -222,11 +222,19 @@ tar-upload: tar tar-signed
 	} | sftp -b - "$(UPLOAD_HOST)"
 
 .PHONY: docker
-docker:
+docker-base:
+	docker build -t munin:base -f Dockerfile.base .
+docker: docker-base
 	./getversion > RELEASE.docker
-	docker build -t munin:dev .
+	docker build -t munin:latest .
 	docker rm -f munin || true
-	docker run --name munin --shm-size=256M -p 4948:4948 -itd --security-opt seccomp:unconfined munin:dev dev_scripts/noop
+	# Add the following to enable strace in the container
+	# --security-opt seccomp:unconfined
+	docker run --name munin --shm-size=256M -p 4948:4948 -itd munin:latest dev_scripts/noop
 
 docker-connect:
 	docker exec -it munin bash
+
+docker-dev: docker-base
+	docker build -t munin:dev -f Dockerfile.dev .
+	docker run --rm --name munin-dev -v $(shell pwd):/munin -p 8000:8000 -p 14948:4948 -it munin:dev
