@@ -4,7 +4,7 @@ dev_scripts/run munin-node > node.log
 dev_scripts/run munin-update --screen --verbose
 dev_scripts/run munin-httpd > httpd.log &
 
-while sleep 10
+while sleep ${SLEEP_TIME:-10}
 do
 	dev_scripts/run munin-update --screen --verbose
 done
