@@ -47,3 +47,4 @@ WORKDIR /
 RUN apt-get install -y eatmydata
 # for noop
 RUN apt-get install -y tcc libc6-dev
+RUN apt-get install -y libdevel-confess-perl

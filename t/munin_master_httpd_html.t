@@ -3,6 +3,7 @@ use warnings;
 
 use lib qw(t/lib);
 
+use Devel::Confess;;
 use Test::More;
 use Test::Differences;
 use Test::MockModule;
@@ -16,20 +17,25 @@ sub new {
 }
 
 sub path_info {
+	my $self = shift;
 	return $path_info;
 }
 
 sub url_param {
-	return $url_param{$_};
+	my $self = shift;
+	my $param = shift;
+	die("undef") unless defined $param;
+	return $url_param{$param};
 }
 
+my %header;
 sub header {
-	shift;
-	use Data::Dumper;
-	print Dumper(@_);
+	my $self = shift;
+	%header = @_;
 }
 
 sub url {
+	my $self = shift;
 	return "";
 }
 
@@ -46,9 +52,13 @@ my $cgi = new CGI();
 require_ok( 'Munin::Master::HTML' );
 
 
-$path_info = "/";
+# Redirect to / test if empty
+$path_info = "";
 Munin::Master::HTML::handle_request($cgi);
 
+# We need to start a new line before done_testing(), otherwise the testing
+# framework cannot correclty parse the test results output
+print "\n";
 done_testing();
 
 1;
