@@ -95,6 +95,7 @@ Suggests:
  libcache-cache-perl,
  libdbd-mysql-perl,
  libnet-dns-perl,
+ libwww-perl,
  logtail,
  net-tools,
  python3,

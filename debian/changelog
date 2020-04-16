@@ -15,6 +15,9 @@ munin (2.0.63-1) UNRELEASED; urgency=medium
       (Closes: #863231)
   * munin sysvinit: fix bash-incompatibility of init script
     (thanks, Craig Sanders, Closes: #954234)
+  * munin-plugins-core: add missing "Suggests" for "nginx_status"
+    (package "libwww-perl")
+    (thanks, Olaf Zaplinski, Closes: #954930)
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 15 Mar 2020 15:01:38 +0100
 
