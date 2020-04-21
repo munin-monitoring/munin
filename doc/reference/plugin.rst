@@ -35,7 +35,7 @@ following fields are used.
 |                    |                  |          | web page                                 |                  |         |
 +--------------------+------------------+----------+------------------------------------------+------------------+---------+
 | graph_scale        | yes|no           | optional | If "yes", the generated graph will be    |                  | no      |
-|                    |                  |          | scaled to the uppper and lower values of |                  |         |
+|                    |                  |          | scaled to the upper and lower values of  |                  |         |
 |                    |                  |          | the datapoints within the graph.         |                  |         |
 +--------------------+------------------+----------+------------------------------------------+------------------+---------+
 | graph_order        | space separated  | optional | Ensures that the listed datapoints are   |                  |         |
