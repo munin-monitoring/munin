@@ -136,6 +136,9 @@ sub main
     # Run directly or execute recursively via "systemd-run".
     if (($ignore_systemd_properties) || (! -d "/run/systemd/system")) {
         return execute_plugin($plugin, $arg);
+    } elsif (!check_systemd_run_permissions()) {
+        print STDERR "# Skipping systemd properties simulation due to lack of permissions.\n" if $config->{DEBUG};
+        return execute_plugin($plugin, $arg);
     } else {
         my $systemd_version = get_systemd_version();
         if ((not defined $systemd_version) or ($systemd_version < $REQUIRED_SYSTEMD_VERSION)) {
@@ -159,6 +162,12 @@ sub main
             }
         }
     }
+}
+
+
+sub check_systemd_run_permissions {
+    # verify whether systemd-run can be exected (e.g. unprivileged users cannot execute it)
+    return system("systemd-run --collect --pipe --quiet --wait -- true </dev/null >/dev/null 2>&1") == 0;
 }
 
 
