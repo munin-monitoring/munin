@@ -77,7 +77,6 @@ case $0 in
             # family.  Thus we are just hoping for the best (as this plugin always did).
             ping_func() { ping "$@"; }
         fi
-        PING=ping
         file_host=${0##*/ping_}
         V=IPv4
         ;;
