@@ -1,5 +1,33 @@
 -*- text -*-
 
+munin-2.0.60, 2020-04-22
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Hans de Graaff (1):
+      Plugin mysql_innodb: pass argument to mysql_exec
+
+Lars Kruse (6):
+      Remove logging from Munin::Common::Daemon
+      Plugin ping_: use "ping" instead of "ping6" except for *BSD
+      Plugin nginx_status: improve error message in case of missing dependency
+      munin-run: skip systemd properties simulation in case of missing privileges
+      Remove asterisk_* plugins
+
+Steve Schnepp (1):
+      dists: remove all dists specific stuff
+
+Thomas Daniels (1):
+      Fix typo in doc/reference/plugin.rst of stable-2.0
+
+
 munin-2.0.59, 2020-03-24
 -------
 Summary
