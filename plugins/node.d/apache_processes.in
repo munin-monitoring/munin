@@ -111,7 +111,7 @@ my $SHOWFREE = !exists $ENV{'showfree'} || $ENV{'showfree'};
 
 # Convert an URL with the %d placeholder into a string. Allow URL without placeholder.
 sub get_url_with_port {
-    my ($url, $port) = shift;
+    my ($url, $port) = @_;
     return ($url =~ /%d/) ? sprintf($url, $port) : $url;
 }
 
