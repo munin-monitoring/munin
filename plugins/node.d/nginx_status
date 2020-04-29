@@ -108,6 +108,9 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" ) {
     exit 0;
 }
 
+# generate a useful error message instead of just bailing out later
+die "Missing dependency: '$ret'" if ($ret);
+
 my $response = $UA->get($URL);
 
 #Active connections: 1845
