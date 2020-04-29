@@ -59,8 +59,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 case $0 in
     *ping4_*)
-        PING=ping4
-        file_host=${0##*/ping4_}
+        if which ping4 >/dev/null; then
+            ping_func() { ping4 "$@"; }
+        else
+            ping_func() { ping -4 "$@"; }
+        fi
+        file_host=${0##*/ping_}
         V=IPv4
         ;;
     *ping6_*)
