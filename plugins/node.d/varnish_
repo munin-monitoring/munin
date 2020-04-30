@@ -946,6 +946,7 @@ sub xml_commit_state
 {
 	my $type;
 	my $name;
+	my $dynamic;
 	if ($state{'values'}{'name'} =~ /\./) {
 		# since Varnish 5.2 the 'name' field includes a 'type' prefix ("type.name")
 		($type, $name) = split(/\./, $state{'values'}{'name'}, 2);
@@ -953,8 +954,12 @@ sub xml_commit_state
 		$name = $state{'values'}{'name'};
 		$type = $state{'values'}{'type'};
 	}
+	foreach my $key (keys %{$ASPECTS{$self}{'values'}}) {
+		if ($key =~ /$type/) {
+			$dynamic = $type;
+		}
+	}
 	my $ident = $state{'values'}{'ident'};
-
 	foreach my $key (keys %{$state{'values'}}) {
 		my $data = $state{'values'}{$key};
 		if ($key eq 'flag') {
@@ -962,6 +967,8 @@ sub xml_commit_state
 		}
 		if (defined($ident) and $ident ne "") {
 			$data{$type}{$ident}{$name}{$key} = $data;
+		} elsif ($dynamic) {
+			$data{$dynamic}{$name}{$key} = $data
 		} else {
 			$data{$name}{$key} = $data
 		}
@@ -1040,9 +1047,11 @@ sub print_dynamic
 	}
 	my $counter = $ASPECTS{$self}{'values'}{$name}{'counter'};
 	my $type = $ASPECTS{$self}{'values'}{$name}{'family'};
-
 	foreach my $key (keys %{$data{$type}}) {
-		my $pname = normalize_name($type . "_" . $key . "_" . $counter);
+		if ($key !~ /$counter/) {
+			next;
+		}
+		my $pname = normalize_name($type . "_" . $key);
 		print $pname . $suffix . " ";
 		my $i = 0;
 		foreach my $f (@field) {
@@ -1050,7 +1059,19 @@ sub print_dynamic
 				print " ";
 			}
 			$i += 1;
-			print $data{$type}{$key}{$counter}{$f};
+			if ($f eq 'flag') {
+				if ($data{$type}{$key}{$f} == 'c') {
+					print 'COUNTER';
+				} else {
+					print 'GAUGE';
+				}	
+				
+			} else {
+			if ($f eq 'description') {
+				print "$pname ";
+			}
+			print $data{$type}{$key}{$f};
+			}
 		}
 		print "\n";
 	}
