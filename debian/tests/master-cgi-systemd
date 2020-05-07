@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# set up clean env for testing the scripts
+service cron stop
+rm -rf /var/cache/munin/www/*
+
 . debian/tests/switch_init_helper.inc
 . debian/tests/enable_cgi_strategy.inc
 
