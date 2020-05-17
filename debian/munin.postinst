@@ -31,7 +31,7 @@ initperms() {
 
 apache_install() {
 	# if you add more webservers here, don't forget to also remove them in postrm
-        webserver=apache2
+	webserver=apache2
 	# installing configuration for Apache 2.4
 	# link config to conf-available
 	if [ -d /etc/$webserver/conf-available ] && [ ! -e /etc/$webserver/conf-available/munin.conf ]; then

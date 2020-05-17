@@ -57,10 +57,10 @@ if [ "$1" = "purge" ]; then
 	webserver=apache2
 	# Disable configuration with Apache 2.4
 	if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
-		. /usr/share/apache2/apache2-maintscript-helper 
-		apache2_invoke disconf munin.conf 
-	fi 
-	
+		. /usr/share/apache2/apache2-maintscript-helper
+		apache2_invoke disconf munin.conf
+	fi
+
 	# Remove configuration from Apache 2.4 conf dir
 	if [ -L /etc/$webserver/conf-available/munin.conf ]; then
 		# delete the link
