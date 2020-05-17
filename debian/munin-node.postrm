@@ -5,8 +5,8 @@ set -e
 if [ "$1" = "purge" ]; then
 	# delete dangling symlinks
 	test -d /etc/munin/plugins/ && for plugin in $(find /etc/munin/plugins/ -type l); do
-		if [ ! -e $(readlink $plugin) ]; then
-			rm $plugin
+		if [ ! -e "$(readlink "$plugin")" ]; then
+			rm "$plugin"
 		fi
 	done
 
