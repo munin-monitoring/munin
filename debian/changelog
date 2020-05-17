@@ -20,6 +20,7 @@ munin (2.0.63-1) UNRELEASED; urgency=medium
     (thanks, Olaf Zaplinski, Closes: #954930)
   * clean up maintainer scripts
     (quoting, whitespace, parameter handling)
+  * munin-(node|common).postinst: remove redundant code
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 15 Mar 2020 15:01:38 +0100
 

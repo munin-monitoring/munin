@@ -43,8 +43,6 @@ init_plugins() {
 	fi
 	echo "done."
 	rm -f "$TMPFILE" "$TMPFILE_STDERR"
-	echo -n "Restarting munin-node.."
-	invoke-rc.d munin-node restart
 }
 
 case "$1" in
