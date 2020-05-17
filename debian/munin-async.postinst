@@ -26,13 +26,6 @@ case "$1" in
 			initperms
 		fi
 		;;
-	abort-upgrade|abort-deconfigure|abort-remove)
-		:
-		;;
-	*)
-		echo "Called with unknown argument $1, bailing out."
-		exit 1
-		;;
 esac
 
 #DEBHELPER#
