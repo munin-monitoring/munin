@@ -1,3 +1,21 @@
+munin (2.0.63-1) UNRELEASED; urgency=medium
+
+  * New upstream release, 2.0.63.
+  * New upstream release, 2.0.62.
+  * New upstream release, 2.0.61.
+  * New upstream release, 2.0.60, fixing the following issue:
+    - asterisk_* plugins: removal due to being outdated. Use the plugins
+      from "contrib" repository instead (e.g. via "munin-get").
+      (Closes: #713891, #806173, #934334)
+  * New upstream release, 2.0.59.
+  * New upstream release, 2.0.58, fixing the following issue:
+    - apt_all plugin: override local apt settings that could
+      interfere with the plugin operation (Closes: #761190)
+    - apt_all plugin: rename state file in order to avoid confusion
+      (Closes: #863231)
+
+ -- Lars Kruse <devel@sumpfralle.de>  Sun, 15 Mar 2020 15:01:38 +0100
+
 munin (2.0.57-1) unstable; urgency=medium
 
   [ Lars Kruse ]
