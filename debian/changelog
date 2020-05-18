@@ -22,6 +22,7 @@ munin (2.0.63-1) UNRELEASED; urgency=medium
     (quoting, whitespace, parameter handling)
   * munin-(node|common).postinst: remove redundant code
   * munin-node.postinst: remove unused conditional
+  * munin-node.postinst: simplify log redirections
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 15 Mar 2020 15:01:38 +0100
 
