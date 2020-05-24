@@ -163,11 +163,12 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 
     print "host_name $host\n" unless $host eq 'localhost';
 
-    my $alias = $session->get_single($ifEntryAlias) ||
+    my $alias = $ENV{alias} ||
+      $session->get_single($ifEntryAlias) ||
       $session->get_single($ifEntryDescr) ||
 	"Interface $iface";
 
-    if (! ($alias =~ /\d+/) ) {
+    if (! ($alias =~ /\d+/ or defined($ENV{alias})) ) {
 	# If there are no numbers in the $alias add the if index
 	$alias .=" (if $iface)";
     }
