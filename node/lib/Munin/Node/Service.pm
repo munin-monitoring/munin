@@ -49,7 +49,7 @@ sub is_a_runnable_service
     return if $file =~ m/^\./;      # Hidden files
     return if $file =~ m/\.conf$/;  # Config files
 
-    return if $file !~ m/^[-\w.:]+$/;  # Skip if any weird chars
+    return if $file !~ m/^[-\w\@.:]+$/;  # Skip if any weird chars
 
     foreach my $regex (@{$config->{ignores}}) {
         return if $file =~ /$regex/;
