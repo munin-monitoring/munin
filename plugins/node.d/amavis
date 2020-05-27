@@ -89,7 +89,7 @@ if [ "$1" = "autoconf" ]; then
 		echo "no (executable 'logtail' not found)"
 	elif [ ! -x "$LOGTAIL" ]; then
 		echo "no ('$LOGTAIL' is not executable)"
-	elif ! which amavisd-new amavisd >/dev/null; then
+	elif ! { command -v amavisd-new || command -v amavisd; } >/dev/null; then
 		echo "no (exeuctable 'amavisd' or 'amavisd-new' not found)"
 	else
 		echo yes
