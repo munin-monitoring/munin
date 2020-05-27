@@ -1,5 +1,25 @@
 -*- text -*-
 
+munin-2.0.63, 2020-05-27
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Alexander (1):
+      Remove unneeded forks in plugin.sh
+
+Lars Kruse (3):
+      plugin.sh: fix shellcheck issues and tolerate unset optional arguments
+      Plugins: force execution in a shell for "command -v"
+      plugin.sh: improve documentation for "print_warning" and "print_critical"
+
+
 munin-2.0.62, 2020-05-27
 -------
 Summary
