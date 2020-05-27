@@ -59,7 +59,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 case $0 in
     *ping4_*)
-        if which ping4 >/dev/null; then
+        if command -v ping4 >/dev/null; then
             ping_func() { ping4 "$@"; }
         else
             ping_func() { ping -4 "$@"; }

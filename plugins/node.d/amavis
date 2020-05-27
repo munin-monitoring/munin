@@ -78,7 +78,7 @@ GPLv2
 =cut
 
 AMAVIS_LOG=${amavislog:-/var/log/mail/mail.info}
-LOGTAIL=${logtail:-$(which logtail)}
+LOGTAIL=${logtail:-$(command -v logtail)}
 STATEFILE=$MUNIN_PLUGSTATE/amavis.offset
 mktemp_command="${mktemp_command:-/bin/mktemp}"
 
