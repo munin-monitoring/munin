@@ -545,7 +545,7 @@ sub do_config_root {
     my ($host) = @_;
 
     print "multigraph if_bytes\n";
-    print "graph_title $host interface traffic\n";
+    print "graph_title All interfaces traffic\n";
     print "graph_order recv send\n";
     print "graph_args --base 1000\n";
     print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
@@ -565,7 +565,7 @@ sub do_config_root {
     print "send.min 0\n";
 
     print "multigraph if_errors\n";
-    print "graph_title $host interface errors\n";
+    print "graph_title All interfaces errors\n";
     print "graph_order recv send\n";
     print "graph_scale no\n";
     print "graph_args --base 1000\n";
@@ -646,7 +646,7 @@ sub do_config_if {
 
     print "multigraph if_bytes.if_$if\n";
 
-    print "graph_title Interface $alias traffic\n";
+    print "graph_title $alias traffic\n";
     print "graph_order recv send\n";
     print "graph_args --base 1000\n";
     print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
@@ -670,7 +670,7 @@ sub do_config_if {
 
     print "multigraph if_errors.if_$if\n";
 
-    print "graph_title Interface $alias errors\n";
+    print "graph_title $alias errors\n";
     print "graph_order recv send\n";
     print "graph_args --base 1000\n";
     print "graph_scale no\n";

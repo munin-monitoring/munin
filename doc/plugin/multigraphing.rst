@@ -37,7 +37,7 @@ The setup is done in the usual way, with graph_title and other configuration ite
 ::
 
    multigraph if_bytes
-   graph_title $host interface traffic
+   graph_title All interfaces traffic
    graph_order recv send
    graph_args --base 1000
    graph_vlabel bits in (-) / out (+) per \${graph_period}
@@ -57,7 +57,7 @@ The setup is done in the usual way, with graph_title and other configuration ite
    send.min 0
 
    multigraph if_errors
-   graph_title $host interface errors
+   graph_title All interfaces errors
    graph_order recv send
    graph_args --base 1000
    graph_vlabel errors in (-) / out (+) per \${graph_period}
@@ -82,7 +82,7 @@ Then for each of the interfaces the plugin emits these configuration items (inte
 
    multigraph if_bytes.if_$if
 
-   graph_title Interface $alias traffic
+   graph_title $alias traffic
    graph_order recv send
    graph_args --base 1000
    graph_vlabel bits in (-) / out (+) per \${graph_period}
@@ -106,7 +106,7 @@ Then for each of the interfaces the plugin emits these configuration items (inte
 
    multigraph if_errors.if_$if
 
-   graph_title Interface $alias errors
+   graph_title $alias errors
    graph_order recv send
    graph_args --base 1000
    graph_vlabel bits in (-) / out (+) per \${graph_period}
