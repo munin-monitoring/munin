@@ -31,7 +31,7 @@ GNU GPL
 
 . "$MUNIN_LIBDIR/plugins/plugin.sh"
 
-PS=$(which ps 2>/dev/null) || true
+PS=$(command -v ps || true)
 if [ "$1" = "autoconf" ]; then
 	if ! [ -x "$PS" ]; then
 		echo "no (command ps not found)"

@@ -39,7 +39,7 @@ GPLv2
 
 =cut
 
-SMBSTATUS=${smbstatus:-$(which smbstatus)}
+SMBSTATUS=${smbstatus:-$(command -v smbstatus)}
 SMBSTATUS=${SMBSTATUS:-/usr/bin/smbstatus}
 
 if [ "$1" = "autoconf" ]; then

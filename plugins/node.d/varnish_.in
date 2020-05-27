@@ -1009,9 +1009,7 @@ sub autoconf
 {
 	if (!$has_xml_parser) {
 		print "no (missing perl module XML::Parser)\n";
-	# XXX: Solaris outputs errors to stderr and always returns true.
-	# XXX: See #873
-	} elsif (`which $varnishstatexec 2>/dev/null` =~ m{^/}) {
+	} elsif (`command -v $varnishstatexec` =~ m{^/}) {
 		print "yes\n";
 	} else {
 		print "no ($varnishstatexec could not be found)\n";

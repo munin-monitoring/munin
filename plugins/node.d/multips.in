@@ -93,7 +93,7 @@ for name in $names; do
 	printf "%s.value " "$fieldname"
 
 	eval REGEX='"${regex_'"$name"'-\<'"$name"'\>}"'
-	PGREP=$(which pgrep)
+	PGREP=$(command -v pgrep)
 	if [ -n "$PGREP" ] && [ -x "$PGREP" ]; then
 		"$PGREP" -f -l "$name" | grep "$REGEX" | wc -l
 	elif [ -x /usr/ucb/ps ]; then

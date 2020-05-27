@@ -48,7 +48,7 @@ purpose.
 #%# capabilities=autoconf suggest
 
 what=$(basename "$0" | sed 's/^mbmon_//g')
-mbmon=${mbmon:-$(which mbmon)}
+mbmon=${mbmon:-$(command -v mbmon)}
 mbmonargs=${mbmonargs:-}
 
 

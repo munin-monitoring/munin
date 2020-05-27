@@ -82,12 +82,10 @@ munin-node.
 
 EOF
 
-# You cannot trust the exit status of which
-EXIQGREP=$(which exiqgrep 2>/dev/null) || true
 
 GRAPHTITLE='Exim Mailqueue'
 
-EXIQGREP=${exiqgrep:-$EXIQGREP}
+EXIQGREP=${exiqgrep:-$(command -v exiqgrep || true)}
 GRAPHTITLE=${graphtitle:-$GRAPHTITLE}
 
 QUEUEWARN=${queuewarn:-100}

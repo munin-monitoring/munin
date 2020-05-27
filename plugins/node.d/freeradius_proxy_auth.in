@@ -43,7 +43,7 @@ Copyright (C) 2008 Alan DeKok <aland@deployingradius.com>
 
 =cut
 
-RADMIN=${radmin:-$(which radmin 2>/dev/null)}
+RADMIN=${radmin:-$(command -v radmin)}
 RADMIN=${RADMIN:-/usr/sbin/radmin}
 SOCKETFILE=${socketfile:-/var/run/radiusd/radiusd.sock}
 
