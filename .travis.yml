@@ -95,3 +95,4 @@ install:
   - PYTHON_LINT_CALL="python3 -m flake8.main" make lint
 script:
   - cover -test -report coveralls
+  - make clean && dev_scripts/install && dev_scripts/run munin-node-configure --suggest

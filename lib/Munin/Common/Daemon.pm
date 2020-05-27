@@ -42,24 +42,30 @@ Munin::Common::Daemon - utilities for daemons.
 The following daemon-related features are supported:
 
 =over
+
 =item sd_notify: signal readiness of the daemon
+
 =back
 
 
 =head1 SUBROUTINES
 
-=over
+=head2 emit_sd_notify_message
 
-=item B<emit_sd_notify_message>
+Example:
 
  emit_sd_notify_message();
 
 Send a "ready" signal according to the C<sd_notify> interface:
 
 =over
+
 =item 1. check whether the environment variable "NOTIFY_SOCKET" is defined
+
 =item 2. remove this variable from the environment (this interface is not propagated to children)
+
 =item 3. send the string "READY=1" to the socket
+
 =back
 
 The function returns silently, if something fails.
@@ -71,12 +77,14 @@ C<sd_notify> interface or not.
 
 Examples for callers supporting the C<sd_notify> interface:
 
+
 =over
+
 =item systemd: see C<Type=Notify> in L<systemd.exec/5>
+
 =item start-stop-daemon: see C<--notify-await> in L<start-stop-daemon/8>
-=back
-
-See L<text|https://www.freedesktop.org/software/systemd/man/sd_notify.html> for
-details of this interface.
 
 =back
+
+See the L<specification of "sd_notify"|https://www.freedesktop.org/software/systemd/man/sd_notify.html>
+for further details of this interface.
