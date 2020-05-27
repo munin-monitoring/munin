@@ -1009,7 +1009,7 @@ sub autoconf
 {
 	if (!$has_xml_parser) {
 		print "no (missing perl module XML::Parser)\n";
-	} elsif (`command -v $varnishstatexec` =~ m{^/}) {
+	} elsif (`sh -c 'command -v "$varnishstatexec"'` =~ m{^/}) {
 		print "yes\n";
 	} else {
 		print "no ($varnishstatexec could not be found)\n";
