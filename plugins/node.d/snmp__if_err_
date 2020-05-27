@@ -108,7 +108,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 
     my $alias = $session->get_single($ifEntryAlias) ||
       $session->get_single($ifEntryDescr) ||
-	"Interface $iface";
+	"$iface";
 
     if (! ($alias =~ /\d+/) ) {
 	# If there are no numbers in the $alias add the if index
@@ -127,7 +127,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     # Any error is too many
     my $warn = 1;
 
-    print "graph_title Interface $alias errors\n";
+    print "graph_title $alias errors\n";
     print "graph_order recv send\n";
     print "graph_args --base 1000\n";
     print "graph_vlabel Errors in (-) / out (+) per \${graph_period}\n";
