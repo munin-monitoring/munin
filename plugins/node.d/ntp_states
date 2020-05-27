@@ -55,7 +55,7 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf") {
         } else {
                 `ntpq -c help >/dev/null 2>/dev/null`;
                 if ($CHILD_ERROR eq "0") {
-                        if (`ntpq -n -c peers | wc -l` > 0) {
+                        if (`ntpq -n -c peers 2>/dev/null | wc -l` > 0) {
                                 print "yes\n";
                         } else {
                                 print "no (ntpq -p returned no peers)\n";
