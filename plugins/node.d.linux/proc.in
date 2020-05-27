@@ -63,7 +63,7 @@ Each graph uses data from the proc filesystem.
 
 =head1 MAGIC MARKERS
 
- #%# family=auto
+ #%# family=manual
  #%# capabilities=autoconf multigraph
 
 =head1 BUGS
