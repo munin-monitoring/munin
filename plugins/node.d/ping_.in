@@ -60,7 +60,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 case $0 in
     *ping6_*)
         # use "ping6" if available - otherwise fall back to "ping"
-        if command -v ping6; then
+        if command -v ping6 >/dev/null; then
             ping_func() { ping6 "$@"; }
         else
             ping_func() { ping -6 "$@"; }
@@ -69,7 +69,7 @@ case $0 in
         V=IPv6
         ;;
     *ping_*)
-        if command -v ping4; then
+        if command -v ping4 >/dev/null; then
             ping_func() { ping4 "$@"; }
         else
             # Some implementations (e.g. "inetutils-ping") do not support the "-4" argument.
