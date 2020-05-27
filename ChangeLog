@@ -1,5 +1,27 @@
 -*- text -*-
 
+munin-2.0.62, 2020-05-27
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (5):
+      Move "munin-node-configure" test from Makefile to travis checks
+      Fix formatting of Munin::Common::Daemon documentation
+      Plugin proc: change to "manual" family
+      Plugins: use "command -v" instead of "which"
+      Plugins: hide output for boolean checks of "command -v"
+
+d0m84 (1):
+      add start and stop log for munin-graph
+
+
 munin-2.0.61, 2020-04-30
 -------
 Summary
