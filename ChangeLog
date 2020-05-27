@@ -4186,6 +4186,22 @@ tsaavik (1):
       dynazoom: added logo and backlink
 
 
+munin-2.0.61, 2020-04-30
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (2):
+      Plugins apache_*: tolerate URL without placeholder for port
+      Plugins apache_*: fix handling of URL with port placeholder
+
+
 munin-2.0.60, 2020-04-22
 -------
 Summary
