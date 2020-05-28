@@ -38,10 +38,6 @@ This will provide for HTTP basic authentication.
 
   #%# family=contrib
 
-=head1 VERSION
-
-  $Id$
-
 =head1 AUTHOR
 
 Jimmy Olsen (based on some Apache plugin).  Documented by Nicolai Langfeldt.

@@ -1,7 +1,5 @@
 package Munin::Node::Configure::Debug;
 
-# $Id$
-
 use strict;
 use warnings;
 

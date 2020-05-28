@@ -46,10 +46,6 @@ and IF-MIB::ifOutErrors.
   #%# family=snmpauto
   #%# capabilities=snmpconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 None known.

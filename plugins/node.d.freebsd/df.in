@@ -1,7 +1,5 @@
 #!@@GOODSH@@
 #
-# $Id$
-#
 # Script to monitor disk usage.
 #
 # Parameters understood:

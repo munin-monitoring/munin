@@ -65,10 +65,6 @@ Each graph uses data from varnishstat.
  #%# family=auto
  #%# capabilities=autoconf suggest
 
-=head1 VERSION
-
- $Id$
-
 =head1 BUGS
 
 The hit_rate graph requires munin r2040 or newer to display
@@ -91,8 +87,11 @@ GPLv2
 =cut
 
 
-use XML::Parser;
 use strict;
+
+use English qw( -no_match_vars );
+eval { require XML::Parser; XML::Parser->import(); };
+my $has_xml_parser = $EVAL_ERROR ? 0 : 1;
 
 # Set to 1 to enable output when a variable is defined in a graph but
 # omitted because it doesn't exist in varnishstat.
@@ -1008,9 +1007,9 @@ sub set_aspect
 # is 'no'.
 sub autoconf
 {
-	# XXX: Solaris outputs errors to stderr and always returns true.
-	# XXX: See #873
-	if (`which $varnishstatexec 2>/dev/null` =~ m{^/}) {
+	if (!$has_xml_parser) {
+		print "no (missing perl module XML::Parser)\n";
+	} elsif (`sh -c 'command -v "$varnishstatexec"'` =~ m{^/}) {
 		print "yes\n";
 	} else {
 		print "no ($varnishstatexec could not be found)\n";

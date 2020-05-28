@@ -66,7 +66,7 @@ fi
 
 UNITS=${units:-}
 COMMUNITY=${community:-public}
-SNMPGET=$(which snmpget 2>/dev/null)
+SNMPGET=$(command -v snmpget)
 
 if [ -n "${oid:-}" ]; then TOID=$oid ; fi
 

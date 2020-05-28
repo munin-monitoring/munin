@@ -42,12 +42,33 @@ use Munin::Plugin;
 use strict;
 use warnings;
 use File::Spec;
-use Net::DNS;
+eval { require Net::DNS; Net::DNS->import(); };
+my $has_net_dns = $EVAL_ERROR ? 0 : 1;
 
 # Include /usr/local/sbin in the path to use the ntpq installed by
 # ports on FreeBSD instead of the base system, which is probably
 # older.
 $ENV{'PATH'} = File::Spec->catdir(File::Spec->rootdir(), 'usr', 'local', 'sbin') . ":" . $ENV{'PATH'};
+
+if ($ARGV[0] and $ARGV[0] eq "autoconf") {
+        if (!$has_net_dns) {
+                print "no (missing perl module Net::DNS)\n";
+        } else {
+                `ntpq -c help >/dev/null 2>/dev/null`;
+                if ($CHILD_ERROR eq "0") {
+                        if (`ntpq -n -c peers | wc -l` > 0) {
+                                print "yes\n";
+                        } else {
+                                print "no (ntpq -p returned no peers)\n";
+                        }
+                } else {
+                        print "no (ntpq not found)\n";
+                }
+        }
+        exit 0;
+}
+
+die "Aborting due to missing perl module 'Net::DNS'" unless ($has_net_dns);
 
 my %stateval = (
                  "reject"    => 0,
@@ -138,22 +159,6 @@ sub make_names {
         $fieldname = clean_fieldname($fieldname);
 
         return ($fieldname, $hostname);
-}
-
-if ($ARGV[0] and $ARGV[0] eq "autoconf") {
-        `ntpq -c help >/dev/null 2>/dev/null`;
-        if ($CHILD_ERROR eq "0") {
-                if (`ntpq -n -c peers | wc -l` > 0) {
-                        print "yes\n";
-                        exit 0;
-                } else {
-                        print "no (ntpq -p returned no peers)\n";
-                        exit 0;
-                }
-        } else {
-                print "no (ntpq not found)\n";
-                exit 0;
-        }
 }
 
 &make_hash;

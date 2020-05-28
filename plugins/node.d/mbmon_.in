@@ -1,28 +1,61 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Plugin to monitor Motherboard temparature using mbmon
-#  (http://www.nt.phys.kyushu-u.ac.jp/shimizu/download/download.html)
 
-# Copyright (c) 2005 Arne Schwabe
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms are freely
-# permitted provided that the above copyright notice and this
-# paragraph and the following disclaimer are duplicated in all
-# such forms.
-#
-# This software is provided "AS IS" and without any express or
-# implied warranties, including, without limitation, the implied
-# warranties of merchantability and fitness for a particular
-# purpose.
-#
+: <<=cut
+
+=head1 NAME
+
+mbmon_ - monitor motherboard temparature using mbmon
+
+=head1 APPLICABLE SYSTEMS
+
+The software "mbmon" is required:
+ http://www.nt.phys.kyushu-u.ac.jp/shimizu/download/download.html
+
+=head1 CONFIGURATION
+
+The following details can be configured (e.g. below /etc/munin/plugin-conf.d/):
+  [mbmon_*]
+  env.mbmon /usr/local/bin/mbmon
+  env.mbmonargs -I -pit87
+
+Parameters
+  mbmonpath  - path to the mbmon program (default: automatic detection)
+  mbmonargs  - additional arguments given to mbmon
+
+=head1 AUTHOR
+
+Copyright (c) 2005 Arne Schwabe
+
+All rights reserved.
+
+=head1 LICENSE
+
+Redistribution and use in source and binary forms are freely
+permitted provided that the above copyright notice and this
+paragraph and the following disclaimer are duplicated in all
+such forms.
+
+This software is provided "AS IS" and without any express or
+implied warranties, including, without limitation, the implied
+warranties of merchantability and fitness for a particular
+purpose.
+
+=cut
+
 
 #%# family=contrib
 #%# capabilities=autoconf suggest
 
 what=$(basename "$0" | sed 's/^mbmon_//g')
-mbmon=${mbmon:-$(which mbmon)}
+mbmon=${mbmon:-$(command -v mbmon)}
+mbmonargs=${mbmonargs:-}
+
+
+run_mbmon() {
+	# shellcheck disable=SC2086
+	"$mbmon" -c 1 -r $mbmonargs
+}
 
 
 if [ "$1" = "suggest" ]; then
@@ -88,15 +121,15 @@ fi
 
 case $what in
 	TEMP)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep TEMP
+		run_mbmon | sed -e "s/ *: */.value /" | grep TEMP
 		exit 0
 		;;
 	Voltage)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep V
+		run_mbmon | sed -e "s/ *: */.value /" | grep V
 		exit 0
 		;;
 	FAN)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep FAN
+		run_mbmon | sed -e "s/ *: */.value /" | grep FAN
 		exit 0
 		;;
 esac

@@ -102,7 +102,7 @@ CRITICAL=${critical:-1073741824} # 1GB
 
 mysql_exec() {
     # shellcheck disable=SC2086
-    "$MYSQL" $MYSQLOPTS --batch --skip-column-names --database=information_schema --execute
+    "$MYSQL" $MYSQLOPTS --batch --skip-column-names --database=information_schema --execute "$1"
 }
 
 

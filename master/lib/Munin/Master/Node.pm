@@ -1,7 +1,5 @@
 package Munin::Master::Node;
 
-# $Id$
-
 # This module is used by UpdateWorker to keep in touch with a node and
 # parse some of the output.
 
@@ -92,7 +90,7 @@ sub _do_connect {
 		MultiHomed => 1,
 		Timeout   => $config->{timeout}
 	);
-	if (! $self->{reader} ) {
+	unless ($self->{reader} && defined $self->{reader}->connected()) {
 		ERROR "Failed to connect to node $self->{address}:$self->{port}/tcp : $!";
 		return 0;
 	}

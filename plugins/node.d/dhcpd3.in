@@ -40,10 +40,6 @@ The plugin shows the number of used leases by subnet.
   #%# family=contrib
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 If a DHCP config file contains multiple subnets but none of them has a

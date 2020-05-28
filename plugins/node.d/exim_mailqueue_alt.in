@@ -45,18 +45,9 @@ GPLv2
 =cut
 
 PATH='/bin:/sbin:/usr/bin:/usr/sbin'
-# You cannot trust the exit status of which
-EXIM=$(which exim 2>/dev/null)
-case $EXIM:$? in
-    *:1|no*) EXIM=$(which exim4 2>/dev/null)
-esac
-case $EXIM:$? in
-    *:1|no*) EXIM=''
-esac
 
 QUEUECRIT=200
-
-EXIM=${exim:-$EXIM}
+EXIM=${exim:-$(command -v exim || command -v exim4)}
 QUEUEWARN=${queuewarn:-100}
 QUEUECRIT=${queuecrit:-200}
 

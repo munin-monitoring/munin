@@ -1,8 +1,6 @@
 package Munin::Master::Utils;
 # -*- cperl -*-
 
-# $Id$
-
 use strict;
 use warnings;
 

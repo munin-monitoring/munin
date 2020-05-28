@@ -1,7 +1,5 @@
 package Munin::Common::TLS;
 
-# $Id$
-
 use warnings;
 use strict;
 

@@ -35,10 +35,6 @@ iowait reporting works to fully understand that number.
   #%# family=legacy
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 Should show more useful device names/labels for device-mapper devices,

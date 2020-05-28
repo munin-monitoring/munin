@@ -43,8 +43,10 @@ sub setup {
     $node->mock('_node_read_single', sub { 
         return '# munin node at foo.example.com' 
     });
+    my $connected_socket = Test::MockObject->new();
+    $connected_socket->set_true('connected');
     my $inet = Test::MockModule->new('IO::Socket::INET6');
-    $inet->mock(new => sub { return {} });
+    $inet->mock(new => sub { return $connected_socket });
 
     $node->_do_connect();
 

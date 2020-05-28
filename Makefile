@@ -2,7 +2,6 @@
 #
 # Gnu make only.  Seriously.
 #
-# $Id$
 
 # Defaults/paths. Allows $(CONFIG) to be overridden by
 # make command line
@@ -539,7 +538,6 @@ install-%: %/Build
 
 test-%: %/Build
 	cd $* && $(PERL) Build test --verbose=0
-
 
 .PHONY: lint lint-plugins lint-spelling
 lint: lint-plugins lint-spelling

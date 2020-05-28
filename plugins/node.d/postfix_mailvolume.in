@@ -106,7 +106,7 @@ sub parseLogfile {
 
 if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
     my $logfile;
-    `which postconf >/dev/null 2>/dev/null`;
+    `sh -c 'command -v postconf' >/dev/null`;
     if (!$?) {
         $logfile = "$LOGDIR/$LOGFILE";
 

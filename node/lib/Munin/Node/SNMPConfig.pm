@@ -1,7 +1,5 @@
 package Munin::Node::SNMPConfig;
 
-# $Id$
-
 use strict;
 use warnings;
 

@@ -42,8 +42,6 @@ Network Appliance. It reports the content of the DfEntry OID.
 v1.0 - 06/22/2009 14:05:03 CEST
 Initial revision
 
-  $Id$
-
 =head1 AUTHOR
 
 This plugin is copyright (c) 2009 by Guillaume Blairon.

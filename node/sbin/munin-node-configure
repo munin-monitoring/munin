@@ -659,8 +659,6 @@ not this works with any particular device, we do not know.
 
 This is munin-node-configure (munin-node) v@@VERSION@@.
 
-$Id$
-
 =head1 AUTHORS
 
 Jimmy Olsen, Nicolai Langfeldt, Matthew Boyle

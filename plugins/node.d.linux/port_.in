@@ -23,10 +23,6 @@ a numeric port number.
 
 The plugin doesnt count the tcp6 connections if tcp and tcp6 is used.
 
-=head1 VERSION
-
-$Id$
-
 =head1 AUTHOR
 
 Unknown

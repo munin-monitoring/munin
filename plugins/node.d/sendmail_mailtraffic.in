@@ -34,7 +34,7 @@ GPLv2
 =cut
 
 
-MAILSTATS=${mailstats:-$(which mailstats 2>/dev/null)}
+MAILSTATS=${mailstats:-$(command -v mailstats)}
 
 
 if [ "$1" = "autoconf" ]; then

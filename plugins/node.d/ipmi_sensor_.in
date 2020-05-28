@@ -128,7 +128,7 @@ def get_sensor_names():
     try:
         p = Popen(["ipmitool", "-I", "open", "sensor"], shell=False, stdout=PIPE)
     except OSError:
-        return
+        return {}
     data = p.stdout.read().decode().splitlines()
 
     units = {}
@@ -157,13 +157,13 @@ def get_sensors():
             try:
                 p = Popen(["ipmitool", "-I", "open", "sensor"], shell=False, stdout=PIPE)
             except OSError:
-                return
+                return {}
         else:
             try:
                 p = Popen(["ipmitool", "-I", "open", "sensor", "get", "--"] + SENSORS,
                           shell=False, stdout=PIPE)
             except OSError:
-                return
+                return {}
         data = p.stdout.read().decode()
         try:
             with open(cache_filename, "w") as f:

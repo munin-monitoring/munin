@@ -1,7 +1,5 @@
 package Munin::Node::Server;
 
-# $Id$
-
 use base qw(Net::Server::Fork);
 
 use strict;

@@ -88,7 +88,7 @@ fi
 
 
 # check if the digitemp executable is available
-if ! [ -x "$(which "$digitemp_bin")" ]; then
+if ! [ -x "$(command -v "$digitemp_bin")" ]; then
     echo "executable '$digitemp_bin' not found" >&2
     exit 1
 fi

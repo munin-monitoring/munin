@@ -160,6 +160,8 @@ sub get_group_tree {
 			my $childnode = generate_service_templates($child);
 			push @$graphs, {"name" => $childname};
 			$childnode->{'name'} = $child->{"graph_title"};
+			# used in category view and comparison view for nested (multigraph) services
+			$childnode->{'nodename'} = munin_get_parent_name($hash);
 			add_graph_to_categories($childnode);
 
 		    # Make sure the link gets right even if the service has subservices

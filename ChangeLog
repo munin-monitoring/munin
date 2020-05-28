@@ -1,5 +1,161 @@
 -*- text -*-
 
+munin-2.0.63, 2020-05-27
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Alexander (1):
+      Remove unneeded forks in plugin.sh
+
+Lars Kruse (3):
+      plugin.sh: fix shellcheck issues and tolerate unset optional arguments
+      Plugins: force execution in a shell for "command -v"
+      plugin.sh: improve documentation for "print_warning" and "print_critical"
+
+
+munin-2.0.62, 2020-05-27
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (5):
+      Move "munin-node-configure" test from Makefile to travis checks
+      Fix formatting of Munin::Common::Daemon documentation
+      Plugin proc: change to "manual" family
+      Plugins: use "command -v" instead of "which"
+      Plugins: hide output for boolean checks of "command -v"
+
+d0m84 (1):
+      add start and stop log for munin-graph
+
+
+munin-2.0.61, 2020-04-30
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (2):
+      Plugins apache_*: tolerate URL without placeholder for port
+      Plugins apache_*: fix handling of URL with port placeholder
+
+
+munin-2.0.60, 2020-04-22
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Hans de Graaff (1):
+      Plugin mysql_innodb: pass argument to mysql_exec
+
+Lars Kruse (6):
+      Remove logging from Munin::Common::Daemon
+      Plugin ping_: use "ping" instead of "ping6" except for *BSD
+      Plugin nginx_status: improve error message in case of missing dependency
+      munin-run: skip systemd properties simulation in case of missing privileges
+      Remove asterisk_* plugins
+
+Steve Schnepp (1):
+      dists: remove all dists specific stuff
+
+Thomas Daniels (1):
+      Fix typo in doc/reference/plugin.rst of stable-2.0
+
+
+munin-2.0.59, 2020-03-24
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Moench-Tegeder (1):
+
+Lars Kruse (1):
+      Fix syntax error in munin-asyncd
+
+
+munin-2.0.58, 2020-03-23
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Moench-Tegeder (1):
+
+Andreas Perhab (1):
+      plugin ipmi_: add support for volts
+
+Klas Meder Boqvist (1):
+      Plugin cpuspeed: ensure value is not in scientific notation
+
+Lars Kruse (28):
+      Plugin ipmi_sensor_: fix "suggest" in case of missing "ipmitool"
+      dev_scripts: allow override for sandbox directory
+      Plugin proc (linux): announce availability of autoconf
+      Plugin proc (linux): fix indentation
+      Remove remaining occurrences of subversion revision markers ($Id$)
+      Plugin ntp_: output "U" values in case of data retrieval problems
+      emit_sd_notify_message: adjust log level for messages
+      asyncd: prevent skipping of values due to variable collection periods
+      master: do not block connection to munin-node in case of TCP timeout
+      Fix test for munin_master_node
+      devscripts/install: override users and groups with the current user
+      Plugin mysql_: handle missing dependencies gracefully
+      Plugin ntp_: handle missing dependencies gracefully
+      Plugin ntp_states: move "autoconf" code to the top
+      Plugin ntp_states: handle missing dependency gracefully
+      Plugin varnish_: handle missing dependency gracefully
+      Makefile: test "munin-node-configure --suggest"
+      Plugin mbmon_: convert plugin documentation to perldoc header
+      Plugin mbmon_: prepare for configurable arguments
+      Plugin mbmon_: allow additional arguments for "mbmon"
+      Plugin apt_all: improve formatting of error messages
+      Plugin apt_all: enforce stable order of fields
+      Plugin apt_all: include release names with slashes (e.g. buster/updates)
+      Plugin apt_all: unify whitespace
+      Plugin apt_all: apply default "options" for apt-get
+      Plugin apt_all: use a proper name for the state file
+      templates: remove superfluous whitespace after "Munin" in title
+      templates: add missing hostname to category and comparison views of multigraph services
+
+Trygve Vea (1):
+      Proc plugin: Allow monitoring of processes with empty cmdline
+
+
 munin-2.0.57, 2020-03-09
 -------
 Summary

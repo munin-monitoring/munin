@@ -17,17 +17,28 @@ graphs.
 You can add some extra options to the apt call, in order to override
 your /etc/apt.conf defaults.
 
-[apt_all]
-env.options -o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false
-env.releases stable experimental
+  [apt_all]
+  env.options -o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false
+  env.releases stable experimental
 
-"options" is empty by default.
-"releases" is a space separated list of release names.  It defaults to
-the empty string.  This default triggers the automatic detection of
-available distributions from the URLs of all configured repositories.
+=head2 options
 
-Note that apt is called with no extra options by default, so it fully honors
-your /etc/apt.conf defaults.
+This settings defaults to the example given above.
+
+This default overrides potential local customization within
+/etc/apt.conf, which could interfere with the intended operation of
+apt or the output format required for this plugin.
+
+Please note that "apt" honors your /etc/apt.conf defaults.
+Thus you may need to override specific options, if you adjusted your
+local apt.conf setup.
+
+=head2 releases
+
+This configuration may contain a space separated list of release names.
+It defaults to the empty string.  This default triggers the automatic
+detection of available distributions from the URLs of all configured
+repositories.
 
 =head1 USAGE
 
@@ -36,8 +47,8 @@ This plugin needs a cronjob that runs apt-get update every hour or so
 Example conjob
 
  /etc/cron.d/munin-plugin-apt
- 53  * * * *	root	apt-get update > /dev/null 2>&1
- 23 08 * * * 	root	apt-get update > /dev/null
+ 53  * * * *    root    apt-get update > /dev/null 2>&1
+ 23 08 * * *    root    apt-get update > /dev/null
 
 Remember to randomize when these cronjobs are run on your servers
 
@@ -66,12 +77,19 @@ use Munin::Plugin;
 $ENV{'LANG'}="C";
 $ENV{'LC_ALL'}="C";
 
-my $statefile = ($ENV{MUNIN_PLUGSTATE} || '@@PLUGSTATE@@/nobody/') . "/plugin-apt.state";
+# The plugin is called in two ways:
+#     - via a cron job (without the munin environment provided by "munin-run")
+#     - as a regular plugin
+# Thus the location evaluation below relies on the following assumptions:
+#     - the plugin is configured to run as "nobody"
+#     - the munin plugin state directory location was not reconfigured
+my $statefile = ($ENV{MUNIN_PLUGSTATE} || '@@PLUGSTATE@@/nobody/') . "/plugin-apt_all.state";
+my $apt_options = $ENV{options} || "-o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false";
 
 
 # try to determine the currently available distributions by inspecting the repository URLs
 sub guess_releases() {
-    open(my $fh, "-|", "apt-get update --print-uris")
+    open(my $fh, "-|", "apt-get $apt_options update --print-uris")
         or die("Failed to determine distribution releases via 'apt-get update --print-uris");
     my %release_names;
     my $line;
@@ -79,11 +97,15 @@ sub guess_releases() {
         defined( $line = readline $fh ) or die "Failed to read line from output of 'apt-get': $!";
         # example line:
         #     'http://ftp.debian.org/debian/dists/stable/InRelease' ftp.debian.org_debian_dists_stable_InRelease 0
-        if ($line =~ m'^.*/dists/([^/]+)/.*$') {
-            $release_names{$1} = 1;
+        if ($line =~ m#^.*/dists/([^']+)/[^/]+/[^/]+/Packages#) {
+            my $release_name = $1;
+            # The security updates are named like "buster/updates". The first part (before the
+            # slash) is sufficient to mach these packages.
+            $release_name =~ s|/updates$||;
+            $release_names{$release_name} = 1;
         }
     }
-    return keys %release_names;
+    return sort keys %release_names;
 }
 
 
@@ -93,133 +115,116 @@ my @releases = split(/\s/, ($ENV{releases} || ""));
 
 
 sub print_state() {
-    if(-l $statefile) {
-	die("$statefile is a symbolic link, refusing to read it.");
+    if (-l $statefile) {
+        die("$statefile is a symbolic link, refusing to read it.");
     }
     if (! -e "$statefile") {
-	update_state ();
+        update_state();
     }
     if (! -e "$statefile") {
-	die ("$statefile does not exist. Something wicked happened.");
+        die("$statefile does not exist. Something wicked happened.");
     }
     open(STATE, "$statefile")
-	or die("Couldn't open state file $statefile for reading.");
+        or die("Couldn't open state file $statefile for reading.");
     while (my $line = <STATE>) {
         foreach my $release (@releases) {
             my $release_cleaned = clean_fieldname($release);
             # print only lines that are exected for the currently requested releases
-	    if ($line =~ /^(hold|pending)_$release_cleaned\.(value|extinfo)/) {
-	    	print $line ;
-            	last;
-	    }
+            if ($line =~ /^(hold|pending)_$release_cleaned\.(value|extinfo)/) {
+                print $line ;
+                last;
+            }
         }
     }
     close STATE;
 }
 
 sub update_state() {
-	if(-l $statefile) {
-		die("$statefile is a symbolic link, refusing to touch it.");
-	}
-	open(STATE, ">$statefile")
-		or die("Couldn't open state file $statefile for writing.");
-	foreach my $release (@releases) {
-	    my $options = $ENV{options} || "";
-	    my $apt="apt-get $options -u dist-upgrade --print-uris --yes -t $release |";
-	    open (APT, "$apt") or exit 22;
+    if(-l $statefile) {
+        die("$statefile is a symbolic link, refusing to touch it.");
+    }
+    open(STATE, ">$statefile")
+        or die("Couldn't open state file $statefile for writing.");
+    foreach my $release (@releases) {
+        my $apt="apt-get $apt_options -u dist-upgrade --print-uris --yes -t $release |";
+        open (APT, "$apt") or exit 22;
 
-	    my @pending = ();
-	    my $hold    = 0;
-	    my @remove  = ();
-	    my @install = ();
+        my @pending = ();
+        my $hold = 0;
+        my @remove = ();
+        my @install = ();
 
-	    while (<APT>)
-	    {
-		    if (/^The following packages will be REMOVED:/)
-		    {
-			    my $where = 0;
-			    while (<APT>)
-			    {
-				    last if (/^\S/);
-				    foreach my $package (split /\s+/)
-				    {
-					    next unless ($package =~ /\S/);
-					    push (@remove, "-$package");
-				    }
-			    }
-		    }
-		    if (/^The following NEW packages will be installed:/)
-		    {
-			    my $where = 0;
-			    while (<APT>)
-			    {
-				    last if (/^\S/);
-				    foreach my $package (split /\s+/)
-				    {
-					    next unless ($package =~ /\S/);
-					    push (@install, "+$package");
-				    }
-			    }
-		    }
-		    if (/^The following packages will be upgraded/)
-		    {
-			    my $where = 0;
-			    while (<APT>)
-			    {
-				    last if (/^\S/);
-				    foreach my $package (split /\s+/)
-				    {
-					    next unless ($package =~ /\S/);
-					    push (@pending, $package);
-				    }
-			    }
-		    }
-		    if (/^\d+\supgraded,\s\d+\snewly installed, \d+ to remove and (\d+) not upgraded/)
-		    {
-			    $hold = $1;
-		    }
-	    }
+        while (<APT>) {
+            if (/^The following packages will be REMOVED:/) {
+                my $where = 0;
+                while (<APT>) {
+                    last if (/^\S/);
+                    foreach my $package (split /\s+/) {
+                        next unless ($package =~ /\S/);
+                        push (@remove, "-$package");
+                    }
+                }
+            }
+            if (/^The following NEW packages will be installed:/) {
+                my $where = 0;
+                while (<APT>) {
+                    last if (/^\S/);
+                    foreach my $package (split /\s+/) {
+                        next unless ($package =~ /\S/);
+                        push (@install, "+$package");
+                    }
+                }
+            }
+            if (/^The following packages will be upgraded/) {
+                my $where = 0;
+                while (<APT>) {
+                    last if (/^\S/);
+                    foreach my $package (split /\s+/) {
+                        next unless ($package =~ /\S/);
+                        push (@pending, $package);
+                    }
+                }
+            }
+            if (/^\d+\supgraded,\s\d+\snewly installed, \d+ to remove and (\d+) not upgraded/) {
+                $hold = $1;
+            }
+        }
 
-	    push (@pending, @install) if @install;
-	    push (@pending, @remove ) if @remove;
-	    close APT;
+        push (@pending, @install) if @install;
+        push (@pending, @remove ) if @remove;
+        close APT;
 
-            my $release_cleaned = clean_fieldname($release);
-            print STATE "pending_$release_cleaned.value ", scalar (@pending), "\n";
-	    if (@pending)
-	    {
-                print STATE "pending_$release_cleaned.extinfo ", join (' ', @pending), "\n";
-	    }
-            print STATE "hold_$release_cleaned.value $hold\n";
+        my $release_cleaned = clean_fieldname($release);
+        print STATE "pending_$release_cleaned.value ", scalar (@pending), "\n";
+        if (@pending) {
+            print STATE "pending_$release_cleaned.extinfo ", join (' ', @pending), "\n";
+        }
+        print STATE "hold_$release_cleaned.value $hold\n";
 
-	}
-	close(STATE);
+    }
+    close(STATE);
 }
 
 sub update_helpandexit() {
-	print("apt update <maxinterval> <probability> -- update apt databases randomly\n\n",
-	      " maxinterval:\n",
-	      "  Enforce the updating of the apt database if it has\n",
-	      "  been more than (maxinterval many seconds since the last update.\n\n",
-	      " probability:\n",
-	      "  There's a 1 in (probability) chance that the database\n",
-	      "  will be updated.\n");
-	exit(1);
+    print("apt update <maxinterval> <probability> -- update apt databases randomly\n\n",
+          " maxinterval:\n",
+          "  Enforce the updating of the apt database if it has\n",
+          "  been more than 'maxinterval' many seconds since the last update.\n\n",
+          " probability:\n",
+          "  There's a 1 in 'probability' chance that the database\n",
+          "  will be updated.\n");
+    exit(1);
 }
 
-if ($ARGV[0] and $ARGV[0] eq "autoconf")
-{
-	`apt-get -v >/dev/null 2>/dev/null`;
-	if ($? eq "0")
-	{
-		print "yes\n";
-		exit 0;
-	}
-	else
-	{
-		print "no (apt-get not found)\n";
-		exit 0;
-	}
+if ($ARGV[0] and $ARGV[0] eq "autoconf") {
+    `apt-get -v >/dev/null 2>/dev/null`;
+    if ($? eq "0") {
+        print "yes\n";
+        exit 0;
+    } else {
+        print "no (apt-get not found)\n";
+        exit 0;
+    }
 }
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
@@ -238,21 +243,21 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 }
 
 if ($ARGV[0] and $ARGV[0] eq "update") {
-	my $maxinterval = $ARGV[1] ? $ARGV[1] : update_helpandexit;
-	my $probability = $ARGV[2] ? $ARGV[2] : update_helpandexit;
+    my $maxinterval = $ARGV[1] ? $ARGV[1] : update_helpandexit;
+    my $probability = $ARGV[2] ? $ARGV[2] : update_helpandexit;
 
-	# The state file needs an update in three situations:
-	#     * it does not exist
-	#     * $maxinterval seconds elapsed since the last update
-	#     * random $probability was hit (one out of $probability)
-	if (!-e $statefile
-			|| ((stat($statefile))[10] + $maxinterval < time())
-			|| (int(rand($probability)) == 0)) {
-		system("/usr/bin/apt-get update") == 0
-			or die("Failed to run 'apt-get update'");
-		update_state();
-	}
-	exit(0);
+    # The state file needs an update in three situations:
+    #     * it does not exist
+    #     * $maxinterval seconds elapsed since the last update
+    #     * random $probability was hit (one out of $probability)
+    if (!-e $statefile
+            || ((stat($statefile))[10] + $maxinterval < time())
+            || (int(rand($probability)) == 0)) {
+        system("/usr/bin/apt-get update") == 0
+            or die("Failed to run 'apt-get update'");
+        update_state();
+    }
+    exit(0);
 }
 
 print_state ();

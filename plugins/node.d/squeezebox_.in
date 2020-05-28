@@ -58,7 +58,7 @@ PORT=${squeezecenter_port:-9090}
 NC=${netcat:-nc}
 
 if [ "$1" = "autoconf" ]; then
-        if ! which "$NC" 1>/dev/null 2>&1; then
+        if ! command -v "$NC" >/dev/null; then
 		echo "no (no netcat/nc binary found)"
 		exit 0
 	fi

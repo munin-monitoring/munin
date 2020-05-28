@@ -36,10 +36,6 @@ compiled, and secondly it must be configured like this:
   #%# family=auto
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 None known
@@ -114,6 +110,9 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" ) {
 
     exit 0;
 }
+
+# generate a useful error message instead of just bailing out later
+die "Missing dependency: '$ret'" if ($ret);
 
 my $ua = LWP::UserAgent->new(timeout => 30,
 		agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));

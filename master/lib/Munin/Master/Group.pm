@@ -2,8 +2,6 @@ package Munin::Master::Group;
 
 use base qw(Munin::Master::GroupRepository);
 
-# $Id$
-
 use warnings;
 use strict;
 

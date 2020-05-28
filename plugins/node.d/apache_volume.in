@@ -70,10 +70,6 @@ some kind of bandwidth limit on your outgoing connection.
   #%# family=auto
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 Does not support digest authentication.
@@ -104,6 +100,14 @@ if (! eval "require LWP::UserAgent;")
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://127.0.0.1:%d/server-status?auto";
 my @PORTS = exists $ENV{'ports'} ? split(' ', $ENV{'ports'}) : (80);
 
+
+# Convert an URL with the %d placeholder into a string. Allow URL without placeholder.
+sub get_url_with_port {
+    my ($url, $port) = @_;
+    return ($url =~ /%d/) ? sprintf($url, $port) : $url;
+}
+
+
 if ( defined $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
 	if ($ret)
@@ -116,7 +120,7 @@ if ( defined $ARGV[0] and $ARGV[0] eq "autoconf" )
 			agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
 
 	foreach my $port (@PORTS) {
-		my $url = sprintf $URL, $port;
+		my $url = get_url_with_port($URL, $port);
 		my $response = $ua->request(HTTP::Request->new('GET',$url));
                 if ($response->is_success) {
                         if ($response->content =~ /^Total Accesses:/im ){
@@ -162,7 +166,7 @@ my $ua = LWP::UserAgent->new(timeout => 30,
 		agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
 
 foreach my $port (@PORTS) {
-	my $url = sprintf $URL, $port;
+	my $url = get_url_with_port($URL, $port);
 	my $response = $ua->request(HTTP::Request->new('GET',$url));
 	if ($response->content =~ /^Total kBytes:\s+(.+)$/im) {
 		print "volume$port.value ", int($1*1024), "\n";

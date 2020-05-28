@@ -44,7 +44,7 @@ INTERFACE=${0##*if_err_}
 
 case $1 in
     autoconf)
-        if which netstat >/dev/null; then
+        if command -v netstat >/dev/null; then
             echo yes
             exit 0
         else
@@ -53,7 +53,7 @@ case $1 in
         fi
         ;;
     suggest)
-        if which netstat >/dev/null; then
+        if command -v netstat >/dev/null; then
             netstat -nib | awk '$3 ~ /Link/ && $1 !~ /(Name|lo|gif|stf)/ && $5 != "0" && $7 != "0" { print $1 }'
         fi
         exit 0

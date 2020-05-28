@@ -43,8 +43,6 @@ the output of the program.
 
 =head1 VERSION
 
-  $Id$
-
 Tested with nvclock version 0.8b3a on a nVidia Geforce 8600GT.
 
 =head1 BUGS

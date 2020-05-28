@@ -31,10 +31,6 @@ The plugin aims to be a functional equivalent to the Linux df_inode plugin.
   #%# family=auto
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 None known

@@ -44,10 +44,6 @@ uses the contents of the hrSWRunPerfMem column of hrSWRunPerfTable.
   #%# family=snmpauto
   #%# capabilities=snmpconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 None known.

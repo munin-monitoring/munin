@@ -17,7 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# $Id$
 
 use strict;
 use warnings;
@@ -40,6 +39,10 @@ my $intervalsize = 86400;
 my $timeout = 3600;
 my $minrate = 300;
 my $retaincount = 7;
+# Asyncd collects data from plugins periodically.  We want to avoid skipping the next value due to
+# slight deviations of this period.  Thus we tolerate a slightly shorter time distance between two
+# successive requests for values from a plugin.
+my $min_update_rate_threshold = 0.75;
 my $nocleanup;
 my $do_fork;
 my $verbose;
@@ -168,7 +171,7 @@ MAIN: while($keepgoing) {
 	PLUGIN: foreach my $plugin (@plugins) {
 		# See if this plugin should be updated
 		my $plugin_rate = $spoolwriter->get_metadata("plugin_rates/$plugin") || 300;
-		if ($when < ($last_updated{$plugin} || 0) + $plugin_rate) {
+		if ($when < ($last_updated{$plugin} || 0) + ($plugin_rate * $min_update_rate_threshold)) {
 			# not yet, next plugin
 			next;
 		}

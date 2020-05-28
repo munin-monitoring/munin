@@ -59,18 +59,33 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 case $0 in
     *ping6_*)
-        PING=ping6
+        # use "ping6" if available - otherwise fall back to "ping"
+        if command -v ping6 >/dev/null; then
+            ping_func() { ping6 "$@"; }
+        else
+            ping_func() { ping -6 "$@"; }
+        fi
         file_host=${0##*/ping6_}
         V=IPv6
         ;;
     *ping_*)
-        PING=ping
+        if command -v ping4 >/dev/null; then
+            ping_func() { ping4 "$@"; }
+        else
+            # Some implementations (e.g. "inetutils-ping") do not support the "-4" argument.
+            # This careful approach sadly prohibits the explicit selection of the IPv4 address
+            # family.  Thus we are just hoping for the best (as this plugin always did).
+            ping_func() { ping "$@"; }
+        fi
         file_host=${0##*/ping_}
         V=IPv4
         ;;
 esac
 
 host=${host:-${file_host:-www.google.com}}
+if [ -n "${ping:-}" ]; then
+    ping_func() { "$ping" "$@"; }
+fi
 
 if [ "$1" = "config" ]; then
         echo "graph_title $V ping times to $host"
@@ -91,5 +106,5 @@ fi
 
 
 # shellcheck disable=SC2086
-"${ping:-$PING}" ${ping_args:-'-c 2'} "${host}" ${ping_args2:-} \
+ping_func ${ping_args:-'-c 2'} "${host}" ${ping_args2:-} \
 	| perl -n -e 'print "ping.value ", $1 / 1000, "\n" if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@; print "packetloss.value $1\n" if /(\d+)% packet loss/;'

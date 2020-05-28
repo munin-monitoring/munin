@@ -99,7 +99,7 @@ vhosts=${vhosts:-}
 configfile=${configfile:-}
 
 
-EJCTL=$(which ejabberdctl 2>/dev/null) || true
+EJCTL=$(command -v ejabberdctl || true)
 # get ejabberd PID
 # in GNU/Linux Debian Lenny release the pidof command can be executed only by root
 #EJPID=$(pidof -s /usr/lib/erlang/erts-5.6.3/bin/beam.smp)

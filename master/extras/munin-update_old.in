@@ -19,7 +19,6 @@
 #
 # Script to update the RRD-files with current information.
 #
-# $Id$
 
 use strict;
 

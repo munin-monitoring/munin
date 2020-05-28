@@ -1,7 +1,5 @@
 package Munin::Node::SpoolReader;
 
-# $Id$
-
 use strict;
 use warnings;
 

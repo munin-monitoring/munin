@@ -162,21 +162,26 @@ use warnings;
 use strict;
 use utf8;
 
-use DBI;
+use English qw( -no_match_vars );
 use File::Basename;
-use Math::BigInt; # Used to append "=> lib 'GMP'" here, but GMP caused
-		  # segfault on some occasions. Removed as I don't
-		  # think the tiny performance boost is worth the
-		  # debugging effort.
 use Storable qw(nfreeze thaw);
 
 use Munin::Plugin;
 
 my $has_cache;
+my $has_dbi;
+my $has_math_bigint;
 
 BEGIN {
-    eval 'require Cache::SharedMemoryCache';
-    $has_cache = $@ ? 0 : 1;
+    eval { require Cache::SharedMemoryCache; };
+    $has_cache = $EVAL_ERROR ? 0 : 1;
+    eval { require DBI; DBI->import(); };
+    $has_dbi = $EVAL_ERROR ? 0 : 1;
+    # Used to append "=> lib 'GMP'" here, but GMP caused segfault on some
+    # occasions. Removed as I don't think the tiny performance boost is
+    # worth the debugging effort.
+    eval { require Math::BigInt; Math::BigInt->import(); };
+    $has_math_bigint = $EVAL_ERROR ? 0 : 1;
 }
 
 
@@ -902,6 +907,12 @@ sub main {
     die "Missing dependency Cache::Cache"
 	unless $has_cache || $command eq 'autoconf';
 
+    die "Missing dependency DBI"
+        unless $has_dbi || $command eq 'autoconf';
+
+    die "Missing dependency Math::BigInt"
+        unless $has_math_bigint || $command eq 'autoconf';
+
     return $command_map{$command}->($graph);
 }
 
@@ -917,6 +928,14 @@ sub main {
 sub autoconf {
     unless ($has_cache) {
 	print "no (Missing dependency Cache::Cache)\n";
+	return 0;
+    }
+    unless ($has_dbi) {
+	print "no (Missing dependency DBI)\n";
+	return 0;
+    }
+    unless ($has_math_bigint) {
+	print "no (Missing dependency Math::BigInt)\n";
 	return 0;
     }
 

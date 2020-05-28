@@ -2,8 +2,6 @@ package Munin::Master::Config;
 
 use base qw(Munin::Common::Config);
 
-# $Id$
-
 # Notes about config data structure:
 # 
 # In Munin all configuration and gathered data is stored in the same

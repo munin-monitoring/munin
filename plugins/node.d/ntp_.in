@@ -53,23 +53,33 @@ Same as munin.
 use English qw( -no_match_vars );
 use strict;
 use warnings;
-use Net::DNS;
-use Net::IP;
+eval {
+    require Net::DNS;
+    Net::DNS->import();
+    require Net::IP;
+    Net::IP->import();
+};
+my $has_requirements = $EVAL_ERROR ? 0 : 1;
+# work around "strict" check for this variable exported by "Net::IP"
+my $IP_IDENTICAL unless $has_requirements;
+
 
 if ($ARGV[0] and $ARGV[0] eq "autoconf") {
-        `ntpq -c help >/dev/null 2>/dev/null`;
-        if ($CHILD_ERROR eq "0") {
-                if (`ntpq -n -c peers | wc -l` > 0) {
-                        print "yes\n";
-                        exit 0;
-                } else {
-                        print "no (ntpq -p returned no peers)\n";
-                        exit 0;
-                }
+        if (!$has_requirements) {
+                print "no (missing Net::DNS or Net::IP modules)\n";
         } else {
-                print "no (ntpq not found)\n";
-                exit 0;
+                `ntpq -c help >/dev/null 2>/dev/null`;
+                if ($CHILD_ERROR eq "0") {
+                        if (`ntpq -n -c peers | wc -l` > 0) {
+                                print "yes\n";
+                        } else {
+                                print "no (ntpq -p returned no peers)\n";
+                        }
+                } else {
+                        print "no (ntpq not found)\n";
+                }
         }
+        exit 0;
 }
 
 if ($ARGV[0] and $ARGV[0] eq "suggest") {
@@ -104,10 +114,10 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
         exit 0;
 }
 
-my $srcadr;
-my $delay;
-my $offset;
-my $jitter;
+my $srcadr = "";
+my $delay = "U";
+my $offset = "U";
+my $jitter = "U";
 my @associations = `ntpq -c associations`;
 
 foreach my $line (@associations) {

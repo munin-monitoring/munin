@@ -150,7 +150,7 @@ if ($smartctl and `$smartctl --version` =~ / release (\d+\.\d+) /i) {
 }
 
 # hdparm is used as a fallback
-my $hdparm = `which hdparm 2>/dev/null`;
+my $hdparm = `sh -c 'command -v hdparm'`;
 chomp $hdparm;
 
 my @drives;

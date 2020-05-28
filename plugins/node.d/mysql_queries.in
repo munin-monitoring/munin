@@ -36,10 +36,6 @@ Copyright 2003-2008 - Per Andreas Buer
 
 GPLv2
 
-=head1 VERSION
-
-  $Id$
-
 =head1 MAGIC MARKERS
 
   #%# family=manual
