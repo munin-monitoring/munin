@@ -1,5 +1,6 @@
 munin (2.0.63-1) UNRELEASED; urgency=medium
 
+  [ Lars Kruse ]
   * New upstream release, 2.0.63.
   * New upstream release, 2.0.62.
   * New upstream release, 2.0.61.
@@ -27,6 +28,9 @@ munin (2.0.63-1) UNRELEASED; urgency=medium
     The init script only creates directories - these are handled via
     systemd-tmpfiles.
     (thanks, Andreas Henriksson)
+
+  [ Holger Levsen ]
+  * Bump debhelper-compat to 13.
 
  -- Lars Kruse <devel@sumpfralle.de>  Sun, 15 Mar 2020 15:01:38 +0100
 
