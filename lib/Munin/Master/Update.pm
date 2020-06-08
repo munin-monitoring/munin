@@ -149,7 +149,7 @@ sub _db_stats {
 	$self->{runid} = time() unless $self->{runid};
 	my $runid = $self->{runid};
 	my $dbh = $self->{dbh} || get_dbh(); # Reuse any existing connection, or open a temporary one
-	my $sth_i = $dbh->prepare_cached("INSERT INTO stats (runid, tstp, type, name, duration) VALUES (?, ?, ?, ?, ?);");
+	my $sth_i = $dbh->prepare_cached("INSERT INTO stats (runid, tstp, type, name, duration) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?);");
 	$sth_i->execute($runid, time(), $type, $name, $duration);
 }
 
@@ -282,7 +282,7 @@ sub _db_init {
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
 
 	# Munin stats
-	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp DATETIME, type VARCHAR, name VARCHAR, duration NUMERIC)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp TIMESTAMP, type VARCHAR, name VARCHAR, duration NUMERIC)");
 
 	# Initialise the grp _root_ node if not present
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
