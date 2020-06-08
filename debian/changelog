@@ -1,4 +1,4 @@
-munin (2.0.63-1) UNRELEASED; urgency=medium
+munin (2.0.63-1) unstable; urgency=medium
 
   [ Lars Kruse ]
   * New upstream release, 2.0.63.
@@ -32,7 +32,7 @@ munin (2.0.63-1) UNRELEASED; urgency=medium
   [ Holger Levsen ]
   * Bump debhelper-compat to 13.
 
- -- Lars Kruse <devel@sumpfralle.de>  Sun, 15 Mar 2020 15:01:38 +0100
+ -- Holger Levsen <holger@debian.org>  Tue, 09 Jun 2020 01:55:12 +0200
 
 munin (2.0.57-1) unstable; urgency=medium
 
