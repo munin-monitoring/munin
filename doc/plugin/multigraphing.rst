@@ -164,6 +164,32 @@ It is necessary to emit all the values for a given graph in a single block; in p
 
 If the same graph is named multiple times in the output, only one of them "wins", and the others are ignored.
 
+Another caveat is that the same name cannot be reused for a sub-graph and its field. For example, the following config *will not work as expected*.
+
+::
+
+   multigraph base
+   ...
+   field1.label ...
+   multigraph base.sub
+   ...
+   sub.label ...
+
+While the "sub" graph will be rendered properly, the "base" graph will not. Munin will be looking for an *non-existent "sub" series outside of the "sub" graph*. This will result in a missing "base" graph, and confusing log messages from munin-graph.
+
+::
+
+   [RRD ERROR] Unable to graph /var/cache/munin/www/host/base-day.png : opening '/var/lib/munin/host/base-sub-g.rrd': No such file or directory
+   [RRD ERROR] rrdtool 'graph' '/var/cache/munin/www/host/base-day.png' \
+        ...
+        'DEF:gfield1=/var/lib/munin/host/base-field1-g.rrd:42:AVERAGE' \
+        ...
+        'DEF:gsub=/var/lib/munin/host/base-sub-g.rrd:42:AVERAGE' \
+        ...
+        '--end' \
+        '1592289000'
+   [WARNING] Could not draw graph " /var/cache/munin/www/host/base-day.png": /var/cache/munin /var/cache/munin/www/host/base-day.png
+
 Other documentation
 ===================
 
