@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# export munin's default palette to SVG
+#
+# The output can be stored in a file.
+#
+
+set -eu
+
+
+MUNIN_LIB_DIR="$(dirname "$0")/../lib"
+SVG_HEADER='<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg width="320mm" height="20mm" viewBox="0 0 320 20"><g>'
+SVG_FOOTER='</g></svg>'
+SVG_COLOR_BOX_TEMPLATE='<rect y="0" x="%d" height="20" width="20" style="color:#000000;fill:#%s"/>'
+
+
+get_munin_colors() {
+    {
+        sed 1d lib/Munin/Master/Graph.pm
+        printf '%s' 'for my $color (@COLOUR) {print($color . "\n");}'
+    } | PERL5LIB="$MUNIN_LIB_DIR" perl
+}
+
+
+printf '%s\n' "$SVG_HEADER"
+get_munin_colors | nl | while read -r line color; do
+    printf "$SVG_COLOR_BOX_TEMPLATE\n" "$(( (line-1) * 20))" "$color"
+done
+printf '%s\n' "$SVG_FOOTER"
