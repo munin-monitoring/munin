@@ -349,14 +349,12 @@ Field name attributes
 .. _fieldname.line:
 
 :Attribute: **{fieldname}.line**
-:Value: value [:color[:label]]
+:Value: value:color:label
 :Type: optional
-:Description: Adds a horizontal line with the fieldname's colour (HRULE) at the value defined. Will not show if outside the graph's scale.
+:Description: Adds a horizontal line with the specified colour (HRULE) at the value defined. Will not show if outside the graph's scale.
 :See also: rrdgraph_
 :Default:
-
-.. Note::
-     Didn't work here (munin-2.0.25-2.el6.noarch, rrdtool-1.3.8-7.el6.x86_64). Please investigate on your platforms and report the versions of Munin and rrdtool to Munin mailinglist if it worked for you.
+:Example: foo.line 23:FF0080:Foo
 
 ============
 
