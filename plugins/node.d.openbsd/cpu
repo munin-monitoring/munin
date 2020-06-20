@@ -97,13 +97,13 @@ if [ "$1" = "config" ]; then
 	echo 'spin.info CPU time spent in spin locks'
 	echo 'spin.min 0'
 	echo "spin.cdef spin,$CDEF"
-	echo 'idle.label idle'
-	echo 'idle.draw STACK'
-	echo 'idle.max 5000'
-	echo 'idle.type DERIVE'
-	echo 'idle.info Idle CPU time'
-	echo 'idle.min 0'
-	echo "idle.cdef idle,$CDEF"
+#	echo 'idle.label idle'
+#	echo 'idle.draw STACK'
+#	echo 'idle.max 5000'
+#	echo 'idle.type DERIVE'
+#	echo 'idle.info Idle CPU time'
+#	echo 'idle.min 0'
+#	echo "idle.cdef idle,$CDEF"
 	exit 0
 fi
 
@@ -115,4 +115,4 @@ echo nice.value $(($2*NCPU))
 echo system.value $(($3*NCPU))
 echo spin.value $(($4*NCPU))
 echo interrupt.value $(($5*NCPU))
-echo idle.value $(($6*NCPU))
+# echo idle.value $(($6*NCPU))
