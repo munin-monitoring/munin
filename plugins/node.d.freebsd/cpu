@@ -34,12 +34,11 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-
 	OSV=`$SYSCTL_BIN -n kern.osrelease | cut -f1 -d.`
-	if [ "$OSV" = "4" ]; then
-		STATUNITS=`$SYSCTL_BIN -n kern.clockrate | cut -f16 -d' '`
-	elif [ "$OSV" -ge "5" ]; then
+	if [ "$(uname -s)" = "MidnightBSD" ] || [ "$OSV" -ge "5" ]; then
 		STATUNITS=`$SYSCTL_BIN -n kern.clockrate | cut -f13 -d' '`
+	elif [ "$OSV" = "4" ]; then
+		STATUNITS=`$SYSCTL_BIN -n kern.clockrate | cut -f16 -d' '`
 	fi
 	PERCENT=`$SYSCTL_BIN -n hw.ncpu | awk '{print ($1)*100}'`
 	NCPU=`$SYSCTL_BIN -n hw.ncpu`

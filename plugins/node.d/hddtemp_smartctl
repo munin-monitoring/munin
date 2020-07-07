@@ -183,7 +183,7 @@ if ($^O eq 'linux') {
   # Get list of all drives we found
   @drives=(@drivesIDE,@drivesSCSI,@drivesNVME);
 
-} elsif ($^O eq 'freebsd') {
+} elsif (($^O eq 'freebsd') || ($^O eq 'midnightbsd')) {
   opendir(DEV, '/dev');
   @drives = grep /^(ada?|da)[0-9]+$/, readdir DEV;
   closedir(DEV);

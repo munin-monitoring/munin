@@ -572,7 +572,7 @@ def find_smart_drives():
                     continue
         except Exception as exc:
             verboselog('Failed to list OpenBSD disks: {}'.format(exc))
-    elif os.uname()[0] == "FreeBSD":
+    elif os.uname()[0] in {"FreeBSD", "MidnightBSD"}:
         try:
             sysctl_kerndisks = os.popen('sysctl kern.disks')
             kerndisks = sysctl_kerndisks.readline().strip()
@@ -588,7 +588,7 @@ def find_smart_drives():
                 except Exception:
                     continue
         except Exception as exc:
-            verboselog('Failed to list FreeBSD disks: {}'.format(exc))
+            verboselog('Failed to list {} disks: {}'.format(os.uname()[0], exc))
     elif os.uname()[0] == "Darwin":
         try:
             from glob import glob
