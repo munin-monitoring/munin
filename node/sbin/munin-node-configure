@@ -501,10 +501,6 @@ Override plugin configuration directory [@@CONFDIR@@/plugin-conf.d/]
 
 Override plugin library [@@LIBDIR@@/plugins/]
 
-=item B<< --exitnoterror >>
-
-Do not consider plugins that exit non-zero exit-value as error.
-
 =item B<< --suggest >>
 
 Suggest plugins that might be added or removed, instead of those that are
