@@ -38,7 +38,9 @@ aliases (1.3.6.1.2.1.31.1.1.1.18.*).  These can be overridden via the
 
 The symlink name of the plugin determines the host and the switch
 port.  The switch port may be a number or the interface name
-(e.g. "ethN.VID@ethN").
+(e.g. "ethN.VID@ethN").  This is primarily useful on devices where
+the interface number is not guaranteed to be consistent, such as is
+the case with some Linux based systems.
 
 =head1 INTERPRETATION
 
