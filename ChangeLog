@@ -1,5 +1,32 @@
 -*- text -*-
 
+munin-2.0.64, 2020-07-09
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (8):
+      Plugins snmp__if(_err)_: describe alias handling for configuration
+      Plugin cpu: add support for hiding selected fields
+      Plugins snmp__if*: clarify usage of interface names
+      munin-node-configure: remove "--exitnoterror" argument
+      LINESTACK: add support for undefined line width and restrict regex
+      Plugins ntp_kernel_*: handle alternative implementations (e.g. ntpsec)
+      Plugins ntp_kernel_*: force non-scientific notation for output
+      Plugin smart_: avoid ambiguous variable name
+
+Mike Beattie (3):
+      Allow '@' in plugin names
+      Support SNMP network interfaces by names instead of index
+      Allow overriding of network interface alias from SNMP
+
+
 munin-2.0.63, 2020-05-27
 -------
 Summary
