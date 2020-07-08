@@ -65,11 +65,12 @@ fi
 
 printf 'ntp_pll_freq.value '
 
-if [ "$(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.')" -ge 427 ]
-then
-    cmd=ntpq
-else
+ntpq_name=$(ntpq -c version | sed 's/[^[:alpha:]].*//')
+ntpq_version=$(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]')
+if [ "$ntpq_name" = "ntpq" ] && [ "$(echo "$ntpq_version" | tr -d '.')" -lt 427 ]; then
     cmd=ntpdc
+else
+    cmd=ntpq
 fi
 
 $cmd -c kerninfo | awk -v fcomp=$fcomp '/^pll frequency:/ { print $3 + fcomp }'
