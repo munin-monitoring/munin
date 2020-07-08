@@ -1,3 +1,130 @@
+munin-2.999.15, 2020-07-08
+
+-------
+Summary
+-------
+
+Bugfix
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (53):
+      travis: using system perl install
+      travis: configuring cpan
+      travis: doing the cpan download via wget
+      travis: needs sudo for dpkg-related stuff
+      travis: using /tmp
+      travis: using a subshell, to avoid chdir
+      Rewrite the Dockerfile
+      update Docker building
+      docker: reorder the layers to minimize trashing
+      docker: Be explicit for deps
+      docker: upgrade to buster
+      node: adding explicit $PATH to untaint it
+      docker: adding eatmydata to speedup everything
+      dev: use /dev/shm as config in sandbox
+      u/g: avoid wrong warning when everything is ok
+      u: using JOURNAL DELETE in sqlite
+      Adding noop in dev/scripts
+      Use IO::Socket::IP instead of IO::Socket::INET[6]
+      Adding a compiled version of noop
+      node: untaint the configured port
+      fix template head.tmpl
+      fix template head.tmpl
+      Rewrite the Dockerfile
+      update Docker building
+      docker: reorder the layers to minimize trashing
+      docker: Be explicit for deps
+      docker: upgrade to buster
+      node: adding explicit $PATH to untaint it
+      docker: adding eatmydata to speedup everything
+      dev: use /dev/shm as config in sandbox
+      u/g: avoid wrong warning when everything is ok
+      u: using JOURNAL DELETE in sqlite
+      node: adding explicit $PATH to untaint it
+      u/g: avoid wrong warning when everything is ok
+      u: using JOURNAL DELETE in sqlite
+      t: use all the various combinations on graph_size
+      docker: Use no-passwd sudo
+      u: Remove unused functions to_mul[_nb]()
+      t: Test scientific values
+      noop: adding child reaps
+      t: Add a skeleton tests for Graph & HTML
+      t: initial testing of httpd
+      travis: add deps for httpd
+      docker: Use multiple docker images
+      Revert "t: initial testing of httpd"
+      t: Adding unit test for Config::_parse_bool()
+      Remove unused functions of Munin::Master::Group
+      Add some "make docker-dev" generated files
+      t: Add mocking tests munin_master_httpd_html
+      t: use a perlish way of mocking
+      dev: Make SLEEP_TIME user definable
+      h/g: Adding a static version of Night&Day
+      t: Use Devel::Confess & fix the test
+
+Lars Kruse (26):
+      plugin.sh: improve documentation for "print_warning" and "print_critical"
+      Specify encoding for perldoc in Munin::Master::UpdateWorker
+      Plugin http_loadtime: fix typo
+      doc: mention the supersampling plugin approach in "protocols"
+      doc: mentioned allowed timestamp prefix for values in network protocol
+      doc: recommend a more verbose mail subject for notifications
+      doc: remove references to pre-2.0 versions for alerting
+      doc: move limits template variables "worst" and "worstid" to proper location
+      doc: fix verbal syntax description for limits (warning/critical)
+      doc: add example plugin output for limits
+      Fix more spelling errors
+      Makefile: tolerate codespell before v1.14
+      Convert a few files to UTF-8
+      Fix spelling errors in munin-get
+      Makefile: execute generate Build script during "build"
+      Add more checks for shell scripts
+      Fix spelling and perl style issues
+      Plugin ping_: add support for IPv4-only ping with "-4" argument
+      Fix CI test for plugins "autoconf"
+      Plugins: remove remaining uses of "which" and the shellcheck exception
+      Plugin jenkins_builds_and_jobs: call "is_multigraph" with arguments
+      Plugins: remove remaining uses of "which"
+      Plugins: remove last surviving "which"
+      Plugins ntp_ and ntp_states: prevent junk on stderr during "autoconf"
+      Add minimal script for visualizing munin's color palette
+      Fix documentation regarding `field.line`
+
+Olivier Mehani (7):
+      [plugins/ping_] Add support for ping4
+      [snmp] Update some titles, categories and draw to better match other plugins
+      Expose NAME in all services HTML templates
+      Put host name or service (NAME) first in <title>
+      fixup! Put host name or service (NAME) first in <title>
+      Add doc about impossibility of sharing name between multigraph sub graphs and series
+      [snmp] Update snmp__if_err_ and snmp__if_multi titles to better match other plugins
+
+Felix Wolfsteller (2):
+      doc: fix grammar
+      guide: fix link to lighttpd
+
+Alexander Moisseev (1):
+      snmp__df_ram: handle undef and zero values
+
+Ayke Halder (1):
+      Unique state-file for each disk configured via env.smartargs
+
+Sae X (1):
+      New Year + link to GPLv2
+
+Simone Rossetto (1):
+      Plugin apc_nis: add UPS load in watt and hide frequency
+
+So (1):
+      Fix cpu plugins on OpenBSD 6.4
+
+rantal (1):
+      update tomcat_: Now can find Old Gen memory values not only for CMS GC
+
+
 munin-2.999.14, 2019-07-18
 
 -------
