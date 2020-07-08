@@ -23,10 +23,6 @@ Unknown author
 
 GPLv2
 
-=head1 BUGS
-
-Handling of $fcomp is unquoted, and may cause trouble.
-
 =head1 MAGIC MARKERS
 
  #%# family=auto
@@ -73,4 +69,4 @@ else
     cmd=ntpq
 fi
 
-$cmd -c kerninfo | awk -v fcomp=$fcomp '/^pll frequency:/ { print $3 + fcomp }'
+"$cmd" -c kerninfo | awk -v "fcomp=$fcomp" '/^pll frequency:/ { printf("%.9f\n", $3 + fcomp) }'
