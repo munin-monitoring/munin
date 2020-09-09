@@ -359,6 +359,8 @@ only to that node.
 
 .. option:: ignore_unknown <yes|no>
 
+   Available since Munin 3.0.
+
    If set, ignore any unknown values reported by the node. Allowed values are "yes"
    and "no". Defaults to "no".
 
