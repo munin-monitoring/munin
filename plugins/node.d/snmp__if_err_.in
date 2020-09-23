@@ -19,8 +19,8 @@ As a rule SNMP plugins need site specific configuration.  The default
 configuration (shown here) will only work on insecure sites/devices:
 
    [snmp_*]
-	env.version 2
-        env.community public
+   env.version 2
+   env.community public
 
 In general SNMP is not very secure at all unless you use SNMP version
 3 which supports authentication and privacy (encryption).  But in any
@@ -28,6 +28,19 @@ case the community string for your devices should not be "public".
 
 Please see 'perldoc Munin::Plugin::SNMP' for further configuration
 information.
+
+Specific interface names (labels) are determined via the SNMP OID for
+aliases (1.3.6.1.2.1.31.1.1.1.18.*).  These can be overridden via the
+"alias" environment variable:
+
+   [snmp_hostname.fqdn_if_2]
+   env.alias WAN
+
+The symlink name of the plugin determines the host and the switch
+port.  The switch port may be a number or the interface name
+(e.g. "ethN.VID@ethN").  This is primarily useful on devices where
+the interface number is not guaranteed to be consistent, such as is
+the case with some Linux based systems.
 
 =head1 INTERPRETATION
 
@@ -83,8 +96,17 @@ my ($host) = Munin::Plugin::SNMP->config_session();
 
 my $iface;
 
+my $session = Munin::Plugin::SNMP->session();
+
 if ($Munin::Plugin::me =~ /if_err_(\d+)$/) {
     $iface = $1;
+} elsif ($Munin::Plugin::me =~ /_if_err_([\w\@.-]+)$/) {
+    my $ifAliasContainer = "1.3.6.1.2.1.31.1.1.1.18.";
+    my $if_alias = $session->get_by_regex($ifAliasContainer, "^$1\$");
+    if (keys(%{$if_alias}) != 1) {
+	die "Could not determine interface number from ".$Munin::Plugin::me."\n";
+    }
+    $iface = (keys %{$if_alias})[0];
 } else {
     die "Could not determine interface number from ".$Munin::Plugin::me."\n";
 }
@@ -100,18 +122,17 @@ my $ifInUnknownProtos= "1.3.6.1.2.1.2.2.1.15.$iface";
 my $ifOutDiscards    = "1.3.6.1.2.1.2.2.1.19.$iface";
 my $ifOutErrors      = "1.3.6.1.2.1.2.2.1.20.$iface";
 
-my $session = Munin::Plugin::SNMP->session();
-
 if ($ARGV[0] and $ARGV[0] eq "config") {
     my ($host) = Munin::Plugin::SNMP->config_session();
 
     print "host_name $host\n" unless $host eq 'localhost';
 
-    my $alias = $session->get_single($ifEntryAlias) ||
+    my $alias = $ENV{alias} ||
+      $session->get_single($ifEntryAlias) ||
       $session->get_single($ifEntryDescr) ||
 	"Interface $iface";
 
-    if (! ($alias =~ /\d+/) ) {
+    if (! ($alias =~ /\d+/ or defined($ENV{alias})) ) {
 	# If there are no numbers in the $alias add the if index
 	$alias .=" (if $iface)";
     }

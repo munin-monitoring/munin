@@ -984,7 +984,7 @@ sub process_service {
             }
         }
 
-        if ($fielddraw =~ /LINESTACK(\d+(?:.\d+)?)/) {
+        if ($fielddraw =~ /LINESTACK(|\d+|\d+\.\d+)$/) {
             if ($autostacking == 0) {
                 $fielddraw    = "LINE$1";
                 $autostacking = 1;

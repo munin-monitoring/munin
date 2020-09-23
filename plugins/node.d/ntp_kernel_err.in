@@ -51,9 +51,10 @@ fi
 
 printf 'ntp_err.value '
 
-if [ "$(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.')" -ge 427 ]
-then
-    ntpq -c kerninfo | awk '/^estimated error:/ { print $3 / 1000 }'
+ntpq_name=$(ntpq -c version | sed 's/[^[:alpha:]].*//')
+ntpq_version=$(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]')
+if [ "$ntpq_name" = "ntpq" ] && [ "$(echo "$ntpq_version" | tr -d '.')" -lt 427 ]; then
+    ntpdc -c kerninfo | awk '/^estimated error:/ { printf("%.9f\n", $3) }'
 else
-    ntpdc -c kerninfo | awk '/^estimated error:/ { print $3 }'
+    ntpq -c kerninfo | awk '/^estimated error:/ { printf("%.9f\n", $3 / 1000) }'
 fi

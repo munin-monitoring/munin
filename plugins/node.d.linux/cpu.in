@@ -15,12 +15,17 @@ All Linux systems
 The following is default configuration
 
   [cpu]
-	env.HZ	100
-	env.scaleto100	no
+    env.HZ          100
+    env.scaleto100  no
 
 "scaleto100" may be "yes" or "no". With "yes" all CPU-related values
 are scaled for a limit of 100.  With "no" (the default) all CPU-related
 values are scaled for a limit of n * 100 ("n" being the number of CPUs).
+
+The "ignore_fields" environment variable (empty by default) may be used
+for listing fields (space separated) that should not be visualized.
+For example hiding the "idle" field may improve the visualization of the
+combined cpu usage.
 
 See "BUGS" for an explanation of the "HZ" setting.
 
@@ -113,6 +118,16 @@ fi
 
 HZ=${HZ:-100}
 scaleto100=${scaleto100:-no}
+ignore_fields=${ignore_fields:-}
+
+
+maybe_hide_field() {
+    local fieldname="$1"
+    if echo "$ignore_fields" | grep -wq "$fieldname"; then
+        echo "$fieldname.graph no"
+    fi
+}
+
 
 extinfo=""
 
@@ -166,6 +181,7 @@ if [ "$1" = "config" ]; then
 
 	for field in system user nice idle; do
 		print_adjusted_thresholds "$field" "$graphlimit"
+		maybe_hide_field "$field"
 	done
 
 	if [ "$scaleto100" = "yes" ]; then
@@ -198,6 +214,7 @@ if [ "$1" = "config" ]; then
 		fi
 		for field in iowait irq softirq; do
 			print_adjusted_thresholds "$field" "$graphlimit"
+			maybe_hide_field "$field"
 		done
 	fi
 
@@ -208,6 +225,7 @@ if [ "$1" = "config" ]; then
 		echo 'steal.min 0'
 		echo 'steal.type DERIVE'
 		echo 'steal.info The time that a virtual CPU had runnable tasks, but the virtual CPU itself was not running'
+		maybe_hide_field "steal"
 		if [ "$scaleto100" = "yes" ]; then
 			echo "steal.cdef steal,$NCPU,/"
 		fi
@@ -221,6 +239,7 @@ if [ "$1" = "config" ]; then
 		echo 'guest.min 0'
 		echo 'guest.type DERIVE'
 		echo 'guest.info The time spent running a virtual CPU for guest operating systems under the control of the Linux kernel.'
+		maybe_hide_field "guest"
 		if [ "$scaleto100" = "yes" ]; then
 			echo "guest.cdef guest,$NCPU,/"
 		fi
