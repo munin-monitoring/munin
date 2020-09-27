@@ -41,7 +41,6 @@ Build-Depends-Indep:
  libxml-libxml-perl,
  libxml-parser-perl,
  perl,
- python,
  python3-sphinx,
  ruby,
 Build-Depends: debhelper-compat (=12), libmodule-build-perl
