@@ -96,8 +96,23 @@ my $slave  = $2;
 my $dbmaster = DBI->connect("DBI:Pg:service=$master") or die "Could not connect to master at $master\n";
 my $dbslave  = DBI->connect("DBI:Pg:service=$slave")  or die "Could not connect to slave at $slave\n";
 
-my $masterdata = $dbmaster->selectall_arrayref("SELECT pg_current_xlog_location()") or die "Could not query for xlog location on master\n";
-my $slavedata = $dbslave->selectall_arrayref("SELECT pg_last_xlog_receive_location(), pg_last_xlog_replay_location()\n") or die "Could not query for xlog locations on slave\n";
+my $masterdata;
+my $slavedata;
+
+# PostgreSQL 10 renamed the WAL status functions as follows:
+#
+#   - pg_current_xlog_location()      -> pg_current_wal_lsn()
+#   - pg_last_xlog_receive_location() -> pg_last_wal_receive_lsn()
+#   - pg_last_xlog_replay_location()  -> pg_last_wal_replay_lsn()
+#
+(my $pg_maj_ver) = $dbmaster->{pg_server_version} =~ /(\d+)(\d){2,2}(\d){2,2}$/;
+if ($pg_maj_ver < 10) {
+    $masterdata = $dbmaster->selectall_arrayref("SELECT pg_current_xlog_location()") or die "Could not query for xlog location on master\n";
+    $slavedata = $dbslave->selectall_arrayref("SELECT pg_last_xlog_receive_location(), pg_last_xlog_replay_location()") or die "Could not query for xlog locations on slave\n";
+} else {
+    $masterdata = $dbmaster->selectall_arrayref("SELECT pg_current_wal_lsn()") or die "Could not query for WAL location on master\n";
+    $slavedata = $dbslave->selectall_arrayref("SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn()") or die "Could not query for WAL locations on slave\n";
+}
 
 $dbmaster->disconnect();
 $dbslave->disconnect();

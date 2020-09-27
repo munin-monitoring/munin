@@ -37,7 +37,7 @@ The setup is done in the usual way, with graph_title and other configuration ite
 ::
 
    multigraph if_bytes
-   graph_title $host interface traffic
+   graph_title All interfaces traffic
    graph_order recv send
    graph_args --base 1000
    graph_vlabel bits in (-) / out (+) per \${graph_period}
@@ -57,7 +57,7 @@ The setup is done in the usual way, with graph_title and other configuration ite
    send.min 0
 
    multigraph if_errors
-   graph_title $host interface errors
+   graph_title All interfaces errors
    graph_order recv send
    graph_args --base 1000
    graph_vlabel errors in (-) / out (+) per \${graph_period}
@@ -82,7 +82,7 @@ Then for each of the interfaces the plugin emits these configuration items (inte
 
    multigraph if_bytes.if_$if
 
-   graph_title Interface $alias traffic
+   graph_title $alias traffic
    graph_order recv send
    graph_args --base 1000
    graph_vlabel bits in (-) / out (+) per \${graph_period}
@@ -106,7 +106,7 @@ Then for each of the interfaces the plugin emits these configuration items (inte
 
    multigraph if_errors.if_$if
 
-   graph_title Interface $alias errors
+   graph_title $alias errors
    graph_order recv send
    graph_args --base 1000
    graph_vlabel bits in (-) / out (+) per \${graph_period}
@@ -163,6 +163,32 @@ It is necessary to emit all the values for a given graph in a single block; in p
    send.value 2000
 
 If the same graph is named multiple times in the output, only one of them "wins", and the others are ignored.
+
+Another caveat is that the same name cannot be reused for a sub-graph and its field. For example, the following config *will not work as expected*.
+
+::
+
+   multigraph base
+   ...
+   field1.label ...
+   multigraph base.sub
+   ...
+   sub.label ...
+
+While the "sub" graph will be rendered properly, the "base" graph will not. Munin will be looking for an *non-existent "sub" series outside of the "sub" graph*. This will result in a missing "base" graph, and confusing log messages from munin-graph.
+
+::
+
+   [RRD ERROR] Unable to graph /var/cache/munin/www/host/base-day.png : opening '/var/lib/munin/host/base-sub-g.rrd': No such file or directory
+   [RRD ERROR] rrdtool 'graph' '/var/cache/munin/www/host/base-day.png' \
+        ...
+        'DEF:gfield1=/var/lib/munin/host/base-field1-g.rrd:42:AVERAGE' \
+        ...
+        'DEF:gsub=/var/lib/munin/host/base-sub-g.rrd:42:AVERAGE' \
+        ...
+        '--end' \
+        '1592289000'
+   [WARNING] Could not draw graph " /var/cache/munin/www/host/base-day.png": /var/cache/munin /var/cache/munin/www/host/base-day.png
 
 Other documentation
 ===================

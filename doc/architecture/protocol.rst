@@ -93,3 +93,8 @@ Dirtyconfig plugins
 ===================
 
 - See :ref:`plugin-protocol-dirtyconfig`
+
+Plugins with custom sample rate
+===============================
+
+- See :ref:`plugin-supersampling`

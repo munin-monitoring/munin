@@ -24,7 +24,7 @@ values).  Graphs are split to 8 groups, every group has sub graphs:
     ...                                            - show applications groups memory using per application in every group
     Group `groupNameX` applications memory usage     ^
     Summary group `groupName1` memory usage          v
-    ...                                            - show applications groups memory using as summ of every parametr of application in every group
+    ...                                            - show applications groups memory using as summ of every parameter of application in every group
     Summary group `groupNameX` memory usage          ^
   Application memory usage                         - show memory usage per application [env.applications]
     Application processes                          - show processes count of every application

@@ -15,6 +15,7 @@ The following is the default configuration
 
   [fail2ban]
   env.client /usr/bin/fail2ban-client
+  env.config_dir /etc/fail2ban
 
 The user running this plugin needs read and write access to the
 fail2ban communications socket.  You will need to add this:
@@ -57,13 +58,19 @@ GPLv2
 ##############################
 # Configurable variables
 client=${client:-/usr/bin/fail2ban-client}
+config_dir=${config_dir:-/etc/fail2ban}
 
 ##############################
 # Functions
 
+# Run fail2ban
+run_fail2ban() {
+    "$client" -c "$config_dir" "$@"
+}
+
 # List jails, one on each line
 list_jails() {
-    "$client" status | while read -r line; do
+    run_fail2ban status | while read -r line; do
         case $line in
             *'Jail list:'*)
                 line="${line##*Jail list*:}"
@@ -77,7 +84,7 @@ list_jails() {
 # Print the munin values
 values() {
     list_jails | while read -r jail; do
-        "$client" status "$jail" | while read -r line; do
+        run_fail2ban status "$jail" | while read -r line; do
             case $line in
                 *'Currently banned'*)
                     line="${line##*Currently banned:}"
@@ -108,7 +115,7 @@ config() {
 autoconf() {
     if [ -e "$client" ]; then
         if [ -x "$client" ]; then
-            if "$client" ping >/dev/null; then
+            if run_fail2ban ping >/dev/null; then
                 echo "yes"
             else
                 echo "no (fail2ban-server does not respond to ping)"

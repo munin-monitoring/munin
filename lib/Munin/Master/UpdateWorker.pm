@@ -985,24 +985,6 @@ sub to_sec {
 	}
 }
 
-sub to_mul {
-	my ($base, $target) = @_;
-	my $target_sec = to_sec($target);
-	if ($target %% $base != 0) {
-		return 0;
-	}
-
-	return round($target / $base);
-}
-
-sub to_mul_nb {
-	my ($base, $target) = @_;
-	my $target_sec = to_sec($target);
-	if ($target %% $base != 0) {
-		return 0;
-	}
-}
-
 sub _update_rrd_file {
 	my ($self, $rrd_file, $ds_name, $ds_values) = @_;
 
@@ -1137,6 +1119,8 @@ sub _does_resolve
 
 
 __END__
+
+=encoding utf8
 
 =head1 NAME
 

@@ -283,6 +283,7 @@ sub handle_request
 
 	my $lastupdated;
 
+	my $first_def;
 	my $field_number = 0;
 	while (my (
 			$_rrdname, $_label,
@@ -374,6 +375,8 @@ sub handle_request
 			push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
 			push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
 		}
+
+		$first_def = "avg_$real_rrdname" unless $first_def;
 
 		# Handle an eventual cdef
 		if ($_rrdcdef) {
@@ -594,6 +597,17 @@ sub handle_request
 		@rrd_legend,
 	);
 
+	# Add the night/day cycle at the extreme end, so it can be in the background
+	push @rrd_cmd, (
+		"CDEF:dummy_val=$first_def",
+		"CDEF:n_d_a=LTIME,86400,%,28800,GE,LTIME,86400,%,64800,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
+		"CDEF:n_d_b=LTIME,86400,%,28800,LT,INF,LTIME,86400,%,64800,GE,INF,UNKN,dummy_val,*,IF,IF",
+		"CDEF:n_d_c=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
+		"AREA:n_d_a#FFC73B19",
+		"AREA:n_d_b#00519919",
+		"AREA:n_d_c#AAABA17F",
+	);
+
 	my $err = RRDs_graph_or_dump(
 		$format,
 		@rrd_cmd,
@@ -788,7 +802,7 @@ sub RRDs_graph_or_dump {
 		print $out_fh "}\n";
 	}
 
-	my $rrd_error = RRDs::error();
+	my $rrd_error = RRDs::error;
 	return $rrd_error;
 }
 

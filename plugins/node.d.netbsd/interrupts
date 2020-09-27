@@ -2,7 +2,7 @@
 #
 # Plugin to monitor the number of interrupts and context switches on a system.
 #
-# Idea and base from Ragnar Wisløff.
+# Idea and base from Ragnar WislÃ¸ff.
 #
 # Usage: Link or copy into /etc/munin/node.d/
 #

@@ -24,7 +24,7 @@ The following environment variables are used by this plugin
  If a username and password are provided, these will be sent to the server
  as an HTTP basic auth header, regardless of whether the server sends a
  challenge. A temporary file will be written to securely pass these options
- to wget. This could incur a noticable time delay, depending on the system.
+ to wget. This could incur a noticeable time delay, depending on the system.
 
 =head1 AUTHOR
 

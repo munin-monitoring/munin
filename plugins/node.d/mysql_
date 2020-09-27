@@ -96,7 +96,7 @@ For example:
 =item Cache::Cache
 
 The plugin uses shared memory to cache the statistics gathered from
-MySQL. This ensures minimal inpact on the MySQL server.
+MySQL. This ensures minimal impact on the MySQL server.
 
 =item DBD::mysql
 
@@ -173,21 +173,26 @@ use warnings;
 use strict;
 use utf8;
 
-use DBI;
+use English qw( -no_match_vars );
 use File::Basename;
-use Math::BigInt; # Used to append "=> lib 'GMP'" here, but GMP caused
-		  # segfault on some occasions. Removed as I don't
-		  # think the tiny performance boost is worth the
-		  # debugging effort.
 use Storable qw(nfreeze thaw);
 
 use Munin::Plugin;
 
 my $has_cache;
+my $has_dbi;
+my $has_math_bigint;
 
 BEGIN {
-    eval 'require Cache::SharedMemoryCache';
-    $has_cache = $@ ? 0 : 1;
+    eval { require Cache::SharedMemoryCache; };
+    $has_cache = $EVAL_ERROR ? 0 : 1;
+    eval { require DBI; DBI->import(); };
+    $has_dbi = $EVAL_ERROR ? 0 : 1;
+    # Used to append "=> lib 'GMP'" here, but GMP caused segfault on some
+    # occasions. Removed as I don't think the tiny performance boost is
+    # worth the debugging effort.
+    eval { require Math::BigInt; Math::BigInt->import(); };
+    $has_math_bigint = $EVAL_ERROR ? 0 : 1;
 }
 
 
@@ -1658,6 +1663,12 @@ sub main {
     die "Missing dependency Cache::Cache"
 	unless $has_cache || $command eq 'autoconf';
 
+    die "Missing dependency DBI"
+        unless $has_dbi || $command eq 'autoconf';
+
+    die "Missing dependency Math::BigInt"
+        unless $has_math_bigint || $command eq 'autoconf';
+
     return $command_map{$command}->($graph);
 }
 
@@ -1674,6 +1685,14 @@ sub autoconf {
     unless ($has_cache) {
 	print "no (Missing dependency Cache::Cache)\n";
 	return 0;
+    }
+    unless ($has_dbi) {
+        print "no (Missing dependency DBI)\n";
+        return 0;
+    }
+    unless ($has_math_bigint) {
+        print "no (Missing dependency Math::BigInt)\n";
+        return 0;
     }
 
     eval {
@@ -1716,7 +1735,7 @@ sub suggest {
 sub config {
     my $graph_name = shift;
 
-    # In MySQL 5.1 (and probably erlier versions as well) status
+    # In MySQL 5.1 (and probably earlier versions as well) status
     # variables are unique when looking at the last 19 characters.
     #
     #   SELECT RIGHT(variable_name, 19), COUNT(*)

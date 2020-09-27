@@ -7,7 +7,7 @@ use warnings;
 use Carp;
 use Exporter;
 use English qw(-no_match_vars);
-use File::Path;
+use File::Path qw(make_path);
 use IO::Handle;
 use Munin::Common::Defaults;
 use Munin::Master::Config;
@@ -78,8 +78,9 @@ sub munin_mkdir_p {
     my ($dirname, $umask) = @_;
 
     eval {
-        mkpath($dirname, 0, $umask);
+        make_path($1) if $dirname =~ /(.*)/;
     };
+    print STDERR "cannot create '$dirname' because $@" if $@;
     return if $@;
     return 1;
 }

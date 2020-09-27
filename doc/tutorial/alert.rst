@@ -4,8 +4,8 @@
 Let Munin croak alarm
 =====================
 
-As of Munin 1.2 there is a generic interface for sending warnings
-and errors from Munin. If a Munin plugin discovers that a plugin has
+Munin offers a generic interface for sending warnings and errors.
+If a Munin plugin discovers that a plugin has
 a data source breaching its defined limits, Munin is able to alert
 the administrator either through simple command line invocations
 or through a monitoring system like Nagios or Icinga.
@@ -16,8 +16,6 @@ a limited number of messages at the time, the configuration directive
 
 When sending alerts, you might find good use in the
 :ref:`Munin alert variables <alert_variables>`.
-
-.. note:: Alerts not working? For some versions 1.4 and less, note that having `more than one contact defined <http://munin-monitoring.org/ticket/732>`_ can cause munin-limits to hang.
 
 Sending alerts through Nagios
 =============================
@@ -35,7 +33,7 @@ To send email alerts directly from Munin use a command such as this:
 
 ::
 
- contact.email.command mail -s "Munin-notification for ${var:group} :: ${var:host}" your@email.address.here
+ contact.email.command mail -s "Munin ${var:worst}: ${var:group}::${var:host}::${var:plugin}" your@email.address.here
 
 
 Syslog Alert
@@ -96,6 +94,16 @@ Note that the warning/critical exception is raised
 only if the value is outside the defined value.
 E.g. ``foo.warning 100:200`` will raise a warning only
 if the value is outside the range of 100 to 200.
+A single number is interpreted as the maximum allowed
+value (without a lower limit).
+
+Example limits configuration emitted by a plugin:
+
+::
+
+  foo.label some data
+  foo.warning 0:100
+  foo.critical 150
 
 Reformatting the output message
 ===============================
@@ -202,6 +210,18 @@ These are directly available.
 :Syntax: ``${var:graph_category}``
 :Reference: Plugin's category as declared via config protocol or set in munin.conf.
 
+============
+
+:Variable: **worst**
+:Syntax: ``${var:worst}``
+:Reference: The name of the worst status detected in this run of munin-limits. From best to worst, the statuses are OK, UNKNOWN, WARNING, and CRITICAL.
+
+============
+
+:Variable: **worstid**
+:Syntax: ``${var:worstid}``
+:Reference: A numeric equivalent of **worst**; 0 for OK, 1 for WARNING, 2 for CRITICAL, and 3 for UNKNOWN. Note that this is not the same as the order of severity.
+
 .. _alert_variable_data:
 
 Data source related variables
@@ -277,18 +297,6 @@ Iteration follows the syntax defined in the Perl module `Text::Balanced <http://
 :Variable: **numufields**, **numcfields**, **numwfields**, **numfofields**, **numofields**
 :Syntax: ``${var:numufields}``, etc
 :Reference: The number of fields that are unknown, critical, warning, freshly OK, and OK, respectively.
-
-============
-
-:Variable: **worst**
-:Syntax: ``${var:worst}``
-:Reference: The name of the worst status detected in this run of munin-limits. From best to worst, the statuses are OK, UNKNOWN, WARNING, and CRITICAL.
-
-============
-
-:Variable: **worstid**
-:Syntax: ``${var:worstid}``
-:Reference: A numeric equivalent of **worst**; 0 for OK, 1 for WARNING, 2 for CRITICAL, and 3 for UNKNOWN. Note that this is not the same as the order of severity.
 
 How variables are expanded
 --------------------------

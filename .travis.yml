@@ -1,8 +1,6 @@
 ---
 dist: xenial
-language: perl
-### perl:
-###   - "5.20"
+language: minimal
 branches:
   only:
     - stable-2.0
@@ -18,6 +16,7 @@ addons:
       - libdbd-pg-perl
       - libdbd-sqlite3-perl
       - libdbi-perl
+      - libdevel-confess-perl
       - libdevel-cover-perl
       - libfile-copy-recursive-perl
       - libfile-readbackwards-perl
@@ -54,6 +53,13 @@ addons:
       - libxml-parser-perl
       - python3-flake8
       - shellcheck
+      - dh-make-perl
+      - libdevel-cover-perl
+      - libhttp-tiny-perl
+      - libio-socket-ssl-perl
+      - libjson-pp-perl
+      - libyaml-perl
+      - libmodule-build-tiny-perl
 notifications:
   email: false
   irc:
@@ -70,10 +76,15 @@ matrix:
 
 env:
   # specify test level and announce cpanm's installation directory
-  - TEST_MEDIUM=1 PERLLIB=/home/travis/perl5/lib/perl5
+  - TEST_MEDIUM=1
 
 before_install:
-  - cpanm -n Devel::Cover::Report::Coveralls
+  - ( cd /tmp && wget https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.13.tar.gz )
+  - ( cd /tmp && tar zxvf Devel-Cover-Report-Coveralls-0.13.tar.gz )
+  - ( cd /tmp && dh-make-perl make --build Devel-Cover-Report-Coveralls-0.13 )
+  - ( cd /tmp && sudo dpkg -i libdevel-cover-report-coveralls-perl*.deb )
+  - ( cd /tmp && wget http://ftp.de.debian.org/debian/pool/main/libh/libhttp-server-simple-cgi-prefork-perl/libhttp-server-simple-cgi-prefork-perl_6-1_all.deb && sudo dpkg -i libhttp-server-simple-cgi-prefork-perl_6-1_all.deb)
+  - ( cd /tmp && sudo apt-get install -yf )
 
 install:
   - perl Build.PL
@@ -84,3 +95,4 @@ install:
   - PYTHON_LINT_CALL="python3 -m flake8.main" make lint
 script:
   - cover -test -report coveralls
+  - make clean && dev_scripts/install node && dev_scripts/run munin-node-configure --suggest

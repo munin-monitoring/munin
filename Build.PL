@@ -110,7 +110,7 @@ my $build = Module::Build->new(
         'HTML::Template::Pro'    => '0',
         'HTTP::Server::Simple::CGI::PreFork'    => '0',
         'CGI::Cookie'            => '0',
-        'IO::Socket::INET6'      => '2.69',
+        'IO::Socket::IP'         => '0.32',
         'JSON'                   => '0',
         'LWP::UserAgent'         => '6.03',
         'List::Util'             => '0',
@@ -144,6 +144,7 @@ my $build = Module::Build->new(
             script/munin-asyncd
             script/munin-cron
             script/munin-doc
+            script/munin-get
             script/munin-httpd
             script/munin-limits
             script/munin-node
@@ -153,6 +154,7 @@ my $build = Module::Build->new(
             )
     ],
     test_requires => {
+        'Devel::Confess'      => '0',
         'IO::Scalar'          => '0',
         'Test::Class'         => '0',
         'Test::Differences'   => '0.62',

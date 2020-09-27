@@ -11,7 +11,7 @@ requires 'HTML::Template::Pro';
 requires 'HTTP::Server::Simple::CGI';
 requires 'HTTP::Server::Simple::CGI::PreFork';
 requires 'IO::Scalar';
-requires 'IO::Socket::INET6';
+requires 'IO::Socket::IP';
 requires 'JSON';
 requires 'LWP::Simple';
 requires 'LWP::UserAgent';

@@ -400,7 +400,7 @@ def read_values(hard_drive):
 
 def get_state_filename(hard_drive):
     statefiledir = os.environ['MUNIN_PLUGSTATE']
-    return os.path.join(statefiledir, "smart-{}.state".format(hard_drive))
+    return os.path.join(statefiledir, "smart-{}.state".format(hard_drive_identifier))
 
 
 def open_state_file(hard_drive, mode):
@@ -449,7 +449,7 @@ def print_config(hard_drive):
         smart_values_state = parsed_data.smart_data
 
     verboselog('Printing configuration')
-    print('graph_title S.M.A.R.T values for drive '+','.join(hard_drive))
+    print('graph_title S.M.A.R.T values for drive '+','.join(hard_drive_identifier))
     print('graph_vlabel Attribute S.M.A.R.T value')
     print('graph_args --base 1000 --lower-limit 0')
     print('graph_category disk')
@@ -650,6 +650,8 @@ def find_smart_drives():
 
 plugin_name = list(os.path.split(sys.argv[0]))[1]
 verboselog("plugins' UID: {:d} / plugins' GID: {:d}".format(os.geteuid(), os.getegid()))
+
+hard_drive_identifier = plugin_name.split('_', 1)[1]
 
 # Parse arguments
 if len(sys.argv) > 1:

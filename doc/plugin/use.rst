@@ -256,3 +256,17 @@ Examples:
   _dev_vda1__boot.value 160647
   _dev_mapper_vg_demo_lv_tmp__tmp.value 34100
   _dev_mapper_vg_demo_lv_var__var.value 897644
+
+
+Download munin plugins
+======================
+
+The munin project maintains a set of core plugins that are distributed in munin's releases.
+Additionally the munin project maintains the
+`contrib <https://github.com/munin-monitoring/contrib>`_ repository. It contains more than a
+thousand plugins contributed by a wide range of people.
+In order to use these plugins they can either be downloaded manually or managed via the
+:ref:`munin-get` plugin tool.
+
+Additionally the munin plugins in the `contrib <https://github.com/munin-monitoring/contrib>`_
+repository can be browsed via the `Munin Plugin Gallery <http://gallery.munin-monitoring.org>`_.

@@ -1,8 +1,11 @@
-FROM bitnami/minideb:latest
-RUN apt-get update
-RUN apt-get install -y python-sphinx rrdtool sqlite3
-COPY dev_scripts/deps /tmp/deps
-RUN /tmp/deps
-COPY . /munin/
-RUN cd /munin && sh dev_scripts/install node
-RUN cd /munin && sh dev_scripts/start_munin-node
+FROM munin:base
+
+COPY . /munin
+COPY RELEASE.docker /munin/RELEASE
+RUN chown -R munin /munin
+RUN mkdir -p /var/log/munin && chown -R munin /var/log/munin
+USER munin
+WORKDIR /munin
+RUN eatmydata dev_scripts/install node
+RUN rm sandbox/etc/munin-conf.d/node.ipv6.sandbox.local.conf
+RUN for i in $(seq 1 10); do printf "[ipv4-$i.sandbox.local]\naddress localhost\nport 4947\n" > sandbox/etc/munin-conf.d/node.ipv4_$i.sandbox.local.conf; done

@@ -1,3 +1,4 @@
-.git
-blib
-sandbox
+/.git
+/blib
+/sandbox
+/Dockerfile

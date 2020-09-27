@@ -491,6 +491,7 @@ sub handle_request
 		];
 
 		$template_params{CATEGORY} = ucfirst($graph_category);
+		$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
 
 		if ($multigraph) {
 			# Emit node template for multigraphs
@@ -499,7 +500,6 @@ sub handle_request
 			my @categories = (_get_params_services($path, $dbh, $graph_category, $graph_name, $node_id, $graph_ext));
 			$template_params{CATEGORIES} = \@categories;
 			$template_params{NCATEGORIES} = scalar(@categories);
-			$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
 
 			goto RENDERING;
 		}

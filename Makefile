@@ -43,6 +43,7 @@ help:
 
 .PHONY: build
 build: $(BUILD_SCRIPT)
+	$(BUILD_SCRIPT)
 
 .PHONY: doc
 doc:
@@ -69,17 +70,16 @@ apply-formatting:
 
 lint: lint-munin lint-plugins lint-spelling lint-whitespace
 
-lint-munin:
+lint-munin: build
 	# Scanning munin code
 	perlcritic --profile .perlcriticrc lib/ script/
+	shellcheck --shell dash getversion script/munin-get script/munin-cron
 
 lint-plugins:
 	@# SC1008: ignore our weird shebang (substituted later)
 	@# SC1090: ignore sourcing of files with variable in path
 	@# SC2009: do not complain about "ps ... | grep" calls (may be platform specific)
 	@# SC2126: tolerate "grep | wc -l" (simple and widespread) instead of "grep -c"
-	@# SC2230: tolerate "which" instead of "command -v".  The latter does not output a full
-	#          path. Thus executable tests ("-x") would fail.  This would need a bit of work.
 	# TODO: fix the remaining shellcheck issues for the missing platforms:
 	#       aix, darwin, netbsd, sunos
 	#       (these require tests with their specific shell implementations)
@@ -88,10 +88,10 @@ lint-plugins:
 			plugins/node.d.debug/ \
 			plugins/node.d.linux/ -type f -print0 \
 		| xargs -0 grep -l --null '^#!.*/bin/sh' \
-			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126,SC2230 --shell dash
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell dash
 	find plugins/ -type f -print0 \
 		| xargs -0 grep -l --null "^#!.*/bin/bash" \
-			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126,SC2230 --shell bash
+			| xargs -0 shellcheck --exclude=SC1008,SC1090,SC2009,SC2126 --shell bash
 	find plugins/ -type f -print0 \
 		| xargs -0 grep -l --null "^#!.*python" \
 			| xargs -0 $(PYTHON_LINT_CALL)
@@ -112,12 +112,15 @@ lint-plugins:
 			echo '[ERROR] Some plugins lack a "multigraph" check (e.g. "needs_multigraph();" or "is_multigraph"):'; \
 			echo "$$plugins_without_multigraph_check" | sed 's/^/\t/'; false; fi >&2
 
+lint-spelling: CODESPELL_ARGS += --exclude-file=.codespell.exclude
+# codespell introduced "--ignore-words" in v1.14 (Debian Buster)
+lint-spelling: CODESPELL_ARGS += $(shell if codespell --help | grep -q " --ignore-words "; then echo "--ignore-words=.codespell.ignore-words"; fi)
 lint-spelling:
 	# codespell misdetections may be ignored by adding the full line of text to the file .codespell.exclude
 	find . -type f -print0 \
 		| grep --null-data -vE '^\./(\.git|\.pc|doc/_build|blib|.*/blib|build|sandbox|web/static/js|contrib/plugin-gallery/www/static/js)/' \
-		| grep --null-data -vE '\.(svg|png|gif|ico|css|woff|woff2|ttf|eot)$$' \
-		| xargs -0 -r codespell --exclude-file=.codespell.exclude
+		| grep --null-data -vE '\.(svg|png|gif|ico|css|woff|woff2|ttf|eot|pem)$$' \
+		| xargs -0 -r codespell $(CODESPELL_ARGS)
 
 lint-whitespace: FILES_WITH_TRAILING_WHITESPACE = $(shell grep -r -l --binary-files=without-match \
 				--exclude-dir=.git --exclude-dir=sandbox '\s$$' . \
@@ -204,3 +207,21 @@ tar-upload: tar tar-signed
 		echo "mkdir $(UPLOAD_DIR)/$(VERSION)"; \
 		echo "put munin-$(VERSION).tar.gz* $(UPLOAD_DIR)/$(VERSION)/"; \
 	} | sftp -b - "$(UPLOAD_HOST)"
+
+.PHONY: docker
+docker-base:
+	docker build -t munin:base -f Dockerfile.base .
+docker: docker-base
+	./getversion > RELEASE.docker
+	docker build -t munin:latest .
+	docker rm -f munin || true
+	# Add the following to enable strace in the container
+	# --security-opt seccomp:unconfined
+	docker run --name munin --shm-size=256M -p 4948:4948 -itd munin:latest dev_scripts/noop
+
+docker-connect:
+	docker exec -it munin bash
+
+docker-dev: docker-base
+	docker build -t munin:dev -f Dockerfile.dev .
+	docker run --rm --name munin-dev -v $(shell pwd):/munin -p 8000:8000 -p 14948:4948 -it munin:dev

@@ -50,7 +50,7 @@ Here the ``load`` is called the field or field name, ``value`` the attribute, an
 Note that field name may not start with a digit or special characters
 (see :ref:`notes on field names <notes-on-fieldnames>` for details).  Thus it is recommended to
 prepend a prefix in front of dynamically discovered field names (e.g. names of network interfaces
-or services). Otherwise a uniqe part of the field name may get lost due to name munging.
+or services). Otherwise a unique part of the field name may get lost due to name munging.
 
 That was the hard part of the plugin.  The rest is just book-keeping.
 

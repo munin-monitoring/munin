@@ -1,3 +1,130 @@
+munin-2.999.15, 2020-07-08
+
+-------
+Summary
+-------
+
+Bugfix
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (53):
+      travis: using system perl install
+      travis: configuring cpan
+      travis: doing the cpan download via wget
+      travis: needs sudo for dpkg-related stuff
+      travis: using /tmp
+      travis: using a subshell, to avoid chdir
+      Rewrite the Dockerfile
+      update Docker building
+      docker: reorder the layers to minimize trashing
+      docker: Be explicit for deps
+      docker: upgrade to buster
+      node: adding explicit $PATH to untaint it
+      docker: adding eatmydata to speedup everything
+      dev: use /dev/shm as config in sandbox
+      u/g: avoid wrong warning when everything is ok
+      u: using JOURNAL DELETE in sqlite
+      Adding noop in dev/scripts
+      Use IO::Socket::IP instead of IO::Socket::INET[6]
+      Adding a compiled version of noop
+      node: untaint the configured port
+      fix template head.tmpl
+      fix template head.tmpl
+      Rewrite the Dockerfile
+      update Docker building
+      docker: reorder the layers to minimize trashing
+      docker: Be explicit for deps
+      docker: upgrade to buster
+      node: adding explicit $PATH to untaint it
+      docker: adding eatmydata to speedup everything
+      dev: use /dev/shm as config in sandbox
+      u/g: avoid wrong warning when everything is ok
+      u: using JOURNAL DELETE in sqlite
+      node: adding explicit $PATH to untaint it
+      u/g: avoid wrong warning when everything is ok
+      u: using JOURNAL DELETE in sqlite
+      t: use all the various combinations on graph_size
+      docker: Use no-passwd sudo
+      u: Remove unused functions to_mul[_nb]()
+      t: Test scientific values
+      noop: adding child reaps
+      t: Add a skeleton tests for Graph & HTML
+      t: initial testing of httpd
+      travis: add deps for httpd
+      docker: Use multiple docker images
+      Revert "t: initial testing of httpd"
+      t: Adding unit test for Config::_parse_bool()
+      Remove unused functions of Munin::Master::Group
+      Add some "make docker-dev" generated files
+      t: Add mocking tests munin_master_httpd_html
+      t: use a perlish way of mocking
+      dev: Make SLEEP_TIME user definable
+      h/g: Adding a static version of Night&Day
+      t: Use Devel::Confess & fix the test
+
+Lars Kruse (26):
+      plugin.sh: improve documentation for "print_warning" and "print_critical"
+      Specify encoding for perldoc in Munin::Master::UpdateWorker
+      Plugin http_loadtime: fix typo
+      doc: mention the supersampling plugin approach in "protocols"
+      doc: mentioned allowed timestamp prefix for values in network protocol
+      doc: recommend a more verbose mail subject for notifications
+      doc: remove references to pre-2.0 versions for alerting
+      doc: move limits template variables "worst" and "worstid" to proper location
+      doc: fix verbal syntax description for limits (warning/critical)
+      doc: add example plugin output for limits
+      Fix more spelling errors
+      Makefile: tolerate codespell before v1.14
+      Convert a few files to UTF-8
+      Fix spelling errors in munin-get
+      Makefile: execute generate Build script during "build"
+      Add more checks for shell scripts
+      Fix spelling and perl style issues
+      Plugin ping_: add support for IPv4-only ping with "-4" argument
+      Fix CI test for plugins "autoconf"
+      Plugins: remove remaining uses of "which" and the shellcheck exception
+      Plugin jenkins_builds_and_jobs: call "is_multigraph" with arguments
+      Plugins: remove remaining uses of "which"
+      Plugins: remove last surviving "which"
+      Plugins ntp_ and ntp_states: prevent junk on stderr during "autoconf"
+      Add minimal script for visualizing munin's color palette
+      Fix documentation regarding `field.line`
+
+Olivier Mehani (7):
+      [plugins/ping_] Add support for ping4
+      [snmp] Update some titles, categories and draw to better match other plugins
+      Expose NAME in all services HTML templates
+      Put host name or service (NAME) first in <title>
+      fixup! Put host name or service (NAME) first in <title>
+      Add doc about impossibility of sharing name between multigraph sub graphs and series
+      [snmp] Update snmp__if_err_ and snmp__if_multi titles to better match other plugins
+
+Felix Wolfsteller (2):
+      doc: fix grammar
+      guide: fix link to lighttpd
+
+Alexander Moisseev (1):
+      snmp__df_ram: handle undef and zero values
+
+Ayke Halder (1):
+      Unique state-file for each disk configured via env.smartargs
+
+Sae X (1):
+      New Year + link to GPLv2
+
+Simone Rossetto (1):
+      Plugin apc_nis: add UPS load in watt and hide frequency
+
+So (1):
+      Fix cpu plugins on OpenBSD 6.4
+
+rantal (1):
+      update tomcat_: Now can find Old Gen memory values not only for CMS GC
+
+
 munin-2.999.14, 2019-07-18
 
 -------
@@ -186,7 +313,7 @@ Steve Schnepp (28):
       Adding "round_to_granularity" tests
       Refactoring the 10% extra for RRA
       t: Add Test::Differences
-      u: fixed whitspace
+      u: fixed whitespace
       u: add some db specific session vars
       u: ignore when mutiplier is "0"
       u: Fixed mixed return args in is_fresh_enough()
@@ -301,7 +428,7 @@ Christian Göttsche (64):
       fix warning on node list operation
       drop Alien::RRDtool dependency
       fix warning on munin-update
-      fix uninitialized varibales in munin-httpd
+      fix uninitialized variables in munin-httpd
       [plugins] fix squid autoconf errors
       [plugins] give reasons for inactive plugins
       [dev_scripts] remove unavailable plugins on ./install node
@@ -354,13 +481,13 @@ Christian Göttsche (64):
       [munin-httpd] update listen option
 
 Christoph Moench-Tegeder (1):
-      make Linux diskstats plugin comaptible with Linux 4.19+
+      make Linux diskstats plugin compatible with Linux 4.19+
 
 Dmitry Marakasov (6):
       Specify minimum value for tuples
       Specify minimal value for postgres scans
       Specify minimal value for bgwriter
-      Speficy minimal value for PostgreSQL checkpoints
+      Specify minimal value for PostgreSQL checkpoints
       Specify minimal value for postgresql buffer cache
       Fix CDEF variable substitution
 
@@ -401,7 +528,7 @@ Lars Kruse (212):
       dynazoom: cgi-based template adapted to cron-based template
       Template 'problemview': fix HTML validation problems
       Template 'serviceview': use double quotes for tag attributes
-      plugin postfix_mailvolume: do not use hashs with save_state/restore_state
+      plugin postfix_mailvolume: do not use hashes with save_state/restore_state
       dynazoom: temporarily remove doctype line
       plugin hddtemp_smartctl: handle missing 'smartctl' gracefully
       Java compilation: change source and target specification from 1.5 to 1.7
@@ -4186,6 +4313,393 @@ tsaavik (1):
       dynazoom: added logo and backlink
 
 
+munin-2.0.63, 2020-05-27
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Alexander (1):
+      Remove unneeded forks in plugin.sh
+
+Lars Kruse (3):
+      plugin.sh: fix shellcheck issues and tolerate unset optional arguments
+      Plugins: force execution in a shell for "command -v"
+      plugin.sh: improve documentation for "print_warning" and "print_critical"
+
+
+munin-2.0.62, 2020-05-27
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (5):
+      Move "munin-node-configure" test from Makefile to travis checks
+      Fix formatting of Munin::Common::Daemon documentation
+      Plugin proc: change to "manual" family
+      Plugins: use "command -v" instead of "which"
+      Plugins: hide output for boolean checks of "command -v"
+
+d0m84 (1):
+      add start and stop log for munin-graph
+
+
+munin-2.0.61, 2020-04-30
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (2):
+      Plugins apache_*: tolerate URL without placeholder for port
+      Plugins apache_*: fix handling of URL with port placeholder
+
+
+munin-2.0.60, 2020-04-22
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Hans de Graaff (1):
+      Plugin mysql_innodb: pass argument to mysql_exec
+
+Lars Kruse (6):
+      Remove logging from Munin::Common::Daemon
+      Plugin ping_: use "ping" instead of "ping6" except for *BSD
+      Plugin nginx_status: improve error message in case of missing dependency
+      munin-run: skip systemd properties simulation in case of missing privileges
+      Remove asterisk_* plugins
+
+Steve Schnepp (1):
+      dists: remove all dists specific stuff
+
+Thomas Daniels (1):
+      Fix typo in doc/reference/plugin.rst of stable-2.0
+
+
+munin-2.0.59, 2020-03-24
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Moench-Tegeder (1):
+
+Lars Kruse (1):
+      Fix syntax error in munin-asyncd
+
+
+munin-2.0.58, 2020-03-23
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Moench-Tegeder (1):
+
+Andreas Perhab (1):
+      plugin ipmi_: add support for volts
+
+Klas Meder Boqvist (1):
+      Plugin cpuspeed: ensure value is not in scientific notation
+
+Lars Kruse (28):
+      Plugin ipmi_sensor_: fix "suggest" in case of missing "ipmitool"
+      dev_scripts: allow override for sandbox directory
+      Plugin proc (linux): announce availability of autoconf
+      Plugin proc (linux): fix indentation
+      Remove remaining occurrences of subversion revision markers ($Id$)
+      Plugin ntp_: output "U" values in case of data retrieval problems
+      emit_sd_notify_message: adjust log level for messages
+      asyncd: prevent skipping of values due to variable collection periods
+      master: do not block connection to munin-node in case of TCP timeout
+      Fix test for munin_master_node
+      devscripts/install: override users and groups with the current user
+      Plugin mysql_: handle missing dependencies gracefully
+      Plugin ntp_: handle missing dependencies gracefully
+      Plugin ntp_states: move "autoconf" code to the top
+      Plugin ntp_states: handle missing dependency gracefully
+      Plugin varnish_: handle missing dependency gracefully
+      Makefile: test "munin-node-configure --suggest"
+      Plugin mbmon_: convert plugin documentation to perldoc header
+      Plugin mbmon_: prepare for configurable arguments
+      Plugin mbmon_: allow additional arguments for "mbmon"
+      Plugin apt_all: improve formatting of error messages
+      Plugin apt_all: enforce stable order of fields
+      Plugin apt_all: include release names with slashes (e.g. buster/updates)
+      Plugin apt_all: unify whitespace
+      Plugin apt_all: apply default "options" for apt-get
+      Plugin apt_all: use a proper name for the state file
+      templates: remove superfluous whitespace after "Munin" in title
+      templates: add missing hostname to category and comparison views of multigraph services
+
+Trygve Vea (1):
+      Proc plugin: Allow monitoring of processes with empty cmdline
+
+
+munin-2.0.57, 2020-03-09
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Moench-Tegeder (1):
+
+Bas Couwenberg (1):
+      Add support for multiple fail2ban instances.
+
+Christoph Moench-Tegeder (1):
+      extend linux diskstat plugins for kernel 5.5
+
+Kim B. Heino (2):
+      head.tmpl: remove trailing white spaces
+      head.tmpl: add missing </TMPL_IF>
+
+Lars Kruse (9):
+      munin-run: improve formatting of constant value
+      munin-run: ignore DropInPaths property
+      Fix spelling and perl style issues
+      Ignore misinterpreted codespell errors
+      Ignore the content of certificate files
+      Remove superfluous trailing semicolons from shell-based plugins
+      Implement "sd_notify" interface for munin-node
+      munin-node: allow to force "foreground" mode via commandline arguments
+      Implement "sd_notify" interface for munin-asyncd
+
+Rowan (1):
+      Fixed broken link to multicpu1sec
+
+Steve Schnepp (2):
+      2.0.56
+      travis: using system perl install
+
+
+munin-2.0.56, 2020-02-07
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Moench-Tegeder (1):
+      extend linux diskstat plugins for kernel 5.5
+
+Kim B. Heino (2):
+      head.tmpl: remove trailing white spaces
+      head.tmpl: add missing </TMPL_IF>
+
+
+munin-2.0.55, 2020-02-05
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (3):
+      munin-run: prepend new systemd-related messages with "#"
+      munin-run: work around systemd's serialization of EnvironmentFile
+      munin-run: emit a warning if execution failed
+
+Olivier Mehani (3):
+      Expose NAME in all services HTML templates
+      Put host name or service (NAME) first in <title>
+
+
+munin-2.0.54, 2020-01-20
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (2):
+      munin-run: skip execution via "systemd-run" for systemd before v236
+      Disable "dashed" threshold lines for rrdtool version before 1.5.3
+
+Steve Schnepp (1):
+      munin-run: Use directly systemd-run
+
+
+munin-2.0.53, 2020-01-15
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (6):
+      Add missing "munindoc" to the node build process
+      Respect custom color for warning thresholds
+      Visualize warning thresholds as dashed line
+      munin-run: allow multi-line environment values
+      munin-run: remove duplicated copyright/license statement
+      munin-run: apply systemd properties configured for "munin-node.service"
+
+Terry Burton (1):
+      Plugin postgres_streaming_: Use modern WAL status function names
+
+
+munin-2.0.52, 2019-11-20
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Alexander Moisseev (1):
+      snmp__if_: handle undefined values
+
+Christian Gut (1):
+      Make date parsing work in Safari
+
+Lars Kruse (7):
+      sample config: improve notification mail subject
+      limits: do not redefine variable used in outer scope
+      Plugin ntp_states: fix missing required output
+      Plugin proc: count processes with a negative nice level
+      Plugin sensors_: add support for voltage output with unit prefix (mV)
+      Remove remaining traces of munin-gather
+      Add minimal local plugin management tool ("munin-get")
+
+
+munin-2.0.51, 2019-10-18
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (7):
+      limits: add missing module import
+      limits: prevent hiding of state changes due to subsequent fields
+      limits: reduce code duplication for counting unknown values
+      limits: send notification if the first emitted value of a plugin is unknown
+      limits: mention worst state change in log message
+      limits: use uppercase"OK" instead of "ok" in notifications
+      limits: remove unused conditional
+
+
+munin-2.0.50, 2019-10-16
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Alexander Moisseev (1):
+      snmp__df_ram: handle undef and zero values
+
+Kenyon Ralph (1):
+      doc: fix example apache virtualhost RewriteRule
+
+Lars Kruse (20):
+      Add comment regarding munin-async timing
+      meminfo plugin: fix "phisical/physical" typo in descriptions
+      Fix link anchors for problems page
+      Avoid erroneous wildcard matching when parsing plugin configurations
+      Remove trailing whitespace
+      plugin bind9_rndc: fix documentation
+      Plugin ejabberd_: remove "usersindays" feature
+      Improve log output in case of broken numeric content
+      Improve error message in case privilege dropping problems
+      Fix some spelling errors
+      Makefile: add lint checks for spelling
+      Makefile: ignore spelling errors in multiple directories
+      Fix perldoc header in Munin::Master::LimitsOld
+      Fix perldoc header in munin-graph
+      Move manpages for munin-node and munin-run to section 8 (admin)
+      Add empty codespell exclusion file
+      Plugin snmp__cpuload: use deterministic order for CPU fields
+      Fix travis setup for new codespell linting
+      Multiple snmp__* plugins: use deterministic order of fields
+      Prevent duplicate timestamps in async spool data
+
+Nicolai Langfeldt (1):
+      Don't "exit 1"
+
+Tobias Kronthaler (1):
+      Fix spelling of "network" in port_
+
+mafri (1):
+      Fixed iteration at apt_all
+
+moisseev (1):
+      snmp__processes: handle undefined values
+
+
 munin-2.0.49, 2019-05-09
 
 -------
@@ -6676,7 +7190,7 @@ munin 1.4.2, r3167:3231, 2009-12-16
 * munin_update: Update to work correctly with 1.4, document and enhance a bit
 * munin_stats: Provide better graph_info and set some warning and
   critical levels at 4 minutes and 4m45s
-* Improove colors contrast in jmx plugins which have Max area, to make
+* Improve colors contrast in jmx plugins which have Max area, to make
   them more readable + fix some indentation
 * ntp_offset: make info into graph_info
 * Munin-(node|run): Make group name resolution lazy, enhance error
@@ -7685,7 +8199,7 @@ munin (1.3.3, r910-r1236)
   * users plugin: Move to platform independent directory
   * users plugin: change family to auto, make generic
   * linux/memory: Further adjustments w.r.t. correct handling of vmalloc_used
-  * Fix typo "contigious"
+  * Fix typo "contiguous"
   * munin-node-simple: Fix @@ variable typos
   * SunOS df plugins: use @@GOODSH@@
   * Define GOODSH and BASH in Makefile.config to be used by shell plugins
@@ -7722,7 +8236,7 @@ munin (1.3.3, r910-r1236)
   * Makefile: Create plugin state directory with correct ownership and
 	permissions
   * port_ plugin did not use @@PLUGSTATE@@ for plugin state
-  * ipmi plugin: Incorrect handeling of 'autoconf' method
+  * ipmi plugin: Incorrect handling of 'autoconf' method
   * YUM plugin did not autoconf correctly
   * install-node-plugins now installs all plugins in the distribution -
 	no matter if they existed already - how else do we get bugfixed
@@ -8212,7 +8726,7 @@ munin (1.1.1)
     field.
   * Added plugin options "graph_info" and "<field>.info", which can be used
     to describe the graph/fields in the above mentioned table.
-  * Bugfix in the linux/df_inode plugin, regarding filesystems withouth
+  * Bugfix in the linux/df_inode plugin, regarding filesystems without
     inodes.
   * Added warning and critical statuses to the info table in the service view.
   * Added "info"-fields to linux/cpu and linux/load plugins, to demonstrate

@@ -70,7 +70,7 @@ GPLv2
 INTERFACE=${0##*if_}
 speed=${speed:-}
 
-# Who whould have thought it's so much work to determine the
+# Who would have thought it's so much work to determine the
 # maximum speed of a network interface.  Buckle up!
 findspeed_mbps() {
     # Do not use interface name to guess technology.  Many many

@@ -15,7 +15,7 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-SYSCTL_BIN=$(which sysctl)
+SYSCTL_BIN=$(command -v sysctl)
 
 if [ "$1" = "autoconf" ]; then
 	if [ ! -z "$SYSCTL_BIN" ]; then

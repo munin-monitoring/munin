@@ -24,7 +24,7 @@ if [ "$1" = "config" ]; then
 	echo "up.max $UPMAX"
 	echo "up.min 0"
 	exit 0
-fi;
+fi
 
 printf "down.value "
 snmpget -Ov "$hostname" "$COMMUNITY" interfaces.ifTable.ifEntry.ifInOctets.3 | sed 's/^.*: //'

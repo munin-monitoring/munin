@@ -169,7 +169,7 @@ graph_category disk
 graph_info This graph shows partition usage in percent.
 END
 
-  foreach my $part (keys %partitions) {
+  foreach my $part (sort(keys %partitions)) {
     my $partname = get_name_by_mp($part);
     my $partinfo = $partitions{$part}{extinfo} || $part;
 
