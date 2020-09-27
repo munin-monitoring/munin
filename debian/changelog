@@ -2,7 +2,7 @@ munin (2.999.15-1) UNRELEASED; urgency=medium
 
   * New upstream release.
     - update debian/patches/disable-munin-limits.patch.
-  * Drop build-dependency on python.
+  * Add build-dependency on libdevel-confess-perl and drop the one on python.
   * Bump standards version to 4.5.0, no changes needed.
 
  -- Holger Levsen <holger@debian.org>  Thu, 17 Oct 2019 11:02:27 +0200
