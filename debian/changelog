@@ -1,7 +1,7 @@
 munin (2.999.15-1) UNRELEASED; urgency=medium
 
   * New upstream release.
-  * Bump standards version to 4.4.1, no changes needed.
+  * Bump standards version to 4.5.0, no changes needed.
 
  -- Holger Levsen <holger@debian.org>  Thu, 17 Oct 2019 11:02:27 +0200
 
