@@ -10,7 +10,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  # Check limits defined for each service, and notify contacts.
  # This also writes state read by munin-httpd.
  
--$MUNIN_BINDIR/munin-limits \$\@
+-$MUNIN_BINDIR/munin-limits "\$\@"
 +# "munin-limits" is not yet working in 2.999.10 (to be done for the 3.0 release)
-+#$MUNIN_BINDIR/munin-limits \$\@
++#$MUNIN_BINDIR/munin-limits "\$\@"
  EOF
