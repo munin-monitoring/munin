@@ -1,4 +1,4 @@
-munin (2.999.15-1) UNRELEASED; urgency=medium
+munin (2.999.15-1) experimental; urgency=medium
 
   * New upstream release.
     - update debian/patches/disable-munin-limits.patch.
@@ -8,11 +8,11 @@ munin (2.999.15-1) UNRELEASED; urgency=medium
       Closes: #968023
     - munin-node and munin-run manpages have moved from section 1 to 8, adjust
       d/munin-node.manpages and d/munin-node.service accordingly.
-  * Bump standards version to 4.5.0, no changes needed.
   * Bump debhelper-compat to 13. Adjust d/rules override_dh_installdocs to use
     use --remaining-packages.
+  * Bump standards version to 4.5.0, no changes needed.
 
- -- Holger Levsen <holger@debian.org>  Thu, 17 Oct 2019 11:02:27 +0200
+ -- Holger Levsen <holger@debian.org>  Mon, 28 Sep 2020 14:23:53 +0200
 
 munin (2.999.14-1) experimental; urgency=medium
 
