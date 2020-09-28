@@ -3,3 +3,4 @@ usr/bin/munin-node
 usr/bin/munin-node-configure
 usr/bin/munin-run
 usr/bin/munin-doc
+usr/bin/munin-get
