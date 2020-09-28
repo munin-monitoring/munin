@@ -72,7 +72,7 @@ override_dh_installsystemd:
 
 override_dh_installdocs:
 	dh_installdocs --link-doc=munin-common --doc-main-package=munin-common -p munin-doc
-	dh_installdocs --link-doc=munin-common --remaining
+	dh_installdocs --link-doc=munin-common --remaining-packages
 	@ # Use the packaged javascript libraries
 	rm debian/munin-doc/usr/share/doc/munin-common/html/_static/jquery.js; \
 	ln -s /usr/share/javascript/jquery/jquery.js \
