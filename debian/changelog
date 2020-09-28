@@ -2,12 +2,13 @@ munin (2.999.15-1) UNRELEASED; urgency=medium
 
   * New upstream release.
     - update debian/patches/disable-munin-limits.patch.
-  * Add build-dependency on libdevel-confess-perl and drop the one on python.
+    - munin-node: add /usr/bin/munin-get, which is a simple tool for managing
+      plugins from remote repositories. Not yet ship its manpage.
+    - add build-dependency on libdevel-confess-perl and drop the python one.
+      Closes: #968023
+    - munin-node and munin-run manpages have moved from section 1 to 8, adjust
+      d/munin-node.manpages and d/munin-node.service accordingly.
   * Bump standards version to 4.5.0, no changes needed.
-  * debian/munin-node.manpages and debian/munin-node.service: adjust for
-    movement of munin-node and munin-run manpages from section 1 to 8.
-  * munin-node: add /usr/bin/munin-get, which is a simple tool for managing
-    plugins from remote repositories. Not yet ship its manpage.
 
  -- Holger Levsen <holger@debian.org>  Thu, 17 Oct 2019 11:02:27 +0200
 
