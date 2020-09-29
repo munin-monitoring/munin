@@ -15,6 +15,7 @@ Build-Depends-Indep:
  libfile-slurp-perl,
  libhtml-template-perl,
  libhtml-template-pro-perl,
+ libhttp-server-simple-cgi-prefork-perl,
  libio-socket-inet6-perl,
  libio-stringy-perl,
  liblist-moreutils-perl,
