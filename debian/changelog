@@ -1,11 +1,12 @@
-munin (2.999.15-1.1) UNRELEASED; urgency=medium
+munin (2.999.15-2) experimental; urgency=medium
 
+  [ Lars Kruse ]
+  * Show local network configuration during build (for debugging purposes).
   * Add build dependency libhttp-server-simple-cgi-prefork-perl.
   * Move obsolete fields Contact and Name from debian/upstream/metadata to
     their new location in debian/copyright.
-  * Show local network configuration during build (for debugging purposes).
 
- -- Lars Kruse <devel@sumpfralle.de>  Tue, 29 Sep 2020 02:33:08 +0200
+ -- Holger Levsen <holger@debian.org>  Tue, 29 Sep 2020 17:01:07 +0200
 
 munin (2.999.15-1) experimental; urgency=medium
 
