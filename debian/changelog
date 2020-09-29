@@ -1,6 +1,8 @@
 munin (2.999.15-1.1) UNRELEASED; urgency=medium
 
   * Add build dependency libhttp-server-simple-cgi-prefork-perl.
+  * Move obsolete fields Contact and Name from debian/upstream/metadata to
+    their new location in debian/copyright.
 
  -- Lars Kruse <devel@sumpfralle.de>  Tue, 29 Sep 2020 02:33:08 +0200
 
