@@ -1,0 +1,21 @@
+From: Lars Kruse <devel@sumpfralle.de>
+Date: Tue, 29 Sep 2020 02:48:04 +0200
+Subject: Show local network address configuration during build for debugging
+
+---
+ Makefile | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index 07edd33..7066fdd 100644
+--- a/Makefile
++++ b/Makefile
+@@ -156,6 +156,8 @@ TEST_FILES_ARG = $(addprefix --test_files , $(TEST_FILES))
+ 
+ .PHONY: test
+ test: $(BUILD_SCRIPT)
++	@# for debugging purposes: show local addresses
++	ip addr
+ 	"$(BUILD_SCRIPT)" test $(TEST_FILES_ARG)
+ 
+ .PHONY: testcover
