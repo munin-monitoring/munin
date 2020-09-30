@@ -1,8 +1,9 @@
-munin (2.999.15-3) UNRELEASED; urgency=medium
+munin (2.999.15-3) experimental; urgency=medium
 
+  [ Lars Kruse ]
   * Fix debugging output of local network configuration during build.
 
- -- Lars Kruse <devel@sumpfralle.de>  Wed, 30 Sep 2020 23:51:01 +0200
+ -- Holger Levsen <holger@debian.org>  Thu, 01 Oct 2020 00:18:27 +0200
 
 munin (2.999.15-2) experimental; urgency=medium
 
