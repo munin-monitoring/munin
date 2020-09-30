@@ -1,3 +1,9 @@
+munin (2.999.15-3) UNRELEASED; urgency=medium
+
+  * Fix debugging output of local network configuration during build.
+
+ -- Lars Kruse <devel@sumpfralle.de>  Wed, 30 Sep 2020 23:51:01 +0200
+
 munin (2.999.15-2) experimental; urgency=medium
 
   [ Lars Kruse ]

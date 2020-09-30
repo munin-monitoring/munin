@@ -15,6 +15,9 @@ override_dh_auto_build:
 	# ./getversion reads RELEASE if it exists
 	echo "$(DEB_VERSION_UPSTREAM)" >RELEASE
 	dh_auto_build -- $(MAKEOPTS)
+	# show local network configuration (debugging a build failure on the buildd hosts)
+	ip addr || ifconfig || true
+	cat /etc/hosts || true
 	# build java plugin files
 	$(MAKE) -f Makefile.config -f Makefile.javaplugin build-plugins-java
 	$(MAKE) -C doc html man SPHINXOPTS="-D today=\"$(BUILD_DATE)\""
