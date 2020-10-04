@@ -36,7 +36,7 @@ your /etc/apt.conf defaults.
 
 This plugin needs a cronjob that runs apt-get update every hour or so
 
-Example conjob
+Example cronjob
 
  /etc/cron.d/munin-plugin-apt
  53  * * * *	root	apt-get update > /dev/null 2>&1
