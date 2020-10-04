@@ -4,7 +4,7 @@
 # varnish_ - Munin plugin to for Varnish
 # Copyright (C) 2009  Redpill Linpro AS
 #
-# Author: Kristian Lyngstol <kristian@bohemians.org>
+# Author: Kristian Lyngstøl <kristian@bohemians.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -72,13 +72,13 @@ correctly.
 
 =head1 PATCHES-TO
 
-Please send patches to Kristian Lyngstol <kristian@bohemians.org>
+Please send patches to Kristian Lyngstøl <kristian@bohemians.org>
 and/or varnish-misc@varnish-cache.org for significant changes. Munin SVN
 is the authoritative repository for this plugin.
 
 =head1 AUTHOR
 
-Kristian Lyngstol <kristian@bohemians.org>
+Kristian Lyngstøl <kristian@bohemians.org>
 
 =head1 LICENSE
 

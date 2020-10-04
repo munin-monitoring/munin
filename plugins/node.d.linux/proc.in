@@ -81,11 +81,11 @@ The munin-project.
 =head1 AUTHOR
 
 Trygve Vea <tv@redpill-linpro.com>
-Kristian Lyngstol <kristian@varnish-software.com>
+Kristian Lyngstøl <kristian@varnish-software.com>
 
 =head1 THANKS
 
-Thanks to Kristian Lyngstol, I stole most of the initial code in this plugin
+Thanks to Kristian Lyngstøl, I stole most of the initial code in this plugin
 from his varnish_-plugin, which is a really nice outline of how a
 wildcardplugin should look like. I've added some weird hacks to make it output
 multigraph. It's pretty ugly, but it works.
