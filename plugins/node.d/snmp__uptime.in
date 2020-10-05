@@ -61,15 +61,13 @@ None known.
 
 =head1 AUTHOR
 
-Copyright (C) 2000-2009 by various authors.
+Copyright (C) 2000-2009 by various authors
 
-Original Nagios plugin: Sébastien Barbereau.
+Original Nagios plugin: Sébastien Barbereau
 
-Introduced to Munin in 2006 based on the Nagios plugin by: Andreas
-Schuldei
+Copyright (C) 2006 Andreas Schuldei
 
-In 2008 updated for Munin::Plugin::SNMP and documented by Nicolai
-Langfeldt.
+Copyright (C) 2008 Nicolai Langfeldt
 
 =head1 LICENSE
 
