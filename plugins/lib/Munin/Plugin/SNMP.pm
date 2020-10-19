@@ -1,7 +1,7 @@
 # -*- cperl -*-
 # vim: ts=4 : sw=4 : et
 #
-# Copyright (C) 2004-2009 Dagfinn Ilmari Mannsaaker, Nicolai Langfeldt,
+# Copyright (C) 2004-2009 Dagfinn Ilmari Mannsåker, Nicolai Langfeldt,
 # Linpro AS
 #
 # This program is free software; you can redistribute it and/or
