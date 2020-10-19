@@ -3754,7 +3754,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
        clocks - stops spurious DNS lookups of these (closes #150)
  * It appears that some versions of Net::SSLeay needs a "" in
    print_errs("") calls (closes #154)
- * Add munin_stats plugin written by Rodolphe Quiedeville - and patch to
+ * Add munin_stats plugin written by Rodolphe Quiédeville - and patch to
    munin-limits to provide timing information by same.  Closes #485.
    Problem: plugin can take more than 10 seconds to run with long log
    files, needs to use log-tail and a state file
