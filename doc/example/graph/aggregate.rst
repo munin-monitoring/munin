@@ -62,7 +62,7 @@ detail, step by step, below the configuration.
   6
   7 [UPS;Aggregated]
   8         update no
-  9         contacts no
+  9         contacts none
  10
  11         snmp_ups_current.update no
  12         snmp_ups_current.graph_args --base 1000 -l 0

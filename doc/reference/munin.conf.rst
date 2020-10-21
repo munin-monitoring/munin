@@ -281,7 +281,7 @@ the groups name in square brackets.
    Changes the order of nodes in a domain.
    Default: Alphabetically sorted.
 
-.. option:: contacts <no|your_contact_name1 your_contact_name2 ...>
+.. option:: contacts <none|your_contact_name1 your_contact_name2 ...>
 
    A list of contacts used by :ref:`munin-limits` to report values passing the warning and critical thresholds.
 
