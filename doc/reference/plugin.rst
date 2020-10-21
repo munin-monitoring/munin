@@ -291,7 +291,7 @@ Field name attributes
 .. _fieldname.draw:
 
 :Attribute: **{fieldname}.draw**
-:Value: AREA, LINE, LINE[n], STACK, AREASTACK, LINESTACK, LINE[n]STACK
+:Value: AREA, LINE, LINE[n], STACK, AREASTACK, LINESTACK, LINESTACK[n]
 :Type: optional
 :Description:
   | Determines how the data points are displayed in the graph. The "LINE" takes an optional width suffix, commonly "LINE1", "LINE2", etc…
