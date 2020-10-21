@@ -759,14 +759,14 @@ sub emit_main_index {
 
     $template->param(
                     TAGLINE   => $htmltagline,
-                    GROUPS    => $groups,
+                    GROUPS    => $groups || [],
                     CSS_NAME  => get_css_name(),
 					R_PATH => ".",
-				    ROOTGROUPS => $htmlconfig->{"groups"},
+				    ROOTGROUPS => $htmlconfig->{"groups"} || [],
 			  	    MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
 					TIMESTAMP	=> $timestamp,
-					NGLOBALCATS => $htmlconfig->{"nglobalcats"},
-					GLOBALCATS => $htmlconfig->{"globalcats"},
+					NGLOBALCATS => $htmlconfig->{"nglobalcats"} || [],
+					GLOBALCATS => $htmlconfig->{"globalcats"} || [],
 					  NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
 					  NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
 					  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
