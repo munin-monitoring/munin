@@ -15,6 +15,8 @@ The following environment variables are used by this plugin
    [http_loadtime]
    env.target http://localhost.de,http://localhost.de/some-site.html
    env.requisites true
+   env.warning 5
+   env.critical 30
 
  Do not enable the download of page requisites (env.requisites) for https
  sites since wget needs incredible long to perform this on big sites...
@@ -34,6 +36,8 @@ GPLv2
  #%# capabilities=autoconf
 
 =cut
+
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 target=${target:-"http://localhost/"}
 requisites=${requisites:-"false"}
@@ -87,6 +91,7 @@ if [ "$1" = "config" ]; then
         if [ "$uri_short" != "$uri" ]; then uri_short="${uri_short}..."; fi
         echo "$(escapeUri "$uri").label $uri_short"
         echo "$(escapeUri "$uri").info page load time"
+        print_thresholds "$(escapeUri "$uri")"
     done
     exit 0
 fi

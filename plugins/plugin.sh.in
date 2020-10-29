@@ -99,8 +99,8 @@ adjust_threshold () {
 
     if [ -n "$1" ] && [ -n "$2" ]; then
         echo "$1" | awk "BEGIN { FS=\":\"; OFS=\":\" }
-        \$1 ~ /.*%/ {\$1 = $2 * substr(\$1, 0, length(\$1) - 1) / 100}
-        \$2 ~ /.*%/ {\$2 = $2 * substr(\$2, 0, length(\$2) - 1) / 100}
+        \$1 ~ /.*%/ {\$1 = $2 * substr(\$1, 1, length(\$1) - 1) / 100}
+        \$2 ~ /.*%/ {\$2 = $2 * substr(\$2, 1, length(\$2) - 1) / 100}
 
         { print }"
     fi

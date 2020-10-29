@@ -114,6 +114,14 @@ my @releases = split(/\s/, ($ENV{releases} || ""));
 @releases = guess_releases() unless @releases;
 
 
+sub get_clean_release_fieldname {
+    my ($fieldname) = @_;
+    # apply some minor URI-like substitution (avoiding ambiguity between slash and hyphen)
+    $fieldname =~ s#/#_2F#g;
+    return clean_fieldname($fieldname);
+}
+
+
 sub print_state() {
     if (-l $statefile) {
         die("$statefile is a symbolic link, refusing to read it.");
@@ -128,7 +136,7 @@ sub print_state() {
         or die("Couldn't open state file $statefile for reading.");
     while (my $line = <STATE>) {
         foreach my $release (@releases) {
-            my $release_cleaned = clean_fieldname($release);
+            my $release_cleaned = get_clean_release_fieldname($release);
             # print only lines that are exected for the currently requested releases
             if ($line =~ /^(hold|pending)_$release_cleaned\.(value|extinfo)/) {
                 print $line ;
@@ -194,7 +202,7 @@ sub update_state() {
         push (@pending, @remove ) if @remove;
         close APT;
 
-        my $release_cleaned = clean_fieldname($release);
+        my $release_cleaned = get_clean_release_fieldname($release);
         print STATE "pending_$release_cleaned.value ", scalar (@pending), "\n";
         if (@pending) {
             print STATE "pending_$release_cleaned.extinfo ", join (' ', @pending), "\n";
@@ -234,7 +242,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_category system\n";
 
     foreach my $release (@releases) {
-        my $release_cleaned = clean_fieldname($release);
+        my $release_cleaned = get_clean_release_fieldname($release);
         print "pending_$release_cleaned.label pending ($release)\n";
         print "pending_$release_cleaned.warning 0:0\n";
         print "hold_$release_cleaned.label hold ($release)\n";

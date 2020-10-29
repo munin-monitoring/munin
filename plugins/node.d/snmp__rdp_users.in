@@ -52,7 +52,7 @@ a thing as a non-Windows RDP server?
 
 =head1 AUTHOR
 
-Copyright (C) 2004 Rune Nordbøe Skillingstad
+Copyright (C) 2004 Rune NordbÃ¸e Skillingstad
 
 Documented and updated to use Munin::Plugin::SNMP by Matthew Boyle.
 

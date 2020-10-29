@@ -90,7 +90,7 @@ around.
 
 =head1 AUTHOR
 
-Copyright (C) 2004-2009 Jimmy Olsen, Daginn Ilmari Mannsaaker.
+Copyright (C) 2004-2009 Jimmy Olsen, Daginn Ilmari Mannsåker.
 Documentation, porting to Munin::Plugin::SNMP and further grooming by
 Nicolai Langfeldt.
 

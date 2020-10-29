@@ -7,6 +7,7 @@
  <TMPL_INCLUDE NAME="partial/navigation.tmpl">
  <div id="content">
 	<h2>Overview</h2>
+	<TMPL_IF NAME="GROUPS">
 	<ul class="groupview">
 	<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
 		<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
@@ -61,6 +62,9 @@
 		</li>
 	</TMPL_UNLESS></TMPL_LOOP>
 	</ul>
+	<TMPL_ELSE>
+		Warning: no hosts were configured for data collection. See the <a href="http://guide.munin-monitoring.org/en/latest/installation/configuration.html#add-some-nodes">Munin Guide</a> for details.
+	</TMPL_IF>
 	<div class="contentpusher"></div>
  </div>
  </div>

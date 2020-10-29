@@ -123,11 +123,11 @@ around.
 
 =head1 AUTHOR
 
-Copyright (C) 2004-2010 Jimmy Olsen, Dagfinn Ilmari Mannsaaker,
+Copyright (C) 2004-2010 Jimmy Olsen, Dagfinn Ilmari Mannsåker,
 Nicolai Langfeldt, Redpill Linpro AS and others.
 
 Original snmp__if_ plugin: Copyright (C) 2004-2009 Jimmy Olsen, Dagfinn
-Ilmari Mannsaaker.
+Ilmari Mannsåker.
 
 Initial SNMPv3 support by "Confusedhacker".
 

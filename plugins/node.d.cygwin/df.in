@@ -33,7 +33,7 @@ Check smb/cifs remote mounts. (Cygwin bug, 2002 vintage, still unfixed: -l switc
 
 =head1 AUTHOR
 
-Erik Inge Bolsø <knan-munin@anduin.net>
+Erik Inge BolsÃ¸ <knan-munin@anduin.net>
 
 =head1 LICENSE
 

@@ -190,10 +190,11 @@ sub _resolve_gids
 
     # Support running with more than one group in effect. See documentation on
     # $EFFECTIVE_GROUP_ID in the perlvar(1) manual page.  Need to specify the
-    # default group twice: once for setegid(2), and once for setgroups(2).
-    my $egids = join ' ', ($default_gid) x 2, @groups;
-
-    return ($default_gid, $egids);
+    # primary group twice: once for setegid(2), and once for setgroups(2).
+    if (scalar(@groups) != 0) {
+        return ($groups[0], join ' ', $groups[0], @groups);
+    }
+    return ($default_gid, join ' ', ($default_gid) x 2);
 }
 
 

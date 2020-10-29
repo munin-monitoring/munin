@@ -1,5 +1,41 @@
 -*- text -*-
 
+munin-2.0.65, 2020-10-28
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Hans van Kranenburg (1):
+      Use configured plugin group as primary group
+
+John Hall (1):
+      plugins/memory: add per-cpu counter
+
+JosefRypacek (1):
+      Munin thresholds support for http_loadtime
+
+Kjetil Torgrim Homme (1):
+      adjust_threshold: strings indexes are 1 based in AWK
+
+Lars Kruse (10):
+      Plugin apt_all: prevent ambiguity between slash and hyphen in release names
+      Fix utf8 encoding in plugins
+      Fix special character for author name (Kristian Lyngstøl)
+      Plugin snmp__if_err_: clarify authors list
+      Plugin nomadix_users_: clarify formatting of authors
+      Plugin vserver_cpu_: clarify copyright statement
+      Plugin snmp__uptime: clarify authors
+      Unify spelling of author "Dagfinn Ilmari Mannsåker"
+      Unify more author names
+      Fix template error in case of an empty host list
+
+
 munin-2.0.64, 2020-07-09
 -------
 Summary
@@ -3754,7 +3790,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
        clocks - stops spurious DNS lookups of these (closes #150)
  * It appears that some versions of Net::SSLeay needs a "" in
    print_errs("") calls (closes #154)
- * Add munin_stats plugin written by Rodolphe Quiedeville - and patch to
+ * Add munin_stats plugin written by Rodolphe Quiédeville - and patch to
    munin-limits to provide timing information by same.  Closes #485.
    Problem: plugin can take more than 10 seconds to run with long log
    files, needs to use log-tail and a state file

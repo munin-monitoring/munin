@@ -85,6 +85,8 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
       "apps ";
     print "page_tables " if exists $mems{'PageTables'};
 
+    print "per_cpu " if exists $mems{'Percpu'};
+
     print "swap_cache " if exists $mems{'SwapCached'};
 
     #print "vmalloc_used " if exists $mems{'VmallocUsed'};
@@ -150,6 +152,12 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "page_tables.info Memory used to map between virtual and ",
 	  "physical memory addresses.\n";
 	print "page_tables.colour COLOUR1\n";
+    }
+    if (exists $mems{'Percpu'}) {
+	print "per_cpu.label per_cpu\n";
+	print "per_cpu.draw STACK\n";
+	print "per_cpu.info Per CPU allocations\n";
+	print "per_cpu.colour COLOUR20\n";
     }
     if (exists $mems{'VmallocUsed'}) {
 	print "vmalloc_used.label vmalloc_used\n";
@@ -225,7 +233,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "ksm_sharing.info Memory saved by KSM sharing\n";
     print "ksm_sharing.colour COLOUR19\n";
     }
-    for my $field (qw(apps buffers swap cached free slab swap_cache page_tables vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean shmem)) {
+    for my $field (qw(apps buffers swap cached free slab swap_cache page_tables per_cpu vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean shmem)) {
     	my ($warning, $critical) = get_thresholds($field);
 	my $total = $mems{MemTotal};
 	$total = $mems{SwapTotal} if($field eq "swap");
@@ -259,6 +267,11 @@ if (exists $mems{'PageTables'}) {
 } else {
     $mems{'PageTables'} = 0;
 }
+if (exists $mems{'Percpu'}) {
+    print "per_cpu.value ", $mems{'Percpu'}, "\n";
+} else {
+    $mems{'Percpu'} = 0;
+}
 
 if (exists $mems{'VmallocUsed'}) {
     print "vmalloc_used.value ", $mems{'VmallocUsed'}, "\n";
@@ -272,6 +285,7 @@ $mems{'Buffers'} ||= 0;
 $mems{'Cached'} ||= 0;
 $mems{'Slab'} ||= 0;
 $mems{'PageTables'} ||= 0;
+$mems{'Percpu'} ||= 0;
 $mems{'SwapCached'} ||= 0;
 $mems{'SwapFree'} ||= 0;
 $mems{'SwapTotal'} ||= 0;
@@ -282,6 +296,7 @@ print "apps.value ", $mems{'MemTotal'}
 	-$mems{'Cached'}
 	-$mems{'Slab'}
 	-$mems{'PageTables'}
+	-$mems{'Percpu'}
         -$mems{'SwapCached'}
 	,"\n";
 

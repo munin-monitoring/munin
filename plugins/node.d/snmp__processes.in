@@ -51,7 +51,7 @@ exists.
 
 =head1 AUTHOR
 
-Copyright (C) 2004 Jimmy Olsen, Dagfinn Ilmari Mannsaaker
+Copyright (C) 2004 Jimmy Olsen, Dagfinn Ilmari Mannsåker
 
 Documented and updated to use Munin::Plugin::SNMP by Matthew Boyle
 in 2010.
