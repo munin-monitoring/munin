@@ -281,7 +281,7 @@ the groups name in square brackets.
    Changes the order of nodes in a domain.
    Default: Alphabetically sorted.
 
-.. option:: contacts <no|your_contact_name1 your_contact_name2 ...>
+.. option:: contacts <none|your_contact_name1 your_contact_name2 ...>
 
    A list of contacts used by :ref:`munin-limits` to report values passing the warning and critical thresholds.
 
@@ -358,6 +358,8 @@ only to that node.
 .. note:: This directive can also be used on hierarchy level plugin to change the name by which the plugin presents itself when warning through ``munin-limits``.
 
 .. option:: ignore_unknown <yes|no>
+
+   Available since Munin 3.0.
 
    If set, ignore any unknown values reported by the node. Allowed values are "yes"
    and "no". Defaults to "no".

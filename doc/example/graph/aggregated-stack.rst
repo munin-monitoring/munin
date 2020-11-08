@@ -74,7 +74,7 @@ detail, step by step, below the configuration.
   9
  10 [aggregates.example.com]
  11       update no
- 12       contacts no
+ 12       contacts none
  13
  14 # This graph stacks the number of postfix delivered mails / minute
  15 # from the nodes foo.example.com, bar.example.com and baz.example.com
