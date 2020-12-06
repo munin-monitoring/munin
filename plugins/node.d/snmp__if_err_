@@ -66,7 +66,7 @@ Earlier versions of this plugin only reported the ifInErrors and
 ifOutErrors numbers.  This does not encompas all errors on a interface
 therefore the change.
 
-=head1 AUTHOR
+=head1 AUTHORS
 
   Copyright (C) 2008-2009 Nicolai Langfeldt
   Copyright (C) 2004-2005 Dagfinn Ilmari Mannsåker
