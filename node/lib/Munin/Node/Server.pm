@@ -200,7 +200,7 @@ sub _process_command_line {
         _print_service($session, _run_service($1, 'config'));
     }
     elsif (/^spoolfetch (\d+)/ and $spool) {
-        _net_write($session, $spool->fetch($1));
+        $spool->fetch($1, sub { _net_write($session, shift()); });
         _net_write($session, ".\n");
     }
     elsif (/^starttls\s*$/i) {
