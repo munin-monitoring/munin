@@ -71,16 +71,25 @@ sub set_metadata
 
 
 # returns all output for all services since $timestamp.
+# The third argument ($submission_function) is optional: it is used for processing partial results,
+# in order to avoid slurping the full data content into RAM.  The result is empty, if this function
+# is given.
 sub fetch
 {
-    my ($self, $timestamp) = @_;
+    my ($self, $timestamp, $submission_function) = @_;
 
     my $return_str = '';
 
     my @plugins = $self->_get_spooled_plugins();
     logger("timestamp:$timestamp, plugins:@plugins") if $config->{DEBUG};
     foreach my $plugin (@plugins) {
-        $return_str .= $self->_cat_multigraph_file($plugin, $timestamp);
+        my $new_content = $self->_cat_multigraph_file(
+            $plugin, $timestamp, undef, $submission_function);
+        if (defined $submission_function) {
+            $submission_function->($new_content);
+        } else {
+            $return_str .= $new_content;
+        }
     }
 
     return $return_str;
@@ -96,9 +105,12 @@ sub list
 }
 
 
+# The last argument ($submission_function) is optional: it is used for processing partial results,
+# in order to avoid slurping the full data content into RAM.  The result is empty, if this function
+# is given.
 sub _cat_multigraph_file
 {
-    my ($self, $service, $timestamp, $max_samples_per_service) = @_;
+    my ($self, $service, $timestamp, $max_samples_per_service, $submission_function) = @_;
 
     # Default $max_samples_per_service is 5, in order to have a 5x time
     # increase in catchup.  This enables to not overwhelm the munin-update when
@@ -155,7 +167,11 @@ sub _cat_multigraph_file
                 $_ = "$1.value $epoch:$2";
             }
 
-            $data .= $_ . "\n";
+            if (defined $submission_function) {
+                $submission_function->($_ . "\n");
+            } else {
+                $data .= $_ . "\n";
+            }
         }
 
 	# We just emitted something
