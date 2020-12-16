@@ -125,7 +125,12 @@ sub _cat_multigraph_file
 
     my $nb_samples_sent = 0;
     foreach my $file (sort readdir $self->{spooldirhandle}) {
-        next unless $file =~ m/^munin-daemon\.$service\.(\d+)\.(\d+)$/;
+        # squash the $service name with the same rules as the munin-update when using plain TCP
+        # Closes D:710529
+        my $service_clean = $service;
+        $service_clean =~ s/[^_A-Za-z0-9]/_/g;
+
+        next unless $file =~ m/^munin-daemon\.$service_clean\.(\d+)\.(\d+)$/;
         next unless $1+$2 >= $timestamp;
 
         open my $fh, '<', "$self->{spooldir}/$file"
