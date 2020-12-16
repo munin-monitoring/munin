@@ -65,8 +65,20 @@ sub do_work {
     my $path = $self->{host}->get_full_path;
     $path =~ s{[:;]}{-}g;
 
-    my $nodedesignation = $host."/".
-	$self->{host}{address}.":".$self->{host}{port};
+		# Parameters are space-separated from the main address
+    my ($url, $params) = split(/ +/, $self->{host}{address}, 2);
+    my $uri = new URI($url);
+
+		# If the scheme is not defined, it's a plain host.
+		# Prefix it with munin:// to be able to parse it like others
+		$uri = new URI("munin://" . $url) unless $uri->scheme;
+
+    my $nodedesignation;
+		if ($uri->scheme eq "ssh" || $uri->scheme eq "cmd") {
+			$nodedesignation = $host." (".$self->{host}{address}.")";
+		}else{
+			$nodedesignation = $host." (".$self->{host}{address}.":".$self->{host}{port}.")";
+		}
 
     local $0 = "$0 [$nodedesignation]";
 
@@ -1163,5 +1175,3 @@ FIX
   You should have received a copy of the GNU General Public License along
   with this program; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-
