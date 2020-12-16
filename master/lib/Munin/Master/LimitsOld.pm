@@ -441,7 +441,7 @@ sub process_service {
             # First we'll need to check whether the user wants to ignore
             # a few UNKNOWN values before actually changing the state to
             # UNKNOWN.
-            if (($oldstate ne "unknown") and ($unknown_limit > 1)) {
+            if (($oldstate ne "unknown") and ($unknown_limit >= 1)) {
                  if (!defined($onfield->{"num_unknowns"}) or ($onfield->{"num_unknowns"} < $unknown_limit)) {
                      $newstate = $oldstate;
                      $extinfo = $onfield->{$newstate};
