@@ -158,7 +158,7 @@ On the munin master
 
 We use ssh encapsulated connections with munin async. In the :ref:`the munin
 master <master-index>` configuration you need to configure a host with a
-"ssh\://" address and append the command to execute to the ssh address.
+"ssh\://" address and append the command to be executed to the ssh address.
 
 Make sure the /usr/local/bin/munin-async path exists on the targeted address,
 the path might be different depending on the distribution used.
@@ -205,7 +205,7 @@ rsa key on the munin home directory.
   EOF
 
 It's also possible to add UserKnownHostsFile=/dev/null to the above config
-if you don't care that the monitor host can be reinstalled,
+if you don't care that the monitored host can be reinstalled,
 so you will not need to cleanup the host in known_hosts file.
 
 On the munin node
