@@ -131,7 +131,10 @@ sub _cat_multigraph_file
         $service_clean =~ s/[^_A-Za-z0-9]/_/g;
 
         next unless $file =~ m/^munin-daemon\.$service_clean\.(\d+)\.(\d+)$/;
-        next unless $1+$2 >= $timestamp;
+        my $interval_start = $1;
+        my $interval_size = $2;
+        # skip the file if its newest value is older than the minimum wanted timestamp
+        next if $interval_start + $interval_size < $timestamp;
 
         open my $fh, '<', "$self->{spooldir}/$file"
             or die "Unable to open spool file: $!";
