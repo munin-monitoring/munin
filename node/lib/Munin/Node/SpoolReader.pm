@@ -124,7 +124,7 @@ sub _cat_multigraph_file
         or die "Unable to reset the spool directory handle: $!";
 
     my $nb_samples_sent = 0;
-    foreach my $file (readdir $self->{spooldirhandle}) {
+    foreach my $file (sort readdir $self->{spooldirhandle}) {
         next unless $file =~ m/^munin-daemon\.$service\.(\d+)\.(\d+)$/;
         next unless $1+$2 >= $timestamp;
 
