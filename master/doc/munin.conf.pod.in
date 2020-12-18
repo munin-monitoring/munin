@@ -341,7 +341,7 @@ load'-graph.
 		load.graph_title Total load
 		load.sum_load.label load
 		load.sum_load.special_stack machine1=machine1.one.dom:load.load machine2=machine2.one.dom:load.load
-	
+
 
 =head1 AUTHORS
 

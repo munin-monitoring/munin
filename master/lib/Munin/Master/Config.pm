@@ -151,6 +151,8 @@ my %booleans = map {$_ => 1} qw(
 		max_processes    => 16,
 		rundir           => $Munin::Common::Defaults::MUNIN_STATEDIR,
 		timeout          => 180,
+		timeout_fetch_one_node => 180,
+		timeout_fetch_all_nodes => 240,
 		tls              => 'disabled',
 		tls_ca_certificate => "$Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem",
 		tls_certificate  => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem",
