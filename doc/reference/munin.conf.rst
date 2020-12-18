@@ -104,7 +104,7 @@ otherwise.
 
    Affects: :ref:`munin-update`
 
-.. option:: timeout_data_fetch <seconds>
+.. option:: timeout_fetch_all_nodes <seconds>
 
    This directive will set the maximum amount of time in seconds the munin-update
    task may run. So we'll make sure the update ended within
@@ -120,10 +120,10 @@ otherwise.
 
    Affects: :ref:`munin-update`
 
-.. option:: timeout_per_node <seconds>
+.. option:: timeout_fetch_one_node <seconds>
 
    This directive will set the maximum amount of time in seconds the munin-update
-   task may run 1 single node. This value can't be bigger than timeout_data_fetch.
+   task may run 1 single node. This value can't be bigger than timeout_fetch_all_nodes.
    Default is 180.
 
    Affects: :ref:`munin-update`
