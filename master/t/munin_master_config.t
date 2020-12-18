@@ -55,6 +55,8 @@ my $fasit = {
         ssh_command            => "ssh",
         ssh_options            => "-o ChallengeResponseAuthentication=no -o StrictHostKeyChecking=no",
         timeout                => 180,
+        timeout_fetch_all_nodes     => 240,
+        timeout_fetch_one_node       => 180,
         tls                    => 'disabled',
         tls_ca_certificate     => '/opt/munin/common/t/tls/CA/ca_cert.pem',
         tls_certificate        => '/opt/munin/common/t/tls/master_cert.pem',
@@ -132,7 +134,7 @@ rrdcached_socket /var/run/rrdcached.sock
     load1.graph_title Loads side by side
     load1.graph_order fii=fii.foo.com:load.load fay=fay.foo.com:load.load
 
-# 
+#
 # A more complex example of a host tree
 #
 ## First our "normal" host.
@@ -147,7 +149,7 @@ rrdcached_socket /var/run/rrdcached.sock
 # [foo.com;Totals] #Force it into the "foo.com"-domain...
 #       update no   # Turn off data-fetching for this "host".
 #
-#   # The graph "load1". We want to see the loads of both machines... 
+#   # The graph "load1". We want to see the loads of both machines...
 #   # "fii=fii.foo.com:load.load" means "label=machine:graph.field"
 #       load1.graph_title Loads side by side
 #       load1.graph_order fii=fii.foo.com:load.load fay=fay.foo.com:load.load
@@ -172,4 +174,3 @@ rrdcached_socket /var/run/rrdcached.sock
 # [foo.com;]
 #       node_order Totals fii.foo.com fay.foo.com
 #
-

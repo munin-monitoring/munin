@@ -113,6 +113,8 @@ my %legal = map { $_ => 1 } qw(
 	sum
 	text
 	timeout
+	timeout_fetch_one_node
+	timeout_fetch_all_nodes
 	tls
 	tls_ca_certificate
 	tls_certificate
