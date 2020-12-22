@@ -32,7 +32,7 @@ Should be rewritten as a autoconfigurable snmp__users (or some such
 name, not sure how specific the OIDs it presents are) plugin using the
 Plugin::SNMP module.
 
-=head1 AUTHOR
+=head1 AUTHORS
 
   Copyright (C) 2007 Erik Inge Bolsø, Linpro AS
   Copyright (C) 2006-2009 Espen Braastad, Linpro AS
@@ -40,6 +40,8 @@ Plugin::SNMP module.
 =head1 LICENSE
 
 GPLv2
+
+SPDX-License-Identifier: GPL-2.0-only
 
 =head1 MAGIC MARKERS
 
