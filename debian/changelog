@@ -1,8 +1,10 @@
 munin (2.0.66-1) UNRELEASED; urgency=medium
 
   * New upstream release.
-  * d/copyright: update my copyright years.
+  * Add Brazilian Portuguese debconf templates translation, thanks to
+    Adriano Rafael Gomes. Closes: #964892.
   * Bump standards version to 4.5.1, no changes needed.
+  * d/copyright: update my copyright years.
 
  -- Holger Levsen <holger@debian.org>  Sun, 17 Jan 2021 22:58:30 +0100
 
