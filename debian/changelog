@@ -1,4 +1,4 @@
-munin (2.0.66-1) UNRELEASED; urgency=medium
+munin (2.0.66-1) unstable; urgency=medium
 
   * New upstream release.
   * Add Brazilian Portuguese debconf templates translation, thanks to
@@ -6,7 +6,7 @@ munin (2.0.66-1) UNRELEASED; urgency=medium
   * Bump standards version to 4.5.1, no changes needed.
   * d/copyright: update my copyright years.
 
- -- Holger Levsen <holger@debian.org>  Sun, 17 Jan 2021 22:58:30 +0100
+ -- Holger Levsen <holger@debian.org>  Sun, 17 Jan 2021 23:20:37 +0100
 
 munin (2.0.65-1) unstable; urgency=medium
 
