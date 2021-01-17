@@ -1,5 +1,36 @@
 -*- text -*-
 
+munin-2.0.66, 2021-01-06
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (7):
+      unknown_limit: do not misinterpret zero as one
+      unknown_limit: fix handling of value "1"
+      SpoolReader: process spooled content lines separately
+      async: fetch spooled data in order of timestamps
+      async: use name squashing rules when determining the names of spooled files
+      async: clarify handling of timestamp
+      doc: describe "timeout_fetch_all_nodes" and "timeout_fetch_one_node"
+
+Matt Merhar (1):
+      Make sensors_ temperature plugin work on musl libc
+
+Wiebe Cazemier (1):
+      Symlink and custom name support for diskstat_
+
+Younes Ichiche (2):
+      fix reporting on URL in the munin-update log (stable-2.0)
+      make it possible to configure global munin-update timeouts
+
+
 munin-2.0.65, 2020-10-28
 -------
 Summary

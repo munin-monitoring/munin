@@ -441,7 +441,7 @@ sub process_service {
             # First we'll need to check whether the user wants to ignore
             # a few UNKNOWN values before actually changing the state to
             # UNKNOWN.
-            if (($oldstate ne "unknown") and ($unknown_limit > 1)) {
+            if (($oldstate ne "unknown") and ($unknown_limit >= 1)) {
                  if (!defined($onfield->{"num_unknowns"}) or ($onfield->{"num_unknowns"} < $unknown_limit)) {
                      $newstate = $oldstate;
                      $extinfo = $onfield->{$newstate};
@@ -590,13 +590,7 @@ sub get_limits {
     }
 
     if ($unknown_limit =~ /^\s*(\d+)\s*$/) {
-        $unknown_limit = $1 if defined $1;
-        if (defined $unknown_limit) {
-            if ($unknown_limit < 1) {
-                # Zero and negative numbers are not valid.  
-                $unknown_limit = 1;
-            }
-        }
+        $unknown_limit = $1;
         DEBUG "[DEBUG] processing unknown_limit: $name -> $unknown_limit";
     }
 

@@ -36,8 +36,8 @@ sub new {
         result_callback => $result_callback,
         error_callback  => $error_callback,
 
-        worker_timeout  => 180,
-        timeout         => 240,
+        worker_timeout  => $config->{timeout_fetch_one_node},
+        timeout         => $config->{timeout_fetch_all_nodes},
         accept_timeout  => 10,
 
         active_workers  => {},
