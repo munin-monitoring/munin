@@ -1712,7 +1712,7 @@ sub orig_to_cdef {
     if (defined $service->{$fieldname} && defined $service->{$fieldname}->{"cdef_name"}) {
         return orig_to_cdef($service, $service->{$fieldname}->{"cdef_name"});
     }
-    return $fieldname;
+    return get_field_name($fieldname);
 }
 
 sub reset_cdef {
