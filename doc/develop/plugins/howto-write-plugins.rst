@@ -284,7 +284,7 @@ But there is more:
 
 Here are two or three points. The :ref:`.cdef <fieldname.cdef>` thing takes care of multiplying by 8 to get from bytes (or bytes per second) which is what the file shows to bits (i.e., bits per second), which is the unit most humans use when they think about network speeds.
 
-There is a munin policy that input and output to the same device should be graphed in the same graph, this we already do.  BUT, we want the output above the X axis and input below.  This is done by first disabling graphing of the input (downloaded) value, then using :ref:`up.negative down <fieldname.negative>`.  Instead of just negating the down value this keeps the sign and gives the down graph the same color as the up graph.  The values in the database are kept as normal, the whole thing is magicked by Munin while graphing.
+There is a munin policy that input and output to the same device should be graphed in the same graph, this we already do.  BUT, we want the output above the X axis and input below.  This is done by first disabling graphing of the input (downloaded) value, then using :ref:`up.negative down <fieldname.negative>`.  Instead of just negating the down value this keeps the sign and gives the down graph the same color as the up graph.  The values in the database are kept as normal, the whole thing is magicked by Munin while graphing. Note that 'down' has to be listed before 'up' under :ref:`.graph_order`, otherwise this will result in an error.
 
 The end result is this kind of graph:
 
