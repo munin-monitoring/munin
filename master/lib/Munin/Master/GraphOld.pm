@@ -876,6 +876,16 @@ sub remove_dups {
 	return @ret;
 }
 
+sub _sanitise_fieldname {
+    # http://munin-monitoring.org/wiki/notes_on_datasource_names
+    my ($name) = @_;
+
+    $name =~ s/^[^A-Za-z_]/_/;
+    $name =~ s/[^A-Za-z0-9_]/_/g;
+
+    return $name;
+}
+
 sub process_service {
     my ($service) = @_;
 
@@ -1135,7 +1145,7 @@ sub process_service {
         if ($has_negative) {
             my $negfieldname
                 = orig_to_cdef($service, munin_get($field, "negative"));
-            my $negfield = $service->{$negfieldname};
+            my $negfield = $service->{_sanitise_fieldname(munin_get($field, "negative"))};
             if (my $tmpneg = munin_get($negfield, "realname")) {
                 $negfieldname = $tmpneg;
                 $negfield     = $service->{$negfieldname};
