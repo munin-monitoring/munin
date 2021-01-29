@@ -1706,13 +1706,21 @@ sub graph_by_hour {
 sub orig_to_cdef {
     my $service   = shift;
     my $fieldname = shift;
+    my $original_fieldname = shift || $fieldname;
 
     return unless ref($service) eq "HASH";
 
     if (defined $service->{$fieldname} && defined $service->{$fieldname}->{"cdef_name"}) {
-        return orig_to_cdef($service, $service->{$fieldname}->{"cdef_name"});
+        return orig_to_cdef($service, $service->{$fieldname}->{"cdef_name"}, $original_fieldname);
     }
-    return get_field_name($fieldname);
+    # For unknown reasons the sanitizing of fieldnames in the context of RRD field names is not
+    # applied consistently (maybe it should not be applied at all).
+    # Thus we need to apply it here in the same way, as it seems to be applied at other places.
+    if (_sanitise_fieldname($original_fieldname) ne $original_fieldname) {
+        return get_field_name(_sanitise_fieldname($fieldname));
+    } else {
+        return get_field_name($fieldname);
+    }
 }
 
 sub reset_cdef {
