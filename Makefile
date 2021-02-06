@@ -224,4 +224,4 @@ docker-connect:
 
 docker-dev: docker-base
 	docker build -t munin:dev -f Dockerfile.dev .
-	docker run --rm --name munin-dev -v $(shell pwd):/munin -p 8000:8000 -p 14948:4948 -it munin:dev
+	docker run --rm --name munin-dev -v $(shell pwd):/munin -p 8000:8000 -p 14947:4947 -p 14948:4948 -it munin:dev
