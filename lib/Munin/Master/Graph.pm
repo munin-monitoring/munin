@@ -369,20 +369,24 @@ sub handle_request
 		}
 
 		# Fetch the data from the RRDs
-		my $real_rrdname = $_rrdcdef ? "$_rrdname" : $_rrdname;
-		if (! $_sum && ! is_virtual($_rrdname, $_rrdcdef)) {
+		my $rrd_is_virtual = is_virtual($_rrdname, $_rrdcdef);
+		my $rrd_is_cdef = defined $_rrdcdef && $_rrdcdef ne "";
+		my $real_rrdname = ($rrd_is_virtual || ! $_rrdcdef) ? "$_rrdname" : "r_$_rrdname";
+		if (! $_sum && ! $rrd_is_virtual) {
 			push @rrd_def, "DEF:avg_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
 			push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
 			push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+
+			# useful for Day&Night
+			$first_def = "avg_$real_rrdname" unless $first_def;
 		}
 
-		$first_def = "avg_$real_rrdname" unless $first_def;
 
 		# Handle an eventual cdef
 		if ($_rrdcdef) {
 			# Populate the CDEF dictionary, to be able to swosh it at the end.
 			# As it will enable to solve inter-field CDEFs.
-			DEBUG "cdef handing for $_rrdname: _rrdcdef:$_rrdcdef, real_rrdname:$real_rrdname";
+			DEBUG "cdef handing for $_rrdname: _rrdcdef:$_rrdcdef, real_rrdname:$real_rrdname, rrd_is_virtual:$rrd_is_virtual, rrd_is_cdef:$rrd_is_cdef";
 			$rrd_cdefs{$_rrdname}->{_rrdcdef} = $_rrdcdef;
 			$rrd_cdefs{$_rrdname}->{real_rrdname} = $real_rrdname;
 		}
@@ -651,9 +655,11 @@ sub handle_request
 # is_virtual() means that the field itself isn't in the cdef.
 sub is_virtual {
 	my ($field, $cdef) = @_;
+	return 0 unless $cdef;
+
 	my @a = split(/,/, $cdef);
-	return 1 if grep $field, @a;
-	return 0;
+	return 0 if (grep {$_ eq $field} @a);
+	return 1;
 }
 
 sub remove_dups {
