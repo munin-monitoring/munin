@@ -494,12 +494,6 @@ sub handle_request
 		push @rrd_gfx, "COMMENT:$last_update_str\\r";
 	}
 
-	# Send the HTTP Headers
-	print "HTTP/1.0 200 OK\r\n";
-	print $cgi->header(
-		"-Content-type" => $CONTENT_TYPES{$format},
-	) unless $cgi->url_param("no_header");
-
 	# Compute the title
 	my $title = "";
 	if ($time eq "pinpoint") {
@@ -625,13 +619,25 @@ sub handle_request
 	# Sending the file
 	DEBUG "sending '$rrd_fh'";
 
+	# Send the HTTP Headers
+	{
+		my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,$blksize,$blocks) = $rrd_fh->stat();
+
+		print "HTTP/1.1 200 OK\r\n";
+		print $cgi->header(
+			"-Content-type" => $CONTENT_TYPES{$format},
+			"-Content-length" => $size,
+		) unless $cgi->url_param("no_header");
+	}
+
 	# Since the file desc is still open, we just rewind it to the beginning.
 	$rrd_fh->seek( 0, SEEK_SET );
 	{
 		my $buffer;
 		# No buffering wanted when sending the file
 		local $OUTPUT_AUTOFLUSH = 1;
-		while (sysread($rrd_fh, $buffer, 40 * 1024)) { print $buffer; }
+		# Using a 4kiB buffer
+		while (sysread($rrd_fh, $buffer, 4096)) { print $buffer; }
 	}
 
 	my $ttot = Time::HiRes::time;
