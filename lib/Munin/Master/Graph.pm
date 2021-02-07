@@ -248,7 +248,7 @@ sub handle_request
 		LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
 		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
 		LEFT OUTER JOIN ds_attr ra ON ra.id = ds.id AND ra.name = 'rrd:alias'
-		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'rrd:cdef'
+		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'cdef'
 		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
 		LEFT OUTER JOIN ds_attr gds ON gds.id = ds.id AND gds.name = 'drawstyle'
@@ -369,19 +369,24 @@ sub handle_request
 		}
 
 		# Fetch the data from the RRDs
-		my $real_rrdname = $_rrdcdef ? "r_$_rrdname" : $_rrdname;
-		if (! $_sum) {
+		my $rrd_is_virtual = is_virtual($_rrdname, $_rrdcdef);
+		my $rrd_is_cdef = defined $_rrdcdef && $_rrdcdef ne "";
+		my $real_rrdname = ($rrd_is_virtual || ! $_rrdcdef) ? "$_rrdname" : "r_$_rrdname";
+		if (! $_sum && ! $rrd_is_virtual) {
 			push @rrd_def, "DEF:avg_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
 			push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
 			push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+
+			# useful for Day&Night
+			$first_def = "avg_$real_rrdname" unless $first_def;
 		}
 
-		$first_def = "avg_$real_rrdname" unless $first_def;
 
 		# Handle an eventual cdef
 		if ($_rrdcdef) {
 			# Populate the CDEF dictionary, to be able to swosh it at the end.
 			# As it will enable to solve inter-field CDEFs.
+			DEBUG "cdef handing for $_rrdname: _rrdcdef:$_rrdcdef, real_rrdname:$real_rrdname, rrd_is_virtual:$rrd_is_virtual, rrd_is_cdef:$rrd_is_cdef";
 			$rrd_cdefs{$_rrdname}->{_rrdcdef} = $_rrdcdef;
 			$rrd_cdefs{$_rrdname}->{real_rrdname} = $real_rrdname;
 		}
@@ -462,18 +467,22 @@ sub handle_request
 		my $_rrdcdef = $rrd_cdefs{$_rrdname}->{_rrdcdef};
 		my $real_rrdname = $rrd_cdefs{$_rrdname}->{real_rrdname};
 
-		for my $t (qw(min avg max)) {
-			my $expanded_cdef = expand_cdef($_rrdname, $_rrdcdef, $t . "_$real_rrdname");
-			for my $inner_rrdname (keys %rrd_cdefs) {
-				next if ($inner_rrdname eq $_rrdname); # Already handled
+		my $expanded_cdef = expand_cdef($_rrdname, $_rrdcdef, "$real_rrdname");
+		for my $inner_rrdname (keys %rrd_cdefs) {
+			next if ($inner_rrdname eq $_rrdname); # Already handled
 
-				# expand an eventual sibling field to its realrrdname
-				my $inner_real_rrdname = $rrd_cdefs{$inner_rrdname}->{real_rrdname};
-				$expanded_cdef = expand_cdef($inner_rrdname, $expanded_cdef, $t . "_$inner_real_rrdname");
-			}
-			push @rrd_def, "CDEF:$t"."_$_rrdname=$expanded_cdef";
+			# expand an eventual sibling field to its realrrdname
+			my $inner_real_rrdname = $rrd_cdefs{$inner_rrdname}->{real_rrdname};
+			$expanded_cdef = expand_cdef($inner_rrdname, $expanded_cdef, "$inner_real_rrdname");
+		}
+
+		# Now, create a version for each min/max/avg
+		for my $t (qw(min avg max)) {
+			push @rrd_def, "CDEF:${t}_$_rrdname=${t}_$expanded_cdef";
 		}
 	}
+
+	DEBUG "rrd_def @rrd_def";
 
 	# $end is possibly in future
 	$end = $end ? $end : time;
@@ -488,12 +497,6 @@ sub handle_request
 		push @rrd_gfx, "COMMENT:\\u";
 		push @rrd_gfx, "COMMENT:$last_update_str\\r";
 	}
-
-	# Send the HTTP Headers
-	print "HTTP/1.0 200 OK\r\n";
-	print $cgi->header(
-		"-Content-type" => $CONTENT_TYPES{$format},
-	) unless $cgi->url_param("no_header");
 
 	# Compute the title
 	my $title = "";
@@ -620,13 +623,25 @@ sub handle_request
 	# Sending the file
 	DEBUG "sending '$rrd_fh'";
 
+	# Send the HTTP Headers
+	{
+		my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,$blksize,$blocks) = $rrd_fh->stat();
+
+		print "HTTP/1.1 200 OK\r\n";
+		print $cgi->header(
+			"-Content-type" => $CONTENT_TYPES{$format},
+			"-Content-length" => $size,
+		) unless $cgi->url_param("no_header");
+	}
+
 	# Since the file desc is still open, we just rewind it to the beginning.
 	$rrd_fh->seek( 0, SEEK_SET );
 	{
 		my $buffer;
 		# No buffering wanted when sending the file
 		local $OUTPUT_AUTOFLUSH = 1;
-		while (sysread($rrd_fh, $buffer, 40 * 1024)) { print $buffer; }
+		# Using a 4kiB buffer
+		while (sysread($rrd_fh, $buffer, 4096)) { print $buffer; }
 	}
 
 	my $ttot = Time::HiRes::time;
@@ -635,6 +650,16 @@ sub handle_request
 		($tpng - $t0),
 		($ttot - $tpng),
 	);
+}
+
+# is_virtual() means that the field itself isn't in the cdef.
+sub is_virtual {
+	my ($field, $cdef) = @_;
+	return 0 unless $cdef;
+
+	my @a = split(/,/, $cdef);
+	return 0 if (grep {$_ eq $field} @a);
+	return 1;
 }
 
 sub remove_dups {
@@ -663,6 +688,9 @@ sub escape_for_rrd {
 	return $text;
 }
 
+# Expands $_rrdcdef, replacing $_rrdname by $real_rrdname
+# TODO - should use a split, and a array map{} operator instead of a complex regex.
+# But it seems to work, so refactoring only if we need to tweak it
 sub expand_cdef {
 	my ($_rrdname, $_rrdcdef, $real_rrdname) = @_;
 	DEBUG "expand_cdef($_rrdname $_rrdcdef $real_rrdname)";
