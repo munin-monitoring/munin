@@ -10,21 +10,22 @@ Plugin Gallery
    pair: plugin; documentation
    pair: plugin; gallery
 
-`In the gallery <http://gallery.munin-monitoring.org/>`_ you can browse description and graph images for our Munin Plugins. It is not ready and complete yet. Example graph images are still missing and many plugins have empty documentation pages (due to missing perldoc sections in the plugin script).
+`In the gallery <https://gallery.munin-monitoring.org/>`_ you can browse description and graph images for our Munin Plugins. It is not ready and complete yet. Example graph images are still missing and many plugins have empty documentation pages (due to missing perldoc sections in the plugin script).
 
 Here some examples pages with graph images:
 
-  * `packages.py <http://gallery.munin-monitoring.org/contrib/apt/deb_packages/deb_packages.py.html>`_ - complete
-  * `quota2percent_ <http://gallery.munin-monitoring.org/contrib/disk/quota2percent_.html>`_ - complete
-  * `oracle_sysstat <http://gallery.munin-monitoring.org/contrib/oracle/oracle_sysstat.html>`_ - complete
-  * `ejabberd <http://gallery.munin-monitoring.org/contrib/ejabberd/ejabberd_resources_.html>`_ - Image only, missing perldoc
-  * `apache_activity <http://gallery.munin-monitoring.org/contrib/apache/apache_activity.html>`_ - Image only, missing perldoc
+  * `packages.py <https://gallery.munin-monitoring.org/plugins/munin-contrib/deb_packages.py/>`_ - complete
+  * `quota2percent_ <https://gallery.munin-monitoring.org/plugins/munin-contrib/quota2percent_/>`_ - complete
+  * `oracle_sysstat <https://gallery.munin-monitoring.org/plugins/munin-contrib/oracle_sysstat/>`_ - complete
+  * `ejabberd <https://gallery.munin-monitoring.org/plugins/munin-contrib/ejabberd_resources_/>`_ - Image only, missing perldoc
+  * `apache_activity <https://gallery.munin-monitoring.org/plugins/munin-contrib/apache_activity/>`_ - Image only, missing perldoc
 
 The HTML-Presentation is auto-generated in a daily cronjob at our project server. It generates the plugins documentation page, that is accessible via :ref:`munindoc <munindoc>` otherwise. Example graphs for the plugins have to be placed in our github repositories.
 
+See `munin-plugin-gallery <https://github.com/munin-monitoring/munin-plugin-gallery>`_ for the technical details of the plugin gallery website builder.
+
 Help from contributors is welcome. Please take a look at the instructions in the next section below.
 
-The gallery has two showrooms. One called `Core Collection <http://gallery.munin-monitoring.org/index.html>`_ for the plugins that we deliver with the distribution of Munin-Node and one called `3rd-Party Collection <http://gallery.munin-monitoring.org/contrib/index.html>`_ for the plugins from the wild, that were uploaded to our Contrib-Repository. Especially the latter need a lot of documentation work and we are happy if you add info in perldoc format and representative example graph images to the contrib repo. The more descriptive content is there, the more helpful the Plugin Gallery will be.
 
 Categories
 ==========
@@ -43,7 +44,7 @@ Rules for plugin contributors
 
 To make sure that we can auto-generate the portrait pages for each plugin please pay attention to the following instructions.
 
-1. Add **documentation about your plugin in perldoc style** (`information about perldoc <http://juerd.nl/site.plp/perlpodtut>`_) to show with :ref:`munindoc <munindoc>` and in the `Plugin Gallery <http://gallery.munin-monitoring.org/>`_ on the web. (See :ref:`Best Current Practices <plugin-bcp-documentation>`).
+1. Add **documentation about your plugin in perldoc style** (`information about perldoc <http://juerd.nl/site.plp/perlpodtut>`_) to show with :ref:`munindoc <munindoc>` and in the `Plugin Gallery <https://gallery.munin-monitoring.org/>`_ on the web. (See :ref:`Best Current Practices <plugin-bcp-documentation>`).
 
  * Add these sections at the start or end of your plugins script file.
 
@@ -64,13 +65,3 @@ To make sure that we can auto-generate the portrait pages for each plugin please
 4. Upload **more image files** to the subdirectory ``example-graphs`` in PNG-Format if you want **to illustrate** the documentation section **Interpretation**
 
   * The filename of such an additional image should match the following format *<plugins_name>* ``-n.png`` with ``n`` standing for a digit between 1 and 9, e.g. ``cpu-1.png``
-
-Current state of the project
-============================
-
-We have `scripts to auto-generate the HTML presentation called "Munin Plugin Gallery" <https://github.com/munin-monitoring/munin/tree/master/contrib/plugin-gallery>`_ per daily cronjob.
-
-ToDo
-----
-
-Whenever the scripts fails to find the relationship between plugins and categories, we put these into category ``other``. It would be good to improve the plugins data concerning the category or to improve the parse method to decrease the number of these unrelated plugins.
