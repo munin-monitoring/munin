@@ -394,6 +394,14 @@ sub parse_service_config {
             DEBUG "[CONFIG dataseries $plugin] $service->$ds_name.$ds_var = $ds_val" if $debug;
             push ( @graph_order, $ds_name ) if $ds_var eq 'label';
         }
+        elsif ($line =~ m{\A ([^\.]+)\.([^\s]+) \s* $}xms) {
+            # the field value is empty - ignore it
+            # see https://github.com/munin-monitoring/contrib/issues/1156#issuecomment-746884950
+            # For example the meminfo "slab_size" graph may contain empty fields.  These should not
+            # end up as log noise, but can be safely ignored instead.
+            $correct++;
+            DEBUG "[DEBUG] Ignoring field without value ('$line') from $plugin on $nodedesignation.\n";
+        }
 	else {
 	    $errors++;
 	    DEBUG "[DEBUG] Protocol exception: unrecognized line '$line' from $plugin on $nodedesignation.\n";
