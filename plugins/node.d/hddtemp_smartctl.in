@@ -298,7 +298,12 @@ foreach my $drive (@drives) {
 sub device_for_drive {
     my ($drive) = @_;
 
-    my $dev = $drive =~ /(.*)(?:_\d+)$/ ? $1 : $drive;
+    # The purpose of the following regular expression (removing a numeric suffix starting with an
+    # underscore) is a mystery.  But it is probably meant to detect a partition and select the
+    # parent block device in such a case.
+    # In order to avoid misinterpreting a trailing serial number as such a partition number, we
+    # limit the number of numeric characters after the underscore to just one or two.
+    my $dev = $drive =~ /(.*)(?:_\d{1,2})$/ ? $1 : $drive;
 
     my $fulldev = '/dev/';
     $fulldev .= 'rdsk/' if $^O eq 'solaris';
