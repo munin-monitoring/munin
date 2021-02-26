@@ -1,10 +1,14 @@
-munin (2.0.66-2) UNRELEASED; urgency=medium
+munin (2.0.67-1) unstable; urgency=medium
 
+  [ Holger Levsen ]
+  * New upstream release.
+
+  [ Debian Janitor ]
   * Set fields Upstream-Name, Upstream-Contact in debian/copyright.
   * Remove obsolete fields Contact, Name from debian/upstream/metadata (already
     present in machine-readable debian/copyright).
 
- --  <user@debian-work>  Fri, 26 Feb 2021 12:23:01 -0000
+ -- Holger Levsen <holger@debian.org>  Fri, 26 Feb 2021 13:24:19 +0100
 
 munin (2.0.66-1) unstable; urgency=medium
 
