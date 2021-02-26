@@ -1,5 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Source: https://github.com/munin-monitoring/munin
+Upstream-Name: Munin
+Upstream-Contact: irc://irc.oftc.net/
 
 Files: *
 License: GPL-2
