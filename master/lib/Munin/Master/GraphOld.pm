@@ -876,6 +876,16 @@ sub remove_dups {
 	return @ret;
 }
 
+sub _sanitise_fieldname {
+    # http://munin-monitoring.org/wiki/notes_on_datasource_names
+    my ($name) = @_;
+
+    $name =~ s/^[^A-Za-z_]/_/;
+    $name =~ s/[^A-Za-z0-9_]/_/g;
+
+    return $name;
+}
+
 sub process_service {
     my ($service) = @_;
 
@@ -1135,7 +1145,7 @@ sub process_service {
         if ($has_negative) {
             my $negfieldname
                 = orig_to_cdef($service, munin_get($field, "negative"));
-            my $negfield = $service->{$negfieldname};
+            my $negfield = $service->{_sanitise_fieldname(munin_get($field, "negative"))};
             if (my $tmpneg = munin_get($negfield, "realname")) {
                 $negfieldname = $tmpneg;
                 $negfield     = $service->{$negfieldname};
@@ -1696,13 +1706,21 @@ sub graph_by_hour {
 sub orig_to_cdef {
     my $service   = shift;
     my $fieldname = shift;
+    my $original_fieldname = shift || $fieldname;
 
     return unless ref($service) eq "HASH";
 
     if (defined $service->{$fieldname} && defined $service->{$fieldname}->{"cdef_name"}) {
-        return orig_to_cdef($service, $service->{$fieldname}->{"cdef_name"});
+        return orig_to_cdef($service, $service->{$fieldname}->{"cdef_name"}, $original_fieldname);
     }
-    return $fieldname;
+    # For unknown reasons the sanitizing of fieldnames in the context of RRD field names is not
+    # applied consistently (maybe it should not be applied at all).
+    # Thus we need to apply it here in the same way, as it seems to be applied at other places.
+    if (_sanitise_fieldname($original_fieldname) ne $original_fieldname) {
+        return get_field_name(_sanitise_fieldname($fieldname));
+    } else {
+        return get_field_name($fieldname);
+    }
 }
 
 sub reset_cdef {
