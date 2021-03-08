@@ -1,3 +1,9 @@
+munin (2.0.67-1~bpo10+1) buster-backports; urgency=medium
+
+  * Rebuild for buster-backports.
+
+ -- Holger Levsen <holger@debian.org>  Mon, 08 Mar 2021 11:57:43 +0100
+
 munin (2.0.67-1) unstable; urgency=medium
 
   [ Holger Levsen ]
