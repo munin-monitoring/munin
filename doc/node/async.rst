@@ -237,7 +237,7 @@ not necessary for the munin-async connection to work
    Some of these may also be set globally in /etc/ssh/sshd_config
    or the ~/.ssh/config for the munin-async user.
 
-See the sshd_config (5) and authorized_keys(5) man pages for more information.
+See the sshd_config(5) and authorized_keys(5) man pages for more information.
 
 Trouble shooting
 ----------------
