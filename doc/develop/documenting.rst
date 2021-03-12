@@ -45,7 +45,7 @@ Munin Gallery
 =============
 
 The plugin documentation is also included in the `Munin Gallery
-<http://gallery.munin-monitoring.org>`_.
+<https://gallery.munin-monitoring.org>`_.
 
 See our `Wiki page <http://munin-monitoring.org/wiki/PluginGallery>`_
 for instructions how to contribute also example images for the

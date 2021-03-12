@@ -36,7 +36,7 @@ be installed, use the option '--remove-also'.
 Installing Third Party Plugins
 ==============================
 
-To use a Munin plugin being delivered from a `3rd-Party <http://gallery.munin-monitoring.org/contrib/>`_,
+To use a Munin plugin being delivered from a `3rd-Party <https://gallery.munin-monitoring.org/repositories/munin-contrib/>`_,
 place it in directory ``/usr/local/munin/lib/plugins`` (or any other
 directory), make it executable, and create the service link.
 It it also possible to place the plugin directly into the ``servicedir``, but this is not recommended for the following reasons:
@@ -269,4 +269,4 @@ In order to use these plugins they can either be downloaded manually or managed 
 :ref:`munin-get` plugin tool.
 
 Additionally the munin plugins in the `contrib <https://github.com/munin-monitoring/contrib>`_
-repository can be browsed via the `Munin Plugin Gallery <http://gallery.munin-monitoring.org>`_.
+repository can be browsed via the `Munin Plugin Gallery <https://gallery.munin-monitoring.org>`_.

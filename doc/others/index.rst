@@ -9,7 +9,7 @@ Other docs
 Contributing
 ============
 
-We need help with completing the `Munin Gallery <http://gallery.munin-monitoring.org/>`_.
+We need help with completing the `Munin Gallery <https://gallery.munin-monitoring.org/>`_.
 A lot of plugins don't have their documentation in POD style format.
 And the Gallery needs more pics!
 
