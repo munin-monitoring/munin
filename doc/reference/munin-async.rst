@@ -9,7 +9,7 @@
 DESCRIPTION
 ===========
 
-The munin async clients reads from a spool directory written by
+The munin async client reads from a spool directory written by
 :ref:`munin-asyncd`.
 
 It can optionally request a cleanup of this directory.

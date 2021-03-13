@@ -83,7 +83,7 @@ Info for plugin contributors
 when uploading your plugins to the repository.
 
 The graph categories set for plugins in the repositories are also used
-to browse the `Munin Plugin Gallery <http://gallery.munin-monitoring.org/>`_.
+to browse the `Munin Plugin Gallery <https://gallery.munin-monitoring.org/>`_.
 They are shown on each index page on the left side with a link to
 the concerning category page which lists all plugins with graphs in this category.
 

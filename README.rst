@@ -8,7 +8,7 @@ After completing a installation a high number of monitoring plugins will be
 playing with no more effort.
 
 Additional plugins can be easily developed and contributed.
-See the `Plugin Gallery <http://gallery.munin-monitoring.org/>`_ for a wide
+See the `Plugin Gallery <https://gallery.munin-monitoring.org/>`_ for a wide
 range of more than a thousand community supported plugins.
 
 Munin is distributed under the `GNU GPL version 2 <https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html>`_.  Munin is copyrighted
@@ -19,10 +19,10 @@ Resources
 =========
 
 * Website: http://munin-monitoring.org/
-* Documentation: http://guide.munin-monitoring.org/
+* Documentation: https://guide.munin-monitoring.org/
 * `IRC channel <irc://irc.oftc.net/#munin>`_: ``#munin`` on OFTC
 * Mailing List: https://lists.sourceforge.net/lists/listinfo/munin-users
-* Plugin Gallery: http://gallery.munin-monitoring.org/
+* Plugin Gallery: https://gallery.munin-monitoring.org/
 * Live Demo (development): http://demo.munin-monitoring.org/
 
 
@@ -71,5 +71,5 @@ docs : |docs-latest|
 
 
 .. |docs-latest| image:: https://readthedocs.org/projects/munin/badge/?version=latest
-   :target: http://guide.munin-monitoring.org/
+   :target: https://guide.munin-monitoring.org/
 
