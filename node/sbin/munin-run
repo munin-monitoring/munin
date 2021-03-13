@@ -520,10 +520,6 @@ This is munin-run (munin-node) v@@VERSION@@
 Audun Ytterdal, Jimmy Olsen, Tore Anderson, Nicolai Langfeldt,
 Lars Kruse.
 
-=head1 BUGS
-
-Please see L<http://munin-monitoring.org/report/1>.
-
 =head1 COPYRIGHT
 
 Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
