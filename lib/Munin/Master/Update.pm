@@ -282,7 +282,7 @@ sub _db_init {
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
 
 	# Munin stats
-	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp TIMESTAMP, type VARCHAR, name VARCHAR, duration NUMERIC)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp TIMESTAMPTZ, type VARCHAR, name VARCHAR, duration NUMERIC)");
 
 	# Initialise the grp _root_ node if not present
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
@@ -349,4 +349,3 @@ Constructor.
 This is where all the work gets done.
 
 =back
-
