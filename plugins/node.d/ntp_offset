@@ -36,6 +36,7 @@ Loosely based on ntp_ plugin, but reworked to shell.
 
 =cut
 
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 nodelay=${nodelay:-}
 
@@ -86,6 +87,9 @@ EOF
     case $nodelay in
 	1) echo "delay.graph no";;
     esac
+    print_thresholds delay
+    print_thresholds offset
+    print_thresholds critical
 }
 
 do_ () {
