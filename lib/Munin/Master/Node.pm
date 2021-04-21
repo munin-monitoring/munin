@@ -84,7 +84,7 @@ sub _do_connect {
         $self->{reader} = $self->{writer} = IO::Socket::INET6->new(
 		PeerAddr  => $uri->host,
 		PeerPort  => $self->{port} || 4949,
-		LocalAddr => $config->{local_address},
+		LocalAddr => $self->{configref}{local_address} || $config->{local_address},
 		Proto     => 'tcp', 
 		MultiHomed => 1,
 		Timeout   => $config->{timeout}
