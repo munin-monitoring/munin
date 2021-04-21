@@ -1,7 +1,11 @@
 #!/usr/bin/perl -T
 #
-# Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
-#    Nicolai Langfeldt
+# Copyright (C) 2006-2010 Nicolai Langfeldt
+# Copyright (C) 2009-2010 Matthew Boyle
+# Copyright (C) 2009 Kjell-Magne Øierud
+# Copyright (C) 2004-2006 Tore Anderson
+# Copyright (C) 2002-2007 Jimmy Olsen
+# Copyright (C) 2002-2004 Audun Ytterdal
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,9 +26,6 @@
 use strict;
 use warnings;
 
-# Trust PERL5LIB from environment
-use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
-
 use Getopt::Long;
 
 use Munin::Common::Defaults;
@@ -33,6 +34,8 @@ use Munin::Node::OS;
 use Munin::Node::Service;
 use Munin::Node::Server;
 
+use English qw(-no_match_vars);
+
 my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 my $sconfdir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
@@ -40,6 +43,7 @@ my $DEBUG    = 0;
 my $VERBOSE  = 0;
 my $PIDEBUG  = 0;
 my $paranoia = 0;
+my $foreground = 0;
 
 sub main
 {
@@ -81,15 +85,21 @@ sub main
         paranoia => $paranoia,
     });
 
-    Munin::Node::Server->run(
+    my %server_params = (
         syslog_ident => 'munin-node',
         conf_file    => $conffile,
     );
-
-    # Untaint $0 after Munin::Node::Server has had a chance of getting
-    # the original value
-    $0 =~ /([^\/]*)$/;
-    $0 = $1;
+    # Optionally force foreground mode (overriding settings in the configuration file).
+    # This is necessary for using the optional "sd_notify" feature:
+    #     * Net::Server::Fork goes into background before the socket is ready.  Thus we need to
+    #       prevent it from daemonizing.
+    #     * start-stop-daemon supports '--notify-await' only combined with '--background'. Thus
+    #       munin-node may not daemonize on its own.
+    if ($foreground) {
+        $server_params{background} = 0;
+        $server_params{setsid} = 0;
+    }
+    Munin::Node::Server->run(%server_params);
 
     return 0;
 }
@@ -108,6 +118,7 @@ sub parse_args
         "debug!"       => \$DEBUG,
         "verbose!"     => \$VERBOSE,
         "pidebug!"     => \$PIDEBUG,
+        "foreground!"  => \$foreground,
         "paranoia!"    => \$paranoia,
         "version"      => \&print_version_and_exit,
         "help"         => \&print_usage_and_exit,

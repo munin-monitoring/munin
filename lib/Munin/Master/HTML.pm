@@ -30,6 +30,17 @@ sub handle_request
 	if ($path =~ m/static\/(.+)$/) {
 		# Emit the static page
 		my $page = $1;
+		if ($page =~ m#/\.\./#) {
+			# "/../" indicates a traversal up the path. We have to prevent this,
+			# otherwise we may get tricked into delivering arbitrary files.
+			# Since there is no readily available function for determining the
+			# canonical path, we simply refuse malformed requests.
+			# Most webservers (used for proxying) should do canonicalization on their
+			# own, but we cannot rely on this.
+			# Static resource paths should never include parent references, anyway.
+			print "HTTP/1.0 404 Not found\r\n";
+			return;
+		}
 		my ($ext) = ($page =~ m/.*\.([^.]+)$/);
 		my %mime_types = (
 			css => "text/css",
@@ -95,9 +106,8 @@ sub handle_request
 	$path =~ s,/$,,;
 
 	# Ok, now SQL is needed to go further
-        use DBI;
-	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
-        my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	use Munin::Master::Update;
+	my $dbh = Munin::Master::Update::get_dbh();
 
 	my $comparison;
 	my $template_filename;
@@ -105,7 +115,7 @@ sub handle_request
 		MUNIN_VERSION   => $Munin::Common::Defaults::MUNIN_VERSION,
 		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
 		R_PATH          => '',
-		GRAPH_EXT       => $graph_ext
+		GRAPH_EXT       => $graph_ext,
 	);
 
 
@@ -130,7 +140,7 @@ sub handle_request
 
 	# Groups nav
 	{
-		my $sth = $dbh->prepare_cached("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' WHERE g.p_id IS NULL ORDER BY g.name ASC");
+		my $sth = $dbh->prepare_cached("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' WHERE g.p_id = 0 ORDER BY g.name ASC");
 		$sth->execute();
 
 		my $rootgroups = [];
@@ -176,7 +186,7 @@ sub handle_request
 			# Constructing the recursive datastructure.
 			# Note that it is quite naive, and not optimized for speed.
 			my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ? ORDER BY g.name ASC");
-			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL ORDER BY g.name ASC");
+			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = 0 ORDER BY g.name ASC");
 			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
 
 			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, undef, $graph_ext);
@@ -270,7 +280,7 @@ sub handle_request
 
 		my $sth_cat;
 		if ($category eq 'other') {
-			# account for those that explictly mention 'other' as category
+			# account for those that explicitly mention 'other' as category
 			$sth_cat = $dbh->prepare_cached(
 				"SELECT DISTINCT s.name, s.service_title FROM service s
 				LEFT JOIN service_categories sc ON s.id = sc.id
@@ -324,7 +334,7 @@ sub handle_request
 		# Constructing the recursive datastructure.
 		# Note that it is quite naive, and not optimized for speed.
 		my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ? ORDER BY g.name ASC");
-		my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL ORDER BY g.name ASC");
+		my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = 0 ORDER BY g.name ASC");
 		my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
 
 		my $sth_p_id = $dbh->prepare_cached("SELECT g.p_id FROM grp g WHERE g.id = ?");
@@ -481,6 +491,7 @@ sub handle_request
 		];
 
 		$template_params{CATEGORY} = ucfirst($graph_category);
+		$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
 
 		if ($multigraph) {
 			# Emit node template for multigraphs
@@ -489,7 +500,6 @@ sub handle_request
 			my @categories = (_get_params_services($path, $dbh, $graph_category, $graph_name, $node_id, $graph_ext));
 			$template_params{CATEGORIES} = \@categories;
 			$template_params{NCATEGORIES} = scalar(@categories);
-			$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
 
 			goto RENDERING;
 		}
@@ -678,8 +688,9 @@ sub _get_params_services_for_comparison {
 		my @nodes;
 		$sth_node->execute($service_name, $grp_id);
 		while (my ($node_name, $node_url, $srv_url, $srv_label) = $sth_node->fetchrow_array) {
-			my $_srv_url = "$srv_url.html" if defined $srv_url;
-			my $_img_url = "/$srv_url-$comparison.$graph_ext" if defined $srv_url;
+			my ($_srv_url, $_img_url);
+			$_srv_url = "$srv_url.html" if defined $srv_url;
+			$_img_url = "/$srv_url-$comparison.$graph_ext" if defined $srv_url;
 			push @nodes, {
 				R_PATH => '',
 				NODENAME => $node_name,
@@ -761,8 +772,8 @@ sub _get_params_services {
 		# Skip unrelated graphs if in multigraph
 		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
-		$n_warnings += $_state_warning;
-		$n_criticals += $_state_critical;
+		$n_warnings += $_state_warning || 0;
+		$n_criticals += $_state_critical || 0;
 
 		my %imgs = map { ("IMG$_" => "/$_url-$_.$graph_ext") } @times;
 		push @$services, {
@@ -787,7 +798,7 @@ sub _get_params_fields {
 
 	my $sth_ds = $dbh->prepare_cached("
 		SELECT ds.name, ds.warning, ds.critical,
-		a_g.value, a_l.value, IFNULL(a_t.value, 'GAUGE'), a_w.value, a_c.value, a_i.value
+		a_g.value, a_l.value, a_t.value, a_w.value, a_c.value, a_i.value
 		FROM ds
 		LEFT JOIN ds_attr a_g ON ds.id = a_g.id AND a_g.name = 'graph'
 		LEFT JOIN ds_attr a_l ON ds.id = a_l.id AND a_l.name = 'label'
@@ -803,6 +814,9 @@ sub _get_params_fields {
 	while (my ($_ds_name, $_ds_s_warn, $_ds_s_crit, $_ds_graph, $_ds_label, $_ds_type, $_ds_warn, $_ds_crit, $_ds_info) =
 			$sth_ds->fetchrow_array) {
 		next if $_ds_graph && $_ds_graph eq 'no';
+
+		# GAUGE by default
+		$_ds_type = 'GAUGE' unless defined $_ds_type;
 
 		push @fields, {
 			FIELD => $_ds_name,
@@ -826,10 +840,8 @@ sub get_param
 	# Ok, now SQL is needed to go further
         use DBI;
 	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
-        my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
-
+	my $dbh = Munin::Master::Update::get_dbh();
 	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
-
 	return $value;
 }
 

@@ -63,7 +63,7 @@
 		height: 100%;
 		max-width: 500px;
 		background-color: #fff;
-		@include box-shadow(1px 0px 20px 0px rgba(0, 0, 0, 0.3));
+		box-shadow: 1px 0px 20px 0px rgba(0, 0, 0, 0.3);
 
 		.navigation-wrapper {
 			padding: 0;
@@ -72,7 +72,7 @@
 			.navigation {
 				width: $navigation-width-mobile;
 			}
-			.timerangesList { @include opacity(1); }
+			.timerangesList { opacity: 1; }
 		}
 
 		&.fold { width: 0; }

@@ -43,7 +43,7 @@ Copyright (C) 2008 Alan DeKok <aland@deployingradius.com>
 
 =cut
 
-RADMIN=${radmin:-`which radmin 2>/dev/null`}
+RADMIN=${radmin:-$(command -v radmin)}
 RADMIN=${RADMIN:-/usr/sbin/radmin}
 SOCKETFILE=${socketfile:-/var/run/radiusd/radiusd.sock}
 
@@ -59,8 +59,9 @@ if [ "$1" = "config" ]; then
     echo 'graph_title FreeRADIUS Accounting Requests'
     echo 'graph_args --base 1000 -l 0 '
     echo 'graph_period second'
+    # shellcheck disable=SC2016
     echo 'graph_vlabel requests / ${graph_period}'
-    echo 'graph_category Other'
+    echo 'graph_category auth'
 
     echo 'requests.label Accounting-Requests'
     echo 'requests.info total received request packets'
@@ -87,10 +88,10 @@ if [ "$1" = "config" ]; then
     echo 'malformed.type DERIVE'
     echo 'malformed.min 0'
 
-    echo 'bad_signature.label Requests with bad signature'
-    echo 'bad_signature.info total request packets with a bad signature'
-    echo 'bad_signature.type DERIVE'
-    echo 'bad_signature.min 0'
+    echo 'bad_authenticator.label Requests with bad authenticator'
+    echo 'bad_authenticator.info total request packets with a bad authenticator'
+    echo 'bad_authenticator.type DERIVE'
+    echo 'bad_authenticator.min 0'
 
     echo 'dropped.label Dropped requests'
     echo 'dropped.info total request packets dropped for other reasons'
@@ -105,4 +106,4 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-$RADMIN -f $SOCKETFILE -e "stats client acct" | awk '{print $1".value " $2}'
+$RADMIN -f "$SOCKETFILE" -e "stats client acct" | awk '{print $1".value " $2}' | sed 's/signature/authenticator/'

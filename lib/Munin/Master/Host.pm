@@ -20,7 +20,7 @@ sub new {
         port          => 4949,
         update        => 1,
         use_node_name => 0,
-        
+
         %$attributes,
     };
 
@@ -50,32 +50,6 @@ sub get_full_path {
     return join(";",@groups);
 }
 
-
-sub add_attributes_if_not_exists {
-    my ($self, $attributes) = @_;
-
-    %$self = (%$attributes, %$self);
-}
-
-
-sub get_canned_ds_config {
-    my ($self, $service, $data_source) = @_;
-
-    # XXX: Could this be done in some sane way?
-
-    my %ds_config;
-    my $svc_ds_prefix = "$service.$data_source.";
-
-    for my $svc_ds_prop (keys %$self) {
-        if (index($svc_ds_prop, $svc_ds_prefix) == 0) {
-            my $prop = substr($svc_ds_prop, length($svc_ds_prefix));
-            $ds_config{$prop} = $self->{$svc_ds_prop};
-        }
-    }
-
-    return \%ds_config;
-}
-
 1;
 
 
@@ -84,7 +58,7 @@ __END__
 =head1 NAME
 
 Munin::Master::Host - Holds information on hosts we are interested in
-collecting data from. 
+collecting data from.
 
 =head1 DESCRIPTION
 
@@ -107,17 +81,6 @@ c<use_node_name>.
 =item B<get_full_path>
 
 Returns the full nested named path of the host object (eg. "group1;group2;hostname").
-
-=item B<add_attributes_if_not_exists>
-
-  $host->add_attributes_if_not_exists(\%attrs);
-
-Merges the new attributes from %attrs into the host object, without
-overwriting any existing   
-
-=item B<get_canned_ds_config>
-
-FIX
 
 =back
 

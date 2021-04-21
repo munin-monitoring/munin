@@ -28,9 +28,9 @@ use File::Temp; # File::Temp was first released with perl 5.006001
 # This file uses subroutine prototypes. This is considered a bad
 # practice according to PBP (see page 194).
 
-## no critic Prototypes
+## no critic qw(Prototypes)
 
-=head1 NAME 
+=head1 NAME
 
 Munin::Plugin - Utility functions for Perl Munin plugins.
 
@@ -56,6 +56,7 @@ set_state_name, save_state, restore_state, tail_open, tail_close.
 
 =cut
 
+use English qw(-no_match_vars);
 use Exporter;
 our @ISA = ('Exporter');
 our @EXPORT = qw(
@@ -317,7 +318,7 @@ sub _restore_state_raw {
     }
 
     # Read a state vector from a plugin appropriate state file
-    local $/;
+    local $INPUT_RECORD_SEPARATOR;
 
     my @state = split(/\n/, <$STATE>);
     my $filemagic = shift(@state);
@@ -329,7 +330,7 @@ sub _restore_state_raw {
     return @state;
 }
 
-=head3 ($warning, $critical) = get_thresholds($field, [$warning_env, [$critical_env]])
+=head3 ($warning, $critical) = get_thresholds($field, [$warning_env, [$critical_env, [$warning_default_value, [$critical_default_value]]]])
 
 Look up the thresholds for the specified field from the environment
 variables named after the field: "$field_warning" and
@@ -338,8 +339,11 @@ $field_warning or $field_critical values then look for the variables
 "warning" and "critical" and return those values if any.
 
 If the second and/or third arguments are specified then they will be
-used to specify the name of variables giving the the warning and
+used to specify the name of variables giving the warning and
 critical levels.
+
+If the fourth and/or the fifth arguments are specified, then they
+will be used as default values for warning and critical levels.
 
 If no values are found for a threshold then undef is returned.
 
@@ -369,7 +373,7 @@ sub get_thresholds {
     return ($warning, $critical);
 }
 
-=head3 print_thresholds($field, [$warning_env, [$critical_env]])
+=head3 print_thresholds($field, [$warning_env, [$critical_env, [$warning_default_value, [$critical_default_value]]]])
 
 If $field has warning or critical thresholds set for it, prints them in the
 default fashion (eg. 'field.warning 42').
@@ -395,7 +399,7 @@ these percentages against $base.
 sub adjust_threshold {
     my ($threshold, $base) = @_;
 
-    return undef if(!defined $threshold or !defined $base);
+    return if(!defined $threshold or !defined $base);
 
     $threshold =~ s!(\d+\.?\d*)%!$1*$base/100!eg;
 
@@ -411,8 +415,8 @@ been rotated, and the file position will be at the start of the file.
 If the file is opened OK the function returns a tuple consisting of
 the file handle and a file rotation indicator.  $rotated will be 1 if
 the file has been rotated and 0 otherwise.  Also, if the file was
-rotated a warning is printed (this can be found in the munin-node log
-or seen in the terminal when using munin-run).
+rotated a warning is printed (only in debug mode, this can be found
+in the munin-node log or seen in the terminal when using munin-run).
 
 At this point the plugin can read from the file with <$file_handle> in
 loop as usual until EOF is encountered.
@@ -441,7 +445,7 @@ sub tail_open ($$) {
       die "$me: Could not open input file '$file' for reading: $!\n";
 
     if ($position > $size) {
-	warn "$me: File rotated, starting at start\n";
+	warn "$me: File rotated, starting at start\n" if $DEBUG;
 	$filereset=1;
     } elsif (!seek($FH, $position, 0)) {
 	die "$me: Seek to position $position of '$file' failed: $!\n";
@@ -462,8 +466,8 @@ the kernel exposes.
 sub readfile($) {
   my ($path) = @_;
 
-  open my $FH, "<", $path or return undef;
-  local $/;
+  open my $FH, "<", $path or return;
+  local $INPUT_RECORD_SEPARATOR;
   my $content = <$FH>;
   close $FH;
 
@@ -477,13 +481,18 @@ Read the first line of a file into an array.
 This is extremely helpful when reading data out of /proc or /sys that
 the kernel exposes.
 
+Returns undef if the file does not exist.
+Returns an empty array if the file is empty (or contains only whitespace).
+
 =cut
 
 sub readarray($) {
   my ($path) = @_;
 
-  open my $FH, "<", $path or return undef;
+  open my $FH, "<", $path or return;
   my $line = <$FH>;
+  # handle an empty file gracefully
+  $line = "" if not defined($line);
   chomp($line);
   my @row = split(/\s+/, $line);
   close $FH;
@@ -493,7 +502,7 @@ sub readarray($) {
 
 =head3 $position = tail_close($file_handle)
 
-Close the the file and return the current position in the file.  This
+Close the file and return the current position in the file.  This
 position can be stored in a state file until the next time the plugin runs.
 
 If the C<close> system call fails, a warning will be printed (which can be
@@ -551,7 +560,7 @@ sub scaleNumber {
 		 1E+9,  'G',  # giga
 		 1E+6,  'M',  # mega
 		 1E+3,  'k',  # kilo
-		 1,     '');  # nothing
+		 1,     '',); # nothing
 
     my %small = (1,     '',   # nothing
 		 1E-3,  'm',  # milli
@@ -561,7 +570,7 @@ sub scaleNumber {
 		 1E-15, 'f',  # femto
 		 1E-18, 'a',  # atto
 		 1E-21, 'z',  # zepto
-		 1E-24, 'y'); # yocto
+		 1E-24, 'y',);# yocto
 
     # Get the absolute and exaggerate it slightly since floating point
     # numbers don't compare very well.
@@ -607,6 +616,7 @@ if it doesn't support multigraph plugins.
 sub need_multigraph {
     return if $ENV{MUNIN_CAP_MULTIGRAPH};
 
+    ## no critic qw(InputOutput::ProhibitInteractiveTest)
     if (-t and (!$ARGV[0] or ($ARGV[0] eq 'config'))) {
 
 	# Catch people running the plugin on the command line.  Note

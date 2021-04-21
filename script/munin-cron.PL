@@ -16,10 +16,10 @@ print $fh <<"EOF";
 # This used to test if the executables were installed.  But that is
 # perfectly redundant and suppresses errors that the admin should see.
 
-$MUNIN_BINDIR/munin-update \$\@ || exit 1
+$MUNIN_BINDIR/munin-update "\$\@" || exit 1
 
 # Check limits defined for each service, and notify contacts.
 # This also writes state read by munin-httpd.
 
-$MUNIN_BINDIR/munin-limits \$\@
+$MUNIN_BINDIR/munin-limits "\$\@"
 EOF

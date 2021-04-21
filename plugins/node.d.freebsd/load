@@ -100,4 +100,4 @@ echo -n "load.value "
 # Except for the Nagios-warnings (which most people don't have any need
 # for) and things used by installation scripts and munin-config (which
 # you don't need if you don't plan on submitting your plugin to the
-# pacakge), the two versions will work identically.
+# package), the two versions will work identically.

@@ -1,0 +1,4 @@
+FROM munin:base
+
+USER munin
+WORKDIR /munin

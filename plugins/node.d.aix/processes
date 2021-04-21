@@ -14,7 +14,7 @@ No configuration
 =head2 DESCRIPTION
 
 This will report back the number of processes currently running on a
-server.  By defualt it will report back the total number of processes
+server.  By default it will report back the total number of processes
 running (global).  Optionally you can edit the script and add items to
 look for to the "lookFor" array.  These should be simple things that
 can be grep'd for.
@@ -61,7 +61,7 @@ if($ARGV[0] && $ARGV[0] eq "autoconf")
       }
   }
 
-my($item);  
+my($item);
 if($ARGV[0] && $ARGV[0] eq "config")
   {
     print "graph_title Number of Processes\n";
@@ -70,23 +70,23 @@ if($ARGV[0] && $ARGV[0] eq "config")
     print "graph_category processes\n";
     print "global.label global\n";
     print "global.draw LINE2\n";
-    
+
     foreach $item (@lookFor)
       {
         print "$item.label $item\n";
         print "$item.draw LINE2\n";
       }
   }
- 
-my($procNum); 
+
+my($procNum);
 foreach $item (@lookFor)
   {
     $procNum = `/usr/bin/ps -ef|grep $item|grep -v grep |wc -l`;
     chomp($procNum);
-    
+
     print "$item.value $procNum\n";
   }
-  
+
 $procNum = `/usr/bin/ps -ef|grep -v grep|wc -l`;
 chomp($procNum);
 print "global.value $procNum\n";

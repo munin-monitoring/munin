@@ -5,17 +5,17 @@
 #
 # Author: Trygve Vea <tv@redpill-linpro.com>
 # Author: Kristian Lyngstøl <kristian@redpill-linpro.com>
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -26,13 +26,13 @@ proc - Munin plugin to monitor various aspects of named processes
 
 =head1 APPLICABLE SYSTEMS
 
-Processes running under Linux for a longer timespan. 
+Processes running under Linux for a longer timespan.
 
 =head1 CONFIGURATION
 
 The plugin needs to be able to parse the /proc-filesystem.
 
-The plugin is configured by supplying a pipe-delimitered list of parameters 
+The plugin is configured by supplying a pipe-delimitered list of parameters
 through environment variables.
   [proc]
      env.procname proc1|proc2|proc3
@@ -41,10 +41,10 @@ through environment variables.
      env.procaspect cpu|memory|ctxt_switches|threads|processes|io
 
 
-env.procname defines the processname as seen inside the parenthesis of the 
+env.procname defines the processname as seen inside the parenthesis of the
 second column in /proc/<PID>/stat. If you don't get the data you expect, you
-can check if the value is what you expect here. This is what's used for the 
-first filter, and args/user-filters are then applied on top of this filter. 
+can check if the value is what you expect here. This is what's used for the
+first filter, and args/user-filters are then applied on top of this filter.
 Note that <PID> is the PID of the process that you are interested in.
 For process names including non-alphanumeric characters (like space, dash,
 etc.) please see Special Process Names below.
@@ -56,7 +56,7 @@ argument list if there's only one key option you care about filtering on.
 env.procuser defines the user the process has to run as. If nothing is
 provided, processes ran by any user are included.
 
-env.procaspect defines which graphs to render. Per default, all graphs are 
+env.procaspect defines which graphs to render. Per default, all graphs are
 included. You don't have to set this unless you want to exclude graphs.
 
 =head1 SPECIAL PROCESS NAMES
@@ -65,7 +65,7 @@ If the process name (in env.procname) contains any characters other than
 [a-zA-Z_], they will be internally replaced by underscores ('_'). This is
 normally not a problem, unless you are setting warning/critical levels.
 
-For example, let's say you have have Plex Media Server running and you want
+For example, let's say you have Plex Media Server running and you want
 to monitor how many processes it has running. The name that shows up in /proc
 is 'Plex Media Serv' (truncated, without the 'er' at the end), the internal
 field becomes: 'Plex_Media_Serv'.
@@ -91,7 +91,7 @@ Each graph uses data from the proc filesystem.
 =head1 MAGIC MARKERS
 
  #%# family=manual
- #%# capabilities=multigraph
+ #%# capabilities=autoconf multigraph
 
 =head1 BUGS
 
@@ -108,12 +108,12 @@ The munin-project.
 =head1 AUTHOR
 
 Trygve Vea <tv@redpill-linpro.com>
-Kristian Lyngstol <kristian@varnish-software.com>
+Kristian Lyngstøl <kristian@varnish-software.com>
 
 =head1 THANKS
 
-Thanks to Kristian Lyngstol, I stole most of the initial code in this plugin 
-from his varnish_-plugin, which is a really nice outline of how a 
+Thanks to Kristian Lyngstøl, I stole most of the initial code in this plugin
+from his varnish_-plugin, which is a really nice outline of how a
 wildcardplugin should look like. I've added some weird hacks to make it output
 multigraph. It's pretty ugly, but it works.
 
@@ -160,13 +160,13 @@ my @field_parameters = ('graph', 'min', 'max', 'draw', 'cdef', 'warning',
                         'colour', 'info', 'type', 'negative');
 # Data structure that defines all possible graphs (aspects) and how they
 # are to be plotted. Every top-level entry is a graph/aspect. Each top-level graph
-# MUST have title set and 'values'. 
-# 
+# MUST have title set and 'values'.
+#
 # 'rpn' on values allows easy access to graphs consisting of multiple
 # values from procstats. (Reverse polish notation). The RPN
 # implementation only accepts +-*/ and procstats-values.
 #
-# Any value left undefined will be left up to Munin to define/ignore/yell 
+# Any value left undefined will be left up to Munin to define/ignore/yell
 # about.
 #
 # See munin documentation or rrdgraph/rrdtool for more information.
@@ -354,15 +354,17 @@ sub populate_stats
         foreach my $line(`fgrep -h '($procname[$i])' /proc/[0-9]*/stat`) {
             my ($pid) = $line =~ /^(\d+)/;
 
-            my $cmdline = slurp("/proc/$pid/cmdline") or next STATLINE;
-            $cmdline =~ tr{\0}{ };
-
             my $cmduid = (lstat("/proc/$pid"))[4];
 
-            next STATLINE if $procargs[$i] and $cmdline !~ /$procargs[$i]/;
+            if ( $procargs[$i] ) {
+              my $cmdline = slurp("/proc/$pid/cmdline") or next STATLINE;
+              $cmdline =~ tr{\0}{ };
+
+              next STATLINE if $procargs[$i] and $cmdline !~ /$procargs[$i]/;
+            }
             next STATLINE if defined $procuid and $cmduid != $procuid;
 
-            if ($line =~ /^\d+ \(.*\) . \-?\d+ \-?\d+ \-?\d+ \-?\d+ \-?\d+ \d+ \d+ \d+ \d+ \d+ (\d+) (\d+) \d+ \d+ \-?\d+ \d+ (\d+) \-?\d+ \d+ (\d+) (\d+)/) {
+            if ($line =~ /^\d+ \(.*\) . \-?\d+ \-?\d+ \-?\d+ \-?\d+ \-?\d+ \d+ \d+ \d+ \d+ \d+ (\d+) (\d+) \d+ \d+ \-?\d+ \-?\d+ (\d+) \-?\d+ \d+ (\d+) (\d+)/) {
                 $procstats{$procuniq[$i]}{"utime"} += $1;
                 $procstats{$procuniq[$i]}{"stime"} += $2;
                 $procstats{$procuniq[$i]}{"threads"} += $3;
@@ -424,7 +426,7 @@ sub print_if_exist
 }
 
 # Walk through the relevant aspect and print all top-level configuration
-# values and value-definitions. 
+# values and value-definitions.
 sub get_config
 {
     my $graph = $_[0];
@@ -571,7 +573,7 @@ sub set_run
     }
 }
 
-# Read and verify the aspect ($self). 
+# Read and verify the aspect ($self).
 sub set_aspect
 {
     $self = $0;
@@ -601,8 +603,16 @@ sub check_args
                 }
             }
             exit 0;
+        } elsif ($ARGV[0] eq "autoconf") {
+            if (-r "/proc/self/cmdline") {
+                print "yes\n";
+            } else {
+                print "no (failed to access 'cmdline' for process below /proc/)\n";
+            }
+            exit 0;
+        } else {
+            usage "Unknown argument";
         }
-        usage "Unknown argument";
     }
 }
 
@@ -667,53 +677,53 @@ populate_stats;
 
 foreach (@procaspect) {
     my $asp = $_;
-$i = 0;
-print "multigraph proc_$asp\n";
-foreach (@procname) {
-    if ( $asp eq 'cpu' ) {
-        print "$procuniq[$i].value " .
-              ($procstats{$procuniq[$i]}{'utime'} + 
-               $procstats{$procuniq[$i]}{'stime'})."\n";
-    }
-    if ( $asp eq 'ctxt_switches' ) {
-        print "$procuniq[$i].value " .
-              ($procstats{$procuniq[$i]}{'voluntary_ctxt_switches'} +
-               $procstats{$procuniq[$i]}{'nonvoluntary_ctxt_switches'})."\n";
-    }
-    if ( $asp eq 'threads' ) {
-        print "$procuniq[$i].value $procstats{$procuniq[$i]}{'threads'}\n";
-    }
-    if ( $asp eq 'processes' ) {
-        print "$procuniq[$i].value $procstats{$procuniq[$i]}{'processes'}\n";
-    }
-    if ( $asp eq 'memory' ) {
-        print "$procuniq[$i].value $procstats{$procuniq[$i]}{'VmRSS'}\n";
-    }
-    if ( $asp eq 'io' ) {
-        print "$procuniq[$i]_rchar.value $procstats{$procuniq[$i]}{'rchar'}\n";
-        print "$procuniq[$i]_wchar.value $procstats{$procuniq[$i]}{'wchar'}\n";
-    }
-    $i++;
-}
-print "\n";
-$i = 0;
-# Print the individual graph statistics
-foreach (@procname) {
-    print "multigraph proc_$asp.$procuniq[$i]\n";
-    foreach my $value (sort keys %{$ASPECTS{$asp}{'values'}}) {
-        if (defined($ASPECTS{$asp}{'values'}{$value}{'rpn'})) {
-            print "$value.value ";
-            rpn($ASPECTS{$asp}{'values'}{$value}{'rpn'});
-        } else {
-            print "$value.value ";
-            if (!defined($procstats{$procuniq[$i]}{$value})) {
-                print "0\n";
-                next;
-            }
-            print "$procstats{$procuniq[$i]}{$value}\n";
+    $i = 0;
+    print "multigraph proc_$asp\n";
+    foreach (@procname) {
+        if ( $asp eq 'cpu' ) {
+            print "$procuniq[$i].value " .
+                  ($procstats{$procuniq[$i]}{'utime'} +
+                   $procstats{$procuniq[$i]}{'stime'})."\n";
         }
+        if ( $asp eq 'ctxt_switches' ) {
+            print "$procuniq[$i].value " .
+                  ($procstats{$procuniq[$i]}{'voluntary_ctxt_switches'} +
+                   $procstats{$procuniq[$i]}{'nonvoluntary_ctxt_switches'})."\n";
+        }
+        if ( $asp eq 'threads' ) {
+            print "$procuniq[$i].value $procstats{$procuniq[$i]}{'threads'}\n";
+        }
+        if ( $asp eq 'processes' ) {
+            print "$procuniq[$i].value $procstats{$procuniq[$i]}{'processes'}\n";
+        }
+        if ( $asp eq 'memory' ) {
+            print "$procuniq[$i].value $procstats{$procuniq[$i]}{'VmRSS'}\n";
+        }
+        if ( $asp eq 'io' ) {
+            print "$procuniq[$i]_rchar.value $procstats{$procuniq[$i]}{'rchar'}\n";
+            print "$procuniq[$i]_wchar.value $procstats{$procuniq[$i]}{'wchar'}\n";
+        }
+        $i++;
     }
     print "\n";
-    $i++;
-}
+    $i = 0;
+    # Print the individual graph statistics
+    foreach (@procname) {
+        print "multigraph proc_$asp.$procuniq[$i]\n";
+        foreach my $value (sort keys %{$ASPECTS{$asp}{'values'}}) {
+            if (defined($ASPECTS{$asp}{'values'}{$value}{'rpn'})) {
+                print "$value.value ";
+                rpn($ASPECTS{$asp}{'values'}{$value}{'rpn'});
+            } else {
+                print "$value.value ";
+                if (!defined($procstats{$procuniq[$i]}{$value})) {
+                    print "0\n";
+                    next;
+                }
+                print "$procstats{$procuniq[$i]}{$value}\n";
+            }
+        }
+        print "\n";
+        $i++;
+    }
 }

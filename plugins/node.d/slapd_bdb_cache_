@@ -62,7 +62,7 @@ Sample config for multiple database directories:
 
 =head1 COPYRIGHT
 
-Bjorn Ruberg <bjorn@ruberg.no> 2005-2009
+Bjørn Ruberg <bjorn@ruberg.no> 2005-2009
 
 =head1 LICENSE
 
@@ -119,12 +119,12 @@ if ($arg && $arg eq "config") {
     print "percent\n";
     exit 0;
 }
-         
+
 
 if ($config) {
     print <<EOF;
 graph_title Requested pages found in cache $title
-graph_category OpenLDAP
+graph_category auth
 graph_info Pages found in cache (indexes)
 EOF
     if ($measure eq "pages") {

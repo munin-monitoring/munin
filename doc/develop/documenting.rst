@@ -20,28 +20,32 @@ If you have a GitHub_ account, you can even edit the pages online and
 send a pull request to contribute your work to the official Munin
 repository.
 
+.. _plugin-documentation:
+
 Plugin Documentation
 ====================
 
 Plugin documentation is included in each plugin, written using the POD
 [#]_ style format
 
-The command line utility :ref:`munin-doc` can be used to display the
-info pages about the plugins.  Call ``munin-doc buddyinfo`` to get the
+The command line utility :ref:`munindoc` can be used to display the
+info pages about the plugins.  Call ``munindoc buddyinfo`` to get the
 documentation for plugin ``buddyinfo``.
 
-Have a look at the `munin-doc instruction page in our Trac wiki
+Have a look at the `munindoc instruction page in our Trac wiki
 <http://munin-monitoring.org/wiki/munindoc>`_ and edit or add the pod
 section in the plugins code file accordingly.
 
 Finally send a patch or a pull request on github to help us improve
 the plugins documentation.
 
+.. _munin-gallery:
+
 Munin Gallery
 =============
 
 The plugin documentation is also included in the `Munin Gallery
-<http://gallery.munin-monitoring.org>`_.
+<https://gallery.munin-monitoring.org>`_.
 
 See our `Wiki page <http://munin-monitoring.org/wiki/PluginGallery>`_
 for instructions how to contribute also example images for the
@@ -79,5 +83,5 @@ Guide`_.
        <http://sphinx-doc.org/rest.html>`_ for help on the syntax.
 
 .. _GitHub: https://github.com/
-.. _Munin Guide: https://munin.readthedocs.org/
+.. _Munin Guide: https://guide.munin-monitoring.org/
 .. _wiki: http://munin-monitoring.org/wiki/

@@ -2,7 +2,7 @@
 input,
 button,
 select {
-	@include border-radius(2px);
+	border-radius: 2px;
 	@include box-sizing(border-box);
 	@include transition-duration(150ms);
 }
@@ -16,7 +16,7 @@ input[type="number"] {
 	border: 1px solid #BFBFBF;
 	background-color: #fff;
 	color: #555;
-	@include box-shadow(inset 0px 1px 2px -1px rgba(0, 0, 0, 0.2));
+	box-shadow: inset 0px 1px 2px -1px rgba(0, 0, 0, 0.2);
 
 	&:focus {
 		border-color: #a5a5a5;
@@ -43,12 +43,12 @@ select {
 
 	&:hover {
 		background-color: lighten(#F5F5F5, 1.5);
-		@include box-shadow(0 1px 6px -2px rgba(0,0,0,0.3));
+		box-shadow: 0 1px 6px -2px rgba(0,0,0,0.3);
 	}
 	&:active {
 		outline: none;
 		background-color: darken(#F5F5F5, 2);
-		@include box-shadow(inset 0 1px 0 0 rgba(0,0,0,0.2));
+		box-shadow: inset 0 1px 0 0 rgba(0,0,0,0.2);
 	}
 
 	i.mdi {
@@ -65,11 +65,11 @@ select {
 
 		&:hover {
 			background-color: lighten($buttons-color, 4);
-			@include box-shadow(0 1px 6px -1px rgba(0,0,0,0.4));
+			box-shadow: 0 1px 6px -1px rgba(0,0,0,0.4);
 		}
 		&:active {
 			background-color: darken($buttons-color, 5);
-			@include box-shadow(inset 0 1px 0 0 rgba(0,0,0,0.2));
+			box-shadow: inset 0 1px 0 0 rgba(0,0,0,0.2);
 		}
 	}
 
@@ -87,7 +87,7 @@ select {
 
 	&:active {
 		background-color: #F5F5F5;
-		@include box-shadow(none);
+		box-shadow: none;
 	}
 }
 

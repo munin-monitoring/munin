@@ -26,6 +26,8 @@ use warnings;
 
 package Munin::Master::Graph;
 
+use English qw(-no_match_vars);
+
 use Time::HiRes;
 
 use POSIX;
@@ -37,15 +39,12 @@ use Munin::Common::Logger;
 use File::Basename;
 use Data::Dumper;
 
-Munin::Common::Logger::configure( level => 'debug', output => 'screen');
-
 # Hash of available palettes
 my %PALETTE;
-# Array of actuall colours to use
+# Array of colours to use
 my @COLOUR;
 
 {
-	no warnings;
 	# This is the old munin palette. Note that it lacks contrast.
 	$PALETTE{'old'} = [
 		qw(22ff22 0022ff ff0000 00aaaa ff00ff
@@ -87,7 +86,7 @@ my %resolutions = (
 	"day"   => "300",
 	"week"  => "1500",
 	"month" => "7200",
-	"year"  => "86400"
+	"year"  => "86400",
 );
 
 my %CONTENT_TYPES = (
@@ -106,7 +105,7 @@ my %CONTENT_TYPES = (
 sub is_ext_handled
 {
 	my $ext = shift;
-	return undef unless $ext;
+	return unless $ext;
 	return defined $CONTENT_TYPES{uc($ext)};
 }
 
@@ -151,15 +150,20 @@ sub handle_request
 	$time = "pinpoint" if $time =~ m/^pinpoint/;
 
 	# Ok, now SQL is needed to go further
-	use DBI;
-	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 	# Note that we reconnect for _each_ request. This is to avoid old data when the DB "rotates"
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	use Munin::Master::Update;
+	my $dbh = Munin::Master::Update::get_dbh();
 
 	DEBUG "($graph_path, $time, $start, $end, $format)\n";
 
 	# Find the service to display
 	my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
+	if (not defined($sth_url)) {
+		# potential cause: permission problem
+		my $msg = "Failed to access database: " . $DBI::errstr;
+		WARNING "[WARNING] $msg";
+		die $msg;
+	}
 	$sth_url->execute($graph_path);
 	my ($id, $type) = $sth_url->fetchrow_array;
 
@@ -181,7 +185,7 @@ sub handle_request
 
 	DEBUG "found node=$id, type=$type";
 
-	# Here's the most common case : only plain plugins
+	# Here's the most common case: only plain plugins
 	my $sth;
 
 	$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = ?");
@@ -231,20 +235,20 @@ sub handle_request
 			ne.value,
 			sm.value as sum,
 			st.value as stack,
-                        (
-                                select hn.id
-                                from ds hn
-                                JOIN ds_attr hn_attr ON hn.service_id = ds.service_id AND hn_attr.value = ds.name and hn_attr.name = 'negative'
-                                where hn.service_id = ds.service_id
-                        ) as negative_id,
-			s.last_epoch,
+			(
+				select hn.id
+				from ds hn
+				JOIN ds_attr hn_attr ON hn_attr.id = hn.id AND hn_attr.value = ds.name and hn_attr.name = 'negative'
+				where hn.service_id = ds.service_id
+			) as negative_id,
+			rl.value as last_epoch,
 			'dummy' as dummy
 		FROM ds
 		LEFT OUTER JOIN ds_attr l ON l.id = ds.id AND l.name = 'label'
 		LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
 		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
 		LEFT OUTER JOIN ds_attr ra ON ra.id = ds.id AND ra.name = 'rrd:alias'
-		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'rrd:cdef'
+		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'cdef'
 		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
 		LEFT OUTER JOIN ds_attr gds ON gds.id = ds.id AND gds.name = 'drawstyle'
@@ -252,7 +256,7 @@ sub handle_request
 		LEFT OUTER JOIN ds_attr ne ON ne.id = ds.id AND ne.name = 'negative'
 		LEFT OUTER JOIN ds_attr sm ON sm.id = ds.id AND sm.name = 'sum'
 		LEFT OUTER JOIN ds_attr st ON st.id = ds.id AND st.name = 'stack'
-		LEFT OUTER JOIN state s ON s.id = ds.id AND s.type = 'ds'
+		LEFT OUTER JOIN ds_attr rl ON rl.id = ds.id AND rl.name = 'rrd:last'
 		WHERE ds.service_id = ?
 		ORDER BY ds.ordr ASC
 	");
@@ -268,8 +272,6 @@ sub handle_request
 	my @rrd_legend;
 	my @rrd_sum;
 
-	my %negatives;
-
 	push @rrd_gfx, "COMMENT:\\t";
 	push @rrd_gfx, "COMMENT:Cur\\t";
 	push @rrd_gfx, "COMMENT:Min\\t";
@@ -281,6 +283,7 @@ sub handle_request
 
 	my $lastupdated;
 
+	my $first_def;
 	my $field_number = 0;
 	while (my (
 			$_rrdname, $_label,
@@ -297,14 +300,17 @@ sub handle_request
 		# Note that we do *NOT* provide any defaults for those
 		# $_rrdXXXX vars. Defaults will be done by munin-update.
 		#
-		# This will :
+		# This will:
 		# 	- have only 1 reference on default values
 		# 	- reduce the size of the CGI part, which is good for
 		# 	  security (& sometimes performances)
 
-		# Fields inherit this field from their plugin, if not overrided
+		# Fields inherit this field from their plugin, if not overridden
 		$_printf = $graph_printf unless defined $_printf;
 		$_printf .= "%s";
+
+		# The label is the fieldname if not present
+		$_label = $_rrdname unless $_label;
 
 		DEBUG "rrdname: $_rrdname";
 
@@ -313,7 +319,7 @@ sub handle_request
 
 		# Handle .sum
 		if ($_sum) {
-			# .sum is just a alias + cdef shortcut, an exemple is :
+			# .sum is just a alias + cdef shortcut, an example is:
 			#
 			# inputtotal.sum \
 			#            ups-5a:snmp_ups_ups-5a_current.inputcurrent \
@@ -363,17 +369,24 @@ sub handle_request
 		}
 
 		# Fetch the data from the RRDs
-		my $real_rrdname = $_rrdcdef ? "r_$_rrdname" : $_rrdname;
-		if (! $_sum) {
+		my $rrd_is_virtual = is_virtual($_rrdname, $_rrdcdef);
+		my $rrd_is_cdef = defined $_rrdcdef && $_rrdcdef ne "";
+		my $real_rrdname = ($rrd_is_virtual || ! $_rrdcdef) ? "$_rrdname" : "r_$_rrdname";
+		if (! $_sum && ! $rrd_is_virtual) {
 			push @rrd_def, "DEF:avg_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
 			push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
 			push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+
+			# useful for Day&Night
+			$first_def = "avg_$real_rrdname" unless $first_def;
 		}
+
 
 		# Handle an eventual cdef
 		if ($_rrdcdef) {
-			# Populate the CDEF dictionnary, to be able to swosh it at the end.
+			# Populate the CDEF dictionary, to be able to swosh it at the end.
 			# As it will enable to solve inter-field CDEFs.
+			DEBUG "cdef handing for $_rrdname: _rrdcdef:$_rrdcdef, real_rrdname:$real_rrdname, rrd_is_virtual:$rrd_is_virtual, rrd_is_cdef:$rrd_is_cdef";
 			$rrd_cdefs{$_rrdname}->{_rrdcdef} = $_rrdcdef;
 			$rrd_cdefs{$_rrdname}->{real_rrdname} = $real_rrdname;
 		}
@@ -454,18 +467,22 @@ sub handle_request
 		my $_rrdcdef = $rrd_cdefs{$_rrdname}->{_rrdcdef};
 		my $real_rrdname = $rrd_cdefs{$_rrdname}->{real_rrdname};
 
-		for my $t (qw(min avg max)) {
-			my $expanded_cdef = expand_cdef($_rrdname, $_rrdcdef, $t . "_$real_rrdname");
-			for my $inner_rrdname (keys %rrd_cdefs) {
-				next if ($inner_rrdname eq $_rrdname); # Already handled
+		my $expanded_cdef = expand_cdef($_rrdname, $_rrdcdef, "$real_rrdname");
+		for my $inner_rrdname (keys %rrd_cdefs) {
+			next if ($inner_rrdname eq $_rrdname); # Already handled
 
-				# expand an eventual sibling field to its realrrdname
-				my $inner_real_rrdname = $rrd_cdefs{$inner_rrdname}->{real_rrdname};
-				$expanded_cdef = expand_cdef($inner_rrdname, $expanded_cdef, $t . "_$inner_real_rrdname");
-			}
-			push @rrd_def, "CDEF:$t"."_$_rrdname=$expanded_cdef";
+			# expand an eventual sibling field to its realrrdname
+			my $inner_real_rrdname = $rrd_cdefs{$inner_rrdname}->{real_rrdname};
+			$expanded_cdef = expand_cdef($inner_rrdname, $expanded_cdef, "$inner_real_rrdname");
+		}
+
+		# Now, create a version for each min/max/avg
+		for my $t (qw(min avg max)) {
+			push @rrd_def, "CDEF:${t}_$_rrdname=${t}_$expanded_cdef";
 		}
 	}
+
+	DEBUG "rrd_def @rrd_def";
 
 	# $end is possibly in future
 	$end = $end ? $end : time;
@@ -475,17 +492,11 @@ sub handle_request
 	# future begins at this horizontal ruler
 	if ($lastupdated) {
 		# TODO - we have to find the last updated for aliased items
-		push(@rrd_gfx, "VRULE:$lastupdated#999999:Last update:dashes=2,5\\l");
+		push(@rrd_gfx, "VRULE:$lastupdated#999999:Last update:dashes=2,5");
 		my $last_update_str = escape_for_rrd(scalar localtime($lastupdated));
 		push @rrd_gfx, "COMMENT:\\u";
 		push @rrd_gfx, "COMMENT:$last_update_str\\r";
 	}
-
-	# Send the HTTP Headers
-	print "HTTP/1.0 200 OK\r\n";
-	print $cgi->header(
-		"-Content-type" => $CONTENT_TYPES{$format},
-	) unless $cgi->url_param("no_header");
 
 	# Compute the title
 	my $title = "";
@@ -494,7 +505,7 @@ sub handle_request
 		my $end_text = localtime($end);
 		$title = "from $start_text to $end_text";
 	} else {
-		$title = "by " . $time;
+		$title = "for the last " . $time;
 	}
 
 	my $width = $cgi->url_param("size_x") || 400;  # We aligned our RRA to 400px
@@ -531,16 +542,16 @@ sub handle_request
 		'--font', "TITLE:$font_size_title:Sans",
 		'--font', "DEFAULT:$font_size_default",
 		'--font', "LEGEND:$font_size_legend",
-                # Colors coordinated with CSS.
-                '--color', 'BACK#F0F0F0',   # Area around the graph
-                '--color', 'FRAME#F0F0F0',  # Line around legend spot
-                '--color', 'CANVAS#FFFFFF', # Graph background, max contrast
-                '--color', 'FONT#666666',   # Some kind of gray
-                '--color', 'AXIS#CFD6F8',   # And axis like html boxes
-                '--color', 'ARROW#CFD6F8',  # And arrow, ditto.
+		# Colors coordinated with CSS.
+		'--color', 'BACK#F0F0F0',   # Area around the graph
+		'--color', 'FRAME#F0F0F0',  # Line around legend spot
+		'--color', 'CANVAS#FFFFFF', # Graph background, max contrast
+		'--color', 'FONT#666666',   # Some kind of gray
+		'--color', 'AXIS#CFD6F8',   # And axis like html boxes
+		'--color', 'ARROW#CFD6F8',  # And arrow, ditto.
 
-                '--width', $width,
-                '--height', $height,
+		'--width', $width,
+		'--height', $height,
 
 		"--border", "0",
 	);
@@ -589,6 +600,17 @@ sub handle_request
 		@rrd_legend,
 	);
 
+	# Add the night/day cycle at the extreme end, so it can be in the background
+	push @rrd_cmd, (
+		"CDEF:dummy_val=$first_def",
+		"CDEF:n_d_a=LTIME,86400,%,28800,GE,LTIME,86400,%,64800,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
+		"CDEF:n_d_b=LTIME,86400,%,28800,LT,INF,LTIME,86400,%,64800,GE,INF,UNKN,dummy_val,*,IF,IF",
+		"CDEF:n_d_c=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
+		"AREA:n_d_a#FFC73B19",
+		"AREA:n_d_b#00519919",
+		"AREA:n_d_c#AAABA17F",
+	);
+
 	my $err = RRDs_graph_or_dump(
 		$format,
 		@rrd_cmd,
@@ -601,13 +623,25 @@ sub handle_request
 	# Sending the file
 	DEBUG "sending '$rrd_fh'";
 
+	# Send the HTTP Headers
+	{
+		my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,$blksize,$blocks) = $rrd_fh->stat();
+
+		print "HTTP/1.1 200 OK\r\n";
+		print $cgi->header(
+			"-Content-type" => $CONTENT_TYPES{$format},
+			"-Content-length" => $size,
+		) unless $cgi->url_param("no_header");
+	}
+
 	# Since the file desc is still open, we just rewind it to the beginning.
 	$rrd_fh->seek( 0, SEEK_SET );
 	{
 		my $buffer;
 		# No buffering wanted when sending the file
-		local $| = 1;
-		while (sysread($rrd_fh, $buffer, 40 * 1024)) { print $buffer; }
+		local $OUTPUT_AUTOFLUSH = 1;
+		# Using a 4kiB buffer
+		while (sysread($rrd_fh, $buffer, 4096)) { print $buffer; }
 	}
 
 	my $ttot = Time::HiRes::time;
@@ -616,6 +650,16 @@ sub handle_request
 		($tpng - $t0),
 		($ttot - $tpng),
 	);
+}
+
+# is_virtual() means that the field itself isn't in the cdef.
+sub is_virtual {
+	my ($field, $cdef) = @_;
+	return 0 unless $cdef;
+
+	my @a = split(/,/, $cdef);
+	return 0 if (grep {$_ eq $field} @a);
+	return 1;
 }
 
 sub remove_dups {
@@ -644,6 +688,9 @@ sub escape_for_rrd {
 	return $text;
 }
 
+# Expands $_rrdcdef, replacing $_rrdname by $real_rrdname
+# TODO - should use a split, and a array map{} operator instead of a complex regex.
+# But it seems to work, so refactoring only if we need to tweak it
 sub expand_cdef {
 	my ($_rrdname, $_rrdcdef, $real_rrdname) = @_;
 	DEBUG "expand_cdef($_rrdname $_rrdcdef $real_rrdname)";
@@ -654,31 +701,10 @@ sub expand_cdef {
 }
 
 sub RRDs_graph {
-	use IPC::Open3;
-	use IO::String;
-
 	# RRDs::graph() is *STATEFUL*. It doesn't emit the same PNG
 	# when called the second time.
 	#
-	# return RRDs::graph(@_);
-
-	# We just revert to spawning a full featured rrdtool cmd for now.
-	my $chld_out = new IO::String();
-	my $chld_in = new IO::String();
-	my $chld_err = new IO::String();
-
-	local $ENV{PATH} = $1 if $ENV{PATH} =~ /(.*)/;
-
-	my $chld_pid = open3($chld_out, $chld_in, $chld_err, "rrdtool", "graphv", @_);
-
-	DEBUG "[DEBUG] RRDs_graph(chld_out=".${$chld_out->string_ref}.")";
-	DEBUG "[DEBUG] RRDs_graph(chld_err=".${$chld_err->string_ref}.")";
-
-	waitpid( $chld_pid, 0 );
-
-	my $child_exit_status = ($? >> 8);
-
-	return $child_exit_status;
+	return RRDs::graph(@_);
 }
 
 sub RRDs_graph_or_dump {
@@ -721,7 +747,7 @@ sub RRDs_graph_or_dump {
 		# Ignore the arg
 	}
 	# Now we have to fetch the textual values
-        DEBUG "[DEBUG] \n\nrrdtool xport '" . join("' \\\n\t'", @xport) . "'\n";
+	DEBUG "[DEBUG] \n\nrrdtool xport '" . join("' \\\n\t'", @xport) . "'\n";
 	my ($start, $end, $step, $nb_vars, $columns, $values) = RRDs::xport(@xport);
 	if ($fileext eq "CSV") {
 		print $out_fh '"epoch", "' . join('", "', @{ $columns } ) . "\"\n";
@@ -770,6 +796,7 @@ sub RRDs_graph_or_dump {
 		print $out_fh "        \"columns\": " . (scalar @$columns) . ",\n";
 		print $out_fh "        \"legend\": [\n";
 		my $index = 0;
+		## no critic qw(ControlStructures::ProhibitMutatingListFunctions)
 		my @json_columns = map { s/\\l$//; $_; } @{ $columns }; # Remove trailing "\l"
 		for my $column ( @json_columns ) {
 			print $out_fh "            \"$column\"";
@@ -803,7 +830,7 @@ sub RRDs_graph_or_dump {
 		print $out_fh "}\n";
 	}
 
-	my $rrd_error = RRDs::error();
+	my $rrd_error = RRDs::error;
 	return $rrd_error;
 }
 
@@ -820,7 +847,7 @@ sub get_alias_rrdfile
 		SELECT
 			rf.value,
 			rd.value,
-			st.last_epoch,
+			rl.value,
 			'dummy' as dummy
 		FROM ds
 		INNER JOIN service s ON s.id = ds.service_id AND (
@@ -829,7 +856,7 @@ sub get_alias_rrdfile
 		)
 		LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
 		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
-		LEFT OUTER JOIN state st ON st.id = ds.id AND st.type = 'ds'
+		LEFT OUTER JOIN ds_attr rl ON rl.id = ds.id AND rl.name = 'rrd:last'
 		WHERE ds.name = ?
 		ORDER BY ds.ordr ASC
 	", undef, $_alias_service, $_alias_service, $_alias_ds);

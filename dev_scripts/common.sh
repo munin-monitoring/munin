@@ -4,10 +4,15 @@
 #
 # - change directory to basedir
 
+unset LC_CTYPE LANG
+
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 BASEDIR="$(cd "$FINDBIN/.." && pwd -P)"
 
-SANDBOX="${BASEDIR}/sandbox"
+SANDBOX=${SANDBOX:-${BASEDIR}/sandbox}
+# shellcheck disable=SC2034
+PERLLIB=$SANDBOX$(perl -V:sitelib | cut -d"'" -f2)
+
 CONFDIR="${SANDBOX}/etc"
 RUNDIR="${SANDBOX}/var/run"
 

@@ -1,10 +1,12 @@
 #! /usr/bin/perl
-# Munin node that presents as many virtual hosts, plugins & fields 
-# as needed to be able to : 
+# Munin node that presents as many virtual hosts, plugins & fields
+# as needed to be able to:
 # - emulate a HUGE network to stress the munin-master server
-# - serve as a basis for protocol debugging 
+# - serve as a basis for protocol debugging
 #
-# Copyright (C) 2010 Steve Schnepp under the GPLv2
+# Copyright (C) 2010 Steve Schnepp
+#
+# License: GPLv2
 
 use strict;
 use warnings;
@@ -17,6 +19,7 @@ use Getopt::Long;
 $| = 1;
 
 my $nb_servers = 3;
+my $nb_servers_per_port = 1;
 my $nb_plugins = 30;
 my $fields_per_plugin = 5;
 my $starting_port = 24949;
@@ -36,12 +39,13 @@ my $arg_ret = GetOptions(
 	"nb-plugins|n=i" => \$nb_plugins,
 	"nb-fields|f=i" => \$fields_per_plugin,
 	"nb-servers|s=i" => \$nb_servers,
+	"nb-servers-port|v=i" => \$nb_servers_per_port,
 	"update-rate=i" => \$update_rate,
 
 	"startint-port|p=i" => \$starting_port,
 
 	"listen=s" => \$listen,
-	
+
 	"update-rate=i" => \$update_rate,
 	"spoolfetch" => \$spoolfetch,
 	"spoolfetch-rate=i" => \$spoolfetch_rate,
@@ -60,22 +64,23 @@ if ($help) {
 Options:
     --help                   View this message.
 
-    -s --nb-servers <int>     Number of servers [3]
-    -p --start-port <int>     Starting TCP listening port [24949]
+    -s --nb-servers <int>      Number of servers [3]
+    -v --nb-servers-port <int> Number of virtual servers per port [1]
+    -p --start-port <int>      Starting TCP listening port [24949]
 
-    -n --nb-plugins <int>     Number of plugins per server [30] 
+    -n --nb-plugins <int>     Number of plugins per server [30]
     -f --nb-fields  <int>     Number of fields per plugins [5]
     --update-rate <int>       Update rate of plugins (in seconds) [10]
 
-       --listen    <host>     Which IP to bind [localhost]. 
+       --listen    <host>     Which IP to bind [localhost].
                               Use '' or '*' to bind to every interface.
 
     --spoolfetch              Be spoolfetch capable
     --starting-epoch          Starting epoch: no data will available before.
-                               Can be relative to now if negative [-3600] 
+                               Can be relative to now if negative [-3600]
 
     -d --dump                 Only dump a generated munin.conf part [no]
-       --debug                Print debug informations [no] 
+       --debug                Print debug information [no]
 
 };
 	exit 0;
@@ -90,13 +95,16 @@ $starting_epoch = time + $starting_epoch if ($starting_epoch < 0);
 if ($dump_config) {
 	for (my $i = 0; $i < $nb_servers; $i++) {
 		my $port = $starting_port + $i;
-		my $hostname = get_hostname($i);
-		print "[$hostname]\n";
-		print "     address 127.0.0.1\n";
-		print "     port $port\n";
-		print "\n";
+		for (my $p = 0; $p < $nb_servers_per_port; $p++) {
+			my $hostname = get_hostname($i, $p);
+			my $group = get_group($i, $p);
+			print "[$group;$hostname]\n";
+			print "     address 127.0.0.1\n";
+			print "     port $port\n";
+			print "\n";
+		}
 	}
-	
+
 	# Only dump config
 	exit;
 }
@@ -123,6 +131,15 @@ for (my $i = 0; $i < $nb_servers; $i ++) {
 debug("Ignoring SIG_CHILD");
 $SIG{CHLD} = 'IGNORE';
 
+# Init the plugin names
+for (my $i = 0; $i < $nb_plugins; $i ++) {
+	my $service = get_service($i);
+
+	# Save the number to retrieve it later, since
+	# it's no longer encoded in the plugin name
+	$services{$service} = $i;
+}
+
 my $select = IO::Select->new(@servers);
 while (my @ready = $select->can_read()) {
 	foreach my $ready_fh (@ready) {
@@ -141,6 +158,7 @@ sub service
 {
 	my $client = shift;
 	my $sockport = $client->sockport();
+	debug("[$$] client connected on $sockport");
 
 	my $hostname = get_hostname($sockport);
 
@@ -152,11 +170,7 @@ sub service
 		if ($line =~ m/^list$/ || $line =~ m/^list /) {
 			for (my $i = 0; $i < $nb_plugins; $i ++) {
 				my $service = get_service($i);
-				print $client get_service($i) . " ";
-
-				# Save the number to retrieve it later, since
-				# it's no longer encoded in the plugin name
-				$services{$service} = $i;
+				print $client "$service ";
 			}
 			print $client "\n";
 		} elsif ($line =~ m/^cap (\w+)/) {
@@ -166,9 +180,23 @@ sub service
 		} elsif ($line =~ m/^config (\w+)/) {
 			my $plugin_number = get_plugin_number($1);
 			my $plugin_name = get_service($plugin_number);
+			debug("[$$] plugin asked:$1, number:$plugin_number, name:$plugin_name");
 			print $client "graph_title " . get_service_title($plugin_number) . "\n";
 			print $client "graph_category " . get_service_category($plugin_number) . "\n";
-			print $client "update_rate $update_rate\n";
+
+			print $client "update_rate $update_rate";
+			if ($plugin_number % 4 == 1) {
+				print $client " aligned";
+			} elsif ($plugin_number % 4 == 2) {
+				print $client " garbled";
+			}
+			print $client "\n";
+
+			my $graph_data_size = "debug";
+			$graph_data_size = "normal" if $plugin_number == 0;
+			$graph_data_size = "custom 10,10 5,10 10" if $plugin_number == 1;
+			$graph_data_size = "custom 10,10 for 5, 5m for 1d" if $plugin_number == 2;
+			$graph_data_size = "huge" if $plugin_number == 3;
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				my $ds = get_ds($plugin_number, $i);
 				my $ds_info = get_ds_info($plugin_number, $i);
@@ -180,13 +208,14 @@ sub service
 				/;
 				my $plugin_type = $PLUGIN_TYPES[($i + $plugin_number) % 3];
 
+				print $client "$ds.graph_data_size $graph_data_size\n" if $graph_data_size;
 				print $client "$ds.type $plugin_type\n";
 			}
 			print $client ".\n";
 		} elsif ($line =~ m/^fetch (\w+)/) {
 			my $plugin_number = get_plugin_number($1);
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
-				my $value = sin( (time / 3600) * $plugin_number + $i);
+				my $value = sin( (time / 3600) * $plugin_number + $i) * (4 ** $plugin_number);
 
 				$value = int($value * 1024) if ($plugin_number + $i) % 3;
 				print $client get_ds($plugin_number, $i) . ".value $value\n";
@@ -194,21 +223,21 @@ sub service
 			print $client ".\n";
 		} elsif ($line =~ m/^spoolfetch (\d+)/) {
 			my $timestamp = $1;
+			print "asked $timestamp, " if $is_debug;
+			my $now = time;
 
 			# Cannot start before $starting_epoch
-			print "asked $timestamp, " if $is_debug;
-			$timestamp = ($timestamp < $starting_epoch) ? $starting_epoch : $timestamp;
-			print "starting at $starting_epoch, using $timestamp, \n" if $is_debug;
+			$timestamp = $starting_epoch if ($timestamp < $starting_epoch);
+			print "starting at $starting_epoch\n" if $is_debug;
 
 			# Only send something every $spoolfetch_rate * $update_rate
-			if ( $timestamp > time - $spoolfetch_rate * $update_rate) {
-				print $client ".\n";
-				return;
+			if ( $timestamp > $now - $spoolfetch_rate * $update_rate) {
+				goto END_SPOOL_CMD;
 			}
 
 			# Sends spools strictly > LastSpooled
 			for (my $epoch = ($timestamp - $timestamp % $update_rate + $update_rate);
-				$epoch < time; $epoch += $update_rate) { 
+				$epoch < time; $epoch += $update_rate) {
 			for (my $plugin_number = 0; $plugin_number < $nb_plugins; $plugin_number ++) {
 				my $plugin_name = get_service($plugin_number);
 				print $client "multigraph $plugin_name\n";
@@ -225,24 +254,37 @@ sub service
 				}
 			}
 		}
+	END_SPOOL_CMD:
 			print $client ".\n";
 		} elsif ($line =~ m/^quit/) {
 			return;
+		} elsif ($line =~ m/^nodes/) {
+			print "asked nodes:" if $is_debug;
+			for (my $p = 0; $p < $nb_servers_per_port; $p++) {
+				my $vhost = get_hostname($sockport, $p);
+				print $client "$vhost ";
+				print " $vhost" if $is_debug;
+			}
+			print $client "\n";
+			print "\n" if $is_debug;
 		} else {
 			print $client "# Command not found\n";
 		}
 	}
 }
 
-sub get_plugin_number 
+sub get_plugin_number
 {
 	my $plugin_name = shift;
-	return $services{$plugin_name};
+	$plugin_name =~ s/^(\s+)//;
+	$plugin_name =~ s/(\s+)$//;
+	my $plugin_number = $services{$plugin_name} || 0;
+	return ($plugin_number+0);
 }
 
-sub debug 
+sub debug
 {
-	print join(" ", @_) . "\n" if $is_debug; 
+	print join(" ", @_) . "\n" if $is_debug;
 }
 
 sub _get_from_array
@@ -258,19 +300,38 @@ sub _get_from_array
 
 sub get_hostname
 {
-	my ($i) = @_;
+	my ($i, $j) = @_;
 
-	my @gods = keys( %{ $fun_names->{gods} } );
-	my @worlds = keys( %{ $fun_names->{worlds} } );
-	my @groups = keys( %{ $fun_names->{groups} } );
+	my @gods = sort keys( %{ $fun_names->{gods} } );
+	my @worlds = sort keys( %{ $fun_names->{worlds} } );
+	my @groups = sort keys( %{ $fun_names->{groups} } );
 
 
 	my $hostname = _get_from_array($i, \@gods, 1);
+
+	# prefix with the virtual node part
+	$hostname = "v$j-$hostname" if $j;
+
 	my $world = _get_from_array($i, \@worlds, 0);
 	my $group = _get_from_array($i, \@groups, 0);
 
 
 	return "$hostname.$world.$group";
+}
+
+sub get_group
+{
+	my ($i, $j) = @_;
+
+	my @gods = sort keys( %{ $fun_names->{gods} } );
+	my @worlds = sort keys( %{ $fun_names->{worlds} } );
+	my @groups = sort keys( %{ $fun_names->{groups} } );
+
+
+	my $world = _get_from_array($i, \@worlds, 0);
+	my $group = _get_from_array($i, \@groups, 0);
+
+	return "$group;$world.$group";
 }
 
 sub get_category
@@ -282,7 +343,7 @@ sub get_service
 {
 	my ($plugin_number) = @_;
 
-	my @giants = keys( %{ $fun_names->{giants} } );
+	my @giants = sort keys( %{ $fun_names->{giants} } );
 	my $giant = _get_from_array($plugin_number, \@giants, 1);
 
 	return $giant;
@@ -292,7 +353,7 @@ sub get_service_title
 {
 	my ($plugin_number)= @_;
 
-	my @giants = keys( %{ $fun_names->{giants} } );
+	my @giants = sort keys( %{ $fun_names->{giants} } );
 	my $giant = _get_from_array($plugin_number, \@giants, 0);
 
 	return $giant . " : " . $fun_names->{giants}->{$giant};
@@ -302,7 +363,7 @@ sub get_service_category
 {
 	my ($plugin_number)= @_;
 
-	my @locations = keys( %{ $fun_names->{locations} } );
+	my @locations = sort keys( %{ $fun_names->{locations} } );
 	my $location = _get_from_array($plugin_number, \@locations, 0);
 
 	return $location;
@@ -312,7 +373,7 @@ sub get_ds
 {
 	my ($plugin_number, $i) = @_;
 
-	my @weapons = keys( %{ $fun_names->{weapons} } );
+	my @weapons = sort keys( %{ $fun_names->{weapons} } );
 	my $weapon = _get_from_array($i, \@weapons, 1);
 
 	return $weapon;
@@ -321,7 +382,7 @@ sub get_ds
 sub get_ds_info
 {
 	my ($plugin_name, $i) = @_;
-	my @weapons = keys( %{ $fun_names->{weapons} } );
+	my @weapons = sort keys( %{ $fun_names->{weapons} } );
 	my $weapon = _get_from_array($i, \@weapons, 0);
 
 	return $fun_names->{weapons}->{$weapon};

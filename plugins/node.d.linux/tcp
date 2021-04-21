@@ -54,20 +54,20 @@ EOF
 			fin_wait2 time_wait close close_wait last_ack \
 			listen closing
 		do
-			echo ${i}.label $i
-			echo ${i}.info Sockets in state $i
+			echo "${i}.label $i"
+			echo "${i}.info Sockets in state $i"
 		done
 
         exit 0
 		;;
     autoconf)
-        if [ -f /proc/net/tcp -o -f /proc/net/tcp6 ]
+        if [ -f /proc/net/tcp ] || [ -f /proc/net/tcp6 ]
 		then
 			echo yes
 			exit 0
 		else
 			echo no
-			exit 1
+			exit 0
 		fi
 esac
 

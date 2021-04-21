@@ -104,7 +104,7 @@ sub process_file {
     }
     elsif ( $interpreter =~ m{python} ) {
         run_check(
-            {   command     => [ 'python', '-m', 'py_compile', $plugin ],
+            {   command     => [ 'python3', '-m', 'py_compile', $plugin ],
                 description => 'python compile',
                 filename    => $plugin
             }

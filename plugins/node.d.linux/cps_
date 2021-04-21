@@ -41,6 +41,7 @@ Unknown
 
 =cut
 
+use warnings;
 use strict;
 
 if ( defined $ARGV[0] and $ARGV[0] eq "autoconf" ) {
@@ -97,15 +98,18 @@ sub autoconf {
 	print "yes\n";
 	exit 0;
     }
+    elsif ($? & 127) {
+	    print "no (system call exited with %d)", $? & 127;
+    }
     elsif (($?>>8) == 2) {
 	print "no (permission denied)\n";
 	exit 0;
     }
-    elsif ($? == 127) {
+    elsif (($?>>8) == 127) {
 	print "no (ipvsadm not found)\n";
 	exit 0;
     } else {
-	print "no\n";
+	print "no (unknown ipvsadm return value: $?, %d)\n", $? >> 8;
 	exit 0;
     }
 }

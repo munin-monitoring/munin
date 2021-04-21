@@ -135,7 +135,7 @@ $ENV{PATH} = "$ENV{INFORMIXDIR}/bin";
 if (@ARGV && $ARGV[0] =~ /config/i) {
 	my $config = qq{
 	    graph_title Number of Concurrent Sessions of $ENV{INFORMIXSERVER}
-	    graph_category Informix
+	    graph_category db
 	    graph_vlabel Number
             graph_info Number of concurrent sessions to $ENV{INFORMIXSERVER}. Note that a constant value of -1 indicates missing grantsfor the plugin user (often "munin") on syssqlstat view.
 	    sessions.label Sessions

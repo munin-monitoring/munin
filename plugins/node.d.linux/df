@@ -1,5 +1,8 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 df - Munin plugin to monitor disk or inode usage
@@ -77,7 +80,7 @@ just link the plugin as C<df_inode>.
 =head1 MAGIC MARKERS
 
   #%# family=auto
-  #%# capabilities=autoconf
+  #%# capabilities=autoconf multigraph
 
 =head1 BUGS
 
@@ -86,8 +89,8 @@ filesystems.
 
 =head1 AUTHOR
 
-Copyright (C) 2013 Diego Elio Pettenò
-Based on the original plugin by Ingvar Hagelund
+  Copyright (C) 2013 Diego Elio Pettenò
+  Copyright (C) 2006 Ingvar Hagelund
 
 =head1 LICENSE
 
@@ -95,9 +98,9 @@ GPLv2
 
 =cut
 
-use strict;
-use warnings;
 use Munin::Plugin;
+
+need_multigraph();
 
 # Reset locale to C
 $ENV{LC_ALL} = 'C';
@@ -106,7 +109,8 @@ $ENV{LC_ALL} = 'C';
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1, simfs => 1 );
 
 my @exclude = qw(none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs);
-my $dfopts  = $ENV{'dfopts'} || "-P -l ";
+my $dfopts  = $ENV{'dfopts'} || "-P -l";
+$dfopts .= ' ';
 my $title = "Disk usage";
 
 if ( $Munin::Plugin::me eq "df_inode" ) {
@@ -126,6 +130,11 @@ my (@include_re, @exclude_re);
 @include_re = map(qr/$_/, split(/\s+/, $ENV{include_re})) if ($ENV{include_re});
 @exclude_re = map(qr/$_/, split(/\s+/, $ENV{exclude_re})) if ($ENV{exclude_re});
 
+
+# Check for a given line of df's output, if it matches one item of 'include_re'
+# (if given) and if it is not matched by one of the items of 'exclude_re'
+# (if given). If all checks were successful, return an array reference for:
+# fieldname, mountpoint, usage_percentage.
 sub split_and_skip {
   my ($line) = @_;
   my ($name, $capacity, $mountpt);
@@ -150,28 +159,43 @@ sub split_and_skip {
     $capacity = $2;
     $mountpt = $3;
   } else {
+    # this was the header line or we failed to parse a data line
     return;
   }
 
   return if $name eq 'Filesystem';
 
-  foreach my $re (@include_re) {
-    return unless ($name =~ $re or $mountpt =~ $re);
+  # If "include_re" is non-empty, then we ignore all non-matching lines.
+  if (scalar(@include_re) > 0) {
+    my $item_found = 0;
+    foreach my $re (@include_re) {
+      if ($name =~ $re or $mountpt =~ $re) {
+        $item_found = 1;
+      }
+    }
+    if (not $item_found) {
+      # "include_re" was given, but none of its entries matched - we give up on this line
+      return;
+    }
   }
 
   foreach my $re (@exclude_re) {
     return if ($name =~ $re or $mountpt =~ $re);
   }
 
+  # For some virtual filesystems we use the mountpoint instead of the ambiguous device name.
   $name = $mountpt if $usemntpt{$name};
 
   return [clean_fieldname($name), $mountpt, $capacity];
 }
 
+
+# Assemble a filtered list of array references (each: fieldname, mountpoint, usage_percentage).
 my @df_output = grep(defined($_), map(split_and_skip, split("\n", `df $dfopts 2>/dev/null`)));
 
+
 if ($mode eq 'autoconf' ) {
-  if ( scalar(@df_output) ) {
+  if ( scalar(@df_output) == 0) {
     print "no (no device to monitor)\n";
   } else {
     print "yes\n";
@@ -179,6 +203,7 @@ if ($mode eq 'autoconf' ) {
   exit 0;
 } elsif ($mode eq 'config' ) {
   print <<END;
+multigraph df
 graph_title $title in percent
 graph_args --upper-limit 100 -l 0
 graph_vlabel %
@@ -186,10 +211,23 @@ graph_scale no
 graph_category disk
 END
 
+  # Summary graph
+  print "min.label Lowest disk usage\n";
+  print "max.label Highest disk usage\n";
+
+  # Detailed graphs
   foreach my $df (@df_output) {
-    my ($name, $mountpt) = @{$df};
-    print $name, ".label ", $mountpt, "\n";
-    print_thresholds($name, undef, undef, 92, 98);
+    my ($name, $mountpt, undef) = @{$df};
+    print <<END;
+multigraph df.$name
+graph_title $title for $mountpt in percent
+graph_args --upper-limit 100 -l 0
+graph_vlabel %
+graph_scale no
+graph_category disk
+df.label $mountpt
+END
+    print_thresholds("df", undef, undef, 92, 98);
   }
 
   unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 ) {
@@ -197,7 +235,25 @@ END
   }
 }
 
+# Summary graph
+# Find the smallest and the biggest usage percentage.
+my $min, my $max;
+foreach my $df (@df_output) {
+  my (undef, undef, $percent) = @{$df};
+  $min = $percent if not defined($min) or ($percent < $min);
+  $max = $percent if not defined($max) or ($percent > $max);
+}
+$min = "U" if not defined($min);
+$max = "U" if not defined($max);
+
+# The overview graph contains only min/max of all filtered df entries.
+print "multigraph df\n";
+print "min.value ", $min, "\n";
+print "max.value ", $max, "\n";
+
+# Detailed graphs
 foreach my $df (@df_output) {
   my ($name, undef, $percent) = @{$df};
-  print $name, ".value ", $percent, "\n";
+  print "multigraph df.", $name, "\n";
+  print "df.value ", $percent, "\n";
 }

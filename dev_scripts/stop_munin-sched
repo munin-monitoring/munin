@@ -1,0 +1,11 @@
+#!/bin/sh
+
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+. "$FINDBIN/common.sh"
+
+
+if [ -f "${RUNDIR}/munin/munin-sched.pid" ]; then
+    xargs kill <"${RUNDIR}/munin/munin-sched.pid"
+else
+    echo "Pid file not found. Not stopping"
+fi

@@ -1,4 +1,8 @@
 #!/bin/sh
+#
+# prepare a sandbox environment for local tests
+# The result is placed below the directory ./sandbox/
+#
 
 set -e
 set -u
@@ -17,18 +21,32 @@ clean_sandbox() {
 
 	rm -rf sandbox
 
-	./Build distclean
+	if [ -f "Build" ]; then
+		./Build distclean
+	fi
 }
 
 make_sandbox() {
 	banner BUILD
-	perl Build.PL --install_base "${BASEDIR}/sandbox" --debug
-	./Build install
+	perl Build.PL --install_base "${BASEDIR}/sandbox"
+	# Without this repetition of "--install_base", the wrong path (~/perl5/) would be written
+	# to _build/runtime_params and be used for munin module installation.
+	./Build --install_base "${BASEDIR}/sandbox" install
 
 	xargs mkdir -p -v <<EOF
 		sandbox/etc/munin-conf.d
 		sandbox/etc/plugin-conf.d
 		sandbox/etc/plugins
+EOF
+
+	XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-}
+	if [ ! -z $XDG_RUNTIME_DIR ] && [ -r "$XDG_RUNTIME_DIR" ]
+	then
+		mkdir -p "$XDG_RUNTIME_DIR/munin-sandbox-var"
+		[ ! -e "sandbox/var" ] && ln -sv "$XDG_RUNTIME_DIR/munin-sandbox-var" sandbox/var
+	fi
+
+	xargs mkdir -p -v <<EOF
 		sandbox/var/log
 		sandbox/var/lib
 		sandbox/var/run
@@ -39,7 +57,7 @@ EOF
 
 configure_plugins() {
 	banner CONFIGURE PLUGINS
-	munin-node-configure --suggest --shell --families=contrib,auto | sh -x
+	dev_scripts/run munin-node-configure --suggest --shell --families=contrib,auto --remove-also | sh -x
 }
 
 configure_node() {
@@ -47,8 +65,8 @@ configure_node() {
 	install -m 0644 "${CONFDIR}/munin-node.conf.sample" "${CONFDIR}/munin-node.conf"
 
 	perl -pi -e "s/port 4949/port ${MUNIN_NODE_PORT}/;
-				 s/user root/user $USER/;
-				 s/group root/group $GROUP/;
+				 s/user root/user $(id -n -u)/;
+				 s/group root/group $(id -n -g)/;
 				 s|^(port .*)|\$1
 
 tls disabled
@@ -74,6 +92,11 @@ tls_ca_certificate     $BASEDIR/t/tls/CA/ca_cert.pem
 tls_verify_certificate yes
 tls_verify_depth       5
 
+# use shm
+dbdir	/dev/shm/munin
+
+graph_data_size debug
+
 # Read node definitions and other configuration
 includedir ${CONFDIR}/munin-conf.d
 EOF
@@ -94,6 +117,27 @@ EOF
 
 }
 
+configure_debug() {
+	banner CONFIGURE DEBUG
+
+        cat > "${CONFDIR}/munin.conf" <<EOF
+# Sandbox munin.conf
+
+tls                    disabled
+tls_private_key        $BASEDIR/t/tls/master_key.pem
+tls_certificate        $BASEDIR/t/tls/master_cert.pem
+tls_ca_certificate     $BASEDIR/t/tls/CA/ca_cert.pem
+tls_verify_certificate yes
+tls_verify_depth       5
+
+# Read node definitions and other configuration
+includedir ${CONFDIR}/munin-conf.d
+EOF
+
+	contrib/munin-node-debug --dump -S 20 > "${CONFDIR}/munin-conf.d/node.debug.conf"
+
+}
+
 stop_node() {
 	./dev_scripts/stop_munin-node
 }
@@ -109,7 +153,30 @@ case ${1:-} in
 		configure_plugins
 		configure_master
 		;;
-	*)
+	master)
 		make_sandbox
+		configure_master
+		;;
+	debug)
+		make_sandbox
+		configure_debug
+		;;
+	lib)
+		for src in lib/Munin/*/*.pm
+		do
+			dst=${src#*/}
+			cp -vf $src sandbox/lib/perl5/$dst
+		done
+		;;
+	"")
+		make_sandbox
+		;;
+	help)
+		echo "Syntax:  $(basename "$0")  { clean | node | master | debug | lib }"
+		echo
+		;;
+	*)
+		"$0" help >&2
+		exit 1
 		;;
 esac

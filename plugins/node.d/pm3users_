@@ -74,6 +74,7 @@ if ($cmd eq 'config') {
 	print("graph_title Users on $host\n");
 	print("graph_args --lower-limit 0 --upper-limit $maxtotal\n");
 	print("graph_vlabel channels in use\n");
+	print("graph_category network\n");
 	print("pstn.label PSTN\n");
 	print("pstn.max $maxpstn\n");
 	print("pstn.type GAUGE\n");

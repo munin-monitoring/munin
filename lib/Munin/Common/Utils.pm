@@ -8,7 +8,6 @@ our @ISA = qw/Exporter/;
 our @EXPORT_OK = qw( is_valid_hostname );
 
 use Params::Validate qw( :all );
-use List::Util qw( all any );
 
 ### Set operations #############################################################
 
@@ -23,12 +22,23 @@ sub is_valid_hostname {
 
     # each part
     my @parts = (split(/[.]/, $hostname));
-    return if any { length > 63 } @parts;
-    return if any { ! /^[a-z0-9\-]+$/ } @parts;
+    return if grep { length > 63 } @parts;
+    return if grep { ! /^[a-z0-9\-]+$/ } @parts;
 
     return $hostname;
 
 }
+
+sub dump_to_file
+{
+	my ($filename, $obj) = @_;
+	open(my $DUMPFILE, q{>>}, "$filename");
+
+	print $DUMPFILE Dumper($obj);
+
+	close($DUMPFILE);
+}
+
 
 
 1;

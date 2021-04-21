@@ -43,7 +43,7 @@ SPOOLDIR=${spooldir:-/var/lib/courier/msgq/}
 
 case $1 in
     autoconf|detect)
-	if [ -d $SPOOLDIR/ -a -r $SPOOLDIR/ ] ; then
+	if [ -d "$SPOOLDIR/" ] && [ -r "$SPOOLDIR/" ] ; then
 	    echo yes
 	    exit 0
         else
@@ -62,7 +62,7 @@ EOF
 	exit 0;;
 esac
 
-cd $SPOOLDIR >/dev/null 2>/dev/null || {
+cd "$SPOOLDIR" >/dev/null 2>/dev/null || {
      echo "# Cannot cd to $SPOOLDIR"
      exit 1
 }

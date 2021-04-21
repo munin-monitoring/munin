@@ -1,16 +1,30 @@
 This is Munin
 =============
 
-Munin is distributed under the GNU GPL version 2.  Munin is copyrighted
-2002-2014 by its various authors as identified in the source files.
+Munin the monitoring tool surveys all your computers and remembers what it saw.
+It presents all the information in graphs through a web interface.
+Its emphasis is on plug and play capabilities.
+After completing a installation a high number of monitoring plugins will be
+playing with no more effort.
 
-Munin is homed at http://munin-monitoring.org/.  After you have completed 
-the INSTALL all the documentation can be found there.
+Additional plugins can be easily developed and contributed.
+See the `Plugin Gallery <https://gallery.munin-monitoring.org/>`_ for a wide
+range of more than a thousand community supported plugins.
 
-Information on developing Munin with GitHub, such as how branches are used
-and the version numbering scheme, can be found in `Munin's GitHub Wiki`__.
+Munin is distributed under the `GNU GPL version 2 <https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html>`_.  Munin is copyrighted
+2002-2020 by its various authors as identified in the source files.
 
-.. __ : https://github.com/munin-monitoring/munin/wiki/_pages
+
+Resources
+=========
+
+* Website: http://munin-monitoring.org/
+* Documentation: https://guide.munin-monitoring.org/
+* `IRC channel <irc://irc.oftc.net/#munin>`_: ``#munin`` on OFTC
+* Mailing List: https://lists.sourceforge.net/lists/listinfo/munin-users
+* Plugin Gallery: https://gallery.munin-monitoring.org/
+* Live Demo (development): http://demo.munin-monitoring.org/
+
 
 Note to contributors
 --------------------
@@ -24,33 +38,38 @@ there's a problem with the commit diff, we either commit another patch
 thereafter or plainly ask you to rework it. We might eventually squash some of
 your commits into one.
 
-Please always rebase your pull requests on a released version, ideally the
-latest one. This makes the merging process much easier. The default branch,
-``master``, automatically tracks the latest released version, so it is a very
-good starting point.
+Please always rebase your pull requests on a released version tag, one of the
+stable branches, or the default branch, ``master``.
 
 If you request a pull against ``master``, your pull will be automatically closed
-upon release. If you request against ``devel``, your pull will be automatically
-closed upon merge.
+upon merge. If you request against one of the stable release branches, your pull will be
+automatically closed upon the next release.
+
+Information on developing Munin with GitHub, such as how branches are used
+and the version numbering scheme, can be found in `Munin's GitHub Wiki`__.
+
+.. __ : https://github.com/munin-monitoring/munin/wiki/_pages
+
 
 Building status
 ---------------
 
 stable-2.0 : |build-stable2.0|
 
-devel : |build-devel|  |coverage-devel|
+master : |build-master|  |coverage-master|
 
 docs : |docs-latest|
 
 .. |build-stable2.0| image:: https://travis-ci.org/munin-monitoring/munin.svg?branch=stable-2.0
    :target: https://travis-ci.org/munin-monitoring/munin
 
-.. |build-devel| image:: https://travis-ci.org/munin-monitoring/munin.svg?branch=devel
+.. |build-master| image:: https://travis-ci.org/munin-monitoring/munin.svg?branch=master
    :target: https://travis-ci.org/munin-monitoring/munin
 
-.. |coverage-devel| image:: https://coveralls.io/repos/munin-monitoring/munin/badge.svg?branch=devel&service=github
-   :target: https://coveralls.io/github/munin-monitoring/munin?branch=devel
+.. |coverage-master| image:: https://coveralls.io/repos/github/munin-monitoring/munin/badge.svg?branch=master
+   :target: https://coveralls.io/github/munin-monitoring/munin?branch=master
+
 
 .. |docs-latest| image:: https://readthedocs.org/projects/munin/badge/?version=latest
-   :target: http://guide.munin-monitoring.org/
+   :target: https://guide.munin-monitoring.org/
 

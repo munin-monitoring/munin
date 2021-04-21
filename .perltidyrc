@@ -1,0 +1,46 @@
+# This perltidy run control file contains what is to be considered an
+# approximation of the code formatting conventions used by the Munin project.
+#
+# The munin source code is a mix of several different coding styles. So an
+# important use of this file is to tidy up old cruft.
+#
+# It is not mandated that code must be run through perltidy with these settings
+# before every commit, as I believe the best formatting is done by humans, but
+# the formatting should be close to what a perltidy run would yield.
+#
+# The content is negotiable.
+#
+# Use: perltidy --profile=./perltidyrc [FILE]...
+#
+# See http://perltidy.sourceforge.net/perltidy.html for option documentation
+
+# I/O Control
+--backup-and-modify-in-place
+--backup-file-extension=/
+
+# Basic Options
+--maximum-line-length=100
+--output-line-ending=unix
+
+# Code Indentation Control
+--nooutdent-long-lines
+
+# Line Break Control
+--break-before-all-operators
+--nooutdent-long-comments
+--opening-brace-always-on-right
+--opening-token-right
+--stack-closing-tokens
+--stack-opening-tokens
+
+# Blank Line Control
+--maximum-consecutive-blank-lines=2
+
+# Turn warnings into errors
+--warning-output
+
+# Write errors to stderr, not to a file
+--standard-error-output
+
+# Check Syntax via perl -c -T
+--check-syntax

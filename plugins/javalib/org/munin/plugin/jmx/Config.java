@@ -39,7 +39,7 @@ public class Config {
 			category = categoryEnv;
 		}
 		if (prefix == null || prefix.length() == 0) {
-			this.prefix = "jmx"; 
+			this.prefix = "jmx";
 		} else {
 			this.prefix = prefix;
 		}
@@ -64,11 +64,11 @@ public class Config {
 	public String getPassword() {
 		return password;
 	}
-	
+
 	public String getPrefix() {
 		return prefix;
 	}
-	
+
 	public boolean isDirtyConfg() {
 		return System.getenv("MUNIN_CAP_DIRTYCONFIG") != null;
 	}

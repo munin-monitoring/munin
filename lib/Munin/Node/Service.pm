@@ -23,8 +23,8 @@ sub new
     # Set defaults
     $args{servicedir} ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 
-    $args{defuser}  ||= getpwnam $Munin::Common::Defaults::MUNIN_PLUGINUSER;
-    $args{defgroup} ||= getgrnam $Munin::Common::Defaults::MUNIN_GROUP;
+    $args{defuser}  = getpwnam $Munin::Common::Defaults::MUNIN_PLUGINUSER unless defined($args{defuser});
+    $args{defgroup} = getgrnam $Munin::Common::Defaults::MUNIN_GROUP unless defined($args{defgroup});
 
     $args{timeout}  ||= 60; # Default transaction timeout : 1 min
     $args{pidebug}  ||= 0;
@@ -50,7 +50,7 @@ sub is_a_runnable_service
     return if $file =~ m/^\./;      # Hidden files
     return if $file =~ m/\.conf$/;  # Config files
 
-    return if $file !~ m/^[-\w.:]+$/;  # Skip if any weird chars
+    return if $file !~ m/^[-\w\@.:]+$/;  # Skip if any weird chars
 
     foreach my $regex (@{$config->{ignores}}) {
         return if $file =~ /$regex/;
@@ -92,12 +92,18 @@ sub prepare_plugin_environment
 
     # Some locales use "," as decimal separator. This can mess up a lot
     # of plugins.
-    $ENV{LC_ALL} = 'C';
+    $ENV{LC_ALL} = 'C.UTF-8';
 
     # LC_ALL should be enough, but some plugins don't follow specs (#1014)
-    $ENV{LANG} = 'C';
+    $ENV{LANG} = 'C.UTF-8';
 
-    # PATH should be *very* sane by default. Can be overrided via 
+    # Force UTF-8 encoding for stdout in Python3. This is only relevant for
+    # Python3 before 3.7 (which will use UTF-8 anyway, if possible).
+    # This override allows python3-based plugins as well as any indrectly
+    # executed python3-based commands to output UTF-8 characters.
+    $ENV{PYTHONIOENCODING} = 'utf8:replace';
+
+    # PATH should be *very* sane by default. Can be overridden via
     # config file if needed (Closes #863 and #1128).
     $ENV{PATH} = '/usr/sbin:/usr/bin:/sbin:/bin';
 
@@ -185,10 +191,11 @@ sub _resolve_gids
 
     # Support running with more than one group in effect. See documentation on
     # $EFFECTIVE_GROUP_ID in the perlvar(1) manual page.  Need to specify the
-    # default group twice: once for setegid(2), and once for setgroups(2).
-    my $egids = join ' ', ($default_gid) x 2, @groups;
-
-    return ($default_gid, $egids);
+    # primary group twice: once for setegid(2), and once for setgroups(2).
+    if (scalar(@groups) != 0) {
+        return ($groups[0], join ' ', $groups[0], @groups);
+    }
+    return ($default_gid, join ' ', ($default_gid) x 2);
 }
 
 
@@ -222,8 +229,8 @@ sub change_real_and_effective_user_and_group
             Munin::Node::OS->set_effective_user_id($uid)    unless $uid  == $root_uid;
         };
 
-        if ($EVAL_ERROR) {
-            CRITICAL("# FATAL: Plugin '$service' Can't drop privileges: $EVAL_ERROR.");
+        if ($@) {
+            CRITICAL("# FATAL: Plugin '$service' Can't drop privileges: $@.");
             exit 1;
         }
     }
@@ -275,7 +282,7 @@ sub _service_command
 
     if ($sconf->{$service}{command}) {
         for my $t (@{ $sconf->{$service}{command} }) {
-            # Unfortunately, every occurence of %c will be expanded,
+            # Unfortunately, every occurrence of %c will be expanded,
             # even if we want to pass it unmodified to the target command,
             # because we parse the original string during the config
             # parsing step, at which we do not yet know the
@@ -371,7 +378,7 @@ Runs miscellaneous tests on $file_name in the service directory, to try and
 establish whether it is a runnable service.
 
 =item B<list>
-  
+
   my @services = $services->list;
 
 Returns a list of all the runnable services in the directory.

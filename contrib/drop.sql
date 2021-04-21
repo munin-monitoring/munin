@@ -1,0 +1,11 @@
+DROP TABLE url;
+DROP TABLE state;
+DROP TABLE service_categories;
+DROP TABLE service_attr;
+DROP TABLE service;
+DROP TABLE param;
+DROP TABLE node_attr;
+DROP TABLE node;
+DROP TABLE grp;
+DROP TABLE ds_attr;
+DROP TABLE ds;

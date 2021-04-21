@@ -111,6 +111,10 @@ sub write
 {
     my ($self, $timestamp, $service, $data) = @_;
 
+    # squash the $service name with the same rules as the munin-update when using plain TCP
+    # Closes D:710529
+    $service =~ s/[^_A-Za-z0-9]/_/g;
+
     my $fmtTimestamp = $self->_snap_to_epoch_boundary($timestamp);
 
     open my $fh , '>>', "$self->{spooldir}/munin-daemon.$service.$fmtTimestamp." . $self->{interval_size}
@@ -119,10 +123,7 @@ sub write
 
     print {$fh} "timestamp $timestamp\n";
 
-    # squash the $service name with the same rules as the munin-update when using plain TCP
-    # Closes D:710529
-    my $service_squashed = $service; $service_squashed =~ tr/.:/__/;
-    print {$fh} "multigraph $service_squashed\n" unless $data->[0] =~ m{^multigraph};
+    print {$fh} "multigraph $service\n" unless $data->[0] =~ m{^multigraph};
 
     foreach my $line (@$data) {
         # Ignore blank lines and "."-ones.
@@ -130,6 +131,9 @@ sub write
 
         print {$fh} $line, "\n" or ERROR("Error writing results: $!");
     }
+
+    # Synchronously write the timestamp for that plugin
+    $self->set_metadata("last-timestamp.$service", $timestamp);
 
     return;
 }

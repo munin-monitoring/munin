@@ -36,7 +36,7 @@ sub _get_xid {
     }
 }
 
-sub get_fq_hostname { 
+sub get_fq_hostname {
     return hostfqdn || "unknown";
 }
 
@@ -68,7 +68,7 @@ sub check_perms_if_paranoid
     # Check dir as well
     if (-f $target) {
         (my $dirname = $target) =~ s{[^/]+$}{};
-        return $class->check_perms($dirname);
+        return $class->check_perms_if_paranoid($dirname);
     }
 
     return 1;
@@ -240,11 +240,15 @@ sub _set_xid {
     # a system call. So we need to check $! for errors.
     $! = undef;
     $$x = $id;
-    croak $! if $!;
+    croak "$!" if $!;
 }
 
 
-sub set_umask { umask(0002) or croak "Unable to set umask: $!\n"; }
+sub set_umask {
+    my $old_umask = umask(0002);
+    croak "Unable to set umask: $!\n" unless (defined $old_umask) and ($old_umask or ($old_umask == 0));
+}
+
 
 sub mkdir_subdir {
     my ($class, $path, $uid) = @_;

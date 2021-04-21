@@ -26,8 +26,8 @@ B<graph no>
 
 =back
 
-If you have password protected your Munin website and trust 
-your known visitors you can make graph and more information 
+If you have password protected your Munin website and trust
+your known visitors you can make graph and more information
 visible by setting the following environment variables in the plugins configuration.
 
 =over 2
@@ -52,7 +52,7 @@ B<Example>
 
 =head2 SPECIAL YUM PLUGIN NEEDED
 
-Package yum-plugin-security is needed as this Munin plugin investigates 
+Package yum-plugin-security is needed as this Munin plugin investigates
 how many security updates are pending.
 
 Install the package with the command:

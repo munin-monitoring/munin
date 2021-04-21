@@ -4,8 +4,8 @@
 Let Munin croak alarm
 =====================
 
-As of Munin 1.2 there is a generic interface for sending warnings
-and errors from Munin. If a Munin plugin discovers that a plugin has
+Munin offers a generic interface for sending warnings and errors.
+If a Munin plugin discovers that a plugin has
 a data source breaching its defined limits, Munin is able to alert
 the administrator either through simple command line invocations
 or through a monitoring system like Nagios or Icinga.
@@ -16,8 +16,6 @@ a limited number of messages at the time, the configuration directive
 
 When sending alerts, you might find good use in the
 :ref:`Munin alert variables <alert_variables>`.
-
-.. note:: Alerts not working? For some versions 1.4 and less, note that having `more than one contact defined <http://munin-monitoring.org/ticket/732>`_ can cause munin-limits to hang.
 
 Sending alerts through Nagios
 =============================
@@ -35,10 +33,8 @@ To send email alerts directly from Munin use a command such as this:
 
 ::
 
- contact.email.command mail -s "Munin-notification for ${var:group} :: ${var:host}" your@email.address.here
+ contact.email.command mail -s "Munin ${var:worst}: ${var:group}::${var:host}::${var:plugin}" your@email.address.here
 
-For an example with explanation please look at
-`Munin alert email notification <http://blog.edseek.com/archives/2006/07/13/munin-alert-email-notification/>`_
 
 Syslog Alert
 ------------
@@ -55,26 +51,17 @@ Alerts to or through external scripts
 
 To run a script (in this example, 'script') from Munin use a command such as this in your munin.conf.
 
+::
+
+ contact.person.command script args...
+
 Make sure that:
 
-#. There is NO space between the '>' and the first 'script'
-#. 'script' is listed twice and
 #. The munin user can find the script -- by either using an absolute path or putting the script somewhere on the PATH -- and has permission to execute the script.
+#. The command is properly quoted and escaped, if necessary. There is some nuance here; specifically, if your command contains any of the characters ``&;`'\"|*?~<>^()[]{}$``, the whole thing will be passed as a single argument to ``sh -c`` for execution, and you need to take into account how the shell will interpret any quotes or special characters. If the command does *not* contain any of those characters, Munin itself (specifically, the perl ``exec()`` function) will split it into words and execute it without passing it through the shell.
 
-::
-
- contact.person.command >script script
-
-This syntax also will work (this time, it doesn't matter if there is a space
-between '|' and the first 'script' ... otherwise, all the above recommendations apply):
-
-::
-
- contact.person.command | script script
-
-Either of the above will pipe all of Munin's warning/critical
-output to the specified script.  Below is an example script
-to handle this input and write it to a file:
+This will pipe all of Munin's warning/critical output to the specified script.
+Below is an example script to handle this input and write it to a file:
 
 ::
 
@@ -87,12 +74,14 @@ to handle this input and write it to a file:
     end
  end
 
-The alerts getting piped into your script will look something like this:
+The alerts getting piped into your script will look something like this (but see "Reformatting the output message" below if you want to customize this):
 
 ::
 
  localhost :: localdomain :: Inode table usage
         CRITICALs: open inodes is 32046.00 (outside range [:6]).
+
+``munin-limits`` will pipe messages to your script until it has sent ``max-messages`` messages, then close the pipe and spawn a new copy of the script for the next batch of messages.
 
 Syntax of warning and critical
 ==============================
@@ -105,6 +94,16 @@ Note that the warning/critical exception is raised
 only if the value is outside the defined value.
 E.g. ``foo.warning 100:200`` will raise a warning only
 if the value is outside the range of 100 to 200.
+A single number is interpreted as the maximum allowed
+value (without a lower limit).
+
+Example limits configuration emitted by a plugin:
+
+::
+
+  foo.label some data
+  foo.warning 0:100
+  foo.critical 150
 
 Reformatting the output message
 ===============================
@@ -117,7 +116,7 @@ Something like:
 
 ::
 
- contact.pipevia.command | /path/to/script /path/to/script \
+ contact.pipevia.command /path/to/script \
     --cmdlineargs="${var:group} ${var:host} ${var:graph_category} '${var:graph_title}'"
 
  contact.pipevia.always_send warning critical
@@ -132,11 +131,11 @@ Something like:
      w="${var:wrange}" c="${var:crange}" extra="${var:extinfo}" /> }\
    </munin>
 
-Calls the script with the command line arguments (as a python list):
+Calls the script with the command line argument:
 
 ::
 
- ['/path/to/script','/path/to/script','--cmdlineargs="example.com', 'test.example.com', 'disk', 'Disk usage in percent', '']
+ --cmdlineargs="example.com test.example.com disk 'Disk usage in percent'"
 
 and the input sent to the script is (whitespace added to break long line):
 
@@ -148,6 +147,14 @@ and the input sent to the script is (whitespace added to break long line):
 
 
 (need for the second ``/path/to/script`` may vary, but this document says it is required)
+
+If you need to insert tabs or newlines into your messages, you can use ``\t`` or ``\n``. This, for example, will output the label and value of each critical field, separated by a tab, one per line:
+
+::
+
+ ${loop:cfields ${var:label}\t${var:value}\n}
+
+Note that this is a special feature of alert messages, not something that will work elsewhere in Munin config files.
 
 If something goes wrong:
 
@@ -203,6 +210,18 @@ These are directly available.
 :Syntax: ``${var:graph_category}``
 :Reference: Plugin's category as declared via config protocol or set in munin.conf.
 
+============
+
+:Variable: **worst**
+:Syntax: ``${var:worst}``
+:Reference: The name of the worst status detected in this run of munin-limits. From best to worst, the statuses are OK, UNKNOWN, WARNING, and CRITICAL.
+
+============
+
+:Variable: **worstid**
+:Syntax: ``${var:worstid}``
+:Reference: A numeric equivalent of **worst**; 0 for OK, 1 for WARNING, 2 for CRITICAL, and 3 for UNKNOWN. Note that this is not the same as the order of severity.
+
 .. _alert_variable_data:
 
 Data source related variables
@@ -245,21 +264,39 @@ Iteration follows the syntax defined in the Perl module `Text::Balanced <http://
 
 ============
 
+:Variable: **ofields**
+:Syntax: ``${var:ofields}``
+:Reference: Space separated list of fieldnames with a value inside the warning range (i.e. "ok" values).
+
+============
+
+:Variable: **fofields**
+:Syntax: ``${var:fofields}``
+:Reference: Space separated list of fieldnames with a value inside the warning range, that were *not* ok the last time munin-limits ran (i.e. "freshly ok" values -- on the next run after this they are merely "ok").
+
+============
+
 :Variable: **wfields**
 :Syntax: ``${var:wfields}``
-:Reference: Space separated list of fieldnames with a value outside the warning range as detected by munin-limit.
+:Reference: Space separated list of fieldnames with a value outside the warning range as detected by munin-limits.
 
 ============
 
 :Variable: **cfields**
 :Syntax: ``${var:cfields}``
-:Reference: Space separated list of fieldnames with a value outside the critical range as detected by munin-limit.
+:Reference: Space separated list of fieldnames with a value outside the critical range as detected by munin-limits.
 
 ============
 
 :Variable: **ufields**
 :Syntax: ``${var:ufields}``
 :Reference: Space separated list of fieldnames with an unknown value as detected by munin-limit.
+
+============
+
+:Variable: **numufields**, **numcfields**, **numwfields**, **numfofields**, **numofields**
+:Syntax: ``${var:numufields}``, etc
+:Reference: The number of fields that are unknown, critical, warning, freshly OK, and OK, respectively.
 
 How variables are expanded
 --------------------------
@@ -268,7 +305,7 @@ The ``${var:value}`` variables get the correct values from munin-limits prior to
 
 Then, the ``${var:*range}`` variables are set from {fieldname}.warning and {fieldname}.critical.
 
-Based on those, ``{fieldname}.label`` occurences where warning or critical levels are breached
+Based on those, ``{fieldname}.label`` occurrences where warning or critical levels are breached
 or unknown are summarized into the ``${var:*fields}`` variables.
 
 .. _alert_variables_example_usage:

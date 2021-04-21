@@ -1,6 +1,4 @@
-#!/usr/bin/perl
-#
-# Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.
+#!/usr/bin/perl -T
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,12 +24,16 @@ use Munin::Common::Defaults;
 use Munin::Node::Configure::PluginList;
 use Munin::Node::Configure::Debug;
 
+use English qw(-no_match_vars);
+
 use Munin::Node::Config;
 my $config = Munin::Node::Config->instance();
 
 my @all_families     = qw/auto manual contrib/;
 my @default_families = qw/auto/;
 
+# Untaint $ENV{PATH}
+$ENV{PATH} = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
 
 sub main
 {
@@ -84,7 +86,6 @@ sub parse_args
 	my $verbose = 0;
 	my $pidebug = 0;
 	my ($suggest, $shell, $removes, $newer);
-	my $exit_not_error = 1;
 	my @families;
 	my (@snmp_hosts, $snmpver, $snmpcomm, $snmpport, $snmpdomain);
     my ($snmp3username, $snmp3authpass, $snmp3authproto, $snmp3privpass, $snmp3privproto);
@@ -94,7 +95,6 @@ sub parse_args
         'version'         => \&print_version_and_exit,
 
         'suggest!'        => \$suggest,
-        'exitnoterror!'   => \$exit_not_error,
         'newer=s'         => \$newer,
 
         'shell!'          => \$shell,
@@ -140,7 +140,8 @@ sub parse_args
     # comma-delimited form
     @snmp_hosts = map { split /,/ } @snmp_hosts;
 
-    my $snmp = init_snmp(
+    my $snmp;
+    $snmp = init_snmp(
         hosts        => \@snmp_hosts,
         version      => $snmpver,
         port         => $snmpport,
@@ -168,7 +169,6 @@ sub parse_args
     $config->reinitialize({
         %$config,
 
-        exit_not_error => $exit_not_error,
         suggest        => $suggest,
 
         shell          => $shell,
@@ -250,6 +250,9 @@ sub gather_suggestions
     $plugins->{library}->prepare_plugin_environment($plugins->names);
 
     foreach my $plugin ($plugins->list) {
+        my $disable_autoconf = $config->{sconf}{$plugin->{name}}{disable_autoconf};
+        next if defined $disable_autoconf && $disable_autoconf;
+
         fetch_plugin_autoconf($plugins, $plugin);
         fetch_plugin_suggestions($plugins, $plugin);
     }
@@ -333,7 +336,15 @@ sub init_snmp
 sub run_plugin
 {
     my ($plugins, $plugin, $mode) = @_;
-    my $name = $plugin->{name};
+
+    # un-taint the plugin name cause it is getting executed
+    my $name;
+    if ($plugin->{name} =~ /^([\w-]+)$/x) {
+        $name = $1;
+    } else {
+        $plugin->log_error("Invalid plugin name '$plugin->{name}'");
+        return;
+    }
 
 	DEBUG("Running '$mode' on $name" );
     my $res = $plugins->{library}->fork_service($name, $mode);
@@ -351,17 +362,20 @@ sub run_plugin
 		# Definitely a bad sign
 		if ($plugin_signal) {
             $plugin->log_error("Died with signal $plugin_signal during $mode");
+            if (my @junk = grep !/^#/, @{ $res->{stderr} }) {
+               $plugin->log_error("Junk printed to stderr");
+               DEBUG("Junk printed to stderr: @junk");
+            }
 			return;
 		}
 		elsif ($plugin_exit) {
             $plugin->log_error("Non-zero exit during $mode ($plugin_exit)");
+            if (my @junk = grep !/^#/, @{ $res->{stderr} }) {
+               $plugin->log_error("Junk printed to stderr");
+               DEBUG("Junk printed to stderr: @junk");
+            }
+            return;
 
-			# Verboten according to the specification, but lots of plugins
-            # still exit(1) it during autoconf.  So making it a non-fatal error
-			# for the time being
-			return unless ($mode eq 'autoconf'
-			           and $plugin_exit == 1
-			           and $config->{exit_not_error});
 		}
 	}
 
@@ -373,8 +387,9 @@ sub run_plugin
 	}
 
     # Ignore debug output
-	my @response = grep !/^#/, @{ $res->{stdout} };
-    $plugin->log_error('Nothing printed to stdout') unless (scalar @response);
+    my @response = grep !/^#/, @{ $res->{stdout} };
+    # Error out on empty response except in suggest mode
+    $plugin->log_error('Nothing printed to stdout') unless (scalar @response || $mode eq 'suggest');
 
     return @response;
 }
@@ -469,7 +484,7 @@ plugins will be printed. These can be reviewed or piped directly into a shell
 to install the plugins.
 
 
-=head1 GENERAL OPTIONS
+=head1 OPTIONS
 
 =over 4
 
@@ -513,10 +528,6 @@ Override plugin configuration directory [@@CONFDIR@@/plugin-conf.d/]
 =item B<< --libdir <dir> >>
 
 Override plugin library [@@LIBDIR@@/plugins/]
-
-=item B<< --exitnoterror >>
-
-Do not consider plugins that exit non-zero exit-value as error.
 
 =item B<< --suggest >>
 
@@ -634,7 +645,7 @@ Username.  There is no default.
 Authentication password.  Optional when encryption is also enabled, in which
 case defaults to the privacy password (C<--snmpprivpass>).
 
-=item B<< --snmpauthprotocol <protocol> >>
+=item B<< --snmpauthproto <protocol> >>
 
 Authentication protocol.  One of 'md5' or 'sha' (HMAC-MD5-96, RFC1321 and
 SHA-1/HMAC-SHA-96, NIST FIPS PIB 180, RFC2264).  ['md5']
@@ -648,7 +659,7 @@ Privacy requires a privprotocol as well as an authprotocol and a authpassword,
 but all of these are defaulted (to 'des', 'md5', and the privpassword value,
 respectively) and may therefore be left unspecified.
 
-=item B<< --snmpprivprotocol <protocol> >>
+=item B<< --snmpprivproto <protocol> >>
 
 If the privpassword is set this setting controls what kind of encryption is
 used to achieve privacy in the session.  Only the very weak 'des' encryption
@@ -672,20 +683,13 @@ not this works with any particular device, we do not know.
 
 This is munin-node-configure (munin-node) v@@VERSION@@.
 
-
 =head1 AUTHORS
 
-Jimmy Olsen, Nicolai Langfeldt, Matthew Boyle
-
-=head1 BUGS
-
-Please see L<http://munin-monitoring.org/report/1>.
+  Copyright (C) 2009-2010 Matthew Boyle
+  Copyright (C) 2006 Nicolai Langfeldt
+  Copyright (C) 2003-2005 Jimmy Olsen
 
 =head1 COPYRIGHT
-
-Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.
-
-Copyright (C) 2009-2010 Matthew Boyle
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

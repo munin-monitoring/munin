@@ -21,7 +21,12 @@ public class MemoryAllocatedTotal extends AbstractMemoryUsageProvider {
 		long totalInit = heap.getInit()+nonHeap.getInit();
 		long totalUsed = heap.getUsed() + nonHeap.getUsed();
 		long totalCommitted = heap.getCommitted()+nonHeap.getCommitted();
-		long totalMax = heap.getMax()+nonHeap.getMax();
+		long totalMax = heap.getMax();
+		if (nonHeap.getMax() == -1) {
+			totalMax += nonHeap.getCommitted();
+		} else {
+			totalMax += nonHeap.getMax();
+		}
 		memoryUsage = new MemoryUsage(totalInit, totalUsed, totalCommitted, totalMax);
 	}
 

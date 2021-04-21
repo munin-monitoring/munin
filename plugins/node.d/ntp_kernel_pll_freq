@@ -22,10 +22,6 @@ Unknown author
 
 GPLv2
 
-=head1 BUGS
-
-Handling of $fcomp is unquoted, and may cause trouble.
-
 =head1 MAGIC MARKERS
 
  #%# family=auto
@@ -41,12 +37,12 @@ if [ "$1" = "autoconf" ]; then
     { ntpq -c kerninfo; ntpdc -c kerninfo; } 2>/dev/null |
     awk 'BEGIN { ev=1; }
          /^pll frequency:/ { ev=0; }
-         END { if (ev == 0) { print "yes";} else { print "no"; } exit ev; }'
+         END { if (ev == 0) { print "yes";} else { print "no (command ntpq or ntpdc not found)"; } exit 0; }'
     exit 0
 fi
 
 if [ -f /etc/munin/ntp-freq-comp ]; then
-    fcomp=`cat /etc/munin/ntp-freq-comp`
+    fcomp=$(cat "/etc/munin/ntp-freq-comp")
 else
     fcomp=0
 fi
@@ -64,11 +60,12 @@ fi
 
 printf 'ntp_pll_freq.value '
 
-if [ $(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.') -ge 427 ]
-then
-    cmd=ntpq
-else
+ntpq_name=$(ntpq -c version | sed 's/[^[:alpha:]].*//')
+ntpq_version=$(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]')
+if [ "$ntpq_name" = "ntpq" ] && [ "$(echo "$ntpq_version" | tr -d '.')" -lt 427 ]; then
     cmd=ntpdc
+else
+    cmd=ntpq
 fi
 
-$cmd -c kerninfo | awk -v fcomp=$fcomp '/^pll frequency:/ { print $3 + fcomp }'
+"$cmd" -c kerninfo | awk -v "fcomp=$fcomp" '/^pll frequency:/ { printf("%.9f\n", $3 + fcomp) }'

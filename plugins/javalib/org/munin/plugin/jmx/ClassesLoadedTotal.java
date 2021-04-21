@@ -21,7 +21,7 @@ public class ClassesLoadedTotal extends AbstractAnnotationGraphsProvider {
 						ClassLoadingMXBean.class);
 		return classmxbean.getTotalLoadedClassCount();
 	}
-	
+
 	public static void main(String[] args) {
 		runGraph(args);
 	}

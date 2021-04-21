@@ -78,6 +78,7 @@ if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
 	print "graph_title UPS Misc - $config{upsname}\n";
 	#print "graph_args -l 110\n";
 	#print "graph_vlabel Misc\n";
+	print "graph_category sensors\n"
 	foreach my $key (keys %graph) {
 		print "$key.label $graph{$key}->{label}\n";
 		print "$key.type $graph{$key}->{type}\n";

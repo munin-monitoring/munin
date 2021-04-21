@@ -11,8 +11,8 @@ information.
 
 =head1 AUTHOR
 
-Copyright (C) 2004 Jimmy Olsen
-Copyright (C) 2012 Diego Elio Pettenò.
+  Copyright (C) 2004 Jimmy Olsen
+  Copyright (C) 2012 Diego Elio Pettenò
 
 =head1 LICENSE
 
@@ -169,7 +169,7 @@ graph_category disk
 graph_info This graph shows partition usage in percent.
 END
 
-  foreach my $part (keys %partitions) {
+  foreach my $part (sort(keys %partitions)) {
     my $partname = get_name_by_mp($part);
     my $partinfo = $partitions{$part}{extinfo} || $part;
 

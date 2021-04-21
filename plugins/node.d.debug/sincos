@@ -1,0 +1,26 @@
+#! /usr/bin/perl
+# Sample plugin that draw a sine & a cos
+# - used for spooling debugging
+
+if ($ARGV[0] eq "config") {
+        print "graph_title Trigo plugin\n";
+        print "graph_vlabel unit\n";
+        print "graph_category debug\n";
+        print "update_rate 1\n";
+        print "graph_data_size custom 1t, 10s for 1y\n";
+        print "sin.label Sine\n";
+        print "cos.label Cosine\n";
+
+        exit 0;
+}
+
+
+my $epoch = time;
+
+for (my $i = $epoch - 5; $i < $epoch; $i += 1) {
+   print "sin.value $i:". sin($i / 3600). "\n";
+}
+
+for (my $i = $epoch - 5; $i < $epoch; $i += 1) {
+   print "cos.value $i:". cos($i / 3600). "\n";
+}

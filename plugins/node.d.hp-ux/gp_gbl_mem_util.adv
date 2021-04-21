@@ -1,4 +1,4 @@
-if (gbl_interval > 2) then 
+if (gbl_interval > 2) then
 {
     print "mem_util.value ",gbl_mem_util|6|2
     print "mem_user.value ",gbl_mem_user_util|6|2

@@ -37,7 +37,7 @@ public class MemoryPoolUsageProvider extends AbstractMemoryUsageProvider {
 		String graphVlabel = "bytes";
 		String graphArgs = "--base 1024 -l 0";
 		String graphInfo = usagePhrase + "memory usage of the " + name + " memory pool";
-		
+
 		printGraphConfig(out, graphTitle, graphVlabel, graphInfo, graphArgs, true, true);
 	}
 

@@ -106,7 +106,7 @@ node will still run in the background.
 
 The ``contrib`` directory contains a daemon used for simulating a lot
 of munin nodes.  This step is optional.  First output a number of node
-definition to the munin configuration, and then run the daemon in the
+definitions to the munin configuration, and then run the daemon in the
 background.
 
 .. code-block:: bash
@@ -126,6 +126,27 @@ The munin httpd listens on http://localhost:4948/ by default.
 .. code-block:: bash
 
    dev_scripts/run munin-httpd
+
+.. _sandbox_plugin_wrapper:
+
+Run plugins in a sandbox
+========================
+
+Very simple plugins can be executed directly.  Other plugins may require
+additional environment settings (e.g. for storing the plugin state or
+for :ref:`sourcing the shell helpers <develop-shell-plugins>`). Testing a
+symlink configuration also requires a bit of manual preparation.
+
+Many non-trivial situations can be simplified with the sandbox plugin
+wrapper ``dev_scripts/plugin``:
+
+.. code-block:: bash
+
+   dev_scripts/plugin run ./my_foo_plugin
+   dev_scripts/plugin run if_ suggest
+   dev_scripts/plugin run_as if_eth0 if_
+   MUNIN_CAP_MULTIGRAPH=1 dev_scripts/plugin run diskstats config
+   MUNIN_CAP_DIRTYCONFIG=1 dev_scripts/plugin run df
 
 Start hacking
 =============

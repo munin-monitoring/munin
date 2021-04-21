@@ -9,11 +9,11 @@ external_ - Plugin that enables delegation of config and fetch
 =head1 CONFIGURATION
 
 [external_*]
-# "config" is the output of "$plugin config"
+# "config" is the file containing the output of "PLUGIN config"
 # default is /dev/null
 env.config /var/run/my_plugin.config
 
-# "fetch" is the output of "$plugin"
+# "fetch" is the file containing the output of "PLUGIN"
 # default is /dev/null
 env.fetch /var/run/my_plugin.fetch
 
@@ -40,18 +40,26 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+
+# shellcheck disable=SC1090
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
+
+config=${config:-/dev/null}
+fetch=${fetch:-/dev/null}
+on_config=${on_config:-nothing}
+on_fetch=${on_fetch:-nothing}
+
 
 if [ "$1" = "config" ]; then
-	cat ${config}
+	cat "$config"
 
 	# Handling HOOK
-	case ${on_config} in
+	case "$on_config" in
 		unlink)
-			rm -f ${config}
+			rm -f "$config"
 			;;
 		truncate)
-			> ${config}
+			true >"$config"
 			;;
 		*)
 			# Do nothing
@@ -60,15 +68,15 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-cat ${fetch}
+cat "$fetch"
 
 # Handling HOOK
-case ${on_fetch} in
+case "$on_fetch" in
 	unlink)
-		rm -f ${fetch}
+		rm -f "$fetch"
 		;;
 	truncate)
-		> ${fetch}
+		true >"$fetch"
 		;;
 	*)
 		# Do nothing

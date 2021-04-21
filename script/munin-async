@@ -20,6 +20,7 @@
 use strict;
 use warnings;
 
+use English qw(-no_match_vars);
 use Sys::Hostname;
 use Data::Dumper;
 use Getopt::Long;
@@ -32,7 +33,7 @@ use Munin::Common::Logger;
 use Munin::Common::Utils qw( is_valid_hostname );
 
 # Disable buffering
-$| = 1;
+$OUTPUT_AUTOFLUSH = 1;
 
 my $SPOOLDIR = $Munin::Common::Defaults::MUNIN_SPOOLDIR;
 my $hostname;
@@ -87,8 +88,8 @@ if ( $verbose || $debug || $screen ) {
     Munin::Common::Logger::configure(%log);
 }
 
-# Use STDIN/STDOUT, in order to be : 
-# 1. secure over internet (SSH), munin-node needs only 
+# Use STDIN/STDOUT, in order to be:
+# 1. secure over internet (SSH), munin-node needs only
 #    to listen on localhost:4949
 # 2. very simple to launch
 
@@ -115,7 +116,7 @@ while (my $line = <>) {
 
 		# XXX - Vector-fetching is disabled for now
 		print ".\n";
-	} elsif ($line =~ m/^spoolfetch (\d+)/) {
+	} elsif ($line =~ m/^spoolfetch (-?\d+)/) {
 		my $last_epoch = $1;
 		print $spoolreader->fetch($last_epoch);
 		print ".\n";
@@ -138,19 +139,6 @@ sub cleanup {
 	$spoolwriter->cleanup();
 }
 
-sub cat_file {
-	my $filename = shift;
-	return if ! -r $filename;
-	
-	open(FILE, "$filename");
-	while(<FILE>) { 
-		# remove line starting with .
-		next if m/^\./;
-		print $_; 
-	}
-	close(FILE);
-}
-
 __END__
 
 =head1 NAME
@@ -169,11 +157,11 @@ munin-async [options]
 
      --spoolfetch               Enables the "spool" capability [no]
      --vectorfetch              Enables the "vectorized" fetching capability [no]
-                                  Note that without this flag, the "fetch" 
+                                  Note that without this flag, the "fetch"
 				  command is disabled.
 
      --screen                   Log to screen instead of syslog
      --debug                    Log debug messages
      -v --verbose               Be verbose
-     -h --help                  View this message	
+     -h --help                  View this message
 

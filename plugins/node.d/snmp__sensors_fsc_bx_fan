@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 =head1 AUTHOR
 
-Copyright (C) 2004 Dagfinn Ilmari Mannsaaker
+  Copyright (C) 2004 Dagfinn Ilmari Mannsåker
 
 =head1 MAGIC MARKERS
 
@@ -96,7 +96,7 @@ EOM
     print 'graph_order ', join(' ', map { get_id($_) } oid_lex_sort keys %$fans), "\n";
     print 'host_name ', $session->hostname(), "\n"
       unless $session->hostname eq 'localhost';
-      
+
     for my $fan (keys %$fans) {
 	my $id = get_id($fan);
 	for my $key (qw(label warning)) {

@@ -16,9 +16,10 @@ The following environment variables are used
 
 =encoding UTF-8
 
-Copyright (C) 2011 Erik Inge Bolsø, Redpill Linpro AS for OSL
+  Copyright (C) 2011 Erik Inge Bolsø, Redpill Linpro AS
+  Copyright (C) 2004 Jimmy Olsen
 
-Based on snmp__df (C) 2004 Jimmy Olsen 
+Based on snmp__df (C) 2004 Jimmy Olsen
 
 =head1 LICENSE
 
@@ -114,7 +115,7 @@ my @keep = ();
 
 foreach my $id (keys %$correct_capacity)
 {
-	if (exists $correct_type->{$id} and 
+	if (exists $correct_type->{$id} and
 	    exists $correct_removable->{$id})
 	{
 	    push (@keep, $id);
@@ -161,7 +162,7 @@ if ($foundpartitions == 0 or defined $partitions{""})
 		$partitions{$spart}{extinfo} = $part;
 		$stor_id->{$id} = $spart;
 	}
-} else 
+} else
 { # Get the ones we're sure about
 
 	$stor_id   = get_by_regex ($session, $hrStorageDesc, '(^'.join('$|^',keys(%partitions)).'$)');
@@ -176,7 +177,7 @@ if (defined $ARGV[0] and $ARGV[0] eq "config")
 	print "graph_category system\n";
 	print "graph_info This graph shows memory usage in percent.\n";
 
-	foreach my $part (keys %partitions)
+	foreach my $part (sort(keys %partitions))
 	{
 		print (&get_name_by_mp ($part), ".label ");
 		print (length($part)<=$MAXLABEL ? $part : "...".substr($part,-($MAXLABEL-3)));
@@ -197,7 +198,8 @@ foreach my $storage (keys %$stor_id)
 
 foreach my $part (keys %partitions)
 {
-    print (&get_name_by_mp ($part), ".value ", ($partitions{$part}{used}*100/$partitions{$part}{size}), "\n");
+    print &get_name_by_mp ($part), ".value ", ($partitions{$part}{used}*100/$partitions{$part}{size}), "\n"
+      if (defined $partitions{$part}{used} && $partitions{$part}{size});
 }
 
 sub get_single

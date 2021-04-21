@@ -1,6 +1,7 @@
 #!/bin/sh
 # System statistics for FreeBSD
-# Author: Gergely Czuczy <phoemix@harmless.hu>
+#
+# Copyright: Gergely Czuczy <phoemix@harmless.hu>
 #
 # Define the environment variable "logarithmic" in plugins.conf to
 # make graphs with logarithmic scale. Default is linear scale.

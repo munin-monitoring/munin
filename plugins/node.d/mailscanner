@@ -54,6 +54,7 @@ if ($cmd eq 'config') {
 	print("graph_title MailScanner statistics\n");
 	print("graph_args --lower-limit 0\n");
 	print("graph_vlabel messages\n");
+	print("graph_category spamfilter\n");
 	print("clean.label clean\n");
 	print("clean.type GAUGE\n");
 	print("clean.draw LINE2\n");

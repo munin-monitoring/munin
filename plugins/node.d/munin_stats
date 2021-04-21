@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (C) 2006-2009 Rodolphe Quiedeville <rodolphe@quiedeville.org>
+# Copyright (C) 2006-2009 Rodolphe Quiédeville <rodolphe@quiedeville.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,13 +24,18 @@
 use strict;
 use warnings;
 
-use File::ReadBackwards;
-
 use Munin::Plugin;
+
+
+my $missing_module = undef;
+$missing_module = "File::ReadBackwards" unless (eval "require File::ReadBackwards");
 
 my @logs = qw/update graph html limits/;
 my $logdir = ($ENV{'logdir'} || $ENV{'MUNIN_LOGDIR'} || '/var/log/munin');
 
+if ($ENV{'fields'}) {
+	@logs = split(/ +/, $ENV{'fields'});
+}
 
 sub uses_graph_cron {
     my $log_file = $_[0];
@@ -54,17 +59,14 @@ if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
 
     if (! -e $munin_update_location) {
         print "no (munin-update was not found at $munin_update_location)\n";
-        exit 0;
-   }
-
-   if (! -x $munin_update_location) {
+    } elsif (! -x $munin_update_location) {
         print "no ($munin_update_location was found, but is not executable)\n";
-        exit 0;
-   }
-   else {
+    } elsif (defined($missing_module)) {
+        print "no (missing Perl module: '$missing_module')\n";
+    } else {
         print "yes\n";
-        exit 0;
-   }
+    }
+    exit 0;
 }
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
@@ -74,23 +76,20 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
           "graph_scale yes\n",
           "graph_vlabel seconds\n",
           "graph_category munin\n";
-    my $print_graph = 1;
     foreach my $log (@logs) {
-        if ($log eq "graph") {
-            $print_graph = uses_graph_cron("$logdir/munin-$log.log");
-        }
-        if ($log ne "graph" || $print_graph) {
-            print "$log.label munin $log\n";
-            print "$log.draw AREASTACK\n";
-        }
-    }
-    print "update.warning 240\n";
-    print "update.critical 285\n";
-    if ($print_graph) {
-        print "graph.warning 240\n";
-        print "graph.critical 285\n";
+        print "$log.label munin $log\n";
+	print "$log.draw AREASTACK\n";
+
+	next unless $log eq "update" || $log eq "graph";
+
+        print_thresholds("$log", undef, undef, 240, 285);
     }
     exit 0;
+}
+
+
+if (defined($missing_module)) {
+    die "Failed to run due to missing Perl module '$missing_module'";
 }
 
 foreach my $log (@logs) {

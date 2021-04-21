@@ -172,7 +172,7 @@ For further reading on SNMP v3 security models please consult RFC3414 and the do
    Authentication password. Optional when encryption is also enabled, in which case defaults to the
    privacy password ("--snmpprivpass").
 
-.. option:: --snmpauthprotocol <protocol>
+.. option:: --snmpauthproto <protocol>
 
    Authentication protocol. One of 'md5' or 'sha' (HMAC-MD5-96, RFC1321 and SHA-1/HMAC-SHA-96, NIST
    FIPS PIB 180, RFC2264). ['md5']
@@ -186,7 +186,7 @@ For further reading on SNMP v3 security models please consult RFC3414 and the do
    are defaulted (to 'des', 'md5', and the privpassword value, respectively) and may therefore be
    left unspecified.
 
-.. option:: --snmpprivprotocol <protocol>
+.. option:: --snmpprivproto <protocol>
 
    If the privpassword is set this setting controls what kind of encryption is used to achieve
    privacy in the session. Only the very weak 'des' encryption method is supported officially.

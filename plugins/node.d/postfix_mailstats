@@ -51,7 +51,6 @@ use Munin::Plugin;
 
 my $pos;
 my $delivered;
-my $rejects = ();
 my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
 my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.log');
 
@@ -61,8 +60,8 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
 {
     if (-d $LOGDIR)
     {
-	if (-f $logfile)
-	{
+        if (-f $logfile)
+        {
             if (-r $logfile)
             {
                 print "yes\n";
@@ -72,11 +71,11 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
             {
                 print "no (logfile '$logfile' not readable)\n";
             }
-	}
-	else
-	{
-	    print "no (logfile '$logfile' not found)\n";
-	}
+        }
+        else
+        {
+            print "no (logfile '$logfile' not found)\n";
+        }
     }
     else
     {
@@ -99,9 +98,10 @@ my %rejects = @state;
 if (! -f $logfile)
 {
     print "delivered.value U\n";
-    foreach my $i (sort keys %rejects)
+    foreach my $reason (sort keys %rejects)
     {
-    	print "r$i.value U\n";
+        my $fieldname = clean_fieldname("r$reason");
+        print "$fieldname.value U\n";
     }
     exit 0;
 }
@@ -130,31 +130,33 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "delivered.type DERIVE\n";
     print "delivered.draw AREA\n";
     print "delivered.min 0\n";
-    foreach my $i (sort keys %rejects)
+    foreach my $reason (sort keys %rejects)
     {
-	    print "r$i.label reject $i\n";
-	    print "r$i.type DERIVE\n";
-	    print "r$i.draw STACK\n";
-	    print "r$i.min 0\n";
+        my $fieldname = clean_fieldname("r$reason");
+        print "$fieldname.label reject $reason\n";
+        print "$fieldname.type DERIVE\n";
+        print "$fieldname.draw STACK\n";
+        print "$fieldname.min 0\n";
     }
     exit 0;
 }
 
 print "delivered.value $delivered\n";
-foreach my $i (sort keys %rejects)
+foreach my $reason (sort keys %rejects)
 {
-	print "r$i.value ", $rejects{$i}, "\n";
+    my $fieldname = clean_fieldname("r$reason");
+    print "$fieldname.value ", $rejects{$reason}, "\n";
 }
 
 save_state($pos, $delivered, %rejects);
 
-sub parseLogfile 
-{    
+sub parseLogfile
+{
     my ($fname, $start, $stop) = @_;
 
 	my ($logfd, $reset) = tail_open($fname, $start);
 
-    while (tell($logfd) < $stop) 
+    while (tell($logfd) < $stop)
     {
 	my $line = <$logfd>;
 	chomp ($line);
@@ -162,11 +164,12 @@ sub parseLogfile
 	if ($line =~ / to=.*, status=sent /)
 	{
 	    $delivered++;
-	} 
+	}
 	elsif ($line =~ /postfix\/smtpd.*proxy-reject: \S+ (\S+)/ ||
 	       $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
 	       $line =~ /postfix\/postscreen.*reject: \S+ \S+ \S+ (\S+)/ ||
-	       $line =~ /postfix\/cleanup.* reject: (\S+)/)
+	       $line =~ /postfix\/cleanup.* reject: (\S+)/ ||
+	       $line =~ /postfix\/cleanup.* milter-reject: \S+ \S+ \S+ (\S+)/)
 	{
 	    $rejects{$1}++;
 	}

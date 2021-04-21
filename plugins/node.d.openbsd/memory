@@ -75,7 +75,7 @@ if [ "$1" = "config" ]; then
 	echo 'free.label free'
 	echo 'free.info pages without data content'
 	echo 'free.draw STACK'
-	
+
 	echo 'swap.label swap'
         echo 'swap.info total used swap'
         echo 'swap.draw STACK'

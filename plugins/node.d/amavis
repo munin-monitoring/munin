@@ -52,9 +52,9 @@ This is the default configuration:
 
 =head1 INTERPRETATION
 
-The plugin shows "probable spam", "surley spam" and "virus".  If your
+The plugin shows "probable spam", "surely spam" and "virus".  If your
 "probable spam" raises you may need to tune your spam configuration to
-classify more spam as "surley spam" and so be able to eliminate it.
+classify more spam as "surely spam" and so be able to eliminate it.
 
 =head1 MAGIC MARKERS
 
@@ -78,25 +78,30 @@ GPLv2
 =cut
 
 AMAVIS_LOG=${amavislog:-/var/log/mail/mail.info}
-LOGTAIL=${logtail:-logtail}
+LOGTAIL=${logtail:-$(command -v logtail)}
 STATEFILE=$MUNIN_PLUGSTATE/amavis.offset
 mktemp_command="${mktemp_command:-/bin/mktemp}"
 
 if [ "$1" = "autoconf" ]; then
-        if [ -f "${AMAVIS_LOG}" -a -n "${LOGTAIL}" -a -x "${LOGTAIL}" ] ; then
-		echo yes
-		exit 0
+	if [ ! -f "$AMAVIS_LOG" ]; then
+		echo "no (file '$AMAVIS_LOG' not found)"
+	elif [ -z "$LOGTAIL" ]; then
+		echo "no (executable 'logtail' not found)"
+	elif [ ! -x "$LOGTAIL" ]; then
+		echo "no ('$LOGTAIL' is not executable)"
+	elif ! { command -v amavisd-new || command -v amavisd; } >/dev/null; then
+		echo "no (exeuctable 'amavisd' or 'amavisd-new' not found)"
 	else
-		echo no
-		exit 0
+		echo yes
 	fi
+	exit 0
 fi
 
 # Try tailing a random file to check how arguments are passed
 ARGS=0
-`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
+"$LOGTAIL" /etc/hosts 2>/dev/null >/dev/null
 if [ $? = 66 ]; then
-    if [ ! -n "$logtail" ]; then
+    if [ -z "$logtail" ]; then
 	ARGS=1
     fi
 fi
@@ -124,22 +129,19 @@ spams=U
 TEMP_FILE=$($mktemp_command) || exit 73
 trap 'rm -f "$TEMP_FILE"' EXIT
 
-if [ -n "$TEMP_FILE" -a -f "$TEMP_FILE" ]
-then
-	if [ $ARGS != 0 ]; then
-	    $LOGTAIL -f ${AMAVIS_LOG} -o ${STATEFILE} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
+if [ -n "$TEMP_FILE" ] && [ -f "$TEMP_FILE" ]; then
+	if [ "$ARGS" != 0 ]; then
+	    "$LOGTAIL" -f "${AMAVIS_LOG}" -o "${STATEFILE}" | grep 'amavis\[.*\]:' > "${TEMP_FILE}"
 	else
-	    $LOGTAIL ${AMAVIS_LOG} ${STATEFILE} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
+	    "$LOGTAIL" "${AMAVIS_LOG}" "${STATEFILE}" | grep 'amavis\[.*\]:' > "${TEMP_FILE}"
 	fi
-	total=$(grep -c 'Hits:' ${TEMP_FILE})
-	virus=$(grep -c 'INFECTED.*Hits:' ${TEMP_FILE})
-	spamm=$(grep -c 'SPAMMY.*Hits:' ${TEMP_FILE})
-	spams=$(grep -c 'SPAM .*Hits:' ${TEMP_FILE})
-
+	total=$(grep -c 'Hits:' "$TEMP_FILE")
+	virus=$(grep -c 'INFECTED.*Hits:' "$TEMP_FILE")
+	spamm=$(grep -c 'SPAMMY.*Hits:' "$TEMP_FILE")
+	spams=$(grep -c 'SPAM .*Hits:' "$TEMP_FILE")
 fi
 
 echo "virus.value ${virus}"
 echo "spam_maybe.value ${spamm}"
 echo "spam_sure.value ${spams}"
 echo "total.value ${total}"
-

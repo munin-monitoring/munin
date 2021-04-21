@@ -78,8 +78,8 @@ Recommended: If you have systemd or upstart installed, use the examples below.
 * :ref:`example-rrdcached-upstart`
 * :ref:`example-rrdcached-systemd`
 
-Configuring munin to use  rrdcached
-===================================
+Configuring munin to use rrdcached
+==================================
 
 To enable rrdcached on the munin master, you will need to set the
 "rrdcached_socket" line in /etc/munin/munin.conf
@@ -123,3 +123,8 @@ munin-update until it hits the flush time. The file looks like:
 For a munin master with 200 nodes, this could well grow to 100MiB,
 depending on the number of plugins, and the spool file time
 parameters.
+
+Monitoring rrdcached
+====================
+
+Munin plugins to monitor ``rrdcached`` are in the distribution. You can download them also from our repository `plugin for stable 2.0 <https://github.com/munin-monitoring/munin/blob/stable-2.0/plugins/node.d.debug/rrdcached.in>`_ and `plugin from master branch <https://github.com/munin-monitoring/munin/blob/master/plugins/node.d.debug/rrdcached>`_ You need to :ref:`configure your munin-node <plugin-conf.d>` to run this plugin as group rrdcached.

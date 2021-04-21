@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/bin/sh
+
+set -eu
 
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 . "${FINDBIN}/common.sh"
 
-echo -e "$*\nquit" | nc localhost "$MUNIN_NODE_PORT"
+printf '%s\nquit\n' "$*" | nc localhost "$MUNIN_NODE_PORT"

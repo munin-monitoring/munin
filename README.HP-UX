@@ -1,5 +1,5 @@
 There is a somewhat ragged set of contributed HP-UX specific plugins
-requiering various licenses.  We hope for further contributions to
+requiring various licenses.  We hope for further contributions to
 make the HP-UX support more complete.
 
 Please note that Makefile.config needs editing almost at the very end

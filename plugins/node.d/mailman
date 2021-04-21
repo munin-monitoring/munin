@@ -54,12 +54,13 @@ elsif (-f "$logfile.01")
 }
 else
 {
-    $rotlogfile = $logfile . ".0";
+    $rotlogfile = undef;
 }
 
 if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Mailman usage\n";
     print "graph_args --base 1000\n";
+    print "graph_category mailinglist\n";
     print "posts.label posts per minute\n";
     print "posts.type DERIVE\n";
     print "posts.min 0\n";
@@ -72,15 +73,14 @@ if($ARGV[0] and $ARGV[0] eq "autoconf") {
     if(-f $logfile && -d $libdir && -x $lister ) {
         print "yes\n";
     } else {
-        print "no\n";
+        print "no (can not find file $logfile or dir $libdir or executable $lister)\n";
     }
     exit 0;
 }
 
 if(! -f $logfile &&
    ! -d $libdir &&
-   ! -x $lister &&
-   ! -f $rotlogfile) {
+   ! -x $lister) {
     print "posts.value U\n";
     print "posts.extinfo Can't find any log files\n";
     print "members.value U\n";
@@ -103,7 +103,9 @@ if(!defined $pos) {
     $startsize = 0;
 } elsif($startsize < $pos) {
     # Log rotated
-    parseMailmanLog($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    if(defined $rotlogfile) {
+	parseMailmanLog($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    }
     $pos = 0;
 }
 
@@ -147,7 +149,7 @@ sub mailmanDomains {
     if (-e "$libdir/data") {
 	@domains = (".");
     } else {
-	opendir(DOMAINS, $libdir) or 
+	opendir(DOMAINS, $libdir) or
 	    die "Can't open directory $libdir for reading: $!";
 	@domains = grep ( { !/^\@/ && !/^\./ && -d "$libdir/$_" }
 			  readdir(DOMAINS) );
@@ -160,7 +162,7 @@ sub mailmanLists {
     my ($domain) = @_;
     opendir(LISTS, "$libdir/$domain/lists") or
 	die "Can't open directory $libdir/$domain/lists for reading: $!";
-    my @lists = grep ( { !/^\@/ && !/^\./ && -d "$libdir/$domain/lists/$_" } 
+    my @lists = grep ( { !/^\@/ && !/^\./ && -d "$libdir/$domain/lists/$_" }
 		       readdir(LISTS) );
     closedir(LISTS);
     return @lists;

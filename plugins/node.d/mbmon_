@@ -1,43 +1,76 @@
 #!/bin/sh
-#
-# Plugin to monitor Motherboard temparature using mbmon
-#  (http://www.nt.phys.kyushu-u.ac.jp/shimizu/download/download.html)
 
-# Copyright (c) 2005 Arne Schwabe
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms are freely
-# permitted provided that the above copyright notice and this
-# paragraph and the following disclaimer are duplicated in all
-# such forms.
-#
-# This software is provided "AS IS" and without any express or
-# implied warranties, including, without limitation, the implied
-# warranties of merchantability and fitness for a particular
-# purpose.
-#
+: <<=cut
+
+=head1 NAME
+
+mbmon_ - monitor motherboard temparature using mbmon
+
+=head1 APPLICABLE SYSTEMS
+
+The software "mbmon" is required:
+ http://www.nt.phys.kyushu-u.ac.jp/shimizu/download/download.html
+
+=head1 CONFIGURATION
+
+The following details can be configured (e.g. below /etc/munin/plugin-conf.d/):
+  [mbmon_*]
+  env.mbmon /usr/local/bin/mbmon
+  env.mbmonargs -I -pit87
+
+Parameters
+  mbmonpath  - path to the mbmon program (default: automatic detection)
+  mbmonargs  - additional arguments given to mbmon
+
+=head1 AUTHOR
+
+Copyright (c) 2005 Arne Schwabe
+
+All rights reserved.
+
+=head1 LICENSE
+
+Redistribution and use in source and binary forms are freely
+permitted provided that the above copyright notice and this
+paragraph and the following disclaimer are duplicated in all
+such forms.
+
+This software is provided "AS IS" and without any express or
+implied warranties, including, without limitation, the implied
+warranties of merchantability and fitness for a particular
+purpose.
+
+=cut
+
 
 #%# family=contrib
 #%# capabilities=autoconf suggest
 
-what=`basename $0 | sed 's/^mbmon_//g'`
+what=$(basename "$0" | sed 's/^mbmon_//g')
+mbmon=${mbmon:-$(command -v mbmon)}
+mbmonargs=${mbmonargs:-}
+
+
+run_mbmon() {
+	# shellcheck disable=SC2086
+	"$mbmon" -c 1 -r $mbmonargs
+}
+
 
 if [ "$1" = "suggest" ]; then
-	printf "TEMP\nFAN\nVoltage\n"
+	echo 'TEMP'
+	echo 'FAN'
+	echo 'Voltage'
 	exit 0
 fi
 
 if [ "$1" = "autoconf" ]; then
-	if $mbmon -c 1 > /dev/null 2>/dev/null ; then
-		printf "yes\n"
-		exit 0
+	if [ -z "$mbmon" ] || [ ! -x "$mbmon" ]; then
+		echo "no (executable 'mbmon' not found)"
+	elif "$mbmon" -c 1 > /dev/null 2>/dev/null; then
+		echo "yes"
 	else
-		if [ $?=127 ] ;then
-			echo "no (executable not found)"
-		else
-			echo "no (mbmon could not read sensor values)"
-		fi
-		exit 0
+		echo "no (mbmon could not read sensor values)"
 	fi
 	exit 0
 fi
@@ -74,7 +107,7 @@ case $what in
 		;;
 	FAN)
 		echo 'graph_title Motherboard Fans'
-		echo 'graph_category sensors' 
+		echo 'graph_category sensors'
 		echo 'graph_order FAN0 FAN1 FAN2'
 		echo 'graph_vlabel rpm'
 		echo 'FAN0.label Fan 1'
@@ -87,19 +120,15 @@ fi
 
 case $what in
 	TEMP)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep TEMP
+		run_mbmon | sed -e "s/ *: */.value /" | grep TEMP
 		exit 0
 		;;
 	Voltage)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep V
+		run_mbmon | sed -e "s/ *: */.value /" | grep V
 		exit 0
 		;;
 	FAN)
-		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep FAN
+		run_mbmon | sed -e "s/ *: */.value /" | grep FAN
 		exit 0
 		;;
 esac
-
-
-
-

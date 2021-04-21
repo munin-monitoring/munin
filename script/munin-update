@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -T
 
 use warnings;
 use strict;
@@ -29,13 +29,15 @@ sub main {
 
     configure();
 
-    if ( $config->{debug} || $config->{screen} || $config->{verbose} ) {
-        my %log;
-        $log{output} = 'screen' if $config->{screen};
-        $log{level}  = 'info'   if $config->{verbose};
-        $log{level}  = 'debug'  if $config->{debug};
-        Munin::Common::Logger::configure(%log);
-    }
+    my %log = (
+        output => $config->{logoutput},
+        logdir => $config->{logdir},
+    );
+    $log{output} = 'screen' if $config->{screen};
+    $log{level}  = 'info'   if $config->{verbose};
+    $log{level}  = 'debug'  if $config->{debug};
+
+    Munin::Common::Logger::configure(%log);
 
     my $update = Munin::Master::Update->new();
     $update->run();
@@ -59,6 +61,7 @@ sub configure {
 	my @files = grep { ! /^\.|~$/ } readdir($DIR);
 	closedir($DIR);
 
+	## no critic qw(ControlStructures::ProhibitMutatingListFunctions)
 	@files = map { $_ = $dirname.'/'.$_; } (sort @files);
 
 	foreach my $f (@files) {
@@ -82,7 +85,7 @@ sub parse_args {
     );
 
     GetOptions (
-        \%args, 
+        \%args,
         "config|config_file=s",
         "debug",
         "verbose",
@@ -93,6 +96,12 @@ sub parse_args {
         "timeout=s",
         "version!",
     ) or pod2usage(1);
+
+    # We let the call shoot himself in the foot with cli args
+    my $config_file = $args{config_file};
+    if ($config_file) {
+        $args{config_file} = $1 if $config_file =~ m/(.*)/;
+    }
 
     delete $args{version};
 
@@ -216,14 +225,15 @@ ticket report>.
 Please report bugs in the bug tracker at L<http://munin-monitoring.org/>.
 
 
-=head1 AUTHORS
+=head1 AUTHOR
 
-The Munin Team. FIX
+  Copyright (C) 2009 Nicolai Langfeldt
+  Copyright (C) 2009 Kjell-Magne Øierud
+  Copyright (C) Audun Ytterdal
+  Copyright (C) Jimmy Olsen
+  Copyright (C) Tore Andersson
 
-
-=head1 COPYRIGHT
-
-Copyright © 2002-2009 Jimmy Olsen, Audun Ytterdal, Tore Andersson, Kjell-Magne Øierud, Linpro AS, Redpill Linpro AS
+=head1 LICENSE
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

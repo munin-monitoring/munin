@@ -16,7 +16,7 @@ profile-strictness = quiet
 
 [Variables::ProhibitPunctuationVars]
 severity = 5
-allow = $_ $!
+allow = $_ $! $0 $@ $$
 
 [CodeLayout::RequireTidyCode]
 perltidyrc = perltidyrc
@@ -24,3 +24,23 @@ perltidyrc = perltidyrc
 [CodeLayout::ProhibitTrailingWhitespace]
 severity = 5
 
+[CodeLayout::ProhibitQuotedWordLists]
+severity = 5
+
+[CodeLayout::RequireTrailingCommas]
+severity = 5
+
+[ControlStructures::ProhibitUnreachableCode]
+severity = 5
+
+[Documentation::RequirePackageMatchesPodName]
+severity = 5
+
+[Miscellanea::ProhibitUnrestrictedNoCritic]
+severity = 5
+
+[TestingAndDebugging::ProhibitNoWarnings]
+severity = 5
+
+[Variables::ProhibitUnusedVariables]
+severity = 5

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+. "$FINDBIN/common.sh"
+
+
+if [ -f "${RUNDIR}/munin/munin-sched.pid" ]; then
+    echo "Pid file found. Not starting"
+else
+    env "PERL5LIB=$PERLLIB" "${SANDBOX}/usr/sbin/munin-sched" "$@"
+fi
+
+tail -f "${SANDBOX}/var/log/munin/munin-sched.log"

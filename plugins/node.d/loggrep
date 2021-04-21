@@ -25,7 +25,7 @@ TODO: Handle rotated logs
 
 =head1 AUTHOR
 
-Copyright (C) 2004 Dagfinn Ilmari Mannsaaker
+  Copyright (C) 2004 Dagfinn Ilmari Mannsåker
 
 =head1 LICENSE
 
@@ -128,7 +128,7 @@ for my $key (keys %regex) {
 
 if(-l $statefile) {
  	die("$statefile is a symbolic link, refusing to touch it.\n");
-}				
+}
 open(my $out, '>', $statefile) or die("Can't write $statefile: $!\n");
 for my $key (keys %regex) {
     print $out "$key=$regex{$key}{'value'}\n";

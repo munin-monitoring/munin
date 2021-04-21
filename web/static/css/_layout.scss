@@ -40,7 +40,7 @@ nav {
 				background-color: #ddd;
 				height: 1px;
 				margin: 0;
-				@include box-shadow(none);
+				box-shadow: none;
 				border: 0;
 			}
 			> h2 {
@@ -91,10 +91,10 @@ nav {
 				}
 			}
 			ul.categories:hover .timerangesList {
-				@include opacity(0.5);
+				opacity: 0.5;
 			}
 			ul.categories li:hover .timerangesList {
-				@include opacity(1);
+				opacity: 1;
 			}
 
 			.badge {
@@ -109,12 +109,12 @@ nav {
 				color: #fff;
 				text-align: center;
 				background-color: #999;
-				@include border-radius(10px);
+				border-radius: 10px;
 			}
 
 			.logo {
 				margin: 10px 15px 5px 15px;
-				@include opacity(0.8);
+				opacity: 0.8;
 			}
 		}
 	}
@@ -141,7 +141,7 @@ nav {
 	background-color: #ffffff;
 	border-left: 1px solid #ccc;
 	border-left: 1px solid rgba(0, 0, 0, 0.01);
-	@include box-shadow(0 1px 2px 0 rgba(0, 0, 0, 0.35));
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
 	@include box-sizing(border-box);
 }
 
@@ -193,18 +193,18 @@ footer {
 	font-size: 17px;
 	padding: 0;
 	text-shadow: 1px 1px rgba(0, 0, 0, 0.3);
-	@include border-radius(2px 0 0 2px);
-	@include box-shadow(0 1px 1px 0 rgba(0, 0, 0, 0.3));
-	@include opacity(0);
+	border-radius: 2px 0 0 2px;
+	box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
+	opacity: 0;
 	@include transition(opacity 300ms 0s);
 
 	&.visible {
-		@include opacity(0.75);
+		opacity: 0.75;
 		height: auto;
 		padding: 4px 7px;
 	}
 	&.visible:hover {
 		text-decoration: none;
-		@include opacity(1);
+		opacity: 1;
 	}
 }

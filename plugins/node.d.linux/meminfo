@@ -8,7 +8,7 @@ meminfo - Plugin to monitor memory usage.
 
 Do not enable this plugin unless you need it.  It alone produces
 significantly more data than any normal munin-node in sum.  Therefore
-it is not autimatically enabled.
+it is not automatically enabled.
 
 =head1 APPLICABLE SYSTEMS
 
@@ -16,15 +16,15 @@ All Linux systems
 
 =head1 INTERPRETATION
 
-This plugin show many graphs (on my pc ~90 graphs with total ~750
-values).  Graph splitted to 8 groups, every group has child graphs:
+This plugin shows many graphs (on my pc ~90 graphs with total ~750
+values).  Graphs are split to 8 groups, every group has sub graphs:
 
   Application groups memory usage                  - show applications groups memory using by group (env.) [env.applications_group]
     Group `groupName1` applications memory usage     v
     ...                                            - show applications groups memory using per application in every group
     Group `groupNameX` applications memory usage     ^
     Summary group `groupName1` memory usage          v
-    ...                                            - show applications groups memory using as summ of every parametr of application in every group
+    ...                                            - show applications groups memory using as summ of every parameter of application in every group
     Summary group `groupNameX` memory usage          ^
   Application memory usage                         - show memory usage per application [env.applications]
     Application processes                          - show processes count of every application
@@ -45,7 +45,7 @@ values).  Graph splitted to 8 groups, every group has child graphs:
     Low and high memory                            - subj :)
   Slab objects size                                - subj :)
     Slabs size [GroupName1]                          v
-    ...                                            - show slabs size. I try split fields by this types. 
+    ...                                            - show slabs size. I try split fields by this types.
     Slabs size [GroupNameX]                          ^
     Slabs sizes of groups                          - "Groups" sizes
     Slab objects                                   - Active/inactive objects
@@ -92,7 +92,7 @@ group name
 Default: undefined
 
 Examples:
-  
+
   env.applications_group ^(firefox|chrome|opera|konqu|arora):Browsers;(^lx|openbox|menu|gnome|slim|^X):X;^(hal|console-kit|syslog|cron|dhcp|udev|dbus|bluetoo|agett|login|automount):System;
 
 And you can select time to display data after application close (all
@@ -107,7 +107,7 @@ Example:
 
 =head2 PERMISSIONS NOTE
 
-Please check, can your munin user read files such as 
+Please check, can your munin user read files such as
 
   /proc/meminfo
   /proc/slabinfo
@@ -127,7 +127,7 @@ If no access, just write in plugin-config
 You can set warning and critical levels for *each* of the data
 series the plugin reports.
 
-Template for limits: 
+Template for limits:
 
   env.limit_%field% (warning_num:crytical_num|critical_num)[kMG]
 
@@ -200,7 +200,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Memory usage by cashes and buffers',
       'vtitle'   => 'bytes',
-      'category' => 'cache',
+      'category' => 'memory',
       'total'    => 'Total'
     },
     'fields' => [qw(cached:AREASTACK:- buffers:AREASTACK:- cached_swap:AREASTACK:- nfs_unstable:AREASTACK:- writeback_fuse:AREASTACK:- bounce:AREASTACK:-)]
@@ -213,7 +213,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Active/Inactive memory',
       'vtitle'   => 'bytes',
-      'category' => 'active_inactive'
+      'category' => 'memory'
     },
     'fields' => [qw(active_file:AREA:FF444488 active_anon:STACK:44FF4488 active:LINE1:000000 inactive_file:AREA:4444FF88 inactive_anon:STACK:FFFF4499 inactive:LINE1:FFFFFF)]
   },
@@ -225,7 +225,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'mmap',
       'vtitle'   => 'bytes',
-      'category' => 'direct_map'
+      'category' => 'memory'
     },
     'fields' => [qw(direct_map_4k:LINE1:- direct_map_2m:LINE1:- direct_map_4m:LINE1:- direct_map_1g:LINE1:- mapped:LINE1:- mmap_copy:LINE1:-)]
   },
@@ -237,7 +237,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Kernel memory',
       'vtitle'   => 'bytes',
-      'category' => 'kernel',
+      'category' => 'memory',
       'total'    => 'Total'
     },
     'fields' => [qw(kernel_stack:AREASTACK:- slab:AREASTACK:- qlists:LINE1:-)]
@@ -250,7 +250,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Low and high memory',
       'vtitle'   => 'bytes',
-      'category' => 'low_and_high'
+      'category' => 'memory'
     },
     'fields' => [qw(low_used:AREASTACK:- low_free:AREASTACK:CCFFCCCC high_used:AREASTACK:- high_free:AREASTACK:FFFFCCCC low_total:LINE1:- high_total:LINE1:- l_h_total:LINE1:000000)]
   },
@@ -262,7 +262,7 @@ my $graphs_source =
       'args'     => '--base 1000 ',
       'title'    => 'HugePages count',
       'vtitle'   => 'count',
-      'category' => 'hugepages'
+      'category' => 'memory'
     },
     'fields' => [qw(huge_pages_total:LINE1:000000 huge_pages_free:AREASTACK:- huge_pages_rsvd:AREASTACK:- huge_pages_surp:AREASTACK:-)]
   },
@@ -274,7 +274,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'HugePages size',
       'vtitle'   => 'bytes',
-      'category' => 'hugepages'
+      'category' => 'memory'
     },
     'fields' => [qw(huge_page_size:LINE1:00FF00 huge_pages_total_size:LINE1:000000 huge_pages_free_size:AREASTACK:- huge_pages_rsvd_size:AREASTACK:- huge_pages_surp_size:AREASTACK:-)]
   },
@@ -298,7 +298,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Vmalloc',
       'vtitle'   => 'bytes',
-      'category' => 'total'
+      'category' => 'memory'
     },
     'fields' => [qw(vmalloc_used:AREASTACK:- vmalloc_free:AREASTACK:FFFFCCCC vmalloc_total:LINE1:000000 vmalloc_chunk:LINE1:-)]
   },
@@ -310,7 +310,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Vmalloc allocates',
       'vtitle'   => 'bytes',
-      'category' => 'allocates',
+      'category' => 'memory',
       'total'    => 'Total'
     },
     'fields' => []
@@ -335,7 +335,7 @@ my $graphs_source =
       'args'     => '--base 1000 ',
       'title'    => 'Slab objects',
       'vtitle'   => 'count',
-      'category' => 'objects'
+      'category' => 'memory'
     },
     'fields' => [qw(active_objects:AREASTACK:- inactive_objects:AREASTACK:FFFFCCCC total_objects:LINE1:000000)]
   },
@@ -347,7 +347,7 @@ my $graphs_source =
       'args'     => '--base 1000 ',
       'title'    => 'Slabs',
       'vtitle'   => 'count',
-      'category' => 'objects'
+      'category' => 'memory'
     },
     'fields' => [qw(active_slabs:AREASTACK:- inactive_slabs:AREASTACK:FFFFCCCC shared_slabs:LINE1:- total_slabs:LINE1:000000)]
   },
@@ -359,7 +359,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Reclaim',
       'vtitle'   => 'bytes',
-      'category' => 'reclaim',
+      'category' => 'memory',
       'total'    => 'Total',
     },
     'fields' => [qw(slab_reclaimable:AREA:- slab_unreclaimable:STACK:-)]
@@ -373,7 +373,7 @@ my $graphs_source =
       'title'    => "Slabs sizes of groups",
       'vtitle'   => 'bytes',
       'total'    => 'Total',
-      'category' => 'groups_size'
+      'category' => 'memory'
     },
     'fields' => []
   },
@@ -397,7 +397,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'Writeback',
       'vtitle'   => 'bytes',
-      'category' => 'writeback'
+      'category' => 'memory'
     },
     'fields' => [qw(dirty:LINE1:- writeback:LINE1:-)]
   },
@@ -409,7 +409,7 @@ my $graphs_source =
       'args'     => '--base 1024',
       'title'    => 'First candidates to swap out',
       'vtitle'   => 'bytes',
-      'category' => 'candidates'
+      'category' => 'memory'
     },
     'fields' => [qw(inactive_file:AREASTACK:- inactive_anon:AREASTACK:- anon_pages:AREASTACK:- inactive:LINE1:-)]
   },
@@ -848,7 +848,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Mapped',
-      'info'  => 'Files which have been mmaped, such as libraries'
+      'info'  => 'Files which have been mapped, such as libraries'
     }
   },
   # ----------------------------------------------
@@ -1043,7 +1043,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Mlocked',
-      'info'  => 'Hlocked'
+      'info'  => 'Mlocked'
     }
   },
   # ----------------------------------------------
@@ -1425,7 +1425,7 @@ my $application_fields =
     'VmSwap' => 'AREA',
     'VmHWM'  => 'LINE2',
     'VmPeak' => 'LINE2'
-    
+
    },
    'color' =>
    {
@@ -1520,15 +1520,15 @@ sub load_vmallocinfo
   my $file = "/proc/vmallocinfo";
   my $result = {};
   open (FH, '<', $file) or die "$! $file \n";
-  my @splitted = ();
+  my @tokens = ();
   my $name = '';
   for my $line (<FH>)
   {
     chomp $line;
-    @splitted =  split(/\s+/, $line);
-    $name     = (split(/\+/ , $splitted[2]))[0];
+    @tokens =  split(/\s+/, $line);
+    $name     = (split(/\+/ , $tokens[2]))[0];
     $result->{$name}  = 0 unless (exists($result->{$name}));
-    $result->{$name} += $splitted[1];
+    $result->{$name} += $tokens[1];
 
     my $field_name = sprintf("vi_%s", clean_fieldname($name));
     append_field         ($field_name, 'vmallocinfo', $name, $name, $name);
@@ -1756,7 +1756,7 @@ sub load_appinfo
         }
       }
     }
-    # not runned applications detect and show
+    # detect and show applications that are not currently running
     my $dummy_app_data = {};
     for my $app (keys %{$storage->{'applications'}{'single'}})
     {
@@ -1968,7 +1968,7 @@ sub append_field
 
 sub append_formula_field
 {
-  my ($field_name, $formula, $label, $info) = @_[0..4];
+  my ($field_name, $formula, $label, $info) = @_[0..3];
   unless (exists($fields_source->{$field_name}))
   {
     $fields_source->{$field_name} =

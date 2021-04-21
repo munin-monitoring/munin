@@ -44,7 +44,7 @@ if [ "$1" = "autoconf" ]; then
 	exit 0
     fi
 fi
-	
+
 
 if [ "$1" = "suggest" ]; then
     /usr/sbin/envstat -r | awk '

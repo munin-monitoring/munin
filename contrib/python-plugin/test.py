@@ -15,10 +15,12 @@ from munin import Plugin
 p = Plugin("Approx cache", "files", "Approx")
 p.info = "Shows how many files the Approx cache stores, split by file-type."
 
+
 def test(data_source):
     if data_source == 'deb':
         return 42
     return 24
+
 
 # Set up graph
 p['deb'].label = "deb files"
@@ -26,14 +28,14 @@ p['deb'].value = test
 p['deb'].info = "Number of .deb-files."
 p['tar.gz'].label = "tar.gz files"
 p['tar.gz'].value = test
-#p['gzip'].value = 123
+# p['gzip'].value = 123
 
 # Run
-print "AUTOCONFIG"
+print("AUTOCONFIG")
 p.run("autoconf")
 
-print "CONFIG"
+print("CONFIG")
 p.run("config")
 
-print "PLAIN"
+print("PLAIN")
 p.run()

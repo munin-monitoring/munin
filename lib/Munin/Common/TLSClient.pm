@@ -11,7 +11,7 @@ use Munin::Common::Logger;
 
 sub new {
     my ($class, $args) = @_;
-    
+
     my $self = $class->SUPER::new($args);
 
     $self->{remote_key} = 0;
@@ -28,7 +28,7 @@ sub start_tls {
 
 sub _initial_communication {
     my ($self) = @_;
-    
+
     $self->{write_func}("STARTTLS\n");
     my $tlsresponse = $self->{read_func}();
     if (!defined $tlsresponse) {
@@ -67,7 +67,7 @@ __END__
 
 =head1 NAME
 
-Munin::Node::TLSClient - Implements the client side of the STARTTLS protocol
+Munin::Common::TLSClient - Implements the client side of the STARTTLS protocol
 
 
 =head1 SYNOPSIS

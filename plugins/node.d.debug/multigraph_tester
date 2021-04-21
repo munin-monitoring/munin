@@ -3,7 +3,7 @@
 #%# family=test
 #%# capabilities=autoconf
 
-. $MUNIN_LIBDIR/plugins/plugin.sh || exit 1
+. "$MUNIN_LIBDIR/plugins/plugin.sh" || exit 1
 
 # Handle the case where the munin node does not understand multigraph.
 is_multigraph "$@"
@@ -78,7 +78,7 @@ do_autoconf () {
 
 # Main is here
 
-do_$1 2>/dev/null || {
+"do_$1" 2>/dev/null || {
       echo "Do what now?" >&2
       exit 1
 }

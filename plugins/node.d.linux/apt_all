@@ -13,7 +13,46 @@ graphs.
 
 =head1 CONFIGURATION
 
-No configuration needed
+You can add some extra options to the apt call, in order to override
+your /etc/apt.conf defaults.
+
+[apt_all]
+env.MUNIN_APT_RELEASES = stable,testing,unstable
+env.options -o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false
+env.releases stable experimental
+
+"options" is empty by default.
+"releases" is a space separated list of release names.  It defaults to
+the empty string.  This default triggers the automatic detection of
+available distributions from the URLs of all configured repositories.
+
+If "MUNIN_APT_RELEASES" is non-empty (a comma separated list of releases),
+then it overrides "releases".  This setting is deprecated.
+
+Note that apt is called with no extra options by default, so it fully honors
+your /etc/apt.conf defaults.
+
+=head1 USAGE
+
+This plugin needs a cronjob that runs apt-get update every hour or so
+
+Example cronjob
+
+ /etc/cron.d/munin-plugin-apt
+ 53  * * * *	root	apt-get update > /dev/null 2>&1
+ 23 08 * * * 	root	apt-get update > /dev/null
+
+Remember to randomize when these cronjobs are run on your servers
+
+This plugin can also be called with the argument "update", which will
+run apt-get update
+
+ update <maxinterval> <probability>
+
+ Updates the APT database randomly, guaranteeing there
+ won't be more than <maxinterval> seconds between each
+ update.  Otherwise, there is a a 1 in <probability>
+ chance that an update will occur.
 
 =head1 MAGIC MARKERS
 
@@ -26,6 +65,7 @@ No configuration needed
 
 use strict;
 use File::stat;
+use Munin::Plugin;
 
 $ENV{'LANG'}="C";
 $ENV{'LC_ALL'}="C";
@@ -33,8 +73,37 @@ $ENV{'LC_ALL'}="C";
 # APT cache directory
 my $aptcache = '/var/cache/apt';
 my $dpkgstatus = '/var/lib/dpkg/status';
-# Releases to monitor
-my @releases = ("stable", "testing", "unstable");
+
+# try to determine the currently available distributions by inspecting the repository URLs
+sub guess_releases() {
+    open(my $fh, "-|", "apt-get update --print-uris")
+        or die("Failed to determine distribution releases via 'apt-get update --print-uris");
+    my %release_names;
+    my $line;
+    while ( ! eof($fh) ) {
+        defined( $line = readline $fh ) or die "Failed to read line from output of 'apt-get': $!";
+        # example line:
+        #     'http://ftp.debian.org/debian/dists/stable/InRelease' ftp.debian.org_debian_dists_stable_InRelease 0
+        if ($line =~ m'^.*/dists/([^/]+)/.*$') {
+            $release_names{$1} = 1;
+        }
+    }
+    return keys %release_names;
+}
+
+# use a given 'releases' environment variable (space separated names) or inspect the repository URLs
+my @releases = split(",", ($ENV{MUNIN_APT_RELEASES} || ""));
+@releases = split(/\s/, ($ENV{releases} || "")) unless @releases;
+@releases = guess_releases() unless @releases;
+
+
+sub get_clean_release_fieldname {
+    my ($fieldname) = @_;
+    # apply some minor URI-like substitution (avoiding ambiguity between slash and hyphen)
+    $fieldname =~ s#/#_2F#g;
+    return clean_fieldname($fieldname);
+}
+
 
 # Print the apt state, regenerating the state cache if necessary
 sub print_state() {
@@ -53,7 +122,16 @@ sub print_state() {
 
     open(STATE, "$statefile")
 	or die("Couldn't open state file $statefile for reading.");
-    print while <STATE>;
+    while (my $line = <STATE>) {
+        foreach my $release (@releases) {
+            my $release_cleaned = get_clean_release_fieldname($release);
+            # print only lines that are expected for the currently requested releases
+            if ($line =~ /^(hold|pending)_$release_cleaned\.(value|extinfo)/) {
+                print $line ;
+                last;
+            }
+        }
+    }
     close STATE;
 }
 
@@ -103,7 +181,8 @@ sub update_state() {
 	open(STATE, ">$statefile")
 		or die("Couldn't open state file $statefile for writing.");
 	foreach my $release (@releases) {
-	    my $apt="apt-get -u dist-upgrade --print-uris --yes -t $release |";
+	    my $options = $ENV{options} || "";
+	    my $apt="apt-get $options -u dist-upgrade --print-uris --yes -t $release |";
 	    open (APT, "$apt") or exit 22;
 
 	    my @pending = ();
@@ -162,12 +241,13 @@ sub update_state() {
 	    push (@pending, @remove ) if @remove;
 	    close APT;
 
-	    print STATE "pending_$release.value ", scalar (@pending), "\n";
+            my $release_cleaned = get_clean_release_fieldname($release);
+            print STATE "pending_$release_cleaned.value ", scalar (@pending), "\n";
 	    if (@pending)
 	    {
-		    print STATE "pending_$release.extinfo ", join (' ', @pending), "\n";
+                print STATE "pending_$release_cleaned.extinfo ", join (' ', @pending), "\n";
 	    }
-	    print STATE "hold_$release.value $hold\n";
+            print STATE "hold_$release_cleaned.value $hold\n";
 
 	}
 	close(STATE);
@@ -195,9 +275,10 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_category security\n";
 
     foreach my $release (@releases) {
-	print "pending_$release.label pending_$release\n";
-	print "pending_$release.warning 0:0\n";
-	print "hold_$release.label hold_$release\n";
+        my $release_cleaned = get_clean_release_fieldname($release);
+        print "pending_$release_cleaned.label pending ($release)\n";
+        print "pending_$release_cleaned.warning 0:0\n";
+        print "hold_$release_cleaned.label hold ($release)\n";
     }
     exit 0;
 }

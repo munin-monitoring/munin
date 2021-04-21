@@ -9,6 +9,7 @@ use warnings;
 use English qw(-no_match_vars);
 
 use Munin::Node::Config;
+use Munin::Common::Daemon;
 use Munin::Common::Defaults;
 use Munin::Common::Timeout;
 use Munin::Common::TLSServer;
@@ -51,6 +52,8 @@ sub pre_loop_hook {
 
     $services->prepare_plugin_environment(keys %services);
     _add_services_to_nodes(keys %services);
+    # the port is bound, the service is prepared: we can start accepting requests
+    Munin::Common::Daemon::emit_sd_notify_message();
     return $self->SUPER::pre_loop_hook();
 }
 
@@ -120,7 +123,7 @@ sub process_request
     $session->{tls_mode}     = $config->{tls} || 'auto';
     $session->{peer_address} = $self->{server}->{peeraddr};
 
-    $PROGRAM_NAME .= " [$session->{peer_address}]";
+    $0 .= " [$session->{peer_address}]";
 
     # Used to provide per-master state-files
     $ENV{MUNIN_MASTER_IP} = $session->{peer_address};
@@ -145,10 +148,19 @@ sub process_request
         });
     };
 
-    ERROR($EVAL_ERROR)                                   if ($EVAL_ERROR);
+    ERROR($@)                                   if ($@);
     ERROR("Node side timeout while processing: '$line'") if ($timed_out);
 
     return;
+}
+
+
+# This method is used by Net::Server for retrieving default values (in case they are not specified
+# in the given "conf_file").
+sub default_values {
+    return {
+        port => 4949,
+    };
 }
 
 
@@ -196,8 +208,8 @@ sub _process_command_line {
         eval {
             $session->{tls_started} = _process_starttls_command($session);
         };
-        if ($EVAL_ERROR) {
-            ERROR($EVAL_ERROR);
+        if ($@) {
+            ERROR($@);
             return 0;
         }
         DEBUG ('DEBUG: Returned from starttls.') if $config->{DEBUG};
@@ -328,7 +340,7 @@ sub _print_service {
 
 sub _list_services {
     my ($session, $node) = @_;
-
+    $node ||= lc($config->{fqdn});
     if (keys %nodes == 1 && ! exists $nodes{$node}) {
 	    # Only one node. Naming mismatch. Just give the use what he wants.
 	    ($node) = keys %nodes;

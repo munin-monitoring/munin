@@ -33,6 +33,7 @@
 				<h2>Overview</h2>
 			</div>
 
+			<TMPL_IF NAME="GROUPS">
 			<ul class="groupview">
 				<TMPL_LOOP GROUPS><TMPL_UNLESS MULTIGRAPH>
 					<li <TMPL_IF __LAST__>class="last"</TMPL_IF>>
@@ -143,6 +144,9 @@
 					</li>
 				</TMPL_UNLESS></TMPL_LOOP>
 			</ul>
+			<TMPL_ELSE>
+				Warning: no hosts were configured for data collection. See the <a href="http://guide.munin-monitoring.org/en/latest/installation/configuration.html#add-some-nodes">Munin Guide</a> for details.
+			</TMPL_IF>
 			<div class="clear"></div>
 		</div>
 </div>

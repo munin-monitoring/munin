@@ -20,6 +20,7 @@
 use strict;
 use warnings;
 
+use English qw(-no_match_vars);
 use IO::Socket;
 use IO::File;
 use File::Path qw(mkpath);
@@ -28,6 +29,7 @@ use Pod::Usage;
 
 use List::Util qw(min max);
 
+use Munin::Common::Daemon;
 use Munin::Node::SpoolWriter;
 use Munin::Common::Defaults;
 use Munin::Common::Logger;
@@ -39,6 +41,10 @@ my $intervalsize = 86400;
 my $timeout = 3600;
 my $minrate;
 my $retaincount = 7;
+# Asyncd collects data from plugins periodically.  We want to avoid skipping the next value due to
+# slight deviations of this period.  Thus we tolerate a slightly shorter time distance between two
+# successive requests for values from a plugin.
+my $min_update_rate_threshold = 0.75;
 my $nocleanup;
 my $do_fork;
 my $verbose;
@@ -85,14 +91,24 @@ $minrate = $update_rate if ! defined $minrate;
 $verbose = 1 if $debug;
 
 unless (-d $SPOOLDIR) {
-	mkpath($SPOOLDIR, { verbose => $verbose, } ) 
+	mkpath($SPOOLDIR, { verbose => $verbose, } )
 		or LOGCROAK("Cannot create '$SPOOLDIR': $!");
 }
+
+my $process_name = "main";
 
 my $sock = new IO::Socket::INET(
 	PeerAddr        => "$host",
 	Proto   => 'tcp'
-) || LOGCROAK("Error creating socket: $!");
+);
+if (!$sock) {
+	print STDERR "[$$][$process_name] Failed to connect to munin-node - trying again in a few seconds ...\n" if $verbose;
+	sleep 20;
+	$sock = new IO::Socket::INET(
+		PeerAddr => "$host",
+		Proto => 'tcp'
+	) || LOGCROAK("Error connecting to munin node ($host): $!");
+}
 my $nodeheader = <$sock>;
 print STDERR "[sock][>] nodes\n" if $debug;
 print $sock "nodes\n";
@@ -102,6 +118,11 @@ while(my $line = <$sock>) {
 	chomp($line);
 	print STDERR "[sock][<] $line\n" if $debug;
 	last if $line =~ /^\./;
+
+	# un-taint nodename TODO: too strict?
+	$line =~ /^([\w.]+)$/x;
+	$line = $1;
+
 	push(@nodes, $line);
 }
 
@@ -125,19 +146,17 @@ foreach my $node (@nodes) {
 
 $0 = "munin-asyncd [$metahostname] [idle]";
 
-my $process_name = "main";
-
 my $plugins = {};
 {
 	INFO("[$$][$process_name] Reading config from $host");
-	my $sock = new IO::Socket::INET( 
-		PeerAddr	=> "$host", 
+	my $sock = new IO::Socket::INET(
+		PeerAddr	=> "$host",
 		Proto	=> 'tcp'
-	) || die "Error creating socket: $!"; 
+	) || die "Error creating socket: $!";
 
 	local $0 = "munin-asyncd [$metahostname] [list]";
-	DEBUG("[sock][>] cap multigraph");
-	print $sock "cap multigraph\n";
+	DEBUG("[sock][>] cap multigraph dirtyconfig");
+	print $sock "cap multigraph dirtyconfig\n";
 	<$sock>; # Read the first header comment line
 	<$sock>; # Read the multigraph response line
 	foreach my $node (@nodes)
@@ -152,16 +171,23 @@ my $plugins = {};
 				"$SPOOLDIR/$node/munin-daemon.list",
 				"w",
 			);
-			print $fh_list $plugins_line;
+			my $sanitised_plugins_line = $plugins_line;
+			$sanitised_plugins_line =~ s/[^_A-Za-z0-9 ]/_/g;
+			print $fh_list $sanitised_plugins_line;
 			print $fh_list "\n";
 		}
+
+		#un-taint plugin_line TODO: more strict?
+		$plugins_line =~ /^(.*)$/x;
+		$plugins_line = $1;
+
 		$plugins->{$node} = [ split(/ /, $plugins_line) ];
 	}
 }
 
 my $keepgoing = 1;
 
-sub termhandler() {
+sub termhandler {
 	$keepgoing = 0;
 }
 
@@ -175,23 +201,35 @@ $SIG{TERM} = 'termhandler';
 # ... but each plugin in its own process to avoid delay-leaking
 my %last_updated;
 my $last_cleanup=0;
+# all preparations are finished: we can notify our caller, that we are ready
+Munin::Common::Daemon::emit_sd_notify_message();
 MAIN: while($keepgoing) {
 	my $when = time;
 
 	my $process_name_orig = $process_name;
 
-	my $when_next = $when + $timeout; # wake up at least every $timeout sec
+	# start the next run close to the end of a munin-node update operation
+	# (i.e. try to avoid overlapping activities)
+	my $when_next = int((int($when / $minrate) + 0.75) * $minrate);
+	while ($when_next <= $when) {
+		$when_next = $when_next + $minrate;
+	}
+
 	foreach my $node (@nodes)
 	{
 		my $sock;
 		PLUGIN: foreach my $plugin ( @{$plugins->{$node}} ) {
 			# See if this plugin should be updated
 			my $plugin_rate = $spoolwriter{$node}->get_metadata("plugin_rates/$plugin") || 300;
-			my $plugin_next = ($last_updated{$plugin} || 0) + $plugin_rate;
-			if ($when < $plugin_next) {
+			# the perfect time for the plugin
+			my $wanted_plugin_next = ($last_updated{$plugin} || 0) + $plugin_rate;
+			# It is acceptable that plugins are executed slightly too early.
+			# (tolerating slight deviations of the request period)
+			my $minimum_plugin_next = ($last_updated{$plugin} || 0) + ($plugin_rate * $min_update_rate_threshold);
+			if ($when < $minimum_plugin_next) {
 				# not yet, wake me up later, and see next plugin
-				if ($plugin_next < $when_next) {
-					$when_next = $plugin_next;
+				if ($wanted_plugin_next < $when_next) {
+					$when_next = $wanted_plugin_next;
 				}
 
 				next;
@@ -265,6 +303,7 @@ MAIN: while($keepgoing) {
 	# Sleep until next plugin exec.
 	my $sleep_sec = $when_next - time;
 
+	# "sleep" expects an unsigned integer - thus we may not let a wrapped number splip through.
 	if ($sleep_sec > 0) {
 		INFO("[$$][$process_name] Sleeping $sleep_sec sec");
 		sleep $sleep_sec;
@@ -288,6 +327,8 @@ sub fetch_data
 		print STDERR "[$$][$process_name][>][$plugin][sock] config $plugin\n" if $debug;
 		print $sock "config $plugin\n";
 
+		my $is_dirtyconfig;
+
 		my $output_rows = [];
 
 		while(my $line = <$sock>) {
@@ -307,12 +348,17 @@ sub fetch_data
 				# This has to be sent back to the master
 				$spoolwriter{$node}->set_metadata("plugin_rates/$plugin", $1);
 			}
+
+			$is_dirtyconfig = 1 if ($line =~ m/^[^.]+\.value /);
 		}
 
 		# handle the special case of cli update_rate
 		if ($update_rate && ! grep { $_ =~ m/^update_rate (\d+)/ } @$output_rows ) {
 			push @$output_rows, "update_rate $update_rate";
 		}
+
+		# if dirty config, bypass the "fetch" part
+		goto WRITE_SPOOL if $is_dirtyconfig;
 
 		INFO("[$$][$process_name][>][$plugin] asking for data\n");
                 DEBUG("[sock][>][$plugin] fetch $plugin\n");
@@ -331,6 +377,7 @@ sub fetch_data
 			push @$output_rows, $line;
 		}
 
+WRITE_SPOOL:
 		# Write the whole load into the spool
 		$spoolwriter{$node}->write($when, $plugin, $output_rows);
 }
@@ -360,4 +407,4 @@ munin-asyncd [options]
         --screen                Log to screen instead of syslog
         --debug                 Log debug messages
      -v --verbose               Be verbose
-     -h --help                  View this message	
+     -h --help                  View this message

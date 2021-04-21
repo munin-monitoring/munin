@@ -9,11 +9,12 @@ Other docs
 Contributing
 ============
 
-We need help with completing the `Munin Gallery <http://gallery.munin-monitoring.org/>`_.
+We need help with completing the `Munin Gallery <https://gallery.munin-monitoring.org/>`_.
 A lot of plugins don't have their documentation in POD style format.
 And the Gallery needs more pics!
 
-See our wiki page with `instructions for gallery contributors <http://munin-monitoring.org/wiki/PluginGallery>`_.
+See the `hints for plugin contributions <https://github.com/munin-monitoring/contrib/blob/master/plugins/README.md>`_
+for more details..
 
 .. _dev-talk:
 
@@ -33,7 +34,7 @@ Ideas
 -----
 
 - Some thoughts about `Tags <http://munin-monitoring.org/wiki/Tags>`_
-- Some thoughts about `basic module API for plugins written in perl, python and ruby <http://munin-monitoring.org/wiki/PluginFramework>`_
+- Some thoughts about `basic module API for plugins written in Perl, Python and Ruby <http://munin-monitoring.org/wiki/PluginFramework>`_
 
 Snippets
 --------
@@ -51,7 +52,7 @@ and then a ``fetch $plugin``.
 
 Some plugins do a lot of work to gather their numbers.  Quite a few of these
 need to do the same amount of work for the value fetching and printing
-as for the the ``config`` output.
+as for the ``config`` output.
 
 We could halve the execution time if ``munin-update`` detects that
 ``config $plugin`` produces .value and from that deducts that the

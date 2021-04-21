@@ -15,9 +15,18 @@ A plugin is activated when a symbolic link is created in the ``servicedir``
 (usually /etc/munin/plugins/ for a package installation of Munin)
 and munin-node is restarted.
 
+.. code-block:: bash
+
+  # activating a simple plugin
+  ln -s /usr/share/munin/plugins/cpu /etc/munin/plugins/
+  # activating a wildcard plugin
+  ln -s /usr/share/munin/plugins/if_ /etc/munin/plugins/if_eth0
+  # restart munin-node with your distribution's tools (e.g. systemctl or service)
+  service munin-node restart
+
 The utility :ref:`munin-node-configure` is used by the Munin installation
 procedure to check which plugins are suitable for your node and
-create the links automatically. It can be called everytime when a system
+create the links automatically. It can be called every time when a system
 configuration changes (services, hardware, etc) on the node and it will adjust
 the collection of plugins accordingly.
 
@@ -27,7 +36,7 @@ be installed, use the option '--remove-also'.
 Installing Third Party Plugins
 ==============================
 
-To use a Munin plugin being delivered from a `3rd-Party <http://gallery.munin-monitoring.org/contrib/>`_,
+To use a Munin plugin being delivered from a `3rd-Party <https://gallery.munin-monitoring.org/repositories/munin-contrib/>`_,
 place it in directory ``/usr/local/munin/lib/plugins`` (or any other
 directory), make it executable, and create the service link.
 It it also possible to place the plugin directly into the ``servicedir``, but this is not recommended for the following reasons:
@@ -47,7 +56,7 @@ plugins overitten by distribution updates.
 Configuring
 ===========
 
-/etc/munin/plugin-conf.d (sometimes /etc/opt/munin/plugin-conf.d) is where plugin configuration files
+``/etc/munin/plugin-conf.d`` (sometimes ``/etc/opt/munin/plugin-conf.d``) is where plugin configuration files
 are stored.
 
 To make sure that plugin configurations are updated with software updates
@@ -95,6 +104,12 @@ timeout <seconds>
 command <command>
   Run <command> instead of plugin. %c will be expanded to what would otherwise have been run. E.g. command sudo -u root %c.
 
+disable_autoconf <boolean>
+  If set to True, ignore plugin when running munin-node-configure.
+  This prevents the plugin even when possibly be supported on the system to be installed.
+
+  Default: False
+
 .. note::
 
    When configuring a munin plugin, add the least amount of extra
@@ -136,6 +151,57 @@ Plugin configuration is optional.
 
 .. index::
    pair: plugin; testing
+
+Inheritance
+-----------
+
+In the plugin configuration file(s), values are inherited. Values assigned in sections with more specific expressions have higher priority.
+
+This means that values from ``[foo_bar_*]`` have precedence over values from ``[foo_*]``, regardless of order in the plugin config file.
+
+Non-conflicting values
+^^^^^^^^^^^^^^^^^^^^^^
+
+Consider the following example for a plugin called ``dummy_foo_gazonk``:
+
+::
+
+  [dummy_*]
+  env.test1 foo
+
+  [dummy_foo_*]
+  env.test2 baz
+
+
+In this case, the resulting environment values are:
+
+::
+
+  test1 = foo
+  test2 = baz
+
+Conflicting values
+^^^^^^^^^^^^^^^^^^
+
+Another example for the plugin called ``dummy_foo_gazonk``:
+
+::
+
+  [dummy_*]
+  env.test1 foo
+
+  [dummy_foo_*]
+  env.test1 bar
+  env.test2 baz
+
+
+As the more specific ``env.test1`` has priority, these are the result values:
+
+::
+
+  test1 = bar
+  test2 = baz
+
 
 Testing
 =======
@@ -190,3 +256,17 @@ Examples:
   _dev_vda1__boot.value 160647
   _dev_mapper_vg_demo_lv_tmp__tmp.value 34100
   _dev_mapper_vg_demo_lv_var__var.value 897644
+
+
+Download munin plugins
+======================
+
+The munin project maintains a set of core plugins that are distributed in munin's releases.
+Additionally the munin project maintains the
+`contrib <https://github.com/munin-monitoring/contrib>`_ repository. It contains more than a
+thousand plugins contributed by a wide range of people.
+In order to use these plugins they can either be downloaded manually or managed via the
+:ref:`munin-get` plugin tool.
+
+Additionally the munin plugins in the `contrib <https://github.com/munin-monitoring/contrib>`_
+repository can be browsed via the `Munin Plugin Gallery <https://gallery.munin-monitoring.org>`_.

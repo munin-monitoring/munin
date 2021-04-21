@@ -44,7 +44,7 @@ master_doc = 'index'
 project = 'Munin'
 description = 'Munin monitoring'
 authors   = 'The Munin project and its contributors'
-copyright = '2012-2015, %s' % authors
+copyright = '2012-2021, %s' % authors
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -201,8 +201,8 @@ latex_logo = '../web/static/img/logo-h.png'
 # If true, show page references after internal links.
 latex_show_pagerefs = False
 
-# If true, show URL addresses after external links.
-latex_show_urls = False
+# Control whether to display URL addresses (no/footnote/inline)
+#latex_show_urls = 'no'
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
@@ -237,6 +237,32 @@ man_pages = [
      ['Audun Ytterdal',
       'Jimmy Olsen'],
      1),
+    ('reference/munin-cgi-graph',
+     'munin-cgi-graph',
+     'Munin CGI grapher',
+     ['Steve Schnepp'],
+     1),
+    ('reference/munin-cgi-html',
+     'munin-cgi-html',
+     'Munin CGI HTML generator',
+     ['Steve Schnepp'],
+     1),
+    ('reference/munin-graph',
+     'munin-graph',
+     'Create graphs from RRD files',
+      ['Audun Ytterdal',
+       'Jimmy Olsen',
+       'Nicolai Langfeldt',
+       'Steve Schnepp'],
+     1),
+    ('reference/munin-html',
+     'munin-html',
+     'Create HTML pages',
+     ['Knut Haugen',
+      'Steve Schnepp',
+      'Audun Ytterdal',
+      'Jimmy Olsen'],
+     1),
     ('reference/munin-httpd',
      'munin-httpd',
      'Munin web interface',
@@ -257,7 +283,7 @@ man_pages = [
       'Jimmy Olsen',
       'Matthew Boyle',
       'Tore Anderson'],
-     1),
+     8),
     ('reference/munin-run',
      'munin-run',
      'A program to run munin plugins from the command line',
@@ -265,7 +291,7 @@ man_pages = [
       'Jimmy Olsen',
       'Tore Anderson',
       'Nikolai Langfeldt'],
-     1),
+     8),
     ('reference/munin-update',
      'munin-update',
      'A program to gather data from machines running munin-node or munin-async',
@@ -280,7 +306,7 @@ man_pages = [
      'munin.conf',
      'Configuration file for the munin master',
      [authors,
-	  'Stig Sandbeck Mathisen'],
+     'Stig Sandbeck Mathisen'],
      5),
     ('reference/munin-node.conf',
      'munin-node.conf',

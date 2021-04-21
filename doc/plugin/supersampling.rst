@@ -8,9 +8,9 @@ Every monitoring software has a polling rate. It is usually 5 min,
 because it's the sweet spot that enables frequent updates yet still
 having a low overhead.
 
-Munin is not different in that respect: it's data fetching routines
+Munin is not different in that respect: its data fetching routines
 have to be launched every 5 min, otherwise you'll face data loss.
-And this 5 min period is deeply grained in the code. So changing it is
+And this 5 min period is deeply ingrained in the code. So changing it is
 possible, but very tedious and error prone.
 
 But sometimes we need a very fine sampling rate. Every 10 seconds
@@ -84,7 +84,7 @@ lines, with monotonically increasing epoch.
   itself does also mandates integers. We can easily imagine that with
   another database as back-end, an extension could be hacked together.
 
-.. _rrdtool: http://oss.oetiker.ch/rrdtool/doc/rrdtool.en.html
+.. _rrdtool: https://oss.oetiker.ch/rrdtool/doc/rrdtool.en.html
 
 Compatibility with 1.4
 ======================
@@ -97,7 +97,7 @@ Sample implementation
 The canonical sample implementation is multicpu1sec_, a contrib plugin
 on github. It is also a so-called streaming plugin.
 
-.. _multicpu1sec: https://github.com/munin-monitoring/contrib/tree/master/plugins/system/multicpu1sec
+.. _multicpu1sec: https://github.com/munin-monitoring/contrib/tree/master/plugins/cpu/multicpu1sec
 
 Streaming plugins
 =================

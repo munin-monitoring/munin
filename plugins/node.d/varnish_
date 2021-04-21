@@ -3,7 +3,7 @@
 # varnish_ - Munin plugin to for Varnish
 # Copyright (C) 2009  Redpill Linpro AS
 #
-# Author: Kristian Lyngstol <kristian@bohemians.org>
+# Author: Kristian Lyngstøl <kristian@bohemians.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -71,13 +71,13 @@ correctly.
 
 =head1 PATCHES-TO
 
-Please send patches to Kristian Lyngstol <kristian@bohemians.org>
+Please send patches to Kristian Lyngstøl <kristian@bohemians.org>
 and/or varnish-misc@varnish-cache.org for significant changes. Munin SVN
 is the authoritative repository for this plugin.
 
 =head1 AUTHOR
 
-Kristian Lyngstol <kristian@bohemians.org>
+Kristian Lyngstøl <kristian@bohemians.org>
 
 =head1 LICENSE
 
@@ -86,8 +86,11 @@ GPLv2
 =cut
 
 
-use XML::Parser;
 use strict;
+
+use English qw( -no_match_vars );
+eval { require XML::Parser; XML::Parser->import(); };
+my $has_xml_parser = $EVAL_ERROR ? 0 : 1;
 
 # Set to 1 to enable output when a variable is defined in a graph but
 # omitted because it doesn't exist in varnishstat.
@@ -944,8 +947,15 @@ sub xml_characters {
 # Note that 'flag' is translated to RRD-equivalents here.
 sub xml_commit_state
 {
-	my $name = $state{'values'}{'name'};
-	my $type = $state{'values'}{'type'};
+	my $type;
+	my $name;
+	if ($state{'values'}{'name'} =~ /\./) {
+		# since Varnish 5.2 the 'name' field includes a 'type' prefix ("type.name")
+		($type, $name) = split(/\./, $state{'values'}{'name'}, 2);
+	} else {
+		$name = $state{'values'}{'name'};
+		$type = $state{'values'}{'type'};
+	}
 	my $ident = $state{'values'}{'ident'};
 
 	foreach my $key (keys %{$state{'values'}}) {
@@ -993,7 +1003,7 @@ sub populate_stats
 	my $parser = new XML::Parser(Handlers => {Start => \&xml_start_elem,
 						End => \&xml_end_elem,
 						Char => \&xml_characters} );
-	
+
 	if ($varnishname) {
 		$arg .= " -n $varnishname";
 	}
@@ -1033,7 +1043,7 @@ sub print_dynamic
 	}
 	my $counter = $ASPECTS{$self}{'values'}{$name}{'counter'};
 	my $type = $ASPECTS{$self}{'values'}{$name}{'family'};
-	
+
 	foreach my $key (keys %{$data{$type}}) {
 		my $pname = normalize_name($type . "_" . $key . "_" . $counter);
 		print $pname . $suffix . " ";
@@ -1065,9 +1075,9 @@ sub set_aspect
 # is 'no'.
 sub autoconf
 {
-	# XXX: Solaris outputs errors to stderr and always returns true.
-	# XXX: See #873
-	if (`which $varnishstatexec 2>/dev/null` =~ m{^/}) {
+	if (!$has_xml_parser) {
+		print "no (missing perl module XML::Parser)\n";
+	} elsif (`sh -c 'command -v "$varnishstatexec"'` =~ m{^/}) {
 		print "yes\n";
 	} else {
 		print "no ($varnishstatexec could not be found)\n";
@@ -1100,7 +1110,7 @@ sub get_config
 	}
 	my %values = %{$ASPECTS{$graph}{'values'}};
 
-	print "graph_category Varnish\n";
+	print "graph_category loadbalancer\n";
 	foreach my $field (@graph_parameters) {
 		print_if_exist(\%ASPECTS,$graph,$field,"graph_$field");
 	}
@@ -1121,7 +1131,7 @@ sub get_config
 			}
 			next;
 		}
-		
+
 		if (!print_if_exist(\%values,$value,'label')) {
 			print "$value.label $data{$value}{'description'}\n";
 		}
@@ -1159,9 +1169,9 @@ sub check_args
 # Execution starts here        #
 ################################
 
-set_aspect;
-check_args;
-populate_stats;
+set_aspect();
+check_args();
+populate_stats();
 
 # We only get here if we're supposed to.
 # Walks through the relevant values and either prints the varnishstat, or

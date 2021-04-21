@@ -74,18 +74,19 @@ my $pg = Munin::Plugin::Pgsql->new(
     vlabel   => 'Buffers / second',
     basequery =>
         "SELECT sum(blks_read) AS blks_read,sum(blks_hit) AS blks_hit FROM pg_stat_database %%FILTER%%",
+    paramdatabase  => 1,
     pivotquery     => 1,
     wildcardfilter => " WHERE datname=?",
     configquery    => [
         "VALUES ('blks_read','Buffers read'),('blks_hit','Buffers hit')", [
             8.1,
-            "SELECT 'blks_read','Buffers read' UNION ALL SELECT 'blks_hit','Buffers hit'"
-        ]
+            "SELECT 'blks_read','Buffers read' UNION ALL SELECT 'blks_hit','Buffers hit'",
+        ],
     ],
     suggestquery =>
         "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1 LIMIT 10",
-    graphtype => 'DERIVE'
+    graphtype => 'DERIVE',
+    graphmin  => 0,
 );
 
 $pg->Process();
-

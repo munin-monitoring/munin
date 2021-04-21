@@ -32,14 +32,16 @@ Should be rewritten as a autoconfigurable snmp__users (or some such
 name, not sure how specific the OIDs it presents are) plugin using the
 Plugin::SNMP module.
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-(C) Copyright 2006-2009.  Written by Espen Braastad, Linpro AS for OSL
-(2006) Further modified by Erik Inge Bolsø, Linpro AS for OSL (2007)
+  Copyright (C) 2007 Erik Inge Bolsø, Linpro AS
+  Copyright (C) 2006-2009 Espen Braastad, Linpro AS
 
 =head1 LICENSE
 
-GPLv2.
+GPLv2
+
+SPDX-License-Identifier: GPL-2.0-only
 
 =head1 MAGIC MARKERS
 
@@ -87,7 +89,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
         print "graph_title Users on " . ${sysname} . " (" . ${target} . ")\n";
         print "graph_args --base 1000\n";
         print "graph_vlabel Active users\n";
-        print "graph_category Nomadix\n";
+        print "graph_category wireless\n";
         print 'graph_info This graph shows the amount of users in AAA state "Valid" connected to ' . ${target} . ".\n";
         print "valid.label Valid users\n";
         print "valid.type GAUGE\n";
@@ -97,7 +99,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
 # Checking if snmpwalk is found and executable
 if(! -x ${snmpwalk}){
         ${status}=2;
-        print STDERR "Error: " . ${snmpwalk} . " not found.\n"; 
+        print STDERR "Error: " . ${snmpwalk} . " not found.\n";
         if(${debug}){
                 print "Exit code: " . ${status} . "\n";
         }

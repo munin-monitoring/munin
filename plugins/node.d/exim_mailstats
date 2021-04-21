@@ -1,5 +1,8 @@
 #!/usr/bin/perl -w
 
+use strict;
+use warnings;
+
 =head1 NAME
 
 exim_mailstats - Plugin to monitor the number of mails received and
@@ -44,8 +47,10 @@ None known
 
 =head1 AUTHOR
 
-Copyright (C) 2000-2009 Torstein Svendsen, Henrik Grindal Bakken,
-Jimmy Olsen, Nicolai Langfeldt and others.
+  Copyright (C) 2006-2009 Nicolai Langfeldt
+  Copyright (C) 2004-2005,2011 Jimmy Olsen
+  Copyright (C) Henrik Grindal
+  Copyright (C) Torstein Svendsen
 
 Torstein Svendsen recalls originally writing this with Henrik Grindal
 Bakken to create MRTG graphs of exims mailqueues for Linpros client
@@ -64,7 +69,6 @@ GPLv2
 # In most installations the "use lib" can be removed as the Munin
 # modules are installed in perls module path.
 
-use strict;
 use lib $ENV{'MUNIN_LIBDIR'};
 use Munin::Plugin;
 
@@ -135,7 +139,7 @@ my $logfile;
 if ($ARGV[0] and $ARGV[0] eq "autoconf") {
     if (defined($LOGDIR)) {
         if (! -d $LOGDIR) {
-            print "no (logdir does not exist)\n";
+            print "no (logdir '$LOGDIR' does not exist)\n";
             exit 0;
         }
         $logfile = $LOGDIR . '/' . ($LOGNAME || 'mainlog');

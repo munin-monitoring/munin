@@ -19,21 +19,21 @@ BEGIN {
 my $current_timeout_epoch;
 
 # This sub always uses absolute epoch time reference.
-# This is in order to cope with eventual stealed time... 
+# This is in order to cope with eventual stealed time...
 # ... and to avoid complex timing computations
 #
 # $timeout is relative seconds, $timeout_epoch is absolute.
 sub do_with_timeout {
     my ($timeout, $block) = @_;
 
-    croak 'Argument exception: $timeout' 
+    croak 'Argument exception: $timeout'
         unless $timeout && $timeout =~ /^\d+$/;
-    croak 'Argument exception: $block' 
+    croak 'Argument exception: $block'
         unless ref $block eq 'CODE';
 
     my $new_timeout_epoch = time + $timeout;
 
-    # Nested timeouts cannot extend the global timeout, 
+    # Nested timeouts cannot extend the global timeout,
     # and we always leave 5s for outer loop to finish itself
     if ($current_timeout_epoch && $new_timeout_epoch > $current_timeout_epoch - 5) {
 	    $new_timeout_epoch = $current_timeout_epoch - 5;
@@ -41,7 +41,7 @@ sub do_with_timeout {
 
     if ($new_timeout_epoch <= time) {
     	# Yey ! Time's up already, don't do anything, just : "farewell !"
-        return undef;
+        return;
     }
 
     # Ok, going under new timeout setting
@@ -50,11 +50,11 @@ sub do_with_timeout {
 
     my $ret_value;
     eval {
-        local $SIG{ALRM} = sub { die "alarm\n" }; # NB: \n required 
+        local $SIG{ALRM} = sub { die "alarm\n" }; # NB: \n required
         alarm ($new_timeout_epoch - time);
         $ret_value = $block->();
     };
-    my $err = $EVAL_ERROR;
+    my $err = $@;
 
     # Restore the old $current_timeout_epoch...
     $current_timeout_epoch = $old_current_timeout_epoch;
@@ -75,7 +75,7 @@ sub do_with_timeout {
 
     # And handle the return code
     if ($err) {
-        return undef if $err eq "alarm\n";
+        return if $err eq "alarm\n";
         die $err; # Propagate any other exceptions
     }
 
@@ -118,14 +118,14 @@ See also L<Time::Out>, L<Sys::AlarmCall>
  my $finished_with_no_timeout = do_with_timeout($seconds, $code_ref)
      or die "Timed out!";
 
-Executes $block with a timeout of $seconds.  Returns the return value of the $block 
+Executes $block with a timeout of $seconds.  Returns the return value of the $block
 if it completed within the timeout.  If the timeout is reached and the code is still
 running, it halts it and returns undef.
 
 NB: every $code_ref should return something defined, otherwise the caller doesn't know
 if a timeout occurred.
 
-Calls to do_with_timeout() can be nested.  Any exceptions raised 
+Calls to do_with_timeout() can be nested.  Any exceptions raised
 by $block are propagated.
 
 =back

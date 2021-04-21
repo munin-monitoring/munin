@@ -15,3 +15,4 @@ Guidelines for developing Munin.
    environment.rst
    documenting.rst
    tests.rst
+   data_structures.rst

@@ -1,7 +1,4 @@
 #
-# Copyright (C) 2004-2009 Dagfinn Ilmari Mannsaaker, Nicolai Langfeldt,
-# Linpro AS
-#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; version 2 dated June,
@@ -56,6 +53,8 @@ package Munin::Plugin::SNMP;
 
 use strict;
 use warnings;
+
+use English qw(-no_match_vars);
 
 use Net::SNMP;
 use Munin::Plugin;
@@ -491,7 +490,7 @@ sub get_single {
 	return $response->{$oid};
 }
 
-=head2 get_by_regex() - Retrive table of values filtered by regex applied to the value
+=head2 get_by_regex() - Retrieve table of values filtered by regex applied to the value
 
 This example shows the usage for a netstat plugin.
 
@@ -550,12 +549,12 @@ L<Net::SNMP>
 
 =head1 AUTHOR
 
-Dagfinn Ilmari Mannsåker, Nicolai Langfeldt
-Rune Nordbøe Skillingstad added timeout support.
+  Copyright (c) 2009-2010 Matthew Boyle
+  Copyright (c) 2009 Rune Nordbøe Skillingstad
+  Copyright (c) 2008-2010 Nicolai Langfeldt
+  Copyright (c) 2004 Dagfinn Ilmari Mannsåker
 
-=head1 COPYRIGHT/License.
-
-Copyright (c) 2004-2009 Dagfinn Ilmari Mannsåker and Nicolai Langfeldt.
+=head1 LICENSE
 
 All rights reserved. This program is free software; you can
 redistribute it and/or modify it under the terms of the GNU General

@@ -42,18 +42,22 @@ elif [ $FUNCTION = "busy" ]; then
 	OUT=wtime
 	OUTNAME=wait
 	CDEF=",100,*"
+	GARGS="--lower-limit 0 --upper-limit 100"
+	VLABEL='%'
 elif [ $FUNCTION = "bytes" ]; then
 	TITLE="I/O"
 	IN=nread
 	INNAME=$IN
 	OUT=nwritten
 	OUTNAME=$OUT
+	VLABEL='Bytes per second'
 elif [ $FUNCTION = "ops" ]; then
 	TITLE="Operations"
 	IN=reads
 	INNAME=$IN
 	OUT=writes
 	OUTNAME=$OUT
+	VLABEL='Operations per second'
 fi
 
 if [ "$1" = "autoconf" ]; then
@@ -68,7 +72,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -x /usr/bin/kstat ]; then
-		kstat -p -c '/disk|nfs|tape/' -s "/^$IN\$/" | sed -e 's/:.*//' -e 's/ssd/sd/' -e '/^fd$/d' | sort -u
+		kstat -p -c '/disk|nfs|tape/' -s "/^$IN\$/" | sed -e 's/:.*//' -e 's/ssd|vdc|zvblk/sd/' -e '/^fd$/d' | sort -u
 		exit 0
 	else
 		exit 1
@@ -77,7 +81,7 @@ fi
 
 REGEX="$MODULE"
 if [ $MODULE = "sd" ]; then
-	REGEX="/^s?sd$/"
+	REGEX="/^(s?sd|vdc|zvblk)$/"
 	NAME="Disk Device"
 elif [ $MODULE = "dad" ]; then
 	NAME="IDE Disk Device"
@@ -104,8 +108,9 @@ fi
 
 if [ "$1" = "config" ]; then
 	echo "graph_title $NAME $TITLE"
-	echo 'graph_args --base 1024'
+	echo "graph_args --base 1024 $GARGS"
 	echo 'graph_category disk'
+	echo "graph_vlabel $VLABEL"
 
 	export IN INNAME OUT OUTNAME CDEF
 	if [ "$HAS_MAPDEV" ]; then
@@ -133,14 +138,14 @@ if [ "$1" = "config" ]; then
 			echo "${dev}_$IN.type DERIVE"
 			echo "${dev}_$IN.min 0"
 			echo "${dev}_$IN.max 1000000000"
-			if [ -n "$CDEV" ]; then
+			if [ -n "$CDEF" ]; then
 				echo "${dev}_$IN.cdef ${dev}_$IN$CDEF"
 			fi
 			echo "${dev}_$OUT.label ${dev}_$OUTNAME"
 			echo "${dev}_$OUT.type DERIVE"
 			echo "${dev}_$OUT.min 0"
 			echo "${dev}_$OUT.max 1000000000"
-			if [ -n "$CDEV" ]; then
+			if [ -n "$CDEF" ]; then
 				echo "${dev}_$OUT.cdef ${dev}_$OUT$CDEF"
 			fi
 		done

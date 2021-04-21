@@ -56,7 +56,7 @@ Probably.
 Based on work by Gorlow Maxim and Andrey Yakovlev.  Totaly reworked by
 Nicolai Langfeldt, BroadNet AS, Oslo, Norway.
 
-(C) 2013 BroadNet AS, Nicolai Langfeldt
+  Copyright (C) 2013 Nicolai Langfeldt, BroadNet AS
 
 =head1 LICENSE
 
@@ -463,7 +463,7 @@ sub emit_config {
 
     say "graph_title ".( $title{$graph} || "Untitled /$graph/");
     say process_oids( "graph_vlabel " . $vlabel{$graph}, $values );
-    say "graph_category UPS";
+    say "graph_category sensors";
     say process_oids( "graph_info " . $info{$graph}, $values );
 
     foreach my $label (keys %{ $label{$graph} } ) {

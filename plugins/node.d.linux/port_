@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-port_ - Munin wildcard plugin to monitor netwok port usage.
+port_ - Munin wildcard plugin to monitor network port usage.
 
 =head1 CONFIGURATION
 
@@ -20,7 +20,7 @@ a numeric port number.
 
 =head1 BUGS
 
-The plugin doesnt count the tcp6 connections if tcp and tcp6 is used.
+The plugin doesn't count the tcp6 connections if tcp and tcp6 is used.
 
 =head1 AUTHOR
 

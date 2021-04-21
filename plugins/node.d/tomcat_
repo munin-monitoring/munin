@@ -11,7 +11,7 @@ Tomcat 5.0 or higher with the default tomcat manager webapp.
 
 =head1 USAGE
 
-Needs access to http://<user>:<password>@localhost:8080/manager/status?XML=true (or modify the address for another host). 
+Needs access to http://<user>:<password>@localhost:8080/manager/status?XML=true (or modify the address for another host).
 
 A munin-user in $CATALINA_HOME/conf/tomcat-users.xml should be set up for this to work.
 
@@ -45,11 +45,11 @@ Override default status-url
 
 =item user
 
-Manager username 
+Manager username
 
 =item password
 
-Manager password 
+Manager password
 
 =item connector
 
@@ -131,8 +131,8 @@ def autoconf()
             puts "yes"
             return 0
         else
-            puts "no"
-            return 1
+            puts "no (could not connect to #{@host}#{@request} on port #{@port})"
+            return 0
         end
     rescue
         puts "no (#{$!})"
@@ -167,7 +167,7 @@ if ARGV[0] == "config"
     case mode
         when "jvm"
             puts "graph_title Tomcat JVM memory"
-            puts "graph_category tomcat"
+            puts "graph_category appserver"
             puts "graph_args --base 1024 -l 0"
             puts "graph_vlabel Bytes"
             puts "graph_order used free max OldGenUsed OldGenMax"
@@ -177,13 +177,13 @@ if ARGV[0] == "config"
             puts "used.draw AREA";
             puts "max.label maximum bytes";
             puts "max.draw LINE2";
-            puts "OldGenMax.label CMS Old Gen maximum bytes";
+            puts "OldGenMax.label Old Gen maximum bytes";
             puts "OldGenMax.draw LINE2";
-            puts "OldGenUsed.label CMS Old Gen used bytes";
+            puts "OldGenUsed.label Old Gen used bytes";
             puts "OldGenUsed.draw LINE1";
         when "access"
             puts "graph_title Tomcat accesses"
-            puts "graph_category tomcat"
+            puts "graph_category appserver"
             puts "graph_args --base 1000"
 	    puts "graph_order accesses errors"
             puts "graph_vlabel accesses / ${graph_period}"
@@ -196,7 +196,7 @@ if ARGV[0] == "config"
             }
         when "volume"
             puts "graph_title Tomcat volume"
-            puts "graph_category tomcat"
+            puts "graph_category appserver"
             puts "graph_args --base 1000"
 	    puts "graph_vlabel bytes in (-) / out (+) per ${graph_period}"
             puts "graph_order volumein volume"
@@ -212,7 +212,7 @@ if ARGV[0] == "config"
             puts "volumein.graph no"
         when "maxtime"
             puts "graph_title Tomcat max processing time for a request"
-            puts "graph_category tomcat"
+            puts "graph_category appserver"
             puts "graph_args --base 1000 -l 0"
             puts "graph_vlabel ms"
 	    w[mode].each { |k, v|
@@ -222,7 +222,7 @@ if ARGV[0] == "config"
             }
         when "avgtime"
             puts "graph_title Tomcat average processing time / request"
-            puts "graph_category tomcat"
+            puts "graph_category appserver"
             puts "graph_args --base 1000 -l 0"
             puts "graph_vlabel ms / request (avg)"
 	    w[mode].each { |k, v|
@@ -232,7 +232,7 @@ if ARGV[0] == "config"
             }
         when "threads"
             puts "graph_title Tomcat threads"
-            puts "graph_category tomcat"
+            puts "graph_category appserver"
             puts "graph_args --base 1000 -l 0"
             puts "graph_vlabel threads"
             puts "graph_order busy idle max"
@@ -268,7 +268,7 @@ w["jvm"]["max"] = node.attributes["max"]
 w["jvm"]["used"] = node.attributes["total"].to_i - node.attributes["free"].to_i
 w["jvm"]["free"] = node.attributes["free"]
 
-node = REXML::XPath.first(doc, "//status/jvm/memorypool[@name='CMS Old Gen']")
+node = REXML::XPath.first(doc, "//status/jvm/memorypool[contains(@name,' Old Gen')]")
 w["jvm"]["OldGenMax"] = node.attributes["usageMax"]
 w["jvm"]["OldGenUsed"] = node.attributes["usageUsed"]
 

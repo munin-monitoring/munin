@@ -46,6 +46,7 @@ nodes
 
 .. index::
    triple: protocol; command; config
+.. _plugin-config:
 
 config *<query-item>*
     Shows the plugins configuration items. See the config protocol for a full description.
@@ -145,7 +146,8 @@ Returned data fields:
 
     <field>.value
 
-Numeric value, or 'U'.
+Numeric value (e.g. "123.45"), timestamp and numeric value separated by a colon (e.g. "1234:56.7")
+or 'U'.
 
 ::
 
@@ -159,3 +161,8 @@ Numeric value, or 'U'.
   < cache.value 8593408
   < free.value 235753472
   < swap.value 85053440
+  < .
+  > fetch load_1sec
+  < load.value 2148659:0.42
+  < load.value 2148660:0.23
+  < load.value 2148661:0.12

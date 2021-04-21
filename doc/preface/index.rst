@@ -32,7 +32,7 @@ hyperlinking abilities of modern documentation readers.
         *This is the part you are currently reading.*
 
         It focus on very generic
-        informations about Munin, and also gives some guidelines on how to
+        information about Munin, and also gives some guidelines on how to
         interact with the Munin ecosystem.
 
         **Every Munin user should read this.**

@@ -5,7 +5,7 @@ import java.lang.management.MemoryUsage;
 
 public abstract class AbstractMemoryUsageProvider extends
 		AbstractAnnotationGraphsProvider {
-	
+
 	protected MemoryUsage memoryUsage;
 
 	protected AbstractMemoryUsageProvider(Config config) {

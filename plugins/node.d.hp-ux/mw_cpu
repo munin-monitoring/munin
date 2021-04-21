@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 # this is public domain copy and share at will
-# quick n dirty hack to read specific performance data on HP-UX thru
+# quick n dirty hack to read specific performance data on HP-UX through
 # measureware (perfview)
 #
 # Sigurd Mytting:
@@ -43,6 +43,7 @@ my $reptfile = "/var/tmp/munin.rept-basic";
 if ($ARGV[0] eq "config") {
     print "graph_title CPU Utilization\n";
     print "graph_vlabel %\n";
+    print "graph_category cpu\n";
     print "graph_scale no\n";
     print "graph_args --upper-limit 100 -l 0\n";
     print "GBL_CPU_SYS.label System\n";

@@ -267,7 +267,7 @@ $plugin->add_graphs
     title => "Asterisk active channels",
     args => "--base 1000 -l 0",
     vlabel => "channels",
-    category => "asterisk",
+    category => "voip",
     order => "total " . join(' ', @CHANNELS),
     fields =>
     {
@@ -284,7 +284,7 @@ $plugin->add_graphs
     title => "Asterisk voicemail messages",
     args => "--base 1000 -l 0",
     vlabel => "messages",
-    category => "asterisk",
+    category => "voip",
     fields =>
     {
      messages =>
@@ -299,7 +299,7 @@ $plugin->add_graphs
    {
     title => "Asterisk meetme statistics",
     args => "--base 1000 -l 0",
-    category => "asterisk",
+    category => "voip",
     fields =>
     {
      users =>
@@ -321,7 +321,7 @@ $plugin->add_graphs
     title => "Asterisk channels per codec",
     args => "--base 1000 -l 0",
     vlabel => "channels",
-    category => "asterisk",
+    category => "voip",
     order => join(' ', @CODECS) . " other unknown",
     fields =>
     {

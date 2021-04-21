@@ -3,11 +3,14 @@
 # with a layout as old DOS defraggers
 #
 # Idea borrowed from seekwatcher [http://oss.oracle.com/~mason/seekwatcher/]
-# Copyright (C) 2010 - Steve Schnepp - GPL
+#
+# Copyright (C) 2010 Steve Schnepp
+#
+# License: GPL
 
 use strict;
 use warnings;
-	
+
 use Curses;
 use Time::HiRes qw(sleep);
 
@@ -27,7 +30,7 @@ Curses::curs_set(0);
 my $last_tstp = 0;
 my $tstp_step = 1 / 25; # 25 Hz
 
-# use non-blocking IO on stdin. 
+# use non-blocking IO on stdin.
 # Otherwise when there is no activity, the drawing is stalled
 use IO::Handle;
 STDIN->blocking(0);
@@ -62,10 +65,10 @@ while(1) {
 } continue {
 }
 
-sub draw 
+sub draw
 {
 	my $io_ops = shift;
-	
+
 	use Term::Size;
 
 	my ($columns, $rows) = Term::Size::chars *STDOUT{IO};
@@ -73,8 +76,8 @@ sub draw
 
 	my $nb_chars = $columns * $rows;
 	my $blocks_per_char = int ($nb_blocks_1k * 2 / $nb_chars) + 1;
-	
-	# Each frame we redraw everything 
+
+	# Each frame we redraw everything
 	$win->clear();
 
 	# Update the status line

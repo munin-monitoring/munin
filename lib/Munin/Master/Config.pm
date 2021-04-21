@@ -143,6 +143,10 @@ my %booleans = map {$_ => 1} qw(
 		carbon_prefix    => "",
 		config_file      => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf",
 		dbdir            => $Munin::Common::Defaults::MUNIN_DBDIR,
+		dbdriver         => "SQLite",
+		dburl            => undef,
+		dbuser           => "",
+		dbpasswd         => "",
 		verbose          => 0,
 		debug            => 0,
 		fork             => 1,
@@ -151,6 +155,7 @@ my %booleans = map {$_ => 1} qw(
 		groups           => {},
 		local_address    => 0,
 		logdir           => $Munin::Common::Defaults::MUNIN_LOGDIR,
+		logoutput        => 'syslog',
 		max_processes    => 16,
 		rundir           => $Munin::Common::Defaults::MUNIN_STATEDIR,
 		timeout          => 180,
@@ -163,6 +168,8 @@ my %booleans = map {$_ => 1} qw(
 		tmpldir          => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
 	        staticdir        => "$Munin::Common::Defaults::MUNIN_CONFDIR/static",
 	        cgitmpdir        => "$Munin::Common::Defaults::MUNIN_CGITMPDIR",
+		ssh_command      => "ssh",
+		ssh_options      => "-o ChallengeResponseAuthentication=no -o StrictHostKeyChecking=no",
 	    }, $class ),
 
 	    oldconfig => bless ( {
@@ -278,7 +285,7 @@ sub _extract_group_name_from_definition {
 
 
 sub _concat_config_line {
-    # Canonify and concatenate current prefix and and the config line
+    # Canonify and concatenate current prefix and the config line
     # we're parsing now in a correct manner.
 
     # See also _split_config_line.
@@ -370,9 +377,9 @@ sub _concat_config_line_ok {
     eval {
 	$self->_split_config_line_ok($longkey);
     };
-    if ($EVAL_ERROR) {
+    if ($@) {
 	# _split_config_line_ok already logged the problem.
-	my $err_msg = "[ERROR] config error under [$prefix] for '$key $value' : $EVAL_ERROR";
+	my $err_msg = "[ERROR] config error under [$prefix] for '$key $value' : $@";
 	ERROR $err_msg;
 	die $err_msg;
     }
@@ -459,8 +466,8 @@ sub _split_config_line_ok {
 
     if ($host =~ /[^-A-Za-z0-9\.]/) {
 	# Since we're not quite sure what context we're called in we'll report the error message more times rather than fewer.
-	ERROR "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.";
-	croak "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.\n";
+	ERROR "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.";
+	croak "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.\n";
     }
 
     return ($groups,$host,$key);
@@ -499,7 +506,7 @@ sub parse_config {
 	    $continuation = '';
 	}
 
-        # This must be handled after continuation hadling otherwise
+        # This must be handled after continuation handling otherwise
 	# empty lines will be ignored in continuation context.
         next if !length($line);
 
@@ -537,7 +544,7 @@ sub look_up {
 	    $value = $value->{groups}{$group};
 
 	} else {
-	    return undef;
+	    return;
 	}
     }
 
@@ -548,7 +555,7 @@ sub look_up {
 	return $value->{hosts}{$host};
     };
 
-    return undef;
+    return;
 }
 
 

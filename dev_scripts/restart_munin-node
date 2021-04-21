@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ./dev_scripts/stop_munin-node
 ./dev_scripts/start_munin-node "$@"

@@ -1,0 +1,3 @@
+# settings for the "flake8" (python code style checks)
+[flake8]
+max-line-length = 99
