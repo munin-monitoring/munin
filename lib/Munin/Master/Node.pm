@@ -88,7 +88,7 @@ sub _do_connect {
         $self->{reader} = $self->{writer} = IO::Socket::IP->new(
 		PeerAddr  => $uri->host,
 		PeerPort  => $port,
-		LocalAddr => $config->{local_address},
+		LocalAddr => $self->{configref}{local_address} || $config->{local_address},
 		Proto     => 'tcp',
 		MultiHomed => 1,
 		Timeout   => $config->{timeout}
