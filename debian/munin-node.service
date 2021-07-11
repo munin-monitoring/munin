@@ -7,6 +7,7 @@ After=network-online.target
 EnvironmentFile=-/etc/default/munin-node
 Type=notify
 Restart=always
+ExecStartPre=/usr/bin/mkdir -p /run/munin
 ExecStart=/usr/sbin/munin-node --foreground $DAEMON_ARGS
 PIDFile=/run/munin/munin-node.pid
 # Plugins like "smart_" require access to devices
