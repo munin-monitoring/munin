@@ -1,3 +1,11 @@
+munin (2.0.67-2) unstable; urgency=medium
+
+  [ Kentaro Hayashi ]
+  * debian/munin-node.service: ensure /run/munin directory exists.
+    Closes: #990371.
+
+ -- Holger Levsen <holger@debian.org>  Mon, 12 Jul 2021 13:12:42 +0200
+
 munin (2.0.67-1) unstable; urgency=medium
 
   [ Holger Levsen ]
