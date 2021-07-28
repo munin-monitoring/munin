@@ -106,8 +106,8 @@ lint-plugins:
 	#     * plugins/node.d.debug/*: these plugins are used only for testing
 	#     * AbstractMultiGraphsProvider.java: this is not a plugin
 	plugins_without_multigraph_check=$$(grep -rlwZ "multigraph" plugins/ \
-		| xargs -r -0 grep -LwE '((need|is)_multigraph|Munin::Plugin::Framework|MUNIN_CAP_MULTIGRAPH)') \
-		| grep -vE 'plugins/(node\.d\.debug/|.*/AbstractMultiGraphsProvider\.java)'; \
+		| xargs -r -0 grep -LwE '((need|is)_multigraph|Munin::Plugin::Framework|MUNIN_CAP_MULTIGRAPH)' \
+		| grep -vE 'plugins/(node\.d\.debug/|.*/AbstractMultiGraphsProvider\.java)'); \
 		if [ -n "$$plugins_without_multigraph_check" ]; then \
 			echo '[ERROR] Some plugins lack a "multigraph" check (e.g. "needs_multigraph();" or "is_multigraph"):'; \
 			echo "$$plugins_without_multigraph_check" | sed 's/^/\t/'; false; fi >&2
