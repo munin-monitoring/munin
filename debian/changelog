@@ -1,3 +1,11 @@
+munin (2.0.67-3) unstable; urgency=high
+
+  * debian/munin-node.service: ensure /run/munin directory exists with the
+    correct permissions. Closes: #991411 (which was introduced in 2.0.67-2 to
+    address #990371)
+
+ -- Holger Levsen <holger@debian.org>  Wed, 28 Jul 2021 18:16:53 +0200
+
 munin (2.0.67-2) unstable; urgency=medium
 
   [ Kentaro Hayashi ]
