@@ -1,3 +1,11 @@
+munin (2.0.67-4) unstable; urgency=medium
+
+  * debian/munin-node.service: use full path to /usr/bin/install as one user
+    reported systemd complaining about the non absolut path on ubuntu 18.04.
+    (Both variants have been tested fine on bullseye.)
+
+ -- Holger Levsen <holger@debian.org>  Fri, 30 Jul 2021 23:45:45 +0200
+
 munin (2.0.67-3) unstable; urgency=high
 
   * debian/munin-node.service: ensure /run/munin directory exists with the
