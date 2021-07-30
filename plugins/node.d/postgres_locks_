@@ -119,7 +119,7 @@ my $pg = Munin::Plugin::Pgsql->new(
             SELECT 'accessexclusivelock','AccessExclusiveLock','Used by ALTER TABLE, DROP TABLE, TRUNCATE, REINDEX, CLUSTER and VACUUM FULL queries'",
         ],
     ],
-    suggestquery => "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1 LIMIT 10",
+    suggestquery => "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1",
     graphdraw    => 'AREA',
     stack        => 1,
 );
