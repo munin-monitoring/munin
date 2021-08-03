@@ -50,7 +50,6 @@ and the version numbering scheme, can be found in `Munin's GitHub Wiki`__.
 
 .. __ : https://github.com/munin-monitoring/munin/wiki/_pages
 
-
 Building status
 ---------------
 
@@ -63,8 +62,8 @@ docs : |docs-latest|
 .. |build-stable2.0| image:: https://travis-ci.org/munin-monitoring/munin.svg?branch=stable-2.0
    :target: https://travis-ci.org/munin-monitoring/munin
 
-.. |build-master| image:: https://travis-ci.org/munin-monitoring/munin.svg?branch=master
-   :target: https://travis-ci.org/munin-monitoring/munin
+.. |build-master| image:: https://github.com/munin-monitoring/munin/actions/workflows/build-n-test.yml/badge.svg?branch=master
+   :target: https://github.com/munin-monitoring/munin/actions/workflows/build-n-test.yml
 
 .. |coverage-master| image:: https://coveralls.io/repos/github/munin-monitoring/munin/badge.svg?branch=master
    :target: https://coveralls.io/github/munin-monitoring/munin?branch=master
