@@ -9,6 +9,7 @@ cat <<EOF
   libdbd-pg-perl
   libdbd-sqlite3-perl
   libdbi-perl
+  libdevel-confess-perl
   libdevel-cover-perl
   libdevel-nytprof-perl
   libfile-copy-recursive-perl
