@@ -27,7 +27,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Fetch the deps
-        run: dev_scripts/deps
+        run: sudo dev_scripts/deps
 
       # Runs a set of commands using the runners shell
       - name: Testing
