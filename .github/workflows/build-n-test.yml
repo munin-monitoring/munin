@@ -25,10 +25,11 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
       - name: Fetch the deps
         run: sudo dev_scripts/deps
 
-      # Runs a set of commands using the runners shell
+      - name: Setup the mock hostname
+        run: echo "127.0.0.1	testing.acme.com" | sudo tee -a /etc/hosts
+
       - name: Testing
         run: make test
