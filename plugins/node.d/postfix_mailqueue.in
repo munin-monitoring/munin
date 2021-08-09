@@ -52,7 +52,7 @@ Unreadable or damaged queue files are moved here for inspection.
 =head1 CONFIGURATION
 
 By default "postconf -h queue_directory" is used to determine the
-spool directory.  Is postconf is not available in the $PATH then
+spool directory.  If postconf is not available in the $PATH then
 /var/spool/postfix is assumed.  This can be overridden by the
 "spooldir" environment variable like so:
 
@@ -81,11 +81,13 @@ munin-node.
 
 =cut
 
-# atempt to get spooldir via postconf, but environment overrides.
-
+# Attempt to get spooldir via postconf, but environment overrides.
 # Remember that postconf is not available unless postfix is.
-POSTCONFSPOOL="$(postconf -h queue_directory 2>/dev/null || echo /var/spool/postfix)"
-SPOOLDIR=${spooldir:-$POSTCONFSPOOL}
+if [ -n "${spooldir}" ]; then
+    SPOOLDIR=${spooldir}
+else
+    SPOOLDIR="$(postconf -h queue_directory 2>/dev/null || echo /var/spool/postfix)"
+fi
 
 . "$MUNIN_LIBDIR/plugins/plugin.sh"
 
