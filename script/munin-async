@@ -118,7 +118,7 @@ while (my $line = <>) {
 		print ".\n";
 	} elsif ($line =~ m/^spoolfetch (-?\d+)/) {
 		my $last_epoch = $1;
-		print $spoolreader->fetch($last_epoch);
+		$spoolreader->fetch($1, sub { print shift(); });
 		print ".\n";
 	} elsif ($spoolfetch && $line =~ m/^cap/) {
 		print "cap spool\n";

@@ -21,6 +21,36 @@ for running as root enter this in a plugin configuration file:
   [diskstat_*]
     user root
 
+You can sym link to this wildcard plugin in various ways:
+
+- diskstat_iops_sda
+- diskstat_latency_nvme2n1
+- diskstat_throughput_nvme0n1
+- diskstat_throughput_nvme4n1_:mnt:extrastorage
+- diskstat_iops_:dev:disk:by-uuid:18edf1f7-961a-4621-8468-92f3981ffabc_:var:www
+
+The segments are separated by _ and denote:
+
+- name of the plugin. Always diskstat.
+- What you're measuring: iops (IO/s), latency (includes utilization) and
+  throughput.
+- Device: like sda, xvda, nvme0n1 (the latter which, incidentally, still
+  denotes a drive, not a partition), or a symlink to a device, with the slashes
+  writtan as colons. So, for example:
+  diskstat_iops_:dev:disk:by-uuid:18edf1f7-961a-4621-8468-92f3981ffabc
+- The last segment is optional, and specifies a custom name. Agan, slashes are
+  written as colons, so :var:www becomes /var/www. This is especially useful
+  when using symlinks to /dev/disk/by-uuid.
+
+As an example, the following:
+
+  diskstat_iops_:dev:disk:by-uuid:18edf1f7-961a-4621-8468-92f3981ffabc_:var:www
+
+Creates an io/s graph for
+/dev/disk/by-uuid/18edf1f7-961a-4621-8468-92f3981ffabc and names it /var/www.
+Without a custom name, the link is followed and the normal device name is used
+(like sdb).
+
 =head1 INTERPRETATION
 
 Among the more self-describing or well-known values like C<throughput>
@@ -216,7 +246,7 @@ DEVICE:
 # needed from here on
 
 my $basename = basename($0);
-my ( $mode, $device ) = $basename =~ m/diskstat_(\w+)_([-+:\w]+)$/;
+my ( $mode, $device, $name_override ) = $basename =~ m/diskstat_([-+:a-zA-Z0-9]+)_([-+:a-zA-Z0-9]+)(?:_([-+:\w]+))?$/;
 
 if ( not defined $device ) {
     croak
@@ -224,6 +254,13 @@ if ( not defined $device ) {
 }
 
 $device = translate_device_name( $device, 'FROM_FS' );
+if (-l $device) {
+    $device = basename(readlink($device));
+}
+
+if (defined $name_override) {
+    $name_override = translate_device_name( $name_override, 'FROM_FS' );
+}
 
 ##########
 # config #
@@ -237,10 +274,18 @@ if ( defined $ARGV[0] && $ARGV[0] eq 'config' ) {
         $pretty_device = translate_devicemapper_name($device);
     }
 
+    my $fullname;
+    if ( defined $name_override && $name_override ne "" ) {
+      $fullname = $name_override;
+    }
+    else {
+      $fullname = "/dev/$pretty_device";
+    }
+
     if ( $mode eq 'latency' ) {
 
         print <<EOF;
-graph_title Disk latency for /dev/$pretty_device
+graph_title Disk latency for $fullname
 graph_args --base 1000
 graph_category disk
 util.label Device utilization (percent)
@@ -269,7 +314,7 @@ EOF
     elsif ( $mode eq 'throughput' ) {
 
         print <<EOF;
-graph_title Disk throughput for /dev/$pretty_device
+graph_title Disk throughput for $fullname
 graph_args --base 1024
 graph_vlabel Bytes/second
 graph_category disk
@@ -284,7 +329,7 @@ EOF
     elsif ( $mode eq 'iops' ) {
 
         print <<EOF;
-graph_title Disk IOs for /dev/$pretty_device
+graph_title Disk IOs for $fullname
 graph_args --base 1000
 graph_vlabel Units/second
 graph_category disk
@@ -564,7 +609,10 @@ sub translate_device_name {
     if ( $mode eq 'FROM_FS' ) {
 
         # Hackaround to mitigate issues with unwisely chosen former separator
-        if ( not( $device =~ m/dm-\d+/ ) ) {
+        if ( $device =~ m/uuid/) {
+            $device =~ tr#:#/#;
+        }
+        elsif ( not( $device =~ m/dm-\d+/ ) ) {
             $device =~ tr#-+:#///#;
         }
 
