@@ -123,7 +123,7 @@ sub main
     $0 = $1;
 
     my @original_argv = @ARGV;
-    my ($plugin, $arg) = parse_args();
+    my ($plugin, @args) = parse_args();
 
     # Loads the settings from munin-node.conf.
     # Ensures that, where options can be set both in the config and in
@@ -135,15 +135,15 @@ sub main
 
     # Run directly or execute recursively via "systemd-run".
     if (($ignore_systemd_properties) || (! -d "/run/systemd/system")) {
-        return execute_plugin($plugin, $arg);
+        return execute_plugin($plugin, @args);
     } elsif (!check_systemd_run_permissions()) {
         print STDERR "# Skipping systemd properties simulation due to lack of permissions.\n" if $config->{DEBUG};
-        return execute_plugin($plugin, $arg);
+        return execute_plugin($plugin, @args);
     } else {
         my $systemd_version = get_systemd_version();
         if ((not defined $systemd_version) or ($systemd_version < $REQUIRED_SYSTEMD_VERSION)) {
             print STDERR "# Skipping systemd properties simulation due to required systemd version ($REQUIRED_SYSTEMD_VERSION)\n" if $config->{DEBUG};
-            return execute_plugin($plugin, $arg);
+            return execute_plugin($plugin, @args);
         } else {
             my @munin_node_hardening_flags;
             my $parse_flags_success = 0;
@@ -158,7 +158,7 @@ sub main
                 # Failed to retrieve systemd properties of munin-node service.
                 # Probable causes: systemd is not installed/enabled or the
                 # service unit does not exist.
-                return execute_plugin($plugin, $arg);
+                return execute_plugin($plugin, @args);
             }
         }
     }
@@ -307,7 +307,7 @@ sub run_via_systemd {
 
 
 sub execute_plugin {
-    my ($plugin, $arg) = @_;
+    my ($plugin, @args) = @_;
 
     $services = Munin::Node::Service->new(
         servicedir => $servicedir,
@@ -330,7 +330,7 @@ sub execute_plugin {
 
     # no need for a timeout -- the user can kill this process any
     # time they want.
-    $services->exec_service($plugin, $arg);
+    $services->exec_service($plugin, @args);
 
     # Never reached, but just in case...
     print STDERR "# FATAL: Failed to exec.\n";
@@ -344,7 +344,7 @@ sub parse_args
     my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
     my $sconffile;
 
-    my ($plugin, $arg);
+    my ($plugin, $arg, @extra_args);
 
     print_usage_and_exit() unless GetOptions(
             "config=s"     => \$conffile,
@@ -367,6 +367,8 @@ sub parse_args
         ($arg) = ($ARGV[1] =~ m/^(\w+)$/)
             or die "# ERROR: Invalid characters in argument '$ARGV[1]'.\n";
     }
+    # all remaining arguments are handed over to the plugin without further checks
+    @extra_args = map {m/^(.*)$/} @ARGV[2..$#ARGV];
 
     # Detaint service directory.  FIXME: do more strict detainting?
     if ($servicedir) {
@@ -385,7 +387,7 @@ sub parse_args
         paranoia   => $paranoia,
     });
 
-    return ($plugin, $arg);
+    return ($plugin, $arg, @extra_args);
 }
 
 
