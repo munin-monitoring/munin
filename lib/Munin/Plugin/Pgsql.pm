@@ -51,12 +51,18 @@ variable, but this is usually a bad idea.
 If you are using plugin for several postgres instances, you can customize
 graph title with the environment variable PGLABEL.
 
+Warning and critical can be customized by setting "warning" and "critical" env variables per plugin.
+
 =head2 Example
 
  [postgres_*]
     user postgres
     env.PGUSER postgres
     env.PGPORT 5433
+
+  [postgres_connections_ALL]
+    env.warning :450
+    env.critical :500
 
 =head1 WILDCARD MATCHING
 
@@ -236,8 +242,8 @@ sub new {
         title          => $args{title},
         info           => $args{info},
         vlabel         => $args{vlabel},
-        warning        => $args{warning},
-        critical       => $args{critical},
+        warning        => defined($ENV{'warning'}) ? $ENV{'warning'} : $args{warning},
+        critical       => defined($ENV{'critical'}) ? $ENV{'critical'} : $args{critical},
         graphdraw      => $args{graphdraw},
         graphtype      => $args{graphtype},
         graphperiod    => $args{graphperiod},
