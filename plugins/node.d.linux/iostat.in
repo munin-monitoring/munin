@@ -167,9 +167,9 @@ sub fetch_detailed() {
 		my $tmpnam = $2;
 		my $major  = $1;
 		if ($tmpnam =~ /\d+$/ and !$include_numbered) {
-		    # Special case for devices like cXdXpX,
-		    # like the cciss driver
-		    next unless $tmpnam =~ /\/c\d+d\d+$/
+			# Special case for devices like cXdXpX, like the cciss driver,
+			# or nvmeXnXpX for nvme.
+			next unless ($tmpnam =~ /\/c\d+d\d+$/ || $tmpnam =~ /nvme\d+n\d+$/)
 		}
 		next unless grep { $_ } @fields;
 
