@@ -28,7 +28,7 @@ used to grep with directly.
 
 This plugin simply counts the total number of processes matching the
 configured regular expressions.  The regular expressions are
-interpreted by "grep" (and not egrep or perl).
+interpreted by "grep" (and not grep -E or perl).
 
 =head1 MAGIC MARKERS
 
