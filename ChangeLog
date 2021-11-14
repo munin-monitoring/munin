@@ -1,5 +1,54 @@
 -*- text -*-
 
+munin-2.0.68, 2021-11-14
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Andreas Perhab (1):
+      plugins/postgres_: enable configuring warning/critical
+
+Christoph Moench-Tegeder (2):
+      postgres_querylength: catch real statements only
+      ntp_: do not mask required variable from Net::IP
+
+Guillaume Rousse (2):
+      display locally-defined tresholds
+      use dedicated munin SNMP plugin
+
+Kim B. Heino (2):
+      plugins/mailman: add missing "graph_category" header
+      plugins/postfix_mailqueue: don't run postconf if spooldir-override is defined
+
+Lars Kruse (11):
+      Remove obsolete links to old bug tracker ("trac")
+      Fix typo
+      plugin.sh: remove conversation log regarding shell redirects
+      Remove old "authors" file
+      Fix typos
+      munin-asyncd: use configured update rate if undefined
+      Munin::Master::Node: unify configuration access
+      munin-run: allow to pass additional arguments to the plugin (#1419)
+      Fix homepage link
+      fix(postgres_querylength_): fix wrong PostgreSQL version (for 9.4)
+      docs: remove stale content from release checklist
+
+Sven Edge (1):
+      Handle NVME drives in the Linux iostat plugin (2.0 branch)
+
+Ville Skyttä (1):
+      Use `grep -E/-F` instead of `egrep` and `fgrep`
+
+wferi (1):
+      Use the host-specific local_address configuration if present
+
+
 munin-2.0.67, 2021-02-22
 -------
 Summary
