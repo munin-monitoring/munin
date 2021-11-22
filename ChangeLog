@@ -1,5 +1,22 @@
 -*- text -*-
 
+munin-2.0.69, 2021-11-22
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Andreas Perhab (1):
+
+Lars Kruse (1):
+      Fix loading of "local_address" configuration
+
+
 munin-2.0.68, 2021-11-14
 -------
 Summary
