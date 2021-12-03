@@ -36,7 +36,7 @@ Global attributes
 :Value: string
 :Type: optional
 :Description: Arguments for the rrd grapher. This is used to control how the generated graph looks, and how values are interpreted or presented.
-:See also: rrdgraph_
+:See also: rrdgraph_args_
 :Default:
 
 ============
@@ -500,6 +500,8 @@ Data fetch run
 
 
 .. _cdeftutorial: https://oss.oetiker.ch/rrdtool/tut/cdeftutorial.en.html
+
+.. _rrdgraph_args: https://oss.oetiker.ch/rrdtool/doc/rrdgraph.en.html
 
 .. _rrdgraph: https://oss.oetiker.ch/rrdtool/doc/rrdgraph_graph.en.html
 
