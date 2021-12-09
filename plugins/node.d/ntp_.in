@@ -53,15 +53,17 @@ Same as munin.
 use English qw( -no_match_vars );
 use strict;
 use warnings;
+# work around "strict" check for this variable exported by "Net::IP"
+my $ip_identical;
 eval {
+    no warnings "once";
     require Net::DNS;
     Net::DNS->import();
     require Net::IP;
     Net::IP->import();
+    $ip_identical = $Net::IP::IP_IDENTICAL;
 };
 my $has_requirements = $EVAL_ERROR ? 0 : 1;
-# work around "strict" check for this variable exported by "Net::IP"
-my $IP_IDENTICAL unless $has_requirements;
 
 
 if ($ARGV[0] and $ARGV[0] eq "autoconf") {
@@ -172,7 +174,7 @@ if (lc($srcadr) ne lc($name)) {
                         ($srcadr) = new Net::IP($srcadr);
 
                         ADDRS: foreach my $addr (@addresses) {
-                                if (defined($srcadr->overlaps($addr)) and $srcadr->overlaps($addr) == $IP_IDENTICAL) {
+                                if (defined($srcadr->overlaps($addr)) and $srcadr->overlaps($addr) == $ip_identical) {
                                         $matched = 1;
                                         last ASSOCS;
                                 }

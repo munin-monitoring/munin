@@ -6,7 +6,7 @@ use warnings;
 
 =head1 NAME
 
-fw_packets - Plugin to monitor the throuhgput of a firewall
+fw_packets - Plugin to monitor the throughput of a firewall
 
 =head1 CONFIGURATION
 

@@ -170,7 +170,7 @@ MAIN: while($keepgoing) {
 	my $sock;
 	PLUGIN: foreach my $plugin (@plugins) {
 		# See if this plugin should be updated
-		my $plugin_rate = $spoolwriter->get_metadata("plugin_rates/$plugin") || 300;
+		my $plugin_rate = $spoolwriter->get_metadata("plugin_rates/$plugin") || $minrate;
 		if ($when < ($last_updated{$plugin} || 0) + ($plugin_rate * $min_update_rate_threshold)) {
 			# not yet, next plugin
 			next;

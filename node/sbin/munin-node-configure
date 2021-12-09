@@ -659,10 +659,6 @@ This is munin-node-configure (munin-node) v@@VERSION@@.
 
 Jimmy Olsen, Nicolai Langfeldt, Matthew Boyle
 
-=head1 BUGS
-
-Please see L<http://munin-monitoring.org/report/1>.
-
 =head1 COPYRIGHT
 
 Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.

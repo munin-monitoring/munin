@@ -212,10 +212,6 @@ This is munin-node v@@VERSION@@
 
 Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
 
-=head1 BUGS
-
-Please see L<http://munin-monitoring.org/report/1>.
-
 =head1 COPYRIGHT
 
 Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.

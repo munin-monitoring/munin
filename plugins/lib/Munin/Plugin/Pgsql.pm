@@ -48,12 +48,21 @@ The plugins will by default connect to the 'template1' database, except for
 wildcard per-database plugins. This can be overridden using the PGDATABASE
 variable, but this is usually a bad idea.
 
+If you are using plugin for several postgres instances, you can customize
+graph title with the environment variable PGLABEL.
+
+Warning and critical can be customized by setting "warning" and "critical" env variables per plugin.
+
 =head2 Example
 
  [postgres_*]
     user postgres
     env.PGUSER postgres
     env.PGPORT 5433
+
+  [postgres_connections_ALL]
+    env.warning :450
+    env.critical :500
 
 =head1 WILDCARD MATCHING
 
@@ -144,6 +153,8 @@ use Munin::Plugin;
                 if the plugin should be run on this machine. Must return a single
                 row, two columns columns. The first one is a boolean field
                 representing yes or no, the second one a reason for "no".
+ warning        The warning low and/or high thresholds.
+ critical       The critical low and/or high thresholds.
  graphdraw      The draw parameter for the graph. The default is LINE1.
  graphtype      The type parameter for the graph. The default is GAUGE.
  graphperiod    The period for the graph. Copied directly to the config output.
@@ -212,6 +223,8 @@ sub new {
         title          => $args{title},
         info           => $args{info},
         vlabel         => $args{vlabel},
+        warning        => defined($ENV{'warning'}) ? $ENV{'warning'} : $args{warning},
+        critical       => defined($ENV{'critical'}) ? $ENV{'critical'} : $args{critical},
         graphdraw      => $args{graphdraw},
         graphtype      => $args{graphtype},
         graphperiod    => $args{graphperiod},
@@ -284,6 +297,8 @@ sub Config {
         }
         print "$l.min $self->{graphmin}\n" if (defined $self->{graphmin});
         print "$l.max $self->{graphmax}\n" if (defined $self->{graphmax});
+        print "$l.warning $self->{warning}\n" if (defined $self->{warning});
+        print "$l.critical $self->{critical}\n" if (defined $self->{critical});
         $firstrow = 0;
     }
 }

@@ -244,7 +244,7 @@ sub change_real_and_effective_user_and_group
 
 sub exec_service
 {
-    my ($self, $service, $arg) = @_;
+    my ($self, $service, @args) = @_;
 
     # XXX - Create the statedir for the user
     my $uid = $self->_resolve_uid($service);
@@ -261,7 +261,7 @@ sub exec_service
 
     Munin::Node::OS::set_umask();
 
-    my @command = grep defined, _service_command($self->{servicedir}, $service, $arg);
+    my @command = grep defined, _service_command($self->{servicedir}, $service, @args);
     print STDERR "# About to run '", join (' ', @command), "'\n"
         if $config->{DEBUG};
 
@@ -269,12 +269,12 @@ sub exec_service
 }
 
 
-# Returns the command for the service and (optional) argument, expanding '%c'
+# Returns the command for the service and (optional) arguments, expanding '%c'
 # as the original command (see 'command' directive in
 # <http://munin-monitoring.org/wiki/plugin-conf.d>).
 sub _service_command
 {
-    my ($dir, $service, $argument) = @_;
+    my ($dir, $service, @arguments) = @_;
 
     my @run;
     my $sconf = $config->{sconf};
@@ -282,14 +282,14 @@ sub _service_command
     if ($sconf->{$service}{command}) {
         for my $t (@{ $sconf->{$service}{command} }) {
             if ($t eq '%c') {
-                push @run, ("$dir/$service", $argument);
+                push @run, ("$dir/$service", @arguments);
             } else {
                 push @run, ($t);
             }
         }
     }
     else {
-        @run = ("$dir/$service", $argument);
+        @run = ("$dir/$service", @arguments);
     }
 
     return @run;
@@ -400,7 +400,7 @@ On failure, causes the process to exit.
 
 =item B<exec_service>
 
- $service->exec_service($service, [$argument]);
+ $service->exec_service($service, [@arguments]);
 
 Replaces the current process with an instance of service $service in
 $directory, running with the correct environment and privileges.

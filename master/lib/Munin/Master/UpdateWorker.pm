@@ -251,7 +251,7 @@ sub do_work {
 	}
 
 	if ($EVAL_ERROR =~ m/^NO_SPOOLFETCH_DATA /) {
-	    INFO "[INFO] No spoofetch data for $nodedesignation";
+	    INFO "[INFO] No spoolfetch data for $nodedesignation";
 	    return;
 	} elsif ($EVAL_ERROR) {
 	    ERROR "[ERROR] Error in node communication with $nodedesignation: "

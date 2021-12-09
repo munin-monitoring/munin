@@ -327,7 +327,7 @@ sub populate_stats
         my $procuid = getpwnam($procuser[$i]); # may return undef
 
     STATLINE:
-        foreach my $line(`fgrep -h '($procname[$i])' /proc/[0-9]*/stat`) {
+        foreach my $line(`grep -Fh '($procname[$i])' /proc/[0-9]*/stat`) {
             my ($pid) = $line =~ /^(\d+)/;
 
             my $cmduid = (lstat("/proc/$pid"))[4];

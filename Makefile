@@ -86,7 +86,7 @@ unconfig:
 
 tags:
 	-rm -f TAGS
-	find master common -type f | egrep -v '/(build/|_build/|blib/|\.svn/)' | grep -v '\.t$$' | fgrep -v '~' | xargs etags -l perl -a
+	find master common -type f | grep -Ev '/(build/|_build/|blib/|\.svn/)' | grep -v '\.t$$' | grep -Fv '~' | xargs etags -l perl -a
 
 ######################################################################
 
@@ -526,7 +526,7 @@ build-%: %/Build
 build-common: build-common-defaults-stamp
 
 # BUG: the Build script writes files under PWD when it does "install"
-# can't seem to find a way to persuade it to write otherwhere.
+# can't seem to find a way to persuade it to write elsewhere.
 install-%: %/Build
 	cd $* && $(PERL) Build install \
 		--install_path lib=$(PERLLIB) \

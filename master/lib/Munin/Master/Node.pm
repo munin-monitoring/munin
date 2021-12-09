@@ -85,7 +85,7 @@ sub _do_connect {
         $self->{reader} = $self->{writer} = IO::Socket::INET6->new(
 		PeerAddr  => $uri->host,
 		PeerPort  => $self->{port} || 4949,
-		LocalAddr => $config->{local_address},
+		LocalAddr => $self->_get_node_or_global_setting("local_address"),
 		Proto     => 'tcp', 
 		MultiHomed => 1,
 		Timeout   => $config->{timeout}
@@ -239,16 +239,12 @@ sub list_plugins {
     my ($self) = @_;
 
     # Check for one on this node- if not, use the global one
-    my $use_node_name = defined($self->{configref}{use_node_name})
-        ? $self->{configref}{use_node_name}
-        : $config->{use_node_name};
+    my $use_node_name = $self->_get_node_or_global_setting("use_node_name");
     my $host = $use_node_name
         ? $self->{node_name}
         : $self->{host};
 
-    my $use_default_node = defined($self->{configref}{use_default_node})
-        ? $self->{configref}{use_default_node}
-        : $config->{use_default_node};
+    my $use_default_node = $self->_get_node_or_global_setting("use_default_node");
 
     if (! $use_default_node && ! $host) {
 	die "[ERROR] Couldn't find out which host to list on $host.\n";
