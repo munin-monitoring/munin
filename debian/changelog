@@ -1,3 +1,9 @@
+munin (2.0.69-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 09 Dec 2021 16:07:43 +0100
+
 munin (2.0.67-4) unstable; urgency=medium
 
   * debian/munin-node.service: use full path to /usr/bin/install as one user
