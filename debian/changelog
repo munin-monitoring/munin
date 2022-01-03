@@ -6,6 +6,7 @@ munin (2.0.69-1) UNRELEASED; urgency=medium
 
   [  ]
   * Use secure URI in Homepage field.
+  * Update standards version to 4.6.0, no changes needed.
 
  -- Holger Levsen <holger@debian.org>  Thu, 09 Dec 2021 16:07:43 +0100
 
