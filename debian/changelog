@@ -1,6 +1,7 @@
 munin (2.0.69-1) UNRELEASED; urgency=medium
 
   * New upstream release.
+  * d/copyright: update my copyright years.
 
  -- Holger Levsen <holger@debian.org>  Thu, 09 Dec 2021 16:07:43 +0100
 
