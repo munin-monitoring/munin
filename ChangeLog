@@ -1,3 +1,95 @@
+munin-2.999.16, 2022-01-12
+
+-------
+Summary
+-------
+
+Bugfix
+
+------------------
+Detailed Changelog
+------------------
+
+Andreas Perhab (1):
+      plugins/postgres_: remove limit of 10 databases for suggestions
+
+Hans van Kranenburg (1):
+      Use configured plugin group as primary group
+
+John Hall (1):
+      plugins/memory: add per-cpu counter
+
+JosefRypacek (1):
+      Munin thresholds support for http_loadtime
+
+Juhani Karppinen (1):
+      Fix spelling mistake in apt_all
+
+Kjetil Torgrim Homme (1):
+      adjust_threshold: strings indexes are 1 based in AWK
+
+Lars Kruse (32):
+      Plugins snmp__if(_err)_: describe alias handling for configuration
+      Plugin cpu: add support for hiding selected fields
+      Plugins snmp__if*: clarify usage of interface names
+      munin-node-configure: remove "--exitnoterror" argument
+      LINESTACK: add support for undefined line width and restrict regex
+      Plugins ntp_kernel_*: handle alternative implementations (e.g. ntpsec)
+      Plugins ntp_kernel_*: force non-scientific notation for output
+      Plugin smart_: avoid ambiguous variable name
+      2.0.64
+      Plugin apt_all: prevent ambiguity between slash and hyphen in release names
+      Fix utf8 encoding in plugins
+      Fix special character for author name (Kristian Lyngstøl)
+      Plugin snmp__if_err_: clarify authors list
+      Plugin nomadix_users_: clarify formatting of authors
+      Plugin vserver_cpu_: clarify copyright statement
+      Plugin snmp__uptime: clarify authors
+      Unify spelling of author "Dagfinn Ilmari Mannsåker"
+      Unify more author names
+      doc: mention availability of "ignore_unknown"
+      doc: fix manpage section for munin-node
+      doc: replace "LINE[n]STACK" with "LINESTACK[n]"
+      doc: change special value for "contacts" from "no" to "none"
+      Fix template error in case of an empty host list
+      doc: update description of plugin gallery
+      doc: fix typos and formatting
+      doc: update plugin gallery links
+      README: fix http URLs
+      doc: wording, URLs and copyright year
+      apt_all: remove reference to "update" argument for cron job (#1420)
+
+Maarten van Schouwen (1):
+      Fix plugins_without_multigraph_check in Makefile (#1403)
+
+Mike Beattie (3):
+      Allow '@' in plugin names
+      Support SNMP network interfaces by names instead of index
+      Allow overriding of network interface alias from SNMP
+
+Sander (1):
+      Added note on value order in graph_order
+
+Steve Schnepp (16):
+      upgrade jquery to 1.12.4
+      d: exposing the node port
+      m/g: fix cdef handling
+      m/g: Sending a length header
+      m/g: handle a CDEF that references itself
+      Migrate to GitHub actions (#1416)
+      Update the Badge for GithubActions in master
+      Delete .travis.yml
+
+Younes Ichiche (4):
+      Update async howto documentation
+      some small typos
+      Update documentation for the added timeouts in munin.conf
+      rename timeout parameters
+
+snickerjp (1):
+      fix homepage link (#1418)
+
+
 munin-2.999.15, 2020-07-08
 
 -------
