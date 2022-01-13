@@ -24,6 +24,10 @@ fail2ban communications socket.  You will need to add this:
   [fail2ban]
   user root
 
+Warning or critical thresholds can be configured via environment
+variables either globally ("warning" and "critical")) or separately for
+each field ("foo_warning" or "foo_critical").
+
 =head1 INTERPRETATION
 
 This plugin shows a graph with one line per active fail2ban jail, each
@@ -55,6 +59,7 @@ GPLv2
 
 =cut
 
+. "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 ##############################
 # Configurable variables
@@ -90,7 +95,8 @@ values() {
                 *'Currently banned'*)
                     line="${line##*Currently banned:}"
                     num="${line//[ $'\t']/}"
-                    echo "${jail//[^0-9A-Za-z]/_}.value $num"
+                    fieldname=$(clean_fieldname "$jail")
+                    echo "${fieldname}.value $num"
                     ;;
             esac
         done
@@ -108,7 +114,9 @@ config() {
     echo 'graph_total total'
 
     list_jails | while read -r jail; do
-        echo "${jail//[^0-9A-Za-z]/_}.label $jail"
+        fieldname=$(clean_fieldname "$jail")
+        echo "${fieldname}.label $jail"
+        print_thresholds "${fieldname}" warning critical
     done
 }
 
