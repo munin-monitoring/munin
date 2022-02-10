@@ -6,6 +6,7 @@ munin (2.999.16-1) UNRELEASED; urgency=medium
 
   [  ]
   * Use secure URI in Homepage field.
+  * Remove 29 obsolete maintscript entries in 25 files.
 
  -- Holger Levsen <holger@debian.org>  Thu, 10 Feb 2022 01:07:57 +0100
 
