@@ -106,8 +106,8 @@ lint-plugins:
 	#     * plugins/node.d.debug/*: these plugins are used only for testing
 	#     * AbstractMultiGraphsProvider.java: this is not a plugin
 	plugins_without_multigraph_check=$$(grep -rlwZ "multigraph" plugins/ \
-		| xargs -r -0 grep -LwE '((need|is)_multigraph|Munin::Plugin::Framework|MUNIN_CAP_MULTIGRAPH)') \
-		| grep -vE 'plugins/(node\.d\.debug/|.*/AbstractMultiGraphsProvider\.java)'; \
+		| xargs -r -0 grep -LwE '((need|is)_multigraph|Munin::Plugin::Framework|MUNIN_CAP_MULTIGRAPH)' \
+		| grep -vE 'plugins/(node\.d\.debug/|.*/AbstractMultiGraphsProvider\.java)'); \
 		if [ -n "$$plugins_without_multigraph_check" ]; then \
 			echo '[ERROR] Some plugins lack a "multigraph" check (e.g. "needs_multigraph();" or "is_multigraph"):'; \
 			echo "$$plugins_without_multigraph_check" | sed 's/^/\t/'; false; fi >&2
@@ -224,4 +224,4 @@ docker-connect:
 
 docker-dev: docker-base
 	docker build -t munin:dev -f Dockerfile.dev .
-	docker run --rm --name munin-dev -v $(shell pwd):/munin -p 8000:8000 -p 14948:4948 -it munin:dev
+	docker run --rm --name munin-dev -v $(shell pwd):/munin -p 8000:8000 -p 14947:4947 -p 14948:4948 -it munin:dev

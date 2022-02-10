@@ -63,14 +63,6 @@ None known.
   Copyright (C) 2006 Andreas Schuldei
   Copyright (C) Sébastien Barbereau
 
-Original Nagios plugin: Sébastien Barbereau.
-
-Introduced to Munin in 2006 based on the Nagios plugin by: Andreas
-Schuldei
-
-In 2008 updated for Munin::Plugin::SNMP and documented by Nicolai
-Langfeldt.
-
 =head1 LICENSE
 
 GPLv2 or (at your option) any later version.

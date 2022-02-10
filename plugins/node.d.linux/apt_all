@@ -34,25 +34,26 @@ your /etc/apt.conf defaults.
 
 =head1 USAGE
 
-This plugin needs a cronjob that runs apt-get update every hour or so
+The plugin depends on a periodic update of apt's package cache.
 
-Example conjob
+This can be accomplished by using systemd's timer for periodic updates or via
+apt's compatibility helper (/etc/cron.daily/apt-compat).
+
+The relevant apt configuration setting for daily updates is:
+
+ APT::Periodic::Update-Package-Lists "1";
+
+(the numeric value defines the number of days between updates)
+
+
+Alternatively you can also configure a simple cron job for updating the cache
+more frequently:
 
  /etc/cron.d/munin-plugin-apt
- 53  * * * *	root	apt-get update > /dev/null 2>&1
- 23 08 * * * 	root	apt-get update > /dev/null
+ 53  * * * *	root	perl -e 'sleep(3600);' && apt-get update >/dev/null 2>&1
 
-Remember to randomize when these cronjobs are run on your servers
+Remember to randomize the starting hour for this cron job on your servers.
 
-This plugin can also be called with the argument "update", which will
-run apt-get update
-
- update <maxinterval> <probability>
-
- Updates the APT database randomly, guaranteeing there
- won't be more than <maxinterval> seconds between each
- update.  Otherwise, there is a a 1 in <probability>
- chance that an update will occur.
 
 =head1 MAGIC MARKERS
 
@@ -97,6 +98,14 @@ my @releases = split(",", ($ENV{MUNIN_APT_RELEASES} || ""));
 @releases = guess_releases() unless @releases;
 
 
+sub get_clean_release_fieldname {
+    my ($fieldname) = @_;
+    # apply some minor URI-like substitution (avoiding ambiguity between slash and hyphen)
+    $fieldname =~ s#/#_2F#g;
+    return clean_fieldname($fieldname);
+}
+
+
 # Print the apt state, regenerating the state cache if necessary
 sub print_state() {
     my $statefile = $ENV{MUNIN_PLUGSTATE} . "/plugin-apt.state";
@@ -116,7 +125,7 @@ sub print_state() {
 	or die("Couldn't open state file $statefile for reading.");
     while (my $line = <STATE>) {
         foreach my $release (@releases) {
-            my $release_cleaned = clean_fieldname($release);
+            my $release_cleaned = get_clean_release_fieldname($release);
             # print only lines that are expected for the currently requested releases
             if ($line =~ /^(hold|pending)_$release_cleaned\.(value|extinfo)/) {
                 print $line ;
@@ -233,7 +242,7 @@ sub update_state() {
 	    push (@pending, @remove ) if @remove;
 	    close APT;
 
-            my $release_cleaned = clean_fieldname($release);
+            my $release_cleaned = get_clean_release_fieldname($release);
             print STATE "pending_$release_cleaned.value ", scalar (@pending), "\n";
 	    if (@pending)
 	    {
@@ -267,7 +276,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_category security\n";
 
     foreach my $release (@releases) {
-        my $release_cleaned = clean_fieldname($release);
+        my $release_cleaned = get_clean_release_fieldname($release);
         print "pending_$release_cleaned.label pending ($release)\n";
         print "pending_$release_cleaned.warning 0:0\n";
         print "hold_$release_cleaned.label hold ($release)\n";

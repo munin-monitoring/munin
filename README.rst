@@ -8,7 +8,7 @@ After completing a installation a high number of monitoring plugins will be
 playing with no more effort.
 
 Additional plugins can be easily developed and contributed.
-See the `Plugin Gallery <http://gallery.munin-monitoring.org/>`_ for a wide
+See the `Plugin Gallery <https://gallery.munin-monitoring.org/>`_ for a wide
 range of more than a thousand community supported plugins.
 
 Munin is distributed under the `GNU GPL version 2 <https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html>`_.  Munin is copyrighted
@@ -19,10 +19,10 @@ Resources
 =========
 
 * Website: http://munin-monitoring.org/
-* Documentation: http://guide.munin-monitoring.org/
+* Documentation: https://guide.munin-monitoring.org/
 * `IRC channel <irc://irc.oftc.net/#munin>`_: ``#munin`` on OFTC
 * Mailing List: https://lists.sourceforge.net/lists/listinfo/munin-users
-* Plugin Gallery: http://gallery.munin-monitoring.org/
+* Plugin Gallery: https://gallery.munin-monitoring.org/
 * Live Demo (development): http://demo.munin-monitoring.org/
 
 
@@ -50,7 +50,6 @@ and the version numbering scheme, can be found in `Munin's GitHub Wiki`__.
 
 .. __ : https://github.com/munin-monitoring/munin/wiki/_pages
 
-
 Building status
 ---------------
 
@@ -63,13 +62,13 @@ docs : |docs-latest|
 .. |build-stable2.0| image:: https://travis-ci.org/munin-monitoring/munin.svg?branch=stable-2.0
    :target: https://travis-ci.org/munin-monitoring/munin
 
-.. |build-master| image:: https://travis-ci.org/munin-monitoring/munin.svg?branch=master
-   :target: https://travis-ci.org/munin-monitoring/munin
+.. |build-master| image:: https://github.com/munin-monitoring/munin/actions/workflows/build-n-test.yml/badge.svg?branch=master
+   :target: https://github.com/munin-monitoring/munin/actions/workflows/build-n-test.yml
 
 .. |coverage-master| image:: https://coveralls.io/repos/github/munin-monitoring/munin/badge.svg?branch=master
    :target: https://coveralls.io/github/munin-monitoring/munin?branch=master
 
 
 .. |docs-latest| image:: https://readthedocs.org/projects/munin/badge/?version=latest
-   :target: http://guide.munin-monitoring.org/
+   :target: https://guide.munin-monitoring.org/
 

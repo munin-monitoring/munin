@@ -126,7 +126,7 @@ Installation
 munin-async is a helper to poll regularly
 
 
-The munin asynchronous proxy node (or "munin-async") connects to the
+The munin asynchronous proxy node (or "munin-asyncd") connects to the
 local node periodically, and spools the results.
 
 When the munin master connects, all the data is available instantly.
@@ -158,26 +158,55 @@ On the munin master
 
 We use ssh encapsulated connections with munin async. In the :ref:`the munin
 master <master-index>` configuration you need to configure a host with a
-"ssh\://" address.
+"ssh\://" address and append the command to be executed to the ssh address.
+
+Make sure the /usr/local/bin/munin-async path exists on the targeted address,
+the path might be different depending on the distribution used.
+
+Port 22 was added on purpose as an example but can be left from the address
+since port 22 is the default for ssh.
 
 ::
 
   [random.example.org]
-    address ssh://munin-async@random.example.org
+    address ssh://munin-async@random.example.org:22/usr/local/bin/munin-async --spoolfetch --spooldir /var/lib/munin/spool
 
-You will need to create an SSH key for the "munin" user, and
-distribute this to all nodes running munin-asyncd.
+You will need to create an SSH key for the "munin" user on the master,
+and distribute the public key to the specified node defined in the config.
 
 The ssh command and options can be customized in :ref:`munin.conf`
-with the ssh_command and ssh_options configuration options.
-
-You can also specify the SSH port directly in the address,
-if a node is not reachable using the default SSH port (22):
+with the ssh_command and ssh_options configuration options. The following will
+point to an alternate location for an ssh user config and id_rsa.
+(needed in case /var/lib/munin isn't the home dir for munin on the master node)
 
 ::
 
-  [random2.example.org]
-    address ssh://munin-async@random2.example.org:2222
+  ssh_options -F /var/lib/munin/.ssh/config -i /var/lib/munin/.ssh/id_rsa
+
+A possible configuration could be to add an ssh config, and save the
+rsa key on the munin home directory.
+
+::
+
+  cat <<EOF > /var/lib/munin/.ssh_async/config
+  Host *
+    BatchMode=yes
+    ConnectTimeout=5
+    EscapeChar=none
+    ExitOnForwardFailure=yes
+    ForwardAgent=no
+    ForwardX11=no
+    IdentitiesOnly=yes
+    PasswordAuthentication=no
+    RequestTTY=no
+    StrictHostKeyChecking=no
+    PreferredAuthentications=publickey
+    User munin-async
+  EOF
+
+It's also possible to add UserKnownHostsFile=/dev/null to the above config
+if you don't care that the monitored host can be reinstalled,
+so you will not need to cleanup the host in known_hosts file.
 
 On the munin node
 -----------------
@@ -185,34 +214,35 @@ On the munin node
 Configure your munin node to only listen on "127.0.0.1".
 
 You will also need to add the public key of the munin user to the
-authorized_keys file for this user.
+authorized_keys file for this munin-async user.
 
- * You must add a "command=" parameter to the key to run the command
-   specified instead of whatever command the connecting user tries to
-   use.
+Make sure that the munin-async user has his home configured
+to the /var/lib/munin/spool dir.
 
-::
-
-  # more than one master may fetch data
-  command="/usr/share/munin/munin-async --spoolfetch" ssh-rsa AAAA[...] munin@master
-  # only a single master is expected to fetch data
-  command="/usr/share/munin/munin-async --spoolfetch && /usr/share/munin/munin-async --cleanupandexit" ssh-rsa AAAA[...] munin@master
-
+Make sure munin-asyncd is running and populates the /var/lib/munin/spool directory.
+The default options for munin-asyncd is to have a sample size of 86400 which
+would better be set to a lower value in case plugins could generate big spool files
+(>20MB). Eg a value of 3600 would result in smaller files resulting in incremental
+updates over multiple updates in case of a big backlog (eg: munin master couldn't
+connect for a few days). If you want to keep a big backlog, then you might want
+to increase the retain option for the amount of samples to keep.
 
 The following options are recommended for security, but are strictly
 not necessary for the munin-async connection to work
-
- * You should add a "from=" parameter to the key to restrict where it
-   can be used from.
 
  * You should add hardening options. At the time of writing, these are
    "no-X11-forwarding", "no-agent-forwarding", "no-port-forwarding",
    "no-pty" and "no-user-rc".
 
-   Some of these may also be set globally in /etc/ssh/sshd_config.
+   Some of these may also be set globally in /etc/ssh/sshd_config
+   or the ~/.ssh/config for the munin-async user.
 
-::
+See the sshd_config(5) and authorized_keys(5) man pages for more information.
 
-  no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,no-user-rc,from="192.0.2.0/24",command="/usr/share/munin/munin-async --spoolfetch" ssh-rsa AAAA[...] munin@master
+Trouble shooting
+----------------
 
-See the sshd_config (5) and authorized_keys(5) man pages for more information.
+1. Check if munin-asyncd populates the spool dir, a file (or files) per plugin should be seen.
+2. Check if the munin master node can connect to the node to be monitored. Check the logs of ssh!
+   If the munin-async user doesn't have a password, the user might not be locked, and ssh could
+   prevent to connect to such a user.
