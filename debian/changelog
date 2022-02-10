@@ -1,7 +1,11 @@
 munin (2.999.16-1) UNRELEASED; urgency=medium
 
+  [ Holger Levsen ]
   * New upstream release.
   * Bump standards version to 4.6.0, no changes needed.
+
+  [  ]
+  * Use secure URI in Homepage field.
 
  -- Holger Levsen <holger@debian.org>  Thu, 10 Feb 2022 01:07:57 +0100
 
