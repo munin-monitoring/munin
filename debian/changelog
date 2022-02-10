@@ -1,3 +1,9 @@
+munin (2.999.16-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 10 Feb 2022 01:07:57 +0100
+
 munin (2.999.15-3) experimental; urgency=medium
 
   [ Lars Kruse ]
