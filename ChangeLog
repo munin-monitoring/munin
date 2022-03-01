@@ -4405,6 +4405,63 @@ tsaavik (1):
       dynazoom: added logo and backlink
 
 
+munin-2.0.67, 2021-02-22
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (7):
+
+Lars Kruse (7):
+      Template "overview": add missing closing "li" and unify indentation
+      CDEF handling: fix access to "negative" field metadata
+      CDEF handling: fix translation of fieldnames to RRD field names
+      CDEF handling: fix access to "negative" field with long name or starting with a digit
+      master: tolerate fields without content in "info"
+      Plugin hddtemp_smartctl: avoid misinterpretation of serial numbers as partitions
+      Plugin memcached_: implement suggest and improve autoconf
+
+Wiebe Cazemier (1):
+      Make netstat human and high connection friendly
+
+
+munin-2.0.66, 2021-01-06
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Lars Kruse (7):
+      unknown_limit: do not misinterpret zero as one
+      unknown_limit: fix handling of value "1"
+      SpoolReader: process spooled content lines separately
+      async: fetch spooled data in order of timestamps
+      async: use name squashing rules when determining the names of spooled files
+      async: clarify handling of timestamp
+      doc: describe "timeout_fetch_all_nodes" and "timeout_fetch_one_node"
+
+Matt Merhar (1):
+      Make sensors_ temperature plugin work on musl libc
+
+Wiebe Cazemier (1):
+      Symlink and custom name support for diskstat_
+
+Younes Ichiche (2):
+      fix reporting on URL in the munin-update log (stable-2.0)
+      make it possible to configure global munin-update timeouts
+
+
 munin-2.0.65, 2020-10-28
 -------
 Summary

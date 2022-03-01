@@ -47,12 +47,23 @@ my $PORT = exists $ENV{'port'} ? $ENV{'port'} : 11211;
 if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 	if ($ret) {
 		print "no ($ret)\n";
-		exit 0;
+	} else {
+		use Net::Ping;
+		my $p = Net::Ping->new();
+		$p->port_number($PORT);
+		if ($p->ping($HOST, 1)) {
+			print "yes\n";
+			exit 0;
+		}
+		print "no (cannot connect to $HOST on port $PORT)\n";
 	}
-# Todo: we can always connect to a memcache server without any errors so I cannot really
-# find a way to detect the presence of a memcache instance. Maybe a forced write/read/delete
-# but there should be a better way somewhere...
-	print "yes\n";
+	exit 0;
+}
+
+if (exists $ARGV[0] and $ARGV[0] eq "suggest") {
+	print "bytes\n";
+	print "counters\n";
+	print "rates\n";
 	exit 0;
 }
 
@@ -62,7 +73,8 @@ if ( exists $ARGV[0] and $ARGV[0] eq "suggest" ) {
 }
 
 if($ret) {
-	print "no ($ret)\n";
+	# refuse to execute "config" or "fetch" due to a missing requirement
+	print "memcached_ plugin fails to run: $ret\n";
 	exit 1;
 }
 
