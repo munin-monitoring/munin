@@ -704,7 +704,9 @@ sub RRDs_graph {
 	# RRDs::graph() is *STATEFUL*. It doesn't emit the same PNG
 	# when called the second time.
 	#
-	return RRDs::graph(@_);
+	RRDs::graph(@_);
+	my $rrd_error = RRDs::error();
+	return $rrd_error;
 }
 
 sub RRDs_graph_or_dump {
