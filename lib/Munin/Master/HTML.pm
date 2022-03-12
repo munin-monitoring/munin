@@ -63,7 +63,10 @@ sub handle_request
 		}
 
 		print "HTTP/1.0 200 OK\r\n";
-		print $cgi->header( -type => $mime_types{$ext});
+		print $cgi->header(
+			-type => $mime_types{$ext},
+			-Cache_Control => "public, max-age=3600"
+		);
 		while (my $line = <$fh>) { print $line; }
 		return;
 	}
