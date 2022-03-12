@@ -82,6 +82,7 @@ my %times = (
 );
 
 my %resolutions = (
+	"pinpoint"  => "1",
 	"hour"  => "10",
 	"day"   => "300",
 	"week"  => "1500",
@@ -634,6 +635,7 @@ sub handle_request
 		print $cgi->header(
 			"-Content-type" => $CONTENT_TYPES{$format},
 			"-Content-length" => $size,
+			"-Cache-Control" => "public, max-age=$resolutions{$time}",
 		) unless $cgi->url_param("no_header");
 	}
 
