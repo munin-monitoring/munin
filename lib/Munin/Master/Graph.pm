@@ -584,7 +584,9 @@ sub handle_request
 	# 	- on a caching reverse proxy, such as varnish.
 
 	use File::Temp;
-	my $rrd_fh = File::Temp->new();
+	my $rrd_fh = File::Temp->new(
+		SUFFIX => ".$format",
+	);
 	# Send the PNG output
 	my $tpng = Time::HiRes::time;
 	my @rrd_cmd = (
