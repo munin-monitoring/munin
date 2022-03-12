@@ -119,7 +119,7 @@ sub handle_request
 	my $t0 = Time::HiRes::time;
 	my $path = $cgi->path_info();
 
-	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png(?:x(\d+))?|[a-z]+)$/) {
+	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|pdf|png(?:x(\d+))?|[a-z]+)$/) {
 		# We don't understand this URL
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
