@@ -60,7 +60,10 @@ sub run {
     });
 }
 
+# If you need a readonly DBH, use M::M::U::get_dbh("readonly").
 sub get_dbh {
+	my ($is_read_only) = @_;
+
 	my $datafilename = $ENV{MUNIN_DBURL} || $config->{dburl} || "$config->{dbdir}/datafile.sqlite";
 	my $db_driver = $ENV{MUNIN_DBDRIVER} || $config->{dbdriver};
 	my $db_user = $ENV{MUNIN_DBUSER} || $config->{dbuser};
@@ -73,12 +76,16 @@ sub get_dbh {
 	# Not being able to open the DB connection seems FATAL to me. Better
 	# die loudly than injecting some misguided data
 	use DBI;
-	my $dbh = DBI->connect("dbi:$db_driver:dbname=$datafilename", $db_user, $db_passwd) or die $DBI::errstr;
-	{
-		$dbh->{RaiseError} = 1;
-		use Carp;
-		$dbh->{HandleError} = sub { confess(shift) };
-	}
+	my %db_args;
+	$db_args{ReadOnly} = 1 if $is_read_only;
+	#	$db_args{AutoCommit} = 0 if $is_read_only;
+	$db_args{AutoCommit} = 0;
+	$db_args{RaiseError} = 1;
+
+	use Carp;
+	$db_args{HandleError} = sub { confess(shift) };
+
+	my $dbh = DBI->connect("dbi:$db_driver:dbname=$datafilename", $db_user, $db_passwd, \%db_args) or die $DBI::errstr;
 
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.

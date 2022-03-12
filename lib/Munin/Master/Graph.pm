@@ -125,7 +125,7 @@ sub handle_request
 		print $cgi->header(
 			"-X-Reason" => "invalid URL: $path",
 		);
-		return;
+		goto CLEANUP;
 	}
 
 
@@ -143,7 +143,7 @@ sub handle_request
 		print $cgi->header(
 			"-X-Reason" => "invalid format $format",
 		);
-		return;
+		goto CLEANUP;
 	}
 
 	# Handle the "pinpoint" time
@@ -152,7 +152,7 @@ sub handle_request
 	# Ok, now SQL is needed to go further
 	# Note that we reconnect for _each_ request. This is to avoid old data when the DB "rotates"
 	use Munin::Master::Update;
-	my $dbh = Munin::Master::Update::get_dbh();
+	my $dbh = Munin::Master::Update::get_dbh(1);
 
 	DEBUG "($graph_path, $time, $start, $end, $format)\n";
 
@@ -166,6 +166,7 @@ sub handle_request
 	}
 	$sth_url->execute($graph_path);
 	my ($id, $type) = $sth_url->fetchrow_array;
+	$sth_url->finish();
 
 	if (! defined $id) {
 		# Not found
@@ -173,14 +174,14 @@ sub handle_request
 		print $cgi->header(
 			"-X-Reason" => "'$graph_path' Not Found in DB",
 		);
-		return;
+		goto CLEANUP;
 	} elsif ($type ne "service") {
 		# Not supported yet
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
 			"-X-Reason" => "'$type' graphing is not supported yet",
 		);
-		return;
+		goto CLEANUP;
 	}
 
 	DEBUG "found node=$id, type=$type";
@@ -645,6 +646,9 @@ sub handle_request
 		# Using a 4kiB buffer
 		while (sysread($rrd_fh, $buffer, 4096)) { print $buffer; }
 	}
+
+CLEANUP:
+	$dbh->disconnect() if $dbh;
 
 	my $ttot = Time::HiRes::time;
 	DEBUG sprintf("total:%.3fs (db:%.3fs rrd:%.3fs)",

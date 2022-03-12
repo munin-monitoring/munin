@@ -107,7 +107,7 @@ sub handle_request
 
 	# Ok, now SQL is needed to go further
 	use Munin::Master::Update;
-	my $dbh = Munin::Master::Update::get_dbh();
+	my $dbh = Munin::Master::Update::get_dbh(1);
 
 	my $comparison;
 	my $template_filename;
@@ -543,7 +543,7 @@ RENDERING:
 	if (! $template_filename ) {
 		# Unknown
 		print "HTTP/1.0 404 Not found\r\n";
-		return;
+		goto CLEANUP;
 	}
 
 	if ($output_format eq "html") {
@@ -583,6 +583,9 @@ RENDERING:
 		use JSON;
 		print encode_json( \%template_params );
 	}
+
+CLEANUP:
+	$dbh->disconnect();
 }
 
 sub _get_params_groups {
