@@ -498,6 +498,9 @@ sub _db_state_update {
 	$sth_ds->execute($node_id, $plugin, $field);
 	my ($ds_id) = $sth_ds->fetchrow_array();
 	DEBUG "_db_state_update.ds_id:$ds_id";
+	WARN "ds_id($plugin, $field, $when, $value) is NULL, SELECT ds.id FROM ds
+	                JOIN service s ON ds.service_id = s.id AND s.node_id = '$node_id' AND s.name = '$plugin'
+			                WHERE ds.name = '$field'" unless $ds_id;
 	$sth_ds->finish();
 
 	# Update the state with the new values
