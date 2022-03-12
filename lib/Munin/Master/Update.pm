@@ -150,7 +150,7 @@ sub _db_stats {
 	my $runid = $self->{runid};
 	my $dbh = $self->{dbh} || get_dbh(); # Reuse any existing connection, or open a temporary one
 	my $sth_i = $dbh->prepare_cached("INSERT INTO stats (runid, tstp, type, name, duration) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?);");
-	$sth_i->execute($runid, $type, $name, $duration);
+	$sth_i->execute($runid, time(), $type, $name, $duration);
 }
 
 
