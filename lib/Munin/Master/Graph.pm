@@ -610,10 +610,11 @@ sub handle_request
 		"CDEF:n_d_a=LTIME,86400,%,28800,GE,LTIME,86400,%,64800,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
 		"CDEF:n_d_b=LTIME,86400,%,28800,LT,INF,LTIME,86400,%,64800,GE,INF,UNKN,dummy_val,*,IF,IF",
 		"CDEF:n_d_c=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
-		"AREA:n_d_a#FFC73B19",
-		"AREA:n_d_b#00519919",
-		"AREA:n_d_c#AAABA17F",
 	);
+
+	push @rrd_cmd, "AREA:n_d_a#FFC73B19" unless grep { $_ eq $time } ("month", "year");
+	push @rrd_cmd, "AREA:n_d_b#00519919" unless grep { $_ eq $time } ("month", "year");
+	push @rrd_cmd, "AREA:n_d_c#AAABA14F" unless grep { $_ eq $time } ("year");
 
 	my $err = RRDs_graph_or_dump(
 		$format,
