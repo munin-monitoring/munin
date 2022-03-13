@@ -709,6 +709,7 @@ sub uw_handle_fetch {
 
 	# Process all the data in-order
 	for my $line (@$data) {
+		next if ($line =~ m/^#/); # Ignore lines with comments
 		next unless ($line =~ m{\A ([^\.]+)(?:\.(\S)+)? \s+ ([\S:]+) }xms);
 		my ($field, $arg, $value) = ($1, $2, $3);
 
