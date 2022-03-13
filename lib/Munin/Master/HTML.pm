@@ -335,7 +335,7 @@ sub handle_request
 	if (! defined $id) {
 		# Not found
 		print "HTTP/1.0 404 Not found\r\n";
-		return;
+		goto CLEANUP;
 	} elsif ($type eq "group") {
 		# Shared code for group views and comparison views
 

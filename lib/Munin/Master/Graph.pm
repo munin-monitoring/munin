@@ -609,14 +609,12 @@ sub handle_request
 	if (defined $first_def) {
 		push @rrd_cmd, (
 			"CDEF:dummy_val=$first_def",
-			"CDEF:n_d_a=LTIME,86400,%,28800,GE,LTIME,86400,%,64800,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
 			"CDEF:n_d_b=LTIME,86400,%,28800,LT,INF,LTIME,86400,%,64800,GE,INF,UNKN,dummy_val,*,IF,IF",
 			"CDEF:n_d_c=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
 		);
 
-		push @rrd_cmd, "AREA:n_d_a#FFC73B19" unless grep { $_ eq $time } ("month", "year");
-		push @rrd_cmd, "AREA:n_d_b#00519919" unless grep { $_ eq $time } ("month", "year");
-		push @rrd_cmd, "AREA:n_d_c#AAABA14F" unless grep { $_ eq $time } ("year");
+		push @rrd_cmd, "AREA:n_d_b#00519909" unless grep { $_ eq $time } ("month", "year");
+		push @rrd_cmd, "AREA:n_d_c#AAABA11F" unless grep { $_ eq $time } ("year");
 
 	} else {
 		WARN "day/night not working for [$path] as \$first_def is NULL";
