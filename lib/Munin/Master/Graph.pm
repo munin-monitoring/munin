@@ -606,7 +606,7 @@ sub handle_request
 	);
 
 	# Add the night/day cycle at the extreme end, so it can be in the background
-	if (! defined $first_def) {
+	if (defined $first_def) {
 		push @rrd_cmd, (
 			"CDEF:dummy_val=$first_def",
 			"CDEF:n_d_a=LTIME,86400,%,28800,GE,LTIME,86400,%,64800,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
