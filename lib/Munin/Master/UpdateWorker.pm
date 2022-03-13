@@ -710,8 +710,13 @@ sub uw_handle_fetch {
 	# Process all the data in-order
 	for my $line (@$data) {
 		next if ($line =~ m/^#/); # Ignore lines with comments
-		next unless ($line =~ m{\A ([^\.]+)(?:\.(\S)+)? \s+ ([\S:]+) }xms);
+		next unless ($line =~ m{\A ([^\.]+)(?:\.(\S+))? \s+ ([\S:]+) }xms);
 		my ($field, $arg, $value) = ($1, $2, $3);
+		$arg = "" unless defined $arg;
+		if ($arg ne "value") {
+			WARN "got '$line' but it should not be part of a fetch reply as (arg:$arg), ignoring.";
+			next;
+		}
 
 		my $when = $now; # Default is NOW, unless specified
 		my $when_is_now = 1;
