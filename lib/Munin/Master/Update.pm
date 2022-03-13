@@ -87,6 +87,8 @@ sub get_dbh {
 
 	my $dbh = DBI->connect("dbi:$db_driver:dbname=$datafilename", $db_user, $db_passwd, \%db_args) or die $DBI::errstr;
 
+	INFO '$dbh->{Driver}->{Name}: ' . $dbh->{Driver}->{Name};
+
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
 	return $dbh;
@@ -149,7 +151,10 @@ sub _db_stats {
 	$self->{runid} = time() unless $self->{runid};
 	my $runid = $self->{runid};
 	my $dbh = $self->{dbh} || get_dbh(); # Reuse any existing connection, or open a temporary one
-	my $sth_i = $dbh->prepare_cached("INSERT INTO stats (runid, tstp, type, name, duration) VALUES (?, TO_TIMESTAMP(?), ?, ?, ?);");
+	my $dbh_driver = $dbh->{Driver}->{Name};
+	my $sql_to_timestamp = "";
+	$sql_to_timestamp = "TO_TIMESTAMP" if $dbh_driver eq "Pg";
+	my $sth_i = $dbh->prepare_cached("INSERT INTO stats (runid, tstp, type, name, duration) VALUES (?, $sql_to_timestamp(?), ?, ?, ?);");
 	$sth_i->execute($runid, time(), $type, $name, $duration);
 }
 
