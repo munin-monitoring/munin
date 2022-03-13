@@ -346,6 +346,8 @@ sub handle_request
 				push @rrd_sum, "DEF:min_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":MIN";
 				push @rrd_sum, "DEF:max_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":MAX";
 
+				$first_def = "avg_$sum_item_rrdname" unless $first_def; # useful for Day&Night
+
 				# The sum lastupdated is the latest of its parts.
 				if (! $_lastupdated || $_lastupdated < $sum_item_lastupdated) {
 					$_lastupdated = $sum_item_lastupdated;
@@ -379,8 +381,7 @@ sub handle_request
 			push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
 			push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
 
-			# useful for Day&Night
-			$first_def = "avg_$real_rrdname" unless $first_def;
+			$first_def = "avg_$real_rrdname" unless $first_def; # useful for Day&Night
 		}
 
 
@@ -605,16 +606,21 @@ sub handle_request
 	);
 
 	# Add the night/day cycle at the extreme end, so it can be in the background
-	push @rrd_cmd, (
-		"CDEF:dummy_val=$first_def",
-		"CDEF:n_d_a=LTIME,86400,%,28800,GE,LTIME,86400,%,64800,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
-		"CDEF:n_d_b=LTIME,86400,%,28800,LT,INF,LTIME,86400,%,64800,GE,INF,UNKN,dummy_val,*,IF,IF",
-		"CDEF:n_d_c=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
-	);
+	if (! defined $first_def) {
+		push @rrd_cmd, (
+			"CDEF:dummy_val=$first_def",
+			"CDEF:n_d_a=LTIME,86400,%,28800,GE,LTIME,86400,%,64800,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
+			"CDEF:n_d_b=LTIME,86400,%,28800,LT,INF,LTIME,86400,%,64800,GE,INF,UNKN,dummy_val,*,IF,IF",
+			"CDEF:n_d_c=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
+		);
 
-	push @rrd_cmd, "AREA:n_d_a#FFC73B19" unless grep { $_ eq $time } ("month", "year");
-	push @rrd_cmd, "AREA:n_d_b#00519919" unless grep { $_ eq $time } ("month", "year");
-	push @rrd_cmd, "AREA:n_d_c#AAABA14F" unless grep { $_ eq $time } ("year");
+		push @rrd_cmd, "AREA:n_d_a#FFC73B19" unless grep { $_ eq $time } ("month", "year");
+		push @rrd_cmd, "AREA:n_d_b#00519919" unless grep { $_ eq $time } ("month", "year");
+		push @rrd_cmd, "AREA:n_d_c#AAABA14F" unless grep { $_ eq $time } ("year");
+
+	} else {
+		WARN "day/night not working for [$path] as \$first_def is NULL";
+	}
 
 	my $err = RRDs_graph_or_dump(
 		$format,
