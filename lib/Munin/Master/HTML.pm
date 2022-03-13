@@ -136,6 +136,7 @@ sub handle_request
 		my $sth = $dbh->prepare_cached("SELECT SUM(critical), SUM(warning), SUM(unknown) FROM ds");
 		$sth->execute();
 		my ($critical, $warning, $unknown) = $sth->fetchrow_array;
+		$sth->finish();
 		$template_params{NCRITICAL} = $critical;
 		$template_params{NWARNING} = $warning;
 		$template_params{NUNKNOWN} = $unknown;
@@ -323,9 +324,13 @@ sub handle_request
 	# Remove an eventual [/index].html
 	$path =~ s/(\/index)?\.html$//;
 
-	my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
-	$sth_url->execute($path);
-	my ($id, $type) = $sth_url->fetchrow_array;
+	my ($id, $type);
+	{
+		my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
+		$sth_url->execute($path);
+		($id, $type) = $sth_url->fetchrow_array;
+		$sth_url->finish();
+	}
 
 	if (! defined $id) {
 		# Not found
@@ -343,6 +348,7 @@ sub handle_request
 		my $sth_p_id = $dbh->prepare_cached("SELECT g.p_id FROM grp g WHERE g.id = ?");
 		$sth_p_id->execute($id);
 		my ($_p_id) = $sth_p_id->fetchrow_array;
+		$sth_p_id->finish();
 		my $sth_peer;
 
 		# Check for top level groups
@@ -432,7 +438,7 @@ sub handle_request
 		$template_params{LARGESET} = 1;
 		$template_params{INFO_OPTION} = 'Nodes on this level';
 
-		my $sth_category = $dbh->prepare(
+		my $sth_category = $dbh->prepare_cached(
 			"SELECT DISTINCT sc.category as graph_category FROM service s
 			INNER JOIN service_categories sc ON sc.id = s.id
 			WHERE s.node_id = ?
@@ -469,14 +475,17 @@ sub handle_request
 									WHERE service.id = ?");
 		$sth->execute($id);
 		my ($graph_name, $graph_title, $graph_info, $multigraph, $category, $state_warning, $state_critical) = $sth->fetchrow_array();
+		$sth->finish();
 
 		$sth = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
 		$sth->execute($id);
 		my ($graph_category) = $sth->fetchrow_array();
+		$sth->finish();
 
 		$sth = $dbh->prepare_cached("SELECT n.id FROM node n INNER JOIN service s ON s.node_id = n.id WHERE s.id = ?");
 		$sth->execute($id);
 		my ($node_id) = $sth->fetchrow_array();
+		$sth->finish();
 
 		# Generate peers
 		my ($graph_parent) = ($graph_name =~ /^(.*)\./);
