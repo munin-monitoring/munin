@@ -626,7 +626,7 @@ sub handle_request
 	);
 	if ($err) {
 		INFO "'" . join("' \\\n'", @rrd_cmd) . "'";
-		ERROR "Error generating image: ". $err;
+		ERROR "RRD error generating image for [$path]: ". $err;
 	};
 
 	# Sending the file
