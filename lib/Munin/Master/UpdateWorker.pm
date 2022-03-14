@@ -664,7 +664,8 @@ sub uw_handle_config {
 
 	# Create the RRDs
 	for my $ds_name (keys %fields) {
-		my $ds_config = $fields{$ds_name};
+		# Merge attributes from ds & service
+		my $ds_config = { %service_attr, %{$fields{$ds_name}} };
 		my $ds_id = $ds_ids->{$ds_name};
 
 		my $first_epoch = time - (12 * 3600); # XXX - we should be able to have some delay in the past for spoolfetched plugins
