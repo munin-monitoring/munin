@@ -558,9 +558,13 @@ RENDERING:
 		goto CLEANUP;
 	}
 
+	# We only cache agressively HTML pages, as they should not move
+	# ... and a manual refresh is ok if needed
 	if ($output_format eq "html") {
 		print "HTTP/1.0 200 OK\r\n";
-		print $cgi->header( "-Content-Type" => "text/html", );
+		print $cgi->header( "-Content-Type" => "text/html",
+			-Cache_Control => "public, max-age=3600", # 1h for HTML pages
+		);
 		my $template = HTML::Template::Pro->new(
 			filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
 			loop_context_vars => 1,
