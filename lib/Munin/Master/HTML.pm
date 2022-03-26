@@ -38,7 +38,9 @@ sub handle_request
 			# Most webservers (used for proxying) should do canonicalization on their
 			# own, but we cannot rely on this.
 			# Static resource paths should never include parent references, anyway.
-			print "HTTP/1.0 404 Not found\r\n";
+			print $cgi->header(
+				-status => "404 Not found",
+			);
 			return;
 		}
 		my ($ext) = ($page =~ m/.*\.([^.]+)$/);
@@ -58,14 +60,17 @@ sub handle_request
 		my $fh = new IO::File("$filename");
 
 		if (! $fh) {
-			print "HTTP/1.0 404 Not found\r\n";
+			print $cgi->header(
+				-status => "404 Not found",
+				-type => $mime_types{$ext},
+			);
 			return;
 		}
 
-		print "HTTP/1.0 200 OK\r\n";
 		print $cgi->header(
+			-status => "200 OK",
 			-type => $mime_types{$ext},
-			-Cache_Control => "public, max-age=3600"
+			-Cache_Control => "public, max-age=3600",
 		);
 		while (my $line = <$fh>) { print $line; }
 		return;
@@ -94,8 +99,8 @@ sub handle_request
 	# a subdir from the browser pov
 	if ($path eq "" || $path !~ /(\/|\.html)$/) {
 		#if ($path eq "") {
-		print "HTTP/1.0 301 Redirect Permanent\r\n";
 		print $cgi->header(
+			-status => "301 Redirect Permanent",
 			-Location => ($cgi->url(-path_info=>1,-query=>1) . "/"),
 			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
 		);
@@ -554,15 +559,18 @@ sub handle_request
 RENDERING:
 	if (! $template_filename ) {
 		# Unknown
-		print "HTTP/1.0 404 Not found\r\n";
+		print $cgi->header(
+			-status => "404 Not found",
+		);
 		goto CLEANUP;
 	}
 
 	# We only cache agressively HTML pages, as they should not move
 	# ... and a manual refresh is ok if needed
 	if ($output_format eq "html") {
-		print "HTTP/1.0 200 OK\r\n";
-		print $cgi->header( "-Content-Type" => "text/html",
+		print $cgi->header(
+			-status => "200 OK",
+			-type => "text/html",
 			-Cache_Control => "public, max-age=3600", # 1h for HTML pages
 		);
 		my $template = HTML::Template::Pro->new(
@@ -587,14 +595,18 @@ RENDERING:
 		# We cannot use "print_to => \*STDOUT" since it does *NOT* work with FastCGI
 		print $template->output();
 	} elsif ($output_format eq "xml") {
-		print "HTTP/1.0 200 OK\r\n";
-		print $cgi->header( "-Content-Type" => "text/xml", );
+		print $cgi->header(
+			-status => "200 OK",
+			-type => "text/xml",
+		);
 
 		use XML::Dumper;
 		print pl2xml( \%template_params );
 	} elsif ($output_format eq "json") {
-		print "HTTP/1.0 200 OK\r\n";
-		print $cgi->header( "-Content-Type" => "application/json", );
+		print $cgi->header(
+			-status => "200 OK",
+			-type => "application/json",
+		);
 
 		use JSON;
 		print encode_json( \%template_params );

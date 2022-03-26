@@ -122,8 +122,8 @@ sub handle_request
 
 	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|pdf|png(?:x(\d+))?|[a-z]+)$/) {
 		# We don't understand this URL
-		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
+			-status => "404 Not Found",
 			"-X-Reason" => "invalid URL: $path",
 		);
 		goto CLEANUP;
@@ -140,8 +140,8 @@ sub handle_request
 	$format = uc($format);
 	if (! $CONTENT_TYPES{$format}) {
 		# We don't understand this format
-		 print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
+			-status => "404 Not Found",
 			"-X-Reason" => "invalid format $format",
 		);
 		goto CLEANUP;
@@ -171,15 +171,15 @@ sub handle_request
 
 	if (! defined $id) {
 		# Not found
-		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
+			-status => "404 Not Found",
 			"-X-Reason" => "'$graph_path' Not Found in DB",
 		);
 		goto CLEANUP;
 	} elsif ($type ne "service") {
 		# Not supported yet
-		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
+			-status => "404 Not Found",
 			"-X-Reason" => "'$type' graphing is not supported yet",
 		);
 		goto CLEANUP;
@@ -636,9 +636,9 @@ sub handle_request
 	{
 		my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,$blksize,$blocks) = $rrd_fh->stat();
 
-		print "HTTP/1.1 200 OK\r\n";
 		print $cgi->header(
-			"-Content-type" => $CONTENT_TYPES{$format},
+			-status => "200 OK",
+			-type => $CONTENT_TYPES{$format},
 			"-Content-length" => $size,
 			"-Cache-Control" => "public, max-age=$resolutions{$time}",
 		) unless $cgi->url_param("no_header");
