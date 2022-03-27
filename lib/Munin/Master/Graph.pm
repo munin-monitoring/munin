@@ -82,6 +82,7 @@ my %times = (
 );
 
 my %resolutions = (
+	"pinpoint"  => "1",
 	"hour"  => "10",
 	"day"   => "300",
 	"week"  => "1500",
@@ -119,13 +120,13 @@ sub handle_request
 	my $t0 = Time::HiRes::time;
 	my $path = $cgi->path_info();
 
-	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png(?:x(\d+))?|[a-z]+)$/) {
+	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|pdf|png(?:x(\d+))?|[a-z]+)$/) {
 		# We don't understand this URL
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
 			"-X-Reason" => "invalid URL: $path",
 		);
-		return;
+		goto CLEANUP;
 	}
 
 
@@ -143,7 +144,7 @@ sub handle_request
 		print $cgi->header(
 			"-X-Reason" => "invalid format $format",
 		);
-		return;
+		goto CLEANUP;
 	}
 
 	# Handle the "pinpoint" time
@@ -152,7 +153,7 @@ sub handle_request
 	# Ok, now SQL is needed to go further
 	# Note that we reconnect for _each_ request. This is to avoid old data when the DB "rotates"
 	use Munin::Master::Update;
-	my $dbh = Munin::Master::Update::get_dbh();
+	my $dbh = Munin::Master::Update::get_dbh(1);
 
 	DEBUG "($graph_path, $time, $start, $end, $format)\n";
 
@@ -166,6 +167,7 @@ sub handle_request
 	}
 	$sth_url->execute($graph_path);
 	my ($id, $type) = $sth_url->fetchrow_array;
+	$sth_url->finish();
 
 	if (! defined $id) {
 		# Not found
@@ -173,14 +175,14 @@ sub handle_request
 		print $cgi->header(
 			"-X-Reason" => "'$graph_path' Not Found in DB",
 		);
-		return;
+		goto CLEANUP;
 	} elsif ($type ne "service") {
 		# Not supported yet
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
 			"-X-Reason" => "'$type' graphing is not supported yet",
 		);
-		return;
+		goto CLEANUP;
 	}
 
 	DEBUG "found node=$id, type=$type";
@@ -344,6 +346,8 @@ sub handle_request
 				push @rrd_sum, "DEF:min_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":MIN";
 				push @rrd_sum, "DEF:max_$sum_item_rrdname=" . $sum_item_rrdfile . ":" . $sum_item_rrdfield . ":MAX";
 
+				$first_def = "avg_$sum_item_rrdname" unless $first_def; # useful for Day&Night
+
 				# The sum lastupdated is the latest of its parts.
 				if (! $_lastupdated || $_lastupdated < $sum_item_lastupdated) {
 					$_lastupdated = $sum_item_lastupdated;
@@ -377,8 +381,7 @@ sub handle_request
 			push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
 			push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
 
-			# useful for Day&Night
-			$first_def = "avg_$real_rrdname" unless $first_def;
+			$first_def = "avg_$real_rrdname" unless $first_def; # useful for Day&Night
 		}
 
 
@@ -584,7 +587,9 @@ sub handle_request
 	# 	- on a caching reverse proxy, such as varnish.
 
 	use File::Temp;
-	my $rrd_fh = File::Temp->new();
+	my $rrd_fh = File::Temp->new(
+		SUFFIX => ".$format",
+	);
 	# Send the PNG output
 	my $tpng = Time::HiRes::time;
 	my @rrd_cmd = (
@@ -601,15 +606,19 @@ sub handle_request
 	);
 
 	# Add the night/day cycle at the extreme end, so it can be in the background
-	push @rrd_cmd, (
-		"CDEF:dummy_val=$first_def",
-		"CDEF:n_d_a=LTIME,86400,%,28800,GE,LTIME,86400,%,64800,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
-		"CDEF:n_d_b=LTIME,86400,%,28800,LT,INF,LTIME,86400,%,64800,GE,INF,UNKN,dummy_val,*,IF,IF",
-		"CDEF:n_d_c=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
-		"AREA:n_d_a#FFC73B19",
-		"AREA:n_d_b#00519919",
-		"AREA:n_d_c#AAABA17F",
-	);
+	if (defined $first_def) {
+		push @rrd_cmd, (
+			"CDEF:dummy_val=$first_def",
+			"CDEF:n_d_b=LTIME,86400,%,28800,LT,INF,LTIME,86400,%,64800,GE,INF,UNKN,dummy_val,*,IF,IF",
+			"CDEF:n_d_c=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
+		);
+
+		push @rrd_cmd, "AREA:n_d_b#00519909" unless grep { $_ eq $time } ("month", "year");
+		push @rrd_cmd, "AREA:n_d_c#AAABA11F" unless grep { $_ eq $time } ("year");
+
+	} else {
+		WARN "day/night not working for [$path] as \$first_def is NULL";
+	}
 
 	my $err = RRDs_graph_or_dump(
 		$format,
@@ -617,7 +626,7 @@ sub handle_request
 	);
 	if ($err) {
 		INFO "'" . join("' \\\n'", @rrd_cmd) . "'";
-		ERROR "Error generating image: ". $err;
+		ERROR "RRD error generating image for [$path]: ". $err;
 	};
 
 	# Sending the file
@@ -631,6 +640,7 @@ sub handle_request
 		print $cgi->header(
 			"-Content-type" => $CONTENT_TYPES{$format},
 			"-Content-length" => $size,
+			"-Cache-Control" => "public, max-age=$resolutions{$time}",
 		) unless $cgi->url_param("no_header");
 	}
 
@@ -643,6 +653,9 @@ sub handle_request
 		# Using a 4kiB buffer
 		while (sysread($rrd_fh, $buffer, 4096)) { print $buffer; }
 	}
+
+CLEANUP:
+	$dbh->disconnect() if $dbh;
 
 	my $ttot = Time::HiRes::time;
 	DEBUG sprintf("total:%.3fs (db:%.3fs rrd:%.3fs)",
@@ -704,7 +717,9 @@ sub RRDs_graph {
 	# RRDs::graph() is *STATEFUL*. It doesn't emit the same PNG
 	# when called the second time.
 	#
-	return RRDs::graph(@_);
+	RRDs::graph(@_);
+	my $rrd_error = RRDs::error();
+	return $rrd_error;
 }
 
 sub RRDs_graph_or_dump {

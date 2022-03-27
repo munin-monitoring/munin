@@ -63,7 +63,10 @@ sub handle_request
 		}
 
 		print "HTTP/1.0 200 OK\r\n";
-		print $cgi->header( -type => $mime_types{$ext});
+		print $cgi->header(
+			-type => $mime_types{$ext},
+			-Cache_Control => "public, max-age=3600"
+		);
 		while (my $line = <$fh>) { print $line; }
 		return;
 	}
@@ -107,7 +110,7 @@ sub handle_request
 
 	# Ok, now SQL is needed to go further
 	use Munin::Master::Update;
-	my $dbh = Munin::Master::Update::get_dbh();
+	my $dbh = Munin::Master::Update::get_dbh(1);
 
 	my $comparison;
 	my $template_filename;
@@ -133,6 +136,7 @@ sub handle_request
 		my $sth = $dbh->prepare_cached("SELECT SUM(critical), SUM(warning), SUM(unknown) FROM ds");
 		$sth->execute();
 		my ($critical, $warning, $unknown) = $sth->fetchrow_array;
+		$sth->finish();
 		$template_params{NCRITICAL} = $critical;
 		$template_params{NWARNING} = $warning;
 		$template_params{NUNKNOWN} = $unknown;
@@ -320,14 +324,18 @@ sub handle_request
 	# Remove an eventual [/index].html
 	$path =~ s/(\/index)?\.html$//;
 
-	my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
-	$sth_url->execute($path);
-	my ($id, $type) = $sth_url->fetchrow_array;
+	my ($id, $type);
+	{
+		my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
+		$sth_url->execute($path);
+		($id, $type) = $sth_url->fetchrow_array;
+		$sth_url->finish();
+	}
 
 	if (! defined $id) {
 		# Not found
 		print "HTTP/1.0 404 Not found\r\n";
-		return;
+		goto CLEANUP;
 	} elsif ($type eq "group") {
 		# Shared code for group views and comparison views
 
@@ -340,6 +348,7 @@ sub handle_request
 		my $sth_p_id = $dbh->prepare_cached("SELECT g.p_id FROM grp g WHERE g.id = ?");
 		$sth_p_id->execute($id);
 		my ($_p_id) = $sth_p_id->fetchrow_array;
+		$sth_p_id->finish();
 		my $sth_peer;
 
 		# Check for top level groups
@@ -429,7 +438,7 @@ sub handle_request
 		$template_params{LARGESET} = 1;
 		$template_params{INFO_OPTION} = 'Nodes on this level';
 
-		my $sth_category = $dbh->prepare(
+		my $sth_category = $dbh->prepare_cached(
 			"SELECT DISTINCT sc.category as graph_category FROM service s
 			INNER JOIN service_categories sc ON sc.id = s.id
 			WHERE s.node_id = ?
@@ -466,14 +475,17 @@ sub handle_request
 									WHERE service.id = ?");
 		$sth->execute($id);
 		my ($graph_name, $graph_title, $graph_info, $multigraph, $category, $state_warning, $state_critical) = $sth->fetchrow_array();
+		$sth->finish();
 
 		$sth = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
 		$sth->execute($id);
 		my ($graph_category) = $sth->fetchrow_array();
+		$sth->finish();
 
 		$sth = $dbh->prepare_cached("SELECT n.id FROM node n INNER JOIN service s ON s.node_id = n.id WHERE s.id = ?");
 		$sth->execute($id);
 		my ($node_id) = $sth->fetchrow_array();
+		$sth->finish();
 
 		# Generate peers
 		my ($graph_parent) = ($graph_name =~ /^(.*)\./);
@@ -543,12 +555,16 @@ RENDERING:
 	if (! $template_filename ) {
 		# Unknown
 		print "HTTP/1.0 404 Not found\r\n";
-		return;
+		goto CLEANUP;
 	}
 
+	# We only cache agressively HTML pages, as they should not move
+	# ... and a manual refresh is ok if needed
 	if ($output_format eq "html") {
 		print "HTTP/1.0 200 OK\r\n";
-		print $cgi->header( "-Content-Type" => "text/html", );
+		print $cgi->header( "-Content-Type" => "text/html",
+			-Cache_Control => "public, max-age=3600", # 1h for HTML pages
+		);
 		my $template = HTML::Template::Pro->new(
 			filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
 			loop_context_vars => 1,
@@ -583,6 +599,9 @@ RENDERING:
 		use JSON;
 		print encode_json( \%template_params );
 	}
+
+CLEANUP:
+	$dbh->disconnect();
 }
 
 sub _get_params_groups {

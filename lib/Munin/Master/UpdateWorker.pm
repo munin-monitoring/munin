@@ -510,6 +510,9 @@ sub _db_state_update {
 	$sth_ds->execute($node_id, $plugin, $field);
 	my ($ds_id) = $sth_ds->fetchrow_array();
 	DEBUG "_db_state_update.ds_id:$ds_id";
+	WARN "ds_id($plugin, $field, $when, $value) is NULL, SELECT ds.id FROM ds
+	                JOIN service s ON ds.service_id = s.id AND s.node_id = '$node_id' AND s.name = '$plugin'
+			                WHERE ds.name = '$field'" unless $ds_id;
 	$sth_ds->finish();
 
 	# Update the state with the new values
@@ -673,7 +676,8 @@ sub uw_handle_config {
 
 	# Create the RRDs
 	for my $ds_name (keys %fields) {
-		my $ds_config = $fields{$ds_name};
+		# Merge attributes from ds & service
+		my $ds_config = { %service_attr, %{$fields{$ds_name}} };
 		my $ds_id = $ds_ids->{$ds_name};
 
 		my $first_epoch = time - (12 * 3600); # XXX - we should be able to have some delay in the past for spoolfetched plugins
@@ -718,8 +722,14 @@ sub uw_handle_fetch {
 
 	# Process all the data in-order
 	for my $line (@$data) {
-		next unless ($line =~ m{\A ([^\.]+)(?:\.(\S)+)? \s+ ([\S:]+) }xms);
+		next if ($line =~ m/^#/); # Ignore lines with comments
+		next unless ($line =~ m{\A ([^\.]+)(?:\.(\S+))? \s+ ([\S:]+) }xms);
 		my ($field, $arg, $value) = ($1, $2, $3);
+		$arg = "" unless defined $arg;
+		if ($arg ne "value") {
+			WARN "got '$line' but it should not be part of a fetch reply as (arg:$arg), ignoring.";
+			next;
+		}
 
 		my $when = $now; # Default is NOW, unless specified
 		my $when_is_now = 1;

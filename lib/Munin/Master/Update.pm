@@ -60,7 +60,10 @@ sub run {
     });
 }
 
+# If you need a readonly DBH, use M::M::U::get_dbh("readonly").
 sub get_dbh {
+	my ($is_read_only) = @_;
+
 	my $datafilename = $ENV{MUNIN_DBURL} || $config->{dburl} || "$config->{dbdir}/datafile.sqlite";
 	my $db_driver = $ENV{MUNIN_DBDRIVER} || $config->{dbdriver};
 	my $db_user = $ENV{MUNIN_DBUSER} || $config->{dbuser};
@@ -73,12 +76,18 @@ sub get_dbh {
 	# Not being able to open the DB connection seems FATAL to me. Better
 	# die loudly than injecting some misguided data
 	use DBI;
-	my $dbh = DBI->connect("dbi:$db_driver:dbname=$datafilename", $db_user, $db_passwd) or die $DBI::errstr;
-	{
-		$dbh->{RaiseError} = 1;
-		use Carp;
-		$dbh->{HandleError} = sub { confess(shift) };
-	}
+	my %db_args;
+	$db_args{ReadOnly} = 1 if $is_read_only;
+	#	$db_args{AutoCommit} = 0 if $is_read_only;
+	$db_args{AutoCommit} = 0;
+	$db_args{RaiseError} = 1;
+
+	use Carp;
+	$db_args{HandleError} = sub { confess(shift) };
+
+	my $dbh = DBI->connect("dbi:$db_driver:dbname=$datafilename", $db_user, $db_passwd, \%db_args) or die $DBI::errstr;
+
+	DEBUG 'get_dbh: $dbh->{Driver}->{Name} = ' . $dbh->{Driver}->{Name};
 
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
@@ -142,8 +151,12 @@ sub _db_stats {
 	$self->{runid} = time() unless $self->{runid};
 	my $runid = $self->{runid};
 	my $dbh = $self->{dbh} || get_dbh(); # Reuse any existing connection, or open a temporary one
-	my $sth_i = $dbh->prepare_cached("INSERT INTO stats (runid, tstp, type, name, duration) VALUES (?, ?, ?, ?, ?);");
+	my $dbh_driver = $dbh->{Driver}->{Name};
+	my $sql_to_timestamp = "";
+	$sql_to_timestamp = "TO_TIMESTAMP" if $dbh_driver eq "Pg";
+	my $sth_i = $dbh->prepare_cached("INSERT INTO stats (runid, tstp, type, name, duration) VALUES (?, $sql_to_timestamp(?), ?, ?, ?);");
 	$sth_i->execute($runid, time(), $type, $name, $duration);
+	$dbh->commit();
 }
 
 
@@ -239,7 +252,6 @@ sub _db_init {
 	$dbh->do("SET LOCAL client_min_messages = error") if $db_driver eq "Pg";
 
 	# Initialize DB Schema
-	$dbh->begin_work();
 	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id $db_serial_type PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS r_g_grp ON grp (p_id, name)");
@@ -275,7 +287,7 @@ sub _db_init {
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
 
 	# Munin stats
-	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp DATETIME, type VARCHAR, name VARCHAR, duration NUMERIC)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp TIMESTAMPTZ, type VARCHAR, name VARCHAR, duration NUMERIC)");
 
 	# Initialise the grp _root_ node if not present
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
@@ -295,7 +307,6 @@ sub _db_params_update {
 		$old_params{$_name} = $_value;
 	}
 
-	$dbh->begin_work();
 	$dbh->do('DELETE FROM param');
 
 	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
@@ -342,4 +353,3 @@ Constructor.
 This is where all the work gets done.
 
 =back
-
