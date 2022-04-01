@@ -1,0 +1,92 @@
+#!/bin/sh
+
+: << '=cut'
+
+=head1 NAME
+
+psi - Plugin to graph Linux pressure stall information
+
+=head1 APPLICABLE SYSTEMS
+
+Linux kernels since 4.20 with CONFIG_PSI=y.
+
+=head1 INTERPRETATION
+
+When resources are contended, workloads experience latency spikes, throughput
+losses, and run the risk of OOM kills.
+
+Linux's PSI feature, introduced in kernel 4.20, identifies and quantifies the
+disruptions caused by resource contention.
+
+=head1 AUTHOR
+
+Copyright (C) 2022 Chris Down <chris@chrisdown.name>
+
+=head1 LICENSE
+
+GNU GPLv2
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=cut
+
+psi_dir=/proc/pressure
+
+autoconf() {
+    if [ -d "$psi_dir" ]; then
+        echo yes
+    else
+        echo "no ($psi_dir not found)"
+    fi
+}
+
+config() {
+    echo "graph_title PSI"
+    echo "graph_args --upper-limit 100 -l 0"
+    echo "graph_vlabel %"
+    echo "graph_category system"
+    echo "graph_info This graph shows resource contention on the machine." \
+         "Values are recorded from the 'avg10' counter." \
+         "%full cpu is excluded as it's meaningless at the system level."
+
+    for res in memory cpu io; do
+        while read -r psi_type _; do
+            if [ "$res" = cpu ] && [ "$psi_type" = full ]; then
+                # See comment in get_data
+                continue
+            fi
+            printf '%s%spressure.label %%%s %s pressure\n' \
+                "$res" "$psi_type" "$psi_type" "$res"
+            printf '%s%spressure.info Percent %s time in "%s" contention\n' \
+                "$res" "$psi_type" "$res" "$psi_type"
+        done < "$psi_dir/$res"
+    done
+}
+
+get_data() {
+    # Example line: some avg10=0.00 avg60=0.00 avg300=0.17 total=91233216
+    #
+    # CPU has "full" to keep parsers the same as for cgroup-local PSI stats,
+    # but it's meaningless at the system level, so it's ignored.
+    for res in memory cpu io; do
+        while read -r psi_type pct_ten _; do
+            if [ "$res" != cpu ] || [ "$psi_type" != full ]; then
+                pct_ten=${pct_ten#*=}
+                printf '%s%spressure.value %s\n' "$res" "$psi_type" "$pct_ten"
+            fi
+        done < "$psi_dir/$res"
+    done
+}
+
+case ${1:-fetch} in
+    config) config ;;
+    autoconf) autoconf ;;
+    fetch) get_data ;;
+    *)
+        printf 'Unknown option: "%s"\n' "$1"
+        exit 1
+    ;;
+esac
