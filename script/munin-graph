@@ -1,0 +1,196 @@
+#!/usr/bin/perl -T
+
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+
+my $jobs = 0;
+my $destination = "/tmp";
+
+print_usage_and_exit()
+  unless GetOptions(
+    "jobs|j=i"  => \$jobs,
+    "destination|d=s"  => \$destination,
+    "version" => \&print_version_and_exit,
+    "help"    => \&print_usage_and_exit,
+  );
+
+# Get the list of png to create
+my @paths;
+{
+	use Munin::Master::Update;
+	my $dbh = Munin::Master::Update::get_dbh(1);
+	my $row_ref = $dbh->selectall_arrayref("SELECT path FROM url WHERE type = ?", {}, "service");
+
+	# Process results
+	@paths = map {
+		my $path = @{$_}[0];
+		(
+			"$path-year.png",
+			"$path-month.png",
+			"$path-week.png",
+			"$path-day.png",
+			"$path-hour.png",
+		);
+	} @$row_ref;
+}
+
+use Parallel::ForkManager;
+my $pm = Parallel::ForkManager->new($jobs);
+for my $path (@paths) {
+	my $worker_id = $pm->start();
+	next if $worker_id;
+
+	# Mock CGI interface, in order to reuse most of munin-httpd internals
+	my $cgi = CGI->new({
+		path_info => $path,
+	});
+
+	my $filepath = "$destination/$path";
+
+	# redirect STDOUT to the file
+	print "s: $filepath\n";
+
+	use File::Basename;
+	use File::Path qw(make_path remove_tree);
+
+	my $dirpath = dirname($filepath);
+	make_path($dirpath);
+
+	do {
+		local *STDOUT;
+		open (STDOUT, '>', $filepath);
+
+		use Munin::Master::Graph;
+		Munin::Master::Graph::handle_request($cgi);
+	};
+
+	$pm->finish();
+}
+
+# wait for every worker to finish
+$pm->wait_all_children();
+
+
+sub print_usage_and_exit {
+    require Pod::Usage;
+    Pod::Usage::pod2usage( -verbose => 1 );
+}
+
+sub print_version_and_exit {
+    require Pod::Usage;
+    Pod::Usage::pod2usage(
+        -verbose  => 99,
+        -sections => 'VERSION|COPYRIGHT',
+    );
+}
+
+package CGI;
+
+sub new {
+        my $c = shift;
+        my $params = shift;
+        return bless $params, $c;
+}
+
+sub path_info {
+	my $self = shift;
+	return $self->{path_info};
+}
+
+sub url_param {
+	my $self = shift;
+	my $param = shift;
+	die("undef") unless defined $param;
+	return $self->{url_param}{$param};
+}
+
+my %header;
+sub header {
+	my $self = shift;
+	%header = @_;
+}
+
+sub url {
+	my $self = shift;
+	return "";
+}
+
+__END__
+
+=head1 NAME
+
+munin-html - Generate a static version of the HTML pages
+
+=head1 USAGE
+
+munin-html [options]
+
+=head1 REQUIRED ARGUMENTS
+
+None.
+
+=head1 EXIT STATUS
+
+Non-zero on failure.
+
+=head1 DESCRIPTION
+
+munin-html is a simple generator of the HTML pages.
+It doesn't support zooming, but does support multi-process execution, via forking.
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<< --jobs <number of jobs> >>
+
+This is the number of workers jobs to launch.
+Default is 0, meaning no fork is done.
+
+=item B<< --destination <destination directory> >>
+
+Default is "/tmp".
+
+=item B<--help >
+
+View this help message.
+
+=item B<--version >
+
+Show version information.
+
+=back
+
+=head1 VERSION
+
+This is munin-html (munin) v@@VERSION@@
+
+=head1 AUTHOR
+
+Steve Schnepp
+
+=head1 BUGS AND LIMITATIONS
+
+None known. If you found one, please report under L<https://github.com/munin-monitoring/munin/issues>.
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (C) 2022 Steve Schnepp
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+=cut
