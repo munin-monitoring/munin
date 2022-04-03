@@ -48,6 +48,7 @@ for my $path (@paths) {
 		path_info => $path,
 	});
 
+	$destination = $1 if $destination =~ m/(.*)/;
 	my $filepath = "$destination/$path";
 
 	# redirect STDOUT to the file

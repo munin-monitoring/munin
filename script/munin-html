@@ -42,6 +42,7 @@ for my $path (@paths) {
 		path_info => $path,
 	});
 
+	$destination = $1 if $destination =~ m/(.*)/;
 	my $filepath = "$destination/$path";
 	$filepath = "$destination/index.html" if $path eq "/";
 
