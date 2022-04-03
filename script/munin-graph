@@ -45,7 +45,7 @@ for my $path (@paths) {
 
 	# Mock CGI interface, in order to reuse most of munin-httpd internals
 	my $cgi = CGI->new({
-		path_info => $path,
+		path_info => "/$path",
 	});
 
 	$destination = $1 if $destination =~ m/(.*)/;
