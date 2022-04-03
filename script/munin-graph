@@ -112,6 +112,9 @@ my %header;
 sub header {
 	my $self = shift;
 	%header = @_;
+
+	# No return
+	return "";
 }
 
 sub url {
