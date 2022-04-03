@@ -26,7 +26,7 @@ my @paths;
 
 	# Process results
 	@paths = map {
-		my $path = @{$_}[0] . "/index.html";
+		my $path = @{$_}[0] . ".html";
 	} @$row_ref;
 	push @paths, "/";
 }
@@ -106,6 +106,9 @@ my %header;
 sub header {
 	my $self = shift;
 	%header = @_;
+
+	# No return, so nothing is printed
+	return "";
 }
 
 sub url {
