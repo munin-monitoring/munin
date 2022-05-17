@@ -43,18 +43,25 @@ Donated to the public domain by Nicolai Langfeldt (janl@linpro.no)
 
 CONFIG=no
 
+autoconf() {
+    type -p ipmitool &>/dev/null ||
+	{ echo 'no (missing ipmitool command)' && return 1; }
+
+    ipmitool sensor &>/dev/null ||
+	{ echo 'no (unable to access IPMI device)' && return 1; }
+
+    return 0
+}
+
 case $1 in
     autoconf)
-	type -p ipmitool &>/dev/null ||
-	  { echo 'no (missing ipmitool command)' && exit 0; }
-
-	ipmitool sensor &>/dev/null ||
-	  { echo 'no (unable to access IPMI device)' && exit 0; }
+	autoconf || exit 0;
 
 	echo yes
         exit 0
 	;;
-    suggest) echo fans
+    suggest) autoconf > /dev/null || exit 0
+             echo fans
              echo temp
              echo power
              echo volts
