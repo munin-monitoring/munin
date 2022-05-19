@@ -92,7 +92,7 @@ sub do_stats {
     get_state;
 
     open(Q,"> $STATEFILE") or die;
-    foreach $k (keys %IN) {
+    foreach $k (sort keys %IN) {
         print "query_$k.value ",$IN{$k},"\n";
         print Q "$k ",$IN{$k},"\n";
     }
@@ -115,7 +115,7 @@ query_other.draw AREA
 ";
     get_state;
 
-    foreach $k (keys %IN) {
+    foreach $k (sort keys %IN) {
         print "query_$k.label $k
 query_$k.type DERIVE
 query_$k.min 0
