@@ -108,10 +108,6 @@ sub do_config {
     print "graph_title DNS Queries by type
 graph_category dns
 graph_vlabel Queries / \${graph_period}
-query_other.label Other
-query_other.type DERIVE
-query_other.min 0
-query_other.draw AREA
 ";
     get_state;
 
@@ -119,9 +115,12 @@ query_other.draw AREA
         print "query_$k.label $k
 query_$k.type DERIVE
 query_$k.min 0
-query_$k.draw STACK
 ";
     }
+    print "query_other.label Other
+query_other.type DERIVE
+query_other.min 0
+";
 };
 
 if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
