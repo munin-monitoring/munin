@@ -1946,7 +1946,7 @@ sub update_variables {
     }
 
     $data->{'mysql_base_memory'} = $data->{'key_buffer_size'}
-                                         + $data->{'query_cache_size'}
+                                         + ( $data->{'query_cache_size'} || 0 )
                                          + $data->{'innodb_buffer_pool_size'}
                                          + ( $data->{'innodb_additional_mem_pool_size'} || 0 )
                                          + $data->{'innodb_log_buffer_size'}
