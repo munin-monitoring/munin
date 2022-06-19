@@ -175,10 +175,10 @@ sub _run_workers {
 	my $nb_workers_failed = 0;
 	$pm->run_on_finish(
 		sub {
-			my ($pid, $exit_code, $ident) = @_;
+			my ($pid, $exit_code) = @_;
 
 			$exit_code = 0 unless defined $exit_code;
-			INFO "[INFO]: run_on_finish(pid:$pid, exit_code:$exit_code, ident:$ident)";
+			INFO "[INFO]: run_on_finish(pid:$pid, exit_code:$exit_code)";
 
 			$nb_workers_failed++ if $exit_code;
 		}
