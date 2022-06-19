@@ -902,9 +902,10 @@ sub _create_rrd_file {
 
     # Add the RRD::create prefix (filename & RRD params)
     my $heartbeat = $update_rate_in_sec * 2;
+    $first_epoch -= $first_epoch % $update_rate_in_sec; # the RRD start should _always_ be aligned
     unshift (@args,
         $rrd_file,
-        "--start", ($first_epoch - $update_rate_in_sec) % $update_rate_in_sec, # the RRD start should _always_ be aligned
+        "--start", ($first_epoch - $update_rate_in_sec),
 	"-s", $update_rate_in_sec,
         sprintf('DS:42:%s:%s:%s:%s',
                 $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
