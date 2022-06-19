@@ -17,6 +17,7 @@ cat <<EOF
   libfile-slurp-perl
   libhtml-template-perl
   libhtml-template-pro-perl
+  libhttp-server-simple-cgi-prefork-perl
   libhttp-server-simple-perl
   libio-socket-inet6-perl
   libio-stringy-perl
@@ -50,10 +51,4 @@ cat <<EOF
   sqlite3
   wget
 EOF
-)
-
-(
-	cd /tmp
-	wget http://ftp.de.debian.org/debian/pool/main/libh/libhttp-server-simple-cgi-prefork-perl/libhttp-server-simple-cgi-prefork-perl_6-1_all.deb
-	dpkg -i libhttp-server-simple-cgi-prefork-perl_6-1_all.deb
 )
