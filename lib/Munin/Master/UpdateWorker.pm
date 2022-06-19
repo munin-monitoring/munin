@@ -17,7 +17,6 @@ use Munin::Master::Config;
 use Munin::Master::Node;
 use Munin::Master::Utils;
 use RRDs;
-use Time::HiRes;
 use Data::Dumper;
 use Scalar::Util qw(weaken);
 
@@ -238,11 +237,9 @@ FETCH_OK:
     }); # do_in_session
 
     # This handles failure in do_in_session,
-    return if ! $done || ! $done->{exit_value};
+    return 0 if ! $done || ! $done->{exit_value};
 
-    return {
-        time_used => Time::HiRes::time - $update_time,
-    }
+    return 1;
 }
 
 sub _db_url {

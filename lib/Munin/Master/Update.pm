@@ -30,7 +30,6 @@ sub new {
     my $self = bless {
         old_service_configs => {},
         old_version         => undef,
-        service_configs     => {},
         workers             => [],
         failed_workers      => [],
         group_repository    => Munin::Master::GroupRepository->new($gah),
@@ -190,6 +189,8 @@ sub _run_workers {
 		my $worker_pid = $pm->start($worker);
 		next WORKER_LOOP if $worker_pid;
 
+		my $start_time = Time::HiRes::time;
+
 		my $res;
 		eval {
 			# Inject the 2 dbh (meta + state)
@@ -202,7 +203,7 @@ sub _run_workers {
 		$worker->{dbh}->disconnect();
 
 		my $worker_id = $worker->{ID};
-		if (! defined($res) || $@) {
+		if (! $res || $@) {
 			# No res, something went wrong
 			# Note that we handle connection failure same as other
 			# failures. Since "do_connect()" fails only softly.
@@ -210,7 +211,8 @@ sub _run_workers {
 			$pm->finish(1, [ $worker_id ] );
 		}
 
-		$self->_handle_worker_result([$worker_id, $res]);
+		my $time_used = Time::HiRes::time - $start_time;
+		$self->_handle_worker_result([$worker_id, $time_used]);
 		$pm->finish(); # Return 0
 	}
 
@@ -230,14 +232,12 @@ sub _handle_worker_result {
 	LOGCROAK("[FATAL] Handle_worker_result got handed a failed worker result");
     }
 
-    my ($worker_id, $time_used, $service_configs)
-        = ($res->[0], $res->[1]{time_used}, $res->[1]{service_configs});
+    my ($worker_id, $time_used)
+        = ($res->[0], $res->[1],);
 
     my $update_time = sprintf("%.2f", $time_used);
     INFO "[INFO]: Munin-update finished for node $worker_id ($update_time sec)";
     $self->_db_stats("UD", $worker_id, $time_used);
-
-    $self->{service_configs}{$worker_id} = $service_configs;
 }
 
 sub _db_init {
