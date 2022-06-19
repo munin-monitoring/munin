@@ -165,7 +165,7 @@ case ${1:-} in
 		for src in lib/Munin/*/*.pm
 		do
 			dst=${src#*/}
-			cp -vf $src sandbox/lib/perl5/$dst
+			ln -vsf $(pwd)/$src sandbox/lib/perl5/$dst
 		done
 		;;
 	"")
