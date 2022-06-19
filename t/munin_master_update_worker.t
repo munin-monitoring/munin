@@ -16,7 +16,7 @@ is_deeply(parse_update_rate("5"), [ 5, 0 ], "update_rate: 5");
 is_deeply(parse_update_rate("5s"), [ 5, 0 ], "update_rate: 5s");
 is_deeply(parse_update_rate("5m"), [ 300, 0 ], "update_rate: 5m");
 is_deeply(parse_update_rate("5t"), [ 13392000, 0 ], "update_rate: 5t");
-is_deeply(parse_update_rate("5m aligned"), [ 300, " aligned" ], "update_rate: 5m aligned");
+is_deeply(parse_update_rate("5m aligned"), [ 300, 1 ], "update_rate: 5m aligned");
 
 sub parse_custom_resolution { my @ret = Munin::Master::UpdateWorker::parse_custom_resolution(@_); return \@ret; }
 

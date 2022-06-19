@@ -146,6 +146,8 @@ my $build = Module::Build->new(
             script/munin-doc
             script/munin-get
             script/munin-httpd
+            script/munin-html
+            script/munin-graph
             script/munin-limits
             script/munin-node
             script/munin-node-configure
