@@ -576,12 +576,14 @@ sub parse_update_rate {
 	my ($update_rate_config) = @_;
 
 	my ($update_rate_in_sec, $is_update_aligned);
-	if ($update_rate_config =~ m/(\d+[a-z]?)( aligned)?/) {
+	if ($update_rate_config =~ m/(\d+[a-z]?)(?: (.*))?/) {
 		$update_rate_in_sec = to_sec($1);
-		$is_update_aligned = ($2 || 0);
+		$is_update_aligned = $2 && ($2 eq "aligned");
 	} else {
 		return (0, 0);
 	}
+
+	$is_update_aligned ||= 0;
 
 	return ($update_rate_in_sec, $is_update_aligned);
 }
@@ -855,9 +857,9 @@ sub _create_rrd_file {
 
     $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
     my $resolution = $ds_config->{graph_data_size};
-    my $update_rate = $ds_config->{update_rate};
+    my ($update_rate_in_sec, $is_update_aligned) = parse_update_rate($ds_config->{update_rate});
     if ($resolution eq 'normal') {
-	$update_rate = 300; # 'normal' means hard coded RRD $update_rate
+	$update_rate_in_sec = 300; # 'normal' means hard coded RRD $update_rate
         push (@args,
               "RRA:AVERAGE:0.5:1:576",   # resolution 5 minutes
               "RRA:MIN:0.5:1:576",
@@ -872,13 +874,13 @@ sub _create_rrd_file {
               "RRA:MIN:0.5:288:450",
               "RRA:MAX:0.5:288:450");
     } elsif ($resolution eq 'huge') {
-	$update_rate = 300; # 'huge' means hard coded RRD $update_rate
+	$update_rate_in_sec = 300; # 'huge' means hard coded RRD $update_rate
         push (@args,
               "RRA:AVERAGE:0.5:1:115200",  # resolution 5 minutes, for 400 days
               "RRA:MIN:0.5:1:115200",
               "RRA:MAX:0.5:1:115200");
     } elsif ($resolution eq 'debug') {
-	$update_rate = 300; # 'debug' means hard coded RRD $update_rate
+	$update_rate_in_sec = 300; # 'debug' means hard coded RRD $update_rate
         push (@args,
               "RRA:AVERAGE:0.5:1:42",  # resolution 5 minutes, for 42 steps
               "RRA:MIN:0.5:1:42",
@@ -886,7 +888,7 @@ sub _create_rrd_file {
     } elsif ($resolution =~ /^custom (.+)/) {
         # Parsing resolution to achieve computer format as defined on the RFC :
         # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB
-        my @resolutions_computer = parse_custom_resolution($1, $update_rate);
+        my @resolutions_computer = parse_custom_resolution($1, $update_rate_in_sec);
         my @enlarged_resolutions = enlarge_custom_resolution(@resolutions_computer);
         foreach my $resolution_computer(@resolutions_computer) {
             my ($multiplier, $multiplier_nb) = @{$resolution_computer};
@@ -899,11 +901,11 @@ sub _create_rrd_file {
     }
 
     # Add the RRD::create prefix (filename & RRD params)
-    my $heartbeat = $update_rate * 2;
+    my $heartbeat = $update_rate_in_sec * 2;
     unshift (@args,
         $rrd_file,
-        "--start", ($first_epoch - $update_rate),
-	"-s", $update_rate,
+        "--start", ($first_epoch - $update_rate_in_sec) % $update_rate_in_sec, # the RRD start should _always_ be aligned
+	"-s", $update_rate_in_sec,
         sprintf('DS:42:%s:%s:%s:%s',
                 $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
     );
