@@ -316,7 +316,8 @@ sub Config {
     for (0 .. scalar(@$r) - 1) {
         my $row = @$r[$_];
         my $l = Munin::Plugin::clean_fieldname($row->[0]);
-        print "$l.label $row->[1]\n";
+        my $label = Munin::Plugin::clean_label($row->[1]);
+        print "$l.label $label\n";
         print "$l.info $row->[2]\n" if (defined $row->[2]);
         print "$l.type $self->{graphtype}\n";
         if ($self->{stack} && !$firstrow) {
