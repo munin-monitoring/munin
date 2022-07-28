@@ -178,6 +178,28 @@ sub clean_fieldname ($) {
     return $name;
 }
 
+=head3 $label = clean_label($input_label)
+
+Munin plugin field labels are restricted with regards to what
+characters they may use: They cannot contain a
+# (would start a comment),
+\ (no escaping allowed/supported)
+or \r nor \n (as those would start a new line).
+To satisfy these demands the function replaces illegal characters with a ' ' (space).
+
+See also
+L<http://guide.munin-monitoring.org/en/latest/reference/plugin.html>
+
+=cut
+
+sub clean_label ($) {
+    my $label = shift;
+
+    # Replace all illegal characters with space
+    $label =~ s/[#\\\r\n]/ /g;
+
+    return $label;
+}
 
 =head3 set_state_name($statefile_name)
 
