@@ -25,11 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 use strict;
 use warnings;
 use IO::Handle;
-BEGIN {
-    no warnings;
-    $Date::Manip::Backend = 'DM5';
-}
-use Date::Manip;
 use POSIX qw(strftime locale_h);
 use CGI::Fast qw(:cgi);
 use CGI::Carp qw(fatalsToBrowser);
