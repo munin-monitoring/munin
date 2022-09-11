@@ -1,5 +1,42 @@
 -*- text -*-
 
+munin-2.0.70, 2022-09-11
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Andreas Perhab (3):
+      plugins/http_loadtime: enable saving cookies between requests
+      UpdateWorker: prevent use of uninitialized value $first_epoch
+      fix html_strategy to point to munin-cgi-html
+
+Lars Kruse (2):
+      plugin fail2ban: allow configuration of warning/critical thresholds
+      Plugin haproxy_: handle backends with special characters
+
+Olivier Mehani (2):
+      [snmp__df_ram] Update title to match the memory plugin
+      [snmp__cpuload] Update title to match the cpu plugin
+
+Pierre-Alain TORET (1):
+      Plugin df_inode : Exclude msdosfs on FreeBSD as there's no concept of inode
+
+Sandro (3):
+      Plugin bind9: stabilize order of values in graph
+      Plugin bind9: Author's blog has moved to .no TLD
+      Plugin bind9: Move 'Other' to bottom of list
+
+Steve Schnepp (2):
+      Update munin-graph.in
+      Update munin-cgi-graph.in
+
+
 munin-2.0.69, 2021-11-22
 -------
 Summary
