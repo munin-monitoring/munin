@@ -1,5 +1,20 @@
 -*- text -*-
 
+munin-2.0.71, 2022-09-19
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      fix the fix for Date::Manip
+
+
 munin-2.0.70, 2022-09-11
 -------
 Summary
