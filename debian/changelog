@@ -1,4 +1,4 @@
-munin (2.0.71-1) UNRELEASED; urgency=medium
+munin (2.0.71-1) unstable; urgency=medium
 
   * New upstream release. Closes: #1019343.
   * d/control:
@@ -6,7 +6,7 @@ munin (2.0.71-1) UNRELEASED; urgency=medium
       were matched with the Buster release.
     - update standards version to 4.6.1, no changes needed.
 
- -- Holger Levsen <holger@debian.org>  Mon, 26 Sep 2022 14:32:00 +0200
+ -- Holger Levsen <holger@debian.org>  Mon, 26 Sep 2022 14:44:44 +0200
 
 munin (2.0.69-1) unstable; urgency=medium
 
