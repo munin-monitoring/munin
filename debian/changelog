@@ -1,7 +1,10 @@
 munin (2.0.71-1) UNRELEASED; urgency=medium
 
   * New upstream release. Closes: #1019343.
-  * Update standards version to 4.6.1, no changes needed.
+  * d/control:
+    - drop several Breaks/Replaces: munin-doc (<< 2.0.37-3) entries as they
+      were matched with the Buster release.
+    - update standards version to 4.6.1, no changes needed.
 
  -- Holger Levsen <holger@debian.org>  Mon, 26 Sep 2022 14:32:00 +0200
 
