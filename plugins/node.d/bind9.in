@@ -30,7 +30,7 @@ such as this:
 
 =over
 
-=item * L<http://blog.larsstrand.org/2008/02/how-to-monitor-bind-with-munin.html>
+=item * L<http://blog.larsstrand.no/2008/02/how-to-monitor-bind-with-munin.html>
 
 =item * BIND Administrator Reference Manual
 
@@ -92,7 +92,7 @@ sub do_stats {
     get_state;
 
     open(Q,"> $STATEFILE") or die;
-    foreach $k (keys %IN) {
+    foreach $k (sort keys %IN) {
         print "query_$k.value ",$IN{$k},"\n";
         print Q "$k ",$IN{$k},"\n";
     }
@@ -108,20 +108,19 @@ sub do_config {
     print "graph_title DNS Queries by type
 graph_category dns
 graph_vlabel Queries / \${graph_period}
-query_other.label Other
-query_other.type DERIVE
-query_other.min 0
-query_other.draw AREA
 ";
     get_state;
 
-    foreach $k (keys %IN) {
+    foreach $k (sort keys %IN) {
         print "query_$k.label $k
 query_$k.type DERIVE
 query_$k.min 0
-query_$k.draw STACK
 ";
     }
+    print "query_other.label Other
+query_other.type DERIVE
+query_other.min 0
+";
 };
 
 if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {

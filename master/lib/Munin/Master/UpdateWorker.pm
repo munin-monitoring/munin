@@ -626,7 +626,7 @@ sub _update_rrd_files {
 	    DEBUG "[DEBUG] asking for a rrd of size : " . $ds_config->{graph_data_size};
 
 	    # Avoid autovivification (for multigraphs)
-	    my $first_epoch = (defined($service_data) and defined($service_data->{$ds_name})) ? ($service_data->{$ds_name}->{when}->[0]) : 0;
+	    my $first_epoch = (defined($service_data) and defined($service_data->{$ds_name}) and $service_data->{$ds_name}->{when}) ? ($service_data->{$ds_name}->{when}->[0]) : 0;
 	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config, $first_epoch);
 
 	    if (defined($service_data) and defined($service_data->{$ds_name})) {

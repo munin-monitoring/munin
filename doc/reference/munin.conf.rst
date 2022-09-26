@@ -99,7 +99,7 @@ otherwise.
 
    If set to "cgi", :ref:`munin-html` will do nothing. To generate
    html pages you must configure a web server to run
-   :ref:`munin-cgi-graph` instead.
+   :ref:`munin-cgi-html` instead.
 
 .. option:: ssh_command <command>
 

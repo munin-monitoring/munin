@@ -32,16 +32,7 @@ use strict;
 use warnings;
 use IO::Handle;
 
-BEGIN {
-    # This is needed because Date::Manip has deprecated the functional
-    # interface in >= 6.x. So, we force the use of the 5.x API.
-    $Date::Manip::Backend = 'DM5';
-
-    # Double line here to avoid spurious warnings about D::M::Backend being
-    # used only once.
-    $Date::Manip::Backend = 'DM5';
-}
-use Date::Manip;
+use Date::Manip; # Using UnixDate() & ParseDateString()
 use POSIX qw(strftime);
 use Time::HiRes qw(gettimeofday tv_interval);
 use IO::File;

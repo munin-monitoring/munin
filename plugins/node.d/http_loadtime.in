@@ -11,20 +11,27 @@ http_loadtime - Plugin to graph the HTTP response times of specific pages
 The following environment variables are used by this plugin
 
  target - comma separated URL(s) to fetch (default: "http://localhost/")
+ requisites - if true also loads images and stylesheets referenced in the page as well, see wget --page-requisites
+              (default: "false")
+ cookies - if true saves and loads cookies to and from munin plugin state directory, this can be used for services that
+           show session statistics to only use one session per http_loadtime uri configuration (default: "false")
+
  example:
    [http_loadtime]
    env.target http://localhost.de,http://localhost.de/some-site.html
    env.requisites true
+   env.cookies true
    env.warning 5
    env.critical 30
 
  Do not enable the download of page requisites (env.requisites) for https
  sites since wget needs incredible long to perform this on big sites...
 
-=head1 AUTHOR
+=head1 AUTHORS
 
 Unknown authors
 (2013) Axel Huebl
+(2021) Andreas Perhab <a.perhab@wtioit.at>
 
 =head1 LICENSE
 
@@ -41,6 +48,7 @@ GPLv2
 
 target=${target:-"http://localhost/"}
 requisites=${requisites:-"false"}
+cookies=${cookies:-"false"}
 
 urls=$(echo "$target" | tr ',' '\n')
 
@@ -52,6 +60,21 @@ request_url() {
 
 escapeUri() {
     echo "$1" | sed 's/[:/.-]/_/g'
+}
+
+request_url_with_args_from_env() {
+    local uri
+    uri=$1
+    if [ "$requisites" = "true" ]; then
+        set -- --page-requisites "$@"
+    fi
+    if [ "$cookies" = "true" ]; then
+        local cookies_file
+        cookies_file="$MUNIN_PLUGSTATE/http_loadtime/$(escapeUri "$uri").cookies.txt"
+        mkdir -p "$(dirname "$cookies_file")"
+        set -- --load-cookies "$cookies_file" --save-cookies "$cookies_file" --keep-session-cookies "$@"
+    fi
+    request_url "$@"
 }
 
 
@@ -100,11 +123,7 @@ fi
 for uri in $urls
 do
     start=$(date +%s.%N)
-    if [ "$requisites" = "true" ]; then
-        request_url --page-requisites "$uri"
-    else
-        request_url "$uri"
-    fi
+    request_url_with_args_from_env "$uri"
     loadtime=$(echo "$start" "$(date +%s.%N)" | awk '{ print($2 - $1); }')
 
     echo "$(escapeUri "$uri").value $loadtime"
