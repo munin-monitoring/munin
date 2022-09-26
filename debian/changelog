@@ -1,3 +1,9 @@
+munin (2.0.71-1) UNRELEASED; urgency=medium
+
+  * New upstream release. Closes: #1019343.
+
+ -- Holger Levsen <holger@debian.org>  Mon, 26 Sep 2022 14:32:00 +0200
+
 munin (2.0.69-1) unstable; urgency=medium
 
   [ Holger Levsen ]
