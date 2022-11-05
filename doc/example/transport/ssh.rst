@@ -12,19 +12,19 @@ Using the ssh transport for munin is a very powerful way to reach hard to reach 
 Using SSH transport
 ===================
 
-For a host that you can only reach via ssh (becasue firewall, or because you don't want to expose munin-node on the network, only to localhost) Munin can use SSH directly like this:
+For a host that you can only reach via ssh (because firewall, or because you don't want to expose munin-node on the network, only to localhost) Munin can use SSH directly like this:
 
   [mail.site2.example.org]
-     address ssh://mail.site2.example.org/bin/nc localhost 4949
+     address ssh://mail.site2.example.org -W localhost:4949
      
-This makes munin use the ssh terminal connection as a network socket.  The "address" line bunces the ssh terminal connection via the netcat ('nc') program to the munin-node port on the remote host.
+This makes munin use the ssh terminal connection as a network socket.  The "address" line bunces the ssh terminal connection to the munin-node port on the remote host.
 
 If you can reach the node via some bastion or bounce host a similar command can be used:
 
   [mail.site2.example.org]
-     address ssh://bastion.site2.example.org/bin/nc mail.site2.example.org 4949
+     address ssh://bastion.site2.example.org -W mail.site2.example.org:4949
      
-This will make munin first ssh into bastion.site2.example.org, then use netcat to reach the munin-node port (4949) on mail.site2.example.org.
+This will make munin first ssh into bastion.site2.example.org, and then from there connect the munin-node port (4949) on mail.site2.example.org.
 
 You will need to configure ssh to allow these connections.
 
