@@ -16,8 +16,8 @@ MUNIN_TEST_CGI_ENABLED=${MUNIN_TEST_CGI_ENABLED:-0}
     # manually triggered executions.
     service cron stop
     systemctl stop cron.target
-    # Kill any possible "munin-update" process (triggered by cron a few moments before).
-    pkill munin-update
+    # Kill any possible "munin-cron" process groups (triggered by cron a few moments before).
+    killall -g munin-cron
     # Clean up any possibly created results of cron executions happening between system setup and
     # the start of the tests.
     find /var/cache/munin/www/ -type f -delete
