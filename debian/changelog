@@ -1,3 +1,11 @@
+munin (2.0.71-2) unstable; urgency=medium
+
+  [ dann frazier ]
+  * debian/tests/munin-master/01.master-components.t: Avoid remaining race
+    with cron shutdown. (MR: debian/munin!6)
+
+ -- Holger Levsen <holger@debian.org>  Wed, 16 Nov 2022 18:08:55 +0100
+
 munin (2.0.71-1) unstable; urgency=medium
 
   * New upstream release. Closes: #1019343.
