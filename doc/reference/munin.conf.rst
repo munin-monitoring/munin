@@ -74,8 +74,7 @@ otherwise.
 
 .. option:: includedir <path>
 
-   (Exactly one) directory to include all files from.
-   Default ``/etc/munin/plugin-conf.d/``
+   Directory to include additional configuration files from.  All the files in the directory are read.  This directive can be used just once.  There is no default but the default installation procedure configures it to ``/etc/munin/munin-conf.d``.
 
 .. option:: local_address <address>
 
