@@ -77,4 +77,4 @@ Add some nodes to CONFDIR/munin.conf
   address node2.example.com
 
 [node3.example.com]
-  address 2001:db8::de:caf:bad
+  address [2001:db8::de:caf:bad]
