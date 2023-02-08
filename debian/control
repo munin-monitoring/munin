@@ -39,7 +39,6 @@ Architecture: all
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${perl:Depends},
  libnet-server-perl,
- lsb-base (>= 4.1),
  munin-common (>= ${binary:Version}),
  munin-plugins-core,
  netbase,
@@ -164,7 +163,6 @@ Package: munin
 Architecture: all
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${perl:Depends},
- lsb-base (>= 4.1),
  cron | cron-daemon | systemd-sysv,
  fonts-dejavu-core,
  libdate-manip-perl,
@@ -222,7 +220,6 @@ Package: munin-async
 Architecture: all
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${perl:Depends},
- lsb-base (>= 4.1),
  adduser,
  munin-common (>= ${binary:Version}),
  munin-node,
