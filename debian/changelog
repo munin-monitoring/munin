@@ -3,6 +3,7 @@ munin (2.0.72-1) UNRELEASED; urgency=medium
   [ Holger Levsen ]
   * New upstream release with a single change: import custom css file in
     style-new.css, thanks to Salvatore Bonaccorso. Closes: #1030677.
+  * d/copyright: update my copyright years.
 
   [ lintian-brush ]
   * Update upstream metadata fields: Bug-Submit.
