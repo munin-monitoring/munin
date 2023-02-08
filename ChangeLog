@@ -1,5 +1,20 @@
 -*- text -*-
 
+munin-2.0.72, 2023-02-08
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Salvatore Bonaccorso (1):
+      Import custom css file in style-new.css
+
+
 munin-2.0.71, 2022-09-19
 -------
 Summary

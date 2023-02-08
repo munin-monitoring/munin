@@ -1,3 +1,6 @@
+/* custom settings */
+@import "custom.css";
+
 /* Overall layout */
 html, body {
 	margin: 0;
