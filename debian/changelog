@@ -6,6 +6,7 @@ munin (2.0.72-1) UNRELEASED; urgency=medium
 
   [  ]
   * Set upstream metadata fields: Bug-Submit.
+  * Update standards version to 4.6.2, no changes needed.
 
  -- Holger Levsen <holger@debian.org>  Wed, 08 Feb 2023 15:22:12 +0100
 
