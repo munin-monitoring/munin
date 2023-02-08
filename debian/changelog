@@ -1,7 +1,11 @@
 munin (2.0.72-1) UNRELEASED; urgency=medium
 
+  [ Holger Levsen ]
   * New upstream release with a single change: import custom css file in
     style-new.css, thanks to Salvatore Bonaccorso. Closes: #1030677.
+
+  [  ]
+  * Set upstream metadata fields: Bug-Submit.
 
  -- Holger Levsen <holger@debian.org>  Wed, 08 Feb 2023 15:22:12 +0100
 
