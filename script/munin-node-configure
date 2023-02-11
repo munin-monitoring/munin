@@ -203,6 +203,7 @@ sub print_version_and_exit
     Pod::Usage::pod2usage(
         -verbose => 99,
         -sections => 'VERSION|COPYRIGHT',
+        -exit     => 0,
     );
 }
 
