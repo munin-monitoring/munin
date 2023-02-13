@@ -122,6 +122,7 @@ otherwise.
 
 .. option:: html_dynamic_images 1
 
+   Available since Munin 2.1.0.
    Munin HTML templates use this variable to decide whether to use dynamic
    ("lazy") loading of images with javascript so that images are loaded as they
    are scrolled in view. This prevents excessive load on the web server.
