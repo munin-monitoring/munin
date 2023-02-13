@@ -8,7 +8,7 @@ Using the ssh transport for munin is a very powerful way to reach hard to reach 
 
 .. index::
    triple: ssh transport; munin.conf; example
-   
+
 Using SSH transport
 ===================
 
@@ -16,14 +16,14 @@ For a host that you can only reach via ssh (because firewall, or because you don
 
   [mail.site2.example.org]
      address ssh://mail.site2.example.org -W localhost:4949
-     
+
 This makes munin use the ssh terminal connection as a network socket.  The "address" line bunces the ssh terminal connection to the munin-node port on the remote host.
 
 If you can reach the node via some bastion or bounce host a similar command can be used:
 
   [mail.site2.example.org]
      address ssh://bastion.site2.example.org -W mail.site2.example.org:4949
-     
+
 This will make munin first ssh into bastion.site2.example.org, and then from there connect the munin-node port (4949) on mail.site2.example.org.
 
 You will need to configure ssh to allow these connections.
@@ -88,5 +88,3 @@ This will keep a long-lived SSH connection open to
 `proxy.customer.example.com`, it will be re-used for all
 connections. The SSH options `TCPKeepAlive` and `ServerAliveInterval`
 are added to detect and restart a dropped connection on demand.
-
-
