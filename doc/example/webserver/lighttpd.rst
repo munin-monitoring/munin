@@ -49,8 +49,8 @@ Webserver configuration
                      ))
                    )
 
-  url.rewrite-repeat += (
+  url.rewrite-repeat-if-not-file += (
                      "/munin/(.*)" => "/munin-cgi/munin-cgi-html/$1",
                      "/munin-cgi/munin-cgi-html$" => "/munin-cgi/munin-cgi-html/",
-                     "/munin-cgi/munin-cgi-html/static/(.*)" => "/munin-static/$1"
+                     #"/munin-cgi/munin-cgi-html/static/(.*)" => "/munin-static/$1"
                      )
