@@ -542,9 +542,9 @@ sub handle_request
 		"--start", $start,
 		"--slope-mode",
 
-		'--font', "TITLE:$font_size_title:Sans",
 		'--font', "DEFAULT:$font_size_default",
 		'--font', "LEGEND:$font_size_legend",
+		'--font', "TITLE:$font_size_title:Sans",
 		# Colors coordinated with CSS.
 		'--color', 'BACK#F0F0F0',   # Area around the graph
 		'--color', 'FRAME#F0F0F0',  # Line around legend spot
