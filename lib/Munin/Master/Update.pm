@@ -248,12 +248,13 @@ sub _handle_worker_result {
 sub _db_init {
 	my ($self, $dbh) = @_;
 
-	my $db_serial_type = "INTEGER";
 	my $db_driver = $ENV{MUNIN_DBDRIVER} || "$config->{dbdriver}";
+	my $db_serial_type = "INTEGER";
 	$db_serial_type = "SERIAL" if $db_driver eq "Pg";
 
 	# Sets some session vars
-	$dbh->do("PRAGMA journal_mode=DELETE;") if $db_driver eq "SQLite";
+	my $db_journalmode = $ENV{MUNIN_DB_JOURNAL_MODE} || "$config->{db_journal_mode}" || "DELETE";
+	$dbh->do("PRAGMA journal_mode=$db_journal_mode;") if $db_driver eq "SQLite";
 	$dbh->do("SET LOCAL client_min_messages = error") if $db_driver eq "Pg";
 
 	# Initialize DB Schema
