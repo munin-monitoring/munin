@@ -55,8 +55,12 @@ else
     ATZ=
 fi
 
+do_ () {
+    # no-arg is fetch
+    do_fetch
+}
 
-do_ () { # Fetch
+do_fetch () {
     for ZONE in $ATZ; do
          TEMP=$(cat "$ZONE/temp")
          echo "$(basename "$ZONE").value $(echo "$TEMP" | awk '{print $1/1000}')"
@@ -93,7 +97,7 @@ do_autoconf () {
 }
 
 case $1 in
-    config|autoconf|'')
+    config|autoconf|fetch|'')
 	"do_$1"
 esac
 
