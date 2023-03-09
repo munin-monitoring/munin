@@ -59,6 +59,10 @@ sub handle_request
 
 		if (! $fh) {
 			print "HTTP/1.0 404 Not found\r\n";
+			print $cgi->header(
+				-type => $mime_types{$ext},
+				-Cache_Control => "public, max-age=3600"
+			);
 			return;
 		}
 
