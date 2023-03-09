@@ -5,23 +5,31 @@ use strict;
 use warnings;
 
 use Getopt::Long;
+use File::Copy::Recursive qw(fcopy rcopy dircopy fmove rmove dirmove);
+
+use Munin::Master::Config;
 
 my $jobs = 0;
-my $destination = "/tmp";
+my $htmldir;
 
 print_usage_and_exit()
-  unless GetOptions(
-    "jobs|j=i"  => \$jobs,
-    "destination|d=s"  => \$destination,
-    "version" => \&print_version_and_exit,
-    "help"    => \&print_usage_and_exit,
-  );
+	unless GetOptions(
+		"jobs|j=i"  => \$jobs,
+		"htmldir|d=s"  => \$htmldir,
+		"version" => \&print_version_and_exit,
+		"help"    => \&print_usage_and_exit,
+	);
 
-# Get the list of HTML pages to create
+my $staticdir;
 my @paths;
 {
 	use Munin::Master::Update;
 	my $dbh = Munin::Master::Update::get_dbh(1);
+
+	($staticdir) = $dbh->selectrow_array("SELECT value FROM param WHERE name = 'staticdir'");
+	($htmldir) = $dbh->selectrow_array("SELECT value FROM param WHERE name = 'htmldir'") || ("/tmp");
+
+	# Get the list of HTML pages to create
 	my $row_ref = $dbh->selectall_arrayref("SELECT path FROM url");
 
 	# Process results
@@ -31,20 +39,34 @@ my @paths;
 	push @paths, "/";
 }
 
+# Copy the static part
+{
+	$staticdir = $1 if $staticdir =~ m/(.*)/;
+	$htmldir = $1 if $htmldir =~ m/(.*)/;
+	dircopy($staticdir, "$htmldir/static/");
+}
+
 use Parallel::ForkManager;
 my $pm = Parallel::ForkManager->new($jobs);
-for my $path (@paths) {
+$pm->set_waitpid_blocking_sleep(0);  # true blocking calls enabled
+
+use List::MoreUtils qw(slideatatime);
+
+my $paths_it = slideatatime(50, 50, @paths);
+
+while (my @paths_batch = $paths_it->()) {
 	my $worker_id = $pm->start();
 	next if $worker_id;
 
+for my $path (@paths) {
 	# Mock CGI interface, in order to reuse most of munin-httpd internals
 	my $cgi = CGI->new({
 		path_info => $path,
 	});
 
-	$destination = $1 if $destination =~ m/(.*)/;
-	my $filepath = "$destination/$path";
-	$filepath = "$destination/index.html" if $path eq "/";
+	htmldir = $1 if $htmldir =~ m/(.*)/;
+	my $filepath = "$htmldir/$path";
+	$filepath = "$htmldir/index.html" if $path eq "/";
 
 	# redirect STDOUT to the file
 	print "s: $filepath\n";
@@ -63,6 +85,8 @@ for my $path (@paths) {
 		Munin::Master::HTML::handle_request($cgi);
 	};
 
+}
+
 	$pm->finish();
 }
 
@@ -71,16 +95,16 @@ $pm->wait_all_children();
 
 
 sub print_usage_and_exit {
-    require Pod::Usage;
-    Pod::Usage::pod2usage( -verbose => 1 );
+	require Pod::Usage;
+	Pod::Usage::pod2usage( -verbose => 1 );
 }
 
 sub print_version_and_exit {
-    require Pod::Usage;
-    Pod::Usage::pod2usage(
-        -verbose  => 99,
-        -sections => 'VERSION|COPYRIGHT',
-    );
+	require Pod::Usage;
+	Pod::Usage::pod2usage(
+		-verbose  => 99,
+		-sections => 'VERSION|COPYRIGHT',
+	);
 }
 
 package CGI;
@@ -149,7 +173,7 @@ It doesn't support zooming, but does support multi-process execution, via forkin
 This is the number of workers jobs to launch.
 Default is 0, meaning no fork is done.
 
-=item B<< --destination <destination directory> >>
+=item B<< --htmldir <destination directory> >>
 
 Default is "/tmp".
 

@@ -39,10 +39,17 @@ my @paths;
 
 use Parallel::ForkManager;
 my $pm = Parallel::ForkManager->new($jobs);
-for my $path (@paths) {
+$pm->set_waitpid_blocking_sleep(0);  # true blocking calls enabled
+
+use List::MoreUtils qw(slideatatime);
+
+my $paths_it = slideatatime(50, 50, @paths);
+while (my @paths_batch = $paths_it->()) {
+
 	my $worker_id = $pm->start();
 	next if $worker_id;
 
+for my $path (@paths_batch) {
 	# Mock CGI interface, in order to reuse most of munin-httpd internals
 	my $cgi = CGI->new({
 		path_info => "/$path",
@@ -67,6 +74,7 @@ for my $path (@paths) {
 		use Munin::Master::Graph;
 		Munin::Master::Graph::handle_request($cgi);
 	};
+}
 
 	$pm->finish();
 }
