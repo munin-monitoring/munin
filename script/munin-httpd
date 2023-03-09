@@ -13,6 +13,8 @@ use Munin::Master::Graph;
 use Munin::Master::HTML;
 use Munin::Common::Logger;
 
+# Untaint $ENV{PATH}
+$ENV{PATH} = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
 
 sub handle_request {
     my $self = shift;
