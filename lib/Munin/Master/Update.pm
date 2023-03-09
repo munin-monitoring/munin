@@ -253,7 +253,7 @@ sub _db_init {
 	$db_serial_type = "SERIAL" if $db_driver eq "Pg";
 
 	# Sets some session vars
-	my $db_journalmode = $ENV{MUNIN_DB_JOURNAL_MODE} || "$config->{db_journal_mode}" || "DELETE";
+	my $db_journal_mode = $ENV{MUNIN_DB_JOURNAL_MODE} || "$config->{db_journal_mode}" || "DELETE";
 	$dbh->do("PRAGMA journal_mode=$db_journal_mode;") if $db_driver eq "SQLite";
 	$dbh->do("SET LOCAL client_min_messages = error") if $db_driver eq "Pg";
 
