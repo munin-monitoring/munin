@@ -43,6 +43,8 @@ my $debug = 0;
 my $stdout = 0;
 my $loglevel = 'info';
 
+my $max_servers = 10;
+
 print_usage_and_exit()
   unless GetOptions(
     "listen=s"  => \$listen,
@@ -50,6 +52,7 @@ print_usage_and_exit()
     "stdout"    => \$stdout,
     "loglevel=s" => \$loglevel,
     "version" => \&print_version_and_exit,
+    "max-servers=i" => \$max_servers,
     "help"    => \&print_usage_and_exit,
   );
 
@@ -77,7 +80,7 @@ if ($stdout) {
 
 Munin::Common::Logger::INFO("Starting preforking munin http server at $host:$port");
 
-Munin::Master::Http->new( { host => $host, port => $port } )->run( prefork => 1, max_servers => 10 );
+Munin::Master::Http->new( { host => $host, port => $port } )->run( prefork => ($max_servers > 0), max_servers => $max_servers );
 
 
 sub print_usage_and_exit {
