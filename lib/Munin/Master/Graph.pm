@@ -165,7 +165,7 @@ sub handle_request
 	if (not defined($sth_url)) {
 		# potential cause: permission problem
 		my $msg = "Failed to access database: " . $DBI::errstr;
-		WARNING "[WARNING] $msg";
+		WARNING $msg;
 		die $msg;
 	}
 	$sth_url->execute($graph_path);
@@ -492,7 +492,7 @@ sub handle_request
 	# $end is possibly in future
 	$end = $end ? $end : time;
 	$lastupdated = "" unless $lastupdated;
-	DEBUG "[DEBUG] lastupdate: $lastupdated, end: $end\n";
+	DEBUG "lastupdate: $lastupdated, end: $end\n";
 
 	# future begins at this horizontal ruler
 	if ($lastupdated) {
@@ -732,11 +732,11 @@ sub RRDs_graph_or_dump {
 		return RRDs_graph(@_);
 	}
 
-	DEBUG "[DEBUG] RRDs_graph(fileext=$fileext)";
+	DEBUG "RRDs_graph(fileext=$fileext)";
 	my $outfile = shift @_;
 
 	# Open outfile
-	DEBUG "[DEBUG] Open outfile($outfile)";
+	DEBUG "Open outfile($outfile)";
 	my $out_fh = new IO::File(">$outfile");
 
 	# Remove unknown args
@@ -764,7 +764,7 @@ sub RRDs_graph_or_dump {
 		# Ignore the arg
 	}
 	# Now we have to fetch the textual values
-	DEBUG "[DEBUG] \n\nrrdtool xport '" . join("' \\\n\t'", @xport) . "'\n";
+	DEBUG "\n\nrrdtool xport '" . join("' \\\n\t'", @xport) . "'\n";
 	my ($start, $end, $step, $nb_vars, $columns, $values) = RRDs::xport(@xport);
 	if ($fileext eq "CSV") {
 		print $out_fh '"epoch", "' . join('", "', @{ $columns } ) . "\"\n";
