@@ -487,8 +487,6 @@ sub handle_request
 		}
 	}
 
-	DEBUG "rrd_def @rrd_def";
-
 	# $end is possibly in future
 	$end = $end ? $end : time;
 	$lastupdated = "" unless $lastupdated;
@@ -627,8 +625,12 @@ sub handle_request
 		@rrd_cmd,
 	);
 	if ($err) {
-		INFO "'" . join("' \\\n'", @rrd_cmd) . "'";
+	        print "HTTP/1.1 400 Bad Request\r\n";
+                print $cgi->header('-Content-type' => 'text/plain');
+                print "RRD error, consult server logs\r\n";
+
 		ERROR "RRD error generating image for [$path]: ". $err;
+                ERROR "Complete RRD command: rrdtool graph '".join("' \\\n\t'", @rrd_cmd)."'";
 	};
 
 	# Sending the file
@@ -729,7 +731,8 @@ sub RRDs_graph_or_dump {
 
 	my $fileext = shift;
 	if ($fileext =~ m/PNG|SVG|EPS|PDF/) {
-		return RRDs_graph(@_);
+		RRDs_graph(@_);
+		return RRDs::error;
 	}
 
 	DEBUG "RRDs_graph(fileext=$fileext)";
