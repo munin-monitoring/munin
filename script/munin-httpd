@@ -11,6 +11,7 @@ use base qw(HTTP::Server::Simple::CGI::PreFork);
 
 use Munin::Master::Graph;
 use Munin::Master::HTML;
+use Munin::Common::Logger;
 
 
 sub handle_request {
@@ -36,10 +37,16 @@ package main;    ## no critic qw(Modules::ProhibitMultiplePackages)
 use Getopt::Long;
 
 my $listen = ":";
+my $debug = 0;
+my $stdout = 0;
+my $loglevel = 'info';
 
 print_usage_and_exit()
   unless GetOptions(
     "listen=s"  => \$listen,
+    "debug"     => \$debug,
+    "stdout"    => \$stdout,
+    "loglevel=s" => \$loglevel,
     "version" => \&print_version_and_exit,
     "help"    => \&print_usage_and_exit,
   );
@@ -49,6 +56,25 @@ my $host = defined $2 ? $2 : "*";
 my $port = defined $3 ? $3 : 4948;
 
 # start the server
+if ($debug) {
+    Munin::Common::Logger::configure( output => 'screen', level => 'debug');
+    Munin::Common::Logger::INFO("Starting in debug mode\n");
+    Munin::Master::Http->new( { host => $host, port => $port } )->run();
+    exit;
+}
+
+if ($stdout) {
+    Munin::Common::Logger::configure( output => 'screen',
+				      level => $loglevel);
+} else {
+    # FIXME: Logfile location to be taken from install-time config?
+    Munin::Common::Logger::configure( output => 'file',
+				      level => $loglevel,
+				      logfile => '/var/log/munin/munin-httpd.log' );
+}
+
+Munin::Common::Logger::INFO("Starting preforking munin http server at $host:$port");
+
 Munin::Master::Http->new( { host => $host, port => $port } )->run( prefork => 1, max_servers => 10 );
 
 
@@ -104,6 +130,20 @@ View this help message.
 =item B<--version >
 
 Show version information.
+
+=item B<--debug >
+
+Set debug mode.  Server starts single threaded in the foreground and
+sets log level to debug.
+
+=item B<--stdout >
+
+Send logs to stdout.  Suitable for systemd use in some versions of Linux.
+
+=item B<--loglevel >
+
+Set which level of logs you want.  One of debug, info, notice, warning
+or error. Default is warning.
 
 =back
 
