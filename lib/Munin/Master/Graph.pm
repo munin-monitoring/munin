@@ -39,6 +39,9 @@ use Munin::Common::Logger;
 use File::Basename;
 use Data::Dumper;
 
+# We don't care anymore for rrdtool less than 1.4
+die "Munin requires at least version 1.4 of RRD\n" if $RRDs::VERSION < 1.4;
+
 # Hash of available palettes
 my %PALETTE;
 # Array of colours to use
@@ -265,7 +268,6 @@ sub handle_request
 	$sth->execute($id);
 
 	# Construction of the RRD command line
-	# We don't care anymore for rrdtool less than 1.4
 	my @rrd_def;
 	my @rrd_cdef;
 	my @rrd_vdef;
