@@ -1,0 +1,6 @@
+munin source: very-long-line-length-in-source-file 558 > 512 [plugins/javalib/org/munin/plugin/jmx/GCTime.java:6]
+munin source: very-long-line-length-in-source-file 560 > 512 [master/lib/Munin/Master/LimitsOld.pm:80]
+munin source: very-long-line-length-in-source-file 568 > 512 [plugins/javalib/org/munin/plugin/jmx/GCCount.java:5]
+munin source: very-long-line-length-in-source-file 609 > 512 [plugins/node.d.linux/if_.in:180]
+munin source: very-long-line-length-in-source-file 644 > 512 [plugins/node.d/munin_stats.in:69]
+munin source: very-long-line-length-in-source-file 816 > 512 [plugins/node.d.linux/meminfo.in:982]
