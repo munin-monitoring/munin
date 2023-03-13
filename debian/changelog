@@ -1,9 +1,11 @@
-munin (2.0.72-3) UNRELEASED; urgency=medium
+munin (2.0.72-3) unstable; urgency=medium
 
-  * Start 2.0.72-3 development. d/changelog entries will be written on
-    release using the git commit messages.
+  * Add Romanian debconf translation, thanks to Remus-Gabriel Chelu.
+    Closes: #1032808
+  * Add source/lintian-overrides for upstream's
+    very-long-line-length-in-source-file issues.
 
- -- Holger Levsen <holger@debian.org>  Mon, 13 Mar 2023 13:55:57 +0100
+ -- Holger Levsen <holger@debian.org>  Mon, 13 Mar 2023 16:36:39 +0100
 
 munin (2.0.72-2) unstable; urgency=medium
 
