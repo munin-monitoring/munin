@@ -1348,6 +1348,9 @@ sub innodb_bigint {
 sub parse_innodb_status {
     local $_ = shift;
 
+    # remove non-stanard (and useless) "---OLDEST VIEW---" section, as it breaks the plugin
+    s{^---OLDEST VIEW---\v.*?^-----------------\v}{}ms;
+
     # Add a dummy section to the end in case the innodb status output
     # has been truncated (Happens for status > 64K characters)
     $_ .= "\n----------\nDUMMY\n";
