@@ -1,5 +1,24 @@
 -*- text -*-
 
+munin-2.0.73, 2023-03-19
+-------
+Summary
+-------
+
+Bugfix release.
+
+------------------
+Detailed Changelog
+------------------
+
+Kai (1):
+      doc: Switch to rewrite-repeat-if-not-file
+
+Steve Schnepp (2):
+      p/acpi: fix the plugin to handle munin-node-c
+      p/mysql_: fix failure due to unknown section
+
+
 munin-2.0.72, 2023-02-08
 -------
 Summary
