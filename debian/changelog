@@ -1,9 +1,8 @@
-munin (2.0.73-1) UNRELEASED; urgency=medium
+munin (2.0.73-1) unstable; urgency=medium
 
-  * Start 2.0.73-1 development. d/changelog entries will be written on
-    release using the git commit messages.
+  * New upstream release. Closes: #991622, #976096.
 
- -- Holger Levsen <holger@debian.org>  Tue, 21 Mar 2023 21:02:11 +0100
+ -- Holger Levsen <holger@debian.org>  Tue, 21 Mar 2023 21:08:22 +0100
 
 munin (2.0.72-3) unstable; urgency=medium
 
