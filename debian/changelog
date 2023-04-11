@@ -1,3 +1,9 @@
+munin (2.0.73-1~bpo11+1) bullseye-backports; urgency=medium
+
+  * Rebuild for bullseye-backports.
+
+ -- Holger Levsen <holger@debian.org>  Tue, 11 Apr 2023 12:28:13 +0200
+
 munin (2.0.73-1) unstable; urgency=medium
 
   * New upstream release. Closes: #991622, #976096.
