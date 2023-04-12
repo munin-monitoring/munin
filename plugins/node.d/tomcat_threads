@@ -129,7 +129,7 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
 } else {
     for my $connector (@connectors) {
         my $clean = clean_fieldname($connector);
-        if(exists $xml->{'connector'}->{$connector}->{'threadInfo'}->[0]->{'currentThreadsBusy'} &&
+        if(exists $xml->{'connector'}->{$connector}->{'threadInfo'}->[0]->{'currentThreadsBusy'} ||
             exists $xml->{'connector'}->{$connector}->{'threadInfo'}->[0]->{'currentThreadCount'}) {
             print "${clean}_busy.value " . $xml->{'connector'}->{$connector}->{'threadInfo'}->[0]->{'currentThreadsBusy'} . "\n";
             print "${clean}_idle.value " .
