@@ -48,7 +48,7 @@ These are the most common Net::Server options used in
 .. option:: log_level
 
    Ranges from 0-4. Specifies what level of error will be logged. "0"
-   means no logigng, while "4" means very verbose. These levels
+   means no logging, while "4" means very verbose. These levels
    correlate to syslog levels as defined by the following key/value
    pairs. 0=err, 1=warning, 2=notice, 3=info, 4=debug.
 
