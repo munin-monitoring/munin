@@ -42,7 +42,7 @@ displayed.
 
 =head1 BUGS
 
-Needs bash, due zo using bashisms to avoid running external programs.
+Needs bash, due to using bashisms to avoid running external programs.
 
 =head1 AUTHOR
 
