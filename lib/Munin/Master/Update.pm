@@ -76,7 +76,10 @@ sub get_dbh {
 	# die loudly than injecting some misguided data
 	use DBI;
 	my %db_args;
-	$db_args{ReadOnly} = 1 if $is_read_only;
+	# Do not use read-only mode with SQLite, to prevent cases where one
+	# database file accessed by multiple clients in different modes results
+	# in the database becoming read-only for all clients of it.
+	$db_args{ReadOnly} = 1 if $is_read_only && !($db_driver eq "SQLite");
 	#	$db_args{AutoCommit} = 0 if $is_read_only;
 	$db_args{AutoCommit} = 0;
 	$db_args{RaiseError} = 1;
