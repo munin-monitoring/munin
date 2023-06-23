@@ -109,11 +109,11 @@ sub _create_workers {
 
     my @hosts = $self->{group_repository}->get_all_hosts();
 
-    # Shuffle @hosts to avoid always having the same ordering
-    # XXX - It might be best to preorder them on the TIMETAKEN ASC
-    #       in order that statistically fast hosts are done first to increase
-    #       the global throughtput
+    # Use user-defined ordering, slow hosts should run first for
+    # better global throughput, keep shuffle() to shuffle hosts within
+    # same update_order
     @hosts = shuffle(@hosts);
+    @hosts = sort { $a->{update_order} <=> $b->{update_order} } @hosts;
 
     if (defined $config->{limit_hosts} && %{$config->{limit_hosts}}) {
         @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts
