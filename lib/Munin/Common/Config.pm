@@ -138,7 +138,7 @@ my %legal = map { $_ => 1 } qw(
 	unknown
 	unknown_limit
 	update
-	update_order
+	update_priority
 	update_rate
 	use_default_name
 	use_node_name

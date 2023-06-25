@@ -17,10 +17,10 @@ sub new {
         host_name => $host_name,
         group     => $group,
 
-        port          => 4949,
-        update        => 1,
-        use_node_name => 0,
-        update_order  => 'Infinity',
+        port            => 4949,
+        update          => 1,
+        use_node_name   => 0,
+        update_priority => 'Infinity',
 
         %$attributes,
     };

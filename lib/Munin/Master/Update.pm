@@ -113,7 +113,7 @@ sub _create_workers {
     # better global throughput, keep shuffle() to shuffle hosts within
     # same update_order
     @hosts = shuffle(@hosts);
-    @hosts = sort { $a->{update_order} <=> $b->{update_order} } @hosts;
+    @hosts = sort { $a->{update_priority} <=> $b->{update_priority} } @hosts;
 
     if (defined $config->{limit_hosts} && %{$config->{limit_hosts}}) {
         @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts

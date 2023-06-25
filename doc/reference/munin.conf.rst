@@ -375,9 +375,9 @@ only to that node.
    If you make a virtual node which borrow data from real nodes for aggregate graphs, set this to
    "no" for that node.
 
-.. option:: update_order <number>
+.. option:: update_priority <number>
 
-   Manually define the order that nodes will be handled.  Lower numbers are run first.
+   Manually define the priority that nodes will be handled.  Lower numbers are run first.
 
    For highest overall throughput, slow running nodes should be run first.  Numbers do not have
    to be unique, and unspecified nodes are placed at the end of the list.
