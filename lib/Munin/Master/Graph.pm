@@ -713,8 +713,8 @@ sub handle_request
 			"CDEF:dummy_val=$first_def",
 			"CDEF:n_d_b=LTIME,86400,%,28800,LT,INF,LTIME,86400,%,64800,GE,INF,UNKN,dummy_val,*,IF,IF",
 			"CDEF:n_d_c=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
-			"CDEF:n_d_b2=LTIME,86400,%,28800,LT,-INF,LTIME,86400,%,64800,GE,-INF,UNKN,dummy_val,*,IF,IF",
-			"CDEF:n_d_c2=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,-INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
+			"CDEF:n_d_b2=LTIME,86400,%,28800,LT,NEGINF,LTIME,86400,%,64800,GE,NEGINF,UNKN,dummy_val,*,IF,IF",
+			"CDEF:n_d_c2=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,NEGINF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
 		);
 
 		push @rrd_cmd, "AREA:n_d_b#00519909","AREA:n_d_b2#00519909" unless grep { $_ eq $time } ("month", "year");
