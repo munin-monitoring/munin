@@ -670,8 +670,8 @@ sub handle_request
 	{
 		my $lower_limit  = $cgi->url_param("lower_limit");
 		my $upper_limit  = $cgi->url_param("upper_limit");
-		push @rrd_header, "--lower" , $lower_limit if defined $lower_limit;
-		push @rrd_header, "--upper" , $upper_limit if defined $upper_limit;
+		push @rrd_header, "--lower-limit" , $lower_limit if defined $lower_limit;
+		push @rrd_header, "--upper-limit" , $upper_limit if defined $upper_limit;
 
 		# Adding --rigid, otherwise the limits are not taken into account.
 		push @rrd_header, "--rigid" if defined $lower_limit || defined $upper_limit;
