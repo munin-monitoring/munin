@@ -78,7 +78,6 @@ sub get_dbh {
 	my %db_args;
 	$db_args{ReadOnly} = 1 if $is_read_only;
 	#	$db_args{AutoCommit} = 0 if $is_read_only;
-	$db_args{AutoCommit} = 0;
 	$db_args{RaiseError} = 1;
 
 	use Carp;
@@ -87,6 +86,15 @@ sub get_dbh {
 	my $dbh = DBI->connect("dbi:$db_driver:dbname=$datafilename", $db_user, $db_passwd, \%db_args) or die $DBI::errstr;
 
 	DEBUG 'get_dbh: $dbh->{Driver}->{Name} = ' . $dbh->{Driver}->{Name};
+
+	# Sets some session vars
+	my $db_journal_mode = $ENV{MUNIN_DB_JOURNAL_MODE} || $config->{db_journal_mode} || "TRUNCATE";
+	$dbh->do("PRAGMA journal_mode=$db_journal_mode;") if $db_driver eq "SQLite";
+
+	my $db_synchronous_mode = $ENV{MUNIN_DB_SYNCHRONOUS_MODE} || $config->{db_synchronous_mode} || "OFF";
+	$dbh->do("PRAGMA main.synchronous=$db_synchronous_mode;") if $db_driver eq "SQLite";
+
+	$dbh->{AutoCommit} = 1;
 
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
@@ -248,7 +256,6 @@ sub _db_init {
 	$db_serial_type = "SERIAL" if $db_driver eq "Pg";
 
 	# Sets some session vars
-	$dbh->do("PRAGMA journal_mode=DELETE;") if $db_driver eq "SQLite";
 	$dbh->do("SET LOCAL client_min_messages = error") if $db_driver eq "Pg";
 
 	# Initialize DB Schema

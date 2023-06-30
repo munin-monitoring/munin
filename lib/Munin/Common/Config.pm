@@ -30,6 +30,8 @@ my %legal = map { $_ => 1 } qw(
 	contacts
 	create_args
 	critical
+	db_journal_mode
+	db_synchronous_mode
 	dbdir
 	dburl
 	dbdriver
