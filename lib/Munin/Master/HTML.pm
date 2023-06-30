@@ -605,7 +605,7 @@ RENDERING:
 	}
 
 CLEANUP:
-	$dbh->disconnect();
+	$dbh = undef;
 }
 
 sub _get_params_groups {
