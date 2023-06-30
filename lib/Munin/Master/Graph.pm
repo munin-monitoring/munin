@@ -763,7 +763,7 @@ sub handle_request
 	}
 
 CLEANUP:
-	$dbh->disconnect() if $dbh;
+	$dbh = undef;
 
 	my $ttot = Time::HiRes::time;
 	DEBUG sprintf("total:%.3fs (db:%.3fs rrd:%.3fs)",
