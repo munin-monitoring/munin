@@ -85,7 +85,7 @@ sub get_dbh {
 
 	my $dbh = DBI->connect("dbi:$db_driver:dbname=$datafilename", $db_user, $db_passwd, \%db_args) or die $DBI::errstr;
 
-	DEBUG 'get_dbh: $dbh->{Driver}->{Name} = ' . $dbh->{Driver}->{Name};
+	DEBUG 'get_dbh: $dbh->{Driver}->{Name} = ' . $dbh->{Driver}->{Name} . ($is_read_only ? "(ro)" : "(rw)");
 
 	# Sets some session vars
 	my $db_journal_mode = $ENV{MUNIN_DB_JOURNAL_MODE} || $config->{db_journal_mode} || "TRUNCATE";
