@@ -512,6 +512,13 @@ sub _db_state_update {
 			                WHERE ds.name = '$field'" unless $ds_id;
 	$sth_ds->finish();
 
+	# Don't insert missing ds values
+	# Note, this means unconfigured ds values are lost, rather than
+	# kept with some default ds_attr values
+	if (!defined($ds_id)) {
+		return $ds_id;
+	}
+
 	# Update the state with the new values
 	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
 	my $rows_u = $sth_state_u->execute($when, $value, $ds_id, "ds");
@@ -757,6 +764,11 @@ sub uw_handle_fetch {
 		# Update all data-driven components: State, RRD, Graphite
 		my $ds_id = $self->_db_state_update($plugin, $field, $when, $value);
 	        DEBUG "[DEBUG] ds_id($plugin, $field, $when, $value) = $ds_id";
+
+		# Missing ds config means undef ds_id, already warned
+		if (!$ds_id) {
+			next;
+		}
 
 		my ($rrd_file, $rrd_field);
 		{
