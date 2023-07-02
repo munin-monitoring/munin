@@ -398,19 +398,6 @@ sub _db_service {
 		$self->_db_service_attr($service_id, $attr, $_service_value);
 	}
 
-	# Update the ordering of fields
-	{
-		my @graph_order = split(/ /, $service_attr->{graph_order});
-		DEBUG "_db_service.graph_order: @graph_order";
-		my $ordr = 0;
-		for my $_name (@graph_order) {
-			my $sth_update_ordr = $dbh->prepare_cached("UPDATE ds SET ordr = ? WHERE ds.service_id = ? AND ds.name = ?");
-			$sth_update_ordr->execute($ordr, $service_id, $_name);
-			DEBUG "_db_service.update_order($ordr, $service_id, $_name)";
-			$ordr ++;
-		}
-	}
-
 	# Handle the service_category
 	{
 		my $category = $service_attr->{graph_category} || "other";
@@ -444,6 +431,19 @@ sub _db_service {
 	{
 		my $sth_del_ds = $dbh->prepare_cached('DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)');
 		$sth_del_ds->execute($service_id);
+	}
+
+	# Update the ordering of fields
+	{
+		my @graph_order = split(/ /, $service_attr->{graph_order});
+		DEBUG "_db_service.graph_order: @graph_order";
+		my $ordr = 0;
+		for my $_name (@graph_order) {
+			my $sth_update_ordr = $dbh->prepare_cached("UPDATE ds SET ordr = ? WHERE ds.service_id = ? AND ds.name = ?");
+			$sth_update_ordr->execute($ordr, $service_id, $_name);
+			DEBUG "_db_service.update_order($ordr, $service_id, $_name)";
+			$ordr ++;
+		}
 	}
 
 	$self->_db_url("service", $service_id, $plugin, "node", $node_id);
@@ -657,7 +657,11 @@ sub uw_handle_config {
 
 		# Adding the $field, even if present. We'll merge all of them later
 		# Using an array since, obviously, the order is important.
-		push @field_order, $arg1;
+		if (!exists($fields{$arg1})) {
+			push @field_order, $arg1;
+		}
+
+		$fields{$arg1}{$arg2} = $value;
 	}
 
 	$$update_rate_ptr = $service_attr{"update_rate"} if $service_attr{"update_rate"};
