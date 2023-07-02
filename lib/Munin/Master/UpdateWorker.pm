@@ -506,7 +506,7 @@ sub _db_state_update {
 		WHERE ds.name = ?");
 	$sth_ds->execute($node_id, $plugin, $field);
 	my ($ds_id) = $sth_ds->fetchrow_array();
-	DEBUG "_db_state_update.ds_id:$ds_id";
+	DEBUG "_db_state_update.ds_id:" . ($ds_id || 'undef');
 	WARN "ds_id($plugin, $field, $when, $value) is NULL, SELECT ds.id FROM ds
 	                JOIN service s ON ds.service_id = s.id AND s.node_id = '$node_id' AND s.name = '$plugin'
 			                WHERE ds.name = '$field'" unless $ds_id;
@@ -763,7 +763,7 @@ sub uw_handle_fetch {
 
 		# Update all data-driven components: State, RRD, Graphite
 		my $ds_id = $self->_db_state_update($plugin, $field, $when, $value);
-	        DEBUG "[DEBUG] ds_id($plugin, $field, $when, $value) = $ds_id";
+		DEBUG "[DEBUG] ds_id($plugin, $field, $when, $value) = " . ($ds_id || 'undef');
 
 		# Missing ds config means undef ds_id, already warned
 		if (!$ds_id) {
