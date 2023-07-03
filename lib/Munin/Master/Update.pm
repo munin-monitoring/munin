@@ -77,7 +77,6 @@ sub get_dbh {
 	use DBI;
 	my %db_args;
 	$db_args{ReadOnly} = 1 if $is_read_only;
-	#	$db_args{AutoCommit} = 0 if $is_read_only;
 	$db_args{RaiseError} = 1;
 
 	use Carp;
@@ -94,7 +93,8 @@ sub get_dbh {
 	my $db_synchronous_mode = $ENV{MUNIN_DB_SYNCHRONOUS_MODE} || $config->{db_synchronous_mode} || "OFF";
 	$dbh->do("PRAGMA main.synchronous=$db_synchronous_mode;") if $db_driver eq "SQLite";
 
-	$dbh->{AutoCommit} = 1;
+	# No AutoCommit
+	$dbh->{AutoCommit} = 0;
 
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
