@@ -655,7 +655,7 @@ sub uw_handle_config {
 
 		$fields{$arg1}{$arg2} = $value;
 
-		# Adding the $field if not present.
+		# Adding the $field, even if present. We'll merge all of them later
 		# Using an array since, obviously, the order is important.
 		push @field_order, $arg1;
 	}
@@ -666,7 +666,8 @@ sub uw_handle_config {
 	{
 		my @graph_order = split(/ /, $service_attr{"graph_order"} || "");
 		for my $field (@field_order) {
-			push @graph_order, $field unless grep { $field } @graph_order;
+			# filter out of _exact_ equality
+			push @graph_order, $field unless grep { $_ eq $field } @graph_order;
 		}
 
 		$service_attr{"graph_order"} = join(" ", @graph_order);
