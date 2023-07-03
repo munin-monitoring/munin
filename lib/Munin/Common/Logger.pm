@@ -156,6 +156,15 @@ sub configure {
     return $log;
 }
 
+# https://perldoc.perl.org/functions/caller
+#  #   0         1          2      3            4
+#  my ($package, $filename, $line, $subroutine, $hasargs,
+#  #   5           6          7            8       9         10
+#      $wantarray, $evaltext, $is_require, $hints, $bitmask, $hinthash
+#  ) = caller($i);
+sub _whoami  { my @c = caller(1); return $c[3] . ":" . $c[2] }
+sub _whowasi { my @c = caller(2); return $c[3] . ":" . $c[2] }
+
 sub would_log {
     my ($level) = @_;
     return $log->would_log($level);
@@ -163,7 +172,10 @@ sub would_log {
 
 sub DEBUG {
     my ($message) = @_;
-    $log->debug($message);
+    # Also record the caller for DEBUG
+    # It has a performance penaly, and is only useful when debugging anyway
+    my $from = _whowasi(); 
+    $log->debug("[$from] $message");
 }
 
 sub INFO {
