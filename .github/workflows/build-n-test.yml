@@ -27,6 +27,8 @@ jobs:
       - name: Fetch the deps
         run: sudo dev_scripts/deps
         
+      - run: perl -V
+
       - name: Devel-Cover-Report-Coveralls install deps
         run: sudo apt-get install -y dh-make-perl libdevel-cover-perl libhttp-tiny-perl libio-socket-ssl-perl libjson-pp-perl libyaml-perl libmodule-build-tiny-perl
       - name: Devel-Cover-Report-Coveralls fetch
@@ -45,6 +47,5 @@ jobs:
         
       - name: Compute coverage 
         run: cover -test -report coveralls
-
-      - name: Testing
-        run: make test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
