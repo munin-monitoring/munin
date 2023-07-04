@@ -162,8 +162,11 @@ sub configure {
 #  #   5           6          7            8       9         10
 #      $wantarray, $evaltext, $is_require, $hints, $bitmask, $hinthash
 #  ) = caller($i);
+
+sub _whoami  { 
 # uncoverable subroutine
-sub _whoami  { my @c = caller(1); return $c[3] . ":" . $c[2] }
+my @c = caller(1); return $c[3] . ":" . $c[2] 
+}
 sub _whowasi { my @c = caller(2); return $c[3] . ":" . $c[2] }
 
 sub would_log {
@@ -195,36 +198,43 @@ sub WARN {
 }
 
 sub WARNING {
+    # uncoverable subroutine
     my ($message) = @_;
     $log->warning($message);
 }
 
 sub ERROR {
+    # uncoverable subroutine
     my ($message) = @_;
     $log->error($message);
 }
 
 sub CRITICAL {
+    # uncoverable subroutine
     my ($message) = @_;
     $log->critical($message);
 }
 
 sub FATAL {
+    # uncoverable subroutine
     my ($message) = @_;
     $log->critical($message);
 }
 
 sub ALERT {
+    # uncoverable subroutine
     my ($message) = @_;
     $log->alert($message);
 }
 
 sub EMERGENCY {
+    # uncoverable subroutine
     my ($message) = @_;
     $log->emergency($message);
 }
 
 sub LOGCROAK {
+    # uncoverable subroutine
     my ($message) = @_;
     $log->log_and_croak( level => 'critical', message => $message );
 }
