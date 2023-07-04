@@ -34,7 +34,7 @@ jobs:
       - name: Devel-Cover-Report-Coveralls uncompress
         run: cd /tmp && tar zxvf Devel-Cover-Report-Coveralls-0.13.tar.gz
       - name: Devel-Cover-Report-Coveralls create the package
-        run: cd /tmp && dh-make-perl make --build Devel-Cover-Report-Coveralls-0.13
+        run: cd /tmp && DEB_BUILD_OPTIONS=nocheck dh-make-perl make --build Devel-Cover-Report-Coveralls-0.13
       - name: Devel-Cover-Report-Coveralls install the package
         run: cd /tmp && sudo dpkg -i libdevel-cover-report-coveralls-perl*.deb
       - name: Devel-Cover-Report-Coveralls install any needed deps
