@@ -27,17 +27,17 @@ jobs:
       - name: Fetch the deps
         run: sudo dev_scripts/deps
         
-      - name: Devel-Cover-Report-Coveralls: install dh-make-perl
+      - name: Devel-Cover-Report-Coveralls install dh-make-perl
         run: sudo apt-get install -y dh-make-perl
-      - name: Devel-Cover-Report-Coveralls: fetch
+      - name: Devel-Cover-Report-Coveralls fetch
         run: cd /tmp && wget https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.13.tar.gz
-      - name: Devel-Cover-Report-Coveralls: uncompress
+      - name: Devel-Cover-Report-Coveralls uncompress
         run: cd /tmp && tar zxvf Devel-Cover-Report-Coveralls-0.13.tar.gz
-      - name: Devel-Cover-Report-Coveralls: create the package
+      - name: Devel-Cover-Report-Coveralls create the package
         run: cd /tmp && dh-make-perl make --build Devel-Cover-Report-Coveralls-0.13
-      - name: Devel-Cover-Report-Coveralls: install the package
+      - name: Devel-Cover-Report-Coveralls install the package
         run: cd /tmp && sudo dpkg -i libdevel-cover-report-coveralls-perl*.deb
-      - name: Devel-Cover-Report-Coveralls: install any needed deps
+      - name: Devel-Cover-Report-Coveralls install any needed deps
         run: sudo apt-get install -yf
 
       - name: Setup the mock hostname
