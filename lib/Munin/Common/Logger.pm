@@ -162,6 +162,7 @@ sub configure {
 #  #   5           6          7            8       9         10
 #      $wantarray, $evaltext, $is_require, $hints, $bitmask, $hinthash
 #  ) = caller($i);
+# uncoverable subroutine
 sub _whoami  { my @c = caller(1); return $c[3] . ":" . $c[2] }
 sub _whowasi { my @c = caller(2); return $c[3] . ":" . $c[2] }
 
