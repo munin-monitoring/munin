@@ -28,7 +28,7 @@ jobs:
         run: sudo dev_scripts/deps
         
       - name: Devel-Cover-Report-Coveralls install deps
-        run: sudo apt-get install -y dh-make-perl lib-devel-cover-perl lib-http-tiny-perl libio-socket-ssl-perl libjson-pp-perl libyaml-perl libmodule-build-tiny-perl
+        run: sudo apt-get install -y dh-make-perl libdevel-cover-perl libhttp-tiny-perl libio-socket-ssl-perl libjson-pp-perl libyaml-perl libmodule-build-tiny-perl
       - name: Devel-Cover-Report-Coveralls fetch
         run: cd /tmp && wget https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.13.tar.gz
       - name: Devel-Cover-Report-Coveralls uncompress
