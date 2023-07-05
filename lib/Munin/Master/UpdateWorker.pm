@@ -1089,7 +1089,7 @@ sub _update_rrd_file {
 		}
 	} else {
 		# normal vector-update the RRD
-		DEBUG "RRDs::update($rrd_file, @update_rrd_data)";
+		INFO "RRDs::update($rrd_file, @update_rrd_data)";
 		RRDs::update($rrd_file, @update_rrd_data);
 	}
 
