@@ -75,7 +75,13 @@ if ($stdout) {
 
 Munin::Common::Logger::INFO("Starting preforking munin http server at $host:$port");
 
-Munin::Master::Http->new( { host => $host, port => $port } )->run( prefork => 1, max_servers => 10 );
+Munin::Master::Http->new( { host => $host, port => $port } )->run(
+	prefork => ($max_servers > 0),
+	min_servers => 1,
+	max_servers => $max_servers,
+	min_spare_servers => 1,
+	max_spare_servers => $max_servers / 10,
+);
 
 
 sub print_usage_and_exit {
