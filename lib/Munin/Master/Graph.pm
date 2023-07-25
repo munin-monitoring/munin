@@ -308,8 +308,12 @@ sub handle_request
 	my $longest_fieldname = 0;
 	my %row;
 
+	my @graph_order = ();
+
 	while (my ($_rrdname, @rest) = $sth->fetchrow_array()) {
 	    $row{$_rrdname} = \@rest;
+
+	    push(@graph_order, $_rrdname);
 
 	    my $l = length($_rrdname);
 	    $longest_fieldname = $l if $l > $longest_fieldname;
@@ -318,26 +322,19 @@ sub handle_request
 
 	DEBUG "Graph survey: graph_has_negatives: $graph_has_negative, longest field name: $longest_fieldname";
 
-	my @graph_order;
-
 	if ($graph_order) {
+	    my %seen;
 	    # The plugin can give graph order but it is not obliged to
-	    # name all fields so we have to make sure we have a list
-	    # of all the fields for the next loop.
-	    @graph_order = split(' +', $graph_order);
-
-	    # Map of all row names
-	    my %all = map { $_ => 1 } keys %row;
-
-	    # Delete all the field names named in the graph order
-	    map { delete $all{$_} } @graph_order;
-
-	    # Now append all the field names left
-	    push @graph_order, keys %all;
-	} else {
-	    @graph_order = keys %row;
+	    # name all fields.
+	    #
+	    # To make a list with each field name only once:
+	    # Concatenate graph_order directive and order seen from
+	    # plugin and then only keep the 0th instance of each
+	    # so each field name occurs only once in the result list
+	    @graph_order =
+	      grep { $seen{$_}++ == 0 }
+		( split(/ +/, $graph_order), @graph_order );
 	}
-	# Now @graph_order contains all the rrd field names
 
 	DEBUG "Finalized graph order: ".join(', ', @graph_order);
 
