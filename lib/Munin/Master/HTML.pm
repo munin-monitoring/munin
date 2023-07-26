@@ -819,6 +819,11 @@ sub _get_params_services {
 sub _get_params_fields {
 	my ($dbh, $service_id) = @_;
 
+	my $sth_sa = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = ?");
+
+	$sth_sa->execute($service_id, 'graph_period');
+	my ($graph_period) = $sth_sa->fetchrow_array();
+
 	my $sth_ds = $dbh->prepare_cached("
 		SELECT ds.name, ds.warning, ds.critical,
 		a_g.value, a_l.value, a_t.value, a_w.value, a_c.value, a_i.value
@@ -837,6 +842,8 @@ sub _get_params_fields {
 	while (my ($_ds_name, $_ds_s_warn, $_ds_s_crit, $_ds_graph, $_ds_label, $_ds_type, $_ds_warn, $_ds_crit, $_ds_info) =
 			$sth_ds->fetchrow_array) {
 		next if $_ds_graph && $_ds_graph eq 'no';
+
+		$_ds_label =~ s/\$\{graph_period\}/$graph_period/g;
 
 		# GAUGE by default
 		$_ds_type = 'GAUGE' unless defined $_ds_type;
