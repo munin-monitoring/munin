@@ -233,6 +233,8 @@ sub handle_request
 	my ($graph_vlabel) = $sth->fetchrow_array();
 	$graph_vlabel =~ s/\$\{graph_period\}/$graph_period/g if $graph_vlabel;
 
+	# Note: This will be the graph order computed in munin-update,
+	# not the graph_order emitted by the plugin.
 	$sth->execute($id, "graph_order");
 	my ($graph_order) = $sth->fetchrow_array() || "";
 	DEBUG "graph_order: $graph_order";
@@ -318,26 +320,15 @@ sub handle_request
 
 	DEBUG "Graph survey: graph_has_negatives: $graph_has_negative, longest field name: $longest_fieldname";
 
-	my @graph_order;
+	# To be robust and sure to be complete we apply the computed
+	# graph_order here and any fields left over is added at the
+	# end in alphabetical order. They will not have been in the
+	# plugin "config" output.
+	my %seen;
+	my @graph_order = grep { $seen{$_}++ == 0 }
+	  ( split(/ +/, $graph_order), sort keys %row );
 
-	if ($graph_order) {
-	    # The plugin can give graph order but it is not obliged to
-	    # name all fields so we have to make sure we have a list
-	    # of all the fields for the next loop.
-	    @graph_order = split(' +', $graph_order);
-
-	    # Map of all row names
-	    my %all = map { $_ => 1 } keys %row;
-
-	    # Delete all the field names named in the graph order
-	    map { delete $all{$_} } @graph_order;
-
-	    # Now append all the field names left
-	    push @graph_order, keys %all;
-	} else {
-	    @graph_order = keys %row;
-	}
-	# Now @graph_order contains all the rrd field names
+	# Now @graph_order contains all the rrd field names, in the desired order
 
 	DEBUG "Finalized graph order: ".join(', ', @graph_order);
 
