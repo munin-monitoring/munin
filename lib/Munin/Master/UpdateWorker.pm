@@ -653,8 +653,7 @@ sub uw_handle_config {
 			next;
 		}
 
-		# Adding the $field, even if present. We'll merge all of them later
-		# Using an array since, obviously, the order is important.
+		# Adding the $field if not seen before.
 		if (!exists($fields{$arg1})) {
 			push @field_order, $arg1;
 		}
