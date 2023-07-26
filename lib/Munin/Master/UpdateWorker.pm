@@ -653,8 +653,6 @@ sub uw_handle_config {
 			next;
 		}
 
-		$fields{$arg1}{$arg2} = $value;
-
 		# Adding the $field, even if present. We'll merge all of them later
 		# Using an array since, obviously, the order is important.
 		if (!exists($fields{$arg1})) {
