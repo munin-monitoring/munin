@@ -120,28 +120,28 @@ sub do_work {
 
 		# Handle spoolfetch, one call to retrieve everything
 		if (grep /^spool$/, @node_capabilities) {
-		my $spoolfetch_last_timestamp = $self->get_spoolfetch_timestamp();
-		local $0 = "$0 s($spoolfetch_last_timestamp)";
+			my $spoolfetch_last_timestamp = $self->get_spoolfetch_timestamp();
+			local $0 = "$0 s($spoolfetch_last_timestamp)";
 
-		# We do inject the update handling, in order to have on-the-fly
-		# updates, as we don't want to slurp the whole spoolfetched output
-		# and process it later. It will surely timeout, and use a truckload
-		# of RSS.
-		my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub {
+			# We do inject the update handling, in order to have on-the-fly
+			# updates, as we don't want to slurp the whole spoolfetched output
+			# and process it later. It will surely timeout, and use a truckload
+			# of RSS.
+			my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub {
 				my ($plugin, $now, $data, $last_timestamp, $update_rate_ptr) = @_;
 				INFO "spoolfetch config ($plugin, $now)";
 				local $0 = "$0 t($now) c($plugin)";
 				$self->uw_handle_config( @_ );
-		} );
+			} );
 
-		# update the timestamp if we spoolfetched something
-		$self->set_spoolfetch_timestamp($timestamp) if $timestamp;
+			# update the timestamp if we spoolfetched something
+			$self->set_spoolfetch_timestamp($timestamp) if $timestamp;
 
-		# Note that spoolfetching hosts is always a success. BY DESIGN.
-		# Since, if we cannot connect, or whatever else, it is NOT an issue.
+			# Note that spoolfetching hosts is always a success. BY DESIGN.
+			# Since, if we cannot connect, or whatever else, it is NOT an issue.
 
-		# No need to do more than that on this node
-		goto NODE_END;
+			# No need to do more than that on this node
+			goto NODE_END;
 	}
 
 	# Note: A multigraph plugin can present multiple services.
