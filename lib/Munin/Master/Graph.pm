@@ -290,7 +290,7 @@ sub handle_request
 		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
 		LEFT OUTER JOIN ds_attr ra ON ra.id = ds.id AND ra.name = 'rrd:alias'
 		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'cdef'
-		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
+		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'colour'
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
 		LEFT OUTER JOIN ds_attr gds ON gds.id = ds.id AND gds.name = 'drawstyle'
 		LEFT OUTER JOIN ds_attr pf ON pf.id = ds.id AND pf.name = 'printf'
