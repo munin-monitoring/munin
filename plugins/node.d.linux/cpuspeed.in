@@ -113,7 +113,7 @@ if [ "$1" = "config" ]; then
     echo "graph_info $graph_info"
 
     for c in /sys/devices/system/cpu/cpu[0-9]*; do
-        if [ ! -r "$c/cpufreq/stats/time_in_state" -a ! -r "$c/cpufreq/scaling_cur_freq" ]; then
+        if [ ! -r "$c/cpufreq/stats/time_in_state" ] && [ ! -r "$c/cpufreq/scaling_cur_freq" ]; then
             continue
         fi
 
