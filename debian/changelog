@@ -1,9 +1,16 @@
-munin (2.0.73-2) UNRELEASED; urgency=medium
+munin (2.0.73-2) unstable; urgency=medium
 
-  * Start 2.0.73-2 development. d/changelog entries will be written on
-    release using the git commit messages.
+  [ Holger Levsen ]
+  * Add Spanish translation of debconf templates, thanks to Camaleón.
+    Closes: #1036372
+  * munin-node: use logrotate without copytruncate is nicer to aide, thanks to
+    Marc Haber. Closes: #1050718
 
- -- Holger Levsen <holger@debian.org>  Sat, 23 Sep 2023 12:54:06 +0200
+  [ Olivetti Real ]
+  * debian/munin.init: Call chown with : as newer chowns lack support for
+    old-style point separator.
+
+ -- Holger Levsen <holger@debian.org>  Sat, 23 Sep 2023 15:10:50 +0200
 
 munin (2.0.73-1) unstable; urgency=medium
 
