@@ -3,7 +3,11 @@
 	missingok
 	rotate 7
 	compress
-	copytruncate
+	nocopytruncate
+	delaycompress
 	notifempty
 	create 640 root root
+	postrotate
+		systemctl restart munin-node
+	endscript
 }
