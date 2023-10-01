@@ -1,3 +1,186 @@
+munin-2.999.17, 2022-01-12
+
+Andreas Perhab (2):
+      lib/pgsql: fix labels containing #, \, \r or \n
+      Fix link for rrdgraph graph_args
+
+Christian Weiske (1):
+      Fix typo in munin-node config docs
+
+Felix Beer (1):
+      smart_: configure `update_rate`
+
+Holger Levsen (1):
+      munin-plugins-core: nginx_*: include ipv6 localhost in example configuration, thanks to Helmut Grohne. Closes: #1033734
+
+Jiyong Youn (1):
+      Fix cpuspeed to show correct values in systems with Ryzen CPUs
+
+Johannes Christ (2):
+      Fix typo in fail2ban documentation
+      Support running docker tasks via podman
+
+Julien Palard (3):
+      doc: Use square bracket notation for IPv6 address.
+      Doc: Linting with sphinx-lint.
+      Document that html_dynamic_images was introduced in 2.1.0.
+
+Kenyon Ralph (1):
+      upgrade jquery to 3.7.1
+
+Kim B. Heino (1):
+      plugins/cpuspeed: fix for Linux kernels with SMT disabled
+
+Lars Kruse (16):
+      unknown_limit: do not misinterpret zero as one
+      unknown_limit: fix handling of value "1"
+      SpoolReader: process spooled content lines separately
+      async: fetch spooled data in order of timestamps
+      async: use name squashing rules when determining the names of spooled files
+      async: clarify handling of timestamp
+      doc: describe "timeout_fetch_all_nodes" and "timeout_fetch_one_node"
+      Template "overview": add missing closing "li" and unify indentation
+      CDEF handling: fix access to "negative" field metadata
+      CFED handling: fix translation of fieldnames to RRD field names
+      CDEF handling: fix access to "negative" field with long name or starting with a digit
+      master: tolerate fields without content in "config"
+      Plugin hddtemp_smartctl: avoid misinterpretation of serial numbers as partitions
+      Plugin memcached_: implement suggest and improve autoconf
+
+Matt Merhar (1):
+      Make sensors_ temperature plugin work on musl libc
+
+Mike Tillberg (8):
+      Use NEGINF for negative infinity for rrd
+      fix rrd options for lower/upper limit
+      implement update_order for controlling order of accessing nodes
+      add documentation for update_order option
+      Add total munin_update runtime to graph
+      rename update_order to update_priority
+      prevent malicious config lines
+      uw: fix merging field list and graph_order
+
+Nick Maynard (1):
+      Add SCSI SENSE information to detect if the drive is in a low power state, and avoid waking it
+
+Nicolai Langfeldt (16):
+      Provide ssh:// examples
+      Correct and expand doc of includedir
+      Make graph TITLE text larger than LEGEND
+      m/graph: check for RRD >= 1.4
+      m/graph: indent palette
+      m/graph: Remove remaining "[$level]" from logging
+      m/graph: Catch errors from RRDs::graph
+      m/httpd: Implement logging
+      m/graph: day/night/weekend background extend under X-axis
+      m/graph: legend, graph_scale, graph_order, lastupdated
+      Sed in the blib directory before install
+      Fix spoolfetch code indentation
+      Remove line that sabotages building graph_order
+      Comment matches code
+      Remove newly redundant code in M::M::Graph and fix remains
+      Get the colours right
+
+O2 Graphics (1):
+      Support for NVMe in FreeBSD
+
+Rowan Wookey (1):
+      Fixed error when query_cache_size doesn't exist
+
+Ryan Mounce (1):
+      Use -W for ssh transport example
+
+Sandro (1):
+      Possible fix for #1474
+
+Steve Mokris (1):
+      In howto-write-plugins.rst, use web.archive.org for broken links
+
+Steve Schnepp (56):
+      fix error value in RRDs_graph
+      accept PDF for graph generation
+      using a temp file with the correct extension
+      using real transactions & read-only
+      sending caching headers
+      adding a cache-control HTTP header on graphs
+      add a warning when  is NULL
+      Fix stats table for PostgreSQL
+      m/update: Change to TIMESTAMPTZ
+      m/update: fix the number of args
+      Revert "m/update: fix the number of args"
+      using pgsql timestamp
+      day-night is useless on month and year graph
+      transactions is implicit now
+      finalize db statements
+      fix day/night
+      fix INSERT INTO stats for SQLite
+      avoid auto ROLLBACK with explicit COMMIT
+      ignore lines with comments when parsing
+      ignore lines with no .value in fetch()
+      adding a script to DELETE state
+      fix day/night detection
+      lighten the colors on day/night
+      cache agressively HTML pages
+      adding path to error message
+      RRD creation shall revert to service attrs
+      Use CGI to send HTTP status
+      initial add of munin-html
+      Initial add of munin-graph
+      m-html: fix the filenames
+      untaint destination dir
+      png need initial /
+      m-g: remove the headers when static
+      libhttp-server-simple-cgi-prefork-perl is now part of debian stable
+      devscripts: using symlinks for libs
+      m: simplify the return of UpdateWorker
+      run_on_finish() does not have a ident param
+      m/uw: update_rate can have some attribute
+      fix alignement on RRD start
+      Create dependabot.yml
+      Revert "Use CGI to send HTTP status"
+      m/html: sending headers also on a 404
+      Migrate project to `.readthedocs.yaml` configuration file v2
+      docs: Build all formats
+      update: limit I/O for SQLite
+      graph: disconnect via removing from dbh scope
+      update: adding db ro/rw debug log
+      u: no auto commit
+      debug: log the caller
+      html: use a read-only db
+      m/u: autocommit when requesting r/o
+      uw: fix graph_order merging
+      ci: install coveralls
+      coverage-improvement
+      Update Logger.pm
+      build: adding a cache for the Devel-Cover-Report-Coveralls deb
+
+Tim Bond (1):
+      Fix meminfo plugin output for slab_reclaim
+
+Tim Connors (1):
+      Don't suggest ipmi_ links if ipmitool isn't runnable on this system
+
+Wiebe Cazemier (2):
+      Symlink and custom name support for diskstat_
+      Make netstat human and high connection friendly
+
+Younes Ichiche (2):
+      fix reporting on URL in the munin-update log (stable-2.0)
+      make it possible to configure global munin-update timeouts
+
+dependabot[bot] (1):
+      Bump actions/checkout from 2 to 3
+
+lifeofguenter (1):
+      exit(0) on --version
+
+pstef (1):
+      Tone down lime color for graphs
+
+starinacool (1):
+      Use big 64 bit numbers
+
+
 munin-2.999.16, 2022-01-12
 
 -------
