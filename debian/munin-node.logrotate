@@ -8,6 +8,6 @@
 	notifempty
 	create 640 root root
 	postrotate
-		invoke-rc.d munin-node restart > /dev/null
+		invoke-rc.d munin-node try-restart > /dev/null
 	endscript
 }
