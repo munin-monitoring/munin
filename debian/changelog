@@ -1,3 +1,10 @@
+munin (2.0.74-2) UNRELEASED; urgency=medium
+
+  * Start 2.0.74-2 development. d/changelog entries will be written on
+    release using the git commit messages.
+
+ -- Holger Levsen <holger@debian.org>  Fri, 06 Oct 2023 21:28:59 +0200
+
 munin (2.0.74-1) unstable; urgency=medium
 
   * New upstream bugfix release. Closes: #1033734.
