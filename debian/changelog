@@ -1,9 +1,12 @@
-munin (2.0.74-1) UNRELEASED; urgency=medium
+munin (2.0.74-1) unstable; urgency=medium
 
-  * Start 2.0.73-3 development. d/changelog entries will be written on
-    release using the git commit messages.
+  * New upstream bugfix release. Closes: #1033734.
+  * munin-node.logrotate:
+    - use invoke-rc.d instead of systemctl, thanks to Bob Proulx.
+      Closes: #1053379
+    - use invoke-rc.d try-restart instead of restart, thanks to Ansgar.
 
- -- Holger Levsen <holger@debian.org>  Sat, 23 Sep 2023 15:22:05 +0200
+ -- Holger Levsen <holger@debian.org>  Fri, 06 Oct 2023 21:13:45 +0200
 
 munin (2.0.73-2) unstable; urgency=medium
 
