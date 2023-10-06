@@ -1,4 +1,4 @@
-munin (2.0.73-3) UNRELEASED; urgency=medium
+munin (2.0.74-1) UNRELEASED; urgency=medium
 
   * Start 2.0.73-3 development. d/changelog entries will be written on
     release using the git commit messages.
