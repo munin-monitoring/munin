@@ -815,7 +815,6 @@ sub expand_cdef {
 sub RRDs_graph {
 	# RRDs::graph() is *STATEFUL*. It doesn't emit the same PNG
 	# when called the second time.
-	#
 	RRDs::graph(@_);
 	my $rrd_error = RRDs::error();
 	return $rrd_error;
@@ -823,6 +822,14 @@ sub RRDs_graph {
 
 sub RRDs_graph_or_dump {
 	use RRDs;
+
+	# Appending $RRD_EXTRA_ARGS if present
+	if ($ENV{RRD_EXTRA_ARGS}) {
+		# Beware, the split is rather simple, and does not
+		# handle the following : "this contains spaces"
+		my @RRD_EXTRA_ARGS = split(/ /, $ENV{RRD_EXTRA_ARGS});
+		push @_, @RRD_EXTRA_ARGS;
+	}
 
 	my $fileext = shift;
 	if ($fileext =~ m/PNG|SVG|EPS|PDF/) {
