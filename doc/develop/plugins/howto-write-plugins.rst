@@ -385,7 +385,7 @@ Python plugin
 Going on
 ========
 
-The :ref:`plugin reference <plugin-reference>`_ should have all the information you need. I suggest the next thing you read about plugins is :ref:`Best Practices <plugin-bcp>` which should tell you all you need to know to get nice graphs in as few tries as possible. If planning to write a plugin as a shell script, please read `Shell Plugins <https://web.archive.org/web/20201023113744/http://munin-monitoring.org/wiki/PluginShell>`_. If your plugin does not work like you think it should, try :ref:`Debugging Plugins <debugging-plugins>`. If you want to get the plugin autoconfigured on install and such take a look at page :ref:`PluginConcise <plugin-concise>`.
+The :ref:`plugin reference <plugin-reference>` should have all the information you need. I suggest the next thing you read about plugins is :ref:`Best Practices <plugin-bcp>` which should tell you all you need to know to get nice graphs in as few tries as possible. If planning to write a plugin as a shell script, please read `Shell Plugins <https://web.archive.org/web/20201023113744/http://munin-monitoring.org/wiki/PluginShell>`_. If your plugin does not work like you think it should, try :ref:`Debugging Plugins <debugging-plugins>`. If you want to get the plugin autoconfigured on install and such take a look at page :ref:`PluginConcise <plugin-concise>`.
 
 See also
 ========
