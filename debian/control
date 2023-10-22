@@ -30,6 +30,47 @@ Homepage: https://munin-monitoring.org
 Vcs-Git: https://salsa.debian.org/debian/munin.git -b debian
 Vcs-Browser: https://salsa.debian.org/debian/munin
 
+Package: munin
+Architecture: all
+Pre-Depends: ${misc:Pre-Depends}
+Depends: cron | cron-daemon | systemd-sysv,
+         fonts-dejavu-core,
+         libdigest-md5-perl,
+         libfile-copy-recursive-perl,
+         libhtml-template-perl,
+         libio-socket-inet6-perl,
+         liblog-log4perl-perl,
+         librrds-perl,
+         libstorable-perl,
+         libtime-hires-perl,
+         libtimedate-perl,
+         liburi-perl,
+         munin-common (>= ${binary:Version}),
+         netbase,
+         rrdtool,
+         ${misc:Depends},
+         ${perl:Depends}
+Recommends: libcgi-fast-perl, munin-doc, munin-node
+Suggests: httpd, libapache2-mod-fcgid, libnet-ssleay-perl, www-browser
+Description: network-wide graphing framework (grapher/gatherer)
+ Munin is a highly flexible and powerful solution used to create graphs of
+ virtually everything imaginable throughout your network, while still
+ maintaining a rattling ease of installation and configuration.
+ .
+ This package contains the grapher/gatherer. You will only need one instance of
+ it in your network. It will periodically poll all the nodes in your network
+ it's aware of for data, which it in turn will use to create graphs and HTML
+ pages, suitable for viewing with your graphical web browser of choice.
+ .
+ It is also able to alert you if any value is outside of a preset boundary,
+ useful if you want to be alerted if a filesystem is about to grow full, for
+ instance.  You can do this by making Munin run an arbitrary command when you
+ need to be alert it, or make use of the intrinsic Nagios support.
+ .
+ Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
+ RRDtool. To see a real example of Munin in action, you can follow a link
+ from <http://munin-monitoring.org/> to a live installation.
+
 Package: munin-node
 Architecture: all
 Pre-Depends: ${misc:Pre-Depends}
@@ -139,47 +180,6 @@ Description: network-wide graphing framework (java plugins for node)
  .
  This package contains the java based plugins that are used by munin-node to
  monitor Java Management Extensions (JMX).
- .
- Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
- RRDtool. To see a real example of Munin in action, you can follow a link
- from <http://munin-monitoring.org/> to a live installation.
-
-Package: munin
-Architecture: all
-Pre-Depends: ${misc:Pre-Depends}
-Depends: cron | cron-daemon | systemd-sysv,
-         fonts-dejavu-core,
-         libdigest-md5-perl,
-         libfile-copy-recursive-perl,
-         libhtml-template-perl,
-         libio-socket-inet6-perl,
-         liblog-log4perl-perl,
-         librrds-perl,
-         libstorable-perl,
-         libtime-hires-perl,
-         libtimedate-perl,
-         liburi-perl,
-         munin-common (>= ${binary:Version}),
-         netbase,
-         rrdtool,
-         ${misc:Depends},
-         ${perl:Depends}
-Recommends: libcgi-fast-perl, munin-doc, munin-node
-Suggests: httpd, libapache2-mod-fcgid, libnet-ssleay-perl, www-browser
-Description: network-wide graphing framework (grapher/gatherer)
- Munin is a highly flexible and powerful solution used to create graphs of
- virtually everything imaginable throughout your network, while still
- maintaining a rattling ease of installation and configuration.
- .
- This package contains the grapher/gatherer. You will only need one instance of
- it in your network. It will periodically poll all the nodes in your network
- it's aware of for data, which it in turn will use to create graphs and HTML
- pages, suitable for viewing with your graphical web browser of choice.
- .
- It is also able to alert you if any value is outside of a preset boundary,
- useful if you want to be alerted if a filesystem is about to grow full, for
- instance.  You can do this by making Munin run an arbitrary command when you
- need to be alert it, or make use of the intrinsic Nagios support.
  .
  Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
  RRDtool. To see a real example of Munin in action, you can follow a link
