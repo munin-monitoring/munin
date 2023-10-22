@@ -23,17 +23,34 @@
 #   * skip-not-installable: some distributions (e.g. Ubuntu) do not ship sysvinit-core.  They
 #     should be allowed to skip these tests.
 
-
 # systemd
 Tests: master-cron-systemd, master-cgi-systemd
-Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, psmisc, sharness, systemd-sysv
+Depends: apache2,
+         curl,
+         daemontools,
+         file,
+         libcgi-fast-perl,
+         munin,
+         munin-node,
+         psmisc,
+         sharness,
+         systemd-sysv
 Restrictions: needs-root, breaks-testbed, isolation-container
 
 # sysvinit-core
 Tests: master-cron-sysv, master-cgi-sysv
-Depends: munin, munin-node, daemontools, apache2, curl, file, libcgi-fast-perl, psmisc, sharness, sysvinit-core, cron
+Depends: apache2,
+         cron,
+         curl,
+         daemontools,
+         file,
+         libcgi-fast-perl,
+         munin,
+         munin-node,
+         psmisc,
+         sharness,
+         sysvinit-core
 Restrictions: needs-root, breaks-testbed, isolation-container, needs-reboot, allow-stderr, skip-not-installable
-
 
 # Tests for munin-node:
 #   * run the node
@@ -50,9 +67,8 @@ Restrictions: needs-root, breaks-testbed, isolation-container
 
 # sysvinit-core
 Tests: node-sysv
-Depends: munin-node, netcat-openbsd, sharness, sysvinit-core, cron
+Depends: cron, munin-node, netcat-openbsd, sharness, sysvinit-core
 Restrictions: needs-root, breaks-testbed, isolation-container, needs-reboot, allow-stderr, skip-not-installable
-
 
 # verify that all binary packages can be installed at the same time (without conflicts)
 Test-Command: true
