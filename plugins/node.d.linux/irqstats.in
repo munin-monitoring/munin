@@ -101,6 +101,10 @@ while (my $line = <$in>) {
 	@data = split (' ', $line, $cpus + 2);
     } else {
 	@data = split(' ', $line, $cpus + 3);
+	# workaround for glued field
+	if ($data[0] =~ /^(.*:)(\d+)$/) {
+	    splice(@data, 0, 1, $1, $2);
+	}
     }
     chomp @data;
     $irq = shift @data;
