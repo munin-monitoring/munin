@@ -24,12 +24,40 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-
       - name: Fetch the deps
         run: sudo dev_scripts/deps
+        
+      - run: perl -V
 
+      - name: Cache Devel-Cover-Report-Coveralls
+        id: cache-Devel-Cover-Report-Coveralls
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-Devel-Cover-Report-Coveralls
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: /tmp/Devel-Cover-Report-Coveralls
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-0.32
+
+      - if: ${{ steps.cache-Devel-Cover-Report-Coveralls.outputs.cache-hit != 'true' }}
+        name: List the state of node modules
+        continue-on-error: true
+        run: |
+          mkdir -p /tmp/Devel-Cover-Report-Coveralls
+          sudo apt-get install -y dh-make-perl libdevel-cover-perl libhttp-tiny-perl libio-socket-ssl-perl libjson-pp-perl libyaml-perl libmodule-build-tiny-perl
+          cd /tmp/Devel-Cover-Report-Coveralls && wget https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.32.tar.gz
+          cd /tmp/Devel-Cover-Report-Coveralls && tar zxvf Devel-Cover-Report-Coveralls-0.32.tar.gz
+          cd /tmp/Devel-Cover-Report-Coveralls && DEB_BUILD_OPTIONS=nocheck dh-make-perl make --build Devel-Cover-Report-Coveralls-0.32
+          
+      - name: Devel-Cover-Report-Coveralls install the package
+        run: cd /tmp/Devel-Cover-Report-Coveralls && sudo dpkg -i libdevel-cover-report-coveralls-perl*.deb
+      - name: Devel-Cover-Report-Coveralls install any needed deps
+        run: sudo apt-get install -yf
+        
       - name: Setup the mock hostname
         run: echo "127.0.0.1	testing.acme.com" | sudo tee -a /etc/hosts
-
-      - name: Testing
-        run: make test
+        
+      - name: Compute coverage 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cover -test -report coveralls

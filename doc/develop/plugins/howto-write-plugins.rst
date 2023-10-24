@@ -151,7 +151,7 @@ This results in a graph such as this:
 
 .. image:: graphs/localhost.localdomain-load-day.png
 
-The html load page looks like the `page <http://munin.ping.uio.no/ping.uio.no/knuth.ping.uio.no/load.html>`_  pointed to here.  There you can see the use of the info attributes as well.
+The html load page looks like the `page <https://web.archive.org/web/20180131042829/http://munin.ping.uio.no/ping.uio.no/knuth.ping.uio.no/load.html>`_  pointed to here.  There you can see the use of the info attributes as well.
 
 Restarting munin-node
 ---------------------
@@ -305,7 +305,7 @@ Given a full set of info attributes (I've broken the first line to make it pract
  up.info Traffic of the eth0 interface. Maximum speed is 1000Mbps
 
 
-Then you end up with a `generated page like this <http://gauc.no-ip.org/munin/phx2.fedoraproject.org/x86-09.phx2.fedoraproject.org/if_wlan0.html>`_.
+Then you end up with a `generated page like this <https://web.archive.org/web/20170525082329/http://gauc.no-ip.org/munin/phx2.fedoraproject.org/x86-09.phx2.fedoraproject.org/if_wlan0.html>`_.
 
 .. _validate-fieldnames:
 
@@ -385,7 +385,7 @@ Python plugin
 Going on
 ========
 
-The `plugin documentation <http://munin-monitoring.org/wiki/plugins>`_ should have all the information you need. I suggest the next thing you read about plugins is :ref:`Best Practices <plugin-bcp>` which should tell you all you need to know to get nice graphs in as few tries as possible. If planning to write a plugin as a shell script, please read `Shell Plugins <http://munin-monitoring.org/wiki/PluginShell>`_. If your plugin does not work like you think it should, try :ref:`Debugging Plugins <debugging-plugins>`. If you want to get the plugin autoconfigured on install and such take a look at page :ref:`PluginConcise <plugin-concise>`.
+The :ref:`plugin reference <plugin-reference>` should have all the information you need. I suggest the next thing you read about plugins is :ref:`Best Practices <plugin-bcp>` which should tell you all you need to know to get nice graphs in as few tries as possible. If planning to write a plugin as a shell script, please read `Shell Plugins <https://web.archive.org/web/20201023113744/http://munin-monitoring.org/wiki/PluginShell>`_. If your plugin does not work like you think it should, try :ref:`Debugging Plugins <debugging-plugins>`. If you want to get the plugin autoconfigured on install and such take a look at page :ref:`PluginConcise <plugin-concise>`.
 
 See also
 ========
@@ -395,8 +395,8 @@ See also
  * :ref:`Global plugin attributes <plugin_attributes_global>`
  * :ref:`Datasource-specific plugin attributes <plugin_attributes_data>`
  * :ref:`Multi-graph plugins <plugin-multigraphing>`
- * `Shell Plugins <http://munin-monitoring.org/wiki/PluginShell>`_
- * `Perl plugins <http://munin-monitoring.org/wiki/PerlPlugins>`_
+ * `Shell Plugins <https://web.archive.org/web/20201023113744/http://munin-monitoring.org/wiki/PluginShell>`_
+ * `Perl plugins <https://web.archive.org/web/20201023103919/http://munin-monitoring.org/wiki/PerlPlugins>`_
 
 
 

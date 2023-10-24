@@ -2133,7 +2133,7 @@ sub innodb_bigint {
 
     return defined $y
 	? Math::BigInt->new($x)->blsft(32) + $y
-	: Math::BigInt->new("0x$x");
+	: Math::BigInt->new($x);
 }
 
 #---------------------------------------------------------------------

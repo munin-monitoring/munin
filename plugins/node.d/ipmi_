@@ -121,11 +121,11 @@ BEGIN {
 	TEMPS = sprintf("%s%s.value %s\n",TEMPS,NAME,TEMP);
 	CTEMPS = sprintf("%s%s.label %s\n",CTEMPS,NAME,THING);
 
-	if (CRIT !~ /na/) {
+	if (CRIT !~ /na/ && CRIT != /^0.000/) {
 		CTEMPS = sprintf("%s%s.critical 0:%s\n",CTEMPS,NAME,CRIT);
 	}
 
-	if (WARN !~ /na/) {
+	if (WARN !~ /na/ && WARN != /^0.000/) {
 		CTEMPS = sprintf("%s%s.warning 0:%s\n",CTEMPS,NAME,WARN);
 	}
 }

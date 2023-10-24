@@ -51,11 +51,12 @@ doc:
 
 .PHONY: install
 install: $(BUILD_SCRIPT)
-	"$(BUILD_SCRIPT)" install --destdir="$(DESTDIR)" --verbose
 	@# various directory placeholders (e.g. "@@SPOOLDIR@@") need to be replaced
-	grep -rl --null "@@" "$(or $(DESTDIR),.)" | xargs -0 sed -i \
+	grep -Irl --null "@@" blib | xargs -0 sed -i \
 		-e "$$(perl -I lib -M"Munin::Common::Defaults" \
-			-e "Munin::Common::Defaults->print_as_sed_substitutions();")"
+		   -e "Munin::Common::Defaults->print_as_sed_substitutions();")"	
+	"$(BUILD_SCRIPT)" install --destdir="$(DESTDIR)" --verbose
+
 
 .PHONY: apply-formatting
 apply-formatting:
@@ -209,19 +210,23 @@ tar-upload: tar tar-signed
 	} | sftp -b - "$(UPLOAD_HOST)"
 
 .PHONY: docker
+
+# Run with `DOCKER=podman` to build with podman instead of docker.
+DOCKER ?= docker
+
 docker-base:
-	docker build -t munin:base -f Dockerfile.base .
+	$(DOCKER) build -t munin:base -f Dockerfile.base .
 docker: docker-base
 	./getversion > RELEASE.docker
-	docker build -t munin:latest .
-	docker rm -f munin || true
+	$(DOCKER) build -t munin:latest .
+	$(DOCKER) rm -f munin || true
 	# Add the following to enable strace in the container
 	# --security-opt seccomp:unconfined
-	docker run --name munin --shm-size=256M -p 4948:4948 -itd munin:latest dev_scripts/noop
+	$(DOCKER) run --name munin --shm-size=256M -p 4948:4948 -itd munin:latest dev_scripts/noop
 
 docker-connect:
-	docker exec -it munin bash
+	$(DOCKER) exec -it munin bash
 
 docker-dev: docker-base
-	docker build -t munin:dev -f Dockerfile.dev .
-	docker run --rm --name munin-dev -v $(shell pwd):/munin -p 8000:8000 -p 14947:4947 -p 14948:4948 -it munin:dev
+	$(DOCKER) build -t munin:dev -f Dockerfile.dev .
+	$(DOCKER) run --rm --name munin-dev -v $(shell pwd):/munin -p 8000:8000 -p 14947:4947 -p 14948:4948 -it munin:dev

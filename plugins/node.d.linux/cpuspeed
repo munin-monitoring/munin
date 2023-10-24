@@ -54,6 +54,7 @@ Nah.
 =head1 AUTHOR
 
 Nicolai Langfeldt
+Jiyong Youn
 
 =head1 LICENSE
 
@@ -71,10 +72,18 @@ GPLv2
 scaleto100=${scaleto100:-no}
 ACPI_CPUFREQ_INDICATOR_FILENAME=/sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state
 INTEL_PSTATE_INDICATOR_FILENAME=/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+if cat /proc/cpuinfo | grep -e ^model\ name | sort -u | grep -q Ryzen; then
+    IS_RYZEN=1
+else
+    IS_RYZEN=0
+fi
 
 
 if [ "$1" = "autoconf" ]; then
-    if [ -r "$ACPI_CPUFREQ_INDICATOR_FILENAME" ]; then
+    if [ IS_RYZEN ] && [ -r "$INTEL_PSTATE_INDICATOR_FILENAME" ]; then
+        # Ryzen CPUs does not show proper boost clock in acpi-cpufreq, therefore use pstate
+        echo yes
+    elif [ -r "$ACPI_CPUFREQ_INDICATOR_FILENAME" ]; then
         # "acpi-cpufreq" is available
         echo yes
     elif [ -r "$INTEL_PSTATE_INDICATOR_FILENAME" ]; then
@@ -99,7 +108,11 @@ if [ "$1" = "config" ]; then
         echo "graph_vlabel Hz"
     fi
     # the visualized data depends on the available data source
-    if [ -r "$ACPI_CPUFREQ_INDICATOR_FILENAME" ]; then
+    if [ IS_RYZEN ] && [ -r "$INTEL_PSTATE_INDICATOR_FILENAME" ]; then
+        # use intel_pstate in Ryzen
+        graph_info="This graph shows the current speed of the CPU at the time of the data retrieval (not its average). This is a limitation of the 'intel_pstate' driver."
+        field_type="GAUGE"
+    elif [ -r "$ACPI_CPUFREQ_INDICATOR_FILENAME" ]; then
         graph_info="This graph shows the average running speed of each CPU."
         field_type="DERIVE"
     elif [ -r "$INTEL_PSTATE_INDICATOR_FILENAME" ]; then
@@ -112,6 +125,10 @@ if [ "$1" = "config" ]; then
     echo "graph_info $graph_info"
 
     for c in /sys/devices/system/cpu/cpu[0-9]*; do
+        if [ ! -r "$c/cpufreq/stats/time_in_state" ] && [ ! -r "$c/cpufreq/scaling_cur_freq" ]; then
+            continue
+        fi
+
         N=${c##*/cpu}
 
         echo "cpu$N.label CPU $N"
@@ -132,7 +149,11 @@ if [ "$1" = "config" ]; then
             fi
         fi
 
-        if [ -r "$c/cpufreq/cpuinfo_min_freq" ]; then
+        if [ IS_RYZEN ]; then
+            # cpuinfo_min_freq does not correctly reflect the actual minimum clock of Ryzen CPU.
+            # Therefore, return 0
+            echo "cpu$N.min 0"
+        elif [ -r "$c/cpufreq/cpuinfo_min_freq" ]; then
             MINHZ=$(cat "$c/cpufreq/cpuinfo_min_freq")
             echo "cpu$N.min $MINHZ"
         fi
@@ -146,12 +167,14 @@ fi
 
 for c in /sys/devices/system/cpu/cpu[0-9]*; do
     N=${c##*/cpu}
-    if [ -r "$ACPI_CPUFREQ_INDICATOR_FILENAME" ]; then
+    if [ IS_RYZEN ] && [ -r "$c/cpufreq/scaling_cur_freq" ]; then
+        value=$(cat "$c/cpufreq/scaling_cur_freq")
+    elif [ -r "$c/cpufreq/stats/time_in_state" ]; then
         value=$(awk '{ cycles += $1 * $2 } END { printf("%.0f", cycles / 100); }' "$c/cpufreq/stats/time_in_state")
-    elif [ -r "$INTEL_PSTATE_INDICATOR_FILENAME" ]; then
+    elif [ -r "$c/cpufreq/scaling_cur_freq" ]; then
         value=$(cat "$c/cpufreq/scaling_cur_freq")
     else
-        value="U"
+        continue
     fi
     printf 'cpu%d.value %s\n' "$N" "$value"
 done

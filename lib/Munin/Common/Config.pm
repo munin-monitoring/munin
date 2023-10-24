@@ -30,6 +30,8 @@ my %legal = map { $_ => 1 } qw(
 	contacts
 	create_args
 	critical
+	db_journal_mode
+	db_synchronous_mode
 	dbdir
 	dburl
 	dbdriver
@@ -138,6 +140,7 @@ my %legal = map { $_ => 1 } qw(
 	unknown
 	unknown_limit
 	update
+	update_priority
 	update_rate
 	use_default_name
 	use_node_name
