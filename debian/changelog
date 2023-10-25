@@ -1,3 +1,9 @@
+munin (2.0.74-2~bpo12+1) bookworm-backports; urgency=medium
+
+  * Rebuild for bookworm-backports.
+
+ -- Holger Levsen <holger@debian.org>  Wed, 25 Oct 2023 10:57:42 +0200
+
 munin (2.0.74-2) unstable; urgency=medium
 
   * d/control:
