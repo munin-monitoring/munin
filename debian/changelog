@@ -1,3 +1,9 @@
+munin (2.0.75-1) UNRELEASED; urgency=medium
+
+  * 
+
+ -- Holger Levsen <holger@debian.org>  Wed, 25 Oct 2023 23:38:41 +0200
+
 munin (2.0.74-2) unstable; urgency=medium
 
   * d/control:
