@@ -52,7 +52,7 @@ jobs:
       - name: Devel-Cover-Report-Coveralls install the package
         run: cd /tmp/Devel-Cover-Report-Coveralls && sudo dpkg -i libdevel-cover-report-coveralls-perl*.deb
       - name: Devel-Cover-Report-Coveralls install any needed deps
-        run: sudo apt-get install -yf
+        run: sudo apt-get install -yf libyaml-perl
         
       - name: Setup the mock hostname
         run: echo "127.0.0.1	testing.acme.com" | sudo tee -a /etc/hosts
