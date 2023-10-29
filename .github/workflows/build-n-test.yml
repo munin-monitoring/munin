@@ -60,4 +60,4 @@ jobs:
       - name: Compute coverage 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: cover -test -report coveralls +inc bin
+        run: cover -test -report coveralls +inc t/
