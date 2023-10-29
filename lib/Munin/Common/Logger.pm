@@ -167,7 +167,11 @@ sub _whoami  {
 # uncoverable subroutine
 my @c = caller(1); return $c[3] . ":" . $c[2] 
 }
-sub _whowasi { my @c = caller(2); return $c[3] . ":" . $c[2] }
+
+sub _whowasi {
+    my @c = caller(2);
+    return $c[3] . ":" . $c[2];
+}
 
 sub would_log {
     my ($level) = @_;
