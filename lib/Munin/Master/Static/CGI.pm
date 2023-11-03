@@ -32,9 +32,4 @@ sub header {
 	return "";
 }
 
-sub url {
-	my $self = shift;
-	return "";
-}
-
 1;
