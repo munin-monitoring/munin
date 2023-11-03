@@ -569,8 +569,9 @@ RENDERING:
 		print $cgi->header( "-Content-Type" => "text/html",
 			-Cache_Control => "public, max-age=3600", # 1h for HTML pages
 		);
+		my $tmpldir = get_param("tmpldir");
 		my $template = HTML::Template::Pro->new(
-			filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
+			filename => "$tmpldir/$template_filename",
 			loop_context_vars => 1,
 		);
 

@@ -42,8 +42,7 @@ kill('TERM', $pid_debug_node);
 wait();
 
 # cleanup the update dir
-system("rm", "-Rvf", $config->{dbdir});
-
+system("rm", "-Rf", $config->{dbdir});
 
 done_testing();
 
