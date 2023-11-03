@@ -727,6 +727,9 @@ sub uw_handle_fetch {
 
 	my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
 
+	# Vectorized updates
+	my %rrd_updates;
+
 	# Process all the data in-order
 	for my $line (@$data) {
 		next if ($line =~ m/^#/); # Ignore lines with comments
@@ -734,7 +737,7 @@ sub uw_handle_fetch {
 		my ($field, $arg, $value) = ($1, $2, $3);
 		$arg = "" unless defined $arg;
 		if ($arg ne "value") {
-			WARN "got '$line' but it should not be part of a fetch reply as (arg:$arg), ignoring.";
+			WARN "got '$line' when fetching $plugin but it should not be part of a fetch reply as (arg:$arg), ignoring.";
 			next;
 		}
 
@@ -780,13 +783,22 @@ sub uw_handle_fetch {
 
 		# This is a little convoluted but is needed as the API permits
 		# vectorized updates
-		my $ds_values = {
-			"value" => [ $value, ],
-			"when" => [ $when, ],
-		};
-		DEBUG "[DEBUG] self->_update_rrd_file($rrd_file, $field, $ds_values";
-		$self->_update_rrd_file($rrd_file, $field, $ds_values);
+		my $ds_values = $rrd_updates{$rrd_file}{$field};
+		if (! $ds_values) {
+			$ds_values = {};
+			$rrd_updates{$rrd_file}{$field} = $ds_values;
+		}
+		push @{	$ds_values->{value} }, $value;
+		push @{	$ds_values->{when} }, $when;
+	}
 
+	# Updating the RRDs
+	for my $rrd_file (keys %rrd_updates) {
+		for my $field (keys %{$rrd_updates{$rrd_file}}) {
+			my $ds_values = $rrd_updates{$rrd_file}{$field};
+			DEBUG "[DEBUG] self->_update_rrd_file($rrd_file, $field, $ds_values";
+			$self->_update_rrd_file($rrd_file, $field, $ds_values);
+		}
 	}
 
 	$self->{dbh}->commit() unless $self->{dbh}->{AutoCommit};
@@ -1074,7 +1086,7 @@ sub _update_rrd_file {
 		}
 	} else {
 		# normal vector-update the RRD
-		DEBUG "RRDs::update($rrd_file, @update_rrd_data)";
+		INFO "RRDs::update($rrd_file, @update_rrd_data)";
 		RRDs::update($rrd_file, @update_rrd_data);
 	}
 
