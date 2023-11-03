@@ -217,6 +217,8 @@ sub handle_request
 
 	DEBUG "found node=$id, type=$type";
 
+	my $dbdir = get_param("dbdir");
+
 	# Here's the most common case: only plain plugins
 	my $sth;
 
@@ -452,6 +454,8 @@ sub handle_request
 			# This is a virtual DS, we have to fetch the original values
 			($_rrdfile, $_rrdfield, $_lastupdated) = get_alias_rrdfile($dbh, $_rrdalias);
 		}
+
+		$_rrdfile = File::Spec->catfile($dbdir, $_rrdfile);
 
 		# Fetch the data from the RRDs
 		my $rrd_is_virtual = is_virtual($_rrdname, $_rrdcdef);
@@ -985,6 +989,18 @@ sub get_alias_rrdfile
 	DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield, $_lastupdated)";
 
 	return ($_rrdfile, $_rrdfield, $_lastupdated);
+}
+
+sub get_param
+{
+	my ($param) = @_;
+
+	# Ok, now SQL is needed to go further
+        use DBI;
+	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
+	my $dbh = Munin::Master::Update::get_dbh(1);
+	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
+	return $value;
 }
 
 1;

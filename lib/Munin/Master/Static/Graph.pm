@@ -1,29 +1,39 @@
-package Munin::Master::Static::HTML;
+package Munin::Master::Static::Graph;
 
 use strict;
 use warnings;
 
 use Getopt::Long;
 use Parallel::ForkManager;
+use File::Basename;
+use File::Path qw(make_path remove_tree);
 
 use Munin::Master::Static::CGI;
+
+use Munin::Master::Graph;
 
 sub create
 {
 	my ($jobs, $destination) = @_;
 
-	# Get the list of HTML pages to create
+	# Get the list of png to create
 	my @paths;
 	{
 		use Munin::Master::Update;
 		my $dbh = Munin::Master::Update::get_dbh(1);
-		my $row_ref = $dbh->selectall_arrayref("SELECT path FROM url");
+		my $row_ref = $dbh->selectall_arrayref("SELECT path FROM url WHERE type = ?", {}, "service");
 
 		# Process results
 		@paths = map {
-			my $path = @{$_}[0] . ".html";
+			my $path = @{$_}[0];
+			(
+				"$path-year.png",
+				"$path-month.png",
+				"$path-week.png",
+				"$path-day.png",
+				"$path-hour.png",
+			);
 		} @$row_ref;
-		push @paths, "/";
 	}
 
 	my $pm = Parallel::ForkManager->new($jobs);
@@ -33,18 +43,14 @@ sub create
 
 		# Mock CGI interface, in order to reuse most of munin-httpd internals
 		my $cgi = CGI->new({
-			path_info => $path,
+			path_info => "/$path",
 		});
 
 		$destination = $1 if $destination =~ m/(.*)/;
 		my $filepath = "$destination/$path";
-		$filepath = "$destination/index.html" if $path eq "/";
 
 		# redirect STDOUT to the file
 		print "s: $filepath\n";
-
-		use File::Basename;
-		use File::Path qw(make_path remove_tree);
 
 		my $dirpath = dirname($filepath);
 		make_path($dirpath);
@@ -53,8 +59,7 @@ sub create
 			local *STDOUT;
 			open (STDOUT, '>', $filepath);
 
-			use Munin::Master::HTML;
-			Munin::Master::HTML::handle_request($cgi);
+			Munin::Master::Graph::handle_request($cgi);
 		};
 
 		$pm->finish();
@@ -62,6 +67,7 @@ sub create
 
 	# wait for every worker to finish
 	$pm->wait_all_children();
+
 }
 
 1;

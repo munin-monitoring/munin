@@ -845,9 +845,6 @@ sub _get_rrd_file_name {
                        $ds_name,
                        $type_id);
 
-    $file = File::Spec->catfile($config->{dbdir},
-				$file);
-
     DEBUG "[DEBUG] rrd filename: $file\n";
 
     return $file;
@@ -858,6 +855,8 @@ sub _create_rrd_file {
     my ($self, $rrd_file, $service, $ds_name, $ds_config, $first_epoch) = @_;
 
     INFO "[INFO] creating rrd-file for $service->$ds_name: '$rrd_file'";
+
+    $rrd_file = File::Spec->catfile($config->{dbdir}, $rrd_file);
 
     munin_mkdir_p(dirname($rrd_file), oct(777));
 
@@ -1017,6 +1016,8 @@ sub to_sec {
 
 sub _update_rrd_file {
 	my ($self, $rrd_file, $ds_name, $ds_values) = @_;
+
+	$rrd_file = File::Spec->catfile($config->{dbdir}, $rrd_file);
 
 	my $values = $ds_values->{value};
 

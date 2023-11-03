@@ -44,7 +44,6 @@ wait();
 # cleanup the update dir
 system("rm", "-Rf", $config->{dbdir});
 
-
 done_testing();
 
 1;
