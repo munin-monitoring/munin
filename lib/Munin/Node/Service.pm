@@ -277,6 +277,9 @@ sub _service_command
 {
     my ($dir, $service, $argument) = @_;
 
+    # Dereference $argument if ARRAYREF
+    my @arguments = ref($argument) ? @$argument : ($argument);
+
     my @run;
     my $sconf = $config->{sconf};
 
@@ -290,14 +293,14 @@ sub _service_command
             # though, since who will ever need to pass "%c" in a place
             # like that?
             if ($t =~ s/%c/$dir\/$service/g) {
-                push @run, ($t, $argument);
+                push @run, ($t, @arguments);
             } else {
                 push @run, ($t);
             }
         }
     }
     else {
-        @run = ("$dir/$service", $argument);
+        @run = ("$dir/$service", @arguments);
     }
 
     return @run;
