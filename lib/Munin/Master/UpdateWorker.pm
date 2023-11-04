@@ -919,7 +919,7 @@ sub _create_rrd_file {
     );
 
     INFO "[INFO] RRDs::create @args";
-    RRDs::create @args;
+    RRDs::create @args unless $ENV{NO_UPDATE_RRD};
     if (my $ERROR = RRDs::error) {
         ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";
     }
@@ -1069,14 +1069,14 @@ sub _update_rrd_file {
 		# https://lists.oetiker.ch/pipermail/rrd-users/2011-October/018196.html
 		for my $update_rrd_data (@update_rrd_data) {
 			DEBUG "RRDs::update($rrd_file, $update_rrd_data)";
-			RRDs::update($rrd_file, $update_rrd_data);
+			RRDs::update($rrd_file, $update_rrd_data) unless $ENV{NO_UPDATE_RRD};
 			# Break on error.
 			last if RRDs::error;
 		}
 	} else {
 		# normal vector-update the RRD
 		DEBUG "RRDs::update($rrd_file, @update_rrd_data)";
-		RRDs::update($rrd_file, @update_rrd_data);
+		RRDs::update($rrd_file, @update_rrd_data) unless $ENV{NO_UPDATE_RRD};
 	}
 
 	if (my $ERROR = RRDs::error) {
