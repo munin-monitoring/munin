@@ -74,6 +74,7 @@ We have some more standard arguments, which play a role in the process of automa
         ../plugin/multigraphing.rst
         ../plugin/protocol-dirtyconfig.rst
         ../plugin/protocol-multigraph.rst
+        ../plugin/protocol-cap.rst
         ../plugin/snmp.rst
         ../plugin/use.rst
         ../plugin/writing-tips.rst
