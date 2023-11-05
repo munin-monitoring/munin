@@ -8,7 +8,7 @@
  Protocol extension: dirtyconfig
 =================================
 
-The dirtyconfig capability is implemented in munin 2.0 and on.
+The dirtyconfig capability is implemented in munin 2.0 and later.
 
 Objective
 ---------

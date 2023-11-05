@@ -74,7 +74,10 @@ sub _add_services_to_nodes
     for my $service (@services) {
         DEBUG("Configuring $service\n") if $config->{DEBUG};
 
-        my @response = _run_service($service, 'config');
+        # Adding a 'cap' sub-argument to 'config' to signal 3.0+ plugins that
+        # they don't need to do any expensive stuff, they are only called for
+        # the initial node config
+        my @response = _run_service($service, [ 'config', 'cap', ]);
 
         if (!@response or grep(/# Timed out/, @response)) {
             DEBUG("Error running $service.  Dropping it.") if $config->{DEBUG};
