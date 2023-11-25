@@ -99,7 +99,7 @@ values() {
 # Print the munin config
 config() {
     echo 'graph_title Hosts blacklisted by fail2ban'
-    echo 'graph_info This graph shows the number of host blacklisted by fail2ban'
+    echo 'graph_info This graph shows the number of hosts blacklisted by fail2ban'
     echo 'graph_category network'
     echo 'graph_vlabel Number of hosts'
 
