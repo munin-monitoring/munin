@@ -100,6 +100,9 @@ def parse_data(data):
      Assertions Enabled    : lcr-
      Deassertions Enabled  : lcr-
 
+    When a sensor reading is unavailable, ipmitool outputs:
+     Sensor Reading        :  Unable to read sensor: Device Not Present
+
     """
     sensors = {}
     cur_sensor = None
@@ -290,6 +293,8 @@ def report_unit(unit):
         nname = normalize_sensor(lbl)
         try:
             value = data[lbl]["sensor reading"].split()[0]
+            if 'Unable to read sensor' in data[lbl]["sensor reading"]:
+                value = 'U'
         except KeyError:
             continue
         print("%s.value %s" % (nname, value))
