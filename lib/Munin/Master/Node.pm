@@ -97,6 +97,16 @@ sub _do_connect {
 		ERROR "Failed to connect to node $self->{address}:$self->{port}/tcp : $!";
 		return 0;
 	}
+    } elsif ($uri->scheme eq "unix") {
+        $self->{reader} = $self->{writer} = IO::Socket::UNIX->new(
+		Type    => SOCK_STREAM(),
+		Peer    => $uri->path,
+		Timeout => $config->{timeout}
+	);
+	unless ($self->{reader} && defined $self->{reader}->connected()) {
+		ERROR "Failed to connect to unix socket ".$uri->path." : $!";
+		return 0;
+	}
     } elsif ($uri->scheme eq "ssh") {
 	    my $ssh_command = sprintf("%s %s", $config->{ssh_command}, $config->{ssh_options});
 	    my $user_part = ($uri->user) ? ($uri->user . "@") : "";

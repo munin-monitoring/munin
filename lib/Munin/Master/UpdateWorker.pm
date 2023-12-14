@@ -73,7 +73,7 @@ sub do_work {
     $uri = new URI("munin://" . $url) unless $uri->scheme;
 
     my $nodedesignation;
-    if ($uri->scheme eq "ssh" || $uri->scheme eq "cmd") {
+    if ($uri->scheme eq "ssh" || $uri->scheme eq "cmd" || $uri->scheme eq "unix") {
         $nodedesignation = $host . " (" . $self->{host}{address} . ")";
     } else {
         $nodedesignation = $host . " (" . $self->{host}{address} . ":" . $self->{host}{port} . ")";
