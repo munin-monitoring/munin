@@ -1,8 +1,9 @@
-munin (2.0.75-1) UNRELEASED; urgency=medium
+munin (2.0.75-1) unstable; urgency=medium
 
-  * 
+  * new upstream version:
+    - plugins/ipmi_: handle "0.000" as "na" in temperature critical/warning.
 
- -- Holger Levsen <holger@debian.org>  Wed, 25 Oct 2023 23:38:41 +0200
+ -- Holger Levsen <holger@debian.org>  Mon, 25 Dec 2023 15:17:57 +0100
 
 munin (2.0.74-2) unstable; urgency=medium
 
