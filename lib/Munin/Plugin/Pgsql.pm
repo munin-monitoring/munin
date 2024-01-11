@@ -123,7 +123,7 @@ use Munin::Plugin;
                 database is an older version than this, the plugin will exit
                 with an error.
  category       The category for this plugin. Copied directly to the config
-                output. Default 'PostgreSQL'.
+                output. Default 'db'.
  title          The title for this plugin. Copied directly to the config output.
  info           The info for this plugin. Copied directly to the config output.
  vlabel         The vertical label for the graph. Copied directly to the config
@@ -223,7 +223,7 @@ sub new {
 
     my %defaults = (
         base      => 1000,
-        category  => 'PostgreSQL',
+        category  => 'db',
         graphdraw => 'LINE1',
         graphtype => 'GAUGE',
     );
