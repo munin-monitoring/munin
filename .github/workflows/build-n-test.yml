@@ -31,7 +31,7 @@ jobs:
 
       - name: Cache Devel-Cover-Report-Coveralls
         id: cache-Devel-Cover-Report-Coveralls
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           cache-name: cache-Devel-Cover-Report-Coveralls
         with:
