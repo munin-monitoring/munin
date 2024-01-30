@@ -46,6 +46,18 @@ ok($update->run() == 5);
 kill('TERM', $pid_debug_node);
 wait();
 
+# Verify stats table has 3 runs of 5 hosts + total
+my $dbh = $update->get_dbh("readonly");
+my $sth = $dbh->prepare("select count(1) from stats group by runid");
+$sth -> execute();
+my $res = $sth->fetchall_arrayref();
+ok(scalar(@{$res}) == 3);
+for my $row (@{$res}) {
+    ok(${$row}[0] == 6);
+}
+$dbh->disconnect();
+
+
 done_testing();
 
 1;
