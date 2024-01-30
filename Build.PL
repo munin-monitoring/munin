@@ -238,8 +238,11 @@ if ( not $build->install_path('plugins') ) {
 
 $plugins_files->{'plugins/plugin.sh'} = 'plugins/plugin.sh';
 
+# MidnightBSD is similar to FreeBSD, so we also want to include FreeBSD specific plugins here.
+my $os = $^O;
+$os =~ s/midnightbsd/freebsd/;
 File::Find::find( { wanted => \&_find_plugins_wanted },
-    'plugins/node.d', "plugins/node.d.$^O" );
+    'plugins/node.d', "plugins/node.d.$os" );
 
 sub _find_plugins_wanted {
 
