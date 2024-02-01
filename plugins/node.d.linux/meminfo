@@ -352,7 +352,7 @@ my $graphs_source =
     'fields' => [qw(active_slabs:AREASTACK:- inactive_slabs:AREASTACK:FFFFCCCC shared_slabs:LINE1:- total_slabs:LINE1:000000)]
   },
   # ----------------------------------------------
-  'slab.reclaim' =>
+  'slab_reclaim' =>
   {
     'munin' =>
     {

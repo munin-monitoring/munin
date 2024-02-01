@@ -22,6 +22,9 @@ configuration (shown here) will only work on insecure sites/devices:
         env.community public
         env.ifTypeOnly ethernetCsmacd
 
+   [snmp_autolimited*]
+        env.auto_limit 1
+
 In general SNMP is not very secure at all unless you use SNMP version
 3 which supports authentication and privacy (encryption).  But in any
 case the community string for your devices should not be "public".
@@ -115,6 +118,9 @@ This problem is a feature of the device SNMP implementation or your
 usage of it, it is nothing the plugin can fix.  In the future Munin
 may be able to run the plugin more often than the counter wraps
 around.
+
+You can use "env.auto_limit 1" if you want to have the graph automatically
+limited with the speed of the interface.
 
 =head1 AUTHOR
 
@@ -648,7 +654,9 @@ sub do_config_if {
 
     print "graph_title $alias traffic\n";
     print "graph_order recv send\n";
-    print "graph_args --base 1000\n";
+    print "graph_args --base 1000";
+    print " --rigid --lower-limit -$speed --upper-limit $speed" if ($speed && $ENV{auto_limit});
+    print "\n";
     print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
     print "graph_category network\n";
     print "graph_info This graph shows traffic for the \"$alias\" network interface.$extrainfo\n";
@@ -813,6 +821,8 @@ sub do_fetch {
 }
 
 # ############################## MAIN ################################
+
+Munin::Plugin::SNMP::handle_caps();
 
 do_collect;
 do_preprocess;

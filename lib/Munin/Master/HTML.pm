@@ -569,8 +569,9 @@ RENDERING:
 		print $cgi->header( "-Content-Type" => "text/html",
 			-Cache_Control => "public, max-age=3600", # 1h for HTML pages
 		);
+		my $tmpldir = get_param("tmpldir");
 		my $template = HTML::Template::Pro->new(
-			filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
+			filename => "$tmpldir/$template_filename",
 			loop_context_vars => 1,
 		);
 
@@ -605,7 +606,7 @@ RENDERING:
 	}
 
 CLEANUP:
-	$dbh->disconnect();
+	$dbh = undef;
 }
 
 sub _get_params_groups {
@@ -863,7 +864,7 @@ sub get_param
 	# Ok, now SQL is needed to go further
         use DBI;
 	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
-	my $dbh = Munin::Master::Update::get_dbh();
+	my $dbh = Munin::Master::Update::get_dbh(1);
 	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
 	return $value;
 }

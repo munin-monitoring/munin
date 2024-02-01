@@ -60,7 +60,7 @@ my @COLOUR;
 	# Line variations: Pure, earthy, dark pastel, misc colours
 	$PALETTE{'default'} = [
 		#  	Green  Blue   Orange Dk yel Dk blu Purple Lime   Reds   Gray
-		qw(	00CC00 0066B3 FF8000 FFCC00 330099 990099 CCFF00 FF0000 808080
+		qw(	00CC00 0066B3 FF8000 FFCC00 330099 990099 AACC00 FF0000 808080
 			008F00 00487D B35A00 B38F00 6B006B 8FB300 B30000 BEBEBE
 			80FF80 80C9FF FFC080 FFE680 AA80FF EE00CC FF8080
 			666600 FFBFFF 00FFCC CC6699 999900
@@ -217,6 +217,8 @@ sub handle_request
 
 	DEBUG "found node=$id, type=$type";
 
+	my $dbdir = get_param("dbdir");
+
 	# Here's the most common case: only plain plugins
 	my $sth;
 
@@ -233,6 +235,8 @@ sub handle_request
 	my ($graph_vlabel) = $sth->fetchrow_array();
 	$graph_vlabel =~ s/\$\{graph_period\}/$graph_period/g if $graph_vlabel;
 
+	# Note: This will be the graph order computed in munin-update,
+	# not the graph_order emitted by the plugin.
 	$sth->execute($id, "graph_order");
 	my ($graph_order) = $sth->fetchrow_array() || "";
 	DEBUG "graph_order: $graph_order";
@@ -290,7 +294,7 @@ sub handle_request
 		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
 		LEFT OUTER JOIN ds_attr ra ON ra.id = ds.id AND ra.name = 'rrd:alias'
 		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'cdef'
-		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
+		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'colour'
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
 		LEFT OUTER JOIN ds_attr gds ON gds.id = ds.id AND gds.name = 'drawstyle'
 		LEFT OUTER JOIN ds_attr pf ON pf.id = ds.id AND pf.name = 'printf'
@@ -318,26 +322,15 @@ sub handle_request
 
 	DEBUG "Graph survey: graph_has_negatives: $graph_has_negative, longest field name: $longest_fieldname";
 
-	my @graph_order;
+	# To be robust and sure to be complete we apply the computed
+	# graph_order here and any fields left over is added at the
+	# end in alphabetical order. They will not have been in the
+	# plugin "config" output.
+	my %seen;
+	my @graph_order = grep { $seen{$_}++ == 0 }
+	  ( split(/ +/, $graph_order), sort keys %row );
 
-	if ($graph_order) {
-	    # The plugin can give graph order but it is not obliged to
-	    # name all fields so we have to make sure we have a list
-	    # of all the fields for the next loop.
-	    @graph_order = split(' +', $graph_order);
-
-	    # Map of all row names
-	    my %all = map { $_ => 1 } keys %row;
-
-	    # Delete all the field names named in the graph order
-	    map { delete $all{$_} } @graph_order;
-
-	    # Now append all the field names left
-	    push @graph_order, keys %all;
-	} else {
-	    @graph_order = keys %row;
-	}
-	# Now @graph_order contains all the rrd field names
+	# Now @graph_order contains all the rrd field names, in the desired order
 
 	DEBUG "Finalized graph order: ".join(', ', @graph_order);
 
@@ -461,6 +454,8 @@ sub handle_request
 			# This is a virtual DS, we have to fetch the original values
 			($_rrdfile, $_rrdfield, $_lastupdated) = get_alias_rrdfile($dbh, $_rrdalias);
 		}
+
+		$_rrdfile = File::Spec->catfile($dbdir, $_rrdfile);
 
 		# Fetch the data from the RRDs
 		my $rrd_is_virtual = is_virtual($_rrdname, $_rrdcdef);
@@ -670,8 +665,8 @@ sub handle_request
 	{
 		my $lower_limit  = $cgi->url_param("lower_limit");
 		my $upper_limit  = $cgi->url_param("upper_limit");
-		push @rrd_header, "--lower" , $lower_limit if defined $lower_limit;
-		push @rrd_header, "--upper" , $upper_limit if defined $upper_limit;
+		push @rrd_header, "--lower-limit" , $lower_limit if defined $lower_limit;
+		push @rrd_header, "--upper-limit" , $upper_limit if defined $upper_limit;
 
 		# Adding --rigid, otherwise the limits are not taken into account.
 		push @rrd_header, "--rigid" if defined $lower_limit || defined $upper_limit;
@@ -713,8 +708,8 @@ sub handle_request
 			"CDEF:dummy_val=$first_def",
 			"CDEF:n_d_b=LTIME,86400,%,28800,LT,INF,LTIME,86400,%,64800,GE,INF,UNKN,dummy_val,*,IF,IF",
 			"CDEF:n_d_c=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
-			"CDEF:n_d_b2=LTIME,86400,%,28800,LT,-INF,LTIME,86400,%,64800,GE,-INF,UNKN,dummy_val,*,IF,IF",
-			"CDEF:n_d_c2=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,-INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
+			"CDEF:n_d_b2=LTIME,86400,%,28800,LT,NEGINF,LTIME,86400,%,64800,GE,NEGINF,UNKN,dummy_val,*,IF,IF",
+			"CDEF:n_d_c2=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,NEGINF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
 		);
 
 		push @rrd_cmd, "AREA:n_d_b#00519909","AREA:n_d_b2#00519909" unless grep { $_ eq $time } ("month", "year");
@@ -763,7 +758,7 @@ sub handle_request
 	}
 
 CLEANUP:
-	$dbh->disconnect() if $dbh;
+	$dbh = undef;
 
 	my $ttot = Time::HiRes::time;
 	DEBUG sprintf("total:%.3fs (db:%.3fs rrd:%.3fs)",
@@ -824,7 +819,6 @@ sub expand_cdef {
 sub RRDs_graph {
 	# RRDs::graph() is *STATEFUL*. It doesn't emit the same PNG
 	# when called the second time.
-	#
 	RRDs::graph(@_);
 	my $rrd_error = RRDs::error();
 	return $rrd_error;
@@ -832,6 +826,14 @@ sub RRDs_graph {
 
 sub RRDs_graph_or_dump {
 	use RRDs;
+
+	# Appending $RRD_EXTRA_ARGS if present
+	if ($ENV{RRD_EXTRA_ARGS}) {
+		# Beware, the split is rather simple, and does not
+		# handle the following : "this contains spaces"
+		my @RRD_EXTRA_ARGS = split(/ /, $ENV{RRD_EXTRA_ARGS});
+		push @_, @RRD_EXTRA_ARGS;
+	}
 
 	my $fileext = shift;
 	if ($fileext =~ m/PNG|SVG|EPS|PDF/) {
@@ -987,6 +989,18 @@ sub get_alias_rrdfile
 	DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield, $_lastupdated)";
 
 	return ($_rrdfile, $_rrdfield, $_lastupdated);
+}
+
+sub get_param
+{
+	my ($param) = @_;
+
+	# Ok, now SQL is needed to go further
+        use DBI;
+	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
+	my $dbh = Munin::Master::Update::get_dbh(1);
+	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
+	return $value;
 }
 
 1;

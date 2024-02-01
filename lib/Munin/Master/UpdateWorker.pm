@@ -73,7 +73,7 @@ sub do_work {
     $uri = new URI("munin://" . $url) unless $uri->scheme;
 
     my $nodedesignation;
-    if ($uri->scheme eq "ssh" || $uri->scheme eq "cmd") {
+    if ($uri->scheme eq "ssh" || $uri->scheme eq "cmd" || $uri->scheme eq "unix") {
         $nodedesignation = $host . " (" . $self->{host}{address} . ")";
     } else {
         $nodedesignation = $host . " (" . $self->{host}{address} . ":" . $self->{host}{port} . ")";
@@ -120,28 +120,28 @@ sub do_work {
 
 		# Handle spoolfetch, one call to retrieve everything
 		if (grep /^spool$/, @node_capabilities) {
-		my $spoolfetch_last_timestamp = $self->get_spoolfetch_timestamp();
-		local $0 = "$0 s($spoolfetch_last_timestamp)";
+			my $spoolfetch_last_timestamp = $self->get_spoolfetch_timestamp();
+			local $0 = "$0 s($spoolfetch_last_timestamp)";
 
-		# We do inject the update handling, in order to have on-the-fly
-		# updates, as we don't want to slurp the whole spoolfetched output
-		# and process it later. It will surely timeout, and use a truckload
-		# of RSS.
-		my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub {
+			# We do inject the update handling, in order to have on-the-fly
+			# updates, as we don't want to slurp the whole spoolfetched output
+			# and process it later. It will surely timeout, and use a truckload
+			# of RSS.
+			my $timestamp = $node->spoolfetch($spoolfetch_last_timestamp, sub {
 				my ($plugin, $now, $data, $last_timestamp, $update_rate_ptr) = @_;
 				INFO "spoolfetch config ($plugin, $now)";
 				local $0 = "$0 t($now) c($plugin)";
 				$self->uw_handle_config( @_ );
-		} );
+			} );
 
-		# update the timestamp if we spoolfetched something
-		$self->set_spoolfetch_timestamp($timestamp) if $timestamp;
+			# update the timestamp if we spoolfetched something
+			$self->set_spoolfetch_timestamp($timestamp) if $timestamp;
 
-		# Note that spoolfetching hosts is always a success. BY DESIGN.
-		# Since, if we cannot connect, or whatever else, it is NOT an issue.
+			# Note that spoolfetching hosts is always a success. BY DESIGN.
+			# Since, if we cannot connect, or whatever else, it is NOT an issue.
 
-		# No need to do more than that on this node
-		goto NODE_END;
+			# No need to do more than that on this node
+			goto NODE_END;
 	}
 
 	# Note: A multigraph plugin can present multiple services.
@@ -398,19 +398,6 @@ sub _db_service {
 		$self->_db_service_attr($service_id, $attr, $_service_value);
 	}
 
-	# Update the ordering of fields
-	{
-		my @graph_order = split(/ /, $service_attr->{graph_order});
-		DEBUG "_db_service.graph_order: @graph_order";
-		my $ordr = 0;
-		for my $_name (@graph_order) {
-			my $sth_update_ordr = $dbh->prepare_cached("UPDATE ds SET ordr = ? WHERE ds.service_id = ? AND ds.name = ?");
-			$sth_update_ordr->execute($ordr, $service_id, $_name);
-			DEBUG "_db_service.update_order($ordr, $service_id, $_name)";
-			$ordr ++;
-		}
-	}
-
 	# Handle the service_category
 	{
 		my $category = $service_attr->{graph_category} || "other";
@@ -444,6 +431,19 @@ sub _db_service {
 	{
 		my $sth_del_ds = $dbh->prepare_cached('DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)');
 		$sth_del_ds->execute($service_id);
+	}
+
+	# Update the ordering of fields
+	{
+		my @graph_order = split(/ /, $service_attr->{graph_order});
+		DEBUG "_db_service.graph_order: @graph_order";
+		my $ordr = 0;
+		for my $_name (@graph_order) {
+			my $sth_update_ordr = $dbh->prepare_cached("UPDATE ds SET ordr = ? WHERE ds.service_id = ? AND ds.name = ?");
+			$sth_update_ordr->execute($ordr, $service_id, $_name);
+			DEBUG "_db_service.update_order($ordr, $service_id, $_name)";
+			$ordr ++;
+		}
 	}
 
 	$self->_db_url("service", $service_id, $plugin, "node", $node_id);
@@ -647,11 +647,18 @@ sub uw_handle_config {
 			next; # Handled
 		}
 
-		$fields{$arg1}{$arg2} = $value;
+		# Prevent plugins from trying to set rrd:* attrs
+		if ($arg2 =~ /^rrd:/) {
+			WARN "Invalid line: $line";
+			next;
+		}
 
-		# Adding the $field if not present.
-		# Using an array since, obviously, the order is important.
-		push @field_order, $arg1;
+		# Adding the $field if not seen before.
+		if (!exists($fields{$arg1})) {
+			push @field_order, $arg1;
+		}
+
+		$fields{$arg1}{$arg2} = $value;
 	}
 
 	$$update_rate_ptr = $service_attr{"update_rate"} if $service_attr{"update_rate"};
@@ -660,7 +667,8 @@ sub uw_handle_config {
 	{
 		my @graph_order = split(/ /, $service_attr{"graph_order"} || "");
 		for my $field (@field_order) {
-			push @graph_order, $field unless grep { $field } @graph_order;
+			# filter out of _exact_ equality
+			push @graph_order, $field unless grep { $_ eq $field } @graph_order;
 		}
 
 		$service_attr{"graph_order"} = join(" ", @graph_order);
@@ -837,9 +845,6 @@ sub _get_rrd_file_name {
                        $ds_name,
                        $type_id);
 
-    $file = File::Spec->catfile($config->{dbdir},
-				$file);
-
     DEBUG "[DEBUG] rrd filename: $file\n";
 
     return $file;
@@ -850,6 +855,8 @@ sub _create_rrd_file {
     my ($self, $rrd_file, $service, $ds_name, $ds_config, $first_epoch) = @_;
 
     INFO "[INFO] creating rrd-file for $service->$ds_name: '$rrd_file'";
+
+    $rrd_file = File::Spec->catfile($config->{dbdir}, $rrd_file);
 
     munin_mkdir_p(dirname($rrd_file), oct(777));
 
@@ -912,7 +919,7 @@ sub _create_rrd_file {
     );
 
     INFO "[INFO] RRDs::create @args";
-    RRDs::create @args;
+    RRDs::create @args unless $ENV{NO_UPDATE_RRD};
     if (my $ERROR = RRDs::error) {
         ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";
     }
@@ -1010,6 +1017,8 @@ sub to_sec {
 sub _update_rrd_file {
 	my ($self, $rrd_file, $ds_name, $ds_values) = @_;
 
+	$rrd_file = File::Spec->catfile($config->{dbdir}, $rrd_file);
+
 	my $values = $ds_values->{value};
 
 	# Some kind of mismatch between fetch and config can cause this.
@@ -1060,14 +1069,14 @@ sub _update_rrd_file {
 		# https://lists.oetiker.ch/pipermail/rrd-users/2011-October/018196.html
 		for my $update_rrd_data (@update_rrd_data) {
 			DEBUG "RRDs::update($rrd_file, $update_rrd_data)";
-			RRDs::update($rrd_file, $update_rrd_data);
+			RRDs::update($rrd_file, $update_rrd_data) unless $ENV{NO_UPDATE_RRD};
 			# Break on error.
 			last if RRDs::error;
 		}
 	} else {
 		# normal vector-update the RRD
 		DEBUG "RRDs::update($rrd_file, @update_rrd_data)";
-		RRDs::update($rrd_file, @update_rrd_data);
+		RRDs::update($rrd_file, @update_rrd_data) unless $ENV{NO_UPDATE_RRD};
 	}
 
 	if (my $ERROR = RRDs::error) {

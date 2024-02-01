@@ -43,6 +43,7 @@ So following minimal configuration in plugin-conf.d/munin-node is needed.
   smartargs     - Override '-a' argument passed to smartctl with '-A -i'+smartargs
   ignorestandby - Ignore the standby state of the drive and perform SMART query. Default: False
   ignoreexit    - Bits in smartctl exit code to ignore, e.g. 64. Default: 0
+  update_rate   - set the sampling rate in seconds, default is five minutes.
 
 Parameters can be specified on a per-drive basis, eg:
 
@@ -52,6 +53,7 @@ Parameters can be specified on a per-drive basis, eg:
   user root
   env.smartargs -H -c -l error -l selftest -l selective -d ata
   env.smartpath /usr/local/sbin/smartctl
+  env.update_rate 86400
 
 =back
 
@@ -291,6 +293,7 @@ smartctl_bin = os.getenv('smartpath', '/usr/sbin/smartctl')
 smartctl_args = os.getenv('smartargs', '-a')
 smartctl_ignore_standby = bool(os.getenv('ignorestandby', False))
 smartctl_ignore_exitcode_bitmask = int(os.getenv('ignoreexit', 0))
+smartctl_update_rate = int(os.getenv('update_rate', 300))
 
 # You may edit the following 3 variables
 # Suppress SMART warnings (True/False)
@@ -457,6 +460,7 @@ def print_config(hard_drive):
           'smartctl_exit_status is the return value of smartctl. A non-zero return value '
           'indicates an error, a potential error, or a fault on the drive.'
           .format(hard_drive, model))
+    print('update_rate {}', format(smartctl_update_rate))
     for key, content in smart_values_state.items():
         print('{}.label {}'.format(key, key))
         if report_warnings:

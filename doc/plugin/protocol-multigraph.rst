@@ -9,7 +9,7 @@
  Protocol extension: multiple graphs from one plugin
 =====================================================
 
-Multigraph plugins are implemented in 1.4.0 and on.
+Multigraph plugins are implemented in 1.4.0 and later.
 
 Objective
 ---------
