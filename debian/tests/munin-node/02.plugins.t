@@ -55,6 +55,11 @@ EOF
     if [ -x /bin/netstat ]; then
       echo netstat
     fi
+    SPOOLDIR="$(postconf -h queue_directory 2>/dev/null || echo /var/spool/postfix)"
+    if [ -d "$SPOOLDIR" ]; then
+        echo postfix_mailqueue
+        echo postfix_mailvolume
+    fi
   } | sort >expected_plugins
   test_cmp expected_plugins all_without_network_interfaces
 '
