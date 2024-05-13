@@ -167,6 +167,7 @@ if [ "$1" = "config" ]; then
             echo "cpu$N.min 0"
         elif [ -r "$c/cpufreq/cpuinfo_min_freq" ]; then
             MINHZ=$(cat "$c/cpufreq/cpuinfo_min_freq")
+            MINHZ=$(( $MINHZ - $MINHZ / 10 ))
             echo "cpu$N.min $MINHZ"
         fi
 
