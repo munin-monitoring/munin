@@ -18,7 +18,19 @@ None needed by default.
 You can set one environment variable to modify the plugins behaviour:
 
   [cpuspeed]
+     env.sleep .2
      env.scaleto100 yes
+
+Parameter sleep 
+
+Sleep for some (fractional) seconds before actually taking the measure.
+This is useful to enable the CPU to relax a little from the previous plugins.
+
+"env.sleep .2" will cause a 200ms sleep.
+
+Default is to NOT sleep, aka "env.sleep 0".
+
+Parameter scaleto100
 
 Show the frequency as a percentage instead of absolute frequency.
 If set the "yes" the plugin sets up a CDEF to change the speed in Hz
@@ -164,6 +176,8 @@ if [ "$1" = "config" ]; then
     done | sort -V
     if [ "${MUNIN_CAP_DIRTYCONFIG:-0}" != 1 ]; then exit 0; fi
 fi
+
+[ -z "${sleep}" ] || sleep "${sleep}"
 
 for c in /sys/devices/system/cpu/cpu[0-9]*; do
     N=${c##*/cpu}
