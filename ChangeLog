@@ -1,5 +1,21 @@
 -*- text -*-
 
+munin-2.0.76, 2024-05-17
+
+Kim B. Heino (1):
+      plugins/postgres: use standard category "db" instead of "PostgreSQL"
+
+Steve Mokris (1):
+      Backport #562 to stable-2.0.
+
+cgzones (1):
+      fix irqstats
+
+pinterior (1):
+      split glued irq name and count
+
+
+
 munin-2.0.75, 2023-10-25
 
 Kim B. Heino (1):
