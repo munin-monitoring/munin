@@ -1,3 +1,66 @@
+munin-2.999.18, 2024-05-17
+
+Kim B. Heino (1):
+      plugins/postgres: use standard category "db" instead of "PostgreSQL"
+
+Steve Mokris (1):
+      Backport #562 to stable-2.0.
+
+cgzones (1):
+      fix irqstats
+
+pinterior (1):
+      split glued irq name and count
+
+Daniel Alder (1):
+      Allow using unix sockets in the form unix:///run/muninnode.sock as address
+
+Johannes Christ (1):
+      Fix typo in fail2ban plugin graph information
+
+Kim B. Heino (2):
+      plugins/ipmi_: handle "0.000" as "na" in temperature upper critical/warning
+      plugins/postgres: use standard category "db" instead of "PostgreSQL"
+
+Lionel Sausin (1):
+      Force the graph limits when the speed is known
+
+Michel Remacle (1):
+      Fix graphs with gaps from tomcat_threads
+
+Steve Mokris (1):
+      Update ipmi_sensor_ to handle ipmitool 'Unable to read sensor' errors
+
+Steve Schnepp (20):
+      Update build-n-test.yml
+      p/snmp__if_multi: optionally auto limit the graph
+      log: whitespace change
+      m/g: add some extra args to rrd-graph
+      adding some sample data
+      t: testing static HTML generation
+      use relative sample data
+      m: use relative rrdfile in the db
+      m/l: remove unused function
+      m/u: adding a RRD dry run mode
+      contrib/mnd: use POSIX::exit to avoid RAM issue
+      node: extra 'cap' subarg to initial config
+      node: implement "config cap" in SNMP.pm
+      p: implement "config cap" in some plugins
+      node: add "config cap" support to munin-run
+      node: fix the debug message for "config cap"
+      doc: change wording of munin version
+      doc: adding doc for config cap subcommand
+      Add cpuspeed env parameter to let CPU relax
+      plugins/cpuspeed: fix if cpus are at minimum speed
+
+Val Lorentz (1):
+      howto-write-plugins: Fix typo in reference
+
+dependabot[bot] (2):
+      Bump actions/checkout from 3 to 4
+      build(deps): bump actions/cache from 3 to 4
+
+
 munin-2.999.17, 2022-01-12
 
 Andreas Perhab (2):
