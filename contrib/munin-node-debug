@@ -97,8 +97,8 @@ if ($dump_config) {
 	for (my $i = 0; $i < $nb_servers; $i++) {
 		my $port = $starting_port + $i;
 		for (my $p = 0; $p < $nb_servers_per_port; $p++) {
-			my $hostname = get_hostname($i, $p);
-			my $group = get_group($i, $p);
+			my $hostname = get_hostname($port, $p);
+			my $group = get_group($port, $p);
 			print "[$group;$hostname]\n";
 			print "     address 127.0.0.1\n";
 			print "     port $port\n";
