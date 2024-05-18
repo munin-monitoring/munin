@@ -96,7 +96,7 @@ sub get_dbh {
 	DEBUG "get_dbh: PRAGMA main.synchronous=$db_synchronous_mode;" if $db_driver eq "SQLite";
 
 	# AutoCommit when readonly is a no-op anyway
-	$dbh->{AutoCommit} = 0;
+	$dbh->{AutoCommit} = $ENV{MUNIN_DB_AUTOCOMMIT} || $config->{db_autocommit} || 0;
 	$dbh->{AutoCommit} = 1 if $is_read_only;
 	DEBUG "get_dbh: {AutoCommit} = " . $dbh->{AutoCommit};
 
