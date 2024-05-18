@@ -87,9 +87,13 @@ sub get_dbh {
 	INFO 'get_dbh: $dbh->{Driver}->{Name} = ' . $dbh->{Driver}->{Name} . ($is_read_only ? "(ro)" : "(rw)");
 
 	# Sets some session vars
-	my $db_journal_mode = $ENV{MUNIN_DB_JOURNAL_MODE} || $config->{db_journal_mode} || "TRUNCATE";
-	$dbh->do("PRAGMA journal_mode=$db_journal_mode;") if $db_driver eq "SQLite";
-	DEBUG "get_dbh: PRAGMA journal_mode=$db_journal_mode;" if $db_driver eq "SQLite";
+
+	# db_journal_mode is only set explicitely. Otherwise use the platform SQLite default
+	my $db_journal_mode = $ENV{MUNIN_DB_JOURNAL_MODE} || $config->{db_journal_mode};
+	if ($db_journal_mode) {
+		$dbh->do("PRAGMA journal_mode=$db_journal_mode;") if $db_driver eq "SQLite";
+		DEBUG "get_dbh: PRAGMA journal_mode=$db_journal_mode;" if $db_driver eq "SQLite";
+	}
 
 	my $db_synchronous_mode = $ENV{MUNIN_DB_SYNCHRONOUS_MODE} || $config->{db_synchronous_mode} || "OFF";
 	$dbh->do("PRAGMA main.synchronous=$db_synchronous_mode;") if $db_driver eq "SQLite";
