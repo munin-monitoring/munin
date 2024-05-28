@@ -1,3 +1,11 @@
+munin (2.0.76-1~bpo12+1) bookworm-backports; urgency=medium
+
+  * Rebuild for bookworm-backports.
+  * Revert "Resolve Java 21 FTBFS (Closes: #1057527)" to make it work with
+    java-common from bookworm again.
+
+ -- Holger Levsen <holger@debian.org>  Tue, 28 May 2024 17:37:27 +0200
+
 munin (2.0.76-1) unstable; urgency=medium
 
   [ Holger Levsen ]
