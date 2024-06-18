@@ -80,7 +80,7 @@ allow ^::1$
 #host 127.0.0.1
 host *
 
-# The TCP port the munin-node listens on
+# The TCP port the munin-node listens on.
 port 4949
 
 EOF
