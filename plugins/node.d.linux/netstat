@@ -66,7 +66,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'multigraph netstat'
 	echo 'graph_title Netstat, combined'
-	echo 'graph_args --units=si -l 1 --base 1000 --logarithmic'
+	echo 'graph_args --units=si -l 0 --base 1000'
 	echo 'graph_vlabel TCP connections'
 	echo 'graph_category network'
 	echo 'graph_period second'
@@ -99,11 +99,6 @@ if [ "$1" = "config" ]; then
 	echo 'resets.info The number of TCP connection resets.'
 	print_warning resets
 	print_critical resets
-	echo 'established.label established'
-	echo 'established.type GAUGE'
-	echo 'established.info The number of currently open connections.'
-	print_warning established
-	print_critical established
 
 	echo ''
 
@@ -133,7 +128,6 @@ echo 'multigraph netstat'
 /passive connection ope/  { print "passive.value " $1 }
 /failed connection/       { print "failed.value " $1 }
 /connection resets/       { print "resets.value " $1 }
-/connections established/ { print "established.value " $1 }'
 
 echo
 
