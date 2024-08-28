@@ -67,6 +67,7 @@ Explanations, per line
   to create an average
 * 19 - 24: Labels to make it all look neat
 
+Note that defining a label for "donald_disk" (line 24) is required for the data source to be shown, as the placeholder name is not automatically used otherwise.
 
 This produces a pretty graph like this, to show the relation between outside temperatures and disk/mainboard temperatures:
 
