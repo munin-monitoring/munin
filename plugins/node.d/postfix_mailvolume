@@ -16,6 +16,8 @@ The following shows the default configuration.
   [postfix*]
     env.logdir /var/log
     env.logfile syslog
+    env.use_journalctl 0
+    env.jc_cmd journalctl -u postfix
 
 =head1 INTERPRETATION
 
@@ -33,11 +35,12 @@ None known
 
 =head1 VERSION
 
-v1.1 2018-03-24
-* calculate extra field for mail volume that is actually delivered ("volume_delivered")
+v1.2 2024-09-12
+* enable reading from journalctl
 
 =head1 AUTHOR
 
+  Copyright (C) 2024 alexx
   Copyright (C) 2007-2008 Nicolai Langfeldt
   Copyright (C) 2004-2005 Jimmy Olsen
 
@@ -66,12 +69,19 @@ use constant queue_id_expiry => 6 * 3600;
 
 my $LOGDIR  = $ENV{'logdir'}  || '/var/log';
 my $LOGFILE = $ENV{'logfile'} || 'syslog';
-
+my $JC_CMD = $ENV{'jc_cmd'} || 'journalctl -u postfix';
+my $USE_JC = $ENV{'use_journalctl'} || 0;
 
 sub parseLogfile {
     my ($fname, $start) = @_;
 
-    my ($LOGFILE, $rotated) = tail_open($fname, $start || 0);
+   my ($LOGFILE, $rotated);
+
+    if ($USE_JC and $USE_JC == 1){
+        open $LOGFILE, '-|', $JC_CMD or die $!;
+    }else{
+       ($LOGFILE, $rotated) = tail_open($fname, $start || 0);
+    }
 
     while (my $line = <$LOGFILE>) {
         chomp ($line);
@@ -101,7 +111,11 @@ sub parseLogfile {
         }
     }
     delete(@volumes_per_queue_id{@expired_queue_ids});
-    return tail_close($LOGFILE);
+    if ($USE_JC and $USE_JC == 1) {
+        return close($LOGFILE);
+    }else{
+        return tail_close($LOGFILE);
+    }
 }
 
 if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
