@@ -1,9 +1,10 @@
 #!/usr/bin/perl -w
+# -*- perl -*-
 
 =head1 NAME
 
 postfix_mailstats - Plugin to monitor the number of mails delivered and
-rejected by postfix
+rejected by postfix, with support for journald logs
 
 =head1 CONFIGURATION
 
@@ -13,14 +14,21 @@ if you need to override the defaults below:
  [postfix_mailstats]
   env.logdir  - Which logfile to use
   env.logfile - What file to read in logdir
+  env.use_journald - Set to 1 to use journald instead of a logfile
+  env.journalctlargs
 
 =head2 DEFAULT CONFIGURATION
 
  [postfix_mailstats]
   env.logdir  /var/log
   env.logfile mail.log
+  env.use_journald 0
+  env.journalctlargs _SYSTEMD_UNIT=postfix@-.service
 
 =head1 AUTHOR
+
+Original plugin contributed by Nicolai Langfeldt,
+extended for journald support by Stephan Kleber with some help by ChatGPT.
 
 Records show that the plugin was contributed by Nicolai Langfeldt in
 2003.  Nicolai can't find anything in his email about this and expects
@@ -46,76 +54,124 @@ munin-node.
 =cut
 
 use strict;
-
 use Munin::Plugin;
 
+my $statefile = $ENV{'MUNIN_PLUGSTATE'} . "/munin-plugin-postfix_mailstats.state";
 my $pos;
-my $delivered;
-my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
-my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.log');
+my $delivered = 0;
+my %rejects = ();
+
+my $LOGDIR      = $ENV{'logdir'}  || '/var/log';
+my $LOGFILE     = $ENV{'logfile'} || 'mail.log';
+my $USE_JOURNALD = $ENV{'use_journald'} || 0;
+my $journalctlargs = $ENV{'journalctlargs'} // '_SYSTEMD_UNIT=postfix@-.service';
 
 my $logfile = "$LOGDIR/$LOGFILE";
 
-if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
+if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
-    if (-d $LOGDIR)
-    {
-        if (-f $logfile)
+    if ($USE_JOURNALD) {
+        # Check if journalctl command is available
+        if (system("which journalctl > /dev/null 2>&1") == 0) {
+            print "yes\n";
+            exit 0;
+        } else {
+            print "no (journalctl not found)\n";
+            exit 0;
+        }
+    } else {
+        # Logfile handling
+        if (-d $LOGDIR)
         {
-            if (-r $logfile)
+            if (-f $logfile)
             {
-                print "yes\n";
-                exit 0;
+                if (-r $logfile)
+                {
+                    print "yes\n";
+                    exit 0;
+                }
+                else
+                {
+                    print "no (logfile '$logfile' not readable)\n";
+                }
             }
             else
             {
-                print "no (logfile '$logfile' not readable)\n";
+                print "no (logfile '$logfile' not found)\n";
             }
         }
         else
         {
-            print "no (logfile '$logfile' not found)\n";
+            print "no (could not find logdir '$LOGDIR')\n";
         }
     }
-    else
-    {
-        print "no (could not find logdir '$LOGDIR')\n";
-    }
 
     exit 0;
 }
 
-my @state = restore_state();
-
-$pos = shift @state;
-$delivered = shift @state;
-
-$pos = 0 unless defined($pos);
-$delivered = 0 unless defined($delivered);
-
-my %rejects = @state;
-
-if (! -f $logfile)
-{
-    print "delivered.value U\n";
-    foreach my $reason (sort keys %rejects)
+if ($USE_JOURNALD) {
+    if (!defined $pos)
     {
-        my $fieldname = clean_fieldname("r$reason");
-        print "$fieldname.value U\n";
+        # Initial run.
+        $pos = 0;
     }
-    exit 0;
-}
 
+    # Parse logs from journald
+    parseJournald();
+} else {
+    # Load statefile if it exists
+    if ( -f $statefile)
+    {
+        open (IN, '<', $statefile) or die "Unable to open state-file: $!\n";
+        if (<IN> =~ /^(\d+):(\d+)/)
+        {
+            ($pos, $delivered) = ($1, $2);
+        }
+        while (<IN>)
+        {
+            if (/^([0-9a-z.\-]+):(\d+)$/)
+            {
+                $rejects{$1} = $2;
+            }
+        }
+        close IN;
+    }
+    
+    # Logfile handling
+    if (! -f $logfile)
+    {
+        print "delivered.value U\n";
+        foreach my $reason (sort keys %rejects)
+        {
+            my $fieldname = clean_fieldname("r$reason");
+            print "$fieldname.value U\n";
+        }
+        exit 0;
+    }
 
-my $startsize = (stat $logfile)[7];
+    my $startsize = (stat $logfile)[7];
 
-if (!defined $pos)
-{
-    # Initial run.
+    if (!defined $pos)
+    {
+        # Initial run.
+        $pos = $startsize;
+    }
+
+    parseLogfile($logfile, $pos, $startsize);
     $pos = $startsize;
+    
+    # Save statefile
+    if(-l $statefile) {
+        die("$statefile is a symbolic link, refusing to touch it.");
+    }
+    open (OUT, '>', $statefile) or die "Unable to open statefile: $!\n";
+    print OUT "$pos:$delivered\n";
+    foreach my $i (sort keys %rejects)
+    {
+        print OUT "$i:", $rejects{$i}, "\n";
+    }
+    close OUT;
 }
-
-$pos = parseLogfile($logfile, $pos, $startsize);
 
 if ( $ARGV[0] and $ARGV[0] eq "config" )
 {
@@ -124,7 +180,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "graph_vlabel mails / \${graph_period}\n";
     print "graph_scale  no\n";
     print "graph_total  Total\n";
-    print "graph_category mail\n";
+    print "graph_category postfix\n";
     print "graph_period minute\n";
     print "delivered.label delivered\n";
     print "delivered.type DERIVE\n";
@@ -148,31 +204,60 @@ foreach my $reason (sort keys %rejects)
     print "$fieldname.value ", $rejects{$reason}, "\n";
 }
 
-save_state($pos, $delivered, %rejects);
-
+# Function to parse logs from a regular logfile
 sub parseLogfile
 {
     my ($fname, $start, $stop) = @_;
+    open (LOGFILE, $fname)
+        or die "Unable to open logfile $fname for reading: $!\n";
+    seek (LOGFILE, $start, 0)
+        or die "Unable to seek to $start in $fname: $!\n";
 
-	my ($logfd, $reset) = tail_open($fname, $start);
-
-    while (tell($logfd) < $stop)
+    while (tell (LOGFILE) < $stop)
     {
-	my $line = <$logfd>;
-	chomp ($line);
+        my $line = <LOGFILE>;
+        chomp ($line);
 
-	if ($line =~ / to=.*, status=sent /)
-	{
-	    $delivered++;
-	}
-	elsif ($line =~ /postfix\/smtpd.*proxy-reject: \S+ (\S+)/ ||
-	       $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
-	       $line =~ /postfix\/postscreen.*reject: \S+ \S+ \S+ (\S+)/ ||
-	       $line =~ /postfix\/cleanup.* reject: (\S+)/ ||
-	       $line =~ /postfix\/cleanup.* milter-reject: \S+ \S+ \S+ (\S+)/)
-	{
-	    $rejects{$1}++;
-	}
+        if ($line =~ / to=.*, status=sent /)
+        {
+            $delivered++;
+        }
+        elsif ($line =~ /postfix\/smtpd.*proxy-reject: \S+ (\S+)/ ||
+               $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
+               $line =~ /postfix\/cleanup.* reject: (\S+)/ ||
+               $line =~ /postfix\/cleanup.* milter-reject: \S+ \S+ \S+ (\S+)/)
+        {
+            $rejects{$1}++;
+        }
     }
-    return tail_close($logfd);
+    close(LOGFILE) or warn "Error closing $fname: $!\n";
 }
+
+# Function to parse logs from journald
+sub parseJournald
+{
+    my $cmd;
+    $cmd = "journalctl --no-pager --quiet --since=" . `date -dlast-sunday +%Y-%m-%d` . " $journalctlargs";
+    open(my $journal, '-|', $cmd) 
+        or die "Unable to read journald logs: $!\n";
+
+    while (my $line = <$journal>) {
+        chomp($line);
+
+        if ($line =~ / to=.*, status=sent /)
+        {
+            $delivered++;
+        }
+        elsif ($line =~ /postfix\/smtpd.*proxy-reject: \S+ (\S+)/ ||
+               $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
+               $line =~ /postfix\/postscreen.*reject: \S+ \S+ \S+ (\S+)/ ||
+               $line =~ /postfix\/cleanup.* reject: (\S+)/ ||
+               $line =~ /postfix\/cleanup.* milter-reject: \S+ \S+ \S+ (\S+)/)
+        {
+            $rejects{$1}++;
+        }
+    }
+    close($journal) or warn "Error closing journald stream: $!\n";
+}
+
+# vim:syntax=perl

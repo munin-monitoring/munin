@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w
+# -*- perl -*-
 
 =head1 NAME
 
@@ -7,7 +8,7 @@ postfix_mailvolume - Plugin to monitor the volume of mails delivered
 
 =head1 APPLICABLE SYSTEMS
 
-Any postfix.
+Any postfix, with traditional logs and support for journald logs.
 
 =head1 CONFIGURATION
 
@@ -16,6 +17,8 @@ The following shows the default configuration.
   [postfix*]
     env.logdir /var/log
     env.logfile syslog
+    env.use_journald 0
+    env.journalctlargs _SYSTEMD_UNIT=postfix@-.service
 
 =head1 INTERPRETATION
 
@@ -35,9 +38,12 @@ None known
 
 v1.1 2018-03-24
 * calculate extra field for mail volume that is actually delivered ("volume_delivered")
+v1.3 2024-09-11
+* Added journald support with timestamp tracking.
 
 =head1 AUTHOR
 
+  Copyleft 2024 Stephan Kleber (with some help by ChatGPT)
   Copyright (C) 2007-2008 Nicolai Langfeldt
   Copyright (C) 2004-2005 Jimmy Olsen
 
@@ -59,22 +65,73 @@ my $volume_delivered = 0;
 my %volumes_per_queue_id = ();
 my $serialized_volumes_queue;
 my %expired_queue_ids = ();
+my $last_timestamp;
 # Discard old queue IDs after a while (otherwise the state storage grows infinitely). We need to
 # store the IDs long enough for the gap between two delivery attempts. Thus multiple hours are
 # recommended.
 use constant queue_id_expiry => 6 * 3600;
 
-my $LOGDIR  = $ENV{'logdir'}  || '/var/log';
-my $LOGFILE = $ENV{'logfile'} || 'syslog';
+my $LOGDIR       = $ENV{'logdir'}  || '/var/log';
+my $LOGFILE      = $ENV{'logfile'} || 'syslog';
+my $USE_JOURNALD = $ENV{'use_journald'} || 0;
+my $journalctlargs = $ENV{'journalctlargs'} // '_SYSTEMD_UNIT=postfix\@-.service';
 
+# Function to parse logs from journald with timestamp tracking
+sub parseJournald {
+    # If no last timestamp is found, default to "yesterday" (first run)
+    if (defined($last_timestamp)) {
+        $last_timestamp =~ s/^\s+|\s+$//g;
+        if ($last_timestamp !~ /^[A-Z][a-z]{2} \d{1,2} \d{2}:\d{2}:\d{2}$/) {
+            undef $last_timestamp;
+        }
+    }
+    my $since_arg = defined($last_timestamp) ? "--since=\"$last_timestamp\"" : "--since=\"yesterday\"";
+    my $cmd = "journalctl --no-pager --quiet $since_arg $journalctlargs";
+    
+    open(my $journal, '-|', $cmd) or die "Unable to read journald logs: $!\n";
+    
+    while (my $line = <$journal>) {
+        chomp($line);
 
+        # Update the last processed timestamp with the timestamp of the current log entry
+        if ($line =~ /^\w+\s+\d+\s+\d+:\d+:\d+\s+\S+\s+/) {
+            # Extract timestamp from log
+            my ($date) = ($line =~ /^(\w+\s+\d+\s+\d+:\d+:\d+)/);
+            # my ($date) = ($line =~ /^[A-Z][a-z]{2} \d{1,2} \d{2}:\d{2}:\d{2}/);
+            $last_timestamp = $date;
+        }
+
+        if ($line =~ /qmgr.*: ([0-9A-Za-z]+): from=.*, size=([0-9]+)/) {
+            if (not exists($volumes_per_queue_id{$1})) {
+                $volumes_per_queue_id{$1} = {timestamp => time};
+            }
+            $volumes_per_queue_id{$1}->{size} = $2;
+        } elsif ($line =~ / ([0-9A-Za-z]+): to=.*, status=sent /) {
+            if (exists($volumes_per_queue_id{$1})) {
+                $volume_delivered += $volumes_per_queue_id{$1}->{size};
+                $volumes_per_queue_id{$1}->{timestamp} = time;
+            }
+        }
+    }
+
+    my @expired_queue_ids;
+    for my $key (keys %volumes_per_queue_id) {
+        if (time > $volumes_per_queue_id{$key}->{timestamp} + queue_id_expiry) {
+            push @expired_queue_ids, $key;
+        }
+    }
+    delete(@volumes_per_queue_id{@expired_queue_ids});
+    close($journal) or warn "Error closing journald stream: $!\n";
+}
+
+# Function to parse logs from a regular logfile
 sub parseLogfile {
     my ($fname, $start) = @_;
 
     my ($LOGFILE, $rotated) = tail_open($fname, $start || 0);
 
     while (my $line = <$LOGFILE>) {
-        chomp ($line);
+        chomp($line);
 
         if ($line =~ /qmgr.*: ([0-9A-Za-z]+): from=.*, size=([0-9]+)/) {
             # The line with queue ID and size may pass along multiple times (every time the mail
@@ -105,13 +162,18 @@ sub parseLogfile {
 }
 
 if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
-    my $logfile;
-    `sh -c 'command -v postconf' >/dev/null`;
-    if (!$?) {
-        $logfile = "$LOGDIR/$LOGFILE";
-
+    if ($USE_JOURNALD) {
+        if (system("which journalctl > /dev/null 2>&1") == 0) {
+            print "yes\n";
+            exit 0;
+        } else {
+            print "no (journalctl not found)\n";
+            exit 0;
+        }
+    } else {
+        my $logfile = "$LOGDIR/$LOGFILE";
         if (-f $logfile) {
-            if (-r "$logfile") {
+            if (-r $logfile) {
                 print "yes\n";
                 exit 0;
             } else {
@@ -120,65 +182,60 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
         } else {
             print "no (logfile '$logfile' not found)\n";
         }
-    } else {
-        print "no (postfix not found)\n";
     }
-
     exit 0;
 }
-
 
 if ( $ARGV[0] and $ARGV[0] eq "config" ) {
     print "graph_title Postfix bytes throughput\n";
     print "graph_args --base 1000 -l 0\n";
     print "graph_vlabel bytes / \${graph_period}\n";
     print "graph_scale yes\n";
-    print "graph_category mail\n";
+    print "graph_category postfix\n";
     print "volume.label delivered volume\n";
     print "volume.type DERIVE\n";
     print "volume.min 0\n";
     exit 0;
 }
 
+# Load stored data
+($pos, $volume_delivered, $serialized_volumes_queue, $last_timestamp) = restore_state();
 
-my $logfile = "$LOGDIR/$LOGFILE";
-
-if (! -f $logfile) {
-    print "volume.value U\n";
-    exit 0;
-}
-
-# load the stored data
-($pos, $volume_delivered, $serialized_volumes_queue) = restore_state();
-
-
-if (!defined($volume_delivered)) {
-
-    # No state file present.  Avoid startup spike: Do not read log
-    # file up to now, but remember how large it is now, and next
-    # time read from there.
-
-    $pos = (stat $logfile)[7]; # File size
-
-    $volume_delivered = 0;
-    %volumes_per_queue_id = ();
+if ($USE_JOURNALD) {
+    parseJournald();
 } else {
-    # decode the serialized hash
-    # source format: "$id1=$size1:$timestamp1 $id2=$size2:$timestamp2 ..."
-    # The "serialized" value may be undefined, in case we just upgraded from the version before
-    # 2018, since that old version stored only two fields in the state file.  Tolerate this.
-    for my $queue_item_descriptor (split(/ /, $serialized_volumes_queue || "")) {
-        (my $queue_item_id, my $queue_item_content) = split(/=/, $queue_item_descriptor);
-        (my $size, my $timestamp) = split(/:/, $queue_item_content);
-        $volumes_per_queue_id{$queue_item_id} = { size => int($size), timestamp => int($timestamp) };
+    my $logfile = "$LOGDIR/$LOGFILE";
+    if (! -f $logfile) {
+        print "volume.value U\n";
+        exit 0;
     }
-    $pos = parseLogfile ($logfile, $pos);
+
+    if (!defined($volume_delivered)) {
+        # No state file present.  Avoid startup spike: Do not read log
+        # file up to now, but remember how large it is now, and next
+        # time read from there.
+        $pos = (stat $logfile)[7]; # File size
+
+        $volume_delivered = 0;
+        %volumes_per_queue_id = ();
+    } else {
+        # decode the serialized hash
+        # source format: "$id1=$size1:$timestamp1 $id2=$size2:$timestamp2 ..."
+        # The "serialized" value may be undefined, in case we just upgraded from the version before
+        # 2018, since that old version stored only two fields in the state file.  Tolerate this.
+        for my $queue_item_descriptor (split(/ /, $serialized_volumes_queue || "")) {
+            (my $queue_item_id, my $queue_item_content) = split(/=/, $queue_item_descriptor);
+            (my $size, my $timestamp) = split(/:/, $queue_item_content);
+            $volumes_per_queue_id{$queue_item_id} = { size => int($size), timestamp => int($timestamp) };
+        }
+        $pos = parseLogfile($logfile, $pos);
+    }
 }
 
 print "volume.value $volume_delivered\n";
 
-# serialize the hash to a string (see "source format" above)
+# Serialize the hash to a string (see "source format" above) and save the last timestamp
 $serialized_volumes_queue = join(" ", map { sprintf("%s=%s", $_, sprintf("%d:%d", $volumes_per_queue_id{$_}->{size}, $volumes_per_queue_id{$_}->{timestamp})) } keys %volumes_per_queue_id);
-save_state($pos, $volume_delivered, $serialized_volumes_queue);
+save_state($pos, $volume_delivered, $serialized_volumes_queue, $last_timestamp);
 
 # vim:syntax=perl
