@@ -11,8 +11,11 @@ digitemp
 
 The following environment variables are used by this plugin:
 
- digitemprc - config file to use. (Default /etc/digitemp.conf)
+ [digitemp]
+  env.digitemprc - config file to use. (Default /etc/digitemp.conf)
               This must be generated with digitemp_<model> -i
+  env.warning    - Warning temperature
+  env.critical   - Critical temperature
 
 =head1 USAGE
 
@@ -49,6 +52,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 digitemp_bin=${0##*/}
 model=${digitemp_bin##*_}
 digitemprc=${digitemprc:-/etc/digitemp.conf}
+warning=${warning:-25}
+critical=${critical:-30}
 
 
 get_sensor_data() {
@@ -101,8 +106,8 @@ if [ "$1" = "config" ]; then
         echo "sensor$serial.label sensor #$sensor"
         echo "sensor$serial.type GAUGE"
         echo "sensor$serial.info Temperature from sensor #$sensor"
-        echo "sensor$serial.critical 30"
-        echo "sensor$serial.warning 25"
+        echo "sensor$serial.critical $critical"
+        echo "sensor$serial.warning $warning"
    done
    exit 0
 fi
