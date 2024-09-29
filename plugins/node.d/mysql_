@@ -2163,8 +2163,6 @@ sub parse_innodb_status {
 	'BUFFER POOL AND MEMORY'      => \&parse_buffer_pool_and_memory,
 	'INDIVIDUAL BUFFER POOL INFO' => \&parse_individual_buffer_pool,
 	'FILE I/O'                    => \&parse_file_io,
-	'INSERT BUFFER AND ADAPTIVE HASH INDEX'
-	    => \&parse_insert_buffer_and_adaptive_hash_index,
 	'LATEST DETECTED DEADLOCK'    => \&skip,
 	'LATEST FOREIGN KEY ERROR'    => \&skip,
 	'LOG'                         => \&parse_log,
@@ -2172,6 +2170,11 @@ sub parse_innodb_status {
 	'SEMAPHORES'                  => \&parse_semaphores,
 	'TRANSACTIONS'                => \&parse_transactions,
 	'BACKGROUND THREAD'           => \&parse_background_thread,
+	# Before MariaDB 10.10
+	'INSERT BUFFER AND ADAPTIVE HASH INDEX'
+		=> \&parse_insert_buffer_and_adaptive_hash_index,
+	# For MariaDB 10.10 and later
+	'INSERT BUFFER'               => \&parse_insert_buffer_and_adaptive_hash_index,
     );
 
     skip_heading();
