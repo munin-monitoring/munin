@@ -72,7 +72,7 @@ OPERSYS=${OPERSYS:-$(uname | cut -f 1 -d _)}
 
 if [ "$1" = "autoconf" ]; then
     case "$OPERSYS" in
-        Linux|SunOS|FreeBSD|OpenBSD|NetBSD|Darwin|CYGWIN)
+        Linux|SunOS|FreeBSD|OpenBSD|NetBSD|Darwin|CYGWIN|MidnightBSD)
             if ! "$ps" >/dev/null 2>/dev/null; then
                 echo "no (ps=$ps failed)"
             elif ! echo | "$awk" '{ print "Hei" }' >/dev/null 2>/dev/null; then
@@ -227,11 +227,25 @@ if [ "$1" = "config" ]; then
         echo "nonexistent.info The number of nonexistent processes."
         print_warning nonexistent
         print_critical nonexistent
+    elif [ "$OPERSYS" = "MidnightBSD" ]; then
+        echo "graph_order sleeping idle stopped zombie lock uninterruptible interrupt runnable processes"
+        echo "lock.label lock"
+        echo "lock.draw STACK"
+        echo "lock.colour $LOCK"
+        echo "lock.info The number of processes that are waiting to acquire a lock."
+        print_warning lock
+        print_critical lock
+        echo "interrupt.label interrupt"
+        echo "interrupt.draw STACK"
+        echo "interrupt.colour $INTERRUPT"
+        echo "interrupt.info The number of idle interrupt threads."
+        print_warning interrupt
+        print_critical interrupt
     fi
 
     # Common flags for some OS
     if [ "$OPERSYS" = "FreeBSD" ] || [ "$OPERSYS" = "OpenBSD" ] ||
-    [ "$OPERSYS" = "NetBSD" ] || [ "$OPERSYS" = "Darwin" ]; then
+    [ "$OPERSYS" = "NetBSD" ] || [ "$OPERSYS" = "Darwin" ] || [ "$OPERSYS" = "MidnightBSD" ]; then
         echo "idle.label idle"
         echo "idle.draw STACK"
         echo "idle.colour $IDLE"
@@ -267,7 +281,7 @@ if [ "$1" = "config" ]; then
     fi
 
     if [ "$OPERSYS" = "Linux" ] || [ "$OPERSYS" = "FreeBSD" ] ||
-    [ "$OPERSYS" = "OpenBSD" ] || [ "$OPERSYS" = "NetBSD" ]; then
+    [ "$OPERSYS" = "OpenBSD" ] || [ "$OPERSYS" = "NetBSD" ] || [ "$OPERSYS" = "MidnightBSD" ]; then
         echo "uninterruptible.label uninterruptible"
         echo "uninterruptible.draw STACK"
         echo "uninterruptible.colour $UNINTERRUPTIBLE"
@@ -344,7 +358,7 @@ print "runnable.value " 0+stat["R"];
 print "stopped.value "  0+stat["T"];
 print "zombie.value "   0+stat["Z"];
 }'
-elif [ "$OPERSYS" = "FreeBSD" ]; then
+elif [ "$OPERSYS" = "FreeBSD" ] || [ "$OPERSYS" = "MidnightBSD" ]; then
     # shellcheck disable=SC2016
     "$ps" -axo state= | sed -e 's/^\(.\).*/\1/' | "$awk" '
 { processes++; stat[$1]++ }

@@ -20,7 +20,7 @@
 OSV=`/sbin/sysctl -n kern.osrelease | cut -f1 -d.`
 
 if [ "$1" = "autoconf" ]; then
-	if [ "$OSV" -ge "5" ]; then
+	if [ $(uname -s) = "MidnightBSD" ] || [ "$OSV" -ge "5" ]; then
 		/sbin/sysctl -n vm.vmtotal 2>/dev/null >/dev/null
 		RESULT=$?
 		NAME=/sbin/sysctl
@@ -49,7 +49,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel process states'
 	echo 'graph_category processes'
 	echo 'graph_info This graph shows number of processes in each state.'
-	if [ "$OSV" -ge "5" ]; then
+	if [ $(uname -s) = "MidnightBSD" ] || [ "$OSV" -ge "5" ]; then
 		echo 'running.label running'
 		echo 'running.info processes on CPU or waiting for CPU'
 		echo 'running.type GAUGE'
@@ -71,7 +71,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-if [ "$OSV" -ge "5" ]; then
+if [ $(uname -s) = "MidnightBSD" ] || [ "$OSV" -ge "5" ]; then
 	/sbin/sysctl -n vm.vmtotal | /usr/bin/awk '
 /^Processes:/ {
 	print "running.value", $3;

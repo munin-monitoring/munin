@@ -50,7 +50,7 @@ EOF
 	    exit 0
 	fi
 	ostype=`uname -s`
-	if [ ${ostype} = "FreeBSD" ]; then
+	if [ ${ostype} = "FreeBSD" ] || [ ${ostype} = "MidnightBSD" ]; then
 	    echo "yes"
 	    exit 0
 	fi
