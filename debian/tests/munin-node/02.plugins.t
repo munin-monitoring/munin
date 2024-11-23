@@ -55,6 +55,14 @@ EOF
     if [ -x /bin/netstat ]; then
       echo netstat
     fi
+    if [ -f /proc/net/rpc/nfsd ]; then
+      if [ grep -q proc3 /proc/net/rpc/nfsd ]; then
+        echo nfsd
+      fi
+      if [ grep -q proc4ops /proc/net/rpc/nfsd ]; then
+        echo nfsd4
+      fi
+    fi
     SPOOLDIR="$(postconf -h queue_directory 2>/dev/null || echo /var/spool/postfix)"
     if [ -d "$SPOOLDIR" ]; then
         echo postfix_mailqueue
