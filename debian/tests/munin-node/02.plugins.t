@@ -56,10 +56,10 @@ EOF
       echo netstat
     fi
     if [ -f /proc/net/rpc/nfsd ]; then
-      if [ grep -q proc3 /proc/net/rpc/nfsd ]; then
+      if $( grep -q proc3 /proc/net/rpc/nfsd 2>/dev/null ); then
         echo nfsd
       fi
-      if [ grep -q proc4ops /proc/net/rpc/nfsd ]; then
+      if $( grep -q proc4ops /proc/net/rpc/nfsd 2>/dev/null ); then
         echo nfsd4
       fi
     fi
