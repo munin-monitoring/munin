@@ -1,9 +1,12 @@
-munin (2.0.76-4) UNRELEASED; urgency=medium
+munin (2.0.76-4) unstable; urgency=medium
 
-  * Start 2.0.76-4 development. d/changelog entries will be written on
-    release using the git commit messages.
+  [ Carles Pina i Estany ]
+  * Add po-debconf Catalan translation.
 
- -- Holger Levsen <holger@debian.org>  Fri, 29 Nov 2024 13:21:11 +0100
+  [ Holger Levsen ]
+  * d/copyright: update years of my contributions.
+
+ -- Holger Levsen <holger@debian.org>  Fri, 24 Jan 2025 19:33:42 +0100
 
 munin (2.0.76-3) unstable; urgency=medium
 
