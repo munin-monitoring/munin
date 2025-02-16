@@ -656,7 +656,7 @@ line.  You are probably looking for the command
    munin-run --servicedir \$PWD $me
 
 This should by preference be run as root, but other users can also be
-used as long as the plugin doesn not use a state file and does not
+used as long as the plugin does not use a state file and does not
 need to be run as a special user or need special privileges.
 
 ";
