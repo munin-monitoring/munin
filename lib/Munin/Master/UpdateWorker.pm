@@ -506,11 +506,18 @@ sub _db_state_update {
 		WHERE ds.name = ?");
 	$sth_ds->execute($node_id, $plugin, $field);
 	my ($ds_id) = $sth_ds->fetchrow_array();
-	DEBUG "_db_state_update.ds_id:$ds_id";
+	DEBUG "_db_state_update.ds_id:" . ($ds_id || 'undef');
 	WARN "ds_id($plugin, $field, $when, $value) is NULL, SELECT ds.id FROM ds
 	                JOIN service s ON ds.service_id = s.id AND s.node_id = '$node_id' AND s.name = '$plugin'
 			                WHERE ds.name = '$field'" unless $ds_id;
 	$sth_ds->finish();
+
+	# Don't insert missing ds values
+	# Note, this means unconfigured ds values are lost, rather than
+	# kept with some default ds_attr values
+	if (!defined($ds_id)) {
+		return $ds_id;
+	}
 
 	# Update the state with the new values
 	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
@@ -758,10 +765,10 @@ sub uw_handle_fetch {
 
 		# Update all data-driven components: State, RRD, Graphite
 		my $ds_id = $self->_db_state_update($plugin, $field, $when, $value);
-	        DEBUG "[DEBUG] ds_id($plugin, $field, $when, $value) = $ds_id";
+		DEBUG "[DEBUG] ds_id($plugin, $field, $when, $value) = " . ($ds_id || 'undef');
 
 		my ($rrd_file, $rrd_field);
-		{
+		if ($ds_id) {
 			# XXX - Quite inefficient, but works
 			my $dbh = $self->{dbh};
 			my $sth_rrdinfos = $dbh->prepare_cached(
@@ -776,6 +783,23 @@ sub uw_handle_fetch {
 				$rrd_field = $row[1] if $row[0] eq "rrd:field";
 			}
 			$sth_rrdinfos->finish();
+		} else {
+			# We have an unconfigured fetch value, make sure
+			# to store the data
+
+			# Need to have the service attrs, currently just for
+			# a potential update_rate value.
+			my $dbh = $self->{dbh};
+			my $sth_service_attrs = $dbh->prepare_cached("SELECT service_attr.name, service_attr.value FROM service_attr, service WHERE service.name=? and service.node_id=? and service.id = service_attr.id");
+			$sth_service_attrs->execute($plugin, $self->{node_id});
+			my %temp_ds_config = ( );
+			while (my ($_name, $_value) = $sth_service_attrs->fetchrow_array()) {
+				$temp_ds_config{$_name} = $_value;
+			}
+
+			my $first_epoch = time - (12 * 3600);
+			$rrd_file = $self->_create_rrd_file_if_needed($plugin, $field, \%temp_ds_config, $first_epoch);
+			$rrd_field = '42';
 		}
 
 		# This is a little convoluted but is needed as the API permits
