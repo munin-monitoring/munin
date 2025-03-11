@@ -61,8 +61,16 @@ my $pg = Munin::Plugin::Pgsql->new(
     title      => 'PostgreSQL bgwriter',
     info       => 'bgwriter buffer statistics',
     vlabel     => 'buffers / second',
-    basequery =>
+    basequery => [
         "SELECT buffers_checkpoint,buffers_clean,buffers_backend,buffers_alloc FROM pg_stat_bgwriter",
+        [ 17,
+            "SELECT pg_stat_get_checkpointer_buffers_written() as buffers_checkpoint,
+              buffers_clean,
+              pg_stat_get_checkpointer_buffers_written() as buffers_backend,
+              buffers_alloc
+              FROM pg_stat_bgwriter",
+        ],
+    ],
     pivotquery  => 1,
     configquery => "VALUES
            ('buffers_checkpoint','Buffers at checkpoint', 'Buffers written when performing a checkpoint'),
