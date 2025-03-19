@@ -100,6 +100,23 @@ You will have to enable the services in systemd to get them up and running.
 Likely you will have to fix SELinux issues when using 3rd-Party plugins and SELinux active and set to *enforcing mode* on the Munin node.
 In case you get competent and friendly support on `SELinux mailinglist <https://admin.fedoraproject.org/mailman/listinfo/selinux>`_.
 
+MidnightBSD
+-------
+
+From source:
+
+.. code-block:: bash
+
+ cd /usr/mports/sysutils/munin-master && make install clean
+ cd /usr/mports/sysutils/munin-node && make install clean
+
+Binary packages:
+
+.. code-block:: bash
+
+ mport install munin-master
+ mport install munin-node
+
 Other systems
 -------------
 
