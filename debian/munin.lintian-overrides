@@ -2,3 +2,5 @@
 # debconf only during package removal (approving file deletion for purge).  Thus we do not need a
 # "config" file (only needed if input during installation is required).
 no-debconf-config
+# munin-common.tmpfile is the systemd service for this init script
+missing-systemd-service-for-init.d-script munin [etc/init.d/munin]
