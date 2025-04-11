@@ -38,7 +38,7 @@ assert_http_response_content() {
 
 
 test_expect_success "main site: mime type" '
-  get_munin_url "/" | assert_mime_type "text/xml"
+  get_munin_url "/" | assert_mime_type "application/xhtml+xml"
 '
 
 test_expect_success "main site: dynamically generated" '
