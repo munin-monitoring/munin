@@ -1,9 +1,12 @@
-munin (2.0.76-5) UNRELEASED; urgency=medium
+munin (2.0.76-5) unstable; urgency=medium
 
-  * Start 2.0.76-5 development. d/changelog entries will be written on
-    release using the git commit messages.
+  * d/tests/munin-master/02.webserver_access.t: adjust expected mime-type for
+    changes in file. Thanks to Christoph Biedl. Closes: #1101127
+  * Override lintian error about missing systemd service file for munin because
+    it exists as munin-common.tmpfile. Closes: #1031138
+  * use default Debian salsa pipelines via debian/salsa-ci.yml
 
- -- Holger Levsen <holger@debian.org>  Fri, 24 Jan 2025 19:41:02 +0100
+ -- Holger Levsen <holger@debian.org>  Sat, 12 Apr 2025 16:27:16 +0200
 
 munin (2.0.76-4) unstable; urgency=medium
 
