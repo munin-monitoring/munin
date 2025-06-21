@@ -65,6 +65,7 @@ case $1 in
              echo temp
              echo power
              echo volts
+             echo amp
              exit 0;;
     config)  CONFIG=config;;
 esac
@@ -74,7 +75,8 @@ case $0 in
     *_fans) MEASURE=fans;;
     *_power) MEASURE=power;;
     *_volts) MEASURE=volts;;
-    *) echo "Please invoke as ipmi_temp, ipmi_fans, ipmi_power or ipmi_volts" >&2
+    *_amp) MEASURE=amp;;
+    *) echo "Please invoke as ipmi_temp, ipmi_fans, ipmi_power ipmi_volts or ipmi_amp" >&2
        exit 1;;
 esac
 
@@ -88,10 +90,12 @@ BEGIN {
     TEMPS = "";
     POWER = "";
     VOLTS = "";
+    AMP = "";
     CFANS = "graph_title Fan speeds based on IPMI\ngraph_vlabel RPM or %\ngraph_category Sensors\n";
     CTEMPS = "graph_title Machine temperature based on IPMI\ngraph_vlabel Degrees celsius\ngraph_category Sensors\n";
     CPOWER = "graph_title Power usage based on IPMI\ngraph_vlabel W\ngraph_category Sensors\n";
     CVOLTS = "graph_title Volts based on IPMI\ngraph_vlabel V\ngraph_category Sensors\n";
+    CAMP = "graph_title Amps based on IPMI\ngraph_vlabel A\ngraph_category Sensors\ngraph_total Total\n";
 }
 
 # Remove extraneous spaces to make output prettyer
@@ -182,6 +186,21 @@ BEGIN {
     CVOLTS = sprintf("%s%s.label %s\n",CVOLTS,NAME,THING);
 }
 
+/Amps/ {
+    NAME=THING=$1
+    gsub(/[^A-Za-z0-9]/,"",NAME);
+    AMPS=$2;
+
+    # Find unique name
+    while (NAMES[NAME] >= 1) {
+        NAME=sprintf("%si",NAME);
+    }
+    NAMES[NAME]=1;
+
+    AMP = sprintf("%s%s.value %s\n",AMP,NAME,AMPS);
+    CAMP = sprintf("%s%s.label %s\n",CAMP,NAME,THING);
+}
+
 END {
     if (ENVIRON["MEASURE"] == "temp") {
         VALUE=TEMPS;
@@ -192,6 +211,9 @@ END {
     } else if (ENVIRON["MEASURE"] == "volts") {
         VALUE=VOLTS;
         CONFIG=CVOLTS;
+    } else if (ENVIRON["MEASURE"] == "amp") {
+        VALUE=AMP;
+        CONFIG=CAMP;
     } else {
         VALUE=FANS;
         CONFIG=CFANS;
