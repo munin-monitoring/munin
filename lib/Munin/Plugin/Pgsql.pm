@@ -328,8 +328,8 @@ sub Config {
         }
         print "$l.min $self->{graphmin}\n" if (defined $self->{graphmin});
         print "$l.max $self->{graphmax}\n" if (defined $self->{graphmax});
-        print "$l.warning $self->{warning}\n" if (defined $self->{warning});
-        print "$l.critical $self->{critical}\n" if (defined $self->{critical});
+        $self->print_warning_critical("warning", $l);
+        $self->print_warning_critical("critical", $l);
         $firstrow = 0;
     }
 }
@@ -627,6 +627,17 @@ sub wildcard_parameter {
         return $pieces[$paramnum];
     }
     die "Wildcard base not found in called filename!\n";
+}
+
+sub print_warning_critical {
+    my ($self, $type, $key) = @_;
+    # enable overriding plugin default warning and critical with key specific env variables in plugin-conf.d
+    if (defined $ENV{$key."_".$type}) {
+        print "$key.$type ".$ENV{$key."_".$type}."\n";
+    }
+    elsif (defined $self->{$type}) {
+        print "$key.$type $self->{$type}\n";
+    }
 }
 
 1;
