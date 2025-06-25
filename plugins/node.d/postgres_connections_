@@ -35,6 +35,9 @@ database configuration.
 Example :
   [postgres_pg91_*]
   env.PGPORT 5432
+  # warn when total connections reaches 900 and crit when we are at 1000, adjust according to your max connections
+  env.total_warning :900
+  env.total_critical :1000
   [postgres_pg92_*]
   env.PGPORT 5432
 
@@ -139,16 +142,29 @@ my $pg = Munin::Plugin::Pgsql->new(
     wildcardfilter => " AND datname=?",
     paramdatabase  => 1,
     configquery    => [
-        "VALUES ('active','Active'),('waiting','Waiting for lock'),('idle','Idle'),('idletransaction','Idle in transaction'),('unknown','Unknown')",
+        "VALUES ('active','Active'),('waiting','Waiting for lock'),('idle','Idle'),('idletransaction','Idle in transaction'),('unknown','Unknown'),('total', 'Total')",
         [
             8.1,
-            "SELECT 'active','Active' UNION ALL SELECT 'idle','Idle' UNION ALL SELECT 'idletransaction','Idle in transaction' UNION ALL SELECT 'unknown','Unknown'",
+            "SELECT 'active','Active' UNION ALL SELECT 'idle','Idle' UNION ALL SELECT 'idletransaction','Idle in transaction' UNION ALL SELECT 'unknown','Unknown' UNION ALL SELECT 'total','Total'" ,
         ],
     ],
     suggestquery =>
         "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1",
-    graphdraw => 'AREA',
-    stack => 1,
+    graphdraw => ['AREA', 'STACK', 'STACK','STACK','STACK','LINE1'],
+    postprocess => \&CountTotal,
+
 );
+
+sub CountTotal {
+    my $pgresult = shift;
+    my $total = 0;
+    my $result = [];
+    foreach my $row (@$pgresult) {
+        $total += $row->[1];
+        push(@{$result}, $row);
+    }
+    push(@$result, ["total", $total]);
+    return $result;
+}
 
 $pg->Process();
