@@ -153,7 +153,7 @@ my %booleans = map {$_ => 1} qw(
 		graph_data_size  => 'normal',
 		graph_strategy   => 'cron',
 		groups           => {},
-		local_address    => 0,
+		local_address    => '::',
 		logdir           => $Munin::Common::Defaults::MUNIN_LOGDIR,
 		logoutput        => 'syslog',
 		max_processes    => 16,
