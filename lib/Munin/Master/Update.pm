@@ -82,7 +82,7 @@ sub get_dbh {
 	use Carp;
 	$db_args{HandleError} = sub { confess(shift) };
 
-	my $dbh = DBI->connect("dbi:$db_driver:dbname=$datafilename", $db_user, $db_passwd, \%db_args) or die $DBI::errstr;
+	my $dbh = DBI->connect_cached("dbi:$db_driver:dbname=$datafilename", $db_user, $db_passwd, \%db_args) or die $DBI::errstr;
 
 	INFO 'get_dbh: $dbh->{Driver}->{Name} = ' . $dbh->{Driver}->{Name} . ($is_read_only ? "(ro)" : "(rw)");
 
@@ -216,7 +216,12 @@ sub _run_workers {
 			$res = $worker->do_work();
 		};
 
-		$worker->{dbh}->disconnect();
+		# Disconnect via removing it from scope
+		#
+		# We don't want to call disconnect forcefully, in order to
+		# fully leverage the reference counting and the automatic call
+		# to ->DESTROY
+		delete($worker->{dbh});
 
 		my $worker_id = $worker->{ID};
 		if (! $res || $@) {
