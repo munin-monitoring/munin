@@ -66,7 +66,7 @@ request_url() {
         wget_auth_opt="--config $wget_config_file"
     fi
     # shellcheck disable=SC2086
-    wget $wget_auth_opt --user-agent "Munin - http_loadtime" --no-cache --quiet --output-document=/dev/null "$@" 2>/dev/null
+    wget $wget_auth_opt --user-agent "Munin - http_loadtime" --no-cache --no-check-certificate --quiet --output-document=/dev/null "$@" 2>/dev/null
     rm -f "$wget_config_file"
 }
 
