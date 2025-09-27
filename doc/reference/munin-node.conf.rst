@@ -208,7 +208,7 @@ A pretty normal configuration file:
   # cidr_deny  192.0.2.42/32
 
   # Which address to bind to;
-  host *
+  host 0.0.0.0
   # host 127.0.0.1
 
   # And which port

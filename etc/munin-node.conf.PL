@@ -78,7 +78,7 @@ allow ^::1$
 
 # Which address to bind to.
 #host 127.0.0.1
-host *
+host 0.0.0.0
 
 # The TCP port the munin-node listens on.
 port 4949
