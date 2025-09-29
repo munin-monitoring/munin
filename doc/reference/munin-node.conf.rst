@@ -208,11 +208,15 @@ A pretty normal configuration file:
   # cidr_deny  192.0.2.42/32
 
   # Which address to bind to;
-  host 0.0.0.0
+  host *
   # host 127.0.0.1
 
   # And which port
   port 4949
+
+  # if only ipv4 is working, uncomment this line
+  # ipv 4
+
 
 
 SEE ALSO
