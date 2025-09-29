@@ -83,4 +83,7 @@ host *
 # The TCP port the munin-node listens on.
 port 4949
 
+# if only ipv4 is working, uncomment this line
+# ipv 4
+
 EOF
