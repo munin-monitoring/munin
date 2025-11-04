@@ -75,12 +75,12 @@ my $USE_JC = $ENV{'use_journalctl'} || 0;
 sub parseLogfile {
     my ($fname, $start) = @_;
 
-   my ($LOGFILE, $rotated);
+    my ($LOGFILE, $rotated);
 
-    if ($USE_JC and $USE_JC == 1){
+    if ($USE_JC and $USE_JC == 1) {
         open $LOGFILE, '-|', $JC_CMD or die $!;
-    }else{
-       ($LOGFILE, $rotated) = tail_open($fname, $start || 0);
+    } else {
+        ($LOGFILE, $rotated) = tail_open($fname, $start || 0);
     }
 
     while (my $line = <$LOGFILE>) {
