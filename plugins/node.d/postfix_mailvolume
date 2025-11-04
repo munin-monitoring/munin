@@ -113,7 +113,7 @@ sub parseLogfile {
     delete(@volumes_per_queue_id{@expired_queue_ids});
     if ($USE_JC and $USE_JC == 1) {
         return close($LOGFILE);
-    }else{
+    } else {
         return tail_close($LOGFILE);
     }
 }
