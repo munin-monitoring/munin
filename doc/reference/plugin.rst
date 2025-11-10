@@ -269,7 +269,7 @@ Field name attributes
 .. _fieldname.colour:
 
 :Attribute: **{fieldname}.colour**
-:Value: Hexadecimal colour code
+:Value: Hexadecimal colour code (RRGGBB)
 :Type: optional
 :Description: Custom specification of colour for drawing curve. Available since 1.2.5 and 1.3.3.
 :See also:
