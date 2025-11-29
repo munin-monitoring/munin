@@ -65,6 +65,6 @@ sub fetch_values {
 		$status{$label} = $value;
 	}
 	foreach my $label (sort keys %graph) {
-		print "$label.value $status{$label}\n";
+		print "$label.value " . ($status{$label} // 'U') . "\n";
 	}
 }
