@@ -105,7 +105,7 @@ sub fetch_values {
 	}
 	$status{'battery_runtime'} /= 60;
 	foreach my $label (sort keys %graph) {
-		print "$label.value $status{$label}\n";
+		print "$label.value " . ($status{$label} // 'U') . "\n";
 	}
 }
 
