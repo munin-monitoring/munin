@@ -126,8 +126,8 @@ resources for each graph
 =item mysql_replication
 
 slave_io_running and slave_sql_running both translate the "Yes" values to 0 and
-anything else to 1 for their respective fields in the "SHOW SLAVE STATUS" output.
-This can be used to warn on slave failure if the warning and critical values
+anything else to 1 for their respective fields in the "SHOW REPLICA STATUS" output.
+This can be used to warn on replica failure if the warning and critical values
 are set as seen in a previous section.
 
 =item wsrep_cluster_status
@@ -2018,12 +2018,12 @@ sub update_innodb {
 sub update_master {
     my ($dbh) = @_;
 
-    my $sth = $dbh->prepare('SHOW MASTER LOGS');
+    my $sth = $dbh->prepare('SHOW BINARY LOGS');
     eval {
 	$sth->execute();
     };
     if ($@) {
-	# SHOW MASTER LOGS failed because binlog is not enabled
+	# SHOW BINARY LOGS failed because binlog is not enabled
 	return if $@ =~ /You are not using binary logging/;
 	die $@;
     }
@@ -2039,7 +2039,7 @@ sub update_master {
 sub update_slave {
     my ($dbh) = @_;
 
-    my $sth = $dbh->prepare('SHOW SLAVE STATUS');
+    my $sth = $dbh->prepare('SHOW REPLICA STATUS');
     $sth->execute();
     my $row = $sth->fetchrow_hashref();
     return 1 unless $row;
@@ -2048,21 +2048,21 @@ sub update_slave {
     }
     $sth->finish();
 
-    # We choose master_host here as a stopped slave
-    # may not indicate that we have reset all slave capability
+    # We choose master_host here as a stopped replica
+    # may not indicate that we have reset all replica capability
     # however the minimium requirement is a master_host
-    return 1 if not defined $data->{master_host};
+    return 1 if not defined $data->{source_host};
 
-    # undef when slave is stopped, or when MySQL fails to calculate
+    # undef when replica is stopped, or when MySQL fails to calculate
     # the lag (which happens depresingly often). (mk-heartbeat fixes
     # this problem.)
     $data->{seconds_behind_master} ||= 0;
 
-    # Track these two fields so we can trigger warnings if the slave stops
+    # Track these two fields so we can trigger warnings if the replica stops
     # running
-    $data->{slave_sql_running} = ($data->{slave_sql_running} eq 'Yes')
+    $data->{slave_sql_running} = ($data->{replica_sql_running} eq 'Yes')
 	    ? 0 : 1;
-    $data->{slave_io_running} = ($data->{slave_io_running} eq 'Yes')
+    $data->{slave_io_running} = ($data->{replica_io_running} eq 'Yes')
 	    ? 0 : 1;
     return 0;
 }
