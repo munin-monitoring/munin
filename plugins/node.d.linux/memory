@@ -288,6 +288,7 @@ $mems{'Percpu'} ||= 0;
 $mems{'SwapCached'} ||= 0;
 $mems{'SwapFree'} ||= 0;
 $mems{'SwapTotal'} ||= 0;
+$mems{'Shmem'} ||= 0;
 
 print "apps.value ", $mems{'MemTotal'}
 	-$mems{'MemFree'}
@@ -297,11 +298,12 @@ print "apps.value ", $mems{'MemTotal'}
 	-$mems{'PageTables'}
 	-$mems{'Percpu'}
         -$mems{'SwapCached'}
+	-$mems{'Shmem'}
 	,"\n";
 
 print "free.value ", $mems{'MemFree'}, "\n";
 print "buffers.value ", $mems{'Buffers'}, "\n";
-print "cached.value ", $mems{'Cached'} - (defined($mems{'Shmem'}) ? $mems{'Shmem'} : 0), "\n";
+print "cached.value ", $mems{'Cached'}, "\n";
 print "swap.value ", $mems{'SwapTotal'} - $mems{'SwapFree'}, "\n";
 
 print "shmem.value ", $mems{'Shmem'}, "\n"
