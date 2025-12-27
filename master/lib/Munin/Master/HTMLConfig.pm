@@ -511,8 +511,14 @@ sub generate_service_templates {
 	$srv{zoomyear} = "$common_url&amp;start_epoch=$start_year&amp;stop_epoch=$epoch_now";
     }
 
+	my $svccfg = { %$service };
+	if ( munin_get($config, "graph_strategy", "cron") eq "cgi" ) {
+		my $cgitmpdir = munin_get($config, "cgitmpdir", "$Munin::Common::Defaults::MUNIN_DBDIR/cgi-tmp");
+		$svccfg->{htmldir} = $cgitmpdir . "/munin-cgi-graph";
+	}
+
 	for my $scale (@times) {
-		my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale));
+		my ($w, $h) = get_png_size(munin_get_picture_filename($svccfg, $scale));
 		if ($w && $h) {
 			$srv{"img" . $scale . "width"}  = $w;
 			$srv{"img" . $scale . "height"} = $h;
@@ -524,7 +530,7 @@ sub generate_service_templates {
         $srv{imgyearsum} = "$srv{node}-year-sum.png";
 
         for my $scale (["week", "year"]) {
-		my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale, 1));
+		my ($w, $h) = get_png_size(munin_get_picture_filename($svccfg, $scale, 1));
 		if ($w && $h) {
 			$srv{"img" . $scale . "sumwidth"}  = $w;
 			$srv{"img" . $scale . "sumheight"} = $h;
@@ -725,13 +731,10 @@ sub borrowed_path {
     }
 }
 
-#TODO: This method is obsolete when cgi-graphing is the only strategy left
 sub get_png_size {
     my $filename = shift;
     my $width    = undef;
     my $height   = undef;
-
-    return (undef, undef) if (munin_get($config, "graph_strategy", "cron") eq "cgi") ;
 
     if (open(my $PNG, '<', $filename)) {
         my $incoming;
