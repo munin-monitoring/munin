@@ -1,3 +1,10 @@
+munin (2.0.76-7) UNRELEASED; urgency=medium
+
+  * Start 2.0.76-7 development. d/changelog entries will be written on
+    release using the git commit messages.
+
+ -- Holger Levsen <holger@debian.org>  Tue, 28 Apr 2026 18:33:40 +0200
+
 munin (2.0.76-6) unstable; urgency=medium
 
   [ Kentaro Hayashi ]
