@@ -24,7 +24,7 @@ Build-Depends-Indep: default-jdk,
                      libtest-mockobject-perl,
                      perl
 Build-Depends: debhelper-compat (=13), dh-sequence-installsysusers, libmodule-build-perl, po-debconf
-Standards-Version: 4.7.3
+Standards-Version: 4.7.4
 Homepage: https://munin-monitoring.org
 Vcs-Git: https://salsa.debian.org/debian/munin.git -b debian
 Vcs-Browser: https://salsa.debian.org/debian/munin
