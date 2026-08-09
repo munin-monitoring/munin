@@ -62,9 +62,9 @@ my $pg = Munin::Plugin::Pgsql->new(
     info       => 'Number of checkpoints per minute',
     vlabel     => 'Checkpoints / minute',
     basequery => [
-        "SELECT checkpoints_timed,checkpoints_req FROM pg_stat_bgwriter",
-        [ 17,
-            "SELECT num_timed as checkpoints_timed, num_requested as checkpoints_req FROM pg_catalog.pg_stat_checkpointer;",
+        "SELECT num_timed as checkpoints_timed, num_requested as checkpoints_req FROM pg_catalog.pg_stat_checkpointer;",
+        [ 16,
+            "SELECT checkpoints_timed,checkpoints_req FROM pg_stat_bgwriter",
         ],
     ],
     pivotquery => 1,
