@@ -521,6 +521,7 @@ sub _db_state_update {
 		# No line exists yet. Create It.
 		my $sth_state_i = $dbh->prepare_cached("INSERT INTO state (id, type) VALUES (?, ?)");
 		$sth_state_i->execute($ds_id, "ds");
+		$sth_state_u->execute($when, $value, $ds_id, "ds");
 	}
 
 	return $ds_id;
@@ -900,7 +901,7 @@ sub _create_rrd_file {
         # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB
         my @resolutions_computer = parse_custom_resolution($1, $update_rate_in_sec);
         my @enlarged_resolutions = enlarge_custom_resolution(@resolutions_computer);
-        foreach my $resolution_computer(@resolutions_computer) {
+		foreach my $resolution_computer(@enlarged_resolutions) {
             my ($multiplier, $multiplier_nb) = @{$resolution_computer};
             push (@args,
                 "RRA:AVERAGE:0.5:$multiplier:$multiplier_nb",
