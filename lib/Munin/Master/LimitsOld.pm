@@ -53,6 +53,7 @@ use Munin::Common::Logger;
 
 use Munin::Master::Utils;
 use Munin::Common::Defaults;
+use Munin::Master::Update;
 
 my $DEBUG          = 0;
 my $VERBOSE        = 0;
@@ -327,14 +328,12 @@ sub process_service {
     my $service_url = sprintf ('%s/%s', $hash->{group}, $host);
     DEBUG "[DEBUG] service_url: $service_url";
 
-    use DBI;
-    my $datafilename = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile.sqlite";
-    my $datafilename_state = $ENV{MUNIN_DBURL} || $config->{dbdir}."/datafile-state.sqlite";
-    DEBUG "[DEBUG] opening sql $datafilename";
     my $dbh = Munin::Master::Update::get_dbh();
-    my $sth_state = $dbh->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm FROM state WHERE id = ? and type = ?');
-    my $sth_state_upt = $dbh->prepare('UPDATE state SET alarm = ? WHERE id = ? and type = ?');
+    my $sth_state = $dbh->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns FROM state WHERE id = ? and type = ?');
+    my $sth_state_ins = $dbh->prepare('INSERT INTO state (id, type, alarm, num_unknowns) SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM state WHERE id = ? AND type = ?)');
+    my $sth_state_upt = $dbh->prepare('UPDATE state SET alarm = ?, num_unknowns = ? WHERE id = ? and type = ?');
     my $sth_ds = $dbh->prepare('SELECT id FROM url WHERE path = ? and type = ?');
+    my $sth_ds_attr = $dbh->prepare('SELECT name, value FROM ds_attr WHERE id = ?');
 
     my %seen = ();
     foreach my $fname (@$field_order) {
@@ -350,14 +349,25 @@ sub process_service {
         next if (!defined $field or ref($field) ne "HASH");
         my $fpath   = munin_get_node_loc($field);
 
-        my ($warn, $crit, $unknown_limit) = get_limits($field);
+    # get the old state if there is one, or leave it empty.
+    $sth_ds->execute("$service_url/$fname", "ds");
+    my ($ds_id) = $sth_ds->fetchrow_array;
+    next if !defined $ds_id;
+
+    my %field_attrs = ();
+    $sth_ds_attr->execute($ds_id);
+    while (my ($attr_name, $attr_value) = $sth_ds_attr->fetchrow_array) {
+        $field_attrs{$attr_name} = $attr_value;
+    }
+
+    # CDEF fields are graph-time virtual computations. They do not have a stable
+    # update-state flow suitable for limits evaluation.
+    next if defined $field_attrs{cdef} && $field_attrs{cdef} ne q{};
+
+        my ($warn, $crit, $unknown_limit) = get_limits_from_attrs(\%field_attrs);
 
         # Skip fields without warning/critical definitions
         next if (!defined $warn and !defined $crit);
-
-	# get the old state if there is one, or leave it empty.
-	$sth_ds->execute("$service_url/$fname", "ds");
-	my ($ds_id) = $sth_ds->fetchrow_array;
 
         DEBUG "[DEBUG] processing field: " . join('::', @$fpath);
         my $value;
@@ -368,6 +378,8 @@ sub process_service {
 
         $old_state ||= 'ok';
         $old_num_unknowns ||= 0;
+		my $new_state = $old_state;
+		my $new_num_unknowns = 0;
 
 		my $heartbeat = 600; # XXX - $heartbeat is a fixed 10 min (2 runs of 5 min).
 		if (! defined $current_updated_value || $current_updated_value eq "U") {
@@ -376,7 +388,7 @@ sub process_service {
 		} elsif (time > $current_updated_timestamp + $heartbeat) {
 			# Current value is too old. Report unknown.
 			$value = "U";
-		} elsif (! $field->{type} || $field->{type} eq "GAUGE") {
+        } elsif (! $field_attrs{type} || $field_attrs{type} eq "GAUGE") {
 			# Non-compute up-to-date value.
 			$value = $current_updated_value;
 		} elsif (! defined $previous_updated_value || $previous_updated_value eq "U") {
@@ -385,10 +397,10 @@ sub process_service {
 		} elsif ($current_updated_timestamp == $previous_updated_timestamp || $current_updated_timestamp > $previous_updated_timestamp + $heartbeat) {
 			# Old value does not exist or is too old. Report unknown.
 			$value = "U";
-		} elsif ($field->{type} eq "ABSOLUTE") {
+        } elsif ($field_attrs{type} eq "ABSOLUTE") {
 			# The previous value is unimportant, as if ABSOLUTE, the counter is reset every time the value is read
 			$value = $current_updated_value / ($current_updated_timestamp - $previous_updated_timestamp);
-		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
+        } elsif ($field_attrs{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
 			# COUNTER never decrease. Report unknown.
 			$value = "U";
 		} else {
@@ -440,9 +452,9 @@ sub process_service {
             $crit->[0] ||= "";
             $crit->[1] ||= "";
 
-            my $new_state = "unknown";
-            my $extinfo = defined $field->{"extinfo"}
-                    ? "unknown: " . $field->{"extinfo"}
+            $new_state = "unknown";
+                my $extinfo = defined $field_attrs{"extinfo"}
+                    ? "unknown: " . $field_attrs{"extinfo"}
                     : "Value is unknown.";
             my $num_unknowns;
 
@@ -455,7 +467,7 @@ sub process_service {
                 if ($old_num_unknowns < $unknown_limit) {
                     # Don't change the state to UNKNOWN yet.
                     $new_state = $old_state;
-                    $extinfo = $field->{"extinfo"} || "";
+                    $extinfo = $field_attrs{"extinfo"} || "";
                     # Increment the number of UNKNOWN values seen.
                     $num_unknowns = $old_num_unknowns + 1;
                 }
@@ -488,6 +500,13 @@ sub process_service {
                 munin_set_var_loc(\%notes, [@$fpath, "num_unknowns"],
                         $num_unknowns);
             }
+            if (defined $num_unknowns) {
+                $new_num_unknowns = $num_unknowns;
+            } elsif ($new_state eq 'unknown') {
+                $new_num_unknowns = $old_num_unknowns;
+            } else {
+                $new_num_unknowns = 0;
+            }
         }
 
         elsif ((defined($crit->[0]) and $value < $crit->[0])
@@ -500,10 +519,10 @@ sub process_service {
             munin_set_var_loc(
                 \%notes,
                 [@$fpath, "critical"], (
-                    defined $field->{"extinfo"}
+                    defined $field_attrs{"extinfo"}
                     ? "$value (not in "
                         . $field->{'crange'} . "): "
-                        . $field->{"extinfo"}
+                        . $field_attrs{"extinfo"}
                     : "Value is $value. Critical range ("
                         . $field->{'crange'}
                         . ") exceeded"
@@ -512,6 +531,8 @@ sub process_service {
             if ($old_state ne "critical") {
                 $hash->{'state_changed'} = 1;
             }
+			$new_state = "critical";
+			$new_num_unknowns = 0;
         }
         elsif ((defined($warn->[0]) and $value < $warn->[0])
             or (defined($warn->[1]) and $value > $warn->[1])) {
@@ -523,10 +544,10 @@ sub process_service {
             munin_set_var_loc(
                 \%notes,
                 [@$fpath, "warning"], (
-                    defined $field->{"extinfo"}
+                    defined $field_attrs{"extinfo"}
                     ? "$value (not in "
                         . $field->{'wrange'} . "): "
-                        . $field->{"extinfo"}
+                        . $field_attrs{"extinfo"}
                     : "Value is $value. Warning range ("
                         . $field->{'wrange'}
                         . ") exceeded"
@@ -535,6 +556,8 @@ sub process_service {
             if ($old_state ne "warning") {
                 $hash->{'state_changed'} = 1;
             }
+			$new_state = "warning";
+			$new_num_unknowns = 0;
         }
         else {
             munin_set_var_loc(\%notes, [@$fpath, "state"], "ok");
@@ -548,27 +571,29 @@ sub process_service {
 		    $hash->{'recovered'}{$fname} = 1;
                 }
 	    }
+            $new_state = "ok";
+            $new_num_unknowns = 0;
         }
 
-	# Replicate the state into the SQL DB
-	my $new_state = $old_state;
-	$sth_state_upt->execute($new_state, $ds_id, "ds");
+    # Replicate the state into the SQL DB
+    $sth_state_ins->execute($ds_id, "ds", $new_state, $new_num_unknowns, $ds_id, "ds");
+    $sth_state_upt->execute($new_state, $new_num_unknowns, $ds_id, "ds");
     }
+    $dbh->commit();
     generate_service_message($hash);
 }
 
 
-sub get_limits {
-    my $hash = shift || return;
+sub get_limits_from_attrs {
+    my $attrs = shift || return;
 
     # This hash will have values that we can look up such as these:
     my $critical = undef;
     my $warning  = undef;
-    my $crit          = munin_get($hash, "critical",      undef);
-    my $warn          = munin_get($hash, "warning",       undef);
-    my $unknown_limit = munin_get($hash, "unknown_limit", 3);
-
-    my $name = munin_get_node_name($hash);
+    my $crit = $attrs->{critical};
+    my $warn = $attrs->{warning};
+    my $unknown_limit = defined $attrs->{unknown_limit} ? $attrs->{unknown_limit} : 3;
+    my $name = defined $attrs->{label} ? $attrs->{label} : 'unknown-ds';
 
     if (defined $crit and $crit =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/) {
         $critical = [undef, undef];
@@ -589,6 +614,7 @@ sub get_limits {
     }
 
     if (defined $warn and $warn =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/) {
+		$warning = [undef, undef];
         ${$warning}[0] = $1 if length $1;
         ${$warning}[1] = $2 if length $2;
     }
