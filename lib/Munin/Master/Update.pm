@@ -54,8 +54,11 @@ sub run {
 		$config_old = $self->_db_params_update($dbh, $config);
 	}
 
-        $self->{workers} = $self->_create_workers();
+	$self->{workers} = $self->_create_workers();
         my $nb_workers = $self->_run_workers();
+
+	# Import contacts from config into SQL
+	$self->_db_contacts_update();
 
 	# Run limits after update — evaluate thresholds and send notifications
 	$self->_run_limits();
@@ -71,14 +74,7 @@ sub _run_limits {
 
     INFO "[INFO] Running limits (inline)";
 
-    # Initialize contacts for notification
-    Munin::Master::Limits::initialize_contacts();
-
-    # Process all limits — evaluate thresholds, update alarm state
-    Munin::Master::Limits::process_limits();
-
-    # Close contact pipes
-    Munin::Master::Limits::close_pipes();
+    Munin::Master::Limits::limits_main();
 
     INFO "[INFO] Limits finished";
 }
@@ -336,6 +332,11 @@ sub _db_init {
 	# Munin stats
 	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp TIMESTAMPTZ, type VARCHAR, name VARCHAR, duration NUMERIC)");
 
+	# Contacts for notification
+	$dbh->do("CREATE TABLE IF NOT EXISTS contact (id $db_serial_type PRIMARY KEY, name VARCHAR UNIQUE)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS contact_attr (id INTEGER REFERENCES contact(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_contact_attr ON contact_attr (id, name)");
+
 	# Initialise the grp _root_ node if not present
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
 		$dbh->do("INSERT INTO grp (id) VALUES (0);");
@@ -366,6 +367,46 @@ sub _db_params_update {
 
 	$dbh->commit();
 	return \%old_params;
+}
+
+# Import contacts from config tree into SQL.
+# This is the only time we walk the config tree — after this, everything reads from SQL.
+sub _db_contacts_update {
+	my ($self) = @_;
+
+	my $dbh = get_dbh();
+
+	# Clear existing contacts
+	$dbh->do('DELETE FROM contact_attr');
+	$dbh->do('DELETE FROM contact');
+
+	my $sth_c  = $dbh->prepare('INSERT INTO contact (name) VALUES (?)');
+	my $sth_ca = $dbh->prepare('INSERT INTO contact_attr (id, name, value) VALUES (?, ?, ?)');
+
+	# Walk the config tree for contacts — this is the ONLY config tree walk
+	my $contacts = $config->{"contact"};
+	if ($contacts && ref $contacts eq 'HASH') {
+		for my $child (values %$contacts) {
+			next unless ref $child eq 'HASH';
+			next if $child->{_};
+
+			my $name = $child->{_}->{name} // next;
+
+			$sth_c->execute($name);
+			my $contact_id = $dbh->last_insert_id(undef, undef, 'contact', 'id');
+
+			# Import all attributes
+			for my $key (keys %$child) {
+				next if $key eq '_';
+				my $val = $child->{$key};
+				next if ref $val;
+				$sth_ca->execute($contact_id, $key, $val);
+			}
+		}
+	}
+
+	$dbh->commit();
+	INFO "[INFO] Imported contacts from config into SQL";
 }
 
 1;
