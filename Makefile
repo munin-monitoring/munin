@@ -232,3 +232,18 @@ docker-dev:
 
 docker-dev-stop:
 	$(DOCKER) compose down
+
+# Run tests in Docker — same env as CI
+docker-test:
+	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
+	$(DOCKER) run --rm --shm-size=64m munin-dev ./Build test
+
+# Run lint in Docker
+docker-lint:
+	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
+	$(DOCKER) run --rm munin-dev make lint
+
+# Shell into dev container
+docker-shell:
+	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
+	$(DOCKER) run --rm -it --shm-size=64m munin-dev bash

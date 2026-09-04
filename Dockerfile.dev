@@ -1,6 +1,6 @@
 FROM debian:bookworm
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     perl \
     libmodule-build-perl \
@@ -32,8 +32,10 @@ RUN apt-get update && apt-get install -y \
     shellcheck \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+# Setup mock hostname for tests
+RUN echo "127.0.0.1\ttesting.acme.com" >> /etc/hosts
 
+WORKDIR /app
 COPY . .
 
 RUN perl Build.PL --install_base /app/sandbox && ./Build install
