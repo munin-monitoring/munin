@@ -300,11 +300,8 @@ sub process_service {
     my $hash       = shift || return;
     my $hobj       = get_host_node($hash);
     my $host       = munin_get_node_name($hobj);
-    my $hostalias  = get_notify_name($hobj);
     my $service    = munin_get_node_name($hash);
     my $hparentobj = munin_get_parent($hobj);
-    my $parent     = munin_get_node_name($hobj);
-    my $gparent    = munin_get_node_name($hparentobj);
     my $field_order = munin_get_field_order($hash);
 
     if (!ref $hash) {
@@ -315,20 +312,53 @@ sub process_service {
 
     DEBUG "[DEBUG] processing service: $service";
 
+    my $service_group_path = get_full_group_path($hparentobj);
+    my $service_node_url = sprintf('%s/%s', $service_group_path, $host);
+    my $service_path = sprintf('%s/%s', $service_node_url, $service);
+
+    my $dbh = Munin::Master::Update::get_dbh();
+
+    # Project service context from SQL instead of config hash
+    my $sth_ctx = $dbh->prepare(q{
+        SELECT
+            n.name,
+            u_n.path,
+            MAX(CASE WHEN na.name = 'notify_alias' THEN na.value END) AS host_alias,
+            MAX(CASE WHEN sa.name = 'graph_title' THEN sa.value END) AS graph_title,
+            MAX(CASE WHEN sa.name = 'contacts' THEN sa.value END) AS contacts
+        FROM service s
+        INNER JOIN url u_s ON u_s.id = s.id AND u_s.type = 'service'
+        INNER JOIN node n ON n.id = s.node_id
+        INNER JOIN url u_n ON u_n.id = n.id AND u_n.type = 'node'
+        LEFT JOIN service_attr sa ON sa.id = s.id
+        LEFT JOIN node_attr na ON na.id = n.id
+        WHERE u_s.path = ?
+        GROUP BY n.name, u_n.path
+    });
+    $sth_ctx->execute($service_path);
+    my ($ctx_host_name, $ctx_node_url, $ctx_host_alias, $ctx_graph_title, $ctx_contacts) = $sth_ctx->fetchrow_array;
+
+    my $hostalias = defined $ctx_host_alias ? $ctx_host_alias : get_notify_name($hobj);
+    my $graph_title = defined $ctx_graph_title ? $ctx_graph_title : get_full_service_name($hash);
+    my $group_path = $ctx_node_url;
+    if (defined $group_path) {
+        $group_path =~ s{/[^/]+$}{};
+    }
+    $group_path = $service_group_path unless defined $group_path && length $group_path;
+
     # Some fields that are nice to have in the plugin output
     $hash->{'fields'} = join(' ', @$field_order);
     $hash->{'plugin'} = $service;
-    $hash->{'graph_title'} = get_full_service_name($hash);
+    $hash->{'graph_title'} = $graph_title;
     $hash->{'host'}  = $hostalias;
-    $hash->{'group'} = get_full_group_path($hparentobj);
+    $hash->{'group'} = $group_path;
+    $hash->{'contacts'} = $ctx_contacts if defined $ctx_contacts;
     $hash->{'worst'} = "OK";
     $hash->{'worstid'} = 0;
     $hash->{'recovered'} = {};
 
-    my $service_url = sprintf ('%s/%s', $hash->{group}, $host);
+    my $service_url = defined $ctx_node_url ? $ctx_node_url : sprintf ('%s/%s', $hash->{group}, $host);
     DEBUG "[DEBUG] service_url: $service_url";
-
-    my $dbh = Munin::Master::Update::get_dbh();
     my $sth_state = $dbh->prepare('SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns FROM state WHERE id = ? and type = ?');
     my $sth_state_ins = $dbh->prepare('INSERT INTO state (id, type, alarm, num_unknowns) SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM state WHERE id = ? AND type = ?)');
     my $sth_state_upt = $dbh->prepare('UPDATE state SET alarm = ?, num_unknowns = ? WHERE id = ? and type = ?');
