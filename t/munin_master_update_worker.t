@@ -38,6 +38,28 @@ is(round_to_granularity($time_20190101_010501, 300),   $time_20190101_010500, "t
 is(round_to_granularity($time_20190101_010501, 3600),  $time_20190101_010000, "time_20190101_010501: rounded to 1 hour");
 is(round_to_granularity($time_20190101_010501, 86400), $time_20190101_000000, "time_20190101_010501: rounded to 1 day");
 
+# to_sec - unit conversion
+sub to_sec { return Munin::Master::UpdateWorker::to_sec(@_); }
+
+is(to_sec("5s"), 5, "to_sec: 5s");
+is(to_sec("5S"), 5, "to_sec: 5S (uppercase)");
+is(to_sec("5m"), 300, "to_sec: 5m");
+is(to_sec("5M"), 300, "to_sec: 5M (uppercase)");
+is(to_sec("2h"), 7200, "to_sec: 2h");
+is(to_sec("2H"), 7200, "to_sec: 2H (uppercase)");
+is(to_sec("1d"), 86400, "to_sec: 1d");
+is(to_sec("1D"), 86400, "to_sec: 1D (uppercase)");
+is(to_sec("1w"), 604800, "to_sec: 1w");
+is(to_sec("1W"), 604800, "to_sec: 1W (uppercase)");
+is(to_sec("1t"), 2678400, "to_sec: 1t (month)");
+is(to_sec("1T"), 2678400, "to_sec: 1T (uppercase)");
+is(to_sec("1y"), 31536000, "to_sec: 1y (year)");
+is(to_sec("1Y"), 31536000, "to_sec: 1Y (uppercase)");
+is(to_sec("300"), 300, "to_sec: bare number 300");
+is(to_sec("0"), 0, "to_sec: zero");
+is(to_sec("10s"), 10, "to_sec: 10s");
+is(to_sec("10m"), 600, "to_sec: 10m");
+
 done_testing();
 
 1;
