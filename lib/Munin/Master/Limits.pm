@@ -180,11 +180,18 @@ sub _process_service {
 sub _process_ds {
     my ($dbh, $ds_id, $ds_name, $ds_type, $service) = @_;
 
-    # Read DS attrs from SQL
+    # Read DS attrs from SQL — plugin defaults
     my $sth_attr = $dbh->prepare('SELECT name, value FROM ds_attr WHERE id = ?');
     $sth_attr->execute($ds_id);
     my %attrs;
     while (my ($k, $v) = $sth_attr->fetchrow_array) {
+        $attrs{$k} = $v;
+    }
+
+    # Read config overrides — wins over plugin defaults
+    my $sth_ov = $dbh->prepare('SELECT name, value FROM override WHERE ds_id = ?');
+    $sth_ov->execute($ds_id);
+    while (my ($k, $v) = $sth_ov->fetchrow_array) {
         $attrs{$k} = $v;
     }
 

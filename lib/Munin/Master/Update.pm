@@ -348,6 +348,10 @@ sub _db_init {
 	)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification ON notification (contact_id, service_id)");
 
+	# Config file overrides — plugin defaults go to ds_attr, config overrides go here
+	$dbh->do("CREATE TABLE IF NOT EXISTS override (ds_id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_override ON override (ds_id, name)");
+
 	# Initialise the grp _root_ node if not present
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
 		$dbh->do("INSERT INTO grp (id) VALUES (0);");
@@ -380,16 +384,17 @@ sub _db_params_update {
 	return \%old_params;
 }
 
-# Import contacts from config tree into SQL.
-# This is the only time we walk the config tree — after this, everything reads from SQL.
+# Import contacts and config overrides from config tree into SQL.
+# This is the ONLY time we walk the config tree — after this, everything reads from SQL.
 sub _db_contacts_update {
 	my ($self) = @_;
 
 	my $dbh = get_dbh();
 
-	# Clear existing contacts
+	# Clear existing contacts and overrides
 	$dbh->do('DELETE FROM contact_attr');
 	$dbh->do('DELETE FROM contact');
+	$dbh->do('DELETE FROM override');
 
 	my $sth_c  = $dbh->prepare('INSERT INTO contact (name) VALUES (?)');
 	my $sth_ca = $dbh->prepare('INSERT INTO contact_attr (id, name, value) VALUES (?, ?, ?)');
@@ -416,8 +421,61 @@ sub _db_contacts_update {
 		}
 	}
 
+	# Import config overrides for warning/critical/unknown_limit from config tree
+	# Config values override plugin defaults via the override table
+	my $sth_ov = $dbh->prepare(q{
+		INSERT INTO override (ds_id, name, value)
+		SELECT ds.id, ?, ?
+		FROM ds
+		INNER JOIN service s ON s.id = ds.service_id
+		INNER JOIN node n ON n.id = s.node_id
+		WHERE ds.name = ? AND s.name = ? AND n.name = ?
+	});
+
+	# Walk groups -> hosts -> services -> fields for overrides
+	my $groups = $config->{groups};
+	if ($groups && ref $groups eq 'HASH') {
+		for my $group (values %$groups) {
+			next unless ref $group eq 'HASH';
+			my $hosts = $group->{hosts} || next;
+			next unless ref $hosts eq 'HASH';
+
+			for my $host (values %$hosts) {
+				next unless ref $host eq 'HASH';
+				my $host_name = $host->{_}->{name} // next;
+				my $services = $host->{services} || next;
+				next unless ref $services eq 'HASH';
+
+				for my $service (values %$services) {
+					next unless ref $service eq 'HASH';
+					my $service_name = $service->{_}->{name} // next;
+
+					# Check service-level overrides
+					for my $key (qw(warning critical unknown_limit)) {
+						my $val = $service->{_}->{$key};
+						next unless defined $val;
+						# Service-level override applies to all fields
+						$sth_ov->execute($key, $val, '.*', $service_name, $host_name);
+					}
+
+					# Check field-level overrides
+					for my $field (values %$service) {
+						next unless ref $field eq 'HASH';
+						my $field_name = $field->{_}->{name} // next;
+
+						for my $key (qw(warning critical unknown_limit)) {
+							my $val = $field->{$key};
+							next unless defined $val;
+							$sth_ov->execute($key, $val, $field_name, $service_name, $host_name);
+						}
+					}
+				}
+			}
+		}
+	}
+
 	$dbh->commit();
-	INFO "[INFO] Imported contacts from config into SQL";
+	INFO "[INFO] Imported contacts and overrides from config into SQL";
 }
 
 1;
