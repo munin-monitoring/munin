@@ -35,7 +35,6 @@ requires 'Pod::Perldoc';
 requires 'Pod::Usage';
 requires 'Scalar::Util';
 requires 'Socket';
-requires 'Test::Perl::Critic';
 requires 'Text::Balanced';
 requires 'Time::HiRes';
 requires 'URI';
