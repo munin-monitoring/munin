@@ -17,7 +17,7 @@ jobs:
         run: docker build -t munin-dev -f Dockerfile.dev .
 
       - name: Run tests
-        run: docker run --rm --shm-size=64m munin-dev ./Build test
+        run: docker run --rm --shm-size=64m --add-host testing.acme.com:127.0.0.1 munin-dev ./Build test
 
       - name: Run lint
         run: docker run --rm munin-dev make lint || true

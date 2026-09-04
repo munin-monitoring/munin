@@ -6,27 +6,26 @@ use lib qw(t/lib);
 use Test::More;
 use Test::Differences;
 
-# Integration tests require munin-node-debug to serve on ports 24949-24951.
-# This is fragile in containers. Skip gracefully if not available.
-unless ($ENV{MUNIN_RUN_INTEGRATION}) {
-    plan skip_all => "integration test: requires MUNIN_RUN_INTEGRATION=1";
-}
-
 require_ok( 'Munin::Master::Update' );
 require_ok( 'Munin::Master::Config' );
 
-# Launch node-debug from the correct path
+# Launch minimal test nodes on ports 24949-24951
 use File::Basename;
 my $script_dir = dirname(__FILE__);
-my $node_debug = "$script_dir/../contrib/munin-node-debug";
-my $pid_debug_node = 0;
-unless (($pid_debug_node = fork())) {
-    exec($node_debug, "--debug");
-    die "exec failed: $!";
+my $test_node = "$script_dir/lib/node_test.pl";
+my @pids;
+
+for my $port (24949, 24950, 24951) {
+    my $pid = fork();
+    if ($pid == 0) {
+        exec("perl", $test_node, $port, "30");
+        die "exec failed: $!";
+    }
+    push @pids, $pid;
 }
 
-# Wait for the node to start
-sleep(5);
+# Wait for nodes to start
+sleep(1);
 
 my $config = Munin::Master::Config->instance()->{"config"};
 $config->parse_config_from_file("t/config/munin.conf");
@@ -47,7 +46,7 @@ ok($update->run() == 5);
 # Run a second time, with an already populated database
 ok($update->run() == 5);
 
-kill('TERM', $pid_debug_node);
+kill('TERM', @pids);
 wait();
 
 # cleanup the update dir

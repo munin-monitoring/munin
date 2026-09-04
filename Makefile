@@ -236,7 +236,7 @@ docker-dev-stop:
 # Run tests in Docker — same env as CI
 docker-test:
 	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
-	$(DOCKER) run --rm --shm-size=64m munin-dev ./Build test
+	$(DOCKER) run --rm --shm-size=64m --add-host testing.acme.com:127.0.0.1 munin-dev ./Build test
 
 # Run lint in Docker
 docker-lint:

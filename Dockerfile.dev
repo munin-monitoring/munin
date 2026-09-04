@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Setup mock hostname for tests
-RUN echo "127.0.0.1\ttesting.acme.com" >> /etc/hosts
+RUN printf '127.0.0.1\ttesting.acme.com\n' >> /etc/hosts
 
 WORKDIR /app
 COPY . .
