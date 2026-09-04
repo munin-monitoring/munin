@@ -59,7 +59,7 @@ Stephan Kleber (3):
       set graph_category to mail
       set graph_category to mail
 
-Steve SCHNEPP (11):
+Steve SCHNEPP (24):
       refactor(master): centralize param lookups via Update get_param
       fix(master): harden limits/update state handling and parsing
       fix(updateworker): preserve first state sample and apply enlarged custom RRA
@@ -71,13 +71,19 @@ Steve SCHNEPP (11):
       docs(dev_scripts): add README documenting all 24 developer scripts
       dev(sandbox): add status, logs, and reset commands to install script
       dev(docker): add Docker dev environment with compose
-
-Steve Schnepp (5):
-      debug: fix the --dump node names
-      m/u: adding logging to get_dbh()
-      m/u: adding a config option for autocommit
-      m/u: SQLite journaling defaults if not explicit
-      p/netstat: move established to different graph
+      fix(master): rewrite Limits.pm to SQL-only (zero Perl struct walking)
+      fix(master): integrate limits into update process
+      fix(master): eliminate unused clientBeginFetch
+      fix(master): add contact/override/notification SQL tables
+      fix(master): config imports once at startup via _db_contacts_update
+      fix(tests): fix integration tests for Docker
+      fix(tests): replace munin-node-debug with minimal test nodes
+      fix(tests): set local_address 0.0.0.0 for IPv4 compatibility
+      ci(docker): add --add-host for testing.acme.com
+      ci(docker): add docker-test, docker-lint, docker-shell Makefile targets
+      build(deps): add missing test deps, fix Perl version to 5.10.1
+      build(deps): move Test::Perl::Critic to test section
+      docs(mission): add mission log for munin 3.0 release prep
 
 Steven Benner (1):
       Enable wget --no-check-certificate option in http_loadtime plugin
