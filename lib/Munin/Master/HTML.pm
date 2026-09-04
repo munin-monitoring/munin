@@ -54,7 +54,7 @@ sub handle_request
 			gif => "image/gif",
 		);
 
-		my $filename = get_param("staticdir"). "/$page";
+		my $filename = Munin::Master::Update::get_param("staticdir"). "/$page";
 		my $fh = new IO::File("$filename");
 
 		if (! $fh) {
@@ -569,7 +569,7 @@ RENDERING:
 		print $cgi->header( "-Content-Type" => "text/html",
 			-Cache_Control => "public, max-age=3600", # 1h for HTML pages
 		);
-		my $tmpldir = get_param("tmpldir");
+		my $tmpldir = Munin::Master::Update::get_param("tmpldir");
 		my $template = HTML::Template::Pro->new(
 			filename => "$tmpldir/$template_filename",
 			loop_context_vars => 1,
@@ -855,18 +855,6 @@ sub _get_params_fields {
 	}
 
 	return \@fields;
-}
-
-sub get_param
-{
-	my ($param) = @_;
-
-	# Ok, now SQL is needed to go further
-        use DBI;
-	my $datafilename = $ENV{MUNIN_DBURL} || "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
-	my $dbh = Munin::Master::Update::get_dbh(1);
-	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
-	return $value;
 }
 
 sub url_to_path

@@ -109,6 +109,14 @@ sub get_dbh {
 	return $dbh;
 }
 
+sub get_param {
+	my ($param_name, $dbh) = @_;
+	my $dbh_local = $dbh || get_dbh(1);
+	my $sql = 'SELECT value FROM param WHERE name = ?';
+	my ($param_value) = $dbh_local->selectrow_array($sql, undef, ($param_name));
+	return $param_value;
+}
+
 sub _create_rundir_if_missing {
     my ($self) = @_;
 
