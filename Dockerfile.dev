@@ -1,4 +1,43 @@
-FROM munin:base
+FROM debian:bookworm
 
-USER munin
-WORKDIR /munin
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    perl \
+    libmodule-build-perl \
+    libdbi-perl \
+    libdbd-sqlite3-perl \
+    libdbd-pg-perl \
+    libhtml-template-pro-perl \
+    libhttp-server-simple-cgi-prefork-perl \
+    libjson-perl \
+    libwww-perl \
+    liblog-dispatch-perl \
+    libnet-snmp-perl \
+    libnet-server-perl \
+    libparallel-forkmanager-perl \
+    libparams-validate-perl \
+    libxml-dumper-perl \
+    libxml-libxml-perl \
+    libxml-parser-perl \
+    libtest-most-perl \
+    libtest-differences-perl \
+    libtest-deep-perl \
+    libtest-mockmodule-perl \
+    libtest-mockobject-perl \
+    libtest-exception-perl \
+    libfile-slurp-perl \
+    librrds-perl \
+    libssl-dev \
+    codespell \
+    shellcheck \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY . .
+
+RUN perl Build.PL --install_base /app/sandbox && ./Build install
+
+EXPOSE 4949 4946
+
+CMD ["./dev_scripts/all"]

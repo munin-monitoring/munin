@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  master:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "4946:4946"
+      - "4949:4949"
+    volumes:
+      - .:/app
+      - master-data:/app/sandbox/var
+    environment:
+      - MUNIN_DBURL=sqlite:/app/sandbox/var/lib/munin/datafile.sqlite
+    command: ./dev_scripts/all
+
+volumes:
+  master-data:

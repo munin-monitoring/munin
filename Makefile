@@ -227,6 +227,8 @@ docker: docker-base
 docker-connect:
 	$(DOCKER) exec -it munin bash
 
-docker-dev: docker-base
-	$(DOCKER) build -t munin:dev -f Dockerfile.dev .
-	$(DOCKER) run --rm --name munin-dev -v $(shell pwd):/munin -p 8000:8000 -p 14947:4947 -p 14948:4948 -it munin:dev
+docker-dev:
+	$(DOCKER) compose up --build
+
+docker-dev-stop:
+	$(DOCKER) compose down
