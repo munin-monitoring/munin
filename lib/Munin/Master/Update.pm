@@ -337,6 +337,17 @@ sub _db_init {
 	$dbh->do("CREATE TABLE IF NOT EXISTS contact_attr (id INTEGER REFERENCES contact(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_contact_attr ON contact_attr (id, name)");
 
+	# Notification tracking — replaces in-memory pipe state
+	$dbh->do("CREATE TABLE IF NOT EXISTS notification (
+		id $db_serial_type PRIMARY KEY,
+		contact_id INTEGER REFERENCES contact(id),
+		service_id INTEGER REFERENCES service(id),
+		severity VARCHAR,
+		sent_at INTEGER,
+		num_messages INTEGER DEFAULT 0
+	)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification ON notification (contact_id, service_id)");
+
 	# Initialise the grp _root_ node if not present
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
 		$dbh->do("INSERT INTO grp (id) VALUES (0);");

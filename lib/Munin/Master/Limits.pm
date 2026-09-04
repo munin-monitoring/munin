@@ -335,28 +335,27 @@ sub _parse_thresholds {
 
 my %contact_pipes;
 
-# Send notifications for service state changes
+# Send notifications for service state changes — all tracking in SQL
 sub _generate_service_message {
     my ($service, $stats) = @_;
 
     my $dbh = Munin::Master::Update::get_dbh();
 
-    # Get contacts for this service
-    my @contacts = split /\s+/, ($service->{contacts} // '');
-    return unless @contacts;
-
-    # Also get global default contacts
-    my $global_contacts = Munin::Master::Update::get_param('contacts');
-    if ($global_contacts && !@contacts) {
-        @contacts = split /\s+/, $global_contacts;
+    # Get contacts for this service from SQL
+    my @contacts;
+    if ($service->{contacts}) {
+        @contacts = split /\s+/, $service->{contacts};
     }
+    # Also check global default contacts from param table
+    unless (@contacts) {
+        my $global = Munin::Master::Update::get_param('contacts');
+        @contacts = split /\s+/, $global if $global;
+    }
+    return unless @contacts;
 
     for my $contact_name (@contacts) {
         next if $contact_name eq 'none';
-
-        if (@limit_contacts && !grep { $_ eq $contact_name } @limit_contacts) {
-            next;
-        }
+        next if @limit_contacts && !grep { $_ eq $contact_name } @limit_contacts;
 
         # Read contact from SQL
         my $sth_c = $dbh->prepare('SELECT id FROM contact WHERE name = ?');
@@ -399,6 +398,23 @@ sub _generate_service_message {
 
         INFO "[INFO] state of $service->{group}::$service->{host}::$service->{plugin} has changed to $service->{worst}, notifying $contact_name";
 
+        # Read notification state from SQL
+        my $sth_n = $dbh->prepare(q{
+            SELECT id, num_messages FROM notification
+            WHERE contact_id = ? AND service_id = (
+                SELECT id FROM service WHERE name = ? LIMIT 1
+            )
+        });
+        $sth_n->execute($contact_id, $service->{plugin});
+        my ($notif_id, $num_messages) = $sth_n->fetchrow_array;
+
+        # Check max_messages
+        my $max_messages = $ca{max_messages} // 0;
+        if ($max_messages && $num_messages && $num_messages >= $max_messages) {
+            DEBUG "[DEBUG] Max messages reached for $contact_name on $service->{plugin}";
+            next;
+        }
+
         # Expand message template
         my $pretxt = $ca{text} // $default_text{$contact_name} // $default_text{default};
         my $txt = _message_expand($service, $pretxt);
@@ -408,7 +424,7 @@ sub _generate_service_message {
         $cmd = _message_expand($service, $cmd);
         $cmd =~ s/^\s*[|><]+//;
 
-        # Open pipe and send
+        # Open pipe if needed — track in SQL, pipe handle in %contact_pipes
         my $pipe = $contact_pipes{$contact_name};
         if (!defined $pipe) {
             pipe(my $r, my $w) or WARN "[WARNING] Failed to open pipe for $contact_name: $!";
@@ -418,6 +434,13 @@ sub _generate_service_message {
                 close $r;
                 $pipe = $w;
                 $contact_pipes{$contact_name} = $pipe;
+                # Reset notification count in SQL
+                if ($notif_id) {
+                    $dbh->do('UPDATE notification SET num_messages = 0 WHERE id = ?', undef, $notif_id);
+                } else {
+                    $dbh->do('INSERT INTO notification (contact_id, severity, num_messages) VALUES (?, ?, 0)',
+                        undef, $contact_id, $service->{worst});
+                }
             } else {
                 close $w;
                 open(STDIN, '<&', $r);
@@ -433,6 +456,16 @@ sub _generate_service_message {
             close $pipe;
             delete $contact_pipes{$contact_name};
         }
+
+        # Update notification count in SQL
+        $dbh->do(q{
+            INSERT INTO notification (contact_id, severity, sent_at, num_messages)
+            VALUES (?, ?, ?, 1)
+            ON CONFLICT (contact_id, service_id) DO UPDATE SET
+                num_messages = num_messages + 1,
+                sent_at = excluded.sent_at,
+                severity = excluded.severity
+        }, undef, $contact_id, $service->{worst}, time());
     }
 }
 
