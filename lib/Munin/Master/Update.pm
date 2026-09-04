@@ -15,6 +15,7 @@ use Munin::Common::Defaults;
 use Munin::Master::Config;
 use Munin::Master::UpdateWorker;
 use Munin::Master::Utils;
+use Munin::Master::Limits;
 
 my $config_old;
 my $config = Munin::Master::Config->instance()->{config};
@@ -55,8 +56,31 @@ sub run {
 
         $self->{workers} = $self->_create_workers();
         my $nb_workers = $self->_run_workers();
+
+	# Run limits after update — evaluate thresholds and send notifications
+	$self->_run_limits();
+
 	return $nb_workers;
     });
+}
+
+# Evaluate thresholds and send notifications.
+# Called at the end of update, so limits runs in the same process.
+sub _run_limits {
+    my ($self) = @_;
+
+    INFO "[INFO] Running limits (inline)";
+
+    # Initialize contacts for notification
+    Munin::Master::Limits::initialize_contacts();
+
+    # Process all limits — evaluate thresholds, update alarm state
+    Munin::Master::Limits::process_limits();
+
+    # Close contact pipes
+    Munin::Master::Limits::close_pipes();
+
+    INFO "[INFO] Limits finished";
 }
 
 # If you need a readonly DBH, use M::M::U::get_dbh("readonly").

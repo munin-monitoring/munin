@@ -1,13 +1,13 @@
-package Munin::Master::LimitsOld;
+package Munin::Master::Limits;
 
 =head1 NAME
 
-Munin::Master::LimitsOld - Process collected values and thresholds
+Munin::Master::Limits - Process collected values and thresholds
 
 
 =head1 SYNOPSIS
 
-This is Munin::Master::LimitsOld, a minimal package shell to make
+This is Munin::Master::Limits, a minimal package shell to make
 munin-limits modular (so it can be loaded persistently in a daemon for
 example) without making it object oriented yet.  The non-'old' module
 will feature proper object orientation like munin-update and will

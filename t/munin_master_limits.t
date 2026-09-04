@@ -6,13 +6,13 @@ use lib qw(t/lib);
 use Test::More;
 use Test::Differences;
 
-use Munin::Master::LimitsOld;
+use Munin::Master::Limits;
 
 # Test get_limits_from_attrs - threshold parsing
 
 # Range format: "low:high"
 {
-    my ($warn, $crit, $unknown_limit) = Munin::Master::LimitsOld::get_limits_from_attrs({
+    my ($warn, $crit, $unknown_limit) = Munin::Master::Limits::get_limits_from_attrs({
         critical => "10:20",
         warning  => "5:15",
         unknown_limit => 5,
@@ -24,7 +24,7 @@ use Munin::Master::LimitsOld;
 
 # Single threshold: "high"
 {
-    my ($warn, $crit, $unknown_limit) = Munin::Master::LimitsOld::get_limits_from_attrs({
+    my ($warn, $crit, $unknown_limit) = Munin::Master::Limits::get_limits_from_attrs({
         critical => "90",
         warning  => "80",
     });
@@ -35,7 +35,7 @@ use Munin::Master::LimitsOld;
 
 # Open-ended range: ":high"
 {
-    my ($warn, $crit, $unknown_limit) = Munin::Master::LimitsOld::get_limits_from_attrs({
+    my ($warn, $crit, $unknown_limit) = Munin::Master::Limits::get_limits_from_attrs({
         critical => ":100",
         warning  => ":80",
     });
@@ -45,7 +45,7 @@ use Munin::Master::LimitsOld;
 
 # Open-ended range: "low:"
 {
-    my ($warn, $crit, $unknown_limit) = Munin::Master::LimitsOld::get_limits_from_attrs({
+    my ($warn, $crit, $unknown_limit) = Munin::Master::Limits::get_limits_from_attrs({
         critical => "5:",
         warning  => "3:",
     });
@@ -55,7 +55,7 @@ use Munin::Master::LimitsOld;
 
 # Negative values
 {
-    my ($warn, $crit, $unknown_limit) = Munin::Master::LimitsOld::get_limits_from_attrs({
+    my ($warn, $crit, $unknown_limit) = Munin::Master::Limits::get_limits_from_attrs({
         critical => "-10:10",
         warning  => "-5:5",
     });
@@ -65,7 +65,7 @@ use Munin::Master::LimitsOld;
 
 # No thresholds defined
 {
-    my ($warn, $crit, $unknown_limit) = Munin::Master::LimitsOld::get_limits_from_attrs({});
+    my ($warn, $crit, $unknown_limit) = Munin::Master::Limits::get_limits_from_attrs({});
     is($warn, undef, "warning undef when not set");
     is($crit, undef, "critical undef when not set");
     is($unknown_limit, 3, "unknown_limit defaults to 3");
@@ -73,7 +73,7 @@ use Munin::Master::LimitsOld;
 
 # Only critical defined
 {
-    my ($warn, $crit, $unknown_limit) = Munin::Master::LimitsOld::get_limits_from_attrs({
+    my ($warn, $crit, $unknown_limit) = Munin::Master::Limits::get_limits_from_attrs({
         critical => "95",
     });
     is($warn, undef, "warning undef when only critical set");
@@ -82,7 +82,7 @@ use Munin::Master::LimitsOld;
 
 # Empty attrs hash
 {
-    my ($warn, $crit, $unknown_limit) = Munin::Master::LimitsOld::get_limits_from_attrs({});
+    my ($warn, $crit, $unknown_limit) = Munin::Master::Limits::get_limits_from_attrs({});
     is($warn, undef, "warning undef for empty attrs");
     is($crit, undef, "critical undef for empty attrs");
     is($unknown_limit, 3, "unknown_limit defaults to 3 for empty attrs");
@@ -90,7 +90,7 @@ use Munin::Master::LimitsOld;
 
 # Unknown limit of 0
 {
-    my ($warn, $crit, $unknown_limit) = Munin::Master::LimitsOld::get_limits_from_attrs({
+    my ($warn, $crit, $unknown_limit) = Munin::Master::Limits::get_limits_from_attrs({
         unknown_limit => 0,
     });
     is($unknown_limit, 0, "unknown_limit of 0 respected");
@@ -98,7 +98,7 @@ use Munin::Master::LimitsOld;
 
 # Unknown limit with spaces
 {
-    my ($warn, $crit, $unknown_limit) = Munin::Master::LimitsOld::get_limits_from_attrs({
+    my ($warn, $crit, $unknown_limit) = Munin::Master::Limits::get_limits_from_attrs({
         unknown_limit => " 5 ",
     });
     is($unknown_limit, 5, "unknown_limit trimmed from spaces");
@@ -106,7 +106,7 @@ use Munin::Master::LimitsOld;
 
 # Float thresholds
 {
-    my ($warn, $crit, $unknown_limit) = Munin::Master::LimitsOld::get_limits_from_attrs({
+    my ($warn, $crit, $unknown_limit) = Munin::Master::Limits::get_limits_from_attrs({
         critical => "1.5:2.5",
         warning  => "0.5:1.5",
     });

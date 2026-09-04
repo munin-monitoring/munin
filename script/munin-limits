@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 use warnings;
 use strict;
 
-use Munin::Master::LimitsOld;
+use Munin::Master::Limits;
 
 limits_startup(\@ARGV);
 
