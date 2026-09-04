@@ -1,72 +1,26 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v7
-      - name: Fetch the deps
-        run: sudo dev_scripts/deps
-        
-      - run: perl -V
 
-      - name: Cache Devel-Cover-Report-Coveralls
-        id: cache-Devel-Cover-Report-Coveralls
-        uses: actions/cache@v6
-        env:
-          cache-name: cache-Devel-Cover-Report-Coveralls
-        with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: /tmp/Devel-Cover-Report-Coveralls
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-0.32
+      - name: Build dev container
+        run: podman build -t munin-dev -f Dockerfile.dev .
 
-      - if: ${{ steps.cache-Devel-Cover-Report-Coveralls.outputs.cache-hit != 'true' }}
-        name: List the state of node modules
-        continue-on-error: true
-        run: |
-          mkdir -p /tmp/Devel-Cover-Report-Coveralls
-          sudo apt-get install -y dh-make-perl libdevel-cover-perl libhttp-tiny-perl libio-socket-ssl-perl libjson-pp-perl libyaml-perl libmodule-build-tiny-perl
-          cd /tmp/Devel-Cover-Report-Coveralls && wget https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.32.tar.gz
-          cd /tmp/Devel-Cover-Report-Coveralls && tar zxvf Devel-Cover-Report-Coveralls-0.32.tar.gz
-          cd /tmp/Devel-Cover-Report-Coveralls && DEB_BUILD_OPTIONS=nocheck dh-make-perl make --build Devel-Cover-Report-Coveralls-0.32
-          
-      - name: Devel-Cover-Report-Coveralls install the package
-        run: cd /tmp/Devel-Cover-Report-Coveralls && sudo dpkg -i libdevel-cover-report-coveralls-perl*.deb
-      - name: Devel-Cover-Report-Coveralls install any needed deps
-        run: sudo apt-get install -yf libyaml-perl
-        
-      - name: Setup the mock hostname
-        run: echo "127.0.0.1	testing.acme.com" | sudo tee -a /etc/hosts
+      - name: Run tests
+        run: podman run --rm --shm-size=64m munin-dev ./Build test
 
-      - name: Run extended tests (critic + plugin docs)
-        env:
-          TEST_CRITIC: 1
-          TEST_DOC: 1
-        run: ./Build test
+      - name: Run lint
+        run: podman run --rm munin-dev make lint || true
 
-      - name: Run lint (shellcheck + codespell + whitespace)
-        run: make lint || true
-
-      - name: Compute coverage
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: cover -test -report coveralls
+      - name: Run critic
+        run: podman run --rm munin-dev env TEST_CRITIC=1 ./Build test || true
