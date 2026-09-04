@@ -29,12 +29,12 @@ Munin::Common::Logger::configure(
 # Restore sample data
 system("cp -r t/sample_data/* $config->{dbdir}"); # need shell expansion
 
-my $mock = Test::MockModule->new("Munin::Master::Graph");
-# replace all calls to get_param
+my $mock = Test::MockModule->new("Munin::Master::Update");
+# replace get_param to return from config hash
 $mock->redefine("get_param", sub {
 	my $param = shift;
 	return $config->{$param} if defined $config->{$param};
-	return $mock->original("get_param")->($param);
+	return undef;
 });
 
 
