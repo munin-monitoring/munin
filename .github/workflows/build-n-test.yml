@@ -56,8 +56,17 @@ jobs:
         
       - name: Setup the mock hostname
         run: echo "127.0.0.1	testing.acme.com" | sudo tee -a /etc/hosts
-        
-      - name: Compute coverage 
+
+      - name: Run extended tests (critic + plugin docs)
+        env:
+          TEST_CRITIC: 1
+          TEST_DOC: 1
+        run: ./Build test
+
+      - name: Run lint (shellcheck + codespell + whitespace)
+        run: make lint || true
+
+      - name: Compute coverage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: cover -test -report coveralls
