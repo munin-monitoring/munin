@@ -301,7 +301,7 @@ sub _process_ds {
     });
     $sth_ins->execute($ds_id, $new_state, $new_num_unknowns, $ds_id, 'ds');
 
-    my $sth_upt = $dbh->prepare('UPDATE state SET alarm = ?, num_unknowns = ? WHERE id = ? AND type = 'ds'');
+    my $sth_upt = $dbh->prepare(q{UPDATE state SET alarm = ?, num_unknowns = ? WHERE id = ? AND type = 'ds'});
     $sth_upt->execute($new_state, $new_num_unknowns, $ds_id);
 
     return [$new_state, $value, $extinfo];
@@ -332,6 +332,8 @@ sub _parse_thresholds {
     return ($warn, $crit);
 }
 
+
+my %contact_pipes;
 
 # Send notifications for service state changes
 sub _generate_service_message {
@@ -433,8 +435,6 @@ sub _generate_service_message {
         }
     }
 }
-
-my %contact_pipes;
 
 sub _close_pipes {
     for my $name (keys %contact_pipes) {
