@@ -14,13 +14,13 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Build dev container
-        run: podman build -t munin-dev -f Dockerfile.dev .
+        run: docker build -t munin-dev -f Dockerfile.dev .
 
       - name: Run tests
-        run: podman run --rm --shm-size=64m munin-dev ./Build test
+        run: docker run --rm --shm-size=64m munin-dev ./Build test
 
       - name: Run lint
-        run: podman run --rm munin-dev make lint || true
+        run: docker run --rm munin-dev make lint || true
 
       - name: Run critic
-        run: podman run --rm munin-dev env TEST_CRITIC=1 ./Build test || true
+        run: docker run --rm munin-dev env TEST_CRITIC=1 ./Build test || true
