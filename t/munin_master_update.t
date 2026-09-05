@@ -62,10 +62,41 @@ unless ($all_ready) {
 	die "Test nodes failed to start";
 }
 
-my $config = Munin::Master::Config->instance()->{"config"};
-$config->parse_config_from_file("t/config/munin.conf");
-
+# Generate config with actual ports
 $temp_dir = tempdir("update-$$-XXXXXX", TMPDIR => 1, CLEANUP => 0);
+
+my $conf_file = "$temp_dir/munin.conf";
+open my $fh, '>', $conf_file or die "Cannot write $conf_file: $!";
+print $fh "dbdir   $temp_dir\n";
+print $fh "htmldir $temp_dir\n";
+print $fh "logdir  $temp_dir\n";
+print $fh "rundir  $temp_dir\n";
+print $fh "local_address 127.0.0.1\n";
+print $fh "graph_data_size debug\n";
+print $fh "fork 0\n";
+print $fh "\n";
+print $fh "[aesir;alfheim.aesir;aegir.alfheim.aesir]\n";
+print $fh "     address 127.0.0.1\n";
+print $fh "     port $ports[0]\n";
+print $fh "\n";
+print $fh "[asynjur;asgard.asynjur;alaisiagae.asgard.asynjur]\n";
+print $fh "     address 127.0.0.1\n";
+print $fh "     port $ports[1]\n";
+print $fh "\n";
+print $fh "[svartalfar;jotunheim.svartalfar;astrild.jotunheim.svartalfar]\n";
+print $fh "     address 127.0.0.1\n";
+print $fh "     port $ports[2]\n";
+print $fh "\n";
+print $fh "[localhost]\n";
+print $fh "     port $ports[0]\n";
+print $fh "\n";
+print $fh "[testing.acme.com]\n";
+print $fh "     port $ports[1]\n";
+close $fh;
+
+my $config = Munin::Master::Config->instance()->{"config"};
+$config->parse_config_from_file($conf_file);
+
 $config->{dbdir} = $temp_dir;
 $config->{fork} = 0;
 
