@@ -428,6 +428,120 @@ my ($alarm_ul, $num_unk_ul) = $dbh->selectrow_array(
 is($alarm_ul, 'unknown', "unknown_limit attr: triggers unknown with limit=1");
 $dbh->disconnect();
 
+# --- Part 15: DERIVE with undefined prev_value (line 236) ---
+
+# ds_id=7 is DERIVE type (rx); set prev_value=U
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+my $now15 = time();
+$dbh_rw->do(
+    "UPDATE state SET last_epoch = ?, last_value = '500', prev_epoch = ?, prev_value = 'U', alarm = 'ok' WHERE id = 7 AND type = 'ds'",
+    undef, $now15, $now15 - 60
+);
+$dbh_rw->disconnect();
+
+for my $i (1..4) { limits_main(); }
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($val_derive) = $dbh->selectrow_array(
+    "SELECT alarm FROM state WHERE id = 7 AND type = 'ds'"
+);
+is($val_derive, 'unknown', "DERIVE prev_value=U: becomes unknown");
+$dbh->disconnect();
+
+# --- Part 16: ABSOLUTE value computation (line 240) ---
+
+# Add a temporary ABSOLUTE DS via ds_attr on an existing GAUGE DS
+# We'll use ds_id=8 (tx, DERIVE) and change its type to ABSOLUTE
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("UPDATE ds SET type = 'ABSOLUTE' WHERE id = 8");
+my $now16 = time();
+$dbh_rw->do(
+    "UPDATE state SET last_epoch = ?, last_value = '1000', prev_epoch = ?, prev_value = '200', alarm = 'ok' WHERE id = 8 AND type = 'ds'",
+    undef, $now16, $now16 - 100
+);
+$dbh_rw->do("DELETE FROM override WHERE ds_id = 8");
+$dbh_rw->disconnect();
+
+limits_main();
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($val_abs) = $dbh->selectrow_array(
+    "SELECT alarm FROM state WHERE id = 8 AND type = 'ds'"
+);
+# ABSOLUTE: value = 1000 / (now - (now-100)) = 1000/100 = 10
+# warn=1000, crit=5000 -> 10 is OK
+is($val_abs, 'ok', "ABSOLUTE: value=10 computed correctly, within thresholds");
+$dbh->disconnect();
+
+# Restore type
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("UPDATE ds SET type = 'DERIVE' WHERE id = 8");
+$dbh_rw->disconnect();
+
+# --- Part 17: Contact from service_attr (line 357-358) ---
+
+# Service 3 (disk on localhost) already has contacts='testcontact' from SampleDB
+# This tests the split path at line 358
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 31 AND type = 'ds'");
+$dbh_rw->disconnect();
+
+limits_main();
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($val_svc_attr) = $dbh->selectrow_array(
+    "SELECT alarm FROM state WHERE id = 31 AND type = 'ds'"
+);
+ok(defined $val_svc_attr, "contact from service_attr: notification sent");
+$dbh->disconnect();
+
+# --- Part 18: contact_name eq 'none' skip (line 368) ---
+
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'none testcontact')");
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+$dbh_rw->disconnect();
+
+limits_main();
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($val_none) = $dbh->selectrow_array(
+    "SELECT alarm FROM state WHERE id = 1 AND type = 'ds'"
+);
+ok(defined $val_none, "contact 'none' skip: limits did not crash");
+$dbh->disconnect();
+
 # Cleanup
 remove_tree($dbdir);
 
