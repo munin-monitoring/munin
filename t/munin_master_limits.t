@@ -320,6 +320,32 @@ my ($val_counter) = $dbh->selectrow_array(
 is($val_counter, 'unknown', "COUNTER wrap: ds_id=14 becomes unknown when last < prev");
 $dbh->disconnect();
 
+# --- Part 11: Missing contact (line 375-377) ---
+
+# Set service contacts to a non-existent contact name
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'ghostcontact')");
+# Ensure state_changed triggers notification path
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+$dbh_rw->disconnect();
+
+# Should warn about missing contact but not crash
+limits_main();
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($val_ghost) = $dbh->selectrow_array(
+    "SELECT alarm FROM state WHERE id = 1 AND type = 'ds'"
+);
+ok(defined $val_ghost, "missing contact: limits did not crash");
+$dbh->disconnect();
+
 # Cleanup
 remove_tree($dbdir);
 
