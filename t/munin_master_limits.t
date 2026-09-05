@@ -372,6 +372,34 @@ my ($val_nocmd) = $dbh->selectrow_array(
 ok(defined $val_nocmd, "missing command: limits did not crash");
 $dbh->disconnect();
 
+# --- Part 13: max_messages limit (line 423-426) ---
+
+# Set testcontact with max_messages=1
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("INSERT OR REPLACE INTO contact_attr (id, name, value) VALUES (1, 'max_messages', '1')");
+$dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'testcontact')");
+# Create notification with num_messages=1 for service cpu (id=1)
+$dbh_rw->do("INSERT OR REPLACE INTO notification (contact_id, service_id, severity, num_messages) VALUES (1, 1, 'warning', 1)");
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+$dbh_rw->disconnect();
+
+limits_main();
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($num_msgs) = $dbh->selectrow_array(
+    "SELECT num_messages FROM notification WHERE contact_id = 1 AND service_id = 1"
+);
+# num_messages should still be 1 — notification skipped due to max_messages
+is($num_msgs, 1, "max_messages: notification skipped at limit");
+$dbh->disconnect();
+
 # Cleanup
 remove_tree($dbdir);
 
