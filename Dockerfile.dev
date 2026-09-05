@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libtest-mockobject-perl \
     libtest-exception-perl \
     libdevel-confess-perl \
+    libdevel-cover-perl \
     libfile-slurp-perl \
     librrds-perl \
     libssl-dev \

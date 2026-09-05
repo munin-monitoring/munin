@@ -236,14 +236,32 @@ docker-dev-stop:
 # Run tests in Docker — same env as CI
 docker-test:
 	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
-	$(DOCKER) run --rm --shm-size=64m --add-host testing.acme.com:127.0.0.1 munin-dev ./Build test
+	$(DOCKER) run --rm --shm-size=64m --add-host testing.acme.com:127.0.0.1 munin-dev ./Build test > out/test.txt
 
 # Run lint in Docker
 docker-lint:
 	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
-	$(DOCKER) run --rm munin-dev make lint
+	$(DOCKER) run --rm munin-dev make lint > out/lint.txt
 
 # Shell into dev container
 docker-shell:
 	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
 	$(DOCKER) run --rm -it --shm-size=64m munin-dev bash
+
+# Run coverage in Docker (all tests, sequential to avoid signal races)
+docker-cover:
+	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
+	$(DOCKER) run --rm --shm-size=256m --add-host testing.acme.com:127.0.0.1 munin-dev bash -c '\
+		perl Build.PL --install_base /app/sandbox 2>/tmp/build.err >/tmp/build.log && \
+		./Build install 2>>/tmp/build.err >>/tmp/build.log && \
+		rm -rf cover_db && \
+		for t in t/*.t; do \
+			base=$$(basename $$t .t); \
+			echo "=== $$t ===" >/tmp/$$base.log; \
+			timeout 120 perl -Iblib/lib -It/lib -MDevel::Cover=-db,cover_db $$t \
+				>>/tmp/$$base.log 2>&1; \
+		done && \
+		cover -report text >/tmp/coverage.txt 2>&1 && \
+		cat /tmp/build.log && \
+		for f in /tmp/munin_*.log; do echo ""; cat "$$f"; done && \
+		cat /tmp/coverage.txt' > out/cover.txt
