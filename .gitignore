@@ -26,6 +26,11 @@ script/munin-cron
 /sandbox/
 local/
 
+# Test sample data (generated at test time)
+t/sample_data/*.rrd
+t/sample_data/**/*.rrd
+t/sample_data/datafile.sqlite
+
 # editor files
 .idea/
 .*.sw[op]

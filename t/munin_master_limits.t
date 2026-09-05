@@ -5,7 +5,9 @@ use lib qw(t/lib);
 
 use Test::More;
 use Test::Differences;
+use Test::Exception;
 use DBI;
+use File::Temp qw(tempdir);
 
 use Munin::Master::Limits;
 
@@ -67,7 +69,20 @@ use Munin::Master::Limits;
     is_deeply($warn, ["0.5", "1.5"], "warning range 0.5:1.5");
 }
 
-# Test override table behavior — config file overrides plugin defaults
+# Malformed thresholds - should not crash
+{
+    my ($warn, $crit) = Munin::Master::Limits::_parse_thresholds("not_a_number", "also_bad");
+    ok(1, "malformed thresholds do not crash");
+}
+
+# Mixed valid/invalid
+{
+    my ($warn, $crit) = Munin::Master::Limits::_parse_thresholds("80", "not_a_number");
+    is_deeply($warn, [undef, 80], "valid warning with invalid critical");
+    ok(1, "mixed valid/invalid thresholds do not crash");
+}
+
+# Test override table behavior - config file overrides plugin defaults
 {
     my $dbh = DBI->connect("dbi:SQLite:dbname=:memory:", "", "", {
         RaiseError => 1,
@@ -83,7 +98,7 @@ use Munin::Master::Limits;
     $dbh->do("CREATE TABLE override (ds_id INTEGER, name VARCHAR, value VARCHAR)");
     $dbh->do("CREATE TABLE state (id INTEGER, type VARCHAR, last_epoch INTEGER, last_value VARCHAR, prev_epoch INTEGER, prev_value VARCHAR, alarm VARCHAR, num_unknowns INTEGER)");
 
-    # Insert test data: group, node, service, ds
+    # Insert test data
     $dbh->do("INSERT INTO grp (id, name, path) VALUES (1, 'testgroup', 'testgroup')");
     $dbh->do("INSERT INTO node (id, grp_id, name, path) VALUES (1, 1, 'testhost', 'testgroup/testhost')");
     $dbh->do("INSERT INTO service (id, node_id, name, path) VALUES (1, 1, 'cpu', 'testgroup/testhost/cpu')");
@@ -103,7 +118,7 @@ use Munin::Master::Limits;
     is($attrs{warning}, '80', "plugin default warning=80");
     is($attrs{critical}, '90', "plugin default critical=90");
 
-    # Step 2: Read overrides — none yet
+    # Step 2: Read overrides - none yet
     my $sth_ov = $dbh->prepare('SELECT name, value FROM override WHERE ds_id = ?');
     $sth_ov->execute(1);
     while (my ($k, $v) = $sth_ov->fetchrow_array) {
@@ -115,7 +130,7 @@ use Munin::Master::Limits;
     # Step 3: Add config override for warning only
     $dbh->do("INSERT INTO override (ds_id, name, value) VALUES (1, 'warning', '75')");
 
-    # Step 4: Re-read — override wins
+    # Step 4: Re-read - override wins
     %attrs = ();
     $sth_attr->execute(1);
     while (my ($k, $v) = $sth_attr->fetchrow_array) {
@@ -148,8 +163,24 @@ use Munin::Master::Limits;
     is_deeply($warn, [undef, 75], "parsed override warning");
     is_deeply($crit, [undef, 95], "parsed override critical");
 
+    # Test override precedence: multiple overrides for same ds_id
+    $dbh->do("INSERT INTO override (ds_id, name, value) VALUES (1, 'warning', '70')");
+    %attrs = ();
+    $sth_attr->execute(1);
+    while (my ($k, $v) = $sth_attr->fetchrow_array) {
+        $attrs{$k} = $v;
+    }
+    $sth_ov->execute(1);
+    while (my ($k, $v) = $sth_ov->fetchrow_array) {
+        $attrs{$k} = $v;
+    }
+    # Last insert wins in our query pattern
+    is($attrs{warning}, '70', "second override wins: warning=70");
+
     $dbh->disconnect();
 }
+
+print "\n";
 
 done_testing();
 
