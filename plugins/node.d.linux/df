@@ -29,7 +29,7 @@ the disk usage.
 This configuration snipplet is an example with the defaults:
 
   [df]
-    env.exclude none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs
+    env.exclude none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs efivarfs
     env.warning 92
     env.critical 98
 
@@ -108,7 +108,7 @@ $ENV{LC_ALL} = 'C';
 # For these devices use the mount point, the device is useless
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1, simfs => 1 );
 
-my @exclude = qw(none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs);
+my @exclude = qw(none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs efivarfs);
 my $dfopts  = $ENV{'dfopts'} || "-P -l";
 $dfopts .= ' ';
 my $title = "Disk usage";
