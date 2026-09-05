@@ -262,6 +262,34 @@ is($alarm1_after, 'ok', "recovery: ds_id=1 recovered from warning to ok");
 
 $dbh->disconnect();
 
+# --- Part 9: Heartbeat timeout (line 231) ---
+
+# Set last_epoch far in the past so time > last_epoch + 600
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+my $old_epoch = time() - 1200;
+$dbh_rw->do("UPDATE state SET last_epoch = ?, num_unknowns = 0, alarm = 'ok' WHERE id = 1 AND type = 'ds'", undef, $old_epoch);
+$dbh_rw->disconnect();
+
+# Run 4x: 3 to accumulate unknowns past default limit (3), 4th to trigger
+for my $i (1..4) {
+    limits_main();
+}
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($val_heartbeat) = $dbh->selectrow_array(
+    "SELECT alarm FROM state WHERE id = 1 AND type = 'ds'"
+);
+# Heartbeat expired -> value becomes 'U' -> unknown state
+is($val_heartbeat, 'unknown', "heartbeat timeout: ds_id=1 becomes unknown");
+$dbh->disconnect();
+
 # Cleanup
 remove_tree($dbdir);
 
