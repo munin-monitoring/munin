@@ -77,6 +77,8 @@ sub _process_limits {
     while (my ($service_id, $service_name, $service_path, $node_name, $group_path) = $sth->fetchrow_array) {
         _process_service($dbh, $service_id, $service_name, $node_name, $group_path);
     }
+
+    $dbh->disconnect();
 }
 
 
@@ -174,7 +176,7 @@ sub _process_service {
     $service{numofields}  = scalar @{$stats{ok}};
 
     # Send notifications
-    _generate_service_message(\%service, \%stats);
+    _generate_service_message($dbh, \%service, \%stats);
 }
 
 
@@ -308,10 +310,12 @@ sub _process_ds {
         SELECT ?, 'ds', ?, ?
         WHERE NOT EXISTS (SELECT 1 FROM state WHERE id = ? AND type = 'ds')
     });
-    $sth_ins->execute($ds_id, $new_state, $new_num_unknowns, $ds_id, 'ds');
+    $sth_ins->execute($ds_id, $new_state, $new_num_unknowns, $ds_id);
 
     my $sth_upt = $dbh->prepare(q{UPDATE state SET alarm = ?, num_unknowns = ? WHERE id = ? AND type = 'ds'});
     $sth_upt->execute($new_state, $new_num_unknowns, $ds_id);
+
+    $dbh->commit();
 
     return [$new_state, $value, $extinfo];
 }
@@ -346,9 +350,7 @@ my %contact_pipes;
 
 # Send notifications for service state changes — all tracking in SQL
 sub _generate_service_message {
-    my ($service, $stats) = @_;
-
-    my $dbh = Munin::Master::Update::get_dbh();
+    my ($dbh, $service, $stats) = @_;
 
     # Get contacts for this service from SQL
     my @contacts;

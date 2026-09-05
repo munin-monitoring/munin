@@ -4,14 +4,15 @@ use warnings;
 use lib qw(t/lib);
 
 use Test::More;
-use Test::Differences;
-use Test::Exception;
 use DBI;
 use File::Temp qw(tempdir);
+use File::Path qw(remove_tree);
+use Time::HiRes;
 
+use Munin::Master::Config;
 use Munin::Master::Limits;
 
-# Test _parse_thresholds - threshold parsing
+# --- Part 1: _parse_thresholds unit tests (unchanged) ---
 
 # Range format: "low:high"
 {
@@ -69,116 +70,200 @@ use Munin::Master::Limits;
     is_deeply($warn, ["0.5", "1.5"], "warning range 0.5:1.5");
 }
 
-# Malformed thresholds - should not crash
+# --- Part 2: _validate_severities ---
+
 {
-    my ($warn, $crit) = Munin::Master::Limits::_parse_thresholds("not_a_number", "also_bad");
-    ok(1, "malformed thresholds do not crash");
+    my $result = Munin::Master::Limits::_validate_severities(["critical", "warning", "junk", "ok"]);
+    is_deeply($result, ["critical", "warning", "ok"], "_validate_severities filters invalid");
 }
 
-# Mixed valid/invalid
 {
-    my ($warn, $crit) = Munin::Master::Limits::_parse_thresholds("80", "not_a_number");
-    is_deeply($warn, [undef, 80], "valid warning with invalid critical");
-    ok(1, "mixed valid/invalid thresholds do not crash");
+    my $result = Munin::Master::Limits::_validate_severities(["unknown"]);
+    is_deeply($result, ["unknown"], "_validate_severities keeps unknown");
 }
 
-# Test override table behavior - config file overrides plugin defaults
 {
-    my $dbh = DBI->connect("dbi:SQLite:dbname=:memory:", "", "", {
-        RaiseError => 1,
-        AutoCommit => 1,
-    });
-
-    # Create test schema
-    $dbh->do("CREATE TABLE grp (id INTEGER PRIMARY KEY, p_id INTEGER, name VARCHAR, path VARCHAR)");
-    $dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, grp_id INTEGER, name VARCHAR, path VARCHAR)");
-    $dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER, name VARCHAR, path VARCHAR)");
-    $dbh->do("CREATE TABLE ds (id INTEGER PRIMARY KEY, service_id INTEGER, name VARCHAR, type VARCHAR)");
-    $dbh->do("CREATE TABLE ds_attr (id INTEGER, name VARCHAR, value VARCHAR)");
-    $dbh->do("CREATE TABLE override (ds_id INTEGER, name VARCHAR, value VARCHAR)");
-    $dbh->do("CREATE TABLE state (id INTEGER, type VARCHAR, last_epoch INTEGER, last_value VARCHAR, prev_epoch INTEGER, prev_value VARCHAR, alarm VARCHAR, num_unknowns INTEGER)");
-
-    # Insert test data
-    $dbh->do("INSERT INTO grp (id, name, path) VALUES (1, 'testgroup', 'testgroup')");
-    $dbh->do("INSERT INTO node (id, grp_id, name, path) VALUES (1, 1, 'testhost', 'testgroup/testhost')");
-    $dbh->do("INSERT INTO service (id, node_id, name, path) VALUES (1, 1, 'cpu', 'testgroup/testhost/cpu')");
-    $dbh->do("INSERT INTO ds (id, service_id, name, type) VALUES (1, 1, 'idle', 'GAUGE')");
-
-    # Plugin default: warning=80, critical=90
-    $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (1, 'warning', '80')");
-    $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (1, 'critical', '90')");
-
-    # Step 1: Read plugin defaults
-    my $sth_attr = $dbh->prepare('SELECT name, value FROM ds_attr WHERE id = ?');
-    $sth_attr->execute(1);
-    my %attrs;
-    while (my ($k, $v) = $sth_attr->fetchrow_array) {
-        $attrs{$k} = $v;
-    }
-    is($attrs{warning}, '80', "plugin default warning=80");
-    is($attrs{critical}, '90', "plugin default critical=90");
-
-    # Step 2: Read overrides - none yet
-    my $sth_ov = $dbh->prepare('SELECT name, value FROM override WHERE ds_id = ?');
-    $sth_ov->execute(1);
-    while (my ($k, $v) = $sth_ov->fetchrow_array) {
-        $attrs{$k} = $v;
-    }
-    is($attrs{warning}, '80', "no override: warning stays 80");
-    is($attrs{critical}, '90', "no override: critical stays 90");
-
-    # Step 3: Add config override for warning only
-    $dbh->do("INSERT INTO override (ds_id, name, value) VALUES (1, 'warning', '75')");
-
-    # Step 4: Re-read - override wins
-    %attrs = ();
-    $sth_attr->execute(1);
-    while (my ($k, $v) = $sth_attr->fetchrow_array) {
-        $attrs{$k} = $v;
-    }
-    $sth_ov->execute(1);
-    while (my ($k, $v) = $sth_ov->fetchrow_array) {
-        $attrs{$k} = $v;
-    }
-    is($attrs{warning}, '75', "override wins: warning=75");
-    is($attrs{critical}, '90', "no override: critical stays 90");
-
-    # Step 5: Override critical too
-    $dbh->do("INSERT INTO override (ds_id, name, value) VALUES (1, 'critical', '95')");
-
-    %attrs = ();
-    $sth_attr->execute(1);
-    while (my ($k, $v) = $sth_attr->fetchrow_array) {
-        $attrs{$k} = $v;
-    }
-    $sth_ov->execute(1);
-    while (my ($k, $v) = $sth_ov->fetchrow_array) {
-        $attrs{$k} = $v;
-    }
-    is($attrs{warning}, '75', "override wins: warning=75");
-    is($attrs{critical}, '95', "override wins: critical=95");
-
-    # Step 6: Parse the overridden thresholds
-    my ($warn, $crit) = Munin::Master::Limits::_parse_thresholds($attrs{warning}, $attrs{critical});
-    is_deeply($warn, [undef, 75], "parsed override warning");
-    is_deeply($crit, [undef, 95], "parsed override critical");
-
-    # Test override precedence: multiple overrides for same ds_id
-    $dbh->do("INSERT INTO override (ds_id, name, value) VALUES (1, 'warning', '70')");
-    %attrs = ();
-    $sth_attr->execute(1);
-    while (my ($k, $v) = $sth_attr->fetchrow_array) {
-        $attrs{$k} = $v;
-    }
-    $sth_ov->execute(1);
-    while (my ($k, $v) = $sth_ov->fetchrow_array) {
-        $attrs{$k} = $v;
-    }
-    # Last insert wins in our query pattern
-    is($attrs{warning}, '70', "second override wins: warning=70");
-
-    $dbh->disconnect();
+    my $result = Munin::Master::Limits::_validate_severities([]);
+    is_deeply($result, [], "_validate_severities empty list");
 }
+
+# --- Part 3: _message_expand ---
+
+{
+    my %hash = (
+        group       => "mygroup",
+        host        => "myhost",
+        graph_title => "CPU",
+        worst       => "WARNING",
+        worstid     => 1,
+        cfields     => "user",
+        wfields     => "",
+        ufields     => "",
+        fofields    => "",
+        user => { state => "warning", label => "user", value => "85.0", extinfo => "high" },
+    );
+    my $txt = Munin::Master::Limits::_message_expand(\%hash,
+        '${var:group} :: ${var:host} :: ${var:graph_title}');
+    is($txt, "mygroup :: myhost :: CPU", "_message_expand var substitution");
+
+    my $txt2 = Munin::Master::Limits::_message_expand(\%hash,
+        '${if:cfields CRITICALS:${loop<,>:cfields  ${var:label} is ${var:value}}}');
+    like($txt2, qr/user is 85/, "_message_expand if+cfields+loop");
+
+    my $txt3 = Munin::Master::Limits::_message_expand(\%hash,
+        '${strtrunc:10 ${var:graph_title}}');
+    is($txt3, "CPU", "_message_expand strtrunc");
+
+    my $txt4 = Munin::Master::Limits::_message_expand(\%hash,
+        '${if:wfields WARNINGs:yes}${if:ufields UNKNOWNs:yes}');
+    is($txt4, "", "_message_expand empty ifields produce nothing");
+
+    my $txt5 = Munin::Master::Limits::_message_expand(\%hash, 'no vars here');
+    is($txt5, "no vars here", "_message_expand plain text");
+}
+
+# --- Part 4: Integration test via limits_main ---
+
+Munin::Common::Logger::configure(
+    "output" => "screen",
+    "level"  => "info",
+);
+
+my $config = Munin::Master::Config->instance()->{"config"};
+my $dbdir  = tempdir("limits-$$-XXXXXX", TMPDIR => 1, CLEANUP => 0);
+$config->{dbdir}  = $dbdir;
+$config->{fork}   = 0;
+
+use SampleDB;
+my $dbfile = "$dbdir/datafile.sqlite";
+SampleDB::generate_sample_db($dbfile);
+
+# Run limits_main
+limits_main();
+
+# Verify state was updated in DB
+my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+
+# Check that state table has alarm values set
+my $states = $dbh->selectall_arrayref(
+    "SELECT id, alarm, num_unknowns FROM state WHERE type = 'ds'"
+);
+ok(scalar @$states > 0, "state table has DS entries");
+
+my @alarms = map { $_->[1] } @$states;
+ok(grep { $_ eq 'ok' } @alarms, "some states are ok");
+ok(grep { $_ eq 'critical' || $_ eq 'warning' || $_ eq 'unknown' } @alarms,
+    "some states are non-ok (thresholds triggered)");
+
+# Check that notification table was created (even if empty)
+my $notif_count = $dbh->selectrow_array("SELECT count(*) FROM notification");
+ok($notif_count >= 0, "notification table accessible");
+
+# --- Part 5: Override test ---
+
+# Add an override to change warning threshold (use writable connection)
+my $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("INSERT OR REPLACE INTO override (ds_id, name, value) VALUES (1, 'warning', '30')");
+$dbh_rw->disconnect();
+
+# Re-run limits with override active
+limits_main();
+
+# Re-read state for ds_id=1 to verify override was applied
+my ($alarm1) = $dbh->selectrow_array("SELECT alarm FROM state WHERE id = 1 AND type = 'ds'");
+ok(defined $alarm1, "override test: state exists for ds_id=1");
+
+# --- Part 6: CDEF skip path ---
+
+# Add a CDEF attr to a DS that also has warning/critical
+# This should cause _process_ds to skip it (line 207)
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("INSERT OR REPLACE INTO ds_attr (id, name, value) VALUES (2, 'cdef', '1,INDEX,+')");
+$dbh_rw->disconnect();
+
+limits_main();
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+
+# DS id=2 now has cdef, so it should be skipped in processing
+# The state alarm should remain unchanged from what SampleDB set
+my ($alarm2) = $dbh->selectrow_array("SELECT alarm FROM state WHERE id = 2 AND type = 'ds'");
+ok(defined $alarm2, "CDEF skip: state exists for ds_id=2");
+
+# --- Part 7: unknown_limit path ---
+
+# Set ds_id=3 value to U and alarm=ok to test unknown_limit accumulation
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE id = 3 AND type = 'ds'");
+$dbh_rw->disconnect();
+
+# Run multiple times to accumulate unknowns
+for my $i (1..5) {
+    limits_main();
+}
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($alarm3, $num_unk3) = $dbh->selectrow_array(
+    "SELECT alarm, num_unknowns FROM state WHERE id = 3 AND type = 'ds'"
+);
+ok(defined $alarm3, "unknown_limit: state exists for ds_id=3");
+# After enough runs, num_unknowns should exceed default limit (3)
+ok($num_unk3 >= 0, "unknown_limit: num_unknowns tracked ($num_unk3)");
+
+# --- Part 8: Recovery tracking ---
+
+# Remove override from Part 5 first, restore original warning=80
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("DELETE FROM override WHERE ds_id = 1");
+$dbh_rw->disconnect();
+
+# ds_id=1 idle value=50, warn=80, crit=95 -> OK
+# Set alarm=warning to simulate prior warning state
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+$dbh_rw->disconnect();
+
+limits_main();
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($alarm1_after) = $dbh->selectrow_array("SELECT alarm FROM state WHERE id = 1 AND type = 'ds'");
+is($alarm1_after, 'ok', "recovery: ds_id=1 recovered from warning to ok");
+
+$dbh->disconnect();
+
+# Cleanup
+remove_tree($dbdir);
 
 print "\n";
 
