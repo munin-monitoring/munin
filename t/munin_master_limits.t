@@ -290,6 +290,36 @@ my ($val_heartbeat) = $dbh->selectrow_array(
 is($val_heartbeat, 'unknown', "heartbeat timeout: ds_id=1 becomes unknown");
 $dbh->disconnect();
 
+# --- Part 10: COUNTER wrap (line 241-242) ---
+
+# ds_id=14 is COUNTER type; set last_value < prev_value to trigger wrap -> 'U'
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+my $now10 = time();
+$dbh_rw->do(
+    "UPDATE state SET last_epoch = ?, last_value = '100', prev_epoch = ?, prev_value = '200', alarm = 'ok' WHERE id = 14 AND type = 'ds'",
+    undef, $now10, $now10 - 60
+);
+$dbh_rw->disconnect();
+
+# Run 4x to accumulate past unknown_limit (default 3)
+for my $i (1..4) {
+    limits_main();
+}
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($val_counter) = $dbh->selectrow_array(
+    "SELECT alarm FROM state WHERE id = 14 AND type = 'ds'"
+);
+is($val_counter, 'unknown', "COUNTER wrap: ds_id=14 becomes unknown when last < prev");
+$dbh->disconnect();
+
 # Cleanup
 remove_tree($dbdir);
 
