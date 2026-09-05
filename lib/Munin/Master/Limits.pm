@@ -30,6 +30,7 @@ my $screen         = 0;
 my $force          = 0;
 my $force_run_as_root = 0;
 
+# PL3 deviation: these template strings are data, not code — breaking them would harm readability
 my %default_text = (
     "default" =>
         '${var:group} :: ${var:host} :: ${var:graph_title}${if:cfields \n\tCRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields \n\tWARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields \n\tUNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields \n\tOKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}\n',
@@ -134,7 +135,8 @@ sub _process_service {
 
         my ($state, $value, $extinfo) = @$result;
 
-        $service{fields} = ($service{fields} // '') . " $ds_name";
+        my $existing = $service{fields} // '';
+        $service{fields} = "$existing $ds_name";
         $service{$ds_name} = {
             state  => $state,
             label  => $ds_name,
@@ -507,51 +509,51 @@ sub _message_expand {
             $text = $2;
         }
 
-        my @a = extract_bracketed($text, '{}');
-        if (!defined $a[0]) {
-            $text = $a[1];
+        my @bracket = extract_bracketed($text, '{}');
+        if (!defined $bracket[0]) {
+            $text = $bracket[1];
             next;
         }
 
-        if ($a[0] =~ /^\{var:(\S+)\}$/) {
-            $a[0] = $hash->{$1} // '';
+        if ($bracket[0] =~ /^\{var:(\S+)\}$/) {
+            $bracket[0] = $hash->{$1} // '';
         }
-        elsif ($a[0] =~ /^\{loop<([^>]+)>:\s*(\S+)\s(.+)\}$/) {
-            my $d = $1;
-            my $f = $2;
-            my $t = $3;
-            my $fields = $hash->{$f} // '';
-            my @r;
+        elsif ($bracket[0] =~ /^\{loop<([^>]+)>:\s*(\S+)\s(.+)\}$/) {
+            my $delimiter = $1;
+            my $field = $2;
+            my $template = $3;
+            my $fields = $hash->{$field} // '';
+            my @expanded;
             if ($fields) {
                 for my $sub (split /\s+/, $fields) {
                     if ($hash->{$sub}) {
-                        push @r, _message_expand($hash->{$sub}, $t);
+                        push @expanded, _message_expand($hash->{$sub}, $template);
                     }
                 }
             }
-            $a[0] = join($d, @r);
+            $bracket[0] = join($delimiter, @expanded);
         }
-        elsif ($a[0] =~ /^\{if:(\S+)\s(.+)\}$/) {
-            my $f = $1;
-            my $t = $2;
-            if ($hash->{$f} && $hash->{$f} ne '') {
-                $a[0] = _message_expand($hash, $t);
+        elsif ($bracket[0] =~ /^\{if:(\S+)\s(.+)\}$/) {
+            my $field = $1;
+            my $template = $2;
+            if ($hash->{$field} && $hash->{$field} ne '') {
+                $bracket[0] = _message_expand($hash, $template);
             } else {
-                $a[0] = '';
+                $bracket[0] = '';
             }
         }
-        elsif ($a[0] =~ /^\{strtrunc:(\d+)\s(.+)\}$/) {
+        elsif ($bracket[0] =~ /^\{strtrunc:(\d+)\s(.+)\}$/) {
             my $len = $1;
-            my $t = $2;
-            my $expanded = _message_expand($hash, $t);
-            $a[0] = substr($expanded, 0, $len);
+            my $template = $2;
+            my $expanded = _message_expand($hash, $template);
+            $bracket[0] = substr($expanded, 0, $len);
         }
         else {
-            $a[0] = '';
+            $bracket[0] = '';
         }
 
-        push @res, $a[0];
-        $text = $a[1];
+        push @res, $bracket[0];
+        $text = $bracket[1];
     }
 
     return join '', @res;
