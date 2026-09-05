@@ -69,8 +69,7 @@ $temp_dir = tempdir("update-$$-XXXXXX", TMPDIR => 1, CLEANUP => 0);
 $config->{dbdir} = $temp_dir;
 
 Munin::Common::Logger::configure(
-	"output" => "file",
-	"file" => "/dev/null",
+	"output" => "screen",
 	"level" => "info",
 );
 

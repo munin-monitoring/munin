@@ -22,8 +22,7 @@ $config->{tmpldir} = "web/templates/";
 system("mkdir", "-p", "$dbdir/_site");
 
 Munin::Common::Logger::configure(
-	"output" => "file",
-	"file" => "/dev/null",
+	"output" => "screen",
 	"level" => "info",
 );
 
