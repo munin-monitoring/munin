@@ -24,7 +24,7 @@ network filesystems, set "env.dfopts", and omit the "-l" option.
 =head2 DEFAULT CONFIGURATION
 
  [df_abs]
-  env.exclude     iso9660
+  env.exclude     iso9660 efivarfs
   env.exclude_re  ^/dev/sdc
   env.warning     92
   env.critical    98
@@ -90,7 +90,7 @@ check_for_regex_match() {
 
 total=${total:-on}
 
-dfopts=${dfopts:-"-P -l"}
+dfopts=${dfopts:-"-P -l -x efivarfs"}
 exclude_re=${exclude_re:-}
 exclude=${exclude:-iso9660}
 exclude=$(echo "$exclude" | sed -r -e 's/ +/ -x /g' -e 's/^/-x /')
