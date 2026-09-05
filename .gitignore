@@ -31,6 +31,12 @@ t/sample_data/*.rrd
 t/sample_data/**/*.rrd
 t/sample_data/datafile.sqlite
 
+# Test TLS certs (generated at test time)
+t/tls/*_cert.pem
+t/tls/*_key.pem
+t/tls/CA/*.pem
+t/tls/CA/*.srl
+
 # editor files
 .idea/
 .*.sw[op]

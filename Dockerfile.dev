@@ -28,6 +28,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libdevel-confess-perl \
     libdevel-cover-perl \
     libfile-slurp-perl \
+    faketime \
+    openssl \
     librrds-perl \
     libssl-dev \
     codespell \
