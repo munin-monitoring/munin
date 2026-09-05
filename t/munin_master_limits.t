@@ -400,6 +400,34 @@ my ($num_msgs) = $dbh->selectrow_array(
 is($num_msgs, 1, "max_messages: notification skipped at limit");
 $dbh->disconnect();
 
+# --- Part 14: unknown_limit attr (line 261) ---
+
+# Set ds_id=5 with custom unknown_limit=1 (instead of default 3)
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("INSERT OR REPLACE INTO ds_attr (id, name, value) VALUES (5, 'unknown_limit', '1')");
+# Set value to U so it triggers unknown path
+$dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE id = 5 AND type = 'ds'");
+$dbh_rw->disconnect();
+
+# First run: unknown_limit=1, num_unknowns goes 0->1, stays ok (below limit)
+limits_main();
+# Second run: num_unknowns=1 >= unknown_limit=1, triggers unknown
+limits_main();
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($alarm_ul, $num_unk_ul) = $dbh->selectrow_array(
+    "SELECT alarm, num_unknowns FROM state WHERE id = 5 AND type = 'ds'"
+);
+is($alarm_ul, 'unknown', "unknown_limit attr: triggers unknown with limit=1");
+$dbh->disconnect();
+
 # Cleanup
 remove_tree($dbdir);
 
