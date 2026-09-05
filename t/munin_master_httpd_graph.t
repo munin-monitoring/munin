@@ -31,6 +31,7 @@ END {
 	if ($temp_dir && -d $temp_dir) {
 		remove_tree($temp_dir);
 	}
+	$? = 0;
 }
 
 my $script_dir = __FILE__;

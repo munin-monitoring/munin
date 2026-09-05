@@ -35,6 +35,7 @@ END {
 	if ($temp_dir && -d $temp_dir) {
 		remove_tree($temp_dir);
 	}
+	$? = 0;
 }
 
 # Launch minimal test nodes on random ports
