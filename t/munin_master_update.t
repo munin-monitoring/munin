@@ -67,6 +67,7 @@ $config->parse_config_from_file("t/config/munin.conf");
 
 $temp_dir = tempdir("update-$$-XXXXXX", TMPDIR => 1, CLEANUP => 0);
 $config->{dbdir} = $temp_dir;
+$config->{fork} = 0;
 
 Munin::Common::Logger::configure(
 	"output" => "screen",
