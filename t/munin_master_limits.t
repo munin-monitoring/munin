@@ -346,6 +346,32 @@ my ($val_ghost) = $dbh->selectrow_array(
 ok(defined $val_ghost, "missing contact: limits did not crash");
 $dbh->disconnect();
 
+# --- Part 12: Missing command (line 389-391) ---
+
+# Create a contact with no command attr
+$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+});
+$dbh_rw->do("INSERT OR IGNORE INTO contact (id, name) VALUES (2, 'nocommand')");
+# No command attr inserted — triggers WARN at line 390
+$dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'nocommand')");
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+$dbh_rw->disconnect();
+
+limits_main();
+
+$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 1,
+    AutoCommit => 1,
+    ReadOnly   => 1,
+});
+my ($val_nocmd) = $dbh->selectrow_array(
+    "SELECT alarm FROM state WHERE id = 1 AND type = 'ds'"
+);
+ok(defined $val_nocmd, "missing command: limits did not crash");
+$dbh->disconnect();
+
 # Cleanup
 remove_tree($dbdir);
 
