@@ -42,6 +42,7 @@ sub run {
     my ($self) = @_;
 
     $self->_create_rundir_if_missing();
+    $self->{runid} = time();
 
     $self->_do_with_timing(sub {
         INFO "[INFO]: Starting munin-update";
@@ -163,7 +164,6 @@ sub _do_with_timing {
 sub _db_stats {
 	my ($self, $type, $name, $duration) = @_;
 
-	$self->{runid} = time() unless $self->{runid};
 	my $runid = $self->{runid};
 	my $dbh = $self->{dbh} || get_dbh(); # Reuse any existing connection, or open a temporary one
 	my $dbh_driver = $dbh->{Driver}->{Name};
@@ -171,6 +171,15 @@ sub _db_stats {
 	$sql_to_timestamp = "TO_TIMESTAMP" if $dbh_driver eq "Pg";
 	my $sth_i = $dbh->prepare_cached("INSERT INTO stats (runid, tstp, type, name, duration) VALUES (?, $sql_to_timestamp(?), ?, ?, ?);");
 	$sth_i->execute($runid, time(), $type, $name, $duration);
+	if ($type eq 'UT') {
+		# One day retention policy
+		my $sth_d= $dbh->prepare_cached("DELETE FROM stats where tstp < $sql_to_timestamp(?)");
+		$sth_d->execute(time() - 86400);
+		# Only retain last stats
+		#my $sth_d= $dbh->prepare_cached("DELETE FROM stats where runid < ?");
+		#$sth_d->execute($runid);
+	}
+
 	$dbh->commit();
 }
 
