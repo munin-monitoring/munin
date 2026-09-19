@@ -7,8 +7,112 @@ Troubleshooting
 This page lists some general troubleshooting strategies and methods for Munin.
 
 
-Check node agent
+Quick Checklists
 ================
+
+Graphs are blank or missing
+----------------------------
+
+1. Is :ref:`munin-node` running on the monitored host?
+
+   .. code-block:: bash
+
+      sudo systemctl status munin-node
+
+2. Can you reach the node from the master?
+
+   .. code-block:: bash
+
+      nc -z <node-ip> 4949
+
+3. Is the node's IP in the ``allow`` list in ``/etc/munin/munin-node.conf``?
+
+4. Is the host defined in ``/etc/munin/munin.conf`` on the master?
+
+5. Has ``munin-cron`` run at least once since you added the host? Wait 5 minutes
+   or run manually:
+
+   .. code-block:: bash
+
+      sudo -u munin /usr/share/munin/munin-cron
+
+6. Check ``/var/log/munin/munin-update.log`` for errors.
+
+7. Clear your browser cache — stale cached images can look blank.
+
+
+A plugin produces no graph
+---------------------------
+
+1. Is the plugin executable?
+
+   .. code-block:: bash
+
+      ls -la /etc/munin/plugins/<plugin-name>
+
+2. Has ``munin-node`` been restarted since the plugin was added?
+
+3. Does the plugin work with ``munin-run``?
+
+   .. code-block:: bash
+
+      sudo munin-run <plugin-name>
+      sudo munin-run <plugin-name> config
+
+4. Check ``/var/log/munin/munin-update.log`` for errors about this plugin.
+
+5. Is the plugin's ``graph_category`` valid? Invalid categories silently
+   drop graphs.
+
+
+munin-update is slow
+---------------------
+
+1. Check ``max_processes`` in ``/etc/munin/munin.conf``. Default is 16.
+   Lower it if the master is resource-constrained.
+
+2. Check ``timeout`` in ``/etc/munin/munin.conf``. Default is 180 seconds.
+   Unreachable nodes will block until the timeout expires.
+
+3. Use ``update_priority`` to run slow nodes first.
+
+4. Consider using :ref:`munin-async <node-async>` for nodes on slow or
+   unreliable links.
+
+
+RRD files filled with zeros or NaN
+------------------------------------
+
+1. The plugin may declare the wrong data type. ``GAUGE`` is the default;
+   ``COUNTER`` and ``DERIVE`` compute rates. If you declared ``COUNTER``
+   but the value is a gauge, you will see zeros.
+
+2. The plugin may output non-numeric characters. Check with:
+
+   .. code-block:: bash
+
+      sudo munin-run <plugin-name>
+
+3. For new plugins, wait 20 minutes. RRD needs several data points before
+   it can display meaningful graphs.
+
+
+Node won't accept connections
+------------------------------
+
+1. Check the ``allow`` / ``cidr_allow`` directives in ``/etc/munin/munin-node.conf``.
+   The master's IP must match.
+
+2. Check firewall rules on the node: port 4949 must be open.
+
+3. Check if another process is already listening on port 4949.
+
+
+Detailed Diagnostics
+====================
+
+Check node agent
+-----------------
 
 Is the :ref:`munin-node` process (daemon) running on the host you want to monitor?
 

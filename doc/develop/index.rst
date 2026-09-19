@@ -13,6 +13,7 @@ Guidelines for developing Munin.
    :maxdepth: 2
 
    environment.rst
+   architecture.rst
    documenting.rst
    tests.rst
    data_structures.rst

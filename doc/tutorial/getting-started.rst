@@ -1,61 +1,172 @@
-Getting Started
-================
+.. _tutorial-getting-started:
 
-Please refer to the :ref:`Nomenclature part <nomenclature>` to understand the terms used in this guide.
+===============
+ Getting Started
+===============
 
-Installation
-------------
+This tutorial walks you through installing Munin, seeing your first graph,
+and understanding what happened. It takes about 5 minutes.
 
-Before you can use Munin you need to install it, of course. It is possible that
-Munin is already installed at your site, either because it was included in your
-operating system distribution or because the system administrator already
-installed it. If that is the case, you should obtain information from the
-operating system documentation or your system administrator about how to access
-Munin.
+.. note::
 
-If you are installing Munin yourself, then refer to :ref:`Install Chapter <installation>`
-for instructions on installation, and return to this guide when the installation is
-complete. Be sure to follow closely the section about setting up the
-appropriate configuration files.
+   This guide assumes a Debian/Ubuntu system. For other distributions,
+   substitute ``yum`` or ``dnf`` for ``apt-get``. The concepts are the same.
 
-All the tutorial will assume a Debian installation, so all the commands are
-suited to the Debian package management system. As the one in Ubuntu is mostly
-the same, examples should work unchanged. For RPM-based systems, the equivalent
-yum command is left as an exercise to the reader, but should not be very hard
-to get.
+Prerequisites
+=============
 
-We cannot speak about every other OS, but any UNIX-like have been reported to
-work. Your safest bet should be to stick to a supported OS if you don't
-feel adventurous.
+You need two machines (or one machine acting as both master and node):
 
-Also, you should need a dedicated server for the master role, as it mostly
-requires root access. Again, it is not required, but safety, and ability to
-copy/paste the samples, advise you to stick to these guidelines.
+- **Master**: collects data and serves the web interface.
+- **Node**: the machine being monitored (runs a small agent).
 
-Architectural Fundamentals
---------------------------
-Munin has a master-nodes architecture. See :ref:`Munin's Architecture <architecture-index>`
-for the details.
+Both need network connectivity on TCP port 4949 (node) and 4948 (web interface).
 
-.. image:: Munin-Architecture.png
+Step 1: Install the Packages
+=============================
 
+On the **node** (the machine to monitor):
 
-Adding a Node
--------------
+.. code-block:: bash
 
-Thanks to the plug-and-play architecture of Munin, this is very easy. You
-obviously have to install the node part on the host you want to monitor.
+   sudo apt-get install munin-node
+
+On the **master** (the machine that collects data):
+
+.. code-block:: bash
+
+   sudo apt-get install munin
+
+This installs everything: the master, the web interface, and a node
+so Munin can monitor itself.
+
+Step 2: Allow the Master to Query the Node
+===========================================
+
+Edit ``/etc/munin/munin-node.conf`` on the **node**. Add the master's
+IP address to the access list:
 
 ::
 
-  $ apt-get install munin-node
+   allow ^127\.0\.0\.1$
 
-This will install the node, some default plugins and launch it.
+Replace ``127.0.0.1`` with your master's actual IP if they are on
+different machines. Then restart the node:
 
-As the node runs as the root user in order to run plugins as any needed user,
-it now only listens on localhost as a security measure. You have to edit
-munin-node.conf in order to listen to the network, and add the master's IP on
-the authorized list.
+.. code-block:: bash
 
-And don't forget to install munin-node also on the "Munin master" machine
-to monitor Munin's activities :-)
+   sudo systemctl restart munin-node
+
+Step 3: Tell the Master About the Node
+=======================================
+
+Edit ``/etc/munin/munin.conf`` on the **master**. Add a section for
+the node you want to monitor:
+
+::
+
+   [myserver.example.com]
+     address 127.0.0.1
+
+Use the node's hostname or IP address. If you are monitoring the
+master itself, ``127.0.0.1`` is correct.
+
+Step 4: Wait for the First Data Collection
+===========================================
+
+Munin collects data every 5 minutes via cron. After installation,
+``munin-cron`` is already set up. Wait 5 minutes, or run it manually
+to speed things up:
+
+.. code-block:: bash
+
+   sudo -u munin /usr/share/munin/munin-cron
+
+Step 5: View Your First Graph
+==============================
+
+Open a web browser and go to:
+
+::
+
+   http://localhost:4948/
+
+You should see the Munin web interface with graphs for your machine.
+Click on a host name, then a category (like "system"), then a service
+(like "load") to see a graph.
+
+What Just Happened?
+====================
+
+Here is what each component did:
+
+1. **munin-node** (on the node) listened on port 4949 and waited for
+   connections from the master.
+
+2. **munin-update** (on the master) connected to the node, asked for
+   a list of plugins, and ran each one to collect data. The data was
+   stored in RRD files under ``/var/lib/munin/``.
+
+3. **munin-limits** (on the master) checked the collected data against
+   warning and critical thresholds.
+
+4. **munin-httpd** (on the master) served the web interface on port 4948,
+   generating graphs from the RRD files on demand.
+
+Understanding the Plugin System
+================================
+
+Munin's power comes from its plugins. Each plugin is a small script that
+knows how to collect one type of data (CPU load, disk usage, network
+traffic, etc.).
+
+You can see which plugins are active on a node by connecting to it:
+
+.. code-block:: bash
+
+   nc localhost 4949
+
+Then type:
+
+::
+
+   list
+
+You will get a list of plugin names like ``cpu``, ``load``, ``df``,
+``if_``, and so on.
+
+To see what a plugin outputs, use ``munin-run``:
+
+.. code-block:: bash
+
+   sudo munin-run load
+
+This prints the current values:
+
+::
+
+   load.value 0.42
+
+To see the plugin's configuration (graph title, labels, thresholds):
+
+.. code-block:: bash
+
+   sudo munin-run load config
+
+Next Steps
+==========
+
+- :ref:`Add more nodes <tutorial-getting-started>` by installing
+  ``munin-node`` on other machines and adding sections to ``munin.conf``.
+
+- :ref:`Install additional plugins <plugin-use>` to monitor databases,
+  web servers, and other services.
+
+- :ref:`Set up alerts <tutorial-alert>` to get notified when values
+  exceed thresholds.
+
+- :ref:`Write your own plugin <plugin-writing>` to monitor anything
+  that can be expressed as a number.
+
+- Read the :ref:`Architecture <architecture-index>` section to understand
+  how the components fit together.

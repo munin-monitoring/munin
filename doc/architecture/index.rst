@@ -77,7 +77,6 @@ We have some more standard arguments, which play a role in the process of automa
         ../plugin/protocol-cap.rst
         ../plugin/snmp.rst
         ../plugin/use.rst
-        ../plugin/writing-tips.rst
         ../plugin/writing.rst
         ../plugin/supersampling.rst
 
@@ -86,10 +85,10 @@ Relations
 ^^^^^^^^^
 
 - Each Munin master may monitor one or more Munin nodes (1:n)
-- More than one Munin master may monitor one or more Munin nodes (n:m)
-    - Does this confuse lightly stupid plugins?
-    - Is "multi-master" configurations tested, known and/or documented?
-    - Does the Plugin-writing-howto describe how the plugin should behave if queried more often than in five minutes intervals and/or from different Munin masters?
+- More than one Munin master may monitor one or more Munin nodes (n:m).
+  Multi-master configurations are supported. Each master maintains its own
+  independent set of RRD files. Plugins should be idempotent and not depend
+  on being called from only one master.
 - Each Munin node controls one or more plugins (1:n)
 - Each plugin returns, when queried:
     - One or more general directives to control the plugin itself, with corresponding values
