@@ -32,7 +32,7 @@ END {
 }
 
 require TestTLS;
-$tls_dir = generate_test_certs();
+$tls_dir = TestTLS::generate_test_certs();
 
 # Helper: fork server, return (pid, client_sock, server_sock)
 sub start_tls_server {

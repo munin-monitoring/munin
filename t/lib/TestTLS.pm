@@ -2,6 +2,8 @@
 # Generate test TLS certificates at test time.
 # Replaces committed PEM files that may be stale.
 
+package TestTLS;
+
 use strict;
 use warnings;
 use File::Temp qw(tempdir);
