@@ -106,8 +106,8 @@ sub generate_sample_db {
             $dbh->do("INSERT OR IGNORE INTO service_attr (id, name, value) VALUES (?, 'contacts', 'testcontact')",
                 undef, $svc_id);
 
-            $dbh->do("INSERT OR IGNORE INTO url (type, path) VALUES (?, ?)",
-                undef, "service", $svc_path);
+            $dbh->do("INSERT OR IGNORE INTO url (id, type, path) VALUES (?, ?, ?)",
+                undef, $svc_id, "service", $svc_path);
 
             my $scenario = $service_scenarios[$svc_idx % scalar(@service_scenarios)];
 
