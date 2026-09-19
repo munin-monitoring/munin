@@ -2,6 +2,8 @@
 # Generate sample RRD files for the current architecture.
 # Replaces committed binary RRDs that break cross-architecture.
 
+package SampleRRD;
+
 use strict;
 use warnings;
 use RRDs;
@@ -24,12 +26,12 @@ sub generate_sample_rrds {
         { name => "cached",  type => "GAUGE",   min => "0", max => "" },
         { name => "rx",      type => "DERIVE",  min => "0", max => "" },
         { name => "tx",      type => "DERIVE",  min => "0", max => "" },
-        { name => "in",      type => "DERIVE",  min => "0", max => "" },
-        { name => "out",     type => "DERIVE",  min => "0", max => "" },
+        { name => "in",      type => "GAUGE",   min => "0", max => "" },
+        { name => "out",     type => "GAUGE",   min => "0", max => "" },
         { name => "value1",  type => "GAUGE",   min => "0", max => "100" },
         { name => "value2",  type => "GAUGE",   min => "0", max => "100" },
         { name => "value3",  type => "GAUGE",   min => "0", max => "100" },
-        { name => "value4",  type => "GAUGE",   min => "0", max => "100" },
+        { name => "value4",  type => "COUNTER", min => "0", max => "100" },
         { name => "value5",  type => "GAUGE",   min => "0", max => "100" },
     );
 
@@ -38,20 +40,23 @@ sub generate_sample_rrds {
     my $step = 300; # 5 minutes
 
     for my $host (@hosts) {
+        my $path = ($host eq "localhost") ? "acme.com/$host" : $host;
         for my $svc (@services) {
             for my $ds (@ds_defs) {
                 my $type_id = lc(substr($ds->{type}, 0, 1));
-                my $filename = "$host-$svc-$ds->{name}-$type_id.rrd";
-                my $filepath = "$dbdir/$host/$filename";
+                my $filename = "$svc-$ds->{name}-$type_id.rrd";
+                my $filepath = "$dbdir/$path/$filename";
 
-                make_path("$dbdir/$host", { mode => 0755 });
+                make_path("$dbdir/$path", { mode => 0755 });
 
                 # Skip if already exists
                 next if -f $filepath;
 
                 my $heartbeat = $step * 2;
+                my $min = $ds->{min} || 'U';
+                my $max = $ds->{max} || 'U';
                 my $ds_def = sprintf("DS:42:%s:%s:%s:%s",
-                    $ds->{type}, $heartbeat, $ds->{min}, $ds->{max});
+                    $ds->{type}, $heartbeat, $min, $max);
 
                 RRDs::create($filepath,
                     "--start", ($start - $step),
