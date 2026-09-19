@@ -2,6 +2,37 @@
 
 munin-2.0.76, 2024-05-17
 
+Bernhard M. Wiedemann (1):
+      Fix graphing with rrdtool >= 1.10
+
+Bryce Chidester (2):
+      Correct Postgres version logic for postgres_bgwriter
+      Correct Postgres version logic for postgres_checkpoints
+
+Eero Häkkinen (2):
+      Support TLS certificate chain files.
+      node: Do not write plain text version response to TLS socket
+
+Jozef Mlich (2):
+      Fixes #1643, updated query was taken from https://github.com/munin-monitoring/contrib/issues/1483
+      Update postgres_checkpoints plugin for PostgreSQL 17
+
+Kenyon Ralph (7):
+      Prevent log spam with nut plugins (#1632)
+      Adjust postgres_bgwriter plugin for PostgreSQL 17 (#1647)
+      plugins/nut_*: emit 'U' if value is not seen in upsc output (#1674)
+      Support TLS certificate chain files (#1682)
+      node: Do not write plain text version response to TLS socket (#1683)
+      Fix PostgreSQL 17 version checks in `postgres_bgwriter` and `postgres_checkpoints` (#1688)
+      Fix munin-graph with rrdtool >= 1.10 (#1690)
+
+Matt Merhar (2):
+      Prevent log spam with nut plugins
+      plugins/nut_*: emit 'U' if value is not seen in upsc output
+
+
+munin-2.0.76, 2024-05-17
+
 Kim B. Heino (1):
       plugins/postgres: use standard category "db" instead of "PostgreSQL"
 
