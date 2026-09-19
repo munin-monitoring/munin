@@ -10,24 +10,43 @@ to help developers navigate the code.
 Directory Layout
 ================
 
-::
+.. graphviz::
 
-  munin/
-  ├── lib/                    # Perl modules (the core library)
-  │   ├── Munin/
-  │   │   ├── Common/         # Shared utilities (TLS, config, logging)
-  │   │   ├── Master/         # Master-side components
-  │   │   ├── Node/           # Node-side components
-  │   │   └── Plugin/         # Plugin helper modules
-  │   └── Munin.pm            # Top-level module
-  ├── script/                 # Executable scripts (installed to PATH)
-  ├── plugins/                # Built-in plugins (organized by category)
-  ├── t/                      # Test suite
-  ├── doc/                    # Documentation (Sphinx/RST)
-  ├── web/                    # Static web assets (CSS, JS, images)
-  ├── dev_scripts/            # Developer sandbox tools
-  ├── contrib/                # Contributed tools and plugins
-  └── etc/                    # Sample configuration files
+   digraph layout {
+       rankdir=TB;
+       node [shape=folder, style=filled, fillcolor=lightyellow];
+
+       munin [label="munin/", fillcolor=lightblue];
+       lib [label="lib/"];
+       script [label="script/"];
+       plugins_dir [label="plugins/"];
+       t [label="t/"];
+       doc [label="doc/"];
+       web [label="web/"];
+       dev [label="dev_scripts/"];
+       contrib [label="contrib/"];
+       etc [label="etc/"];
+
+       munin_common [label="Common/\n(TLS, config, logging)"];
+       munin_master [label="Master/\n(update, limits, graph)"];
+       munin_node [label="Node/\n(server, service)"];
+       munin_plugin [label="Plugin/\n(SNMP, HTTP, Pgsql)"];
+
+       munin -> lib;
+       munin -> script;
+       munin -> plugins_dir;
+       munin -> t;
+       munin -> doc;
+       munin -> web;
+       munin -> dev;
+       munin -> contrib;
+       munin -> etc;
+
+       lib -> munin_common;
+       lib -> munin_master;
+       lib -> munin_node;
+       lib -> munin_plugin;
+   }
 
 Key Modules
 ===========
@@ -90,17 +109,28 @@ Helper modules for plugin authors:
 Data Flow
 =========
 
-::
+.. graphviz::
 
-  ┌─────────┐      ┌──────────┐      ┌─────────┐
-  │  cron   │─────→│munin-    │─────→│munin-   │
-  │         │      │update    │      │limits   │
-  └─────────┘      └────┬─────┘      └────┬────┘
-                        │                  │
-                   ┌────▼─────┐      ┌────▼─────┐
-                   │  node    │      │  alerts  │
-                   │  plugins │      │          │
-                   └──────────┘      └──────────┘
+   digraph dataflow {
+       rankdir=LR;
+       node [shape=box, style=filled, fillcolor=lightblue];
+
+       cron [label="munin-cron"];
+       update [label="munin-update"];
+       limits [label="munin-limits"];
+       node_box [label="munin-node\nplugins", fillcolor=lightyellow];
+       alerts [label="alerts", fillcolor=lightyellow];
+       rrd [label="RRD files", shape=cylinder, fillcolor=lightgreen];
+       db [label="SQLite DB", shape=cylinder, fillcolor=lightgreen];
+
+       cron -> update;
+       cron -> limits;
+       update -> node_box [label="network\nprotocol"];
+       update -> rrd;
+       update -> db;
+       limits -> db;
+       limits -> alerts [label="threshold\nbreach"];
+   }
 
 1. ``munin-cron`` invokes ``munin-update`` and ``munin-limits`` every 5 minutes.
 
