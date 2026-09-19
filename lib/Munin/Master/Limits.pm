@@ -15,8 +15,11 @@ use Time::HiRes;
 use Text::Balanced qw ( extract_bracketed );
 use Scalar::Util qw( looks_like_number );
 use Munin::Common::Logger;
+use RRDs;
 
 use Munin::Master::Update;
+
+my $config = Munin::Master::Config->instance()->{config};
 
 my $DEBUG          = 0;
 my $VERBOSE        = 0;
@@ -205,8 +208,34 @@ sub _process_ds {
     # Skip if no thresholds
     return unless defined $warn_str || defined $crit_str;
 
-    # Skip CDEF fields
-    return if defined $attrs{cdef} && $attrs{cdef} ne '';
+    # --------------------------------------------------------------------
+    # CDEF fields: compute value via RRDs::xport.
+    #
+    # WHY COMPUTE HERE (at limits time)?
+    # - Update phase is time-critical (must finish in update_rate)
+    # - Limits phase is async, less time-sensitive
+    # - Only services with CDEF thresholds pay the xport cost
+    # - RRDs::xport auto-flushes rrdcached (FETCH implies flush)
+    #
+    # WHAT WE STORE:
+    # - state.last_value: computed CDEF value (for HTML/graph display)
+    # - state.alarm: threshold evaluation result (ok/warning/critical)
+    # - This makes CDEF values queryable like any other DS
+    # --------------------------------------------------------------------
+    my $value;
+    my $is_cdef = defined $attrs{cdef} && $attrs{cdef} ne '';
+    if ($is_cdef) {
+        $value = _compute_cdef_value($dbh, $ds_id, $attrs{cdef});
+        # Store computed value immediately so HTML/graphs can show it
+        # even if threshold evaluation hasn't run yet
+        if (defined $value) {
+            my $sth_store = $dbh->prepare(q{
+                UPDATE state SET last_value = ?, last_epoch = ?
+                WHERE id = ? AND type = 'ds'
+            });
+            $sth_store->execute(sprintf('%.6f', $value), time(), $ds_id);
+        }
+    }
 
     # Parse thresholds
     my ($warn, $crit) = _parse_thresholds($warn_str, $crit_str);
@@ -223,9 +252,27 @@ sub _process_ds {
     $old_state       //= 'ok';
     $old_num_unknowns //= 0;
 
-    # Compute current value
+    # Compute current value for non-CDEF fields
     my $heartbeat = 600;
-    my $value;
+    unless (defined $value) {  # Skip if already computed (CDEF case)
+        if (!defined $last_value || $last_value eq 'U') {
+            $value = 'U';
+        } elsif (time > $last_epoch + $heartbeat) {
+            $value = 'U';
+        } elsif (!$ds_type || $ds_type eq 'GAUGE') {
+            $value = $last_value;
+        } elsif (!defined $prev_value || $prev_value eq 'U') {
+            $value = 'U';
+        } elsif ($last_epoch == $prev_epoch || $last_epoch > $prev_epoch + $heartbeat) {
+            $value = 'U';
+        } elsif ($ds_type eq 'ABSOLUTE') {
+            $value = $last_value / ($last_epoch - $prev_epoch);
+        } elsif ($ds_type eq 'COUNTER' && $last_value < $prev_value) {
+            $value = 'U';
+        } else {
+            $value = ($last_value - $prev_value) / ($last_epoch - $prev_epoch);
+        }
+    }
     if (!defined $last_value || $last_value eq 'U') {
         $value = 'U';
     } elsif (time > $last_epoch + $heartbeat) {
@@ -347,6 +394,132 @@ sub _parse_thresholds {
 
 
 my %contact_pipes;
+
+# ========================================================================
+# CDEF VALUE COMPUTATION
+# ========================================================================
+#
+# WHY COMPUTE CDEFs HERE (at limits time)?
+#
+# 1. UPDATE PHASE IS TIME-CRITICAL:
+#    munin-update must complete within update_rate (typically 5 min).
+#    Adding RRDs::xport calls would risk timeouts.
+#
+# 2. LIMITS PHASE IS ASYNC:
+#    munin-limits runs separately, can take longer.
+#    It's the right place for derived value computation.
+#
+# 3. COST PROPORTIONAL:
+#    Only services with CDEF thresholds pay the xport cost.
+#    Most CDEFs have no thresholds, so no overhead.
+#
+# 4. RRDCACHED COMPATIBILITY:
+#    RRDs::xport auto-flushes rrdcached (FETCH implies flush).
+#    So we always get fresh data even if update just wrote.
+#
+# 5. STORE FOR HTML/GRAPHS:
+#    Computed value is stored in state.last_value.
+#    HTML and graph modules can display it without recomputing.
+#
+# ========================================================================
+
+sub _compute_cdef_value {
+    my ($dbh, $ds_id, $cdef_expr) = @_;
+    my $dbdir = $config->{dbdir};
+
+    # --------------------------------------------------------------------
+    # Get RRD file and source DS names for this CDEF.
+    # --------------------------------------------------------------------
+    my $sth_rrd = $dbh->prepare(q{
+        SELECT d.name, da.value
+        FROM ds d
+        INNER JOIN ds_attr da ON da.id = d.id AND da.name = 'rrd:file'
+        WHERE d.id = ?
+    });
+    $sth_rrd->execute($ds_id);
+    my ($ds_name, $rrd_file) = $sth_rrd->fetchrow_array;
+    return unless defined $rrd_file;
+    $rrd_file = File::Spec->catfile($dbdir, $rrd_file);
+    return unless -f $rrd_file;
+
+    # Get all DS in same service (for source DS lookup)
+    my $sth_svc = $dbh->prepare(q{
+        SELECT d.id, d.name, da.value
+        FROM ds d
+        INNER JOIN ds_attr da ON da.id = d.id AND da.name = 'rrd:file'
+        WHERE d.service_id = (SELECT service_id FROM ds WHERE id = ?)
+    });
+    $sth_svc->execute($ds_id);
+    my %rrd_files;
+    while (my ($id, $name, $file) = $sth_svc->fetchrow_array) {
+        $rrd_files{$name} = File::Spec->catfile($dbdir, $file) if $file;
+    }
+
+    # --------------------------------------------------------------------
+    # Parse CDEF expression to find source DS names.
+    #
+    # CDEFs are RPN: "in,out,+" = push in, push out, add.
+    # We identify DS names (alphanumeric) vs operators (symbols).
+    # --------------------------------------------------------------------
+    my @tokens = split(/,/, $cdef_expr);
+    my %seen_defs;
+    my @xport_args = (
+        '--start', 'now-3600',
+        '--end',   'now+120',
+        '--step',  '60',
+    );
+
+    # RRDtool CDEF keywords (not DS names)
+    my %keywords = map { $_ => 1 } qw(
+        GT GE LT LE EQ NE IF MIN MAX LIMIT DUP POP EXC
+        SIN COS LOG EXP FLOOR CEIL ABS UNKN INF NEGINF
+        PREV NOW TIME LTIME
+    );
+
+    for my $tok (@tokens) {
+        next if $seen_defs{$tok};
+        next if $tok =~ /^[-+]?[\d.]+$/;  # Number
+        next if $tok =~ /^[<>=!+*\/\-]/;   # Operator
+        next if $keywords{uc $tok};         # RRD keyword
+
+        # Looks like a DS name -- add DEF if we have its RRD
+        if (defined $rrd_files{$tok}) {
+            push @xport_args, "DEF:${tok}=$rrd_files{$tok}:$tok:AVERAGE"
+                unless $seen_defs{$tok}++;
+        }
+    }
+
+    # Add CDEF and XPORT for the computed field
+    push @xport_args, "CDEF:result=$cdef_expr";
+    push @xport_args, 'XPORT:result';
+
+    # --------------------------------------------------------------------
+    # Execute xport.
+    #
+    # RRDs::xport uses FETCH internally, which auto-flushes rrdcached.
+    # See rrd_client.c: "FlushVersion" in FETCH response.
+    # --------------------------------------------------------------------
+    DEBUG "[DEBUG] _compute_cdef_value: RRDs::xport(@xport_args)";
+    my ($start, $end, $step, $nb, $cols, $vals) = RRDs::xport(@xport_args);
+
+    if (my $err = RRDs::error) {
+        WARN "[WARN] RRDs::xport failed for $ds_name: $err";
+        return undef;
+    }
+
+    # --------------------------------------------------------------------
+    # Extract last non-NaN value.
+    # --------------------------------------------------------------------
+    for my $i (reverse 0..$#$vals) {
+        my $val = $vals->[$i][0];
+        if (defined $val) {
+            DEBUG "[DEBUG] _compute_cdef_value: $ds_name = $val";
+            return $val;
+        }
+    }
+
+    return undef;
+}
 
 # Send notifications for service state changes — all tracking in SQL
 sub _generate_service_message {
