@@ -315,7 +315,8 @@ sub _process_starttls_command {
 
 
 sub _show_version {
-    print "munins node on $config->{fqdn} version: $Munin::Common::Defaults::MUNIN_VERSION\n"
+    my ($session) = @_;
+    _net_write($session, "munins node on $config->{fqdn} version: $Munin::Common::Defaults::MUNIN_VERSION\n");
 }
 
 

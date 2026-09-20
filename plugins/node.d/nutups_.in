@@ -13,6 +13,7 @@
 UPS=$(basename "$0" | cut -d_ -f2)
 FUNCTION=$(basename "$0" | cut -d_ -f3)
 UPSC=$(command -v upsc)
+export NUT_QUIET_INIT_SSL=1
 
 if [ "$1" = "autoconf" ]; then
 	[ -x "$UPSC" ] && [ -r /etc/nut/ups.conf ] && echo yes && exit 0

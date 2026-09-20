@@ -51,12 +51,8 @@ use Time::HiRes;
 use Text::ParseWords;
 
 # For UTF-8 handling (plugins are assumed to use Latin 1)
-if ($RRDs::VERSION >= 1.3) {
-    use Encode;
-    use Encode::Guess;
-    Encode->import;
-    Encode::Guess->import;
-}
+use Encode;
+use Encode::Guess;
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -65,25 +61,13 @@ use Munin::Common::Defaults;
 use Log::Log4perl qw( :easy );
 
 # RRDtool 1.2 requires \\: in comments
-my $RRDkludge = $RRDs::VERSION < 1.2 ? '' : '\\';
-
-# And RRDtool 1.2.* draws lines with crayons so we hack
-# the LINE* options a bit.
-my $LINEkluge = 0;
-if ($RRDs::VERSION >= 1.2 and $RRDs::VERSION < 1.3) {
-
-    # Only kluge the line widths in RRD 1.2*
-    $LINEkluge = 1;
-}
+my $RRDkludge = '\\';
 
 # RRD 1.3 has a "ADDNAN" operator which evaluates n + NaN = n instead of = NaN.
-my $AddNAN = '+';
-if ($RRDs::VERSION >= 1.3) {
-    $AddNAN = 'ADDNAN';
-}
+my $AddNAN = 'ADDNAN';
 
 # the ":dashes" syntax for LINEs is supported since rrdtool 1.5.3
-my $RRDLineThresholdAttribute = ($RRDs::VERSION < 1.50003) ? '' : ':dashes';
+my $RRDLineThresholdAttribute = ':dashes';
 
 # Force drawing of "graph no".
 my $force_graphing = 0;
@@ -99,7 +83,6 @@ my $skip_stats     = 0;
 my $stdout         = 0;
 my $force_run_as_root = 0;
 my $conffile       = $Munin::Common::Defaults::MUNIN_CONFDIR . "/munin.conf";
-my $libdir         = $Munin::Common::Defaults::MUNIN_LIBDIR;
 # Note: Nothing by default is more convenient and elliminates code while
 # for cgi graphing - but it breaks how munin-graph expected stuff to work.
 # I think.
@@ -321,13 +304,7 @@ sub graph_startup {
     $max_running = &munin_get($config, "max_graph_jobs", $max_running);
 
     if ($config->{"rrdcached_socket"}) {
-	    if ($RRDs::VERSION >= 1.3){
-		# Using the RRDCACHED_ADDRESS environnement variable, as
-                # it is way less intrusive than the command line args.
-                $ENV{RRDCACHED_ADDRESS} = $config->{"rrdcached_socket"};
-	    } else {
-		    ERROR "[ERROR] RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION;
-	    }
+        $ENV{RRDCACHED_ADDRESS} = $config->{"rrdcached_socket"};
     }
 
 
@@ -548,7 +525,7 @@ sub get_header {
         push @$result, ("--vertical-label", $tmp_field);
     }
 
-    push @$result, '--slope-mode' if $RRDs::VERSION >= 1.2;
+    push @$result, '--slope-mode';
 
     push @$result, "--height", ($size_y || munin_get($service, "graph_height", "175"));
     push @$result, "--width",  ($size_x || munin_get($service, "graph_width",  "400"));
@@ -1351,21 +1328,11 @@ sub process_service {
         my @complete = get_fonts();
 
 	# Watermarks introduced in RRD 1.2.13.
-        push(@complete, '-W', $watermark) if $RRDs::VERSION >= 1.2013;
+        push(@complete, '-W', $watermark);
 
         # Do the header (title, vtitle, size, etc...), but IN THE BEGINNING
         unshift @complete, @{get_header($service, $time)};
 
-        if ($LINEkluge) {
-            @rrd = map {
-                my $line = $_;
-                $line =~ s/LINE3:/LINE2.2:/;
-                $line =~ s/LINE2:/LINE1.6:/;
-
-                # LINE1 is thin enough.
-                $line;
-            } @rrd;
-        }
         push @complete, @rrd;
 
         # graph end in future
@@ -1378,13 +1345,11 @@ sub process_service {
         # as utf8 string. So we assume that every input is in latin1
         # and decode it to perl's internal representation and then to utf8.
 
-        if ($RRDs::VERSION >= 1.3) {
-            @complete = map {
-                my $str = $_;
-                my $utf8 = guess_encoding($str, 'utf8');
-                ref $utf8 ? $str : encode("utf8", (decode("latin1", $_)));
-            } @complete;
-        }
+        @complete = map {
+            my $str = $_;
+            my $utf8 = guess_encoding($str, 'utf8');
+            ref $utf8 ? $str : encode("utf8", (decode("latin1", $_)));
+        } @complete;
 
 	# Surcharging the graphing limits
 	my ($upper_limit_overrided, $lower_limit_overrided);
@@ -1651,43 +1616,18 @@ sub handle_trends {
 }
 
 sub get_fonts {
-    # Set up rrdtool graph font options according to RRD version.
-    my @options;
-
-    if ($RRDs::VERSION < 1.2) {
-	# RRD before 1.2, no font options
-    } elsif ($RRDs::VERSION < 1.3) {
-	# RRD 1.2
-	# The RRD 1.2 documentation says you can identify font family
-	# names but I never got that to work, but full font path worked
-	@options = (
-		'--font', "LEGEND:7:$libdir/DejaVuSansMono.ttf",
-		'--font', "UNIT:7:$libdir/DejaVuSans.ttf",
-		'--font', "AXIS:7:$libdir/DejaVuSans.ttf",
-	       );
-    } else {
-	# At least 1.3
-	@options = (
-		'--font', 'DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans',
-		'--font', 'LEGEND:7:DejaVuSansMono,DejaVu Sans Mono,DejaVu LGC Sans Mono,Bitstream Vera Sans Mono,monospace',
-		# Colors coordinated with CSS.
-		'--color',  'BACK#F0F0F0',   # Area around the graph
-		'--color',  'FRAME#F0F0F0',  # Line around legend spot
-		'--color',  'CANVAS#FFFFFF', # Graph background, max contrast
-		'--color',  'FONT#666666',   # Some kind of gray
-		'--color',  'AXIS#CFD6F8',   # And axis like html boxes
-		'--color',  'ARROW#CFD6F8',  # And arrow, ditto.
-	       );
-    }
-
-    if ($RRDs::VERSION >= 1.4) {
-	# RRD 1.4 has border, adding it
-	push @options, (
-		'--border',  '0',
-	       );
-    }
-
-    return @options;
+    return (
+        '--font', 'DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans',
+        '--font', 'LEGEND:7:DejaVuSansMono,DejaVu Sans Mono,DejaVu LGC Sans Mono,Bitstream Vera Sans Mono,monospace',
+        # Colors coordinated with CSS.
+        '--color', 'BACK#F0F0F0',   # Area around the graph
+        '--color', 'FRAME#F0F0F0',  # Line around legend spot
+        '--color', 'CANVAS#FFFFFF', # Graph background, max contrast
+        '--color', 'FONT#666666',   # Some kind of gray
+        '--color', 'AXIS#CFD6F8',   # And axis like html boxes
+        '--color', 'ARROW#CFD6F8',  # And arrow, ditto.
+        '--border', '0',
+    );
 };
 
 
@@ -1847,7 +1787,7 @@ sub get_scientific {
 
 sub RRDescape {
     my $text = shift;
-    return $RRDs::VERSION < 1.2 ? $text : escape($text);
+    return escape($text);
 }
 
 
