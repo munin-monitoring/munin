@@ -376,14 +376,22 @@ sub match_glob {
     my ($self, $context, $name) = @_;
     my $dbh = $self->dbh;
 
+    # Fetch all glob entries for this name and match in Perl.
+    # The context column may itself be a glob (e.g. 'web;app*.com').
     my $sth = $dbh->prepare(
-        'SELECT pattern, value FROM config_glob WHERE context = ? AND name = ?'
+        'SELECT pattern, context, value FROM config_glob WHERE name = ?'
     );
-    $sth->execute($context, $name);
+    $sth->execute($name);
 
     my @matches;
-    while (my ($pattern, $value) = $sth->fetchrow_array) {
-        push @matches, [$pattern, $value];
+    while (my ($pattern, $stored_ctx, $value) = $sth->fetchrow_array) {
+        # Convert stored context glob to regex for matching
+        my $re = quotemeta($stored_ctx);
+        $re =~ s/\\\*/.*/g;
+        $re =~ s/\\\?/./g;
+        if ($context =~ /^$re$/) {
+            push @matches, [$pattern, $value];
+        }
     }
 
     return \@matches;
