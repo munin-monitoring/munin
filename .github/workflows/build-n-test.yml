@@ -13,12 +13,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Use Docker for reproducible builds — native CI had issues with
+      # missing deps, IPv6 socket hangs, and coveralls .deb builds.
       - name: Build dev container
         run: docker build -t munin-dev -f Dockerfile.dev .
 
+      # --add-host maps the test hostname to localhost
+      # --shm-size avoids shared-memory issues in Perl forking tests
       - name: Run tests
         run: docker run --rm --shm-size=64m --add-host testing.acme.com:127.0.0.1 munin-dev ./Build test
 
+      # Non-blocking: lint and critic failures don't break CI yet
       - name: Run lint
         run: docker run --rm munin-dev make lint || true
 
