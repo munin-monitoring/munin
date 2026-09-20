@@ -1,6 +1,11 @@
 -*- text -*-
 
-munin-2.0.76, 2024-05-17
+munin-2.0.78, 2026-09-20
+
+Fix Changelog
+
+
+munin-2.0.77, 2026-09-19
 
 Bernhard M. Wiedemann (1):
       Fix graphing with rrdtool >= 1.10
