@@ -41,8 +41,18 @@ jobs:
 
       # Use Docker for reproducible builds — native CI had issues with
       # missing deps and IPv6 socket hangs.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build dev container
-        run: docker build -t munin-dev -f Dockerfile.dev .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.dev
+          tags: munin-dev
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # --add-host maps the test hostname to localhost
       # --shm-size avoids shared-memory issues in Perl forking tests
@@ -56,8 +66,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Build dev container
-        run: docker build -t munin-dev -f Dockerfile.dev .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.dev
+          tags: munin-dev
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # Non-blocking: lint and critic failures don't break CI yet
       - name: Run lint
