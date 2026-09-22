@@ -47,9 +47,11 @@ jobs:
       # --add-host maps the test hostname to localhost
       # --shm-size avoids shared-memory issues in Perl forking tests
       - name: Run tests with coverage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker run --rm --shm-size=64m --add-host testing.acme.com:127.0.0.1 \
-            -e COVERALLS_REPO_TOKEN=${{ secrets.COVERALLS_REPO_TOKEN }} \
+            -e GITHUB_TOKEN \
             munin-dev sh -c "cover -test -report coveralls"
 
   lint:
