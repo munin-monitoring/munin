@@ -22,6 +22,7 @@ also read :ref:`Part III <install-index>`.
    :maxdepth: 2
 
    getting-started.rst
+   using-munin.rst
    wildcard-plugins.rst
    snmp.rst
    alert.rst

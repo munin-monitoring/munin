@@ -1,4 +1,60 @@
-FROM munin:base
+FROM debian:bookworm
 
-USER munin
-WORKDIR /munin
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cpanminus \
+    build-essential \
+    perl \
+    libmodule-build-perl \
+    libdbi-perl \
+    libdbd-sqlite3-perl \
+    libdbd-pg-perl \
+    libhtml-template-pro-perl \
+    libhttp-server-simple-cgi-prefork-perl \
+    libjson-perl \
+    libwww-perl \
+    liblog-dispatch-perl \
+    libnet-snmp-perl \
+    libnet-server-perl \
+    libparallel-forkmanager-perl \
+    libparams-validate-perl \
+    libxml-dumper-perl \
+    libxml-libxml-perl \
+    libxml-parser-perl \
+    libtest-most-perl \
+    libtest-differences-perl \
+    libtest-deep-perl \
+    libtest-mockmodule-perl \
+    libtest-mockobject-perl \
+    libtest-exception-perl \
+    libdevel-confess-perl \
+    libdevel-cover-perl \
+    libyaml-perl \
+    libfile-slurp-perl \
+    faketime \
+    openssl \
+    librrds-perl \
+    libssl-dev \
+    codespell \
+    shellcheck \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install cached .deb if present, otherwise fall back to cpanm
+COPY libdevel-cover-report-coveralls-perl*.deb* /tmp/
+RUN if ls /tmp/libdevel-cover-report-coveralls-perl*.deb 1>/dev/null 2>&1; then \
+        dpkg -i /tmp/libdevel-cover-report-coveralls-perl*.deb || apt-get install -yf; \
+        rm /tmp/*.deb*; \
+    else \
+        rm -f /tmp/.no-coveralls-deb; \
+        cpanm --notest Devel::Cover::Report::Coveralls; \
+    fi
+
+# Hostname mapping handled at runtime via --add-host in docker run
+
+WORKDIR /app
+COPY . .
+
+RUN perl Build.PL --install_base /app/sandbox && ./Build install
+
+EXPOSE 4949 4946
+
+CMD ["./dev_scripts/all"]

@@ -512,6 +512,8 @@ sub _db_state_update {
 			                WHERE ds.name = '$field'" unless $ds_id;
 	$sth_ds->finish();
 
+	return unless defined $ds_id;
+
 	# Update the state with the new values
 	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
 	my $rows_u = $sth_state_u->execute($when, $value, $ds_id, "ds");
@@ -519,6 +521,7 @@ sub _db_state_update {
 		# No line exists yet. Create It.
 		my $sth_state_i = $dbh->prepare_cached("INSERT INTO state (id, type) VALUES (?, ?)");
 		$sth_state_i->execute($ds_id, "ds");
+		$sth_state_u->execute($when, $value, $ds_id, "ds");
 	}
 
 	return $ds_id;
@@ -759,6 +762,7 @@ sub uw_handle_fetch {
 		# Update all data-driven components: State, RRD, Graphite
 		my $ds_id = $self->_db_state_update($plugin, $field, $when, $value);
 	        DEBUG "[DEBUG] ds_id($plugin, $field, $when, $value) = $ds_id";
+		next unless defined $ds_id;
 
 		my ($rrd_file, $rrd_field);
 		{
@@ -897,7 +901,7 @@ sub _create_rrd_file {
         # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB
         my @resolutions_computer = parse_custom_resolution($1, $update_rate_in_sec);
         my @enlarged_resolutions = enlarge_custom_resolution(@resolutions_computer);
-        foreach my $resolution_computer(@resolutions_computer) {
+		foreach my $resolution_computer(@enlarged_resolutions) {
             my ($multiplier, $multiplier_nb) = @{$resolution_computer};
             push (@args,
                 "RRA:AVERAGE:0.5:$multiplier:$multiplier_nb",
@@ -1007,7 +1011,8 @@ sub to_sec {
 
 	my ($target) = @_;
 	if ($target =~ m/(\d+)([smhdwty])/i) {
-		return $1 * $secs_table->{$2};
+		my $unit = lc($2);
+		return $1 * $secs_table->{$unit};
 	} else {
 		# no recognised unit, return the int value as seconds
 		return int $target;

@@ -194,3 +194,79 @@ For the master, this will install everything.
 
  make
  make install
+
+
+Post-Installation Steps
+========================
+
+After installing Munin, you need to configure the basic access controls
+and verify that everything works.
+
+On the Node
+------------
+
+1. Edit ``/etc/munin/munin-node.conf`` and add the master's IP to the
+   access list:
+
+   ::
+
+      allow ^127\.0\.0\.1$
+
+   Replace ``127.0.0.1`` with your master's actual IP if they are on
+   different machines.
+
+2. Restart the node:
+
+   .. code-block:: bash
+
+      sudo systemctl restart munin-node
+
+3. Verify the node is running and accepting connections:
+
+   .. code-block:: bash
+
+      nc localhost 4949
+
+   You should see ``# munin node at <hostname>``.
+
+On the Master
+--------------
+
+1. Edit ``/etc/munin/munin.conf`` and add a section for each node:
+
+   ::
+
+      [myserver.example.com]
+        address 127.0.0.1
+
+2. Verify that ``munin-cron`` is installed in the munin user's crontab:
+
+   .. code-block:: bash
+
+      sudo crontab -l -u munin
+
+3. Run the first data collection manually:
+
+   .. code-block:: bash
+
+      sudo -u munin /usr/share/munin/munin-cron
+
+4. Open ``http://localhost:4948/`` in a web browser to see the graphs.
+
+What Gets Installed
+====================
+
+The package installs files in the following locations:
+
+====================================== ============================
+Path                                 Purpose
+====================================== ============================
+``/etc/munin/munin.conf``            Master configuration
+``/etc/munin/munin-node.conf``       Node configuration
+``/etc/munin/plugins/``              Active plugins (symlinks)
+``/etc/munin/plugin-conf.d/``        Plugin configuration
+``/usr/share/munin/plugins/``        Plugin scripts
+``/var/lib/munin/``                  RRD databases
+``/var/log/munin/``                  Log files
+``/var/run/munin/``                  PID files and runtime state
+====================================== ============================

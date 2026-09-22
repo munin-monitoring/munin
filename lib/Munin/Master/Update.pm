@@ -15,6 +15,7 @@ use Munin::Common::Defaults;
 use Munin::Master::Config;
 use Munin::Master::UpdateWorker;
 use Munin::Master::Utils;
+use Munin::Master::Limits;
 
 my $config_old;
 my $config = Munin::Master::Config->instance()->{config};
@@ -53,10 +54,29 @@ sub run {
 		$config_old = $self->_db_params_update($dbh, $config);
 	}
 
-        $self->{workers} = $self->_create_workers();
+	$self->{workers} = $self->_create_workers();
         my $nb_workers = $self->_run_workers();
+
+	# Import contacts from config into SQL
+	$self->_db_contacts_update();
+
+	# Run limits after update — evaluate thresholds and send notifications
+	$self->_run_limits();
+
 	return $nb_workers;
     });
+}
+
+# Evaluate thresholds and send notifications.
+# Called at the end of update, so limits runs in the same process.
+sub _run_limits {
+    my ($self) = @_;
+
+    INFO "[INFO] Running limits (inline)";
+
+    Munin::Master::Limits::limits_main();
+
+    INFO "[INFO] Limits finished";
 }
 
 # If you need a readonly DBH, use M::M::U::get_dbh("readonly").
@@ -107,6 +127,14 @@ sub get_dbh {
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
 	return $dbh;
+}
+
+sub get_param {
+	my ($param_name, $dbh) = @_;
+	my $dbh_local = $dbh || get_dbh(1);
+	my $sql = 'SELECT value FROM param WHERE name = ?';
+	my ($param_value) = $dbh_local->selectrow_array($sql, undef, ($param_name));
+	return $param_value;
 }
 
 sub _create_rundir_if_missing {
@@ -304,6 +332,26 @@ sub _db_init {
 	# Munin stats
 	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp TIMESTAMPTZ, type VARCHAR, name VARCHAR, duration NUMERIC)");
 
+	# Contacts for notification
+	$dbh->do("CREATE TABLE IF NOT EXISTS contact (id $db_serial_type PRIMARY KEY, name VARCHAR UNIQUE)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS contact_attr (id INTEGER REFERENCES contact(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_contact_attr ON contact_attr (id, name)");
+
+	# Notification tracking — replaces in-memory pipe state
+	$dbh->do("CREATE TABLE IF NOT EXISTS notification (
+		id $db_serial_type PRIMARY KEY,
+		contact_id INTEGER REFERENCES contact(id),
+		service_id INTEGER REFERENCES service(id),
+		severity VARCHAR,
+		sent_at INTEGER,
+		num_messages INTEGER DEFAULT 0
+	)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification ON notification (contact_id, service_id)");
+
+	# Config file overrides — plugin defaults go to ds_attr, config overrides go here
+	$dbh->do("CREATE TABLE IF NOT EXISTS override (ds_id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_override ON override (ds_id, name)");
+
 	# Initialise the grp _root_ node if not present
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
 		$dbh->do("INSERT INTO grp (id) VALUES (0);");
@@ -334,6 +382,100 @@ sub _db_params_update {
 
 	$dbh->commit();
 	return \%old_params;
+}
+
+# Import contacts and config overrides from config tree into SQL.
+# This is the ONLY time we walk the config tree — after this, everything reads from SQL.
+sub _db_contacts_update {
+	my ($self) = @_;
+
+	my $dbh = get_dbh();
+
+	# Clear existing contacts and overrides
+	$dbh->do('DELETE FROM contact_attr');
+	$dbh->do('DELETE FROM contact');
+	$dbh->do('DELETE FROM override');
+
+	my $sth_c  = $dbh->prepare('INSERT INTO contact (name) VALUES (?)');
+	my $sth_ca = $dbh->prepare('INSERT INTO contact_attr (id, name, value) VALUES (?, ?, ?)');
+
+	# Walk the config tree for contacts — this is the ONLY config tree walk
+	my $contacts = $config->{"contact"};
+	if ($contacts && ref $contacts eq 'HASH') {
+		for my $child (values %$contacts) {
+			next unless ref $child eq 'HASH';
+			next if $child->{_};
+
+			my $name = $child->{_}->{name} // next;
+
+			$sth_c->execute($name);
+			my $contact_id = $dbh->last_insert_id(undef, undef, 'contact', 'id');
+
+			# Import all attributes
+			for my $key (keys %$child) {
+				next if $key eq '_';
+				my $val = $child->{$key};
+				next if ref $val;
+				$sth_ca->execute($contact_id, $key, $val);
+			}
+		}
+	}
+
+	# Import config overrides for warning/critical/unknown_limit from config tree
+	# Config values override plugin defaults via the override table
+	my $sth_ov = $dbh->prepare(q{
+		INSERT INTO override (ds_id, name, value)
+		SELECT ds.id, ?, ?
+		FROM ds
+		INNER JOIN service s ON s.id = ds.service_id
+		INNER JOIN node n ON n.id = s.node_id
+		WHERE ds.name = ? AND s.name = ? AND n.name = ?
+	});
+
+	# Walk groups -> hosts -> services -> fields for overrides
+	my $groups = $config->{groups};
+	if ($groups && ref $groups eq 'HASH') {
+		for my $group (values %$groups) {
+			next unless ref $group eq 'HASH';
+			my $hosts = $group->{hosts} || next;
+			next unless ref $hosts eq 'HASH';
+
+			for my $host (values %$hosts) {
+				next unless ref $host eq 'HASH';
+				my $host_name = $host->{_}->{name} // next;
+				my $services = $host->{services} || next;
+				next unless ref $services eq 'HASH';
+
+				for my $service (values %$services) {
+					next unless ref $service eq 'HASH';
+					my $service_name = $service->{_}->{name} // next;
+
+					# Check service-level overrides
+					for my $key (qw(warning critical unknown_limit)) {
+						my $val = $service->{_}->{$key};
+						next unless defined $val;
+						# Service-level override applies to all fields
+						$sth_ov->execute($key, $val, '.*', $service_name, $host_name);
+					}
+
+					# Check field-level overrides
+					for my $field (values %$service) {
+						next unless ref $field eq 'HASH';
+						my $field_name = $field->{_}->{name} // next;
+
+						for my $key (qw(warning critical unknown_limit)) {
+							my $val = $field->{$key};
+							next unless defined $val;
+							$sth_ov->execute($key, $val, $field_name, $service_name, $host_name);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	$dbh->commit();
+	INFO "[INFO] Imported contacts and overrides from config into SQL";
 }
 
 1;

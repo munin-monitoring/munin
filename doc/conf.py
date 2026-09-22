@@ -26,7 +26,11 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.doctest', 'sphinx.ext.graphviz' ]
+extensions = ['sphinx.ext.doctest', 'sphinx.ext.graphviz', 'sphinx.ext.intersphinx' ]
+
+intersphinx_mapping = {
+    'perl': ('https://perldoc.perl.org/', None),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -44,14 +48,14 @@ master_doc = 'index'
 project = 'Munin'
 description = 'Munin monitoring'
 authors   = 'The Munin project and its contributors'
-copyright = '2012-2021, %s' % authors
+copyright = '2012-2025, %s' % authors
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '2.1'
+version = '3.0'
 # The full version, including alpha/beta/rc tags.
 release = os.popen('../getversion').read().strip()
 
@@ -127,7 +131,7 @@ html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-#html_last_updated_fmt = '%b %d, %Y'
+html_last_updated_fmt = '%b %d, %Y'
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.

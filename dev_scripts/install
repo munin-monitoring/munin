@@ -142,6 +142,47 @@ stop_node() {
 	./dev_scripts/stop_munin-node
 }
 
+status_sandbox() {
+	banner STATUS
+
+	if [ -d sandbox ]; then
+		echo "Sandbox: exists"
+		echo "Build:   $(./Build --version 2>/dev/null || echo 'not built')"
+		if [ -f sandbox/var/run/munin-node.pid ]; then
+			pid=$(cat sandbox/var/run/munin-node.pid)
+			if kill -0 "$pid" 2>/dev/null; then
+				echo "Node:    running (pid $pid)"
+			else
+				echo "Node:    stopped (stale pid)"
+			fi
+		else
+			echo "Node:    stopped"
+		fi
+		if [ -f sandbox/var/run/munin-httpd.pid ]; then
+			pid=$(cat sandbox/var/run/munin-httpd.pid)
+			if kill -0 "$pid" 2>/dev/null; then
+				echo "Httpd:   running (pid $pid)"
+			else
+				echo "Httpd:   stopped (stale pid)"
+			fi
+		else
+			echo "Httpd:   stopped"
+		fi
+		echo "DB:      ${MUNIN_DBURL:-sandbox/var/lib/munin/datafile.sqlite}"
+	else
+		echo "Sandbox: not found. Run '$0 node' to create."
+	fi
+}
+
+logs_sandbox() {
+	banner LOGS
+	if [ -d sandbox/var/log ]; then
+		tail -f sandbox/var/log/*.log 2>/dev/null || echo "No log files found"
+	else
+		echo "No log directory. Run '$0 node' first."
+	fi
+}
+
 case ${1:-} in
 	clean)
 		stop_node
@@ -161,6 +202,20 @@ case ${1:-} in
 		make_sandbox
 		configure_debug
 		;;
+	status)
+		status_sandbox
+		;;
+	logs)
+		logs_sandbox
+		;;
+	reset)
+		stop_node
+		clean_sandbox
+		make_sandbox
+		configure_node
+		configure_plugins
+		configure_master
+		;;
 	lib)
 		for src in lib/Munin/*/*.pm
 		do
@@ -172,7 +227,16 @@ case ${1:-} in
 		make_sandbox
 		;;
 	help)
-		echo "Syntax:  $(basename "$0")  { clean | node | master | debug | lib }"
+		echo "Syntax:  $(basename "$0")  { clean | node | master | debug | status | logs | reset | lib }"
+		echo
+		echo "  clean   - Remove sandbox and rebuild artifacts"
+		echo "  node    - Full setup: node + master + plugins"
+		echo "  master  - Master only (no node)"
+		echo "  debug   - Debug config with munin-node-debug"
+		echo "  status  - Show sandbox state (running/stopped)"
+		echo "  logs    - Tail all sandbox log files"
+		echo "  reset   - Clean + full rebuild"
+		echo "  lib     - Symlink libs for live editing"
 		echo
 		;;
 	*)
