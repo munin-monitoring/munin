@@ -37,7 +37,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     shellcheck \
     && rm -rf /var/lib/apt/lists/*
 
-RUN cpanm --notest Devel::Cover::Report::Coveralls
+# Install cached .deb if present, otherwise fall back to cpanm
+COPY libdevel-cover-report-coveralls-perl*.deb* /tmp/
+RUN if ls /tmp/libdevel-cover-report-coveralls-perl*.deb 1>/dev/null 2>&1; then \
+        dpkg -i /tmp/libdevel-cover-report-coveralls-perl*.deb || apt-get install -yf; \
+        rm /tmp/*.deb*; \
+    else \
+        rm -f /tmp/.no-coveralls-deb; \
+        cpanm --notest Devel::Cover::Report::Coveralls; \
+    fi
 
 # Hostname mapping handled at runtime via --add-host in docker run
 

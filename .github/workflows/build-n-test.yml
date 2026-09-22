@@ -13,6 +13,32 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Cache Devel-Cover-Report-Coveralls
+        id: cache-coveralls-deb
+        uses: actions/cache@v4
+        with:
+          path: /tmp/coveralls-deb
+          key: ${{ runner.os }}-coveralls-deb-0.32
+
+      - if: ${{ steps.cache-coveralls-deb.outputs.cache-hit != 'true' }}
+        name: Build Devel-Cover-Report-Coveralls .deb
+        run: |
+          mkdir -p /tmp/coveralls-deb
+          sudo apt-get update && sudo apt-get install -y dh-make-perl libdevel-cover-perl libhttp-tiny-perl libio-socket-ssl-perl libjson-pp-perl libyaml-perl libmodule-build-tiny-perl
+          cd /tmp/coveralls-deb
+          wget -q https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.32.tar.gz
+          tar xzf Devel-Cover-Report-Coveralls-0.32.tar.gz
+          cd Devel-Cover-Report-Coveralls-0.32
+          DEB_BUILD_OPTIONS=nocheck dh-make-perl make --build .
+
+      - name: Copy .deb to build context
+        run: |
+          if ls /tmp/coveralls-deb/libdevel-cover-report-coveralls-perl*.deb 1>/dev/null 2>&1; then
+            cp /tmp/coveralls-deb/libdevel-cover-report-coveralls-perl*.deb .
+          else
+            touch .no-coveralls-deb
+          fi
+
       # Use Docker for reproducible builds — native CI had issues with
       # missing deps and IPv6 socket hangs.
       - name: Build dev container
