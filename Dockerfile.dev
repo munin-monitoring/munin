@@ -1,6 +1,7 @@
 FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    cpanminus \
     build-essential \
     perl \
     libmodule-build-perl \
@@ -35,6 +36,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     codespell \
     shellcheck \
     && rm -rf /var/lib/apt/lists/*
+
+RUN cpanm --notest Devel::Cover::Report::Coveralls
 
 # Hostname mapping handled at runtime via --add-host in docker run
 
