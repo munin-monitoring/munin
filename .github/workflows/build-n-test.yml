@@ -14,14 +14,47 @@ jobs:
       - uses: actions/checkout@v7
 
       # Use Docker for reproducible builds — native CI had issues with
-      # missing deps, IPv6 socket hangs, and coveralls .deb builds.
+      # missing deps and IPv6 socket hangs.
       - name: Build dev container
         run: docker build -t munin-dev -f Dockerfile.dev .
 
       # --add-host maps the test hostname to localhost
       # --shm-size avoids shared-memory issues in Perl forking tests
-      - name: Run tests
-        run: docker run --rm --shm-size=64m --add-host testing.acme.com:127.0.0.1 munin-dev ./Build test
+      - name: Run tests with coverage
+        run: |
+          docker create --name munin-test --shm-size=64m --add-host testing.acme.com:127.0.0.1 munin-dev sh -c "perl Build.PL && ./Build testcover"
+          docker start -a munin-test
+          docker cp munin-test:/app/cover_db ./cover_db
+          docker rm munin-test
+
+      - name: Generate LCOV report
+        run: docker run --rm -v ${{ github.workspace }}/cover_db:/cover_db munin-dev cover -report lcov /cover_db
+
+      - name: Upload to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: cover_db/lcov.info
+          flag-name: perl-unit-tests
+          parallel: true
+
+  coveralls-finish:
+    needs: build
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build dev container
+        run: docker build -t munin-dev -f Dockerfile.dev .
 
       # Non-blocking: lint and critic failures don't break CI yet
       - name: Run lint
