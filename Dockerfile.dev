@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libtest-exception-perl \
     libdevel-confess-perl \
     libdevel-cover-perl \
+    libyaml-perl \
     libfile-slurp-perl \
     faketime \
     openssl \
