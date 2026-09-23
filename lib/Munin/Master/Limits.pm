@@ -311,10 +311,10 @@ sub _process_ds {
         $new_state = 'unknown';
         $extinfo = $attrs{extinfo} // 'Value is unknown.';
         if ($old_state ne 'unknown') {
+            $new_num_unknowns = $old_num_unknowns + 1;
             if ($old_num_unknowns < $unknown_limit) {
                 $new_state = $old_state;
                 $extinfo = $attrs{extinfo} // '';
-                $new_num_unknowns = $old_num_unknowns + 1;
             }
         } else {
             $new_num_unknowns = $old_num_unknowns;
@@ -330,7 +330,7 @@ sub _process_ds {
         }
     }
 
-    if ($new_state eq 'ok' && defined $warn) {
+    if ($new_state eq 'ok' && defined $warn && $value ne 'unknown') {
         my $wrange = ($warn->[0] // '') . ':' . ($warn->[1] // '');
         if ((defined $warn->[0] && $value < $warn->[0]) ||
             (defined $warn->[1] && $value > $warn->[1])) {
