@@ -15,7 +15,7 @@ jobs:
 
       - name: Cache Devel-Cover-Report-Coveralls
         id: cache-coveralls-deb
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: /tmp/coveralls-deb
           key: ${{ runner.os }}-coveralls-deb-0.32
