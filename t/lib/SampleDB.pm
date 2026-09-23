@@ -5,7 +5,6 @@
 use strict;
 use warnings;
 use DBI;
-use Time::HiRes;
 
 package SampleDB;
 
@@ -77,7 +76,7 @@ sub generate_sample_db {
     my $node_id = 1;
     my $svc_id = 1;
     my $ds_id = 1;
-    my $now = int(Time::HiRes::time());
+    my $now = time();
     my $prev_time = $now - 60;
 
     for my $host (@hosts) {

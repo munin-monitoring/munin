@@ -38,6 +38,7 @@ sub generate_sample_rrds {
     my $now = time();
     my $start = $now - (3600 * 24 * 30); # 30 days of data
     my $step = 300; # 5 minutes
+    my $ds_id_counter = 0;
 
     for my $host (@hosts) {
         my $path = ($host eq "localhost") ? "acme.com/$host" : $host;
@@ -81,15 +82,17 @@ sub generate_sample_rrds {
                     next;
                 }
 
-                # Populate with sample data
+                # Populate with deterministic data
+                my $seed = 42 + $ds_id_counter++;
                 my @updates;
                 for (my $t = $start; $t < $now; $t += $step) {
                     my $val;
                     if ($ds->{type} eq "DERIVE") {
-                        $val = int(rand(1000));
+                        $val = $seed % 1000;
                     } else {
-                        $val = int(rand(100));
+                        $val = $seed % 100;
                     }
+                    $seed = ($seed * 1103515245 + 12345) & 0x7fffffff;  # LCG
                     push @updates, "$t:$val";
                 }
 
