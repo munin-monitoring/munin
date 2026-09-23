@@ -27,7 +27,9 @@ The following environment variables are used by this plugin:
 . "$MUNIN_LIBDIR/plugins/plugin.sh"
 
 
-df_entries=$(df -P -l 2>/dev/null | sed -e '1d' -e '/\/\//d' -e 's/%//' | sort)
+# Keep the first mount point per device (bind mounts share one device).
+# See https://github.com/munin-monitoring/munin/issues/1611
+df_entries=$(df -P -l 2>/dev/null | sed -e '1d' -e '/\/\//d' -e 's/%//' | awk '!seen[$1]++' | sort)
 
 
 # Use the mountpoint instead of the device name for ambiguous virtual devices (tmpfs, ...).
