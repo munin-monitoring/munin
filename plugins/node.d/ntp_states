@@ -103,6 +103,9 @@ sub make_hash {
                         chomp(my $peerinfo = `ntpq -n -c "readvar $assid srcadr"`);
                         $peerinfo =~ s/\s//g;
                         my ($peer_addr) = ($peerinfo =~ m/srcadr=(.*)/);
+                        # Pool placeholders and other unreachable assocs often have no srcadr
+                        # (ntpq: "No information returned for association N").
+                        next unless defined $peer_addr;
 
                         # some states get the last letter cut off in
                         # ntp version 4.2.4p8 (and probably others) in
