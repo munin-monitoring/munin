@@ -138,6 +138,9 @@ if ($mode eq 'config' ) {
 }
 
 # Read from df
+# Keep the first mount point per field name (bind mounts share one device).
+# See https://github.com/munin-monitoring/munin/issues/1611
+my %seen_name;
 open (DF,"df $dfopts 2>/dev/null |") or die "Unable to open pipe from df: $!";
 <DF>; # Skip the header
 while (<DF>) {
@@ -154,6 +157,7 @@ while (<DF>) {
 
     $name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
     $name = clean_fieldname($name);
+    next if $seen_name{$name}++;
 
     if($mode eq 'config') {
         print $name, ".label ", $mountpt, "\n";
