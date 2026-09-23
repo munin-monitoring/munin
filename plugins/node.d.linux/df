@@ -191,7 +191,11 @@ sub split_and_skip {
 
 
 # Assemble a filtered list of array references (each: fieldname, mountpoint, usage_percentage).
-my @df_output = grep(defined($_), map(split_and_skip, split("\n", `df $dfopts 2>/dev/null`)));
+# Keep the first mount point per field name (bind mounts share one device).
+# See https://github.com/munin-monitoring/munin/issues/1611
+my %seen_name;
+my @df_output = grep(defined($_) && !$seen_name{$_->[0]}++,
+                      map(split_and_skip, split("\n", `df $dfopts 2>/dev/null`)));
 
 
 if ($mode eq 'autoconf' ) {
