@@ -255,5 +255,5 @@ docker-cover:
 		-v $(CURDIR):/app munin-dev sh -c '\
 		perl Build.PL && \
 		rm -rf cover_db && \
-		cover -test'
+		cover -test -select "blib/lib|blib/script"'
 
