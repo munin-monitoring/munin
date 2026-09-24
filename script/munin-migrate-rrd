@@ -223,8 +223,8 @@ for my $out_file (sort keys %by_output) {
         # Get rows from all inputs for this RRA
         my @input_rows;
         for my $i (0..$#$group) {
-            my @rras_i = $doms[$i]->findnodes('/rrd/rra');
-            my @rows = $rras[$i]->findnodes('database/row');
+            my @rras_i = $doms[$i]->findnodes("/rrd/rra");
+            my @rows = $rras_i[$rra_idx]->findnodes("database/row");
             $input_rows[$i] = \@rows;
         }
 
