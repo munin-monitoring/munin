@@ -42,12 +42,12 @@ jobs:
       - name: Build dev container
         run: docker build -t munin-dev -f Dockerfile.dev .
 
-      # Run lint first — fast, no coverage overhead
+      # Lint first — fast, fails early before expensive coverage run
       - name: Lint
-        run: docker run --rm munin-dev make lint || true
+        run: docker run --rm munin-dev make lint
 
       - name: Critic
-        run: docker run --rm munin-dev env TEST_CRITIC=1 ./Build test || true
+        run: docker run --rm munin-dev env TEST_CRITIC=1 ./Build test
 
       # Full test suite with coverage
       - name: Test with coverage
