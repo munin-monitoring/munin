@@ -39,31 +39,21 @@ jobs:
             touch libdevel-cover-report-coveralls-perl.deb.dummy
           fi
 
-      # Use Docker for reproducible builds — native CI had issues with
-      # missing deps and IPv6 socket hangs.
       - name: Build dev container
         run: docker build -t munin-dev -f Dockerfile.dev .
 
-      # --add-host maps the test hostname to localhost
-      # --shm-size avoids shared-memory issues in Perl forking tests
-      - name: Run tests with coverage
+      # Run lint first — fast, no coverage overhead
+      - name: Lint
+        run: docker run --rm munin-dev make lint || true
+
+      - name: Critic
+        run: docker run --rm munin-dev env TEST_CRITIC=1 ./Build test || true
+
+      # Full test suite with coverage
+      - name: Test with coverage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker run --rm --shm-size=128m --add-host testing.acme.com:127.0.0.1 \
             -e GITHUB_TOKEN \
             munin-dev sh -c "cover -test -report coveralls"
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - name: Build dev container
-        run: docker build -t munin-dev -f Dockerfile.dev .
-
-      # Non-blocking: lint and critic failures don't break CI yet
-      - name: Run lint
-        run: docker run --rm munin-dev make lint || true
-
-      - name: Run critic
-        run: docker run --rm munin-dev env TEST_CRITIC=1 ./Build test || true
