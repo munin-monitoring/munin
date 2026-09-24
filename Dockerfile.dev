@@ -62,9 +62,9 @@ RUN if ls /tmp/libdevel-cover-report-coveralls-perl*.deb 1>/dev/null 2>&1; then 
 # Hostname mapping handled at runtime via --add-host in docker run
 
 WORKDIR /app
+COPY . .
 
-# Source mounted at runtime: docker run -v $(pwd):/app munin-dev ...
-# Build with: perl Build.PL --install_base /app/sandbox && ./Build install
+# Source also mountable at runtime: -v $(pwd):/app overrides COPY
 
 EXPOSE 4949 4946
 
