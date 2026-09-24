@@ -49,3 +49,9 @@ t/tls/CA/*.srl
 /RELEASE.docker
 /.bash_history
 /.viminfo
+
+# Build artifacts
+/selectre/
+out/
+specs/
+*.dummy
