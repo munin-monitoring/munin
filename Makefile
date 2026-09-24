@@ -249,20 +249,11 @@ docker-lint:
 docker-shell:
 	$(DOCKER) run --rm -it --shm-size=128m -v $(CURDIR):/app munin-dev bash
 
-# Run coverage in Docker (all tests, sequential to avoid signal races)
+# Run coverage in Docker
 docker-cover:
 	$(DOCKER) run --rm --shm-size=256m --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c '\
-		perl Build.PL 2>/tmp/build.err >/tmp/build.log && \
-		./Build install 2>>/tmp/build.err >>/tmp/build.log && \
+		perl Build.PL && \
 		rm -rf cover_db && \
-		for t in t/*.t; do \
-			base=$$(basename $$t .t); \
-			echo "=== $$t ===" >/tmp/$$base.log; \
-			timeout 120 perl -Iblib/lib -It/lib -MDevel::Cover=-db,cover_db $$t \
-				>>/tmp/$$base.log 2>&1; \
-		done && \
-		cover -report text >/tmp/coverage.txt 2>&1 && \
-		cat /tmp/build.log && \
-		for f in /tmp/munin_*.log; do echo ""; cat "$$f"; done && \
-		cat /tmp/coverage.txt' > out/cover.txt
+		cover -test' > out/cover.txt
+

@@ -44,16 +44,18 @@ jobs:
 
       # Lint first — fast, fails early before expensive coverage run
       - name: Lint
-        run: docker run --rm munin-dev make lint
+        run: make docker-lint
 
       - name: Critic
-        run: docker run --rm munin-dev env TEST_CRITIC=1 ./Build test
+        run: make docker-test
 
       # Full test suite with coverage
       - name: Test with coverage
+        run: make docker-cover
+
+      # Upload coverage to Coveralls
+      - name: Upload to Coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          docker run --rm --shm-size=128m --add-host testing.acme.com:127.0.0.1 \
-            -e GITHUB_TOKEN \
-            munin-dev sh -c "cover -test -report coveralls"
+          docker run --rm -v $(pwd):/app munin-dev cover -report coveralls
