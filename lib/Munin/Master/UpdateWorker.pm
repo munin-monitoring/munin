@@ -858,7 +858,7 @@ sub _get_rrd_file_name {
 sub _create_rrd_file {
     my ($self, $rrd_file, $service, $ds_name, $ds_config, $first_epoch) = @_;
 
-    INFO "creating rrd-file for $service->$ds_name: '$rrd_file'";
+    DEBUG "creating rrd-file for $service->$ds_name: '$rrd_file'";
 
     $rrd_file = File::Spec->catfile($config->{dbdir}, $rrd_file);
 
@@ -922,7 +922,7 @@ sub _create_rrd_file {
                 $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
     );
 
-    INFO "RRDs::create @args";
+    DEBUG "RRDs::create @args";
     RRDs::create @args unless $ENV{NO_UPDATE_RRD};
     if (my $ERROR = RRDs::error) {
         ERROR "Unable to create '$rrd_file': $ERROR";
