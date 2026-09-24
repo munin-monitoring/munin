@@ -118,7 +118,7 @@ sub _parse_fh {
         if ($line =~ /^\[(.+)\]$/) {
             @context = split /;/, $1;
             # Trim each part
-            @context = map { s/^\s+|\s+$//g; $_ } @context;
+            @context = map { my $x = $_; $x =~ s/^\s+|\s+$//g; $x } @context;
             next;
         }
 

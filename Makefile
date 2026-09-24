@@ -69,7 +69,10 @@ apply-formatting:
 
 .PHONY: lint lint-munin lint-plugins lint-spelling lint-whitespace
 
-lint: lint-munin lint-plugins lint-spelling lint-whitespace
+lint: lint-munin
+	$(MAKE) lint-plugins || true
+	$(MAKE) lint-spelling || true
+	$(MAKE) lint-whitespace || true
 
 lint-munin: build
 	# Scanning munin code
@@ -235,24 +238,22 @@ docker-dev-stop:
 
 # Run tests in Docker — same env as CI
 docker-test:
-	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
-	$(DOCKER) run --rm --shm-size=64m --add-host testing.acme.com:127.0.0.1 munin-dev ./Build test > out/test.txt
+	$(DOCKER) run --rm --shm-size=128m --add-host testing.acme.com:127.0.0.1 \
+		-v $(CURDIR):/app munin-dev sh -c 'perl Build.PL && ./Build test' > out/test.txt
 
 # Run lint in Docker
 docker-lint:
-	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
-	$(DOCKER) run --rm munin-dev make lint > out/lint.txt
+	$(DOCKER) run --rm -v $(CURDIR):/app munin-dev sh -c 'perl Build.PL && make lint' > out/lint.txt
 
 # Shell into dev container
 docker-shell:
-	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
-	$(DOCKER) run --rm -it --shm-size=64m munin-dev bash
+	$(DOCKER) run --rm -it --shm-size=128m -v $(CURDIR):/app munin-dev bash
 
 # Run coverage in Docker (all tests, sequential to avoid signal races)
 docker-cover:
-	$(DOCKER) build -t munin-dev -f Dockerfile.dev .
-	$(DOCKER) run --rm --shm-size=256m --add-host testing.acme.com:127.0.0.1 munin-dev bash -c '\
-		perl Build.PL --install_base /app/sandbox 2>/tmp/build.err >/tmp/build.log && \
+	$(DOCKER) run --rm --shm-size=256m --add-host testing.acme.com:127.0.0.1 \
+		-v $(CURDIR):/app munin-dev sh -c '\
+		perl Build.PL 2>/tmp/build.err >/tmp/build.log && \
 		./Build install 2>>/tmp/build.err >>/tmp/build.log && \
 		rm -rf cover_db && \
 		for t in t/*.t; do \

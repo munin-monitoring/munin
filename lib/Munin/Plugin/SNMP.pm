@@ -548,7 +548,7 @@ sub handle_caps
 	print "host_name $host\n" unless $host eq 'localhost';
 
 	# We are a multigraph enabled plugin
-	print "multigraph dummy\n"; 
+	print "multigraph dummy\n";
 
 	# Stopping here
 	exit(0);

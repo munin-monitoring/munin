@@ -163,9 +163,9 @@ sub configure {
 #      $wantarray, $evaltext, $is_require, $hints, $bitmask, $hinthash
 #  ) = caller($i);
 
-sub _whoami  { 
+sub _whoami  {
 # uncoverable subroutine
-my @c = caller(1); return $c[3] . ":" . $c[2] 
+my @c = caller(1); return $c[3] . ":" . $c[2]
 }
 
 sub _whowasi {
@@ -182,7 +182,7 @@ sub DEBUG {
     my ($message) = @_;
     # Also record the caller for DEBUG
     # It has a performance penaly, and is only useful when debugging anyway
-    my $from = _whowasi(); 
+    my $from = _whowasi();
     $log->debug("[$from] $message");
 }
 

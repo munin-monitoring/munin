@@ -504,7 +504,7 @@ sub _compute_cdef_value {
 
     if (my $err = RRDs::error) {
         WARN "[WARN] RRDs::xport failed for $ds_name: $err";
-        return undef;
+        return;
     }
 
     # --------------------------------------------------------------------
@@ -518,7 +518,7 @@ sub _compute_cdef_value {
         }
     }
 
-    return undef;
+    return;
 }
 
 # Send notifications for service state changes — all tracking in SQL

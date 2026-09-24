@@ -538,7 +538,7 @@ case "$ACTION" in
         [ -d "$PLUGINS_ENABLE_DIR" ] || exit 0
         find "$PLUGINS_ENABLE_DIR" -type l | while read -r plugin_symlink; do
             target=$(readlink --canonicalize-missing "$plugin_symlink")
-            repo_plugin_path=${target#${PLUGINS_INSTALL_DIR%/}/}
+            repo_plugin_path=${target#"${PLUGINS_INSTALL_DIR%/}"/}
             [ "$repo_plugin_path" = "$target" ] && continue
             parsed=$(split_slashed_repo_plugin_name "$repo_plugin_path")
             repo_name=$(echo "$parsed" | sed -n 1p)
