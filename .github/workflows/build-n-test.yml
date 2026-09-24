@@ -46,9 +46,6 @@ jobs:
       - name: Lint
         run: make docker-lint
 
-      - name: Critic
-        run: make docker-test
-
       # Full test suite with coverage
       - name: Test with coverage
         run: make docker-cover
