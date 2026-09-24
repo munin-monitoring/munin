@@ -444,15 +444,20 @@ sub _compute_cdef_value {
 
     # Get all DS in same service (for source DS lookup)
     my $sth_svc = $dbh->prepare(q{
-        SELECT d.id, d.name, da.value
+        SELECT d.id, d.name, da_file.value as rrd_file, da_field.value as rrd_field
         FROM ds d
-        INNER JOIN ds_attr da ON da.id = d.id AND da.name = 'rrd:file'
+        INNER JOIN ds_attr da_file ON da_file.id = d.id AND da_file.name = 'rrd:file'
+        LEFT JOIN ds_attr da_field ON da_field.id = d.id AND da_field.name = 'rrd:field'
         WHERE d.service_id = (SELECT service_id FROM ds WHERE id = ?)
     });
     $sth_svc->execute($ds_id);
-    my %rrd_files;
-    while (my ($id, $name, $file) = $sth_svc->fetchrow_array) {
-        $rrd_files{$name} = File::Spec->catfile($dbdir, $file) if $file;
+    my %rrd_files;   # munin_name => rrd_path
+    my %rrd_fields;  # munin_name => rrd_ds_name
+    while (my ($id, $name, $file, $field) = $sth_svc->fetchrow_array) {
+        if ($file) {
+            $rrd_files{$name} = File::Spec->catfile($dbdir, $file);
+            $rrd_fields{$name} = $field;  # may be undef
+        }
     }
 
     # --------------------------------------------------------------------
@@ -484,7 +489,8 @@ sub _compute_cdef_value {
 
         # Looks like a DS name -- add DEF if we have its RRD
         if (defined $rrd_files{$tok}) {
-            push @xport_args, "DEF:${tok}=$rrd_files{$tok}:$tok:AVERAGE"
+            my $rrd_field = $rrd_fields{$tok} // $tok;
+            push @xport_args, "DEF:${tok}=$rrd_files{$tok}:$rrd_field:AVERAGE"
                 unless $seen_defs{$tok}++;
         }
     }
