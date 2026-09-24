@@ -238,14 +238,12 @@ docker-dev-stop:
 
 # Run tests in Docker — same env as CI
 docker-test:
-	@mkdir -p out
 	$(DOCKER) run --rm --shm-size=128m --add-host testing.acme.com:127.0.0.1 \
-		-v $(CURDIR):/app munin-dev sh -c 'perl Build.PL && ./Build test' > out/test.txt
+		-v $(CURDIR):/app munin-dev sh -c 'perl Build.PL && ./Build test'
 
 # Run lint in Docker
 docker-lint:
-	@mkdir -p out
-	$(DOCKER) run --rm -v $(CURDIR):/app munin-dev sh -c 'perl Build.PL && make lint' > out/lint.txt
+	$(DOCKER) run --rm -v $(CURDIR):/app munin-dev sh -c 'perl Build.PL && make lint'
 
 # Shell into dev container
 docker-shell:
@@ -253,10 +251,9 @@ docker-shell:
 
 # Run coverage in Docker
 docker-cover:
-	@mkdir -p out
 	$(DOCKER) run --rm --shm-size=256m --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c '\
 		perl Build.PL && \
 		rm -rf cover_db && \
-		cover -test' > out/cover.txt
+		cover -test'
 
