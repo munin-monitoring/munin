@@ -36,6 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl-dev \
     codespell \
     shellcheck \
+    libperl-critic-perl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install cached .deb if present, otherwise fall back to cpanm
