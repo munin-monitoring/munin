@@ -156,21 +156,21 @@ sub get_rra_hash {
 # Compare RRAs
 sub rras_match {
     my ($rra1, $rra2) = @_;
-    
+
     my @keys1 = sort { $a <=> $b } keys %$rra1;
     my @keys2 = sort { $a <=> $b } keys %$rra2;
-    
+
     return 0 unless @keys1 == @keys2;
-    
+
     for my $i (0..$#keys1) {
         my $k1 = $keys1[$i];
         my $k2 = $keys2[$i];
-        
+
         return 0 unless $rra1->{$k1}{cf} eq $rra2->{$k2}{cf};
         return 0 unless $rra1->{$k1}{rows} == $rra2->{$k2}{rows};
         return 0 unless $rra1->{$k1}{pdp_per_row} == $rra2->{$k2}{pdp_per_row};
     }
-    
+
     return 1;
 }
 
@@ -179,16 +179,16 @@ my @mappings;
 for my $i (0..$#input_specs_raw) {
     my ($in_file, $in_field) = parse_spec($input_specs_raw[$i]);
     my ($out_file, $out_field) = parse_spec($output_specs_raw[$i]);
-    
+
     die "Error: Input file does not exist: $in_file\n" unless -f $in_file;
-    
+
     die "Error: No DS name for input $in_file\n" unless defined $in_field;
     die "Error: No DS name for output $out_file\n" unless defined $out_field;
-    
+
     # Get DS type for proper handling of DERIVE/COUNTER
     my $info = get_rrd_info($in_file);
     my $ds_type = $info->{"ds[$in_field].type"} || 'GAUGE';
-    
+
     push @mappings, {
         in_file => $in_file,
         in_field => $in_field,
@@ -202,13 +202,13 @@ for my $i (0..$#input_specs_raw) {
 if ($merge) {
     my %out_files = map { $_->{out_file} => 1 } @mappings;
     die "Error: --merge requires all outputs to same file\n" unless keys %out_files == 1;
-    
+
     # Check all inputs are single-DS
     for my $m (@mappings) {
         my @ds = get_ds_names($m->{in_file});
         die "Error: Input $m->{in_file} has " . scalar(@ds) . " DS, expected 1\n" unless @ds == 1;
     }
-    
+
     # Check RRAs are compatible
     my $first_rra = get_rra_hash($mappings[0]{in_file});
     for my $m (@mappings[1..$#mappings]) {
@@ -217,11 +217,11 @@ if ($merge) {
             die "Error: RRA mismatch between $mappings[0]{in_file} and $m->{in_file}\n";
         }
     }
-    
+
 } elsif ($split) {
     my %in_files = map { $_->{in_file} => 1 } @mappings;
     die "Error: --split requires all inputs from same file\n" unless keys %in_files == 1;
-    
+
     # Check input has all specified DS
     my @ds = get_ds_names($mappings[0]{in_file});
     my %ds_map = map { $_ => 1 } @ds;
@@ -254,78 +254,78 @@ print "Done.\n";
 
 sub do_merge {
     my $out_file = $mappings[0]->{out_file};
-    
+
     print "\nMerging to $out_file...\n" if $verbose;
-    
+
     my $tmpdir = tempdir(CLEANUP => 1);
-    
+
     # Step 1: Extract each DS to a temporary single-DS RRD
     my @temp_files;
     for my $m (@mappings) {
         my $temp_file = "$tmpdir/" . basename($m->{in_file});
-        
+
         # Dump to XML
         my $xml_file = "$temp_file.xml";
         RRDs::dump($m->{in_file}, $xml_file);
         if (my $err = RRDs::error) {
             die "RRDs::dump failed for $m->{in_file}: $err\n";
         }
-        
+
         # Modify XML to rename DS
         open(my $fh, '<', $xml_file) or die "Cannot open $xml_file: $!\n";
         my $xml = do { local $/; <$fh> };
         close($fh);
-        
+
         # Rename DS from input name to output name (handle whitespace)
         my $in_field = quotemeta($m->{in_field});
         my $out_field = $m->{out_field};
         $xml =~ s/<name>\s*$in_field\s*<\/name>/<name>$out_field<\/name>/g;
-        
+
         open($fh, '>', $xml_file) or die "Cannot write $xml_file: $!\n";
         print $fh $xml;
         close($fh);
-        
+
         # Restore to temp RRD
         RRDs::restore($xml_file, $temp_file);
         if (my $err = RRDs::error) {
             die "RRDs::restore failed: $err\n";
         }
-        
+
         push @temp_files, $temp_file;
         print "  Extracted $m->{in_field} to temp file\n" if $verbose;
     }
-    
+
     # Step 2: Merge all temp files into output using rrdxport
     # First, get the RRA structure from first input
     my $first_info = get_rrd_info($mappings[0]{in_file});
     my $step = $first_info->{step} || 300;
     # Use first non-temp file for start time - limit to 1 day to avoid step scaling
     my $start = RRDs::last($mappings[0]{in_file}) - (1 * 24 * 3600); # 30 days back
-    
+
     # Build DEF/XPORT args for all DS
     my @xport_args = (
         '--start', $start,
         '--end', 'now',
         '--step', $step,
     );
-    
+
     my @ds_names;
     for my $i (0..$#mappings) {
         my $m = $mappings[$i];
         my $temp_file = $temp_files[$i];
         my $out_field = $m->{out_field};
-        
+
         push @xport_args, "DEF:ds_$i=$temp_file:$out_field:AVERAGE";
         push @xport_args, "XPORT:ds_$i";
         push @ds_names, $out_field;
     }
-    
+
     # Export all data
     my ($x_start, $x_end, $x_step, $x_nb, $x_cols, $x_values) = RRDs::xport(@xport_args);
     if (my $err = RRDs::error) {
         die "RRDs::xport failed: $err\n";
     }
-    
+
     # Step 3: Create output RRD
     my @ds_defs;
     for my $m (@mappings) {
@@ -334,10 +334,10 @@ sub do_merge {
         my $heartbeat = $info->{"ds[$m->{in_field}].minimal_heartbeat"} || 600;
         my $min = $info->{"ds[$m->{in_field}].min"} || 'U';
         my $max = $info->{"ds[$m->{in_field}].max"} || 'U';
-        
+
         push @ds_defs, "DS:$m->{out_field}:$ds_type:$heartbeat:$min:$max";
     }
-    
+
     # Get RRAs from first input
     my @rra_args;
     for my $key (sort keys %$first_info) {
@@ -347,29 +347,29 @@ sub do_merge {
             $rra_args[$idx]{$attr} = $first_info->{$key};
         }
     }
-    
+
     my @rra_cmd;
     for my $rra (@rra_args) {
         next unless $rra;
         push @rra_cmd, sprintf("RRA:%s:%s:%d:%d",
             $rra->{cf}, $rra->{xff}, $rra->{pdp_per_row}, $rra->{rows});
     }
-    
+
     make_path(dirname($out_file), { mode => 0755 }) unless -d dirname($out_file);
-    
+
     RRDs::create($out_file,
         '--start', $x_start - $x_step,
         '-s', $x_step,
         @ds_defs,
         @rra_cmd,
     );
-    
+
     if (my $err = RRDs::error) {
         die "RRDs::create failed: $err\n";
     }
-    
+
     print "  Created $out_file\n" if $verbose;
-    
+
     # Step 4: Update output with exported data
     my $update_count = 0;
     for my $i (0..$#$x_values) {
@@ -389,16 +389,16 @@ sub do_merge {
                 }
             }
         }
-        
+
         RRDs::update($out_file, "$when:" . join(':', @vals));
         if (my $err = RRDs::error) {
             die "RRDs::update failed: $err\n";
         }
         $update_count++;
     }
-    
+
     print "  Wrote $update_count updates\n" if $verbose;
-    
+
     # Step 5: Remove input files
     for my $m (@mappings) {
         unlink $m->{in_file} or die "Cannot remove $m->{in_file}: $!\n";
@@ -408,28 +408,28 @@ sub do_merge {
 
 sub do_split {
     my $in_file = $mappings[0]->{in_file};
-    
+
     print "\nSplitting $in_file...\n" if $verbose;
-    
+
     my $tmpdir = tempdir(CLEANUP => 1);
-    
+
     # Step 1: Dump input to XML
     my $xml_file = "$tmpdir/source.xml";
     RRDs::dump($in_file, $xml_file);
     if (my $err = RRDs::error) {
         die "RRDs::dump failed: $err\n";
     }
-    
+
     # Read XML
     open(my $fh, '<', $xml_file) or die "Cannot open $xml_file: $!\n";
     my $xml = do { local $/; <$fh> };
     close($fh);
-    
+
     # Step 2: For each output, create XML with single DS and restore
     my $info = get_rrd_info($in_file);
     my $step = $info->{step} || 300;
     my $start = RRDs::last($in_file) - (1 * 24 * 3600);
-    
+
     for my $m (@mappings) {
         # Export just this DS
         my ($x_start, $x_end, $x_step, $x_nb, $x_cols, $x_values) = RRDs::xport(
@@ -439,17 +439,17 @@ sub do_split {
             "DEF:val=$in_file:$m->{in_field}:AVERAGE",
             "XPORT:val",
         );
-        
+
         if (my $err = RRDs::error) {
             die "RRDs::xport failed: $err\n";
         }
-        
+
         # Create single-DS RRD
         my $ds_type = $info->{"ds[$m->{in_field}].type"} || 'GAUGE';
         my $heartbeat = $info->{"ds[$m->{in_field}].minimal_heartbeat"} || 600;
         my $min = $info->{"ds[$m->{in_field}].min"} || 'U';
         my $max = $info->{"ds[$m->{in_field}].max"} || 'U';
-        
+
         # Get RRAs
         my @rra_args;
         for my $key (sort keys %$info) {
@@ -459,44 +459,44 @@ sub do_split {
                 $rra_args[$idx]{$attr} = $info->{$key};
             }
         }
-        
+
         my @rra_cmd;
         for my $rra (@rra_args) {
             next unless $rra;
             push @rra_cmd, sprintf("RRA:%s:%s:%d:%d",
                 $rra->{cf}, $rra->{xff}, $rra->{pdp_per_row}, $rra->{rows});
         }
-        
+
         make_path(dirname($m->{out_file}), { mode => 0755 }) unless -d dirname($m->{out_file});
-        
+
         RRDs::create($m->{out_file},
             '--start', $x_start - $x_step,
             '-s', $x_step,
             "DS:$m->{out_field}:$ds_type:$heartbeat:$min:$max",
             @rra_cmd,
         );
-        
+
         if (my $err = RRDs::error) {
             die "RRDs::create failed for $m->{out_file}: $err\n";
         }
-        
+
         # Update with data
         my $update_count = 0;
         for my $i (0..$#$x_values) {
             my $when = $x_start + ($i * $x_step);
             my $val = $x_values->[$i][0];
             $val = 'U' if !defined $val || $val eq 'nan';
-            
+
             RRDs::update($m->{out_file}, "$when:$val");
             if (my $err = RRDs::error) {
                 die "RRDs::update failed: $err\n";
             }
             $update_count++;
         }
-        
+
         print "  Created $m->{out_file} ($update_count values)\n" if $verbose;
     }
-    
+
     # Remove input file
     unlink $in_file or die "Cannot remove $in_file: $!\n";
     print "  Removed $in_file\n" if $verbose;

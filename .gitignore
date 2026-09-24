@@ -5,6 +5,9 @@
 # Local planning docs
 plans/
 
+# Test artifacts
+-selectre/
+
 # Perl Builded files
 /blib/
 /Build
