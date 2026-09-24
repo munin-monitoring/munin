@@ -221,7 +221,7 @@ subtest 'mismatched_count' => sub {
     );
 
     isnt($rc, 0, "fails on count mismatch");
-    like($out, qr/must equal/, "error about count");
+    like($out, qr/Input count != output count/, "error about count");
 };
 
 # Test 8: No args
