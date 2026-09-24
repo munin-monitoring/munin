@@ -693,12 +693,28 @@ sub uw_handle_config {
 		my $first_epoch = time - (12 * 3600); # XXX - we should be able to have some delay in the past for spoolfetched plugins
 		my $rrd_file = $self->_create_rrd_file_if_needed($plugin, $ds_name, $ds_config, $first_epoch);
 
-		# Update the RRD file
-		# XXX - Should be handled in a stateful way, as now it is reconstructed every time
+		# Stateful: only set rrd:file and rrd:field if not already present
 		my $dbh = $self->{dbh};
-		my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
-		$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
-		$sth_ds_attr->execute($ds_id, "rrd:field", "42");
+		my $sth_check = $dbh->prepare_cached('SELECT value FROM ds_attr WHERE id = ? AND name = ?');
+		$sth_check->execute($ds_id, 'rrd:file');
+		my ($existing_rrd_file) = $sth_check->fetchrow_array;
+
+		if (!defined $existing_rrd_file) {
+			# New field - set rrd:file and rrd:field
+			my $rrd_field = $self->_get_rrd_field_name($ds_name, $ds_config);
+			my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+			$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
+			$sth_ds_attr->execute($ds_id, "rrd:field", $rrd_field);
+		} else {
+			# Existing field - verify rrd:field is set
+			$sth_check->execute($ds_id, 'rrd:field');
+			my ($existing_rrd_field) = $sth_check->fetchrow_array;
+			if (!defined $existing_rrd_field) {
+				my $rrd_field = $self->_get_rrd_field_name($ds_name, $ds_config);
+				my $sth_update = $dbh->prepare_cached('UPDATE ds_attr SET value = ? WHERE id = ? AND name = ?');
+				$sth_update->execute($rrd_field, $ds_id, 'rrd:field');
+			}
+		}
 	}
 
 	# timestamp == 0 means "Nothing was updated". We only count on the
@@ -852,6 +868,17 @@ sub _get_rrd_file_name {
     DEBUG "rrd filename: $file\n";
 
     return $file;
+}
+
+
+sub _get_rrd_field_name {
+    my ($self, $ds_name, $ds_config) = @_;
+
+    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
+    my $type_id = lc(substr(($ds_config->{type}), 0, 1));
+
+    # Format: {field}-{type_id} (e.g., idle-g, tx-d)
+    return "$ds_name-$type_id";
 }
 
 
