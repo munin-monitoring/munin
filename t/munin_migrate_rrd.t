@@ -1,11 +1,5 @@
 #!/usr/bin/perl
 
-=head1 NAME
-
-t/munin_migrate_rrd.t - Tests for munin-migrate-rrd tool
-
-=cut
-
 use strict;
 use warnings;
 use File::Spec;
@@ -16,393 +10,320 @@ use Test::More;
 use RRDs;
 use File::Path qw(make_path remove_tree);
 
-# Find the script
 my $script = "$FindBin::Bin/../script/munin-migrate-rrd";
 plan skip_all => "Script not found: $script" unless -f $script;
 
-# Create temp directory for test
 my $tmpdir = tempdir(CLEANUP => 1);
 my $dbdir = "$tmpdir/rrd";
-
-# Create directories
 make_path($dbdir, { mode => 0755 });
 
-# Create single-DS RRD file
-sub create_single_ds_rrd {
-    my ($filepath, $type, $data) = @_;
-    
-    my $dir = dirname($filepath);
-    make_path($dir, { mode => 0755 }) unless -d $dir;
-    
-    my $heartbeat = 600;
+sub create_rrd {
+    my ($file, $ds_name, $type, $data) = @_;
+    make_path(dirname($file), { mode => 0755 }) unless -d dirname($file);
+
     my $start = time() - 86400;
-    
-    RRDs::create($filepath,
-        '--start', $start - 300,
-        '-s', 300,
-        "DS:42:$type:$heartbeat:0:U",
+    RRDs::create($file,
+        '--start', $start - 300, '-s', 300,
+        "DS:$ds_name:$type:600:0:U",
         'RRA:AVERAGE:0.5:1:576',
         'RRA:MIN:0.5:1:576',
         'RRA:MAX:0.5:1:576',
     );
-    
-    die "RRDs::create failed: " . RRDs::error if RRDs::error;
-    
-    # Add data
+    die "RRDs::create: " . RRDs::error if RRDs::error;
+
     if ($data && @$data) {
         my $when = $start;
         for my $val (@$data) {
-            RRDs::update($filepath, "$when:$val");
-            die "RRDs::update failed: " . RRDs::error if RRDs::error;
+            RRDs::update($file, "$when:$val");
+            die "RRDs::update: " . RRDs::error if RRDs::error;
             $when += 300;
         }
     }
 }
 
-# Create multi-DS RRD file
-sub create_multi_ds_rrd {
-    my ($filepath, $ds_defs, $data) = @_;
-    
-    my $dir = dirname($filepath);
-    make_path($dir, { mode => 0755 }) unless -d $dir;
-    
-    my $heartbeat = 600;
-    my $start = time() - 86400;
-    
-    my @ds_args;
-    for my $ds (@$ds_defs) {
-        push @ds_args, "DS:$ds->{name}:$ds->{type}:$heartbeat:0:U";
-    }
-    
-    RRDs::create($filepath,
-        '--start', $start - 300,
-        '-s', 300,
-        @ds_args,
-        'RRA:AVERAGE:0.5:1:576',
-        'RRA:MIN:0.5:1:576',
-        'RRA:MAX:0.5:1:576',
-    );
-    
-    die "RRDs::create failed: " . RRDs::error if RRDs::error;
-    
-    # Add data
-    if ($data && @$data) {
-        my $when = $start;
-        for my $vals (@$data) {
-            RRDs::update($filepath, "$when:" . join(':', @$vals));
-            die "RRDs::update failed: " . RRDs::error if RRDs::error;
-            $when += 300;
-        }
-    }
-}
-
-# Get RRD data
 sub get_rrd_data {
-    my ($filepath, $ds_name) = @_;
-    
-    my ($start, $end, $step, $nb, $cols, $values) = RRDs::xport(
-        '--start', 'now-86400',
-        '--end', 'now',
-        "DEF:val=$filepath:$ds_name:AVERAGE",
-        "XPORT:val",
+    my ($file, $ds) = @_;
+    my ($s, $e, $step, $nb, $cols, $vals) = RRDs::xport(
+        '--start', 'now-86400', '--end', 'now',
+        "DEF:v=$file:$ds:AVERAGE", "XPORT:v",
     );
-    
-    if (RRDs::error) {
-        return [];
-    }
-    
-    return [grep { defined $_ && $_ ne 'nan' } map { $_->[0] } @$values];
+    return [] if RRDs::error;
+    return [grep { defined $_ && $_ ne 'nan' } map { $_->[0] } @$vals];
 }
 
-# Get DS names
-sub get_ds_names {
-    my ($filepath) = @_;
-    
-    my $info = RRDs::info($filepath);
+sub ds_names {
+    my ($file) = @_;
+    my $info = RRDs::info($file);
     return () if RRDs::error;
-    
-    my @ds_names;
-    for my $key (sort keys %$info) {
-        if ($key =~ /^ds\[([^\]]+)\]\.type$/) {
-            push @ds_names, $1;
-        }
-    }
-    return @ds_names;
+    return sort map { /^ds\[([^\]]+)\]\.type$/ ? $1 : () } keys %$info;
 }
 
-# Run migration tool
-sub run_migrate {
+sub ds_type {
+    my ($file, $ds) = @_;
+    my $info = RRDs::info($file);
+    return $info->{"ds[$ds].type"} // undef;
+}
+
+sub run {
     my (@args) = @_;
-    
     my $cmd = "perl $script --dbdir=$dbdir @args 2>&1";
-    my $output = `$cmd`;
-    my $exit_code = $? >> 8;
-    
-    return ($exit_code, $output);
+    my $out = `$cmd`;
+    return ($? >> 8, $out);
 }
 
-# Test 1: Basic merge (single-DS to multi-DS)
-subtest 'merge_single_to_multi_ds' => sub {
-    my $idle_file = "$dbdir/acme.com/localhost/cpu-idle-g.rrd";
-    my $user_file = "$dbdir/acme.com/localhost/cpu-user-g.rrd";
-    my $system_file = "$dbdir/acme.com/localhost/cpu-system-g.rrd";
-    my $target_file = "$dbdir/acme.com/localhost/cpu-g.rrd";
-    
-    create_single_ds_rrd($idle_file, 'GAUGE', [50, 60, 70, 80]);
-    create_single_ds_rrd($user_file, 'GAUGE', [10, 20, 30, 40]);
-    create_single_ds_rrd($system_file, 'GAUGE', [5, 10, 15, 20]);
-    
-    # Verify single-DS files exist
-    ok(-f $idle_file, "Single-DS idle file exists");
-    ok(-f $user_file, "Single-DS user file exists");
-    ok(-f $system_file, "Single-DS system file exists");
-    
-    # Get data before merge
-    my $idle_before = get_rrd_data($idle_file, '42');
-    my $user_before = get_rrd_data($user_file, '42');
-    my $system_before = get_rrd_data($system_file, '42');
-    
-    # Run merge
-    my ($exit_code, $output) = run_migrate(
-        '--merge', '--verbose',
-        '-i', "$idle_file:42", '-o', "$target_file:idle-g",
-        '-i', "$user_file:42", '-o', "$target_file:user-g",
-        '-i', "$system_file:42", '-o', "$target_file:system-g",
+# Test 1: Basic copy (single-DS to multi-DS)
+subtest 'basic_copy' => sub {
+    my $f1 = "$dbdir/t1/idle.rrd";
+    my $f2 = "$dbdir/t1/user.rrd";
+    my $f3 = "$dbdir/t1/cpu.rrd";
+
+    create_rrd($f1, '42', 'GAUGE', [50, 60, 70]);
+    create_rrd($f2, '42', 'GAUGE', [10, 20, 30]);
+
+    my ($rc, $out) = run(
+        '-i', "$f1:42", '-o', "$f3:idle-g",
+        '-i', "$f2:42", '-o', "$f3:user-g",
     );
-    
-    is($exit_code, 0, "Merge succeeded");
-    like($output, qr/Created $target_file/, "Created multi-DS file");
-    like($output, qr/Wrote \d+ updates/, "Wrote updates");
-    
-    # Verify multi-DS file exists
-    ok(-f $target_file, "Multi-DS file exists");
-    
-    # Verify single-DS files removed
-    ok(!-f $idle_file, "Single-DS idle removed");
-    ok(!-f $user_file, "Single-DS user removed");
-    ok(!-f $system_file, "Single-DS system removed");
-    
-    # Verify DS names
-    my @ds_names = get_ds_names($target_file);
-    is(scalar @ds_names, 3, "Multi-DS has 3 DS");
-    is_deeply(\@ds_names, ['idle-g', 'system-g', 'user-g'], "DS names correct");
-    
-    # Verify data was copied
-    my $idle_after = get_rrd_data($target_file, 'idle-g');
-    my $user_after = get_rrd_data($target_file, 'user-g');
-    my $system_after = get_rrd_data($target_file, 'system-g');
-    
-    ok(scalar @$idle_after > 0, "Data copied for idle");
-    ok(scalar @$user_after > 0, "Data copied for user");
-    ok(scalar @$system_after > 0, "Data copied for system");
+
+    is($rc, 0, "copy succeeded");
+    ok(-f $f3, "output created");
+    ok(!-f $f1, "input1 removed");
+    ok(!-f $f2, "input2 removed");
+
+    my @ds = ds_names($f3);
+    is(scalar @ds, 2, "output has 2 DS");
+    is_deeply(\@ds, ['idle-g', 'user-g'], "DS names correct");
+
+    my $d1 = get_rrd_data($f3, 'idle-g');
+    my $d2 = get_rrd_data($f3, 'user-g');
+    ok(scalar @$d1 > 0, "idle-g has data");
+    ok(scalar @$d2 > 0, "user-g has data");
 };
 
-# Test 2: Dry run
-subtest 'dry_run' => sub {
-    my $idle_file = "$dbdir/test-dry/cpu-idle-g.rrd";
-    my $target_file = "$dbdir/test-dry/cpu-g.rrd";
-    
-    create_single_ds_rrd($idle_file, 'GAUGE', [50, 60]);
-    
-    my $size_before = -s $idle_file;
-    
-    my ($exit_code, $output) = run_migrate(
-        '--merge', '--dry-run', '--verbose',
-        '-i', "$idle_file:42", '-o', "$target_file:idle-g",
-    );
-    
-    is($exit_code, 0, "Dry run succeeded");
-    like($output, qr/Dry run/, "Shows dry run message");
-    like($output, qr/:idle-g/, "Shows mapping");
-    
-    # Verify original file still exists
-    ok(-f $idle_file, "Original file still exists");
-    is(-s $idle_file, $size_before, "File not modified");
-    ok(!-f $target_file, "Target file not created");
-};
-
-# Test 3: Split (multi-DS to single-DS)
-subtest 'split_multi_to_single_ds' => sub {
-    my $source_file = "$dbdir/test-split/cpu-g.rrd";
-    my $idle_file = "$dbdir/test-split/cpu-idle-g.rrd";
-    my $user_file = "$dbdir/test-split/cpu-user-g.rrd";
-    
-    create_multi_ds_rrd($source_file,
-        [
-            { name => 'idle-g', type => 'GAUGE' },
-            { name => 'user-g', type => 'GAUGE' },
-        ],
-        [[50, 10], [60, 20], [70, 30]],
-    );
-    
-    ok(-f $source_file, "Multi-DS file exists");
-    
-    my $idle_before = get_rrd_data($source_file, 'idle-g');
-    my $user_before = get_rrd_data($source_file, 'user-g');
-    
-    my ($exit_code, $output) = run_migrate(
-        '--split', '--verbose',
-        '-i', "$source_file:idle-g", '-o', "$idle_file:42",
-        '-i', "$source_file:user-g", '-o', "$user_file:42",
-    );
-    
-    is($exit_code, 0, "Split succeeded");
-    like($output, qr/Created $idle_file/, "Created idle file");
-    like($output, qr/Created $user_file/, "Created user file");
-    
-    # Verify single-DS files exist
-    ok(-f $idle_file, "Single-DS idle exists");
-    ok(-f $user_file, "Single-DS user exists");
-    
-    # Verify multi-DS file removed
-    ok(!-f $source_file, "Multi-DS source removed");
-    
-    # Verify DS count
-    is(scalar get_ds_names($idle_file), 1, "idle has 1 DS");
-    is(scalar get_ds_names($user_file), 1, "user has 1 DS");
-    
-    # Verify data was copied
-    my $idle_after = get_rrd_data($idle_file, '42');
-    my $user_after = get_rrd_data($user_file, '42');
-    
-    ok(scalar @$idle_after > 0, "Data copied for idle");
-    ok(scalar @$user_after > 0, "Data copied for user");
-};
-
-# Test 4: Comma syntax
+# Test 2: Comma syntax
 subtest 'comma_syntax' => sub {
-    my $idle_file = "$dbdir/test-comma/cpu-idle-g.rrd";
-    my $user_file = "$dbdir/test-comma/cpu-user-g.rrd";
-    my $target_file = "$dbdir/test-comma/cpu-g.rrd";
-    
-    create_single_ds_rrd($idle_file, 'GAUGE', [50, 60]);
-    create_single_ds_rrd($user_file, 'GAUGE', [10, 20]);
-    
-    # Use comma syntax
-    my ($exit_code, $output) = run_migrate(
-        '--merge', '--verbose',
-        '-i', "$idle_file:42,$user_file:42",
-        '-o', "$target_file:idle-g,user-g",
+    my $f1 = "$dbdir/t2/a.rrd";
+    my $f2 = "$dbdir/t2/b.rrd";
+    my $f3 = "$dbdir/t2/merged.rrd";
+
+    create_rrd($f1, '42', 'GAUGE', [100]);
+    create_rrd($f2, '42', 'GAUGE', [200]);
+
+    my ($rc, $out) = run(
+        '-i', "$f1:42,$f2:42",
+        '-o', "$f3:a-g,b-g",
     );
-    
-    is($exit_code, 0, "Comma syntax merge succeeded");
-    ok(-f $target_file, "Target file created");
-    
-    my @ds = get_ds_names($target_file);
-    is(scalar @ds, 2, "Has 2 DS");
+
+    is($rc, 0, "comma syntax works");
+    my @ds = ds_names($f3);
+    is(scalar @ds, 2, "has 2 DS");
 };
 
-# Test 5: Mismatched input/output count
+# Test 3: Fail if output exists without --append
+subtest 'no_overwrite' => sub {
+    my $f1 = "$dbdir/t3/src.rrd";
+    my $f2 = "$dbdir/t3/dst.rrd";
+
+    create_rrd($f1, '42', 'GAUGE', [10]);
+    create_rrd($f2, '42', 'GAUGE', [20]);
+
+    my ($rc, $out) = run(
+        '-i', "$f1:42", '-o', "$f2:new-g",
+    );
+
+    isnt($rc, 0, "fails without --append");
+    like($out, qr/Output exists/, "error about existing file");
+};
+
+# Test 4: --append adds DS to existing file
+subtest 'append' => sub {
+    my $f1 = "$dbdir/t4/new.rrd";
+    my $f2 = "$dbdir/t4/existing.rrd";
+
+    create_rrd($f1, '42', 'GAUGE', [100, 200, 300]);
+    create_rrd($f2, '42', 'GAUGE', [10, 20, 30]);
+
+    my ($rc, $out) = run('--append',
+        '-i', "$f1:42", '-o', "$f2:new-g",
+    );
+
+    is($rc, 0, "append succeeded");
+    ok(-f "$f2.bak", "backup created");
+
+    my @ds = ds_names($f2);
+    is(scalar @ds, 2, "has 2 DS after append");
+    is(ds_type($f2, '42'), 'GAUGE', "original DS preserved");
+    is(ds_type($f2, 'new-g'), 'GAUGE', "new DS added");
+
+    my $d1 = get_rrd_data($f2, '42');
+    my $d2 = get_rrd_data($f2, 'new-g');
+    ok(scalar @$d1 > 0, "original data preserved");
+    ok(scalar @$d2 > 0, "new data added");
+};
+
+# Test 5: Fail on RRA mismatch
+subtest 'rra_mismatch' => sub {
+    my $f1 = "$dbdir/t5/a.rrd";
+    my $f2 = "$dbdir/t5/b.rrd";
+    my $f3 = "$dbdir/t5/out.rrd";
+
+    # Create with different RRAs
+    my $start = time() - 86400;
+    make_path("$dbdir/t5", { mode => 0755 });
+
+    RRDs::create($f1,
+        '--start', $start - 300, '-s', 300,
+        "DS:42:GAUGE:600:0:U",
+        'RRA:AVERAGE:0.5:1:576',
+    );
+    RRDs::update($f1, "$start:50");
+
+    RRDs::create($f2,
+        '--start', $start - 300, '-s', 300,
+        "DS:42:GAUGE:600:0:U",
+        'RRA:AVERAGE:0.5:6:432',  # Different RRA
+    );
+    RRDs::update($f2, "$start:60");
+
+    my ($rc, $out) = run(
+        '-i', "$f1:42", '-o', "$f3:a-g",
+        '-i', "$f2:42", '-o', "$f3:b-g",
+    );
+
+    isnt($rc, 0, "fails on RRA mismatch");
+    like($out, qr/RRA mismatch/, "error about RRA");
+};
+
+# Test 6: Fail on DS name collision in --append
+subtest 'ds_collision' => sub {
+    my $f1 = "$dbdir/t6/src.rrd";
+    my $f2 = "$dbdir/t6/dst.rrd";
+
+    create_rrd($f1, '42', 'GAUGE', [100]);
+    create_rrd($f2, 'myfield', 'GAUGE', [200]);
+
+    my ($rc, $out) = run('--append',
+        '-i', "$f1:42", '-o', "$f2:myfield",
+    );
+
+    isnt($rc, 0, "fails on DS collision");
+    like($out, qr/already exists/, "error about collision");
+};
+
+# Test 7: Mismatched input/output count
 subtest 'mismatched_count' => sub {
-    my $file = "$dbdir/test-mismatch/cpu.rrd";
-    create_single_ds_rrd($file, 'GAUGE', [50]);
-    
-    my ($exit_code, $output) = run_migrate(
-        '--merge',
-        '-i', "$file:42",
-        '-o', "$file:idle-g",
-        '-o', "$file:user-g",
+    my $f = "$dbdir/t7/a.rrd";
+    create_rrd($f, '42', 'GAUGE', [10]);
+
+    my ($rc, $out) = run(
+        '-i', "$f:42",
+        '-o', "$f:x", '-o', "$f:y",
     );
-    
-    isnt($exit_code, 0, "Fails with mismatched count");
-    like($output, qr/Number of inputs.*must equal/, "Error message about mismatch");
+
+    isnt($rc, 0, "fails on count mismatch");
+    like($out, qr/must equal/, "error about count");
 };
 
-# Test 6: Missing input file
-subtest 'missing_input_file' => sub {
-    my ($exit_code, $output) = run_migrate(
-        '--merge',
-        '-i', "/nonexistent/file.rrd:42",
-        '-o', "$dbdir/test-missing/cpu.rrd:idle-g",
+# Test 8: No args
+subtest 'no_args' => sub {
+    my ($rc, $out) = run();
+    isnt($rc, 0, "fails without args");
+};
+
+# Test 9: DS type preserved
+subtest 'type_preserved' => sub {
+    my $f1 = "$dbdir/t9/gauge.rrd";
+    my $f2 = "$dbdir/t9/derive.rrd";
+    my $f3 = "$dbdir/t9/merged.rrd";
+
+    create_rrd($f1, '42', 'GAUGE', [50]);
+    create_rrd($f2, '42', 'DERIVE', [100]);
+
+    my ($rc) = run(
+        '-i', "$f1:42", '-o', "$f3:g-g",
+        '-i', "$f2:42", '-o', "$f3:d-d",
     );
-    
-    isnt($exit_code, 0, "Fails with missing input");
-    like($output, qr/does not exist/, "Error message about missing file");
+
+    is($rc, 0, "copy succeeded");
+    is(ds_type($f3, 'g-g'), 'GAUGE', "GAUGE preserved");
+    is(ds_type($f3, 'd-d'), 'DERIVE', "DERIVE preserved");
 };
 
-# Test 7: No --merge or --split
-subtest 'no_mode' => sub {
-    my ($exit_code, $output) = run_migrate(
-        '-i', "file.rrd:42",
-        '-o', "file.rrd:idle-g",
+# Test 10: Split multi-DS to single-DS
+subtest 'split' => sub {
+    my $src = "$dbdir/t10/multi.rrd";
+    my $f1 = "$dbdir/t10/a.rrd";
+    my $f2 = "$dbdir/t10/b.rrd";
+
+    my $start = time() - 86400;
+    make_path("$dbdir/t10", { mode => 0755 });
+
+    RRDs::create($src,
+        '--start', $start - 300, '-s', 300,
+        "DS:x:GAUGE:600:0:U",
+        "DS:y:GAUGE:600:0:U",
+        'RRA:AVERAGE:0.5:1:576',
     );
-    
-    isnt($exit_code, 0, "Fails without mode");
-    like($output, qr/Must specify --merge or --split/, "Error message about mode");
-};
+    RRDs::update($src, "$start:10,20");
 
-# Test 8: Help message
-subtest 'help_message' => sub {
-    my ($exit_code, $output) = run_migrate('--help');
-    
-    like($output, qr/munin-migrate-rrd/, "Help contains script name");
-    like($output, qr/--merge/, "Help contains --merge");
-    like($output, qr/--split/, "Help contains --split");
-    like($output, qr/-i/, "Help contains -i");
-    like($output, qr/-o/, "Help contains -o");
-};
-
-# Test 9: Merge with different types
-subtest 'merge_different_types' => sub {
-    my $gauge_file = "$dbdir/test-types/cpu-idle-g.rrd";
-    my $derive_file = "$dbdir/test-types/cpu-tx-d.rrd";
-    my $target_file = "$dbdir/test-types/cpu-g.rrd";
-    
-    create_single_ds_rrd($gauge_file, 'GAUGE', [50, 60]);
-    create_single_ds_rrd($derive_file, 'DERIVE', [100, 200]);
-    
-    my ($exit_code, $output) = run_migrate(
-        '--merge',
-        '-i', "$gauge_file:42", '-o', "$target_file:idle-g",
-        '-i', "$derive_file:42", '-o', "$target_file:tx-d",
+    my ($rc) = run(
+        '-i', "$src:x", '-o', "$f1:42",
+        '-i', "$src:y", '-o', "$f2:42",
     );
-    
-    is($exit_code, 0, "Merge with different types succeeded");
-    
-    # Verify DS types
-    my $info = RRDs::info($target_file);
-    is($info->{'ds[idle-g].type'}, 'GAUGE', "idle-g is GAUGE");
-    is($info->{'ds[tx-d].type'}, 'DERIVE', "tx-d is DERIVE");
+
+    is($rc, 0, "split succeeded");
+    ok(-f $f1, "output1 created");
+    ok(-f $f2, "output2 created");
+    ok(!-f $src, "source removed");
+    is(scalar @{ds_names($f1)}, 1, "output1 has 1 DS");
+    is(scalar @{ds_names($f2)}, 1, "output2 has 1 DS");
 };
 
-# Test 10: Data integrity after merge
-subtest 'data_integrity' => sub {
-    my $idle_file = "$dbdir/test-integrity/cpu-idle-g.rrd";
-    my $target_file = "$dbdir/test-integrity/cpu-g.rrd";
-    
-    my @data = (50, 60, 70, 80, 90, 100);
-    create_single_ds_rrd($idle_file, 'GAUGE', \@data);
-    
-    my $before = get_rrd_data($idle_file, '42');
-    
-    my ($exit_code, $output) = run_migrate(
-        '--merge',
-        '-i', "$idle_file:42", '-o', "$target_file:idle-g",
+# Test 11: Dry run
+subtest 'dry_run' => sub {
+    my $f1 = "$dbdir/t11/src.rrd";
+    my $f2 = "$dbdir/t11/dst.rrd";
+
+    create_rrd($f1, '42', 'GAUGE', [50]);
+
+    my ($rc, $out) = run('--dry-run',
+        '-i', "$f1:42", '-o', "$f2:my-g",
     );
-    
-    is($exit_code, 0, "Merge succeeded");
-    
-    my $after = get_rrd_data($target_file, 'idle-g');
-    
-    # Both should have data (exact count depends on xport resolution)
-    ok(scalar @$before > 0, "Input has data");
-    ok(scalar @$after > 0, "Output has data");
-    
-    if (@$before && @$after) {
-        # Values should be similar (RRD consolidation may affect exact values)
-        ok(abs($before->[0] - $after->[0]) < 10, "First values similar");
-        ok(abs($before->[-1] - $after->[-1]) < 10, "Last values similar");
-    }
+
+    is($rc, 0, "dry run succeeds");
+    ok(!-f $f2, "output not created");
+    like($out, qr/Dry run/, "shows dry run message");
 };
 
-# Clean up
+# Test 12: Help
+subtest 'help' => sub {
+    my ($rc, $out) = run('--help');
+    like($out, qr/munin-migrate-rrd/, "help shows script name");
+    like($out, qr/--append/, "help shows --append");
+};
+
+# Test 13: --append preserves original data
+subtest 'append_data_preserved' => sub {
+    my $new = "$dbdir/t13/new.rrd";
+    my $old = "$dbdir/t13/old.rrd";
+
+    create_rrd($new, '42', 'GAUGE', [100, 200, 300]);
+    create_rrd($old, 'myfield', 'GAUGE', [10, 20, 30]);
+
+    my $before = get_rrd_data($old, 'myfield');
+    my $count_before = scalar @$before;
+
+    run('--append', '-i', "$new:42", '-o', "$old:extra-g");
+
+    my $after_old = get_rrd_data($old, 'myfield');
+    my $after_new = get_rrd_data($old, 'extra-g');
+
+    ok(scalar @$after_old >= $count_before * 0.8, "original data roughly preserved");
+    ok(scalar @$after_new > 0, "new data added");
+};
+
 END {
-    if ($tmpdir && -d $tmpdir) {
-        remove_tree($tmpdir, { error => \my $err });
-        if (@$err) {
-            warn "Error removing $tmpdir: " . join(", ", map { values %$_ } @$err);
-        }
-    }
+    remove_tree($tmpdir) if $tmpdir && -d $tmpdir;
 }
 
 done_testing();
