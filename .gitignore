@@ -2,6 +2,9 @@
 *~
 *.bak
 
+# Local planning docs
+plans/
+
 # Perl Builded files
 /blib/
 /Build
