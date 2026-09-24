@@ -39,8 +39,22 @@ jobs:
             touch libdevel-cover-report-coveralls-perl.deb.dummy
           fi
 
-      - name: Build dev container
-        run: docker build -t munin-dev -f Dockerfile.dev .
+      - name: Cache Docker image
+        id: cache-docker
+        uses: actions/cache@v6
+        with:
+          path: /tmp/munin-dev.tar
+          key: ${{ runner.os }}-munin-dev-${{ hashFiles('Dockerfile.dev') }}
+
+      - if: ${{ steps.cache-docker.outputs.cache-hit != 'true' }}
+        name: Build dev container
+        run: |
+          docker build -t munin-dev -f Dockerfile.dev .
+          docker save munin-dev > /tmp/munin-dev.tar
+
+      - if: ${{ steps.cache-docker.outputs.cache-hit == 'true' }}
+        name: Load cached dev container
+        run: docker load < /tmp/munin-dev.tar
 
       # Lint first — fast, fails early before expensive coverage run
       - name: Lint
