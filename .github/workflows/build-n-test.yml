@@ -55,4 +55,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          docker run --rm -v $(pwd):/app munin-dev cover -report coveralls
+          docker run --rm -v $(pwd):/app -e GITHUB_TOKEN munin-dev cover -report coveralls
