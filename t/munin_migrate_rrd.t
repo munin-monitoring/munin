@@ -53,8 +53,9 @@ sub get_rrd_data {
 
 sub ds_names {
     my ($file) = @_;
+    return () unless -f $file;
     my $info = RRDs::info($file);
-    return () if RRDs::error;
+    return () if RRDs::error || !$info;
     return sort map { /^ds\[([^\]]+)\]\.type$/ ? $1 : () } keys %$info;
 }
 
@@ -275,8 +276,10 @@ subtest 'split' => sub {
     ok(-f $f1, "output1 created");
     ok(-f $f2, "output2 created");
     ok(!-f $src, "source removed");
-    is(scalar @{ds_names($f1)}, 1, "output1 has 1 DS");
-    is(scalar @{ds_names($f2)}, 1, "output2 has 1 DS");
+    my @ds1 = ds_names($f1);
+    my @ds2 = ds_names($f2);
+    is(scalar @ds1, 1, "output1 has 1 DS");
+    is(scalar @ds2, 1, "output2 has 1 DS");
 };
 
 # Test 11: Dry run
@@ -322,8 +325,5 @@ subtest 'append_data_preserved' => sub {
     ok(scalar @$after_new > 0, "new data added");
 };
 
-END {
-    remove_tree($tmpdir) if $tmpdir && -d $tmpdir;
-}
-
 done_testing();
+# tempdir cleanup via CLEANUP => 1

@@ -418,3 +418,15 @@ sub do_append {
 }
 
 __END__
+
+=head1 NAME
+
+munin-migrate-rrd - Copy/split/merge RRD data sources via XML
+
+=head1 SYNOPSIS
+
+munin-migrate-rrd [options] -i input:ds -o output:ds [...]
+
+Options: --dbdir, --append, --dry-run, --verbose, --help
+
+=cut
