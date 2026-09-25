@@ -453,15 +453,45 @@ sub _db_service {
 	return ($service_id, \%service_attrs_old, \%fields_old, \%ds_ids);
 }
 
-sub _db_service_attr {
-	my ($self, $service_id, $name, $value) = @_;
+sub _db_diff_attrs {
+	my ($self, $table, $id_col, $id, $attrs_old, $attrs_new) = @_;
 	my $dbh = $self->{dbh};
 
-	DEBUG "_db_service_attr($service_id, $name, $value)";
+	# Security gate: only allow known table/id_col combinations
+	my %allowed = (
+		'service_attr.id' => 1,
+		'ds_attr.id' => 1,
+	);
+	die "_db_diff_attrs: invalid table '$table' id_col '$id_col'"
+		unless $allowed{"$table.$id_col"};
 
-	# Save the whole service config, and drop it.
-	my $sth_service_attr = $dbh->prepare_cached("INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)");
-	$sth_service_attr->execute($service_id, $name, $value);
+	DEBUG "_db_diff_attrs($table, $id_col, $id)";
+
+	my $sth_up = $dbh->prepare_cached("UPDATE $table SET value = ? WHERE $id_col = ? AND name = ?");
+	my $sth_ins = $dbh->prepare_cached("INSERT INTO $table ($id_col, name, value) VALUES (?, ?, ?)");
+	my $sth_del = $dbh->prepare_cached("DELETE FROM $table WHERE $id_col = ? AND name = ?");
+
+	# Insert/Update new attrs
+	for my $name (keys %$attrs_new) {
+		my $value = $attrs_new->{$name};
+		if (exists $attrs_old->{$name}) {
+			if ($attrs_old->{$name} ne $value) {
+				$sth_up->execute($value, $id, $name);
+				DEBUG "_db_diff_attrs: updated $table.$id_col=$id name=$name";
+			}
+		} else {
+			$sth_ins->execute($id, $name, $value);
+			DEBUG "_db_diff_attrs: inserted $table.$id_col=$id name=$name";
+		}
+	}
+
+	# Delete removed attrs
+	for my $name (keys %$attrs_old) {
+		unless (exists $attrs_new->{$name}) {
+			$sth_del->execute($id, $name);
+			DEBUG "_db_diff_attrs: deleted $table.$id_col=$id name=$name";
+		}
+	}
 }
 
 sub _db_ds_update {
