@@ -191,6 +191,87 @@ All 58 tests pass. No regressions.
 
 ---
 
+## Session 2: Integration Testing and Bug Fixes (2026-09-25)
+
+### What We Did
+
+Ran full test suite in Docker (matching CI environment). Found and fixed 3 additional bugs:
+
+#### Bug 3: Variable shadowing of %fields_old
+
+**Symptom:** `UNIQUE constraint failed: ds_attr.id, ds_attr.name` on second update run.
+
+**Root cause:** Inner `my %fields_old` inside a block shadowed the outer declaration:
+```perl
+my (%service_attrs_old, %fields_old);  # Line 367 - outer
+{
+    my %fields_old;  # Line 381 - INNER shadows outer!
+    while (...) { $fields_old{...} = ...; }  # Writes to inner
+}
+# Inner %fields_old is gone!
+```
+
+**Fix:** Remove the inner `my` declaration.
+
+#### Bug 4: Non-numeric input warning in to_sec
+
+**Symptom:** `Argument "abc" isn't numeric in int at UpdateWorker.pm line 1069`
+
+**Root cause:** `graph_data_size` parsing used `m/(\w+) for (\w+)/` which captures any word chars. When invalid input reaches `to_sec`, `int "abc"` warns.
+
+**Fix:**
+1. Tighten regex to `m/(\d+[smhdwty]?) for (\d+[smhdwty]?)/i`
+2. Add guard in `to_sec`: `return 0 unless $target =~ /^\d+$/;`
+
+#### Bug 5: Test include path
+
+**Symptom:** Tests failed with `Can't locate Munin::Master::UpdateWorker.pm`
+
+**Root cause:** Tests used `use lib qw(t/lib)` but modules are in `lib/`.
+
+**Fix:** Changed all tests to `use lib qw(lib t/lib)`.
+
+### What We Learned
+
+#### Technical
+
+1. **Variable shadowing is silent in Perl.** No warning unless `use warnings` is in effect AND the variable is used. Always check for inner `my` declarations that match outer variables.
+
+2. **Docker testing matches CI.** Always verify with `make docker-test` to catch environment-specific issues.
+
+3. **Regex specificity matters.** `\w+` is too broad for time specs - use `\d+[smhdwty]?` to match expected format.
+
+#### Process
+
+1. **Run integration tests early.** Unit tests passed but integration tests caught the shadowing bug.
+
+2. **CI environment matters.** The Docker container has different paths and dependencies than local.
+
+### What We Decided
+
+1. **Always run `make docker-test` before committing.** Local tests may pass but CI may fail.
+
+2. **Defensive input validation.** Add guards in utility functions like `to_sec` even if callers should validate.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `lib/Munin/Master/UpdateWorker.pm` | Fix variable shadowing, add input validation |
+| `t/munin_*.t` (17 files) | Fix test include paths |
+| `.github/workflows/build-n-test.yml` | No changes (reference only) |
+
+### Test Results
+
+```
+# Docker test suite (matching CI)
+All tests successful.
+Files=21, Tests=392, 402 wallclock secs
+Result: PASS
+```
+
+---
+
 ## Next Steps
 
 1. **service_categories CRUD.** Currently uses DELETE+INSERT. Should diff properly.
@@ -200,3 +281,5 @@ All 58 tests pass. No regressions.
 3. **Stress test.** Verify concurrency behavior with multiple update workers.
 
 4. **Review other DELETE+INSERT patterns** in the codebase.
+
+5. **Audit variable shadowing.** Check for other inner `my` declarations that shadow outer variables.
