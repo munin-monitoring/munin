@@ -660,6 +660,11 @@ sub uw_handle_config {
 
 		# Handle dirty_config
 		if ($arg2 && $arg2 eq "value") {
+			# Ensure field exists in %fields so datasource gets created
+			if (!exists($fields{$arg1})) {
+				push @field_order, $arg1;
+				$fields{$arg1} = {};  # empty attrs, will get defaults
+			}
 			push @fetch_data, $line;
 			next; # Handled
 		}
