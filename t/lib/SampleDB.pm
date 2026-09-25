@@ -49,6 +49,11 @@ sub generate_sample_db {
     my @hosts = ("localhost", "acme.com", "aesir", "asynjur", "svartalfar");
     my @services = ("cpu", "memory", "disk", "network", "load");
 
+    # Services that use multi-DS RRDs (new style)
+    my %multi_ds_services = map { $_ => 1 } qw(cpu memory network);
+    # Hosts that use old-style single-DS RRDs
+    my %old_style_hosts = map { $_ => 1 } qw(aesir asynjur svartalfar);
+
     # DS definitions with thresholds
     my @ds_defs = (
         { name => "idle",    type => "GAUGE",   warn => "80",     crit => "95",     value => "50" },
@@ -112,7 +117,23 @@ sub generate_sample_db {
 
             for my $ds (@ds_defs) {
                 my $type_id = lc(substr($ds->{type}, 0, 1));
-                my $rrd_file = "$path/$svc-$ds->{name}-$type_id.rrd";
+                my $is_old_style = $old_style_hosts{$host};
+
+                # Determine RRD file and DS name based on style
+                my ($rrd_file, $rrd_field_name);
+                if ($is_old_style) {
+                    # Old style: single-DS, DS name is "42"
+                    $rrd_file = "$path/$svc-$ds->{name}-$type_id.rrd";
+                    $rrd_field_name = "42";
+                } elsif ($multi_ds_services{$svc}) {
+                    # New style multi-DS: all fields share one RRD file
+                    $rrd_file = "$path/$svc.rrd";
+                    $rrd_field_name = "$ds->{name}-$type_id";
+                } else {
+                    # New style single-DS: field-specific RRD
+                    $rrd_file = "$path/$svc-$ds->{name}-$type_id.rrd";
+                    $rrd_field_name = "$ds->{name}-$type_id";
+                }
 
                 $dbh->do("INSERT OR IGNORE INTO ds (id, service_id, name, type) VALUES (?, ?, ?, ?)",
                     undef, $ds_id, $svc_id, $ds->{name}, $ds->{type});
@@ -121,7 +142,7 @@ sub generate_sample_db {
                 $dbh->do("INSERT OR IGNORE INTO ds_attr (id, name, value) VALUES (?, ?, ?)",
                     undef, $ds_id, "rrd:file", $rrd_file);
                 $dbh->do("INSERT OR IGNORE INTO ds_attr (id, name, value) VALUES (?, ?, ?)",
-                    undef, $ds_id, "rrd:field", "42");
+                    undef, $ds_id, "rrd:field", $rrd_field_name);
 
                 # Add warning/critical if defined
                 if (defined $ds->{warn}) {
