@@ -32,7 +32,8 @@ for my $i (1..$num_plugins) {
     open my $fh, '>', $spool_file or die "Cannot write $spool_file: $!\n";
     print $fh "timestamp $now\n";
     print $fh "multigraph $plugin\n";
-    print $fh "field1.value 42\n";
+    # Use explicit timestamp to exercise set_spoolfetch_timestamp path
+    print $fh "field1.value ${now}:42\n";
     print $fh ".\n";
     close $fh;
 }
