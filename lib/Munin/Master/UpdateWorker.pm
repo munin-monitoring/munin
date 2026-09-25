@@ -945,7 +945,8 @@ sub _create_rrd_file {
         $rrd_file,
         "--start", ($first_epoch - $update_rate_in_sec),
 	"-s", $update_rate_in_sec,
-        sprintf('DS:42:%s:%s:%s:%s',
+        sprintf('DS:%s:%s:%s:%s:%s',
+                $self->_get_rrd_field_name($ds_name, $ds_config),
                 $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
     );
 
