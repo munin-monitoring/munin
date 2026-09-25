@@ -388,15 +388,8 @@ sub _db_service {
 	DEBUG "_db_service.%service_attrs_old:" . Dumper(\%service_attrs_old);
 	DEBUG "_db_service.%fields_old:" . Dumper(\%fields_old);
 
-	# Leave room for refresh
-	# XXX - we might only update DB with diff.
-	my $sth_service_attrs_del = $dbh->prepare_cached("DELETE FROM service_attr WHERE id = ?");
-	$sth_service_attrs_del->execute($service_id);
-
-	for my $attr (keys %$service_attr) {
-		my $_service_value = $service_attr->{$attr};
-		$self->_db_service_attr($service_id, $attr, $_service_value);
-	}
+	# Diff and apply service_attr changes
+	$self->_db_diff_attrs('service_attr', 'id', $service_id, \%service_attrs_old, $service_attr);
 
 	# Handle the service_category
 	{
@@ -410,27 +403,23 @@ sub _db_service {
 		$sth_service_cat->execute($service_id, $category);
 	}
 
-	# Handle the fields
-
-	# Remove the ds_attr rows
-	{
-		my $sth_del_attr = $dbh->prepare_cached('DELETE FROM ds_attr WHERE id IN (SELECT id FROM ds WHERE service_id = ?)');
-		$sth_del_attr->execute($service_id);
-	}
+	# Handle the fields - diff and apply ds_attr changes
 
 	my %ds_ids;
 	for my $field_name (keys %$fields) {
 		my $_field_attrs = $fields->{$field_name};
 
-
-		my $ds_id = $self->_db_ds_update($service_id, $field_name, $_field_attrs);
+		my $ds_id = $self->_db_ds_update($service_id, $field_name, $_field_attrs, $fields_old{$field_name} // {});
 		$ds_ids{$field_name} = $ds_id;
 	}
 
-	# Purge the ds that have no attributes, as they are not relevant anymore
-	{
-		my $sth_del_ds = $dbh->prepare_cached('DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)');
-		$sth_del_ds->execute($service_id);
+	# Delete datasources that are no longer in the config
+	for my $old_field (keys %fields_old) {
+		unless (exists $fields->{$old_field}) {
+			DEBUG "_db_service: deleting stale ds '$old_field' from service $service_id";
+			my $sth_del_ds = $dbh->prepare_cached('DELETE FROM ds WHERE service_id = ? AND name = ?');
+			$sth_del_ds->execute($service_id, $old_field);
+		}
 	}
 
 	# Update the ordering of fields
@@ -495,10 +484,10 @@ sub _db_diff_attrs {
 }
 
 sub _db_ds_update {
-	my ($self, $service_id, $field_name, $attrs) = @_;
+	my ($self, $service_id, $field_name, $attrs_new, $attrs_old) = @_;
 	my $dbh = $self->{dbh};
 
-	DEBUG "_db_ds_update($service_id, $field_name, $attrs)";
+	DEBUG "_db_ds_update($service_id, $field_name)";
 
 	my $sth_id = $dbh->prepare_cached("SELECT id FROM ds WHERE service_id = ? AND name = ?");
 	$sth_id->execute($service_id, $field_name);
@@ -513,12 +502,8 @@ sub _db_ds_update {
 		$ds_id = _get_last_insert_id($dbh, "ds");
 	}
 
-	# Reinsert the other rows
-	my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
-	for my $field_attr (keys %$attrs) {
-		my $_value = $attrs->{$field_attr};
-		$sth_ds_attr->execute($ds_id, $field_attr, $_value);
-	}
+	# Diff and apply ds_attr changes
+	$self->_db_diff_attrs('ds_attr', 'id', $ds_id, $attrs_old, $attrs_new);
 
 	return $ds_id;
 }
@@ -745,6 +730,14 @@ sub uw_handle_config {
 				$sth_update->execute($rrd_field, $ds_id, 'rrd:field');
 			}
 		}
+	}
+
+	# Purge ds that have no attributes (plugin stopped exposing them)
+	# Now safe to do this since RRD loop above has added rrd:file/rrd:field attrs
+	{
+		my $dbh_purge = $self->{dbh};
+		my $sth_del_ds = $dbh_purge->prepare_cached('DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)');
+		$sth_del_ds->execute($service_id);
 	}
 
 	# timestamp == 0 means "Nothing was updated". We only count on the
