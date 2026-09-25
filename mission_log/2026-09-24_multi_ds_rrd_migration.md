@@ -376,7 +376,7 @@ Sets `rrd:file` and `rrd:field` correctly:
 
 All 83 tests pass:
 - Graph: 4/4
-- Limits: 43/43  
+- Limits: 43/43
 - Limits CDEF: 6/6
 - Migrate RRD: 30/30
 

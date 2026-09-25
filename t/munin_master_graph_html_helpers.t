@@ -46,19 +46,19 @@ subtest 'expand_cdef' => sub {
         'field1', 'field1,field2,+', 'real_field1'
     );
     is($result, 'real_field1,field2,+', 'Replaces field at start');
-    
+
     # Replacement in middle
     $result = Munin::Master::Graph::expand_cdef(
         'field2', 'field1,field2,+', 'real_field2'
     );
     is($result, 'field1,real_field2,+', 'Replaces field in middle');
-    
+
     # Single field
     $result = Munin::Master::Graph::expand_cdef(
         'field1', 'field1', 'real_field1'
     );
     is($result, 'real_field1', 'Replaces single field');
-    
+
     # Complex cdef
     $result = Munin::Master::Graph::expand_cdef(
         'field1', 'field1,field1,+', 'real_field1'
@@ -140,12 +140,12 @@ subtest 'url_to_path' => sub {
     is(scalar @paths, 1, 'Single segment');
     is($paths[0]{pathname}, 'group1', 'First pathname');
     ok($paths[0]{switchable}, 'Is switchable');
-    
+
     @paths = Munin::Master::HTML::url_to_path('group1/node1');
     is(scalar @paths, 2, 'Two segments');
     is($paths[0]{pathname}, 'group1', 'First');
     is($paths[1]{pathname}, 'node1', 'Second');
-    
+
     # Underscore becomes space (real URLs)
     @paths = Munin::Master::HTML::url_to_path('my_group/my_node');
     is($paths[0]{pathname}, 'my group', 'Underscore -> space');
@@ -171,13 +171,13 @@ subtest 'url_absolutize' => sub {
 subtest 'get_param from database' => sub {
     my $dbh = Munin::Master::Update::get_dbh(1);
     ok(defined $dbh, 'Got database handle');
-    
+
     # Test that param table exists and is queryable
     my $sth = $dbh->prepare_cached("SELECT COUNT(*) FROM param");
     $sth->execute();
     my ($count) = $sth->fetchrow_array();
     $sth->finish();
-    
+
     ok(defined $count, 'Param table is queryable');
 };
 
@@ -186,13 +186,13 @@ subtest 'get_param from database' => sub {
 # ============================================================================
 subtest 'URL lookup for services' => sub {
     my $dbh = Munin::Master::Update::get_dbh(1);
-    
+
     # Test the URL query that Graph.pm uses
     my $sth = $dbh->prepare_cached("SELECT id, type FROM url LIMIT 1");
     $sth->execute();
     my ($id, $type) = $sth->fetchrow_array();
     $sth->finish();
-    
+
     ok(defined $id, 'Found a URL');
     ok(defined $type, 'URL has type');
 };
@@ -202,28 +202,28 @@ subtest 'URL lookup for services' => sub {
 # ============================================================================
 subtest 'service attributes' => sub {
     my $dbh = Munin::Master::Update::get_dbh(1);
-    
+
     # Get a service ID
     my $sth = $dbh->prepare_cached("SELECT id FROM service LIMIT 1");
     $sth->execute();
     my ($service_id) = $sth->fetchrow_array();
     $sth->finish();
-    
+
     ok(defined $service_id, 'Got a service ID');
-    
+
     # Test the attribute query that Graph.pm uses
     $sth = $dbh->prepare_cached("SELECT name, value FROM service_attr WHERE id = ? AND name = ?");
     $sth->execute($service_id, 'graph_title');
     my ($name, $value) = $sth->fetchrow_array();
     $sth->finish();
-    
+
     ok(defined $value, 'Got graph_title');
-    
+
     # Get graph_order
     $sth->execute($service_id, 'graph_order');
     ($name, $value) = $sth->fetchrow_array();
     $sth->finish();
-    
+
     # graph_order might not exist, that's ok
     ok(1, 'Checked graph_order');
 };
@@ -233,22 +233,22 @@ subtest 'service attributes' => sub {
 # ============================================================================
 subtest 'data sources and attributes' => sub {
     my $dbh = Munin::Master::Update::get_dbh(1);
-    
+
     # Get a service with data sources
     my $sth = $dbh->prepare_cached("
-        SELECT s.id, s.name FROM service s 
+        SELECT s.id, s.name FROM service s
         WHERE EXISTS (SELECT 1 FROM ds WHERE ds.service_id = s.id)
         LIMIT 1
     ");
     $sth->execute();
     my ($service_id, $service_name) = $sth->fetchrow_array();
     $sth->finish();
-    
+
     ok(defined $service_id, 'Got service with data sources');
-    
+
     # Test the DS query that Graph.pm uses
     $sth = $dbh->prepare_cached("
-        SELECT ds.name, l.value, rf.value 
+        SELECT ds.name, l.value, rf.value
         FROM ds
         LEFT OUTER JOIN ds_attr l ON l.id = ds.id AND l.name = 'label'
         LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
@@ -256,7 +256,7 @@ subtest 'data sources and attributes' => sub {
         ORDER BY ds.ordr ASC
     ");
     $sth->execute($service_id);
-    
+
     my @ds_list;
     while (my ($name, $label, $rrdfile) = $sth->fetchrow_array()) {
         push @ds_list, {
@@ -266,9 +266,9 @@ subtest 'data sources and attributes' => sub {
         };
     }
     $sth->finish();
-    
+
     ok(scalar @ds_list > 0, 'Got data sources for service');
-    
+
     # Check that each DS has required attributes
     for my $ds (@ds_list) {
         ok(defined $ds->{name}, "DS '$ds->{name}' has name");
@@ -281,25 +281,25 @@ subtest 'data sources and attributes' => sub {
 # ============================================================================
 subtest 'group hierarchy' => sub {
     my $dbh = Munin::Master::Update::get_dbh(1);
-    
+
     # Test the group query that HTML.pm uses
     my $sth = $dbh->prepare_cached("
-        SELECT g.id, g.name, u.path 
-        FROM grp g 
-        INNER JOIN url u ON u.id = g.id AND u.type = 'group' 
-        WHERE g.p_id = 0 
+        SELECT g.id, g.name, u.path
+        FROM grp g
+        INNER JOIN url u ON u.id = g.id AND u.type = 'group'
+        WHERE g.p_id = 0
         ORDER BY g.name ASC
     ");
     $sth->execute();
-    
+
     my @groups;
     while (my ($id, $name, $path) = $sth->fetchrow_array()) {
         push @groups, { id => $id, name => $name, path => $path };
     }
     $sth->finish();
-    
+
     ok(1, 'Group hierarchy query works');
-    
+
     # Check that groups have proper structure
     for my $g (@groups) {
         ok(defined $g->{name}, "Group '$g->{name}' has name");
@@ -312,31 +312,31 @@ subtest 'group hierarchy' => sub {
 # ============================================================================
 subtest 'node listing' => sub {
     my $dbh = Munin::Master::Update::get_dbh(1);
-    
+
     # Get a group ID
     my $sth = $dbh->prepare_cached("SELECT id FROM grp LIMIT 1");
     $sth->execute();
     my ($grp_id) = $sth->fetchrow_array();
     $sth->finish();
-    
+
     ok(defined $grp_id, 'Got a group ID');
-    
+
     # Test the node query that HTML.pm uses
     $sth = $dbh->prepare_cached("
-        SELECT n.id, n.name, u.path 
-        FROM node n 
-        INNER JOIN url u ON u.id = n.id AND u.type = 'node' 
-        WHERE n.grp_id = ? 
+        SELECT n.id, n.name, u.path
+        FROM node n
+        INNER JOIN url u ON u.id = n.id AND u.type = 'node'
+        WHERE n.grp_id = ?
         ORDER BY n.name ASC
     ");
     $sth->execute($grp_id);
-    
+
     my @nodes;
     while (my ($id, $name, $path) = $sth->fetchrow_array()) {
         push @nodes, { id => $id, name => $name, path => $path };
     }
     $sth->finish();
-    
+
     # Might have nodes, might not - that's ok
     ok(1, 'Node listing query works');
 };
@@ -346,19 +346,19 @@ subtest 'node listing' => sub {
 # ============================================================================
 subtest 'service categories' => sub {
     my $dbh = Munin::Master::Update::get_dbh(1);
-    
+
     # Test the category query that HTML.pm uses
     my $sth = $dbh->prepare_cached("
         SELECT DISTINCT category FROM service_categories ORDER BY category ASC
     ");
     $sth->execute();
-    
+
     my @categories;
     while (my ($category) = $sth->fetchrow_array()) {
         push @categories, $category;
     }
     $sth->finish();
-    
+
     ok(scalar @categories >= 0, 'Category query works');
 };
 

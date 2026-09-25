@@ -362,7 +362,7 @@ subtest 'split_basic' => sub {
     ok(-f $f1, "output1 created");
     ok(-f $f2, "output2 created");
     ok(!-f $src, "source removed");
-    
+
     my @ds1 = ds_names($f1);
     my @ds2 = ds_names($f2);
     is(scalar @ds1, 1, "output1 has 1 DS");

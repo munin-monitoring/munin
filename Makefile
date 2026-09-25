@@ -54,7 +54,7 @@ install: $(BUILD_SCRIPT)
 	@# various directory placeholders (e.g. "@@SPOOLDIR@@") need to be replaced
 	grep -Irl --null "@@" blib | xargs -0 sed -i \
 		-e "$$(perl -I lib -M"Munin::Common::Defaults" \
-		   -e "Munin::Common::Defaults->print_as_sed_substitutions();")"	
+		   -e "Munin::Common::Defaults->print_as_sed_substitutions();")"
 	"$(BUILD_SCRIPT)" install --destdir="$(DESTDIR)" --verbose
 
 

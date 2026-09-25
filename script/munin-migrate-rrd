@@ -97,7 +97,7 @@ sub dump_dom {
 # Save DOM to RRD via restore
 sub restore_dom {
     my ($dom, $file) = @_;
-    make_path(dirname($file), { mode => 0755 }) unless -d dirname($file);
+    make_path(dirname($file), { mode => oct('0755') }) unless -d dirname($file);
     my $tmpdir = tempdir(CLEANUP => 1);
     my $xml_file = "$tmpdir/dump.xml";
     $dom->toFile($xml_file);

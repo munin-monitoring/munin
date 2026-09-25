@@ -38,7 +38,7 @@ subtest 'update_rate parsing' => sub {
         ['garbage', 0, 0],
         ['5m garbage', 300, 0],  # Handles partial garbage
     );
-    
+
     for my $tc (@cases) {
         my ($input, $exp_sec, $exp_aligned) = @$tc;
         my @result = Munin::Master::UpdateWorker::parse_update_rate($input);
@@ -69,7 +69,7 @@ subtest 'to_sec conversion' => sub {
         ['0', 0],
         ['abc', 0],  # Returns 0 for invalid
     );
-    
+
     for my $tc (@cases) {
         my ($input, $expected) = @$tc;
         my $result = Munin::Master::UpdateWorker::to_sec($input);
@@ -88,7 +88,7 @@ subtest 'round_to_granularity' => sub {
     my $result = Munin::Master::UpdateWorker::round_to_granularity('N', 300);
     ok($result <= $now, 'N rounds to past');
     ok($result % 300 == 0, 'N rounds to 5-min boundary');
-    
+
     # Test specific timestamps
     is(Munin::Master::UpdateWorker::round_to_granularity(1000, 300), 900, '1000 -> 900');
     is(Munin::Master::UpdateWorker::round_to_granularity(1200, 300), 1200, '1200 -> 1200');
@@ -113,7 +113,7 @@ subtest 'convert_to_float' => sub {
         ['1.5E-5', '0.000015000'],
         ['1.23e3', '1230.0000'],
     );
-    
+
     for my $tc (@cases) {
         my ($input, $expected) = @$tc;
         my $result = Munin::Master::UpdateWorker::convert_to_float($input);
@@ -130,15 +130,15 @@ subtest 'parse_custom_resolution' => sub {
     # Simple numeric
     my @result = Munin::Master::UpdateWorker::parse_custom_resolution('42', 300);
     is_deeply(\@result, [[1, 42]], 'Simple numeric');
-    
+
     # Multiple resolutions
     @result = Munin::Master::UpdateWorker::parse_custom_resolution('42, 10 10', 300);
     is(scalar @result, 2, 'Multiple resolutions');
-    
+
     # Human readable
     @result = Munin::Master::UpdateWorker::parse_custom_resolution('1h', 300);
     is_deeply(\@result, [[1, 12]], '1h = 12 steps of 300s');
-    
+
     # Complex with "for"
     @result = Munin::Master::UpdateWorker::parse_custom_resolution('5m for 1h', 300);
     is(scalar @result, 1, 'Complex with for');
@@ -152,10 +152,10 @@ subtest 'parse_custom_resolution' => sub {
 subtest 'enlarge_custom_resolution' => sub {
     my @input = ([1, 100]);
     my @result = Munin::Master::UpdateWorker::enlarge_custom_resolution(@input);
-    
+
     is($result[0][0], 1, 'Multiplier preserved');
     ok($result[0][1] >= 100, 'Count increased by 10%');
-    
+
     # Edge case: small number gets minimum +1
     @input = ([1, 10]);
     @result = Munin::Master::UpdateWorker::enlarge_custom_resolution(@input);
@@ -170,17 +170,17 @@ subtest 'enlarge_custom_resolution' => sub {
 subtest 'is_fresh_enough' => sub {
     # Create a minimal object to test the method
     my $worker = bless {}, 'Munin::Master::UpdateWorker';
-    
+
     my $now = time();
-    
+
     # Data from 60 seconds ago, update_rate 300 - should be fresh
     ok(Munin::Master::UpdateWorker::is_fresh_enough($worker, '300', $now - 60, $now),
        '60s old with 300s rate = fresh');
-    
+
     # Data from 400 seconds ago, update_rate 300 - should NOT be fresh
     ok(!Munin::Master::UpdateWorker::is_fresh_enough($worker, '300', $now - 400, $now),
        '400s old with 300s rate = not fresh');
-    
+
     # Data from 60 seconds ago, update_rate 60 - should NOT be fresh
     ok(!Munin::Master::UpdateWorker::is_fresh_enough($worker, '60', $now - 60, $now),
        '60s old with 60s rate = not fresh');
@@ -195,16 +195,16 @@ subtest 'spoolfetch timestamp logic' => sub {
     # Test timestamp comparison logic
     my $last_ts = 0;
     my $new_ts = 1000;
-    
+
     # New timestamp should override old
     $last_ts = $new_ts if $new_ts && $new_ts > $last_ts;
     is($last_ts, 1000, 'New timestamp overrides old');
-    
+
     # Older timestamp should NOT override
     $new_ts = 500;
     $last_ts = $new_ts if $new_ts && $new_ts > $last_ts;
     is($last_ts, 1000, 'Older timestamp does not override');
-    
+
     # Zero timestamp should NOT override
     $new_ts = 0;
     $last_ts = $new_ts if $new_ts && $new_ts > $last_ts;
@@ -221,7 +221,7 @@ subtest 'spoolfetch timestamp default' => sub {
     my $last_updated_value = undef;
     $last_updated_value = 0 unless $last_updated_value;
     is($last_updated_value, 0, 'Undefined becomes 0');
-    
+
     $last_updated_value = 12345;
     $last_updated_value = 0 unless $last_updated_value;
     is($last_updated_value, 12345, 'Defined value preserved');

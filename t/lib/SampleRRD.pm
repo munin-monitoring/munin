@@ -93,7 +93,7 @@ sub generate_sample_rrds {
                     my $type_code = lc(substr($ds->{type}, 0, 1));
                     $filepath = "$dbdir/$path/$svc-$ds->{name}-$type_code.rrd";
                 }
-                make_path("$dbdir/$path", { mode => 0755 });
+                make_path("$dbdir/$path", { mode => oct('0755') });
                 next if -f $filepath;
 
                 RRDs::create($filepath,
