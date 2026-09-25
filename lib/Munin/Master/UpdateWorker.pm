@@ -378,7 +378,6 @@ sub _db_service {
 			LEFT OUTER JOIN ds_attr ON ds.id = ds_attr.id WHERE ds.service_id = ?");
 		$sth_fields_attr->execute($service_id);
 
-		my %fields_old;
 		while (my ($_field, $_name, $_value) = $sth_fields_attr->fetchrow_array()) {
 			$fields_old{$_field}{$_name} = $_value;
 		}
