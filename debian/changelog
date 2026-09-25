@@ -1,9 +1,8 @@
-munin (2.0.76-8) UNRELEASED; urgency=medium
+munin (2.0.78-1) unstable; urgency=medium
 
-  * Start 2.0.76-8 development. d/changelog entries will be written on
-    release using the git commit messages.
+  * New upstream version. Closes: #1114669.
 
- -- Holger Levsen <holger@debian.org>  Tue, 28 Apr 2026 18:42:10 +0200
+ -- Holger Levsen <holger@debian.org>  Fri, 25 Sep 2026 11:23:56 +0200
 
 munin (2.0.76-7) unstable; urgency=medium
 
