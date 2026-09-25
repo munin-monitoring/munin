@@ -1,0 +1,432 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Getopt::Long;
+use File::Spec;
+use File::Basename qw(dirname);
+use File::Path qw(make_path);
+use File::Copy qw(move);
+use File::Temp qw(tempdir);
+use XML::LibXML;
+use RRDs;
+use Pod::Usage;
+
+my $dbdir = '/var/lib/munin';
+my $append = 0;
+my $dry_run = 0;
+my $verbose = 0;
+my $help = 0;
+my @input_args;
+my @output_args;
+
+GetOptions(
+    'dbdir=s'    => \$dbdir,
+    'append'     => \$append,
+    'dry-run'    => \$dry_run,
+    'verbose'    => \$verbose,
+    'help'       => \$help,
+    'i=s'        => \@input_args,
+    'o=s'        => \@output_args,
+) or pod2usage(1);
+
+pod2usage(0) if $help;
+die "Error: No input files\n" unless @input_args;
+die "Error: No output files\n" unless @output_args;
+
+sub expand {
+    my ($specs, $is_input) = @_;
+    my @out;
+    for my $s (@$specs) {
+        if ($s =~ /,/) {
+            my @parts = split(/,/, $s);
+            if (!$is_input && @parts > 1 && $parts[0] =~ /^([^:]+):(.+)$/) {
+                my $file = $1;
+                for my $p (@parts) { push @out, ($p =~ /:/) ? $p : "$file:$p"; }
+            } else { push @out, @parts; }
+        } else { push @out, $s; }
+    }
+    return @out;
+}
+
+my @inputs  = expand(\@input_args, 1);
+my @outputs = expand(\@output_args, 0);
+die "Error: Input count != output count\n" unless @inputs == @outputs;
+
+sub parse {
+    my ($spec) = @_;
+    my ($file, $ds) = split(/:/, $spec, 2);
+    $file = File::Spec->catfile($dbdir, $file) unless File::Spec->file_name_is_absolute($file);
+    return ($file, $ds);
+}
+
+sub rrd_info {
+    my ($file) = @_;
+    die "Error: File not found: $file\n" unless -f $file;
+    my $info = RRDs::info($file);
+    die "Error reading $file: " . RRDs::error . "\n" if RRDs::error;
+    return $info;
+}
+
+sub rra_key {
+    my ($info) = @_;
+    my @rras;
+    for my $k (sort keys %$info) {
+        if ($k =~ /^rra\[(\d+)\]\.(cf|xff|rows|pdp_per_row)$/) {
+            $rras[$1]{$2} = $info->{$k};
+        }
+    }
+    my $key = '';
+    for my $r (@rras) {
+        next unless $r;
+        $key .= join(':', @{$r}{qw(cf pdp_per_row rows xff)}) . '|';
+    }
+    return $key;
+}
+
+# Dump RRD to XML::LibXML DOM
+sub dump_dom {
+    my ($file) = @_;
+    my $tmpdir = tempdir(CLEANUP => 1);
+    my $xml_file = "$tmpdir/dump.xml";
+    RRDs::dump($file, $xml_file);
+    die "RRDs::dump $file: " . RRDs::error . "\n" if RRDs::error;
+    return XML::LibXML->load_xml(location => $xml_file);
+}
+
+# Save DOM to RRD via restore
+sub restore_dom {
+    my ($dom, $file) = @_;
+    make_path(dirname($file), { mode => oct('0755') }) unless -d dirname($file);
+    my $tmpdir = tempdir(CLEANUP => 1);
+    my $xml_file = "$tmpdir/dump.xml";
+    $dom->toFile($xml_file);
+    RRDs::restore($xml_file, $file);
+    die "RRDs::restore $file: " . RRDs::error . "\n" if RRDs::error;
+}
+
+# Build mappings
+my @mappings;
+for my $i (0..$#inputs) {
+    my ($in_file, $in_ds) = parse($inputs[$i]);
+    my ($out_file, $out_ds) = parse($outputs[$i]);
+    die "Error: No DS name in '$inputs[$i]'\n" unless defined $in_ds;
+    die "Error: No DS name in '$outputs[$i]'\n" unless defined $out_ds;
+    die "Error: Input not found: $in_file\n" unless -f $in_file;
+    my $info = rrd_info($in_file);
+    die "Error: DS '$in_ds' not found\n" unless defined $info->{"ds[$in_ds].type"};
+    push @mappings, { in_file => $in_file, in_ds => $in_ds, out_file => $out_file, out_ds => $out_ds, info => $info };
+}
+
+my %by_output;
+push @{$by_output{$_->{out_file}}}, $_ for @mappings;
+
+for my $out_file (keys %by_output) {
+    my $group = $by_output{$out_file};
+    my $first_key = rra_key($group->[0]{info});
+    for my $m (@$group[1..$#$group]) {
+        die "Error: RRA mismatch for $out_file\n" if rra_key($m->{info}) ne $first_key;
+    }
+}
+
+print "Mappings:\n";
+for my $m (@mappings) { print "  $m->{in_file}:$m->{in_ds} -> $m->{out_file}:$m->{out_ds}\n"; }
+if ($dry_run) { print "\nDry run\n"; exit 0; }
+
+my %input_removed;
+for my $out_file (sort keys %by_output) {
+    my $group = $by_output{$out_file};
+
+    if (-f $out_file && $append) {
+        do_append($out_file, $group);
+        next;
+    }
+    die "Error: Output exists: $out_file (use --append)\n" if -f $out_file;
+
+    # Load all input DOMs
+    my @doms = map { dump_dom($_->{in_file}) } @$group;
+    my $n_ds = scalar @$group;
+
+    # Get RRA count from first input
+    my @rras = $doms[0]->findnodes('/rrd/rra');
+    my $n_rras = scalar @rras;
+
+    # Build output DOM
+    my $out_dom = XML::LibXML::Document->new('1.0', 'utf-8');
+    my $out_rrd = $out_dom->createElement('rrd');
+    $out_dom->setDocumentElement($out_rrd);
+
+    # Copy header from first input (version, step, lastupdate)
+    for my $child ($doms[0]->documentElement->childNodes) {
+        my $name = $child->nodeName;
+        next if $name eq 'ds';
+        next if $name eq 'rra';
+        $out_rrd->appendChild($out_dom->importNode($child, 1)) if $name =~ /^(version|step|lastupdate)$/;
+    }
+
+    # Add DS blocks from all inputs (renamed)
+    for my $i (0..$#$group) {
+        my $m = $group->[$i];
+        # Find DS by name (handle whitespace)
+        my $ds_node;
+        my $ds_idx = 0;
+        for my $j (0..$#{$doms[$i]->findnodes('/rrd/ds')}) {
+            my $ds = $doms[$i]->findnodes('/rrd/ds')->[$j];
+            my $name = $ds->findvalue('name');
+            $name =~ s/^\s+|\s+$//g;
+            if ($name eq $m->{in_ds}) { $ds_node = $ds; $ds_idx = $j; last; }
+        }
+        die "DS '$m->{in_ds}' not found in XML\n" unless $ds_node;
+        $m->{_ds_idx} = $ds_idx;  # Store index for row extraction
+
+        my $new_ds = $out_dom->importNode($ds_node, 1);
+        # Rename DS
+        my ($name_node) = $new_ds->findnodes('name');
+        $name_node->removeChildNodes;
+        $name_node->appendChild($out_dom->createTextNode($m->{out_ds}));
+        $out_rrd->appendChild($new_ds);
+        print "  Extracted $m->{in_ds}\n" if $verbose;
+    }
+
+    # Build RRA blocks with interleaved row values
+    for my $rra_idx (0..$n_rras-1) {
+        my $src_rra = $rras[$rra_idx];
+
+        # Create RRA node with config from first input
+        my $new_rra = $out_dom->createElement('rra');
+
+        # Copy cf, pdp_per_row, params, xff from source
+        for my $child ($src_rra->childNodes) {
+            my $name = $child->nodeName;
+            next if $name eq 'cdp_prep';
+            next if $name eq 'database';
+            next if $name eq '#text';
+            $new_rra->appendChild($out_dom->importNode($child, 1));
+        }
+
+        # Build cdp_prep with one ds per output DS
+        my $cdp_prep = $out_dom->createElement('cdp_prep');
+        for my $i (0..$n_ds-1) {
+            my $ds_elem = $out_dom->createElement('ds');
+            for my $field (qw(primary_value secondary_value value unknown_datapoints)) {
+                my $elem = $out_dom->createElement($field);
+                $elem->appendChild($out_dom->createTextNode('NaN'));
+                $ds_elem->appendChild($elem);
+            }
+            $cdp_prep->appendChild($ds_elem);
+        }
+        $new_rra->appendChild($cdp_prep);
+
+        # Build database with interleaved rows
+        my $database = $out_dom->createElement('database');
+
+        # Get rows from all inputs for this RRA
+        my @input_rows;
+        for my $i (0..$#$group) {
+            my @rras_i = $doms[$i]->findnodes("/rrd/rra");
+            my @rows = $rras_i[$rra_idx]->findnodes("database/row");
+            $input_rows[$i] = \@rows;
+        }
+
+        # Get row count from first input
+        my $n_rows = scalar @{$input_rows[0]};
+
+        # Build interleaved rows
+        for my $row_idx (0..$n_rows-1) {
+            my $row = $out_dom->createElement('row');
+
+            if ($n_ds == 1 && scalar @doms == 1) {
+                # Split mode: extract specific DS index from multi-DS source
+                my $src_row = $input_rows[0][$row_idx];
+                my $ds_idx = $group->[0]{_ds_idx} || 0;
+                if ($src_row) {
+                    my @v_nodes = $src_row->findnodes('v');
+                    if ($v_nodes[$ds_idx]) {
+                        $row->appendChild($out_dom->importNode($v_nodes[$ds_idx], 1));
+                    } else {
+                        my $v = $out_dom->createElement('v');
+                        $v->appendChild($out_dom->createTextNode('NaN'));
+                        $row->appendChild($v);
+                    }
+                } else {
+                    my $v = $out_dom->createElement('v');
+                    $v->appendChild($out_dom->createTextNode('NaN'));
+                    $row->appendChild($v);
+                }
+            } else {
+                # Merge mode: collect <v> from each input
+                for my $i (0..$#$group) {
+                    my $src_row = $input_rows[$i][$row_idx];
+                    if ($src_row) {
+                        for my $v_node ($src_row->findnodes('v')) {
+                            $row->appendChild($out_dom->importNode($v_node, 1));
+                        }
+                    } else {
+                        my $v = $out_dom->createElement('v');
+                        $v->appendChild($out_dom->createTextNode('NaN'));
+                        $row->appendChild($v);
+                    }
+                }
+            }
+
+            $database->appendChild($row);
+        }
+
+        $new_rra->appendChild($database);
+        $out_rrd->appendChild($new_rra);
+    }
+
+    restore_dom($out_dom, $out_file);
+    print "  Created $out_file\n" if $verbose;
+}
+
+# Remove inputs
+for my $m (@mappings) {
+    next if $input_removed{$m->{in_file}};
+    unlink $m->{in_file} or warn "Cannot remove $m->{in_file}: $!\n";
+    print "  Removed $m->{in_file}\n" if $verbose;
+    $input_removed{$m->{in_file}} = 1;
+}
+
+print "Done.\n";
+
+sub do_append {
+    my ($out_file, $group) = @_;
+    print "  Appending to $out_file...\n" if $verbose;
+
+    my $existing_info = rrd_info($out_file);
+    my $new_step = $group->[0]{info}{step} || 300;
+    die "Error: Step mismatch\n" unless ($existing_info->{step} || 300) == $new_step;
+    die "Error: RRA mismatch\n" unless rra_key($existing_info) eq rra_key($group->[0]{info});
+
+    my %existing_ds;
+    for my $k (keys %$existing_info) { $existing_ds{$1} = 1 if $k =~ /^ds\[([^\]]+)\]\.type$/; }
+    for my $m (@$group) { die "Error: DS .* already exists\n" if $existing_ds{$m->{out_ds}}; }
+
+    # Load existing and new DOMs
+    my $existing_dom = dump_dom($out_file);
+    my @new_doms = map { dump_dom($_->{in_file}) } @$group;
+    my @existing_rras = $existing_dom->findnodes('/rrd/rra');
+    my @existing_ds_nodes = $existing_dom->findnodes('/rrd/ds');
+    my $n_existing_ds = scalar @existing_ds_nodes;
+    my $total_ds = $n_existing_ds + scalar(@$group);
+
+    # Create output DOM
+    my $out_dom = XML::LibXML::Document->new('1.0', 'utf-8');
+    my $out_rrd = $out_dom->createElement('rrd');
+    $out_dom->setDocumentElement($out_rrd);
+
+    # Copy header
+    for my $child ($existing_dom->documentElement->childNodes) {
+        my $name = $child->nodeName;
+        next if $name eq 'ds';
+        next if $name eq 'rra';
+        $out_rrd->appendChild($out_dom->importNode($child, 1)) if $name =~ /^(version|step|lastupdate)$/;
+    }
+
+    # Copy existing DS blocks
+    for my $ds ($existing_dom->findnodes('/rrd/ds')) {
+        $out_rrd->appendChild($out_dom->importNode($ds, 1));
+    }
+
+    # Add new DS blocks
+    for my $i (0..$#$group) {
+        my $m = $group->[$i];
+        my $ds_node;
+        for my $ds ($new_doms[$i]->findnodes('/rrd/ds')) {
+            my $name = $ds->findvalue('name');
+            $name =~ s/^\s+|\s+$//g;
+            if ($name eq $m->{in_ds}) { $ds_node = $ds; last; }
+        }
+        die "DS '$m->{in_ds}' not found\n" unless $ds_node;
+        my $new_ds = $out_dom->importNode($ds_node, 1);
+        my ($name_node) = $new_ds->findnodes('name');
+        $name_node->removeChildNodes;
+        $name_node->appendChild($out_dom->createTextNode($m->{out_ds}));
+        $out_rrd->appendChild($new_ds);
+    }
+
+    # Build RRAs: existing data + new DS values
+    for my $rra_idx (0..$#existing_rras) {
+        my $src_rra = $existing_rras[$rra_idx];
+        my $new_rra = $out_dom->createElement('rra');
+
+        for my $child ($src_rra->childNodes) {
+            my $name = $child->nodeName;
+            next if $name eq 'cdp_prep';
+            next if $name eq 'database';
+            next if $name eq '#text';
+            $new_rra->appendChild($out_dom->importNode($child, 1));
+        }
+
+        # cdp_prep for total_ds
+        my $cdp_prep = $out_dom->createElement('cdp_prep');
+        for my $i (0..$total_ds-1) {
+            my $ds_elem = $out_dom->createElement('ds');
+            for my $field (qw(primary_value secondary_value value unknown_datapoints)) {
+                my $elem = $out_dom->createElement($field);
+                $elem->appendChild($out_dom->createTextNode('NaN'));
+                $ds_elem->appendChild($elem);
+            }
+            $cdp_prep->appendChild($ds_elem);
+        }
+        $new_rra->appendChild($cdp_prep);
+
+        # Database: existing rows + new DS values
+        my $database = $out_dom->createElement('database');
+        my @existing_rows = $src_rra->findnodes('database/row');
+        my @new_row_sets;
+        for my $i (0..$#$group) {
+            my @new_rras = $new_doms[$i]->findnodes('/rrd/rra');
+            $new_row_sets[$i] = [$new_rras[$rra_idx]->findnodes('database/row')] if $new_rras[$rra_idx];
+        }
+
+        for my $row_idx (0..$#existing_rows) {
+            my $row = $out_dom->createElement('row');
+
+            # Copy existing <v> values
+            for my $v ($existing_rows[$row_idx]->findnodes('v')) {
+                $row->appendChild($out_dom->importNode($v, 1));
+            }
+
+            # Add new <v> values from each new input
+            for my $i (0..$#$group) {
+                my $src_rows = $new_row_sets[$i];
+                if ($src_rows && $src_rows->[$row_idx]) {
+                    for my $v ($src_rows->[$row_idx]->findnodes('v')) {
+                        $row->appendChild($out_dom->importNode($v, 1));
+                    }
+                } else {
+                    my $v = $out_dom->createElement('v');
+                    $v->appendChild($out_dom->createTextNode('NaN'));
+                    $row->appendChild($v);
+                }
+            }
+
+            $database->appendChild($row);
+        }
+
+        $new_rra->appendChild($database);
+        $out_rrd->appendChild($new_rra);
+    }
+
+    my $bak = "$out_file.bak";
+    move($out_file, $bak) or die "Cannot rename: $!\n";
+    restore_dom($out_dom, $out_file);
+    print "  $out_file -> $bak\n" if $verbose;
+    print "  Appended " . scalar(@$group) . " DS\n" if $verbose;
+}
+
+__END__
+
+=head1 NAME
+
+munin-migrate-rrd - Copy/split/merge RRD data sources via XML
+
+=head1 SYNOPSIS
+
+munin-migrate-rrd [options] -i input:ds -o output:ds [...]
+
+Options: --dbdir, --append, --dry-run, --verbose, --help
+
+=cut

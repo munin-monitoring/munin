@@ -2,6 +2,12 @@
 *~
 *.bak
 
+# Local planning docs
+plans/
+
+# Test artifacts
+-selectre/
+
 # Perl Builded files
 /blib/
 /Build
@@ -49,3 +55,12 @@ t/tls/CA/*.srl
 /RELEASE.docker
 /.bash_history
 /.viminfo
+
+# Build artifacts
+/selectre/
+out/
+specs/
+*.dummy
+
+# Build/lint output
+out/

@@ -87,9 +87,9 @@ sub parseJournald {
     }
     my $since_arg = defined($last_timestamp) ? "--since=\"$last_timestamp\"" : "--since=\"yesterday\"";
     my $cmd = "journalctl --no-pager --quiet $since_arg $journalctlargs";
-    
+
     open(my $journal, '-|', $cmd) or die "Unable to read journald logs: $!\n";
-    
+
     while (my $line = <$journal>) {
         chomp($line);
 

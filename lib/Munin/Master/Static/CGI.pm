@@ -1,4 +1,8 @@
+## no critic (Modules::RequireFilenameMatchesPackage)
 package Munin::Master::Static::HTML::CGI;
+
+use strict;
+use warnings;
 
 # empty, it is just to have Perl loading this file to be able to override the
 # standard ::CGI namespace to mock it

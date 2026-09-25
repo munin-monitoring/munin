@@ -365,7 +365,7 @@ sub _concat_config_line_ok {
     my ($self, $prefix, $key, $value) = @_;
 
     if (!defined($key) or !$key) {
-	ERROR "[ERROR] Somehow we're missing a keyword sometime after section [$prefix]";
+	ERROR "Somehow we're missing a keyword sometime after section [$prefix]";
 	die "[ERROR] Somehow we're missing a keyword sometime after section [$prefix]";
     }
 
@@ -379,7 +379,7 @@ sub _concat_config_line_ok {
     };
     if ($@) {
 	# _split_config_line_ok already logged the problem.
-	my $err_msg = "[ERROR] config error under [$prefix] for '$key $value' : $@";
+	my $err_msg = "config error under [$prefix] for '$key $value' : $@";
 	ERROR $err_msg;
 	die $err_msg;
     }
@@ -466,7 +466,7 @@ sub _split_config_line_ok {
 
     if ($host =~ /[^-A-Za-z0-9\.]/) {
 	# Since we're not quite sure what context we're called in we'll report the error message more times rather than fewer.
-	ERROR "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.";
+	ERROR "Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.";
 	croak "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.\n";
     }
 

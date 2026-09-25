@@ -793,7 +793,7 @@ sub remove_dups {
 sub is_int {
 	my ($str) = @_;
 
-	return ($str =~ m/[0-9]+/);
+	return ($str =~ m/^\d+$/);
 }
 
 sub escape_for_rrd {

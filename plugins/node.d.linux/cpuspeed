@@ -21,7 +21,7 @@ You can set one environment variable to modify the plugins behaviour:
      env.sleep .2
      env.scaleto100 yes
 
-Parameter sleep 
+Parameter sleep
 
 Sleep for some (fractional) seconds before actually taking the measure.
 This is useful to enable the CPU to relax a little from the previous plugins.

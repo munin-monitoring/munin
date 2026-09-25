@@ -45,7 +45,7 @@ sub run {
     $self->_create_rundir_if_missing();
 
     $self->_do_with_timing(sub {
-        INFO "[INFO]: Starting munin-update";
+        INFO "Starting munin-update";
 
 	# Create the DB, using a local block to close the DB cnx
 	{
@@ -72,11 +72,11 @@ sub run {
 sub _run_limits {
     my ($self) = @_;
 
-    INFO "[INFO] Running limits (inline)";
+    INFO "Running limits (inline)";
 
     Munin::Master::Limits::limits_main();
 
-    INFO "[INFO] Limits finished";
+    INFO "Limits finished";
 }
 
 # If you need a readonly DBH, use M::M::U::get_dbh("readonly").
@@ -104,7 +104,7 @@ sub get_dbh {
 
 	my $dbh = DBI->connect("dbi:$db_driver:dbname=$datafilename", $db_user, $db_passwd, \%db_args) or die $DBI::errstr;
 
-	INFO 'get_dbh: $dbh->{Driver}->{Name} = ' . $dbh->{Driver}->{Name} . ($is_read_only ? "(ro)" : "(rw)");
+	DEBUG 'get_dbh: $dbh->{Driver}->{Name} = ' . $dbh->{Driver}->{Name} . ($is_read_only ? "(ro)" : "(rw)");
 
 	# Sets some session vars
 
@@ -183,7 +183,7 @@ sub _do_with_timing {
     $self->_db_stats('UT', "", 	$update_time);
 
     my $update_time_string = sprintf("%.2f", $update_time);
-    INFO "[INFO]: Munin-update finished ($update_time sec)";
+    INFO "Munin-update finished ($update_time sec)";
 
     return $retval;
 }
@@ -222,7 +222,7 @@ sub _run_workers {
 			my ($pid, $exit_code) = @_;
 
 			$exit_code = 0 unless defined $exit_code;
-			INFO "[INFO]: run_on_finish(pid:$pid, exit_code:$exit_code)";
+			INFO "run_on_finish(pid:$pid, exit_code:$exit_code)";
 
 			$nb_workers_failed++ if $exit_code;
 		}
@@ -251,7 +251,7 @@ sub _run_workers {
 			# No res, something went wrong
 			# Note that we handle connection failure same as other
 			# failures. Since "do_connect()" fails only softly.
-			INFO "[INFO]: no connection or EVAL_ERROR:$@";
+			INFO "no connection or EVAL_ERROR:$@";
 			$pm->finish(1, [ $worker_id ] );
 		}
 
@@ -280,7 +280,7 @@ sub _handle_worker_result {
         = ($res->[0], $res->[1],);
 
     my $update_time = sprintf("%.2f", $time_used);
-    INFO "[INFO]: Munin-update finished for node $worker_id ($update_time sec)";
+    INFO "Munin-update finished for node $worker_id ($update_time sec)";
     $self->_db_stats("UD", $worker_id, $time_used);
 }
 
@@ -475,7 +475,7 @@ sub _db_contacts_update {
 	}
 
 	$dbh->commit();
-	INFO "[INFO] Imported contacts and overrides from config into SQL";
+	INFO "Imported contacts and overrides from config into SQL";
 }
 
 1;

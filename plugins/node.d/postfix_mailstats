@@ -136,7 +136,7 @@ if ($USE_JOURNALD) {
         }
         close IN;
     }
-    
+
     # Logfile handling
     if (! -f $logfile)
     {
@@ -159,7 +159,7 @@ if ($USE_JOURNALD) {
 
     parseLogfile($logfile, $pos, $startsize);
     $pos = $startsize;
-    
+
     # Save statefile
     if(-l $statefile) {
         die("$statefile is a symbolic link, refusing to touch it.");
@@ -238,7 +238,7 @@ sub parseJournald
 {
     my $cmd;
     $cmd = "journalctl --no-pager --quiet --since=" . `date -dlast-sunday +%Y-%m-%d` . " $journalctlargs";
-    open(my $journal, '-|', $cmd) 
+    open(my $journal, '-|', $cmd)
         or die "Unable to read journald logs: $!\n";
 
     while (my $line = <$journal>) {

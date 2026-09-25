@@ -270,7 +270,7 @@ foreach my $drive (@drives) {
   $drive = $fulldev;
   $drive =~ s/.*\///;
   warn "[DEBUG] Processing $drive\n" if $DEBUG;
-  
+
   # Don't wake up SCSI drives!
   next if (check_scsi_low_power($fulldev));
 
@@ -405,15 +405,15 @@ sub get_drive_id {
 
 sub check_scsi_low_power {
   my ($fulldev) = @_;
-  
+
   # If present, use sdparm to check the SENSE data to see if the drive is in low power mode
   # This catches SCSI drives' low power modes, per https://www.t10.org/lists/asc-num.htm#ASC_5E
-  
+
   if ($sdparm) {
     my @lines = `$sdparm --readonly --command=sense --hex $fulldev 2> /dev/null`;
     # sdparm error cases (ie. ATA drives) should return 0, to be checked in other ways
     return 0 if ($? != 0);
-    
+
     # get hex bytes
     my @sensehexbytes = ();
     foreach my $line(@lines) {
@@ -430,6 +430,6 @@ sub check_scsi_low_power {
       return 1;
     }
   }
-  
+
   return 0;
 }

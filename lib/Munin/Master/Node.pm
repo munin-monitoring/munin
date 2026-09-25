@@ -129,7 +129,7 @@ sub _do_connect {
 	    $self->{writer} = new IO::Handle();
 	    $self->{stderr} = new IO::Handle();
 
-	    DEBUG "[DEBUG] open3($remote_connection_cmd)";
+	    DEBUG "open3($remote_connection_cmd)";
 	    $self->{pid} = open3($self->{writer}, $self->{reader}, $self->{stderr}, $remote_connection_cmd);
             ERROR "Failed to connect to node $self->{address} : $!" unless $self->{pid};
     } elsif ($uri->scheme eq "cmd") {
@@ -147,7 +147,7 @@ sub _do_connect {
 	    $self->{writer} = new IO::Handle();
 	    $self->{stderr} = new IO::Handle();
 
-	    DEBUG "[DEBUG] open3($local_pipe_cmd)";
+	    DEBUG "open3($local_pipe_cmd)";
 	    $self->{pid} = open3($self->{writer}, $self->{reader}, $self->{stderr}, $local_pipe_cmd);
             ERROR "Failed to execute local command: $!" unless $self->{pid};
     } else {
@@ -168,7 +168,7 @@ sub _do_connect {
 	$self->_extract_name_from_greeting($greeting);
     };
 
-    INFO "[INFO] node $self->{host} advertised itself as $self->{node_name} instead." if $self->{node_name} && $self->{node_name} ne $self->{host};
+    INFO "node $self->{host} advertised itself as $self->{node_name} instead." if $self->{node_name} && $self->{node_name} ne $self->{host};
 
     return 1;
 }
@@ -243,7 +243,7 @@ sub negotiate_capabilities {
     # other takes advantage of the capabilities it understands (or
     # dumbs itself down to the counterparts level of sophistication).
 
-    DEBUG "[DEBUG] Negotiating capabilities\n";
+    DEBUG "Negotiating capabilities\n";
 
     $self->_node_write_single("cap $self->{master_capabilities}\n");
     my $cap = $self->_node_read_single();
@@ -255,7 +255,7 @@ sub negotiate_capabilities {
     my @node_capabilities = split(/\s+/,$cap);
     shift @node_capabilities ; # Get rid of leading "cap".
 
-    DEBUG "[DEBUG] Node says /$cap/\n";
+    DEBUG "Node says /$cap/\n";
 
     return @node_capabilities;
 }
@@ -285,7 +285,7 @@ sub list_plugins {
     my $list = $self->_node_read_single("true");
 
     if (not $list) {
-        WARN "[WARNING] Config node $self->{host} listed no services for '$host_list'.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
+        WARNING "Config node $self->{host} listed no services for '$host_list'.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
     }
 
     return split / /, $list;
@@ -300,7 +300,7 @@ sub fetch_service_config {
 
 	my $now = time; # Using the time of the call for the timing
 
-	DEBUG "[DEBUG] Fetching service configuration for '$service'";
+	DEBUG "Fetching service configuration for '$service'";
 	$self->_node_write_single("config $service\n");
 
 	# The whole config in one fell swoop.
@@ -345,7 +345,7 @@ sub fetch_service_config {
 sub spoolfetch {
     my ($self, $timestamp, $uw_handle_config) = @_;
 
-    DEBUG "[DEBUG] Fetching spooled services since $timestamp (" . localtime($timestamp) . ")";
+    DEBUG "Fetching spooled services since $timestamp (" . localtime($timestamp) . ")";
     $self->_node_write_single("spoolfetch $timestamp\n");
 
     # The whole stuff in one fell swoop.
@@ -415,7 +415,7 @@ sub _sanitise_fieldname {
 sub _node_write_single {
     my ($self, $text) = @_;
 
-    DEBUG "[DEBUG] Writing to socket: \"$text\".";
+    DEBUG "Writing to socket: \"$text\".";
     my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
         if ($self->{tls} && $self->{tls}->session_started()) {
             $self->{tls}->write($text) or exit 9;
@@ -465,7 +465,7 @@ RESTART:
     # If the line is empty, just read another line
     goto RESTART unless $res || $ignore_empty;
 
-    DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\".";
+    DEBUG "Reading from socket to ".$self->{host}.": \"$res\".";
 
     return $res;
 }

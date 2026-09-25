@@ -96,7 +96,7 @@ sub do_work {
 	# Having a local handle looks easier
 	my $node = $self->{node};
 
-    INFO "[INFO] starting work in $$ for $nodedesignation.\n";
+    INFO "starting work in $$ for $nodedesignation.\n";
     my $done = $node->do_in_session(sub {
 
 	# A I/O timeout results in a violent exit.  Catch and handle.
@@ -159,12 +159,12 @@ sub do_work {
 	@plugins = shuffle(@plugins);
 
 	for my $plugin (@plugins) {
-		DEBUG "[DEBUG] for my $plugin (@plugins)";
+		DEBUG "for my $plugin (@plugins)";
 		if (defined $config->{limit_services} && %{$config->{limit_services}}) {
 		    next unless $config->{limit_services}{$plugin};
 		}
 
-		DEBUG "[DEBUG] config $plugin";
+		DEBUG "config $plugin";
 
 		local $0 = "$0 c($plugin)";
 		my $update_rate = "300"; # Default
@@ -172,12 +172,12 @@ sub do_work {
 
 		# Ignoring if $last_timestamp is undef, as we don't have config
 		if (! defined ($last_timestamp)) {
-			INFO "[INFO] $plugin did emit no proper config, ignoring";
+			INFO "$plugin did emit no proper config, ignoring";
 			next;
 		}
 
 		if ($update_rate ne "300") {
-			INFO "[INFO] $plugin did change update_rate to $update_rate";
+			INFO "$plugin did change update_rate to $update_rate";
 		}
 
 		# Done with this plugin on dirty config (we already have a timestamp for data)
@@ -191,7 +191,7 @@ sub do_work {
 
 		next if ($is_fresh_enough);
 
-		DEBUG "[DEBUG] fetch $plugin";
+		DEBUG "fetch $plugin";
 		local $0 = "$0 f($plugin)";
 
 		$last_timestamp = $node->fetch_service_data($plugin,
@@ -216,22 +216,22 @@ NODE_END:
 	# XXX - investigate why this leaks here. It should be handled directly by Node.pm
 	my $node_pid = $node->{pid};
 	if ($node_pid && kill(0, $node_pid)) {
-		INFO "[INFO] Killing subprocess $node_pid";
+		INFO "Killing subprocess $node_pid";
 		kill 'KILL', $node_pid; # Using SIGKILL, since normal termination didn't happen
 	}
 
 	if ($@ =~ m/^NO_SPOOLFETCH_DATA /) {
-	    INFO "[INFO] No spoofetch data for $nodedesignation";
+	    INFO "No spoofetch data for $nodedesignation";
 	    return;
 	} elsif ($@) {
-	    ERROR "[ERROR] Error in node communication with $nodedesignation: "
+	    ERROR "Error in node communication with $nodedesignation: "
 		.$@;
 	    return;
 	}
 
 FETCH_OK:
 	# Everything went smoothly.
-	DEBUG "[DEBUG] Everything went smoothly.";
+	DEBUG "Everything went smoothly.";
 	return 1;
 
     }); # do_in_session
@@ -560,7 +560,7 @@ sub get_spoolfetch_timestamp {
 	# 0 if unset
 	$last_updated_value = 0 unless $last_updated_value;
 
-	DEBUG "[DEBUG] get_spoolfetch_timestamp($node_id) = $last_updated_value";
+	DEBUG "get_spoolfetch_timestamp($node_id) = $last_updated_value";
 	return $last_updated_value;
 }
 
@@ -568,7 +568,7 @@ sub set_spoolfetch_timestamp {
 	my ($self, $timestamp) = @_;
 	my $dbh = $self->{dbh};
 	my $node_id = $self->{node_id};
-	DEBUG "[DEBUG] set_spoolfetch_timestamp($node_id, $timestamp)";
+	DEBUG "set_spoolfetch_timestamp($node_id, $timestamp)";
 
 	my $sth_spoolfetch = $dbh->prepare_cached("UPDATE node SET spoolepoch = ? WHERE id = ?");
 	$sth_spoolfetch->execute($timestamp, $node_id);
@@ -693,12 +693,28 @@ sub uw_handle_config {
 		my $first_epoch = time - (12 * 3600); # XXX - we should be able to have some delay in the past for spoolfetched plugins
 		my $rrd_file = $self->_create_rrd_file_if_needed($plugin, $ds_name, $ds_config, $first_epoch);
 
-		# Update the RRD file
-		# XXX - Should be handled in a stateful way, as now it is reconstructed every time
+		# Stateful: only set rrd:file and rrd:field if not already present
 		my $dbh = $self->{dbh};
-		my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
-		$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
-		$sth_ds_attr->execute($ds_id, "rrd:field", "42");
+		my $sth_check = $dbh->prepare_cached('SELECT value FROM ds_attr WHERE id = ? AND name = ?');
+		$sth_check->execute($ds_id, 'rrd:file');
+		my ($existing_rrd_file) = $sth_check->fetchrow_array;
+
+		if (!defined $existing_rrd_file) {
+			# New field - set rrd:file and rrd:field
+			my $rrd_field = $self->_get_rrd_field_name($ds_name, $ds_config);
+			my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+			$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
+			$sth_ds_attr->execute($ds_id, "rrd:field", $rrd_field);
+		} else {
+			# Existing field - verify rrd:field is set
+			$sth_check->execute($ds_id, 'rrd:field');
+			my ($existing_rrd_field) = $sth_check->fetchrow_array;
+			if (!defined $existing_rrd_field) {
+				my $rrd_field = $self->_get_rrd_field_name($ds_name, $ds_config);
+				my $sth_update = $dbh->prepare_cached('UPDATE ds_attr SET value = ? WHERE id = ? AND name = ?');
+				$sth_update->execute($rrd_field, $ds_id, 'rrd:field');
+			}
+		}
 	}
 
 	# timestamp == 0 means "Nothing was updated". We only count on the
@@ -761,7 +777,7 @@ sub uw_handle_fetch {
 
 		# Update all data-driven components: State, RRD, Graphite
 		my $ds_id = $self->_db_state_update($plugin, $field, $when, $value);
-	        DEBUG "[DEBUG] ds_id($plugin, $field, $when, $value) = $ds_id";
+	        DEBUG "ds_id($plugin, $field, $when, $value) = $ds_id";
 		next unless defined $ds_id;
 
 		my ($rrd_file, $rrd_field);
@@ -788,7 +804,7 @@ sub uw_handle_fetch {
 			"value" => [ $value, ],
 			"when" => [ $when, ],
 		};
-		DEBUG "[DEBUG] self->_update_rrd_file($rrd_file, $field, $ds_values";
+		DEBUG "self->_update_rrd_file($rrd_file, $field, $ds_values";
 		$self->_update_rrd_file($rrd_file, $field, $ds_values);
 
 	}
@@ -849,16 +865,27 @@ sub _get_rrd_file_name {
                        $ds_name,
                        $type_id);
 
-    DEBUG "[DEBUG] rrd filename: $file\n";
+    DEBUG "rrd filename: $file\n";
 
     return $file;
+}
+
+
+sub _get_rrd_field_name {
+    my ($self, $ds_name, $ds_config) = @_;
+
+    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
+    my $type_id = lc(substr(($ds_config->{type}), 0, 1));
+
+    # Format: {field}-{type_id} (e.g., idle-g, tx-d)
+    return "$ds_name-$type_id";
 }
 
 
 sub _create_rrd_file {
     my ($self, $rrd_file, $service, $ds_name, $ds_config, $first_epoch) = @_;
 
-    INFO "[INFO] creating rrd-file for $service->$ds_name: '$rrd_file'";
+    DEBUG "creating rrd-file for $service->$ds_name: '$rrd_file'";
 
     $rrd_file = File::Spec->catfile($config->{dbdir}, $rrd_file);
 
@@ -918,14 +945,15 @@ sub _create_rrd_file {
         $rrd_file,
         "--start", ($first_epoch - $update_rate_in_sec),
 	"-s", $update_rate_in_sec,
-        sprintf('DS:42:%s:%s:%s:%s',
+        sprintf('DS:%s:%s:%s:%s:%s',
+                $self->_get_rrd_field_name($ds_name, $ds_config),
                 $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
     );
 
-    INFO "[INFO] RRDs::create @args";
+    DEBUG "RRDs::create @args";
     RRDs::create @args unless $ENV{NO_UPDATE_RRD};
     if (my $ERROR = RRDs::error) {
-        ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";
+        ERROR "Unable to create '$rrd_file': $ERROR";
     }
 }
 
@@ -950,7 +978,7 @@ sub parse_custom_resolution {
 	my @elems = split(',\s*', shift);
 	my $update_rate = shift;
 
-	DEBUG "[DEBUG] update_rate: $update_rate";
+	DEBUG "update_rate: $update_rate";
 
         my @computer_format;
 
@@ -983,7 +1011,7 @@ sub parse_custom_resolution {
 				next;
 			}
 
-			DEBUG "[DEBUG] $elem"
+			DEBUG "$elem"
 				. " -> nb_sec:$nb_sec, for_sec:$for_sec"
 				. " -> multiplier:$multiplier, multiplier_nb:$multiplier_nb"
 			;
@@ -1031,9 +1059,9 @@ sub _update_rrd_file {
 
 	if ($config->{"rrdcached_socket"}) {
 		if (! -e $config->{"rrdcached_socket"} || ! -w $config->{"rrdcached_socket"}) {
-			WARN "[WARN] RRDCached feature ignored: rrdcached socket not writable";
+			WARNING "RRDCached feature ignored: rrdcached socket not writable";
 		} elsif($RRDs::VERSION < 1.3){
-			WARN "[WARN] RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION;
+			WARNING "RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION;
 		} else {
 			# Using the RRDCACHED_ADDRESS environment variable, as
 			# it is way less intrusive than the command line args.
@@ -1062,7 +1090,7 @@ sub _update_rrd_file {
 		$current_updated_value = $value;
 	}
 
-	DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
+	DEBUG "Updating $rrd_file with @update_rrd_data";
 	if ($ENV{RRDCACHED_ADDRESS} && (scalar @update_rrd_data > 32) ) {
 		# RRDCACHED only takes about 4K worth of commands. If the commands is
 		# too large, we have to break it in smaller calls.
@@ -1086,7 +1114,7 @@ sub _update_rrd_file {
 
 	if (my $ERROR = RRDs::error) {
 		#confess Dumper @_;
-		ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
+		ERROR "In RRD: Error updating $rrd_file: $ERROR";
 	}
 
 	return $current_updated_timestamp;

@@ -48,14 +48,14 @@ sub limits_main {
     $SIG{PIPE} = 'IGNORE';
 
     my $update_time = Time::HiRes::time;
-    INFO "[INFO] Starting limits (inline)";
+    INFO "Starting limits (inline)";
 
     _process_limits();
 
     _close_pipes();
 
     $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
-    INFO "[INFO] Limits finished ($update_time sec)";
+    INFO "Limits finished ($update_time sec)";
 }
 
 
@@ -89,7 +89,7 @@ sub _process_limits {
 sub _process_service {
     my ($dbh, $service_id, $service_name, $node_name, $group_path) = @_;
 
-    DEBUG "[DEBUG] processing service: $service_name";
+    DEBUG "processing service: $service_name";
 
     # Read service context from SQL
     my $sth_ctx = $dbh->prepare(q{
@@ -311,10 +311,10 @@ sub _process_ds {
         $new_state = 'unknown';
         $extinfo = $attrs{extinfo} // 'Value is unknown.';
         if ($old_state ne 'unknown') {
+            $new_num_unknowns = $old_num_unknowns + 1;
             if ($old_num_unknowns < $unknown_limit) {
                 $new_state = $old_state;
                 $extinfo = $attrs{extinfo} // '';
-                $new_num_unknowns = $old_num_unknowns + 1;
             }
         } else {
             $new_num_unknowns = $old_num_unknowns;
@@ -330,7 +330,7 @@ sub _process_ds {
         }
     }
 
-    if ($new_state eq 'ok' && defined $warn) {
+    if ($new_state eq 'ok' && defined $warn && $value ne 'unknown') {
         my $wrange = ($warn->[0] // '') . ':' . ($warn->[1] // '');
         if ((defined $warn->[0] && $value < $warn->[0]) ||
             (defined $warn->[1] && $value > $warn->[1])) {
@@ -444,15 +444,20 @@ sub _compute_cdef_value {
 
     # Get all DS in same service (for source DS lookup)
     my $sth_svc = $dbh->prepare(q{
-        SELECT d.id, d.name, da.value
+        SELECT d.id, d.name, da_file.value as rrd_file, da_field.value as rrd_field
         FROM ds d
-        INNER JOIN ds_attr da ON da.id = d.id AND da.name = 'rrd:file'
+        INNER JOIN ds_attr da_file ON da_file.id = d.id AND da_file.name = 'rrd:file'
+        LEFT JOIN ds_attr da_field ON da_field.id = d.id AND da_field.name = 'rrd:field'
         WHERE d.service_id = (SELECT service_id FROM ds WHERE id = ?)
     });
     $sth_svc->execute($ds_id);
-    my %rrd_files;
-    while (my ($id, $name, $file) = $sth_svc->fetchrow_array) {
-        $rrd_files{$name} = File::Spec->catfile($dbdir, $file) if $file;
+    my %rrd_files;   # munin_name => rrd_path
+    my %rrd_fields;  # munin_name => rrd_ds_name
+    while (my ($id, $name, $file, $field) = $sth_svc->fetchrow_array) {
+        if ($file) {
+            $rrd_files{$name} = File::Spec->catfile($dbdir, $file);
+            $rrd_fields{$name} = $field;  # may be undef
+        }
     }
 
     # --------------------------------------------------------------------
@@ -484,7 +489,8 @@ sub _compute_cdef_value {
 
         # Looks like a DS name -- add DEF if we have its RRD
         if (defined $rrd_files{$tok}) {
-            push @xport_args, "DEF:${tok}=$rrd_files{$tok}:$tok:AVERAGE"
+            my $rrd_field = $rrd_fields{$tok} // $tok;
+            push @xport_args, "DEF:${tok}=$rrd_files{$tok}:$rrd_field:AVERAGE"
                 unless $seen_defs{$tok}++;
         }
     }
@@ -499,12 +505,12 @@ sub _compute_cdef_value {
     # RRDs::xport uses FETCH internally, which auto-flushes rrdcached.
     # See rrd_client.c: "FlushVersion" in FETCH response.
     # --------------------------------------------------------------------
-    DEBUG "[DEBUG] _compute_cdef_value: RRDs::xport(@xport_args)";
+    DEBUG "_compute_cdef_value: RRDs::xport(@xport_args)";
     my ($start, $end, $step, $nb, $cols, $vals) = RRDs::xport(@xport_args);
 
     if (my $err = RRDs::error) {
-        WARN "[WARN] RRDs::xport failed for $ds_name: $err";
-        return undef;
+        WARNING "RRDs::xport failed for $ds_name: $err";
+        return;
     }
 
     # --------------------------------------------------------------------
@@ -513,12 +519,12 @@ sub _compute_cdef_value {
     for my $i (reverse 0..$#$vals) {
         my $val = $vals->[$i][0];
         if (defined $val) {
-            DEBUG "[DEBUG] _compute_cdef_value: $ds_name = $val";
+            DEBUG "_compute_cdef_value: $ds_name = $val";
             return $val;
         }
     }
 
-    return undef;
+    return;
 }
 
 # Send notifications for service state changes — all tracking in SQL
@@ -546,7 +552,7 @@ sub _generate_service_message {
         $sth_c->execute($contact_name);
         my ($contact_id) = $sth_c->fetchrow_array;
         unless ($contact_id) {
-            WARN "[WARNING] Missing contact: $contact_name; skipping";
+            WARNING "Missing contact: $contact_name; skipping";
             next;
         }
 
@@ -560,7 +566,7 @@ sub _generate_service_message {
 
         my $cmd = $ca{command};
         unless (defined $cmd) {
-            WARN "[WARNING] Missing command for contact $contact_name; skipping";
+            WARNING "Missing command for contact $contact_name; skipping";
             next;
         }
 
@@ -580,7 +586,7 @@ sub _generate_service_message {
         }
         next unless $service->{state_changed} || $obsess;
 
-        INFO "[INFO] state of $service->{group}::$service->{host}::$service->{plugin} has changed to $service->{worst}, notifying $contact_name";
+        INFO "state of $service->{group}::$service->{host}::$service->{plugin} has changed to $service->{worst}, notifying $contact_name";
 
         # Read notification state from SQL
         my $sth_n = $dbh->prepare(q{
@@ -595,7 +601,7 @@ sub _generate_service_message {
         # Check max_messages
         my $max_messages = $ca{max_messages} // 0;
         if ($max_messages && $num_messages && $num_messages >= $max_messages) {
-            DEBUG "[DEBUG] Max messages reached for $contact_name on $service->{plugin}";
+            DEBUG "Max messages reached for $contact_name on $service->{plugin}";
             next;
         }
 
@@ -611,9 +617,9 @@ sub _generate_service_message {
         # Open pipe if needed — track in SQL, pipe handle in %contact_pipes
         my $pipe = $contact_pipes{$contact_name};
         if (!defined $pipe) {
-            pipe(my $r, my $w) or WARN "[WARNING] Failed to open pipe for $contact_name: $!";
+            pipe(my $r, my $w) or WARNING "Failed to open pipe for $contact_name: $!";
             my $pid = fork();
-            defined $pid or WARN "[WARNING] Failed fork for $contact_name: $!";
+            defined $pid or WARNING "Failed fork for $contact_name: $!";
             if ($pid) {
                 close $r;
                 $pipe = $w;
@@ -629,14 +635,14 @@ sub _generate_service_message {
                 close $w;
                 open(STDIN, '<&', $r);
                 close(STDOUT);
-                exec($cmd) or WARN "[WARNING] Failed exec for $contact_name: $!";
+                exec($cmd) or WARNING "Failed exec for $contact_name: $!";
                 exit;
             }
         }
 
-        DEBUG "[DEBUG] sending message to $contact_name: \"$txt\"";
+        DEBUG "sending message to $contact_name: \"$txt\"";
         if (!print $pipe $txt, "\n") {
-            WARN "[WARNING] Writing to pipe for $contact_name failed: $!";
+            WARNING "Writing to pipe for $contact_name failed: $!";
             close $pipe;
             delete $contact_pipes{$contact_name};
         }
@@ -657,8 +663,8 @@ sub _close_pipes {
     for my $name (keys %contact_pipes) {
         my $pipe = $contact_pipes{$name};
         if ($pipe) {
-            DEBUG "[DEBUG] Closing pipe for $name";
-            close $pipe or WARN "[WARNING] Failed to close pipe for $name: $!";
+            DEBUG "Closing pipe for $name";
+            close $pipe or WARNING "Failed to close pipe for $name: $!";
         }
     }
     %contact_pipes = ();
