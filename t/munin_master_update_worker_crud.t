@@ -8,6 +8,9 @@ use Test::Exception;
 use DBI;
 use File::Temp qw(tempfile);
 
+# Load real UpdateWorker
+use Munin::Master::UpdateWorker;
+
 # Create in-memory SQLite database for testing
 sub create_test_db {
     my ($dbh) = @_;
@@ -52,74 +55,12 @@ sub create_test_db {
     )");
 }
 
-# Create a minimal UpdateWorker-like object for testing
+# Create a real UpdateWorker object for testing
+# _db_diff_attrs and _db_ds_update only need dbh and node_id
 sub create_test_worker {
     my ($dbh) = @_;
-    return bless { dbh => $dbh, node_id => 1 }, 'TestWorker';
+    return bless { dbh => $dbh, node_id => 1 }, 'Munin::Master::UpdateWorker';
 }
-
-# Mock UpdateWorker package with just the methods we need
-package TestWorker;
-
-sub _db_diff_attrs {
-    my ($self, $table, $id_col, $id, $attrs_old, $attrs_new) = @_;
-    my $dbh = $self->{dbh};
-
-    # Security gate: only allow known table/id_col combinations
-    my %allowed = (
-        'service_attr.id' => 1,
-        'ds_attr.id' => 1,
-    );
-    die "_db_diff_attrs: invalid table '$table' id_col '$id_col'"
-        unless $allowed{"$table.$id_col"};
-
-    my $sth_up = $dbh->prepare_cached("UPDATE $table SET value = ? WHERE $id_col = ? AND name = ?");
-    my $sth_ins = $dbh->prepare_cached("INSERT INTO $table ($id_col, name, value) VALUES (?, ?, ?)");
-    my $sth_del = $dbh->prepare_cached("DELETE FROM $table WHERE $id_col = ? AND name = ?");
-
-    # Insert/Update new attrs
-    for my $name (keys %$attrs_new) {
-        my $value = $attrs_new->{$name};
-        if (exists $attrs_old->{$name}) {
-            if ($attrs_old->{$name} ne $value) {
-                $sth_up->execute($value, $id, $name);
-            }
-        } else {
-            $sth_ins->execute($id, $name, $value);
-        }
-    }
-
-    # Delete removed attrs
-    for my $name (keys %$attrs_old) {
-        unless (exists $attrs_new->{$name}) {
-            $sth_del->execute($id, $name);
-        }
-    }
-}
-
-sub _db_ds_update {
-    my ($self, $service_id, $field_name, $attrs_new, $attrs_old) = @_;
-    my $dbh = $self->{dbh};
-
-    my $sth_id = $dbh->prepare_cached("SELECT id FROM ds WHERE service_id = ? AND name = ?");
-    $sth_id->execute($service_id, $field_name);
-
-    my ($ds_id) = $sth_id->fetchrow_array();
-    $sth_id->finish();
-
-    if (! defined $ds_id) {
-        my $sth_ds = $dbh->prepare_cached("INSERT INTO ds (service_id, name) VALUES (?, ?)");
-        $sth_ds->execute($service_id, $field_name);
-        $ds_id = $dbh->last_insert_id(undef, undef, 'ds', 'id');
-    }
-
-    # Diff and apply ds_attr changes
-    $self->_db_diff_attrs('ds_attr', 'id', $ds_id, $attrs_old, $attrs_new);
-
-    return $ds_id;
-}
-
-package main;
 
 my ($dbh, $tempfile);
 BEGIN {
@@ -237,8 +178,6 @@ subtest 'No-op when data unchanged' => sub {
     $dbh->do("INSERT INTO service_attr (id, name, value) VALUES (100, 'x', '1')");
     $dbh->do("INSERT INTO service_attr (id, name, value) VALUES (100, 'y', '2')");
 
-    my $sth_check = $dbh->prepare("SELECT changes() as cnt");
-    
     # Run diff with identical data
     $worker->_db_diff_attrs('service_attr', 'id', 100,
         { x => '1', y => '2' },
@@ -361,7 +300,6 @@ subtest 'BUG: New attr not in old should INSERT not UPDATE' => sub {
     $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (501, 'label', 'Existing')");
 
     # Old has only 'label', new has 'label' + 'type'
-    # BUG: If we only UPDATE, 'type' won't be added
     my $ds_id = $worker->_db_ds_update(200, 'field2',
         { label => 'Existing', type => 'GAUGE' },  # new
         { label => 'Existing' }                     # old - missing 'type'
@@ -387,7 +325,6 @@ subtest 'BUG: Old attr not in new should be DELETED' => sub {
     $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (502, 'stale', 'Delete me')");
 
     # Old has 'label' + 'stale', new has only 'label'
-    # BUG: If we don't DELETE, 'stale' remains
     my $ds_id = $worker->_db_ds_update(200, 'field3',
         { label => 'Keep' },              # new - no 'stale'
         { label => 'Keep', stale => 'Delete me' }  # old - has 'stale'
