@@ -1019,7 +1019,7 @@ sub parse_custom_resolution {
                 if ($elem =~ m/(\d+) (\d+)/) {
                         # nothing to do, already in computer format
                         push @computer_format, [$1, $2];
-                } elsif ($elem =~ m/(\w+) for (\w+)/) {
+                } elsif ($elem =~ m/(\d+[smhdwty]?) for (\d+[smhdwty]?)/i) {
                         my $nb_sec = to_sec($1);
                         my $for_sec = to_sec($2);
 
@@ -1066,6 +1066,7 @@ sub to_sec {
 		return $1 * $secs_table->{$unit};
 	} else {
 		# no recognised unit, return the int value as seconds
+		return 0 unless $target =~ /^\d+$/;
 		return int $target;
 	}
 }
