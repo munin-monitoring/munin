@@ -272,6 +272,60 @@ Result: PASS
 
 ---
 
+## Session 3: Remove Mock Code (2026-09-25)
+
+### What We Did
+
+Removed duplicated mock code from test files. Mocks were copying production code verbatim, which is dangerous because:
+
+1. If real code changes, mocks might not be updated
+2. Gives false confidence that real code works
+3. Maintenance burden
+
+#### Changes
+
+- `t/munin_master_update_worker_dbstate.t`: Removed MockWorker, now uses real `Munin::Master::UpdateWorker` with blessed `{ dbh, node_id }`
+- `t/munin_master_update_worker_crud.t`: Removed TestWorker, same approach
+
+Also fixed uninitialized warning when `graph_order` is not set:
+```perl
+# Before
+my @graph_order = split(/ /, $service_attr->{graph_order});
+# After  
+my @graph_order = split(/ /, $service_attr->{graph_order} // '');
+```
+
+### What We Learned
+
+#### Technical
+
+1. **Minimal blessed objects work for testing.** Methods like `_db_diff_attrs` only need `$self->{dbh}` and `$self->{node_id}`. No need to mock the entire object.
+
+2. **Mock code rots.** Identical code in two places will diverge over time. Always prefer testing real code.
+
+3. **Coverage now works.** Lines 418-421 (stale ds deletion) are now covered by real tests.
+
+#### Process
+
+1. **Audit tests for mock duplication.** Check `grep -l "package Mock" t/*.t` periodically.
+
+2. **Legitimate mocks vs code duplication.** `Mock::Config` in `munin_common_config.t` is fine - it's a minimal subclass, not copying logic.
+
+### What We Decided
+
+1. **No mock code that duplicates production.** Tests must exercise real methods.
+
+2. **Blessed hashes for simple testing.** When methods only need a few fields, `bless { dbh => $dbh, node_id => 1 }, 'Real::Package'` is sufficient.
+
+### Test Results
+
+```
+All 38 UpdateWorker tests pass (16 + 12 + 10)
+No mock code remains in test suite
+```
+
+---
+
 ## Next Steps
 
 1. **service_categories CRUD.** Currently uses DELETE+INSERT. Should diff properly.
