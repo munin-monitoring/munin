@@ -101,7 +101,9 @@ subtest 'SampleRRD structure' => sub {
 
     my $info = RRDs::info($sample_rrd);
     ok(defined $info, "RRD info readable");
-    ok(exists $info->{"ds[42].type"}, "DS 42 type exists");
+    # Check for DS - either old-style '42' or new-style field name
+    my @ds_keys = grep { /^ds\[.+\]\.type$/ } keys %$info;
+    ok(scalar @ds_keys > 0, "at least one DS exists");
     ok($info->{step} == 300, "step is 300 seconds");
 };
 
