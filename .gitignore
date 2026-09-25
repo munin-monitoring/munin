@@ -61,3 +61,6 @@ t/tls/CA/*.srl
 out/
 specs/
 *.dummy
+
+# Build/lint output
+out/
