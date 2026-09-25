@@ -423,7 +423,7 @@ sub _db_service {
 
 	# Update the ordering of fields
 	{
-		my @graph_order = split(/ /, $service_attr->{graph_order});
+		my @graph_order = split(/ /, $service_attr->{graph_order} // '');
 		DEBUG "_db_service.graph_order: @graph_order";
 		my $ordr = 0;
 		for my $_name (@graph_order) {

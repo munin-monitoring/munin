@@ -8,6 +8,9 @@ use Test::Differences;
 use DBI;
 use File::Temp qw(tempfile);
 
+# Load real UpdateWorker
+use Munin::Master::UpdateWorker;
+
 # ============================================================================
 # SETUP: In-memory SQLite database
 # ============================================================================
@@ -58,141 +61,11 @@ $dbh->do("CREATE TABLE IF NOT EXISTS url (
 )");
 
 # ============================================================================
-# Mock UpdateWorker with full _db_service logic
+# Create test worker using real UpdateWorker
 # ============================================================================
+# _db_service, _db_ds_update, _db_diff_attrs only need dbh and node_id
 
-package MockWorker;
-
-sub new {
-    my ($class, $dbh, $node_id) = @_;
-    return bless { dbh => $dbh, node_id => $node_id }, $class;
-}
-
-sub _get_last_insert_id {
-    my $self = shift;
-    my $table = shift;
-    return $self->{dbh}->last_insert_id(undef, undef, undef, 'id');
-}
-
-sub _db_diff_attrs {
-    my ($self, $table, $id_col, $id, $attrs_old, $attrs_new) = @_;
-    my $dbh = $self->{dbh};
-
-    my %allowed = (
-        'service_attr.id' => 1,
-        'ds_attr.id' => 1,
-    );
-    die "_db_diff_attrs: invalid table '$table' id_col '$id_col'"
-        unless $allowed{"$table.$id_col"};
-
-    my $sth_up = $dbh->prepare_cached("UPDATE $table SET value = ? WHERE $id_col = ? AND name = ?");
-    my $sth_ins = $dbh->prepare_cached("INSERT INTO $table ($id_col, name, value) VALUES (?, ?, ?)");
-    my $sth_del = $dbh->prepare_cached("DELETE FROM $table WHERE $id_col = ? AND name = ?");
-
-    for my $name (keys %$attrs_new) {
-        my $value = $attrs_new->{$name};
-        if (exists $attrs_old->{$name}) {
-            if ($attrs_old->{$name} ne $value) {
-                $sth_up->execute($value, $id, $name);
-            }
-        } else {
-            $sth_ins->execute($id, $name, $value);
-        }
-    }
-
-    for my $name (keys %$attrs_old) {
-        unless (exists $attrs_new->{$name}) {
-            $sth_del->execute($id, $name);
-        }
-    }
-}
-
-sub _db_ds_update {
-    my ($self, $service_id, $field_name, $attrs_new, $attrs_old) = @_;
-    my $dbh = $self->{dbh};
-
-    my $sth_id = $dbh->prepare_cached("SELECT id FROM ds WHERE service_id = ? AND name = ?");
-    $sth_id->execute($service_id, $field_name);
-    my ($ds_id) = $sth_id->fetchrow_array();
-    $sth_id->finish();
-
-    if (!defined $ds_id) {
-        my $sth_ds = $dbh->prepare_cached("INSERT INTO ds (service_id, name) VALUES (?, ?)");
-        $sth_ds->execute($service_id, $field_name);
-        $ds_id = $self->_get_last_insert_id($dbh, "ds");
-    }
-
-    $self->_db_diff_attrs('ds_attr', 'id', $ds_id, $attrs_old, $attrs_new);
-    return $ds_id;
-}
-
-sub _db_service {
-    my ($self, $plugin, $service_attr, $fields) = @_;
-    my $dbh = $self->{dbh};
-    my $node_id = $self->{node_id};
-
-    # Get or create service
-    my $sth_service_id = $dbh->prepare_cached("SELECT id FROM service WHERE node_id = ? AND name = ?");
-    $sth_service_id->execute($node_id, $plugin);
-    my ($service_id) = $sth_service_id->fetchrow_array();
-    $sth_service_id->finish();
-
-    if (!defined $service_id) {
-        my $sth_service = $dbh->prepare_cached("INSERT INTO service (node_id, name) VALUES (?, ?)");
-        $sth_service->execute($node_id, $plugin);
-        $service_id = $self->_get_last_insert_id($dbh, "service");
-    }
-
-    # Read existing attrs
-    my %service_attrs_old;
-    my $sth_old = $dbh->prepare_cached("SELECT name, value FROM service_attr WHERE id = ?");
-    $sth_old->execute($service_id);
-    while (my ($n, $v) = $sth_old->fetchrow_array()) {
-        $service_attrs_old{$n} = $v;
-    }
-    $sth_old->finish();
-
-    my %fields_old;
-    my $sth_fields_old = $dbh->prepare_cached("SELECT ds.name as field, ds_attr.name as attr, ds_attr.value FROM ds
-        LEFT OUTER JOIN ds_attr ON ds.id = ds_attr.id WHERE ds.service_id = ?");
-    $sth_fields_old->execute($service_id);
-    while (my ($field, $attr, $val) = $sth_fields_old->fetchrow_array()) {
-        $fields_old{$field}{$attr} = $val if defined $attr;
-    }
-    $sth_fields_old->finish();
-
-    # Diff service_attr
-    $self->_db_diff_attrs('service_attr', 'id', $service_id, \%service_attrs_old, $service_attr);
-
-    # Diff ds_attr for each field
-    my %ds_ids;
-    for my $field_name (keys %$fields) {
-        my $attrs_new = $fields->{$field_name};
-        my $attrs_old = $fields_old{$field_name} // {};
-        my $ds_id = $self->_db_ds_update($service_id, $field_name, $attrs_new, $attrs_old);
-        $ds_ids{$field_name} = $ds_id;
-    }
-
-    # Delete datasources that are no longer in the config
-    for my $old_field (keys %fields_old) {
-        unless (exists $fields->{$old_field}) {
-            my $sth_del = $dbh->prepare_cached('DELETE FROM ds WHERE service_id = ? AND name = ?');
-            $sth_del->execute($service_id, $old_field);
-        }
-    }
-
-    return ($service_id, \%service_attrs_old, \%fields_old, \%ds_ids);
-}
-
-sub _db_purge_stale_ds {
-    my ($self, $service_id) = @_;
-    my $dbh = $self->{dbh};
-
-    my $sth = $dbh->prepare_cached('DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)');
-    $sth->execute($service_id);
-}
-
-package main;
+my $worker = bless { dbh => $dbh, node_id => 1 }, 'Munin::Master::UpdateWorker';
 
 # Helper to get full service state
 sub get_service_state {
@@ -224,8 +97,6 @@ sub get_service_state {
 # ============================================================================
 # TEST SUITE: Plugin lifecycle scenarios
 # ============================================================================
-
-my $worker = MockWorker->new($dbh, 1);
 
 # Scenario 1: Fresh plugin - first config
 subtest 'Scenario 1: Fresh plugin install' => sub {
@@ -390,8 +261,8 @@ subtest 'Scenario 9: Complex multi-field attribute changes' => sub {
     is($state->{ds}{d}{attrs}{label}, 'D', "d added");
 };
 
-# Scenario 10: Purge stale datasources
-subtest 'Scenario 10: Purge stale datasources' => sub {
+# Scenario 10: All fields removed then re-added
+subtest 'Scenario 10: Remove all fields then re-add' => sub {
     $dbh->do("DELETE FROM service WHERE node_id = 1 AND name = 'purge_test'");
     $dbh->do("DELETE FROM ds_attr");
     $dbh->do("DELETE FROM ds");
@@ -401,17 +272,24 @@ subtest 'Scenario 10: Purge stale datasources' => sub {
         { field1 => { label => 'F1' }, field2 => { label => 'F2' } }
     );
 
-    # Simulate field2 losing all attrs (should be purged)
-    $dbh->do("DELETE FROM ds_attr WHERE id = (SELECT id FROM ds WHERE service_id = ? AND name = 'field2')", undef, $svc_id);
+    # Remove all fields
+    ($svc_id) = $worker->_db_service('purge_test',
+        { graph_title => 'Purge Test' },
+        {}  # no fields
+    );
 
-    $worker->_db_purge_stale_ds($svc_id);
+    my $state = get_service_state($svc_id);
+    is(scalar keys %{$state->{ds}}, 0, "All fields removed");
 
-    my $sth = $dbh->prepare("SELECT name FROM ds WHERE service_id = ? ORDER BY name");
-    $sth->execute($svc_id);
-    my @fields = map { $_->{name} } @{$sth->fetchall_arrayref({})};
+    # Re-add fields
+    ($svc_id) = $worker->_db_service('purge_test',
+        { graph_title => 'Purge Test' },
+        { field1 => { label => 'F1 New' } }
+    );
 
-    is(scalar @fields, 1, "Only 1 field remains after purge");
-    is($fields[0], 'field1', "field1 remains, field2 purged");
+    $state = get_service_state($svc_id);
+    is(scalar keys %{$state->{ds}}, 1, "Field re-added");
+    is($state->{ds}{field1}{attrs}{label}, 'F1 New', "Re-added field has correct attrs");
 };
 
 # Scenario 11: Empty config (all fields removed)
