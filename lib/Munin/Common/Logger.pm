@@ -245,15 +245,15 @@ Munin::Common::Logger - Perl extension for blah blah blah
 
    use Munin::Common::Logger;
 
-   DEBUG("blah, blah, blah");
-   INFO("blah, blah, blah");
-   NOTICE("blah, blah, blah");
-   WARNING("blah, blah, blah");
-   ERROR("blah, blah, blah");
-   CRITICAL("blah, blah, blah");
-   ALERT("blah, blah, blah");
-   EMERGENCY("oops");
-   LOGCROAK("Goodbye, world!");
+   DEBUG("verbose debug info");
+   INFO("general operation info");
+   NOTICE("significant expected event");
+   WARN("unexpected but non-fatal");
+   ERROR("something failed");
+   CRITICAL("major failure");
+   FATAL("unrecoverable, exiting");  # logs and dies
+   ALERT("needs immediate attention");
+   EMERGENCY("system unusable");
 
    DEBUG(slow_and_expensive_operation) if Munin::Common::Logger::would_log('debug');
 
@@ -319,47 +319,67 @@ See L<Log::Dispatch> for a list of valid log levels.
 
 =item DEBUG
 
-Log with DEBUG priority. Takes one argument, which is the string to log.
+Verbose debugging information. Only useful for developers debugging code.
+Not logged in production (level defaults to 'warning').
+
+    DEBUG "Entering subroutine foo with args: @args";
 
 =item INFO
 
-Log with INFO priority. Takes one argument, which is the string to log.
+General information about normal operations. Startup messages, connection
+status, configuration loaded.
+
+    INFO "Starting munin-update for $host";
+    INFO "Configuration reloaded";
 
 =item NOTICE
 
-Log with NOTICE priority. Takes one argument, which is the string to log.
+Significant but expected events. New services discovered, state changes
+that are normal.
+
+    NOTICE "New service $plugin discovered on $host";
 
 =item WARN
 
-Log with WARNING priority. Takes one argument, which is the string to log.
+Something unexpected happened but the system continues. Degraded performance,
+retrying a failed operation, missing optional config.
 
-=item WARNING
-
-Log with WARNING priority. Takes one argument, which is the string to log.
+    WARN "Failed to connect to $host, retrying in 30s";
+    WARN "Using default value for $config_key";
 
 =item ERROR
 
-Log with ERROR priority. Takes one argument, which is the string to log.
+Something failed but the system can continue. A single plugin failed,
+one node unreachable, one graph could not be generated.
+
+    ERROR "Plugin $plugin failed: $!";
+    ERROR "Could not update $ds_name: $err";
 
 =item CRITICAL
 
-Log with CRITICAL priority. Takes one argument, which is the string to log.
+A major failure that affects functionality. Database connection lost,
+cannot write to disk, multiple nodes unreachable.
 
-=item EMERGENCY
-
-Log with EMERGENCY priority. Takes one argument, which is the string to log.
-
-=item ALERT
-
-Log with ALERT priority. Takes one argument, which is the string to log.
+    CRITICAL "Cannot open database: $DBI::errstr";
 
 =item FATAL
 
-Log with CRITICAL priority and terminate the program. Takes one argument,
-which is the string to log. This is the standard way to log a fatal error
-and exit.
+Unrecoverable error. Logs at CRITICAL level and terminates the program.
+Use when the process cannot continue at all.
 
     FATAL("Database connection failed: $!");  # logs and dies
+
+=item ALERT
+
+Requires immediate attention. Usually handled by monitoring systems.
+
+    ALERT "Disk space critical on $host";
+
+=item EMERGENCY
+
+System is unusable. Entire monitoring system down.
+
+    EMERGENCY "Munin master cannot start: $!";
 
 =back
 
