@@ -566,12 +566,91 @@ Full test suite: 360+ tests pass
 
 ## Next Steps
 
-1. **Check resolution parsing coverage.** Verify graph_data_size parsing is tested.
+1. **Performance benchmark.** Compare old vs new approach with large configs.
 
-2. **Performance benchmark.** Compare old vs new approach with large configs.
+2. **Stress test.** Verify concurrency behavior with multiple update workers.
 
-3. **Stress test.** Verify concurrency behavior with multiple update workers.
+3. **Review other DELETE+INSERT patterns** in the codebase.
 
-4. **Review other DELETE+INSERT patterns** in the codebase.
+4. **Audit variable shadowing.** Check for other inner `my` declarations that shadow outer variables.
 
-5. **Audit variable shadowing.** Check for other inner `my` declarations that shadow outer variables.
+---
+
+## Session 7: Test Coverage and Bug Fixes (2026-09-26)
+
+### What We Did
+
+#### Service Categories CRUD
+
+Fixed service_categories to use proper diff pattern:
+
+1. **Original bug**: DELETE only removed specific category, not all for service.
+
+2. **Proper fix**: Read existing, diff against new (INSERT/UPDATE/SKIP).
+
+3. **Default category**: Per spec, default to 'other' when not declared.
+
+#### Other Fixes
+
+- Fixed TLS.pm using removed WARNING function
+- Fixed HTML.pm undefined $graph_category warning
+
+#### Test Coverage
+
+Added comprehensive tests for `enlarge_custom_resolution`:
+- Basic 10% enlargement
+- Small number minimum increment
+- Very small number edge case
+- Multiple resolutions
+- Multiplier preservation
+
+### What We Learned
+
+#### Technical
+
+1. **Spec compliance matters**. Default category is 'other' per Munin spec.
+
+2. **Consistent CRUD pattern**. All attribute tables now use same diff logic.
+
+3. **Search for stragglers**. After removing functions, grep for remaining usage.
+
+#### Process
+
+1. **Don't revert to old patterns**. Maintain new architecture when fixing bugs.
+
+2. **Read the spec**. Documentation clarifies intended behavior.
+
+### What We Decided
+
+1. **service_categories uses CRUD diff**. Same pattern as service_attr and ds_attr.
+
+2. **Default category is 'other'**. Per Munin spec.
+
+3. **Comprehensive edge case testing**. Test small numbers, minimums, multiples.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `lib/Munin/Master/UpdateWorker.pm` | CRUD diff for service_categories |
+| `lib/Munin/Common/TLS.pm` | WARNING -> WARN |
+| `lib/Munin/Master/HTML.pm` | Default graph_category to 'other' |
+| `t/munin_master_real_failures.t` | Enhanced enlarge_custom_resolution tests |
+
+### Test Results
+
+```
+Full test suite: 360+ tests pass
+```
+
+---
+
+## Next Steps
+
+1. **Performance benchmark.** Compare old vs new approach with large configs.
+
+2. **Stress test.** Verify concurrency behavior with multiple update workers.
+
+3. **Review other DELETE+INSERT patterns** in the codebase.
+
+4. **Audit variable shadowing.** Check for other inner `my` declarations that shadow outer variables.
