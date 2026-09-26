@@ -162,7 +162,7 @@ sub _load_private_key {
 	    }
 	}
 	else {
-	    WARNING("No key file \"$self->{tls_priv}\". Continuing without private key.");
+	    WARN("No key file \"$self->{tls_priv}\". Continuing without private key.");
         }
     }
 
@@ -177,12 +177,12 @@ sub _load_certificate {
         if (defined $self->{tls_cert} and length $self->{tls_cert}) {
 	    if (!Net::SSLeay::CTX_use_certificate_chain_file($self->{tls_context},
 	                                                     $self->{tls_cert})) {
-	        WARNING("Problem occurred when trying to read file with certificate \"$self->{tls_cert}\": $!. Continuing without certificate.");
+	        WARN("Problem occurred when trying to read file with certificate \"$self->{tls_cert}\": $!. Continuing without certificate.");
 	    }
         }
     }
     else {
-	WARNING("No certificate file \"$self->{tls_cert}\". Continuing without certificate.");
+	WARN("No certificate file \"$self->{tls_cert}\". Continuing without certificate.");
     }
 
     return 1;
@@ -194,7 +194,7 @@ sub _load_ca_certificate {
 
     if ($self->{tls_ca_cert} && -e $self->{tls_ca_cert}) {
     	if(!Net::SSLeay::CTX_load_verify_locations($self->{tls_context}, $self->{tls_ca_cert}, '')) {
-            WARNING("Problem occurred when trying to read file with the CA's certificate \"$self->{tls_ca_cert}\": ".&Net::SSLeay::print_errs("").". Continuing without CA's certificate.");
+            WARN("Problem occurred when trying to read file with the CA's certificate \"$self->{tls_ca_cert}\": ".&Net::SSLeay::print_errs("").". Continuing without CA's certificate.");
    	 }
     }
 
@@ -209,7 +209,7 @@ sub _set_peer_requirements {
     Net::SSLeay::CTX_set_verify_depth ($self->{tls_context}, $self->{tls_vdepth});
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        WARNING("in set_verify_depth: $err");
+        WARN("in set_verify_depth: $err");
     }
     Net::SSLeay::CTX_set_verify ($self->{tls_context},
                                  $self->{tls_verify}  ? &Net::SSLeay::VERIFY_PEER :
@@ -217,7 +217,7 @@ sub _set_peer_requirements {
                                  $self->_tls_verify_callback($tls_verified));
     $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        WARNING("in set_verify: $err");
+        WARN("in set_verify: $err");
     }
 
     return 1;

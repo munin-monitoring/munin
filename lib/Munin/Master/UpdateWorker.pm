@@ -378,7 +378,6 @@ sub _db_service {
 			LEFT OUTER JOIN ds_attr ON ds.id = ds_attr.id WHERE ds.service_id = ?");
 		$sth_fields_attr->execute($service_id);
 
-		my %fields_old;
 		while (my ($_field, $_name, $_value) = $sth_fields_attr->fetchrow_array()) {
 			$fields_old{$_field}{$_name} = $_value;
 		}
@@ -388,54 +387,52 @@ sub _db_service {
 	DEBUG "_db_service.%service_attrs_old:" . Dumper(\%service_attrs_old);
 	DEBUG "_db_service.%fields_old:" . Dumper(\%fields_old);
 
-	# Leave room for refresh
-	# XXX - we might only update DB with diff.
-	my $sth_service_attrs_del = $dbh->prepare_cached("DELETE FROM service_attr WHERE id = ?");
-	$sth_service_attrs_del->execute($service_id);
+	# Diff and apply service_attr changes
+	$self->_db_diff_attrs('service_attr', 'id', $service_id, \%service_attrs_old, $service_attr);
 
-	for my $attr (keys %$service_attr) {
-		my $_service_value = $service_attr->{$attr};
-		$self->_db_service_attr($service_id, $attr, $_service_value);
-	}
-
-	# Handle the service_category
+	# Handle the service_category (diff: insert/update as needed)
+	# Default category is 'other' per spec: if plugin doesn't declare
+	# graph_category, it goes to 'other'
 	{
-		my $category = $service_attr->{graph_category} || "other";
+		my $category = $service_attr->{graph_category} || 'other';
 
-		# XXX - might only INSERT IT IF NOT PRESENT
-		my $sth_service_cat_del = $dbh->prepare_cached("DELETE FROM service_categories WHERE id = ? and category = ?");
-		$sth_service_cat_del->execute($service_id, $category);
+		# Read current category
+		my $sth_cat_old = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
+		$sth_cat_old->execute($service_id);
+		my ($old_category) = $sth_cat_old->fetchrow_array();
+		$sth_cat_old->finish();
 
-		my $sth_service_cat = $dbh->prepare_cached("INSERT INTO service_categories (id, category) VALUES (?, ?)");
-		$sth_service_cat->execute($service_id, $category);
+		if (!defined $old_category) {
+			my $sth_cat_ins = $dbh->prepare_cached("INSERT INTO service_categories (id, category) VALUES (?, ?)");
+			$sth_cat_ins->execute($service_id, $category);
+		} elsif ($old_category ne $category) {
+			my $sth_cat_upd = $dbh->prepare_cached("UPDATE service_categories SET category = ? WHERE id = ?");
+			$sth_cat_upd->execute($category, $service_id);
+		}
 	}
 
-	# Handle the fields
-
-	# Remove the ds_attr rows
-	{
-		my $sth_del_attr = $dbh->prepare_cached('DELETE FROM ds_attr WHERE id IN (SELECT id FROM ds WHERE service_id = ?)');
-		$sth_del_attr->execute($service_id);
-	}
+	# Handle the fields - diff and apply ds_attr changes
 
 	my %ds_ids;
 	for my $field_name (keys %$fields) {
 		my $_field_attrs = $fields->{$field_name};
 
-
-		my $ds_id = $self->_db_ds_update($service_id, $field_name, $_field_attrs);
+		my $ds_id = $self->_db_ds_update($service_id, $field_name, $_field_attrs, $fields_old{$field_name} // {});
 		$ds_ids{$field_name} = $ds_id;
 	}
 
-	# Purge the ds that have no attributes, as they are not relevant anymore
-	{
-		my $sth_del_ds = $dbh->prepare_cached('DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)');
-		$sth_del_ds->execute($service_id);
+	# Delete datasources that are no longer in the config
+	for my $old_field (keys %fields_old) {
+		unless (exists $fields->{$old_field}) {
+			DEBUG "_db_service: deleting stale ds '$old_field' from service $service_id";
+			my $sth_del_ds = $dbh->prepare_cached('DELETE FROM ds WHERE service_id = ? AND name = ?');
+			$sth_del_ds->execute($service_id, $old_field);
+		}
 	}
 
 	# Update the ordering of fields
 	{
-		my @graph_order = split(/ /, $service_attr->{graph_order});
+		my @graph_order = split(/ /, $service_attr->{graph_order} // '');
 		DEBUG "_db_service.graph_order: @graph_order";
 		my $ordr = 0;
 		for my $_name (@graph_order) {
@@ -453,22 +450,52 @@ sub _db_service {
 	return ($service_id, \%service_attrs_old, \%fields_old, \%ds_ids);
 }
 
-sub _db_service_attr {
-	my ($self, $service_id, $name, $value) = @_;
+sub _db_diff_attrs {
+	my ($self, $table, $id_col, $id, $attrs_old, $attrs_new) = @_;
 	my $dbh = $self->{dbh};
 
-	DEBUG "_db_service_attr($service_id, $name, $value)";
+	# Security gate: only allow known table/id_col combinations
+	my %allowed = (
+		'service_attr.id' => 1,
+		'ds_attr.id' => 1,
+	);
+	die "_db_diff_attrs: invalid table '$table' id_col '$id_col'"
+		unless $allowed{"$table.$id_col"};
 
-	# Save the whole service config, and drop it.
-	my $sth_service_attr = $dbh->prepare_cached("INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)");
-	$sth_service_attr->execute($service_id, $name, $value);
+	DEBUG "_db_diff_attrs($table, $id_col, $id)";
+
+	my $sth_up = $dbh->prepare_cached("UPDATE $table SET value = ? WHERE $id_col = ? AND name = ?");
+	my $sth_ins = $dbh->prepare_cached("INSERT INTO $table ($id_col, name, value) VALUES (?, ?, ?)");
+	my $sth_del = $dbh->prepare_cached("DELETE FROM $table WHERE $id_col = ? AND name = ?");
+
+	# Insert/Update new attrs
+	for my $name (keys %$attrs_new) {
+		my $value = $attrs_new->{$name};
+		if (exists $attrs_old->{$name}) {
+			if ($attrs_old->{$name} ne $value) {
+				$sth_up->execute($value, $id, $name);
+				DEBUG "_db_diff_attrs: updated $table.$id_col=$id name=$name";
+			}
+		} else {
+			$sth_ins->execute($id, $name, $value);
+			DEBUG "_db_diff_attrs: inserted $table.$id_col=$id name=$name";
+		}
+	}
+
+	# Delete removed attrs
+	for my $name (keys %$attrs_old) {
+		unless (exists $attrs_new->{$name}) {
+			$sth_del->execute($id, $name);
+			DEBUG "_db_diff_attrs: deleted $table.$id_col=$id name=$name";
+		}
+	}
 }
 
 sub _db_ds_update {
-	my ($self, $service_id, $field_name, $attrs) = @_;
+	my ($self, $service_id, $field_name, $attrs_new, $attrs_old) = @_;
 	my $dbh = $self->{dbh};
 
-	DEBUG "_db_ds_update($service_id, $field_name, $attrs)";
+	DEBUG "_db_ds_update($service_id, $field_name)";
 
 	my $sth_id = $dbh->prepare_cached("SELECT id FROM ds WHERE service_id = ? AND name = ?");
 	$sth_id->execute($service_id, $field_name);
@@ -483,12 +510,8 @@ sub _db_ds_update {
 		$ds_id = _get_last_insert_id($dbh, "ds");
 	}
 
-	# Reinsert the other rows
-	my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
-	for my $field_attr (keys %$attrs) {
-		my $_value = $attrs->{$field_attr};
-		$sth_ds_attr->execute($ds_id, $field_attr, $_value);
-	}
+	# Diff and apply ds_attr changes
+	$self->_db_diff_attrs('ds_attr', 'id', $ds_id, $attrs_old, $attrs_new);
 
 	return $ds_id;
 }
@@ -646,6 +669,11 @@ sub uw_handle_config {
 
 		# Handle dirty_config
 		if ($arg2 && $arg2 eq "value") {
+			# Ensure field exists in %fields so datasource gets created
+			if (!exists($fields{$arg1})) {
+				push @field_order, $arg1;
+				$fields{$arg1} = {};  # empty attrs, will get defaults
+			}
 			push @fetch_data, $line;
 			next; # Handled
 		}
@@ -715,6 +743,14 @@ sub uw_handle_config {
 				$sth_update->execute($rrd_field, $ds_id, 'rrd:field');
 			}
 		}
+	}
+
+	# Purge ds that have no attributes (plugin stopped exposing them)
+	# Now safe to do this since RRD loop above has added rrd:file/rrd:field attrs
+	{
+		my $dbh_purge = $self->{dbh};
+		my $sth_del_ds = $dbh_purge->prepare_cached('DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)');
+		$sth_del_ds->execute($service_id);
 	}
 
 	# timestamp == 0 means "Nothing was updated". We only count on the
@@ -996,7 +1032,7 @@ sub parse_custom_resolution {
                 if ($elem =~ m/(\d+) (\d+)/) {
                         # nothing to do, already in computer format
                         push @computer_format, [$1, $2];
-                } elsif ($elem =~ m/(\w+) for (\w+)/) {
+                } elsif ($elem =~ m/(\d+[smhdwty]?) for (\d+[smhdwty]?)/i) {
                         my $nb_sec = to_sec($1);
                         my $for_sec = to_sec($2);
 
@@ -1043,6 +1079,7 @@ sub to_sec {
 		return $1 * $secs_table->{$unit};
 	} else {
 		# no recognised unit, return the int value as seconds
+		return 0 unless $target =~ /^\d+$/;
 		return int $target;
 	}
 }
@@ -1059,9 +1096,9 @@ sub _update_rrd_file {
 
 	if ($config->{"rrdcached_socket"}) {
 		if (! -e $config->{"rrdcached_socket"} || ! -w $config->{"rrdcached_socket"}) {
-			WARNING "RRDCached feature ignored: rrdcached socket not writable";
+			WARN "RRDCached feature ignored: rrdcached socket not writable";
 		} elsif($RRDs::VERSION < 1.3){
-			WARNING "RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION;
+			WARN "RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION;
 		} else {
 			# Using the RRDCACHED_ADDRESS environment variable, as
 			# it is way less intrusive than the command line args.

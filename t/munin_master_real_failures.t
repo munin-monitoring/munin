@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use lib qw(t/lib);
+use lib qw(lib t/lib);
 
 use Test::More;
 
@@ -150,16 +150,38 @@ subtest 'parse_custom_resolution' => sub {
 # RRDtool recommends 10% extra space for RRAs
 # ============================================================================
 subtest 'enlarge_custom_resolution' => sub {
-    my @input = ([1, 100]);
-    my @result = Munin::Master::UpdateWorker::enlarge_custom_resolution(@input);
+    my @input;
+    my @result;
 
+    # --- Basic 10% enlargement ---
+    @input = ([1, 100]);
+    @result = Munin::Master::UpdateWorker::enlarge_custom_resolution(@input);
     is($result[0][0], 1, 'Multiplier preserved');
-    ok($result[0][1] >= 100, 'Count increased by 10%');
+    is($result[0][1], 110, '100 + 10% = 110');
 
-    # Edge case: small number gets minimum +1
+    # --- Small number gets minimum +1 ---
     @input = ([1, 10]);
     @result = Munin::Master::UpdateWorker::enlarge_custom_resolution(@input);
-    is($result[0][1], 11, '10% of 10 = 1 minimum');
+    is($result[0][1], 11, '10 + 10% = 11 (minimum increment)');
+
+    # --- Very small number ---
+    @input = ([1, 1]);
+    @result = Munin::Master::UpdateWorker::enlarge_custom_resolution(@input);
+    is($result[0][1], 2, '1 + 10% = 2 (minimum increment)');
+
+    # --- Multiple resolutions ---
+    @input = ([1, 100], [6, 432], [24, 540]);
+    @result = Munin::Master::UpdateWorker::enlarge_custom_resolution(@input);
+    is(scalar @result, 3, 'Multiple resolutions preserved');
+    is($result[0][1], 110, 'First enlarged');
+    is($result[1][1], 475, 'Second enlarged (432 + 43)');
+    is($result[2][1], 594, 'Third enlarged (540 + 54)');
+
+    # --- Multiplier preserved ---
+    @input = ([6, 100]);
+    @result = Munin::Master::UpdateWorker::enlarge_custom_resolution(@input);
+    is($result[0][0], 6, 'Multiplier unchanged');
+    is($result[0][1], 110, 'Count enlarged');
 };
 
 # ============================================================================
