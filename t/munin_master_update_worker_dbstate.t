@@ -335,6 +335,27 @@ subtest 'Scenario 12: Service attrs independent of field changes' => sub {
     is($state->{ds}{y}{attrs}{label}, 'Y', "field y added");
 };
 
+# Scenario 13: dirty_config fields with empty attrs create datasources
+# Regression test: fields with only .value lines (no .label etc) must
+# still create datasources so _db_state_update can find them.
+subtest 'Scenario 13: dirty_config fields create datasources' => sub {
+    $dbh->do("DELETE FROM service WHERE node_id = 1 AND name = 'dirty'");
+    $dbh->do("DELETE FROM ds_attr");
+    $dbh->do("DELETE FROM ds");
+
+    # Simulate dirty_config: field has data but no config attrs
+    my ($svc_id) = $worker->_db_service('dirty',
+        { graph_title => 'Dirty Config' },
+        { field1 => {}, field2 => {} }  # empty attrs like dirty_config
+    );
+
+    my $state = get_service_state($svc_id);
+
+    is(scalar keys %{$state->{ds}}, 2, "datasources created for dirty_config fields");
+    ok(exists $state->{ds}{field1}, "field1 exists");
+    ok(exists $state->{ds}{field2}, "field2 exists");
+};
+
 done_testing();
 
 1;
