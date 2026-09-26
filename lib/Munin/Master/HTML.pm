@@ -485,6 +485,7 @@ sub handle_request
 		$sth->execute($id);
 		my ($graph_category) = $sth->fetchrow_array();
 		$sth->finish();
+		$graph_category //= 'other';
 
 		$sth = $dbh->prepare_cached("SELECT n.id FROM node n INNER JOIN service s ON s.node_id = n.id WHERE s.id = ?");
 		$sth->execute($id);
