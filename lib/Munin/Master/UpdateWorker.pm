@@ -390,9 +390,9 @@ sub _db_service {
 	# Diff and apply service_attr changes
 	$self->_db_diff_attrs('service_attr', 'id', $service_id, \%service_attrs_old, $service_attr);
 
-	# Handle the service_category (diff: only update if changed)
+	# Handle the service_category (diff: insert/update/delete as needed)
 	{
-		my $category = $service_attr->{graph_category} || "other";
+		my $category = $service_attr->{graph_category};
 
 		# Read current category
 		my $sth_cat_old = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
@@ -400,13 +400,21 @@ sub _db_service {
 		my ($old_category) = $sth_cat_old->fetchrow_array();
 		$sth_cat_old->finish();
 
-		# Update only if changed
-		if (!defined $old_category) {
-			my $sth_cat_ins = $dbh->prepare_cached("INSERT INTO service_categories (id, category) VALUES (?, ?)");
-			$sth_cat_ins->execute($service_id, $category);
-		} elsif ($old_category ne $category) {
-			my $sth_cat_upd = $dbh->prepare_cached("UPDATE service_categories SET category = ? WHERE id = ?");
-			$sth_cat_upd->execute($category, $service_id);
+		if (defined $category) {
+			# Category is set - insert or update
+			if (!defined $old_category) {
+				my $sth_cat_ins = $dbh->prepare_cached("INSERT INTO service_categories (id, category) VALUES (?, ?)");
+				$sth_cat_ins->execute($service_id, $category);
+			} elsif ($old_category ne $category) {
+				my $sth_cat_upd = $dbh->prepare_cached("UPDATE service_categories SET category = ? WHERE id = ?");
+				$sth_cat_upd->execute($category, $service_id);
+			}
+		} else {
+			# No category in config - delete if present
+			if (defined $old_category) {
+				my $sth_cat_del = $dbh->prepare_cached("DELETE FROM service_categories WHERE id = ?");
+				$sth_cat_del->execute($service_id);
+			}
 		}
 	}
 
