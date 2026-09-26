@@ -201,8 +201,7 @@ sub WARN {
     $log->warning($message);
 }
 
-# DEPRECATED: Use WARN instead
-sub WARNING { WARN(@_) }
+
 
 sub ERROR {
     # uncoverable subroutine
@@ -233,8 +232,7 @@ sub EMERGENCY {
     $log->emergency($message);
 }
 
-# DEPRECATED: Use FATAL instead
-sub LOGCROAK { FATAL(@_) }
+
 
 1;
 __END__
@@ -289,8 +287,6 @@ and used in the output formatting.
 
 The functions DEBUG, INFO, NOTICE, WARN, ERROR, CRITICAL, FATAL, ALERT,
 and EMERGENCY are exported by default.
-
-WARNING and LOGCROAK are deprecated aliases. Use WARN and FATAL instead.
 
 =head1 FUNCTIONS
 
