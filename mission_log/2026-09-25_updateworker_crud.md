@@ -500,9 +500,73 @@ Full test suite: 360+ tests pass
 
 ---
 
+## Session 6: Service Categories CRUD and Bug Fixes (2026-09-26)
+
+### What We Did
+
+#### Service Categories CRUD
+
+Fixed service_categories to use proper diff pattern like other attrs:
+
+1. **Original bug**: DELETE only removed specific category, not all for service. Old categories accumulated.
+
+2. **First fix**: DELETE all categories, then INSERT. But this is the old pattern we're trying to eliminate.
+
+3. **Proper fix**: Read existing, diff against new:
+   - INSERT if new and none existed
+   - UPDATE if changed
+   - SKIP if unchanged
+
+4. **Default category**: Per spec, if plugin doesn't declare graph_category, default to 'other'. So we always have a category.
+
+#### Other Fixes
+
+- Fixed TLS.pm still using WARNING (removed from exports)
+- Fixed HTML.pm undefined $graph_category warning (default to 'other')
+
+### What We Learned
+
+#### Technical
+
+1. **Spec compliance matters**. The spec says default category is 'other', so we should always have one. No need to delete.
+
+2. **Consistent CRUD pattern**. All attribute tables (service_attr, ds_attr, service_categories) now use the same diff logic.
+
+3. **Search for stragglers**. After removing WARNING from exports, found TLS.pm still using it. Always grep for removed functions.
+
+#### Process
+
+1. **Don't revert to old patterns**. When fixing bugs, maintain the new architecture (CRUD diff) instead of reverting to DELETE+INSERT.
+
+2. **Read the spec**. Documentation clarifies intended behavior (default category = 'other').
+
+### What We Decided
+
+1. **service_categories uses CRUD diff**. Same pattern as service_attr and ds_attr.
+
+2. **Default category is 'other'**. Per Munin spec, undeclared categories default to 'other'.
+
+3. **Always search for removed functions**. After removing WARNING/LOGCROAK, grep for stragglers.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `lib/Munin/Master/UpdateWorker.pm` | CRUD diff for service_categories |
+| `lib/Munin/Common/TLS.pm` | WARNING -> WARN |
+| `lib/Munin/Master/HTML.pm` | Default graph_category to 'other' |
+
+### Test Results
+
+```
+Full test suite: 360+ tests pass
+```
+
+---
+
 ## Next Steps
 
-1. **service_categories CRUD.** Currently uses DELETE+INSERT. Should diff properly.
+1. **Check resolution parsing coverage.** Verify graph_data_size parsing is tested.
 
 2. **Performance benchmark.** Compare old vs new approach with large configs.
 
