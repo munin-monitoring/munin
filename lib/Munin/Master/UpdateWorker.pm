@@ -394,9 +394,9 @@ sub _db_service {
 	{
 		my $category = $service_attr->{graph_category} || "other";
 
-		# XXX - might only INSERT IT IF NOT PRESENT
-		my $sth_service_cat_del = $dbh->prepare_cached("DELETE FROM service_categories WHERE id = ? and category = ?");
-		$sth_service_cat_del->execute($service_id, $category);
+		# Delete ALL categories for this service, then insert the new one
+		my $sth_service_cat_del = $dbh->prepare_cached("DELETE FROM service_categories WHERE id = ?");
+		$sth_service_cat_del->execute($service_id);
 
 		my $sth_service_cat = $dbh->prepare_cached("INSERT INTO service_categories (id, category) VALUES (?, ?)");
 		$sth_service_cat->execute($service_id, $category);
