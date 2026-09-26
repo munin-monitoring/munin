@@ -30,7 +30,7 @@ my @rrd_update_calls;    # each entry: [$file, @args]
 my $rrd_update_error;    # set to undef (ok) or a string (error)
 
 no warnings 'redefine';
-*RRDs::update = sub {
+*RRDs::update = sub (@) {
     push @rrd_update_calls, [@_];
     return;
 };
@@ -73,6 +73,20 @@ sub gen_data {
         push @data, "$ts:$val";
     }
     return @data;
+}
+
+# Helper: create a fake socket file (must exist and be writable for RRDCACHED)
+my $fake_sock;
+sub enable_rrdcached {
+    $fake_sock = "$temp_dir/fake.sock";
+    open my $fh, '>', $fake_sock or die "Cannot create $fake_sock: $!";
+    close $fh;
+    $config->{rrdcached_socket} = $fake_sock;
+}
+
+sub disable_rrdcached {
+    $config->{rrdcached_socket} = "";
+    unlink $fake_sock if $fake_sock;
 }
 
 # ============================================================================
@@ -119,7 +133,7 @@ subtest 'No rrdcached: >32 points → single vectorized update' => sub {
 
 subtest 'With rrdcached: ≤32 points → single update (else branch)' => sub {
     reset_mocks();
-    $config->{rrdcached_socket} = "/tmp/fake-rrdcached.sock";
+    enable_rrdcached();
 
     my @data = gen_data(20);
     my $ds_values = make_ds_values(@data);
@@ -130,7 +144,7 @@ subtest 'With rrdcached: ≤32 points → single update (else branch)' => sub {
     is(scalar @{$rrd_update_calls[0]} - 1, 20, "all 20 points batched");
     is($ts, 1700000000 + 19 * 300, "returns last timestamp");
 
-    delete $config->{rrdcached_socket};
+    disable_rrdcached();
 };
 
 # ============================================================================
@@ -139,7 +153,7 @@ subtest 'With rrdcached: ≤32 points → single update (else branch)' => sub {
 
 subtest 'With rrdcached: >32 points → individual updates' => sub {
     reset_mocks();
-    $config->{rrdcached_socket} = "/tmp/fake-rrdcached.sock";
+    enable_rrdcached();
 
     my @data = gen_data(40);
     my $ds_values = make_ds_values(@data);
@@ -154,7 +168,7 @@ subtest 'With rrdcached: >32 points → individual updates' => sub {
     }
     is($ts, 1700000000 + 39 * 300, "returns last timestamp");
 
-    delete $config->{rrdcached_socket};
+    disable_rrdcached();
 };
 
 # ============================================================================
@@ -163,7 +177,7 @@ subtest 'With rrdcached: >32 points → individual updates' => sub {
 
 subtest 'With rrdcached: exactly 33 points → individual updates' => sub {
     reset_mocks();
-    $config->{rrdcached_socket} = "/tmp/fake-rrdcached.sock";
+    enable_rrdcached();
 
     my @data = gen_data(33);
     my $ds_values = make_ds_values(@data);
@@ -173,7 +187,7 @@ subtest 'With rrdcached: exactly 33 points → individual updates' => sub {
     is(scalar @rrd_update_calls, 33, "33 individual calls at boundary");
     is($ts, 1700000000 + 32 * 300, "returns last timestamp");
 
-    delete $config->{rrdcached_socket};
+    disable_rrdcached();
 };
 
 # ============================================================================
@@ -182,7 +196,7 @@ subtest 'With rrdcached: exactly 33 points → individual updates' => sub {
 
 subtest 'With rrdcached: exactly 32 points → single update' => sub {
     reset_mocks();
-    $config->{rrdcached_socket} = "/tmp/fake-rrdcached.sock";
+    enable_rrdcached();
 
     my @data = gen_data(32);
     my $ds_values = make_ds_values(@data);
@@ -192,7 +206,7 @@ subtest 'With rrdcached: exactly 32 points → single update' => sub {
     is(scalar @rrd_update_calls, 1, "1 call — 32 is not > 32");
     is(scalar @{$rrd_update_calls[0]} - 1, 32, "all 32 points batched");
 
-    delete $config->{rrdcached_socket};
+    disable_rrdcached();
 };
 
 # ============================================================================
@@ -201,7 +215,7 @@ subtest 'With rrdcached: exactly 32 points → single update' => sub {
 
 subtest 'With rrdcached: error on 3rd update stops the loop' => sub {
     reset_mocks();
-    $config->{rrdcached_socket} = "/tmp/fake-rrdcached.sock";
+    enable_rrdcached();
 
     my @data = gen_data(40);
     my $ds_values = make_ds_values(@data);
@@ -209,7 +223,7 @@ subtest 'With rrdcached: error on 3rd update stops the loop' => sub {
     # Fail on the 3rd call
     my $call_count = 0;
     no warnings 'redefine';
-    *RRDs::update = sub {
+    *RRDs::update = sub (@) {
         $call_count++;
         push @rrd_update_calls, [@_];
         if ($call_count == 3) {
@@ -228,7 +242,7 @@ subtest 'With rrdcached: error on 3rd update stops the loop' => sub {
 
     # Restore normal mock
     no warnings 'redefine';
-    *RRDs::update = sub {
+    *RRDs::update = sub (@) {
         push @rrd_update_calls, [@_];
         return;
     };
@@ -237,7 +251,7 @@ subtest 'With rrdcached: error on 3rd update stops the loop' => sub {
     };
     use warnings 'redefine';
 
-    delete $config->{rrdcached_socket};
+    disable_rrdcached();
 };
 
 # ============================================================================
@@ -262,7 +276,7 @@ subtest 'NO_UPDATE_RRD=1 suppresses all RRDs::update calls' => sub {
 subtest 'NO_UPDATE_RRD=1 with rrdcached: >32 points suppressed' => sub {
     reset_mocks();
     $ENV{NO_UPDATE_RRD} = 1;
-    $config->{rrdcached_socket} = "/tmp/fake-rrdcached.sock";
+    enable_rrdcached();
 
     my @data = gen_data(50);
     my $ds_values = make_ds_values(@data);
@@ -272,7 +286,7 @@ subtest 'NO_UPDATE_RRD=1 with rrdcached: >32 points suppressed' => sub {
     is(scalar @rrd_update_calls, 0, "no calls even with rrdcached + >32 points");
     is($ts, 1700000000 + 49 * 300, "still returns correct timestamp");
 
-    delete $config->{rrdcached_socket};
+    disable_rrdcached();
     delete $ENV{NO_UPDATE_RRD};
 };
 
@@ -309,6 +323,7 @@ subtest 'Non-monotonic timestamps are skipped' => sub {
 
 subtest 'rrdcached_socket not writable → warn and skip rrdcached' => sub {
     reset_mocks();
+    delete $ENV{RRDCACHED_ADDRESS};
     $config->{rrdcached_socket} = "/nonexistent/path/socket.sock";
 
     my @data = gen_data(40);
@@ -320,11 +335,12 @@ subtest 'rrdcached_socket not writable → warn and skip rrdcached' => sub {
     is(scalar @rrd_update_calls, 1, "single call — rrdcached skipped");
     is(scalar @{$rrd_update_calls[0]} - 1, 40, "all 40 points batched");
 
-    delete $config->{rrdcached_socket};
+    disable_rrdcached();
 };
 
 subtest 'rrdcached_socket exists but not writable → warn and skip' => sub {
     reset_mocks();
+    delete $ENV{RRDCACHED_ADDRESS};
 
     # Create a read-only file to satisfy -e but fail -w
     my $ro_socket = "$temp_dir/readonly.sock";
@@ -345,7 +361,7 @@ subtest 'rrdcached_socket exists but not writable → warn and skip' => sub {
     is(scalar @{$rrd_update_calls[0]} - 1, 40, "all 40 points batched");
 
     chmod 0644, $ro_socket;  # restore for cleanup
-    delete $config->{rrdcached_socket};
+    disable_rrdcached();
 };
 
 # ============================================================================
@@ -370,7 +386,7 @@ subtest 'Deterministic: same input → same RRDs::update args' => sub {
         is_deeply($rrd_update_calls[$i], $first_calls[$i], "call $i identical");
     }
 
-    delete $config->{rrdcached_socket};
+    disable_rrdcached();
 };
 
 done_testing();
