@@ -63,7 +63,7 @@ sub _do_connect {
     # Connect to a munin node.  Return false if not, true otherwise.
     my ($self) = @_;
 
-    LOGCROAK("[FATAL] No address!  Did you forget to set 'update no' or to set 'address <IP>' ?")
+    FATAL("No address!  Did you forget to set 'update no' or to set 'address <IP>' ?")
 	if !defined($self->{address});
 
     # Check if it's an URI or a plain host
@@ -79,7 +79,7 @@ sub _do_connect {
     # If the scheme is not defined, it's a plain host.
     # Prefix it with munin:// to be able to parse it like others
     $uri = new URI("munin://" . $url) unless $uri->scheme;
-    LOGCROAK("[FATAL] '$url' is not a valid address!") unless $uri->scheme;
+    FATAL("'$url' is not a valid address!") unless $uri->scheme;
 
     my $port = $self->{port} || $uri->{port};
     $port = $1 if $port =~ m/([0-9]+)/;
@@ -285,7 +285,7 @@ sub list_plugins {
     my $list = $self->_node_read_single("true");
 
     if (not $list) {
-        WARNING "Config node $self->{host} listed no services for '$host_list'.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
+        WARN "Config node $self->{host} listed no services for '$host_list'.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
     }
 
     return split / /, $list;
@@ -425,7 +425,7 @@ sub _node_write_single {
 	return 1;
     });
     if ($timed_out) {
-        LOGCROAK "[FATAL] Socket write timed out to ".$self->{host}.
+        FATAL "Socket write timed out to ".$self->{host}.
 	    ".  Terminating process.";
     }
     return 1;
@@ -447,7 +447,7 @@ RESTART:
 
     if (!defined($res)) {
 	# Probable socket not open.  Why are we here again then?
-	LOGCROAK "[FATAL] Socket read from ".$self->{host}." failed.  Terminating process.";
+	FATAL "Socket read from ".$self->{host}." failed.  Terminating process.";
     }
 
     # Remove \r *and* \n

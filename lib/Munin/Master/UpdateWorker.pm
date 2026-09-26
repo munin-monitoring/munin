@@ -1087,9 +1087,9 @@ sub _update_rrd_file {
 
 	if ($config->{"rrdcached_socket"}) {
 		if (! -e $config->{"rrdcached_socket"} || ! -w $config->{"rrdcached_socket"}) {
-			WARNING "RRDCached feature ignored: rrdcached socket not writable";
+			WARN "RRDCached feature ignored: rrdcached socket not writable";
 		} elsif($RRDs::VERSION < 1.3){
-			WARNING "RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION;
+			WARN "RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION;
 		} else {
 			# Using the RRDCACHED_ADDRESS environment variable, as
 			# it is way less intrusive than the command line args.

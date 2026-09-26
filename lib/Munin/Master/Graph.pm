@@ -192,7 +192,7 @@ sub handle_request
 	if (not defined($sth_url)) {
 		# potential cause: permission problem
 		my $msg = "Failed to access database: " . $DBI::errstr;
-		WARNING $msg;
+		WARN $msg;
 		die $msg;
 	}
 	$sth_url->execute($graph_path);

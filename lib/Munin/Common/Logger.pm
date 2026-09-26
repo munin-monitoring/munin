@@ -15,7 +15,7 @@ use Munin::Common::Defaults;
 our @ISA = qw(Exporter);
 
 our @EXPORT
-    = qw(DEBUG INFO NOTICE WARN WARNING ERROR CRITICAL FATAL ALERT EMERGENCY LOGCROAK);
+    = qw(DEBUG INFO NOTICE WARN ERROR CRITICAL FATAL ALERT EMERGENCY);
 
 use Params::Validate qw(validate SCALAR);
 use POSIX;
@@ -33,7 +33,7 @@ sub _timestamp {
 # calls have been updated.
 sub _remove_label {
     my ($message) = @_;
-    $message =~ s{^\[(DEBUG|INFO|NOTICE|WARNING|ERROR)\][\s:]*}{};
+    $message =~ s{^\[(DEBUG|INFO|NOTICE|WARNING|ERROR|CRITICAL|FATAL|ALERT|EMERGENCY)\][\s:]*}{};
     return $message;
 }
 
@@ -201,11 +201,8 @@ sub WARN {
     $log->warning($message);
 }
 
-sub WARNING {
-    # uncoverable subroutine
-    my ($message) = @_;
-    $log->warning($message);
-}
+# DEPRECATED: Use WARN instead
+sub WARNING { WARN(@_) }
 
 sub ERROR {
     # uncoverable subroutine
@@ -220,9 +217,8 @@ sub CRITICAL {
 }
 
 sub FATAL {
-    # uncoverable subroutine
     my ($message) = @_;
-    $log->critical($message);
+    $log->log_and_croak( level => 'critical', message => $message );
 }
 
 sub ALERT {
@@ -237,11 +233,8 @@ sub EMERGENCY {
     $log->emergency($message);
 }
 
-sub LOGCROAK {
-    # uncoverable subroutine
-    my ($message) = @_;
-    $log->log_and_croak( level => 'critical', message => $message );
-}
+# DEPRECATED: Use FATAL instead
+sub LOGCROAK { FATAL(@_) }
 
 1;
 __END__
@@ -294,8 +287,10 @@ and used in the output formatting.
 
 =head2 EXPORT
 
-The functions DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT,
-EMERGENCY and LOGCROAK are exported by default.
+The functions DEBUG, INFO, NOTICE, WARN, ERROR, CRITICAL, FATAL, ALERT,
+and EMERGENCY are exported by default.
+
+WARNING and LOGCROAK are deprecated aliases. Use WARN and FATAL instead.
 
 =head1 FUNCTIONS
 
@@ -364,13 +359,11 @@ Log with ALERT priority. Takes one argument, which is the string to log.
 
 =item FATAL
 
-Log with FATAL priority. Takes one argument, which is the string to log.
+Log with CRITICAL priority and terminate the program. Takes one argument,
+which is the string to log. This is the standard way to log a fatal error
+and exit.
 
-=item LOGCROAK
-
-Log with CRITIAL priority exit the program. Takes one argument, which is the string to log.
-
-See also C<log_and_croak> in L<Log::Dispatch>.
+    FATAL("Database connection failed: $!");  # logs and dies
 
 =back
 
