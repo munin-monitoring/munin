@@ -312,10 +312,15 @@ sub handle_request
 	my $longest_fieldname = 0;
 	my %row;
 
-	while (my ($_rrdname, @rest) = $sth->fetchrow_array()) {
+	while (my ($_rrdname, $label, @rest) = $sth->fetchrow_array()) {
+	    # The label is the fieldname if not present.
+	    $label ||= $_rrdname;
+	    $label =~ s/\$\{graph_period\}/$graph_period/g;
+	    unshift @rest, $label;
+
 	    $row{$_rrdname} = \@rest;
 
-	    my $l = length($_rrdname);
+	    my $l = length($label);
 	    $longest_fieldname = $l if $l > $longest_fieldname;
 	    $graph_has_negative = 1 if $rest[9];
 	}
@@ -393,9 +398,6 @@ sub handle_request
 		# Fields inherit this field from their plugin, if not overridden by the field
 		$_printf = $graph_printf unless defined $_printf;
 		$_printf .= "%s" if $graph_scale;
-
-		# The label is the fieldname if not present
-		$_label = $_rrdname unless $_label;
 
 		DEBUG "rrdname: $_rrdname: negative: ".($_negative // "undef")." has_negative: ".($_has_negative // "undef");
 
