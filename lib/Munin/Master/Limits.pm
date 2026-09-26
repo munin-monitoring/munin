@@ -509,7 +509,7 @@ sub _compute_cdef_value {
     my ($start, $end, $step, $nb, $cols, $vals) = RRDs::xport(@xport_args);
 
     if (my $err = RRDs::error) {
-        WARNING "RRDs::xport failed for $ds_name: $err";
+        WARN "RRDs::xport failed for $ds_name: $err";
         return;
     }
 
@@ -552,7 +552,7 @@ sub _generate_service_message {
         $sth_c->execute($contact_name);
         my ($contact_id) = $sth_c->fetchrow_array;
         unless ($contact_id) {
-            WARNING "Missing contact: $contact_name; skipping";
+            WARN "Missing contact: $contact_name; skipping";
             next;
         }
 
@@ -566,7 +566,7 @@ sub _generate_service_message {
 
         my $cmd = $ca{command};
         unless (defined $cmd) {
-            WARNING "Missing command for contact $contact_name; skipping";
+            WARN "Missing command for contact $contact_name; skipping";
             next;
         }
 
@@ -617,9 +617,9 @@ sub _generate_service_message {
         # Open pipe if needed — track in SQL, pipe handle in %contact_pipes
         my $pipe = $contact_pipes{$contact_name};
         if (!defined $pipe) {
-            pipe(my $r, my $w) or WARNING "Failed to open pipe for $contact_name: $!";
+            pipe(my $r, my $w) or WARN "Failed to open pipe for $contact_name: $!";
             my $pid = fork();
-            defined $pid or WARNING "Failed fork for $contact_name: $!";
+            defined $pid or WARN "Failed fork for $contact_name: $!";
             if ($pid) {
                 close $r;
                 $pipe = $w;
@@ -635,14 +635,14 @@ sub _generate_service_message {
                 close $w;
                 open(STDIN, '<&', $r);
                 close(STDOUT);
-                exec($cmd) or WARNING "Failed exec for $contact_name: $!";
+                exec($cmd) or WARN "Failed exec for $contact_name: $!";
                 exit;
             }
         }
 
         DEBUG "sending message to $contact_name: \"$txt\"";
         if (!print $pipe $txt, "\n") {
-            WARNING "Writing to pipe for $contact_name failed: $!";
+            WARN "Writing to pipe for $contact_name failed: $!";
             close $pipe;
             delete $contact_pipes{$contact_name};
         }
@@ -664,7 +664,7 @@ sub _close_pipes {
         my $pipe = $contact_pipes{$name};
         if ($pipe) {
             DEBUG "Closing pipe for $name";
-            close $pipe or WARNING "Failed to close pipe for $name: $!";
+            close $pipe or WARN "Failed to close pipe for $name: $!";
         }
     }
     %contact_pipes = ();

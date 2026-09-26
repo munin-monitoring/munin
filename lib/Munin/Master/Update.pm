@@ -273,7 +273,7 @@ sub _handle_worker_result {
 
     if (!defined($res)) {
 	# no result? problem
-	LOGCROAK("[FATAL] Handle_worker_result got handed a failed worker result");
+	FATAL("Handle_worker_result got handed a failed worker result");
     }
 
     my ($worker_id, $time_used)
