@@ -421,3 +421,93 @@ Result: PASS
 4. **Review other DELETE+INSERT patterns** in the codebase.
 
 5. **Audit variable shadowing.** Check for other inner `my` declarations that shadow outer variables.
+
+---
+
+## Session 5: Logger Refactor and Test Infrastructure (2026-09-26)
+
+### What We Did
+
+#### Logger.pm Cleanup
+
+Refactored logging functions to remove confusion:
+
+1. **WARN vs WARNING**: Both existed and did the same thing. Removed WARNING (kept as alias initially, then deleted).
+
+2. **FATAL behavior**: Was just `log->critical()` (same as CRITICAL). Changed to `log_and_croak()` - logs CRITICAL then dies. Now useful for unrecoverable errors.
+
+3. **LOGCROAK**: Weird name, just called `log_and_croak`. Removed, use FATAL instead.
+
+4. **`_remove_label`**: Didn't handle `[FATAL]`, `[CRITICAL]`, `[ALERT]`, `[EMERGENCY]` prefixes. Fixed regex to handle all levels.
+
+5. **POD documentation**: Added clear "when to use" guidance for each level:
+   - DEBUG: verbose debug info for developers
+   - INFO: general operation info (startup, connections)
+   - NOTICE: significant expected events
+   - WARN: unexpected but non-fatal (retries, defaults)
+   - ERROR: failures that don't stop operation
+   - CRITICAL: major failures affecting functionality
+   - FATAL: unrecoverable, logs and dies
+   - ALERT: needs immediate attention
+   - EMERGENCY: system unusable
+
+#### Test Infrastructure
+
+- Added `t/munin_common_logger.t` with tests for WARN, FATAL, and `_remove_label`
+- Set `TMPDIR=/dev/shm` in docker-test targets for faster tests (ramdisk)
+
+### What We Learned
+
+#### Technical
+
+1. **FATAL should die**. A logging function named FATAL that doesn't exit is misleading. Now FATAL = log CRITICAL + croak.
+
+2. **POD needs usage guidance**. Listing functions isn't enough - developers need to know when to use each level.
+
+3. **`_remove_label` must handle all prefixes**. Old regex only handled 5 of 9 levels.
+
+4. **shm for tests**. `/dev/shm` is ramdisk, much faster for temp files. Set via `TMPDIR=/dev/shm`.
+
+#### Process
+
+1. **Deprecate then remove**. Two commits: one to add aliases, one to delete. Cleaner than keeping deprecated code forever.
+
+2. **No backward compatibility clutter**. Aliases were immediately removed, not kept for "compat".
+
+### What We Decided
+
+1. **Use WARN, not WARNING**. Use FATAL, not LOGCROAK.
+
+2. **FATAL = log + die**. Standard pattern for unrecoverable errors.
+
+3. **shm for test temp files**. All docker tests now use `/dev/shm`.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `lib/Munin/Common/Logger.pm` | FATAL now logs and dies, removed WARNING/LOGCROAK, improved POD |
+| `lib/Munin/Master/*.pm` | Updated callers: WARNING→WARN, LOGCROAK→FATAL |
+| `t/munin_common_logger.t` | New: tests for WARN, FATAL, _remove_label |
+| `Makefile` | docker-test uses TMPDIR=/dev/shm |
+
+### Test Results
+
+```
+Logger tests: 4/4 pass
+Full test suite: 360+ tests pass
+```
+
+---
+
+## Next Steps
+
+1. **service_categories CRUD.** Currently uses DELETE+INSERT. Should diff properly.
+
+2. **Performance benchmark.** Compare old vs new approach with large configs.
+
+3. **Stress test.** Verify concurrency behavior with multiple update workers.
+
+4. **Review other DELETE+INSERT patterns** in the codebase.
+
+5. **Audit variable shadowing.** Check for other inner `my` declarations that shadow outer variables.
