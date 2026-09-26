@@ -326,6 +326,90 @@ No mock code remains in test suite
 
 ---
 
+## Session 4: Fix Original Bug - dirty_config Datasource Creation (2026-09-25)
+
+### What We Did
+
+Fixed the original bug that started this investigation: `ds_id is NULL` warnings during spoolfetch.
+
+#### Root Cause
+
+When a plugin sends only `field.value TIMESTAMP:42` (dirty_config) without config lines like `field.label`, the field wasn't added to `%fields`:
+
+```perl
+# Handle dirty_config
+if ($arg2 && $arg2 eq "value") {
+    push @fetch_data, $line;
+    next; # Handled  <-- SKIPS adding to %fields!
+}
+```
+
+Since `%fields` was empty, `_db_service` never created any datasources. When `uw_handle_fetch` called `_db_state_update`, it couldn't find the ds.
+
+#### Fix
+
+Add dirty_config fields to `%fields` with empty attrs:
+
+```perl
+if ($arg2 && $arg2 eq "value") {
+    # Ensure field exists in %fields so datasource gets created
+    if (!exists($fields{$arg1})) {
+        push @field_order, $arg1;
+        $fields{$arg1} = {};  # empty attrs, will get defaults
+    }
+    push @fetch_data, $line;
+    next; # Handled
+}
+```
+
+The empty `{}` is correct because:
+- The `.value` line is **data**, not config
+- It shouldn't create ds_attr entries like `label`, `type`, etc.
+- The ds just needs to exist so `_db_state_update` can find it
+- RRD loop will add `rrd:file` and `rrd:field` attrs, so ds survives purge
+
+Also added explicit timestamps to spoolfetch test data to exercise `set_spoolfetch_timestamp` path.
+
+### What We Learned
+
+#### Technical
+
+1. **dirty_config vs config separation.** Config lines (`.label`, `.type`) define the ds structure. Data lines (`.value`) are stored in state/RRD. Both need the ds to exist, but only config lines should create ds_attr entries.
+
+2. **First principles tracing.** When `ds_id is NULL`, trace backwards: `_db_state_update` looks for ds → `_db_service` should have created it → `%fields` must have the field → parser must have added it.
+
+3. **Test data matters.** The original test node sent `field1.value 42` without timestamp, which didn't exercise `set_spoolfetch_timestamp`. Changed to `field1.value TIMESTAMP:42`.
+
+#### Process
+
+1. **Original bug was architectural.** The CRUD refactoring exposed this bug by making the code paths more visible.
+
+2. **Test coverage reveals design issues.** Uncovered `set_spoolfetch_timestamp` not being tested, which led to discovering the dirty_config datasource creation bug.
+
+### What We Decided
+
+1. **dirty_config fields must be in %fields.** Even if attrs are empty, the field needs to exist so the ds gets created.
+
+2. **Empty attrs are valid.** A field with no config attrs (only data) is legitimate - it gets defaults and RRD attrs from the RRD loop.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `lib/Munin/Master/UpdateWorker.pm` | Add dirty_config fields to %fields |
+| `t/lib/node_test_spool.pl` | Add explicit timestamps to spool data |
+
+### Test Results
+
+```
+# Full Docker test suite
+All tests successful.
+Files=21, Tests=392, 400 wallclock secs
+Result: PASS
+```
+
+---
+
 ## Next Steps
 
 1. **service_categories CRUD.** Currently uses DELETE+INSERT. Should diff properly.
