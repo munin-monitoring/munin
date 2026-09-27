@@ -339,6 +339,13 @@ subtest 'rrdcached_socket not writable → warn and skip rrdcached' => sub {
 };
 
 subtest 'rrdcached_socket exists but not writable → warn and skip' => sub {
+    # Root can write to any file, chmod has no effect
+    if ($> == 0) {
+        pass('Running as root, chmod has no effect');
+        pass('Running as root, chmod has no effect');
+        return;
+    }
+
     reset_mocks();
     delete $ENV{RRDCACHED_ADDRESS};
 
