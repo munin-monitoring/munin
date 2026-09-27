@@ -32,6 +32,7 @@ our (@ISA, @EXPORT);
 	   munin_time
 	   faketime
 	   faketime_delta
+	   parse_duration
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -75,6 +76,18 @@ sub munin_time {
     return time;
 }
 
+# Convert human-readable time spec to seconds
+# Examples: '1s', '30m', '1h', '7d', '2w'
+sub parse_duration {
+    my ($spec) = @_;
+    if ($spec =~ /^(\d+)([smhdw])$/) {
+        my ($num, $unit) = ($1, $2);
+        my %multipliers = (s => 1, m => 60, h => 3600, d => 86400, w => 604800);
+        return $num * $multipliers{$unit};
+    }
+    return undef;
+}
+
 # faketime() - set deterministic time for testing
 # Usage:
 #   faketime('2024-01-01 00:00:00')  # absolute
@@ -96,11 +109,9 @@ sub faketime {
         return;
     }
 
-    if ($spec =~ /^([+-])(\d+)([smhdw])$/) {
-        # Relative time: +1h, -30m, +2d, etc.
-        my ($sign, $num, $unit) = ($1, $2, $3);
-        my %multipliers = (s => 1, m => 60, h => 3600, d => 86400, w => 604800);
-        my $offset = $num * $multipliers{$unit};
+    if ($spec =~ /^([+-])(\d+[smhdw])$/) {
+        my ($sign, $dur) = ($1, $2);
+        my $offset = parse_duration($dur);
         $offset = -$offset if $sign eq '-';
         $TIME_OVERRIDE = time + $offset;
     } elsif ($spec =~ /^\d+$/) {
@@ -121,10 +132,9 @@ sub faketime_delta {
 
     my $base = defined $TIME_OVERRIDE ? $TIME_OVERRIDE : time;
 
-    if ($spec =~ /^([+-])(\d+)([smhdw])$/) {
-        my ($sign, $num, $unit) = ($1, $2, $3);
-        my %multipliers = (s => 1, m => 60, h => 3600, d => 86400, w => 604800);
-        my $offset = $num * $multipliers{$unit};
+    if ($spec =~ /^([+-])(\d+[smhdw])$/) {
+        my ($sign, $dur) = ($1, $2);
+        my $offset = parse_duration($dur);
         $offset = -$offset if $sign eq '-';
         $TIME_OVERRIDE = $base + $offset;
     } else {
