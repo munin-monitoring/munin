@@ -66,7 +66,16 @@ jobs:
 
       # Upload coverage to Coveralls
       - name: Upload to Coveralls
+        if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker run --rm -v $(pwd):/app -e GITHUB_TOKEN munin-dev cover -report coveralls
+
+      # Upload coverage HTML as artifact for inspection
+      - name: Upload coverage HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: cover_db/
