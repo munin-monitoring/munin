@@ -152,6 +152,9 @@ sub _load_private_key {
                 $self->{private_key_loaded} = 1;
             }
             else {
+		    # Clear the OpenSSL error stack to prevent stale errors
+		    # from causing issues in subsequent SSL operations
+		    Net::SSLeay::ERR_clear_error();
 	        if ($self->{tls_paranoia} eq "paranoid") {
                     ERROR("Problem occurred when trying to read file with private key \"$self->{tls_priv}\": $!");
 		    return 0;

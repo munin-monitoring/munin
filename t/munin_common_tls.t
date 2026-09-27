@@ -433,10 +433,10 @@ subtest '_start_tls fails when _load_net_ssleay fails' => sub {
         write_fd => 1, write_func => sub { "" },
     });
     no warnings 'redefine';
-    my $orig = \&Munin::Common::TLSServer::_load_net_ssleay;
-    *Munin::Common::TLSServer::_load_net_ssleay = sub { 0 };
+    my $orig = \&Munin::Common::TLS::_load_net_ssleay;
+    *Munin::Common::TLS::_load_net_ssleay = sub { 0 };
     is($tls->start_tls(), 0, 'returns 0');
-    *Munin::Common::TLSServer::_load_net_ssleay = $orig;
+    *Munin::Common::TLS::_load_net_ssleay = $orig;
     use warnings 'redefine';
 };
 
@@ -455,6 +455,7 @@ subtest '_start_tls fails when _initial_communication fails' => sub {
         write_fd => 1, write_func => sub { "" },
     });
     no warnings 'redefine';
+    # Must mock on TLSServer since it overrides _initial_communication
     my $orig = \&Munin::Common::TLSServer::_initial_communication;
     *Munin::Common::TLSServer::_initial_communication = sub { 0 };
     is($tls->start_tls(), 0, 'returns 0');
