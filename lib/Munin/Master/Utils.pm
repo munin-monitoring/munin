@@ -18,6 +18,7 @@ use POSIX qw(:sys_wait_h);
 use POSIX qw(:errno_h);
 use Symbol qw(gensym);
 use Data::Dumper;
+use Time::Local qw(timelocal);
 use Storable;
 use Scalar::Util qw(isweak weaken);
 
@@ -28,6 +29,8 @@ our (@ISA, @EXPORT);
 	   munin_mkdir_p
 	   print_version_and_exit
 	   exit_if_run_by_super_user
+	   munin_time
+	   faketime
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -69,6 +72,40 @@ our $TIME_OVERRIDE;
 sub munin_time {
     return $TIME_OVERRIDE if defined $TIME_OVERRIDE;
     return time;
+}
+
+# faketime() - set deterministic time for testing
+# Usage:
+#   faketime('2024-01-01 00:00:00')  # absolute
+#   faketime('+1h')                   # relative from now
+#   faketime('-1d')                   # relative from now
+#   faketime(1704067200)             # epoch
+#   faketime(undef)                  # clear, return to real time
+sub faketime {
+    my ($spec) = @_;
+
+    if (!defined $spec) {
+        undef $TIME_OVERRIDE;
+        return;
+    }
+
+    if ($spec =~ /^([+-])(\d+)([smhdw])$/) {
+        # Relative time: +1h, -30m, +2d, etc.
+        my ($sign, $num, $unit) = ($1, $2, $3);
+        my %multipliers = (s => 1, m => 60, h => 3600, d => 86400, w => 604800);
+        my $offset = $num * $multipliers{$unit};
+        $offset = -$offset if $sign eq '-';
+        $TIME_OVERRIDE = time + $offset;
+    } elsif ($spec =~ /^\d+$/) {
+        # Epoch timestamp
+        $TIME_OVERRIDE = $spec;
+    } elsif ($spec =~ /^(\d{4})-(\d{2})-(\d{2})\s*(\d{2}):(\d{2}):(\d{2})$/) {
+        # ISO date string: YYYY-MM-DD HH:MM:SS
+        my ($year, $month, $day, $hour, $min, $sec) = ($1, $2, $3, $4, $5, $6);
+        $TIME_OVERRIDE = timelocal($sec, $min, $hour, $day, $month - 1, $year);
+    } else {
+        warn "faketime: unrecognized format '$spec'";
+    }
 }
 
 sub munin_mkdir_p {
