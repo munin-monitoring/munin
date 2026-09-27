@@ -63,6 +63,14 @@ my @COPY_FIELDS    = ("label", "draw", "drawstyle", "type", "rrdfile", "fieldnam
 my @dircomponents = split('/',$0);
 my $me = pop(@dircomponents);
 
+# Mockable time function for testing
+# Override $TIME_OVERRIDE in tests for deterministic behavior
+our $TIME_OVERRIDE;
+sub munin_time {
+    return $TIME_OVERRIDE if defined $TIME_OVERRIDE;
+    return time;
+}
+
 sub munin_mkdir_p {
     my ($dirname, $umask) = @_;
 
