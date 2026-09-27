@@ -21,7 +21,6 @@ plans/
 /MYMETA.yml
 
 # Generated files (foo.PL -> foo)
-lib/Munin/Common/Defaults.pm
 lib/Munin.pm
 etc/munin.conf.sample
 etc/munin-node.conf.sample
