@@ -91,8 +91,16 @@ sub generate_sample_db {
         $dbh->do("INSERT OR IGNORE INTO grp (id, name, path) VALUES (?, ?, ?)",
             undef, $grp_id, $grp_name || $host, $path);
 
+        # Insert group into url table
+        $dbh->do("INSERT OR IGNORE INTO url (id, type, path) VALUES (?, ?, ?)",
+            undef, $grp_id, "group", $path);
+
         $dbh->do("INSERT OR IGNORE INTO node (id, grp_id, name, path) VALUES (?, ?, ?, ?)",
             undef, $node_id, $grp_id, $host, $path);
+
+        # Insert node into url table
+        $dbh->do("INSERT OR IGNORE INTO url (id, type, path) VALUES (?, ?, ?)",
+            undef, $node_id, "node", $path);
 
         # Set notify_alias for notification testing
         $dbh->do("INSERT OR IGNORE INTO node_attr (id, name, value) VALUES (?, 'notify_alias', ?)",
