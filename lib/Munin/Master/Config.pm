@@ -495,15 +495,22 @@ sub parse_config {
 
     while (my $line = <$io>) {
         $self->_strip_comment($line);
-        $self->_trim($line);
+        chomp $line;
 
 	# Handle continuation lines (ending in \)
 	if ($line =~ s|\\$||) {
+	    # Line ends with backslash: this is a continuation
+	    # Don't trim - preserve whitespace between parts
 	    $continuation .= $line;
 	    next;
-	} elsif ($continuation) {
+	} elsif (length($continuation)) {
+	    # Final continuation line: join and trim the whole thing
 	    $line = $continuation . $line;
+	    $self->_trim($line);
 	    $continuation = '';
+	} else {
+	    # Normal line: trim as before
+	    $self->_trim($line);
 	}
 
         # This must be handled after continuation handling otherwise
