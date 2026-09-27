@@ -1048,3 +1048,65 @@ Fail:            0
 1. Use `munin_time()` in tests for deterministic time control
 2. Consider adding more RRA rows for `debug` resolution
 3. Performance benchmark of CRUD diff vs old DELETE+INSERT
+
+---
+
+## Session 13: Time Utilities and Consolidation (2026-09-27)
+
+### What We Did
+
+#### Time Utilities
+
+1. **faketime()** — Set deterministic time for testing:
+   - Absolute: `faketime('2024-01-01 00:00:00')`
+   - Relative: `faketime('+1h')`, `faketime('-1d')`
+   - Epoch: `faketime(1704067200)`
+   - Clear: `faketime(undef)`
+
+2. **faketime_delta()** — Offset from frozen time:
+   ```perl
+   faketime('2024-01-01 00:00:00');  # freeze at midnight
+   faketime_delta('+1h');           # now 01:00
+   faketime_delta('+1h');           # now 02:00
+   ```
+
+3. **munin_duration_to_sec()** — Consolidated time parsing:
+   - Moved from UpdateWorker.pm to Utils.pm
+   - Supports: s, m, h, d, w, t (month=31d), y (year=365d)
+   - Used by faketime, faketime_delta, and UpdateWorker
+
+#### Test Fixes
+
+1. **munin_master_update_worker.t** — Updated to use `munin_duration_to_sec`
+2. **munin_master_real_failures.t** — Updated to use `munin_duration_to_sec`
+3. **munin_master_utils_time.t** — New test file for time utilities
+
+### What We Learned
+
+#### Technical
+
+1. **Consolidate parsing code** — When similar parsing exists in multiple places, move to shared utility module.
+
+2. **Naming conventions** — Use `munin_` prefix for global utility functions to avoid namespace pollution.
+
+3. **No backward aliases** — When refactoring, change all callers at once instead of maintaining deprecated aliases.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `lib/Munin/Master/Utils.pm` | Added munin_time, faketime, faketime_delta, munin_duration_to_sec |
+| `lib/Munin/Master/UpdateWorker.pm` | Removed to_sec, now calls munin_duration_to_sec |
+| `t/munin_master_utils_time.t` | New: tests for time utilities |
+| `t/munin_master_update_worker.t` | Updated to use munin_duration_to_sec |
+| `t/munin_master_real_failures.t` | Updated to use munin_duration_to_sec |
+
+### Test Results
+
+```
+Total tests:     427
+Programs:        29
+Pass:            29
+Fail:            0
+Lint:            Pass
+```
