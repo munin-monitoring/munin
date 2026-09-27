@@ -4,7 +4,7 @@ use strict;
 # This module contains default values for Munin paths and settings.
 # It is a static file with FHS-compliant paths.
 # Distributions should patch this file directly instead of using
-code generation.
+# code generation.
 #
 # To change a default, edit the corresponding variable below.
 # For example:
