@@ -57,7 +57,7 @@ Munin::Common::*
 Shared infrastructure used by both master and node:
 
 - ``Config`` — base class for configuration parsing
-- ``Defaults`` — installation paths and version (generated at build time)
+- ``Defaults`` — installation paths and version (static file, patch for your distribution)
 - ``Logger`` — logging via Log::Dispatch
 - ``TLS``, ``TLSClient``, ``TLSServer`` — TLS support
 - ``Timeout`` — execution timeout handling
