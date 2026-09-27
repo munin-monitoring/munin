@@ -39,7 +39,7 @@ is(round_to_granularity($time_20190101_010501, 3600),  $time_20190101_010000, "t
 is(round_to_granularity($time_20190101_010501, 86400), $time_20190101_000000, "time_20190101_010501: rounded to 1 day");
 
 # to_sec - unit conversion
-sub to_sec { return Munin::Master::UpdateWorker::to_sec(@_); }
+sub to_sec { return Munin::Master::UpdateWorker::munin_duration_to_sec(@_); }
 
 is(to_sec("5s"), 5, "to_sec: 5s");
 is(to_sec("5S"), 5, "to_sec: 5S (uppercase)");

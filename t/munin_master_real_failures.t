@@ -72,7 +72,7 @@ subtest 'to_sec conversion' => sub {
 
     for my $tc (@cases) {
         my ($input, $expected) = @$tc;
-        my $result = Munin::Master::UpdateWorker::to_sec($input);
+        my $result = Munin::Master::UpdateWorker::munin_duration_to_sec($input);
         is($result, $expected, "to_sec('$input') = $expected");
     }
 };
