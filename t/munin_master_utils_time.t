@@ -8,7 +8,7 @@ use lib qw(lib t/lib);
 
 use Test::More;
 use Time::Local;
-use Munin::Master::Utils qw(munin_time faketime);
+use Munin::Master::Utils qw(munin_time faketime faketime_delta);
 
 # ============================================================================
 # TESTS: munin_time returns real time by default
@@ -101,6 +101,35 @@ subtest 'faketime units' => sub {
 
     faketime('+1w');
     is(munin_time(), $base + 604800, "+1w");
+
+    faketime(undef);
+};
+
+# ============================================================================
+# TESTS: faketime_delta
+# ============================================================================
+
+subtest 'faketime_delta' => sub {
+    # Start at a fixed time
+    faketime(1704067200);  # 2024-01-01 00:00:00 UTC
+    is(munin_time(), 1704067200, "frozen at midnight");
+
+    # Delta from frozen time
+    faketime_delta('+1h');
+    is(munin_time(), 1704067200 + 3600, "+1h from midnight");
+
+    faketime_delta('+1h');
+    is(munin_time(), 1704067200 + 7200, "+2h from midnight");
+
+    faketime_delta('-30m');
+    is(munin_time(), 1704067200 + 7200 - 1800, "-30m from 2h");
+
+    # Delta from real time when not frozen
+    faketime(undef);
+    my $before = time();
+    faketime_delta('+5m');
+    my $got = munin_time();
+    ok(abs($got - ($before + 300)) < 2, "+5m from real time");
 
     faketime(undef);
 };
