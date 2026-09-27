@@ -603,7 +603,7 @@ sub parse_update_rate {
 
 	my ($update_rate_in_sec, $is_update_aligned);
 	if ($update_rate_config =~ m/(\d+[a-z]?)(?: (.*))?/) {
-		$update_rate_in_sec = to_sec($1);
+		$update_rate_in_sec = munin_duration_to_sec($1);
 		$is_update_aligned = $2 && ($2 eq "aligned");
 	} else {
 		return (0, 0);
@@ -1033,8 +1033,8 @@ sub parse_custom_resolution {
                         # nothing to do, already in computer format
                         push @computer_format, [$1, $2];
                 } elsif ($elem =~ m/(\d+[smhdwty]?) for (\d+[smhdwty]?)/i) {
-                        my $nb_sec = to_sec($1);
-                        my $for_sec = to_sec($2);
+                        my $nb_sec = munin_duration_to_sec($1);
+                        my $for_sec = munin_duration_to_sec($2);
 
 			my $multiplier = int ($nb_sec / $update_rate);
                         my $multiplier_nb = int ($for_sec / $nb_sec);
@@ -1060,30 +1060,6 @@ sub parse_custom_resolution {
 
 # return the number of seconds
 # for the human readable format
-# s : second,  m : minute, h : hour
-# d : day, w : week, t : month, y : year
-sub to_sec {
-	my $secs_table = {
-		"s" => 1,
-		"m" => 60,
-		"h" => 60 * 60,
-		"d" => 60 * 60 * 24,
-		"w" => 60 * 60 * 24 * 7,
-		"t" => 60 * 60 * 24 * 31, # a month always has 31 days
-		"y" => 60 * 60 * 24 * 365, # a year always has 365 days
-	};
-
-	my ($target) = @_;
-	if ($target =~ m/(\d+)([smhdwty])/i) {
-		my $unit = lc($2);
-		return $1 * $secs_table->{$unit};
-	} else {
-		# no recognised unit, return the int value as seconds
-		return 0 unless $target =~ /^\d+$/;
-		return int $target;
-	}
-}
-
 sub _update_rrd_file {
 	my ($self, $rrd_file, $ds_name, $ds_values) = @_;
 
