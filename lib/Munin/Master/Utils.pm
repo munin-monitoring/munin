@@ -32,7 +32,7 @@ our (@ISA, @EXPORT);
 	   munin_time
 	   faketime
 	   faketime_delta
-	   parse_duration
+	   munin_duration_to_sec
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -77,15 +77,27 @@ sub munin_time {
 }
 
 # Convert human-readable time spec to seconds
-# Examples: '1s', '30m', '1h', '7d', '2w'
-sub parse_duration {
-    my ($spec) = @_;
-    if ($spec =~ /^(\d+)([smhdw])$/) {
-        my ($num, $unit) = ($1, $2);
-        my %multipliers = (s => 1, m => 60, h => 3600, d => 86400, w => 604800);
-        return $num * $multipliers{$unit};
+# Examples: '1s', '30m', '1h', '7d', '2w', '1t' (month=31d), '1y' (year=365d)
+sub munin_duration_to_sec {
+    my $secs_table = {
+        "s" => 1,
+        "m" => 60,
+        "h" => 60 * 60,
+        "d" => 60 * 60 * 24,
+        "w" => 60 * 60 * 24 * 7,
+        "t" => 60 * 60 * 24 * 31, # a month always has 31 days
+        "y" => 60 * 60 * 24 * 365, # a year always has 365 days
+    };
+
+    my ($target) = @_;
+    if ($target =~ m/(\d+)([smhdwty])/i) {
+        my $unit = lc($2);
+        return $1 * $secs_table->{$unit};
+    } else {
+        # no recognised unit, return the int value as seconds
+        return 0 unless $target =~ /^\d+$/;
+        return int $target;
     }
-    return undef;
 }
 
 # faketime() - set deterministic time for testing
@@ -109,9 +121,9 @@ sub faketime {
         return;
     }
 
-    if ($spec =~ /^([+-])(\d+[smhdw])$/) {
+    if ($spec =~ /^([+-])(\d+[smhdwty])$/i) {
         my ($sign, $dur) = ($1, $2);
-        my $offset = parse_duration($dur);
+        my $offset = munin_duration_to_sec($dur);
         $offset = -$offset if $sign eq '-';
         $TIME_OVERRIDE = time + $offset;
     } elsif ($spec =~ /^\d+$/) {
@@ -132,9 +144,9 @@ sub faketime_delta {
 
     my $base = defined $TIME_OVERRIDE ? $TIME_OVERRIDE : time;
 
-    if ($spec =~ /^([+-])(\d+[smhdw])$/) {
+    if ($spec =~ /^([+-])(\d+[smhdwty])$/i) {
         my ($sign, $dur) = ($1, $2);
-        my $offset = parse_duration($dur);
+        my $offset = munin_duration_to_sec($dur);
         $offset = -$offset if $sign eq '-';
         $TIME_OVERRIDE = $base + $offset;
     } else {
