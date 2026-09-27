@@ -129,7 +129,6 @@ my $build = Module::Build->new(
         'etc/munin-node.conf.PL'          => 'etc/munin-node.conf.sample',
         'etc/munin.conf.PL'               => 'etc/munin.conf.sample',
         'lib/Munin.pm.PL'                 => 'lib/Munin.pm',
-        'lib/Munin/Common/Defaults.pm.PL' => 'lib/Munin/Common/Defaults.pm',
         'script/munin-cron.PL'            => 'script/munin-cron',
     },
     etc_files => {
