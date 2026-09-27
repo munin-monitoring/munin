@@ -1,12 +1,20 @@
 use warnings;
 use strict;
 
+# This module contains default values for Munin paths and settings.
+# It is a static file with FHS-compliant paths.
+# Distributions should patch this file directly instead of using
+code generation.
+#
+# To change a default, edit the corresponding variable below.
+# For example:
+#   our $MUNIN_CONFDIR = '/etc/munin-custom';
+
 package Munin::Common::Defaults;
 
 use English qw(-no_match_vars);
 use File::Basename qw(dirname);
 
-# This file's package variables are changed during an installation procedure.
 # This variable makes only sense in development environment
 my $COMPONENT_ROOT = dirname(__FILE__) . '/../../..';
 
@@ -62,10 +70,57 @@ __END__
 Munin::Common::Defaults - Default values for Munin paths and settings.
 
 
-=head1 PACKAGE VARIABLES
+=head1 DESCRIPTION
 
-See L<http://munin-monitoring.org/wiki/MuninInstallProcedure> for
-more information on the variables provided by this package.
+This module contains default values for Munin paths and settings.
+It is a static file with FHS-compliant paths.
+
+Distributions should patch this file directly instead of using
+code generation.
+
+
+=head1 PATHS
+
+=over
+
+=item B<MUNIN_CONFDIR>
+
+Configuration directory. Default: /etc/munin
+
+=item B<MUNIN_LIBDIR>
+
+Library directory. Default: /var/lib/munin
+
+=item B<MUNIN_HTMLDIR>
+
+HTML output directory. Default: /var/www/html/munin
+
+=item B<MUNIN_DBDIR>
+
+Database directory. Default: /var/lib/munin
+
+=item B<MUNIN_LOGDIR>
+
+Log directory. Default: /var/log/munin
+
+=item B<MUNIN_STATEDIR>
+
+Runtime state directory. Default: /run/munin
+
+=item B<MUNIN_PLUGSTATE>
+
+Plugin state directory. Default: /var/lib/munin/plugin-state
+
+=item B<MUNIN_SPOOLDIR>
+
+Spool directory. Default: /var/lib/munin
+
+=item B<MUNIN_CGITMPDIR>
+
+CGI temporary directory. Default: /var/lib/munin/cgi-tmp
+
+=back
+
 
 =head1 METHODS
 
