@@ -20,6 +20,13 @@ use constant {
 	RRDCACHED_START    => 5,
 };
 
+# Skip if rrdcached is not available
+my $rrdcached_available = system("which rrdcached >/dev/null 2>&1") == 0;
+unless ($rrdcached_available) {
+	done_testing();
+	exit(0);
+}
+
 # ============================================================================
 # GLOBALS
 # ============================================================================
@@ -163,7 +170,7 @@ if ($rrdcached_pid == 0) {
 		'-p', "$temp_dir/rrdcached.pid",
 		'-F',                     # flush when idle
 		'-g',                     # foreground (don't daemonize)
-		'-v',                     # verbose for debugging
+		'-V', 'LOG_DEBUG',          # verbose for debugging
 	);
 	die "exec rrdcached failed: $!";
 }
@@ -201,8 +208,8 @@ print $fh "rrdcached_socket $sockpath\n";
 print $fh "\n";
 # Two groups, multiple nodes — forces enough data points to test batching
 for my $i (0 .. 2) {
-	my $group = "group_$i";
-	my $host  = "host_$i";
+	my $group = "group-$i";
+	my $host  = "host-$i";
 	my $port  = $node_ports[$i];
 	print $fh "[$group;$host]\n";
 	print $fh "    address 127.0.0.1\n";
