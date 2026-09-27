@@ -31,6 +31,7 @@ our (@ISA, @EXPORT);
 	   exit_if_run_by_super_user
 	   munin_time
 	   faketime
+	   faketime_delta
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -81,6 +82,12 @@ sub munin_time {
 #   faketime('-1d')                   # relative from now
 #   faketime(1704067200)             # epoch
 #   faketime(undef)                  # clear, return to real time
+#
+# faketime_delta() - offset from frozen time
+# Usage:
+#   faketime('2024-01-01 00:00:00')  # freeze at midnight
+#   faketime_delta('+1h');           # now 01:00
+#   faketime_delta('+1h');           # now 02:00
 sub faketime {
     my ($spec) = @_;
 
@@ -105,6 +112,23 @@ sub faketime {
         $TIME_OVERRIDE = timelocal($sec, $min, $hour, $day, $month - 1, $year);
     } else {
         warn "faketime: unrecognized format '$spec'";
+    }
+}
+
+# faketime_delta() - offset from current (possibly frozen) time
+sub faketime_delta {
+    my ($spec) = @_;
+
+    my $base = defined $TIME_OVERRIDE ? $TIME_OVERRIDE : time;
+
+    if ($spec =~ /^([+-])(\d+)([smhdw])$/) {
+        my ($sign, $num, $unit) = ($1, $2, $3);
+        my %multipliers = (s => 1, m => 60, h => 3600, d => 86400, w => 604800);
+        my $offset = $num * $multipliers{$unit};
+        $offset = -$offset if $sign eq '-';
+        $TIME_OVERRIDE = $base + $offset;
+    } else {
+        warn "faketime_delta: unrecognized format '$spec'";
     }
 }
 
