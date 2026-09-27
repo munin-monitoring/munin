@@ -39,14 +39,23 @@ our $MUNIN_HASSETR    = '';
 sub get_defaults {
     my ($class) = @_;
 
-    no strict 'refs';
-    my $defaults = {};
-    for my $g ( keys %{"Munin::Common::Defaults::"} ) {
-        next unless $g =~ /MUNIN_/;
-        $defaults->{$g} = ${ *$g{'SCALAR'} };
-    }
-
-    return $defaults;
+    return {
+        MUNIN_CONFDIR    => $MUNIN_CONFDIR,
+        MUNIN_LIBDIR     => $MUNIN_LIBDIR,
+        MUNIN_HTMLDIR    => $MUNIN_HTMLDIR,
+        MUNIN_CGITMPDIR  => $MUNIN_CGITMPDIR,
+        MUNIN_DBDIR      => $MUNIN_DBDIR,
+        MUNIN_PLUGSTATE  => $MUNIN_PLUGSTATE,
+        MUNIN_SPOOLDIR   => $MUNIN_SPOOLDIR,
+        MUNIN_LOGDIR     => $MUNIN_LOGDIR,
+        MUNIN_STATEDIR   => $MUNIN_STATEDIR,
+        MUNIN_USER       => $MUNIN_USER,
+        MUNIN_GROUP      => $MUNIN_GROUP,
+        MUNIN_PLUGINUSER => $MUNIN_PLUGINUSER,
+        MUNIN_VERSION    => $MUNIN_VERSION,
+        MUNIN_PERL       => $MUNIN_PERL,
+        MUNIN_HASSETR    => $MUNIN_HASSETR,
+    };
 }
 
 sub export_to_environment {
