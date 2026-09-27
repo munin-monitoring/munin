@@ -719,3 +719,104 @@ Full test suite: 360+ tests pass
 4. **Audit variable shadowing.** Check for other inner `my` declarations that shadow outer variables.
 
 5. **Full RRDCACHED integration test.** Set up complete config to test actual writes through rrdcached.
+
+---
+
+## Session 9: TLS Test Coverage — Real Handshakes, No Mocks (2026-09-27)
+
+### What We Did
+
+#### Phase 1: Rewrite TLS Tests From Scratch
+
+The existing TLS tests were mostly mocked or skipped. We rewrote `t/munin_common_tls.t` to use real TLS handshakes with generated certificates:
+
+1. **Generated test certs** via `TestTLS.pm` (CA, server, client certs)
+2. **Forked TLS server/client pairs** for real handshake tests
+3. **Fixed write_func closure bug**: `syswrite($fh, @_)` only writes 1 byte; must use `syswrite($fh, $_[0])` — a Perl quirk with how syswrite handles `@_` expansion
+4. **Fixed server protocol**: Server must read STARTTLS before calling `start_tls()`, just like the real munin-update main loop does
+
+#### Phase 2: Debug SEGV — Root Cause Found and Fixed
+
+All 17 subtests passed, but the process SEGV'd during cleanup. Investigation revealed:
+
+1. **OpenSSL error stack leak**: `_load_private_key()` with a non-existent file left error 2147483650 on the OpenSSL error stack
+2. **`Net::SSLeay::new()` SEGVs** when called with stale errors on the stack
+3. **Fix**: Added `Net::SSLeay::ERR_clear_error()` after failed key load in `_load_private_key()`
+
+#### Phase 3: Mock/Restore Pattern Fix
+
+The `_start_tls fails when _load_net_ssleay fails` test broke the next test because:
+
+1. Mocking inherited methods via `*TLSServer::_load_net_ssleay` creates a stash entry
+2. `$orig = \&Munin::Common::TLSServer::_load_net_ssleay` captures `undef` (method lives in TLS.pm)
+3. Restoring `$orig` (undef) deletes the stash entry, breaking method resolution
+4. **Fix**: Mock on the package where the method is actually defined (`Munin::Common::TLS`)
+
+#### Phase 4: RRDCACHED Tests
+
+1. **Unit tests**: Fixed socket file test (root bypasses chmod), added root check
+2. **Integration tests**: Installed `rrdcached` package in Docker (separate from rrdtool in bookworm), fixed `-V` flag (not `-v`), fixed hostnames (hyphens not underscores)
+3. **Pre-existing issue**: `graph_data_size debug` puts data into RRAs that AVERAGE fetch doesn't cover
+
+#### Phase 5: Dockerfile Update
+
+Added `rrdtool` and `rrdcached` packages to `Dockerfile.dev` (rrdcached is now a separate package in Debian bookworm).
+
+### What We Learned
+
+#### Technical
+
+1. **`syswrite` with `@_` in closures**: `syswrite($fh, @_)` can write wrong number of bytes. Always use `syswrite($fh, $_[0])` in write_func closures.
+
+2. **OpenSSL error stack is global**: Errors left on the stack by one operation can cause SEGVs in subsequent operations. Always clear after expected failures.
+
+3. **Inherited method mocking**: `*Child::method = sub { ... }` on an inherited method creates a stash entry. Restoring with undef deletes it. Mock on the base class instead.
+
+4. **Server protocol order**: The TLS server's `_initial_communication` writes without reading. In real munin, the main loop reads STARTTLS before calling `start_tls`. Tests must replicate this.
+
+5. **Root breaks file permission tests**: `chmod 0444` has no effect when running as root. Tests must check `$> == 0` and skip.
+
+6. **Debian bookworm**: `rrdcached` is a separate package from `rrdtool`.
+
+#### Process
+
+1. **Debug by binary search**: Comment out half the tests, run, narrow down. Found the exact test causing SEGV in 3 iterations.
+
+2. **Write debug .t files**: Always use real files (not -e) for debug tests so they can be reused/patched.
+
+3. **Always run in Docker**: `make docker-test-one FILE=x.t` for fast iteration.
+
+### What We Decided
+
+1. **Real TLS handshakes over mocks**: All TLS tests use actual socket connections with generated certs.
+
+2. **ERR_clear_error after expected failures**: Any OpenSSL operation that's expected to fail should clear the error stack.
+
+3. **Mock on base class**: When mocking inherited methods, always use the package where the method is defined.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `lib/Munin/Common/TLS.pm` | Added ERR_clear_error() after failed key load |
+| `t/munin_common_tls.t` | Complete rewrite: 23 subtests with real TLS handshakes |
+| `t/munin_master_update_rrdcached.t` | Fixed root check for chmod test |
+| `t/munin_master_update_rrdcached_integration.t` | Fixed hostname validation, rrdcached flags |
+| `Dockerfile.dev` | Added rrdtool and rrdcached packages |
+| `Makefile` | Added docker-test-one target |
+
+### Test Results
+
+```
+TLS tests:              23/23 pass (was 17 pass + SEGV)
+RRDCACHED unit tests:   13/13 pass (was 12 pass + 1 skip)
+RRDCACHED integration:  13/14 pass (1 pre-existing: graph_data_size debug)
+Full suite:             379 tests, 24/25 programs pass
+```
+
+### Next Steps
+
+1. **Fix `graph_data_size debug` RRA issue** in rrdcached integration test.
+2. **Benchmark CRUD diff** vs old DELETE+INSERT approach.
+3. **Review other DELETE+INSERT patterns** in the codebase.
+4. **Audit variable shadowing** across the codebase.
