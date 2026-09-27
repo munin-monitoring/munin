@@ -895,3 +895,72 @@ HTML static tests:   10/10 pass (3 failing, need path fixes)
 2. Fix remaining `munin_master_update_rrdcached_integration.t` failure
 3. Performance benchmark of CRUD diff vs old DELETE+INSERT
 4. Review other DELETE+INSERT patterns
+
+---
+
+## Session 11: Final Test Results (2026-09-27)
+
+### What We Did
+
+1. **Fixed HTML static test paths** — group pages are at root level (`acme.com.html`), not in subdirectories
+2. **Ran full test suite** — 441 tests, 26/27 programs pass
+
+### Test Results
+
+```
+Total tests:     441
+Programs:        27
+Pass:            26
+Fail:            1 (pre-existing: graph_data_size debug)
+```
+
+### Remaining Issues
+
+1. **munin_master_update_rrdcached_integration.t test 14** — `RRD contains defined values` fails because `graph_data_size debug` puts data into RRAs that AVERAGE fetch doesn't cover. Pre-existing issue.
+
+### Summary of All Changes This Branch
+
+| Commit | Description |
+|--------|-------------|
+| `f823d9021` | refactor: add _db_diff_attrs with security gate |
+| `1329ba6d9` | refactor: use CRUD diff in _db_service and _db_ds_update |
+| `964844d16` | test: add CRUD unit tests and DB state integration tests |
+| `cf4a4ff08` | docs: add mission log for UpdateWorker CRUD refactoring |
+| `7b4d8b64b` | fix: add lib to test include path |
+| `76af826a0` | fix: prevent int warning for non-numeric input in to_sec |
+| `86b39cdcf` | fix: remove variable shadowing of %fields_old |
+| `dec01587a` | docs: update mission log with Session 2 |
+| `cee306dbd` | refactor: use real UpdateWorker in dbstate tests |
+| `32b18ac36` | refactor: use real UpdateWorker in crud tests |
+| `aef9a7d6d` | docs: update mission log with Session 3 |
+| `77472d5c1` | test: add explicit timestamps to spoolfetch test data |
+| `5c3a3f505` | fix: create datasources for dirty_config fields |
+| `8060d2456` | docs: update mission log with Session 4 |
+| `b6f520faf` | test: add regression test for dirty_config |
+| `18a3ea246` | deprecate: use WARN not WARNING, FATAL not LOGCROAK |
+| `32d28ea94` | remove: delete deprecated WARNING and LOGCROAK |
+| `efa531f03` | docs: improve logger POD |
+| `18c26dbbf` | docs: update mission log with Session 5 |
+| `73c6f9456` | fix: use WARN not WARNING in TLS.pm |
+| `00f693c28` | fix: default graph_category to 'other' |
+| `2ba475888` | fix: delete ALL service categories before inserting |
+| `de3cb4bcd` | refactor: use CRUD diff for service_categories |
+| `3f24d85d2` | fix: delete service category when config removes |
+| `e252bdf83` | fix: default category to 'other' per spec |
+| `3cbf8cab1` | docs: update mission log with Session 6 |
+| `6f42e77ba` | test: add comprehensive tests for enlarge_custom_resolution |
+| `970ab7f8b` | docs: update mission log with Session 7 |
+| `27f15491b` | test: verify RRDCACHED branching logic structure |
+| `ec35aeb24` | docs: update mission log with Session 8 |
+| `37829f7fd` | test: rewrite rrdcached unit tests |
+| `61eaf5a90` | test: add rrdcached integration test |
+| `d17a0b6c1` | fix: RRDCACHED test - create fake socket |
+| `b6dad3854` | test: add _get_default_address tests |
+| `52fae6273` | test: rewrite TLS tests with real handshake |
+| `51f6109ca` | fix: rrdcached tests - root check, valid hostnames |
+| `3d6474e55` | fix: TLS SEGV from stale OpenSSL error stack |
+| `096511c03` | docs: update mission log with Session 9 |
+| `38bdfa460` | fix: add groups/nodes to url table in SampleDB |
+| `3c938d0c0` | test: rewrite Graph.pm tests |
+| `ea37aec97` | test: add Graph.pm and HTML.pm tests |
+| `a2633019f` | fix: HTML static test paths |
