@@ -105,27 +105,26 @@ subtest 'comments are ignored' => sub {
 subtest 'continuation line joins next line' => sub {
     my $text = "dbdir /var/lib/munin\\\n    /custom\n";
     my $config = parse_config_string($text);
-    is($config->{dbdir}, '/var/lib/munin/custom', 'lines joined');
+    is($config->{dbdir}, '/var/lib/munin    /custom', 'lines joined with whitespace');
 };
 
-subtest 'continuation preserves leading whitespace' => sub {
+subtest 'continuation preserves whitespace between parts' => sub {
     my $text = "dbdir /var/lib\\\n    /munin\n";
     my $config = parse_config_string($text);
-    # Note: _trim removes leading whitespace from each line,
-    # so continuation lines are trimmed too.
-    is($config->{dbdir}, '/var/lib/munin', 'continuation lines are trimmed');
+    # Whitespace between parts is preserved, but leading/trailing is trimmed
+    is($config->{dbdir}, '/var/lib    /munin', 'whitespace between parts preserved');
 };
 
 subtest 'three line continuation' => sub {
     my $text = "dbdir /var\\\n    /lib\\\n    /munin\n";
     my $config = parse_config_string($text);
-    is($config->{dbdir}, '/var/lib/munin', 'three lines joined');
+    is($config->{dbdir}, '/var    /lib    /munin', 'three lines joined with whitespace');
 };
 
 subtest 'continuation then normal line' => sub {
     my $text = "dbdir /var/lib\\\n    /munin\nlogdir /var/log/munin\n";
     my $config = parse_config_string($text);
-    is($config->{dbdir}, '/var/lib/munin', 'continuation works');
+    is($config->{dbdir}, '/var/lib    /munin', 'continuation works');
     is($config->{logdir}, '/var/log/munin', 'normal line works');
 };
 
