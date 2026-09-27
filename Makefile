@@ -239,7 +239,11 @@ docker-dev-stop:
 # Run tests in Docker — same env as CI
 docker-test:
 	$(DOCKER) run --rm --shm-size=128m --add-host testing.acme.com:127.0.0.1 \
-		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build test'
+		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build test $(TESTS)'
+
+docker-test-one:
+	$(DOCKER) run --rm --shm-size=128m --add-host testing.acme.com:127.0.0.1 \
+		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build test --test-files t/$(FILE)'
 
 # Run lint in Docker
 docker-lint:
