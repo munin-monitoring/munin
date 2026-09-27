@@ -8,9 +8,27 @@ use lib qw(lib t/lib);
 
 use Test::More;
 use Time::Local;
-use Munin::Master::Utils qw(munin_time faketime faketime_delta);
+use Munin::Master::Utils qw(munin_time faketime faketime_delta parse_duration);
 
 # ============================================================================
+
+# ============================================================================
+# TESTS: parse_duration
+# ============================================================================
+
+subtest 'parse_duration' => sub {
+    is(parse_duration('1s'), 1, '1s');
+    is(parse_duration('30s'), 30, '30s');
+    is(parse_duration('1m'), 60, '1m');
+    is(parse_duration('30m'), 1800, '30m');
+    is(parse_duration('1h'), 3600, '1h');
+    is(parse_duration('12h'), 43200, '12h');
+    is(parse_duration('1d'), 86400, '1d');
+    is(parse_duration('7d'), 604800, '7d');
+    is(parse_duration('1w'), 604800, '1w');
+    is(parse_duration('2w'), 1209600, '2w');
+    is(parse_duration('invalid'), undef, 'invalid returns undef');
+};
 # TESTS: munin_time returns real time by default
 # ============================================================================
 
