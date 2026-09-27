@@ -525,47 +525,6 @@ sub parse_config {
 }
 
 
-sub look_up {
-	# The path through the hash works out to:
-	# $self->{groups}{localdomain}[...]{hosts}{localhost}
-
-    my ($self,$key) = @_;
-
-    my (@groups) = split(';',$key);
-    my $host = pop(@groups);
-
-    my $value = $self;
-
-    for my $group (@groups) {
-	if (defined $value and
-	    defined $value->{groups} and
-	    defined $value->{groups}{$group}) {
-
-	    $value = $value->{groups}{$group};
-
-	} else {
-	    return;
-	}
-    }
-
-    if (defined $value and
-	defined $value->{hosts} and
-	defined $value->{hosts}{$host}) {
-
-	return $value->{hosts}{$host};
-    };
-
-    return;
-}
-
-
-sub get_groups_and_hosts {
-    my ($self) = @_;
-
-    return $self->{groups};
-}
-
-
 sub get_all_hosts {
     # Note! This method is implemented in multiple classes to make the
     # recursion complete.
@@ -576,15 +535,6 @@ sub get_all_hosts {
         push @hosts, $group->get_all_hosts;
     }
     return @hosts;
-}
-
-
-
-sub set {
-    my ($self, $config) = @_;
-
-    # Note: config overrides self.
-    %$self = (%$self, %$config);
 }
 
 
@@ -620,16 +570,6 @@ Set a value in the config, where $longkey is the full ;:. separated value.
 Populates the fields of $config from the configuration file referred to by
 filehandle $io.
 
-=item B<look_up>
-
-  my $value = $config->look_up($key);
-
-Look up a group/host by a key such as "localdomain;localhost" etc.
-If the path does not exist create it with correct class and so on.
-
-Lookup ends at host name.  If something is missing along the way
-undef is returned.
-
 =item B<get_groups_and_hosts>
 
   my $gah = $config->get_groups_and_hosts();
@@ -641,12 +581,6 @@ Returns all the groups and hosts defined in the configuration.
   my $hosts = $config->get_all_hosts();
 
 Returns a list of all the hosts defined in the configuration.
-
-=item B<set>
-
-  $config->set(\%attrs);
-
-Sets the keys and values in $config to those in %attrs.
 
 =back
 
