@@ -25,15 +25,11 @@ $config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
 sub new {
     my ($class) = @_;
 
-    # This steals the groups from the master instance of the config.
-    my $gah = $config->get_groups_and_hosts();
-
     my $self = bless {
         old_service_configs => {},
         old_version         => undef,
         workers             => [],
         failed_workers      => [],
-        group_repository    => Munin::Master::GroupRepository->new($gah),
         config_dump_file    => "$config->{dbdir}/datafile",
     }, $class;
 }
@@ -141,7 +137,8 @@ sub get_param {
 }
 
 # Get all hosts from the DB with their attributes.
-# Returns arrayref of hashrefs with keys: host_name, grp_id, path, and all node_attr values.
+# Returns arrayref of Host objects loaded from DB.
+# Host objects have get_full_path() using the stored path.
 sub get_hosts {
 	my ($dbh) = @_;
 	my $dbh_local = $dbh || get_dbh(1);
@@ -173,7 +170,23 @@ sub get_hosts {
 		$row->{update} = int($row->{update}) if defined $row->{update};
 		$row->{update_priority} = int($row->{update_priority}) if defined $row->{update_priority};
 
-		push @hosts, $row;
+		# Create Host object with stored path
+		# Use a mock group that provides get_full_path via the stored path
+		my $stored_path = $row->{path};
+		my $mock_group = bless {
+			group_name => $row->{group_name},
+		}, 'Munin::Master::Group';
+
+		my $host = Munin::Master::Host->new(
+			$row->{name},
+			$mock_group,
+			$row
+		);
+
+		# Store path for get_full_path to use
+		$host->{_db_path} = $stored_path;
+
+		push @hosts, $host;
 	}
 
 	return \@hosts;
@@ -193,7 +206,7 @@ sub _create_rundir_if_missing {
 sub _create_workers {
     my ($self) = @_;
 
-    my @hosts = $self->{group_repository}->get_all_hosts();
+    my @hosts = @{ get_hosts() };
 
     # Use user-defined ordering, slow hosts should run first for
     # better global throughput, keep shuffle() to shuffle hosts within
@@ -202,7 +215,7 @@ sub _create_workers {
     @hosts = sort { $a->{update_priority} <=> $b->{update_priority} } @hosts;
 
     if (defined $config->{limit_hosts} && %{$config->{limit_hosts}}) {
-        @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts
+        @hosts = grep { $config->{limit_hosts}{$_->{name}} } @hosts
     }
 
     # Only create the "update yes" hosts

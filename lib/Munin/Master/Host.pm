@@ -39,6 +39,9 @@ sub get_full_path {
 
     my ($self) = @_;
 
+    # If loaded from DB, use stored path
+    return $self->{_db_path} if exists $self->{_db_path};
+
     my $group;
     my @groups = ( $self->{host_name} );
 
