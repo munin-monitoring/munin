@@ -124,27 +124,27 @@ subtest 'host attributes imported correctly' => sub {
     my $hosts = Munin::Master::Update::get_hosts();
 
     # Find app1.example.com
-    my ($app1) = grep { $_->{name} eq 'app1.example.com' } @$hosts;
+    my ($app1) = grep { $_->isa('Munin::Master::Host') && $_->{host_name} eq 'app1.example.com' } @$hosts;
     ok($app1, 'Found app1.example.com');
     is($app1->{address}, '10.0.0.1', 'app1 address correct');
     is($app1->{port}, 4949, 'app1 port correct');
-    is($app1->{group_name}, 'web', 'app1 group correct');
-    like($app1->{path}, qr/web;app1\.example\.com/, 'app1 path correct');
+    is($app1->{group}{group_name}, 'web', 'app1 group correct');
+    like($app1->get_full_path, qr/web;app1\.example\.com/, 'app1 get_full_path works');
 
     # Find db1.example.com (has update=0)
-    my ($db1) = grep { $_->{name} eq 'db1.example.com' } @$hosts;
+    my ($db1) = grep { $_->isa('Munin::Master::Host') && $_->{host_name} eq 'db1.example.com' } @$hosts;
     ok($db1, 'Found db1.example.com');
     is($db1->{address}, '10.0.1.1', 'db1 address correct');
     is($db1->{port}, 4950, 'db1 port correct');
     is($db1->{update}, 0, 'db1 update disabled');
-    is($db1->{group_name}, 'db', 'db1 group correct');
+    is($db1->{group}{group_name}, 'db', 'db1 group correct');
 
     # Find web01.example.com (nested group)
-    my ($web01) = grep { $_->{name} eq 'web01.example.com' } @$hosts;
+    my ($web01) = grep { $_->isa('Munin::Master::Host') && $_->{host_name} eq 'web01.example.com' } @$hosts;
     ok($web01, 'Found web01.example.com');
     is($web01->{address}, '10.0.2.1', 'web01 address correct');
     is($web01->{update_priority}, 1, 'web01 update_priority correct');
-    like($web01->{path}, qr/prod;webservers;web01\.example\.com/, 'web01 path correct');
+    like($web01->get_full_path, qr/prod;webservers;web01\.example\.com/, 'web01 get_full_path works');
 };
 
 subtest 'groups exist in grp table' => sub {
