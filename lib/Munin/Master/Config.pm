@@ -532,6 +532,13 @@ sub parse_config {
 }
 
 
+sub get_groups_and_hosts {
+    my ($self) = @_;
+
+    return $self->{groups};
+}
+
+
 sub get_all_hosts {
     # Note! This method is implemented in multiple classes to make the
     # recursion complete.
