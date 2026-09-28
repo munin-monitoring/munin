@@ -54,6 +54,9 @@ sub run {
 		$config_old = $self->_db_params_update($dbh, $config);
 	}
 
+	# Import groups/hosts from config into SQL
+	$self->_db_groups_update();
+
 	$self->{workers} = $self->_create_workers();
         my $nb_workers = $self->_run_workers();
 
@@ -135,6 +138,45 @@ sub get_param {
 	my $sql = 'SELECT value FROM param WHERE name = ?';
 	my ($param_value) = $dbh_local->selectrow_array($sql, undef, ($param_name));
 	return $param_value;
+}
+
+# Get all hosts from the DB with their attributes.
+# Returns arrayref of hashrefs with keys: host_name, grp_id, path, and all node_attr values.
+sub get_hosts {
+	my ($dbh) = @_;
+	my $dbh_local = $dbh || get_dbh(1);
+
+	my $sql = q{
+		SELECT n.id, n.name, n.path, g.name as group_name
+		FROM node n
+		JOIN grp g ON g.id = n.grp_id
+		ORDER BY n.name
+	};
+
+	my $sth = $dbh_local->prepare($sql);
+	$sth->execute();
+
+	my @hosts;
+	while (my $row = $sth->fetchrow_hashref) {
+		# Get all attributes for this node
+		my $attr_sth = $dbh_local->prepare(
+			'SELECT name, value FROM node_attr WHERE id = ?'
+		);
+		$attr_sth->execute($row->{id});
+
+		while (my $attr = $attr_sth->fetchrow_hashref) {
+			$row->{$attr->{name}} = $attr->{value};
+		}
+
+		# Convert numeric strings back
+		$row->{port} = int($row->{port}) if defined $row->{port};
+		$row->{update} = int($row->{update}) if defined $row->{update};
+		$row->{update_priority} = int($row->{update_priority}) if defined $row->{update_priority};
+
+		push @hosts, $row;
+	}
+
+	return \@hosts;
 }
 
 sub _create_rundir_if_missing {
@@ -382,6 +424,84 @@ sub _db_params_update {
 
 	$dbh->commit();
 	return \%old_params;
+}
+
+# Import groups and hosts from config tree into SQL.
+# Stores group hierarchy in grp, hosts in node, and connection info in node_attr.
+sub _db_groups_update {
+	my ($self) = @_;
+
+	my $dbh = get_dbh();
+
+	# Clear existing groups, nodes, and node attributes
+	$dbh->do('DELETE FROM node_attr');
+	$dbh->do('DELETE FROM node');
+	$dbh->do('DELETE FROM grp WHERE id != 0');  # Keep root
+
+	my $sth_grp = $dbh->prepare('INSERT INTO grp (p_id, name) VALUES (?, ?)');
+	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
+	my $sth_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
+
+	# Walk the config tree for groups and hosts
+	my $groups = $config->{groups};
+	if ($groups && ref $groups eq 'HASH') {
+		$self->_import_groups_recursive($dbh, $groups, 0, []);
+	}
+
+	$dbh->commit();
+	INFO "Imported groups and hosts from config into SQL";
+}
+
+# Recursively import groups and their hosts into the DB.
+sub _import_groups_recursive {
+	my ($self, $dbh, $groups, $p_id, $path_parts) = @_;
+
+	my $sth_grp = $dbh->prepare('INSERT INTO grp (p_id, name) VALUES (?, ?)');
+	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
+	my $sth_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
+
+	for my $group_name (sort keys %$groups) {
+		my $group = $groups->{$group_name};
+		next unless ref $group;  # Skip non-refs (blessed objects are ok)
+
+		# Insert group
+		$sth_grp->execute($p_id, $group_name);
+		my $grp_id = $dbh->last_insert_id(undef, undef, 'grp', 'id');
+
+		# Track path for this group
+		my @current_path = (@$path_parts, $group_name);
+
+		# Import hosts in this group
+		my $hosts = $group->{hosts};
+		if ($hosts && ref $hosts) {
+			for my $host_name (sort keys %$hosts) {
+				my $host = $hosts->{$host_name};
+				next unless ref $host;
+
+				# Build full path: group1;group2;host
+				my $full_path = join(';', @current_path, $host_name);
+
+				# Insert node
+				$sth_node->execute($grp_id, $host_name, $full_path);
+				my $node_id = $dbh->last_insert_id(undef, undef, 'node', 'id');
+
+				# Insert node attributes
+				for my $attr (qw(address port update update_priority use_node_name)) {
+					my $val = $host->{$attr};
+					next unless defined $val;
+					# Convert Infinity to a large number for storage
+					$val = 999999 if $val eq 'Infinity';
+					$sth_attr->execute($node_id, $attr, $val);
+				}
+			}
+		}
+
+		# Recurse into nested groups
+		my $nested_groups = $group->{groups};
+		if ($nested_groups && ref $nested_groups) {
+			$self->_import_groups_recursive($dbh, $nested_groups, $grp_id, \@current_path);
+		}
+	}
 }
 
 # Import contacts and config overrides from config tree into SQL.
