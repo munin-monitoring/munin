@@ -1,0 +1,185 @@
+#!/usr/bin/perl
+# Tests for Munin::Master::Update - _db_groups_update and get_hosts
+#
+# Tests importing groups/hosts from config tree into SQLite
+
+use strict;
+use warnings;
+
+use lib qw(lib t/lib);
+
+use Test::More;
+use Test::Exception;
+use File::Temp qw(tempfile);
+use IO::Handle;
+
+use lib qw(lib);
+
+# ============================================================================
+# SETUP: Create a temp DB and config
+# ============================================================================
+
+# Reset config singleton
+delete $INC{'lib/Munin/Master/Config.pm'};
+require Munin::Master::Config;
+
+# Create temp database
+my ($fh, $dbpath) = tempfile(CLEANUP => 1, SUFFIX => '.db');
+close $fh;
+
+# Create config instance and parse test config
+my $config_obj = Munin::Master::Config->instance();
+my $config = $config_obj->{config};
+
+# Set up dbdir for the test
+$config->{dbdir} = '/tmp/munin_test';
+
+# Parse a test config with groups and hosts
+my $test_config = <<'EOF';
+dbdir /var/lib/munin
+tmpldir /etc/munin/templates
+fork 1
+timeout 180
+
+[web;app1.example.com]
+    address 10.0.0.1
+    port 4949
+
+[web;app2.example.com]
+    address 10.0.0.2
+
+[db;db1.example.com]
+    address 10.0.1.1
+    port 4950
+    update 0
+
+[prod;webservers;web01.example.com]
+    address 10.0.2.1
+    update_priority 1
+EOF
+
+my $io = IO::Handle->new;
+open($io, '<', \$test_config) or die "Cannot open string: $!";
+$config->parse_config($io);
+close $io;
+
+# Now test the import
+
+# Load Update.pm
+require Munin::Master::Update;
+
+# Create a mock Update object (we don't need to actually run update)
+my $update = bless {
+    config => $config,
+}, 'Munin::Master::Update';
+
+# Override get_dbh to use our temp DB
+no warnings 'redefine';
+*Munin::Master::Update::get_dbh = sub {
+    my ($is_read_only) = @_;
+    use DBI;
+    my $dbh = DBI->connect(
+        "dbi:SQLite:dbname=$dbpath",
+        '', '',
+        {
+            RaiseError => 1,
+            AutoCommit => 0,
+            sqlite_unicode => 1,
+        }
+    ) or die "Cannot connect: $DBI::errstr";
+    return $dbh;
+};
+use warnings 'redefine';
+
+# Initialize schema
+{
+    my $dbh = Munin::Master::Update::get_dbh();
+    $update->_db_init($dbh);
+    $dbh->disconnect();
+}
+
+# Test 1: Import groups
+subtest 'import groups from config' => sub {
+    # Run the import
+    eval { $update->_db_groups_update() };
+    ok(!$@, '_db_groups_update runs without error');
+    diag($@) if $@;
+
+    # Verify with get_hosts
+    my $hosts = Munin::Master::Update::get_hosts();
+    ok(ref $hosts eq 'ARRAY', 'get_hosts returns arrayref');
+    is(scalar @$hosts, 4, 'Found 4 hosts');
+
+    # Check host names
+    my @host_names = sort map { $_->{name} } @$hosts;
+    is_deeply(\@host_names, [
+        'app1.example.com',
+        'app2.example.com',
+        'db1.example.com',
+        'web01.example.com',
+    ], 'Host names are correct');
+};
+
+subtest 'host attributes imported correctly' => sub {
+    my $hosts = Munin::Master::Update::get_hosts();
+
+    # Find app1.example.com
+    my ($app1) = grep { $_->{name} eq 'app1.example.com' } @$hosts;
+    ok($app1, 'Found app1.example.com');
+    is($app1->{address}, '10.0.0.1', 'app1 address correct');
+    is($app1->{port}, 4949, 'app1 port correct');
+    is($app1->{group_name}, 'web', 'app1 group correct');
+    like($app1->{path}, qr/web;app1\.example\.com/, 'app1 path correct');
+
+    # Find db1.example.com (has update=0)
+    my ($db1) = grep { $_->{name} eq 'db1.example.com' } @$hosts;
+    ok($db1, 'Found db1.example.com');
+    is($db1->{address}, '10.0.1.1', 'db1 address correct');
+    is($db1->{port}, 4950, 'db1 port correct');
+    is($db1->{update}, 0, 'db1 update disabled');
+    is($db1->{group_name}, 'db', 'db1 group correct');
+
+    # Find web01.example.com (nested group)
+    my ($web01) = grep { $_->{name} eq 'web01.example.com' } @$hosts;
+    ok($web01, 'Found web01.example.com');
+    is($web01->{address}, '10.0.2.1', 'web01 address correct');
+    is($web01->{update_priority}, 1, 'web01 update_priority correct');
+    like($web01->{path}, qr/prod;webservers;web01\.example\.com/, 'web01 path correct');
+};
+
+subtest 'groups exist in grp table' => sub {
+    my $dbh = Munin::Master::Update::get_dbh();
+
+    # Count groups (excluding root)
+    my ($count) = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM grp WHERE id != 0'
+    );
+    is($count, 4, 'Found 4 groups (web, db, prod, webservers)');
+
+    # Check group names
+    my $sth = $dbh->prepare('SELECT name FROM grp WHERE id != 0 ORDER BY name');
+    $sth->execute();
+    my @names;
+    while (my ($name) = $sth->fetchrow_array) {
+        push @names, $name;
+    }
+    is_deeply(\@names, ['db', 'prod', 'web', 'webservers'], 'Group names correct');
+
+    $dbh->disconnect();
+};
+
+subtest 're-import clears old data' => sub {
+    # Add a host, then re-import
+    my $dbh = Munin::Master::Update::get_dbh();
+    $dbh->do('DELETE FROM node');
+    $dbh->do('DELETE FROM grp WHERE id != 0');
+    $dbh->disconnect();
+
+    # Re-import
+    $update->_db_groups_update();
+
+    my $hosts = Munin::Master::Update::get_hosts();
+    is(scalar @$hosts, 4, 'Re-import restores all 4 hosts');
+};
+
+done_testing();
