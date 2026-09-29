@@ -56,8 +56,8 @@ sub run {
 	$self->{workers} = $self->_create_workers();
         my $nb_workers = $self->_run_workers();
 
-	# Import contacts from config into SQL
-	$self->_db_contacts_update();
+	# Import contacts and config overrides into SQL
+	$self->_db_import_config();
 
 	# Run limits after update — evaluate thresholds and send notifications
 	$self->_run_limits();
@@ -190,6 +190,39 @@ sub get_hosts {
 	}
 
 	return \@hosts;
+}
+
+# Get a config override value from the config_override table.
+# Looks up by (host_name, service_name, field_name, attr_name).
+# Returns undef if not found.
+sub get_override {
+	my ($host_name, $service_name, $field_name, $attr_name, $dbh) = @_;
+	my $dbh_local = $dbh || get_dbh(1);
+
+	# Try exact match first (field-level override)
+	my ($value) = $dbh_local->selectrow_array(
+		'SELECT value FROM config_override WHERE host_name = ? AND service_name = ? AND field_name = ? AND name = ?',
+		undef, $host_name, $service_name // '', $field_name // '', $attr_name
+	);
+
+	return $value if defined $value;
+
+	# Fall back to service-level override (empty field_name)
+	if (defined $field_name && $field_name ne '') {
+		($value) = $dbh_local->selectrow_array(
+			'SELECT value FROM config_override WHERE host_name = ? AND service_name = ? AND field_name = ? AND name = ?',
+			undef, $host_name, $service_name // '', '', $attr_name
+		);
+		return $value if defined $value;
+	}
+
+	# Fall back to host-level override (empty service and field)
+	($value) = $dbh_local->selectrow_array(
+		'SELECT value FROM config_override WHERE host_name = ? AND service_name = ? AND field_name = ? AND name = ?',
+		undef, $host_name, '', '', $attr_name
+	);
+
+	return $value;
 }
 
 sub _create_rundir_if_missing {
@@ -407,6 +440,17 @@ sub _db_init {
 	$dbh->do("CREATE TABLE IF NOT EXISTS override (ds_id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_override ON override (ds_id, name)");
 
+	# Config import overrides — raw config values keyed by host/service/field
+	# Stores everything from munin.conf before inheritance resolution
+	$dbh->do("CREATE TABLE IF NOT EXISTS config_override (
+		host_name VARCHAR NOT NULL,
+		service_name VARCHAR NOT NULL DEFAULT '',
+		field_name VARCHAR NOT NULL DEFAULT '',
+		name VARCHAR NOT NULL,
+		value VARCHAR,
+		PRIMARY KEY (host_name, service_name, field_name, name)
+	)");
+
 	# Initialise the grp _root_ node if not present
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
 		$dbh->do("INSERT INTO grp (id) VALUES (0);");
@@ -519,20 +563,21 @@ sub _import_groups_recursive {
 
 # Import contacts and config overrides from config tree into SQL.
 # This is the ONLY time we walk the config tree — after this, everything reads from SQL.
-sub _db_contacts_update {
+sub _db_import_config {
 	my ($self) = @_;
 
 	my $dbh = get_dbh();
 
-	# Clear existing contacts and overrides
+	# Clear existing contacts, overrides, and config overrides
 	$dbh->do('DELETE FROM contact_attr');
 	$dbh->do('DELETE FROM contact');
 	$dbh->do('DELETE FROM override');
+	$dbh->do('DELETE FROM config_override');
 
 	my $sth_c  = $dbh->prepare('INSERT INTO contact (name) VALUES (?)');
 	my $sth_ca = $dbh->prepare('INSERT INTO contact_attr (id, name, value) VALUES (?, ?, ?)');
 
-	# Walk the config tree for contacts — this is the ONLY config tree walk
+	# Walk the config tree for contacts
 	my $contacts = $config->{"contact"};
 	if ($contacts && ref $contacts eq 'HASH') {
 		for my $child (values %$contacts) {
@@ -554,53 +599,52 @@ sub _db_contacts_update {
 		}
 	}
 
-	# Import config overrides for warning/critical/unknown_limit from config tree
-	# Config values override plugin defaults via the override table
-	my $sth_ov = $dbh->prepare(q{
-		INSERT INTO override (ds_id, name, value)
-		SELECT ds.id, ?, ?
-		FROM ds
-		INNER JOIN service s ON s.id = ds.service_id
-		INNER JOIN node n ON n.id = s.node_id
-		WHERE ds.name = ? AND s.name = ? AND n.name = ?
+	# Import ALL config overrides into config_override table
+	# This stores raw config values keyed by (host, service, field, name)
+	my $sth_co = $dbh->prepare(q{
+		INSERT OR REPLACE INTO config_override (host_name, service_name, field_name, name, value)
+		VALUES (?, ?, ?, ?, ?)
 	});
 
 	# Walk groups -> hosts -> services -> fields for overrides
 	my $groups = $config->{groups};
-	if ($groups && ref $groups eq 'HASH') {
+	if ($groups && ref $groups) {
 		for my $group (values %$groups) {
-			next unless ref $group eq 'HASH';
+			next unless ref $group;
 			my $hosts = $group->{hosts} || next;
-			next unless ref $hosts eq 'HASH';
+			next unless ref $hosts;
 
 			for my $host (values %$hosts) {
-				next unless ref $host eq 'HASH';
-				my $host_name = $host->{_}->{name} // next;
-				my $services = $host->{services} || next;
-				next unless ref $services eq 'HASH';
+				next unless ref $host;
+				my $host_name = $host->{host_name} // next;
 
-				for my $service (values %$services) {
-					next unless ref $service eq 'HASH';
-					my $service_name = $service->{_}->{name} // next;
+				# Import host-level overrides (e.g., timeout, retries)
+				# Host attributes are stored directly in the host hash
+				for my $key (keys %$host) {
+					next if grep { $key eq $_ } qw(host_name group groups services);
+					my $val = $host->{$key};
+					next unless defined $val;
+					# Skip service.field attributes (contain dots)
+					next if $key =~ /\./;
+					$sth_co->execute($host_name, '', '', $key, $val);
+				}
 
-					# Check service-level overrides
-					for my $key (qw(warning critical unknown_limit)) {
-						my $val = $service->{_}->{$key};
-						next unless defined $val;
-						# Service-level override applies to all fields
-						$sth_ov->execute($key, $val, '.*', $service_name, $host_name);
-					}
+				# Import service.field overrides from flattened keys
+				# Keys like 'cpu.graph_title', 'cpu.user.warning' etc.
+				for my $key (keys %$host) {
+					next unless $key =~ /^(\w+)\.(.+)$/;
+					my ($service_name, $rest) = ($1, $2);
+					my $val = $host->{$key};
+					next unless defined $val;
 
-					# Check field-level overrides
-					for my $field (values %$service) {
-						next unless ref $field eq 'HASH';
-						my $field_name = $field->{_}->{name} // next;
-
-						for my $key (qw(warning critical unknown_limit)) {
-							my $val = $field->{$key};
-							next unless defined $val;
-							$sth_ov->execute($key, $val, $field_name, $service_name, $host_name);
-						}
+					# Check if it's a service-level or field-level override
+					if ($rest =~ /^(\w+)\.(.+)$/) {
+						# Field-level: service.field.attr (e.g., cpu.user.warning)
+						my ($field_name, $attr) = ($1, $2);
+						$sth_co->execute($host_name, $service_name, $field_name, $attr, $val);
+					} else {
+						# Service-level: service.attr (e.g., cpu.graph_title)
+						$sth_co->execute($host_name, $service_name, '', $rest, $val);
 					}
 				}
 			}
@@ -608,7 +652,7 @@ sub _db_contacts_update {
 	}
 
 	$dbh->commit();
-	INFO "Imported contacts and overrides from config into SQL";
+	INFO "Imported contacts and config overrides from config into SQL";
 }
 
 1;

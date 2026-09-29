@@ -182,4 +182,68 @@ subtest 're-import clears old data' => sub {
     is(scalar @$hosts, 4, 'Re-import restores all 4 hosts');
 };
 
+# Test config_override import
+# First, let's add some service/field config to test with
+my $test_config_with_overrides = <<'EOF';
+dbdir /var/lib/munin
+tmpldir /etc/munin/templates
+
+[web;app1.example.com]
+    address 10.0.0.1
+    port 4949
+    timeout 60
+
+[web;app1.example.com:cpu]
+    graph_title CPU Usage
+    user.warning 80
+    user.critical 95
+    user.label User
+
+[db;db1.example.com]
+    address 10.0.1.1
+    timeout 120
+EOF
+
+# Re-parse config with overrides
+my $io2 = IO::Handle->new;
+open($io2, '<', \$test_config_with_overrides) or die "Cannot open string: $!";
+$config->parse_config($io2);
+close $io2;
+
+# Re-import groups
+$update->_db_groups_update();
+
+subtest 'config overrides imported' => sub {
+    # Import config
+    eval { $update->_db_import_config() };
+    ok(!$@, '_db_import_config runs without error');
+    diag($@) if $@;
+
+    # Check host-level override
+    my $val = Munin::Master::Update::get_override('app1.example.com', '', '', 'timeout');
+    is($val, '60', 'Host-level timeout override found');
+
+    # Check service-level override
+    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', '', 'graph_title');
+    is($val, 'CPU Usage', 'Service-level graph_title override found');
+
+    # Check field-level override
+    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'warning');
+    is($val, '80', 'Field-level warning override found');
+
+    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'critical');
+    is($val, '95', 'Field-level critical override found');
+
+    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'label');
+    is($val, 'User', 'Field-level label override found');
+
+    # Check db1 timeout
+    $val = Munin::Master::Update::get_override('db1.example.com', '', '', 'timeout');
+    is($val, '120', 'db1 timeout override found');
+
+    # Check nonexistent returns undef
+    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'nonexistent');
+    is($val, undef, 'Nonexistent override returns undef');
+};
+
 done_testing();
