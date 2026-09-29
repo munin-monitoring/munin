@@ -68,16 +68,21 @@ EOF
 
 
 generate_version_string_from_dir() {
-    basename "`pwd`" | grep -e '^munin-' | cut -c 7-
+    basename "$1" | grep -e '^munin-' | cut -c 7-
 }
 
+DIRNAME=`dirname "$0"`
+BASEDIR=`realpath "${DIRNAME}"`
 
-if [ -s "RELEASE" ]; then
-    cat RELEASE
+if [ -s "${BASEDIR}/RELEASE" ]; then
+    cat "${BASEDIR}/RELEASE"
 elif [ "`git rev-parse --is-inside-work-tree 2>/dev/null`" = "true" ]; then
     generate_version_string
-elif [ -n "`generate_version_string_from_dir`" ]; then
-    generate_version_string_from_dir
 else
-    echo "unknown"
+    VERSIONFROMDIR=`generate_version_string_from_dir "${BASEDIR}"`
+    if [ -n "${VERSIONFROMDIR}" ]; then
+	echo "${VERSIONFROMDIR}"
+    else
+	echo "unknown"
+    fi
 fi
