@@ -18,9 +18,6 @@ use base qw(Munin::Common::Config);
 # Please note that the munin-node configuration is also based on
 # Munin::Common::Config but is quite a lot simpler with regards to syntax
 #
-# The Class Munin::Master::GroupRepository is based on Munin::Master::Config
-# and contains a tree of Munin::Master::Group objects.
-#
 # The M::M::Group objects can be nested.  Under a M::M::Group object there
 # can be a (flat) collection of M::M::Host objects.  The M::M::Host class
 # is based in M::M::Group.
@@ -532,26 +529,6 @@ sub parse_config {
 }
 
 
-sub get_groups_and_hosts {
-    my ($self) = @_;
-
-    return $self->{groups};
-}
-
-
-sub get_all_hosts {
-    # Note! This method is implemented in multiple classes to make the
-    # recursion complete.
-    my ($self) = @_;
-
-    my @hosts = ();
-    for my $group (values %{$self->{groups}}) {
-        push @hosts, $group->get_all_hosts;
-    }
-    return @hosts;
-}
-
-
 1;
 
 
@@ -583,18 +560,6 @@ Set a value in the config, where $longkey is the full ;:. separated value.
 
 Populates the fields of $config from the configuration file referred to by
 filehandle $io.
-
-=item B<get_groups_and_hosts>
-
-  my $gah = $config->get_groups_and_hosts();
-
-Returns all the groups and hosts defined in the configuration.
-
-=item B<get_all_hosts>
-
-  my $hosts = $config->get_all_hosts();
-
-Returns a list of all the hosts defined in the configuration.
 
 =back
 

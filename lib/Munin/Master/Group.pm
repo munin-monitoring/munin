@@ -1,7 +1,5 @@
 package Munin::Master::Group;
 
-use base qw(Munin::Master::GroupRepository);
-
 
 use warnings;
 use strict;
@@ -52,7 +50,7 @@ Groups can be nested.
 
 =item B<new>
 
-  my $group = Munin::Master::Group->new($name, $parent);
+  my $group = Munin::Master::Group->new($name);
 
 Constructor.  $name is the name of the group.
 
