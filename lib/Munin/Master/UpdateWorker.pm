@@ -15,6 +15,7 @@ use File::Spec;
 use IO::Socket::INET;
 use Munin::Master::Config;
 use Munin::Master::Node;
+use Munin::Master::Update;
 use Munin::Master::Utils;
 use RRDs;
 use Data::Dumper;
@@ -510,10 +511,44 @@ sub _db_ds_update {
 		$ds_id = _get_last_insert_id($dbh, "ds");
 	}
 
+	# Apply config overrides (wins over node-reported values)
+	# Get host and service names for override lookup
+	my ($node_name, $service_name) = $self->_get_names_for_ds($ds_id);
+	if (defined $node_name) {
+		for my $attr (keys %$attrs_new) {
+			my $override = Munin::Master::Update::get_override(
+				$node_name, $service_name, $field_name, $attr, $dbh
+			);
+			if (defined $override) {
+				DEBUG "_db_ds_update: override $attr: $attrs_new->{$attr} -> $override";
+				$attrs_new->{$attr} = $override;
+			}
+		}
+	}
+
 	# Diff and apply ds_attr changes
 	$self->_db_diff_attrs('ds_attr', 'id', $ds_id, $attrs_old, $attrs_new);
 
 	return $ds_id;
+}
+
+# Get node name and service name for a ds_id (for override lookup)
+sub _get_names_for_ds {
+	my ($self, $ds_id) = @_;
+	my $dbh = $self->{dbh};
+
+	my $sth = $dbh->prepare_cached("
+		SELECT n.name, s.name
+		FROM ds d
+		INNER JOIN service s ON s.id = d.service_id
+		INNER JOIN node n ON n.id = s.node_id
+		WHERE d.id = ?
+	");
+	$sth->execute($ds_id);
+	my ($node_name, $service_name) = $sth->fetchrow_array();
+	$sth->finish();
+
+	return ($node_name, $service_name);
 }
 
 sub _db_state_update {
