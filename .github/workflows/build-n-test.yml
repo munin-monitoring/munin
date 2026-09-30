@@ -69,6 +69,9 @@ jobs:
       - name: Show test failures
         if: failure()
         run: |
+          echo "=== Failed Test Files ==="
+          grep -E "\.t.*(Failed|Failed \d)" test-output.log | head -20
+          echo ""
           echo "=== Test Failure Summary ==="
           grep -E "^(not ok|Failed|ERROR|#.*Failed)" test-output.log | head -50
           echo ""
