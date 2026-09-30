@@ -247,3 +247,158 @@ No files changed in this session -- discussion only.
 2. **Create munin_master_stats plugin** -- Read stats files, emit performance graphs.
 
 3. **Continue DB-driven groups work** -- Remove config singleton, use get_override in UpdateWorker.
+
+---
+
+## Session 3: Architecture Discussion & Fixes (2026-09-30)
+
+### What We Did
+
+#### Removed config singleton from modules
+
+1. **HTML.pm** -- Removed `Config->instance()` fallbacks for tmpldir/staticdir, now uses only `get_param()`
+
+2. **Limits.pm** -- Removed module-level `$config`, replaced `$config->{dbdir}` with `get_param('dbdir', $dbh)`
+
+3. **Update.pm** -- Replaced runtime settings with `get_param()`:
+   - `_create_rundir_if_missing`: `get_param('rundir')`
+   - `_create_workers`: `get_param('limit_hosts')`
+   - `_run_workers`: `get_param('max_processes')`, `get_param('fork')`
+
+4. **UpdateWorker.pm** -- Added config override application in `_db_ds_update()`:
+   - Checks `config_override` table for each ds_attr
+   - Config overrides win over node-reported values
+   - Added `_get_names_for_ds()` helper
+
+#### Fixed test failures
+
+1. **rundir issue** -- `_create_rundir_if_missing` called `get_param('rundir')` before DB exists. Reverted to config singleton.
+
+2. **node table issue** -- `_get_names_for_ds()` queried `node` table which doesn't exist in tests. Wrapped in `eval`.
+
+#### CI improvements
+
+1. Added `script/show-test-failures` -- reusable script to show test failures
+2. Added `make docker-show-fail` target
+3. CI uploads `test-output.log` as artifact
+4. Failure summary shows which .t files failed
+
+### Architecture Discussion
+
+#### The singleton question
+
+User questioned why Config uses singleton pattern when static functions would be simpler:
+
+```perl
+# Current (singleton)
+my $config = Munin::Master::Config->instance()->{config};
+my $rundir = $config->{rundir};
+
+# Proposed (static)
+use Munin::Master::Config;
+my $rundir = Config::get('rundir');
+```
+
+**Consensus:** Move toward static functions. Config owns state in package variables.
+
+#### High-level API
+
+User clarified the API should be high-level. Callers don't need to know where values come from:
+
+```perl
+# Caller sees:
+Config::get('rundir')           # any config value
+Config::get_hosts()             # hosts from DB
+Config::get_override(...)       # override value
+Config::parse($file)            # parse munin.conf
+Config::import()                # import to DB
+
+# Caller doesn't see:
+Config::get_dbh()               # DB connection is internal
+```
+
+#### Module partitioning explored
+
+Considered reorganizing responsibilities:
+
+| Module | Current | Proposed |
+|--------|---------|----------|
+| Config.pm | parse, singleton | parse, get, import, get_hosts, get_override |
+| Update.pm | get_dbh, get_param, get_hosts, orchestration | orchestration only |
+| UpdateWorker.pm | node comm, data writes | node comm, data writes |
+
+**Conclusion:** "it isn't much better" -- keep current architecture until better idea emerges.
+
+#### Timer vs web access pattern
+
+Settled model:
+
+| Module | Run via | DB Access | Reason |
+|--------|---------|-----------|--------|
+| Update.pm | timer | RW | No inbound connectivity |
+| UpdateWorker.pm | timer (forked) | RW | No inbound connectivity |
+| Limits.pm | timer | RW | No inbound connectivity |
+| HTML.pm | web server | RO | Inbound traffic |
+| Graph.pm | web server | RO | Inbound traffic |
+
+### What We Learned
+
+#### Technical
+
+1. **Bootstrap problem** -- Some settings (dbdir, rundir) needed before DB exists. Can't use `get_param()` for these.
+
+2. **eval for defensive queries** -- When querying tables that may not exist in tests, wrap in `eval`.
+
+3. **PIPESTATUS in shell** -- `${PIPESTATUS[0]}` preserves exit code when piping through `tee`.
+
+#### Process
+
+1. **Architecture discussions are valuable** -- Even if we don't change code, documenting the thinking helps future decisions.
+
+2. **Fix tests before refactoring** -- User's approach: "keep as is and fix until I get a better idea overall".
+
+### What We Decided
+
+1. **Keep current architecture** -- Config singleton stays for now. Static functions are a future direction.
+
+2. **rundir uses config singleton** -- Bootstrap setting, needed before DB init.
+
+3. **Runtime settings use get_param()** -- max_processes, fork, limit_hosts read from DB.
+
+4. **Timer processes get RW, web gets RO** -- Clear security boundary.
+
+5. **Stats logging waits** -- Defer to future release.
+
+### Rules Added
+
+- **Bootstrap settings stay in config** -- Settings needed before DB init (dbdir, rundir) use config singleton.
+- **Runtime settings from DB** -- Settings needed after DB init use `get_param()`.
+- **Defensive queries in tests** -- Wrap table queries in `eval` when tables may not exist.
+
+### What We'd Do Differently
+
+1. **Think through bootstrap flow first** -- Should have realized rundir is needed before DB before changing it.
+
+2. **Test changes immediately** -- Running tests after each change would have caught issues faster.
+
+3. **Document architecture discussion earlier** -- The singleton/static debate took time; documenting sooner helps.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `lib/Munin/Master/HTML.pm` | Removed config singleton fallbacks |
+| `lib/Munin/Master/Limits.pm` | Removed module-level $config |
+| `lib/Munin/Master/Update.pm` | Use get_param for runtime settings |
+| `lib/Munin/Master/UpdateWorker.pm` | Apply config overrides during fetch |
+| `script/show-test-failures` | New: show test failures |
+| `Makefile` | Add docker-show-fail target |
+| `.github/workflows/build-n-test.yml` | Upload test log, show failures |
+
+### Next Steps
+
+1. **Wait for better architecture idea** -- Current state is working, can refactor later.
+
+2. **Stats logging** -- Defer to future release.
+
+3. **Consider static Config functions** -- When ready for bigger refactor.
