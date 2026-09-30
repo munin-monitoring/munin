@@ -533,20 +533,24 @@ sub _db_ds_update {
 }
 
 # Get node name and service name for a ds_id (for override lookup)
+# Returns empty list if tables don't exist yet (tests, fresh installs)
 sub _get_names_for_ds {
 	my ($self, $ds_id) = @_;
 	my $dbh = $self->{dbh};
 
-	my $sth = $dbh->prepare_cached("
-		SELECT n.name, s.name
-		FROM ds d
-		INNER JOIN service s ON s.id = d.service_id
-		INNER JOIN node n ON n.id = s.node_id
-		WHERE d.id = ?
-	");
-	$sth->execute($ds_id);
-	my ($node_name, $service_name) = $sth->fetchrow_array();
-	$sth->finish();
+	my ($node_name, $service_name);
+	eval {
+		my $sth = $dbh->prepare_cached("
+			SELECT n.name, s.name
+			FROM ds d
+			INNER JOIN service s ON s.id = d.service_id
+			INNER JOIN node n ON n.id = s.node_id
+			WHERE d.id = ?
+		");
+		$sth->execute($ds_id);
+		($node_name, $service_name) = $sth->fetchrow_array();
+		$sth->finish();
+	};
 
 	return ($node_name, $service_name);
 }
