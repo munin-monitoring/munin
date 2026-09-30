@@ -62,7 +62,18 @@ jobs:
 
       # Full test suite with coverage
       - name: Test with coverage
-        run: make docker-cover
+        run: |
+          make docker-cover 2>&1 | tee test-output.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Show test failures
+        if: failure()
+        run: |
+          echo "=== Test Failure Summary ==="
+          grep -E "^(not ok|Failed|ERROR|#.*Failed)" test-output.log | head -50
+          echo ""
+          echo "=== Detailed Failures ==="
+          grep -B2 -A5 "not ok" test-output.log | head -100
 
       # Upload coverage to Coveralls
       - name: Upload to Coveralls
