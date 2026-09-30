@@ -26,7 +26,14 @@ sub generate_sample_db {
     $dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
     $dbh->do("CREATE TABLE IF NOT EXISTS ds (id $db_serial_type PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR, type VARCHAR DEFAULT 'GAUGE', ordr INTEGER DEFAULT 0, unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
     $dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER NOT NULL, type VARCHAR NOT NULL, path VARCHAR NOT NULL, PRIMARY KEY(id,type))");
+    $dbh->do("CREATE TABLE IF NOT EXISTS url (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        path VARCHAR UNIQUE NOT NULL,
+        grp_id INTEGER REFERENCES grp(id),
+        node_id INTEGER REFERENCES node(id),
+        service_id INTEGER REFERENCES service(id),
+        CHECK ((grp_id IS NOT NULL) + (node_id IS NOT NULL) + (service_id IS NOT NULL) = 1)
+    )");
     $dbh->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR, last_epoch INTEGER, last_value VARCHAR, prev_epoch INTEGER, prev_value VARCHAR, alarm VARCHAR, num_unknowns INTEGER DEFAULT 0)");
     $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
     $dbh->do("CREATE TABLE IF NOT EXISTS contact (id $db_serial_type PRIMARY KEY, name VARCHAR UNIQUE)");
@@ -92,15 +99,15 @@ sub generate_sample_db {
             undef, $grp_id, $grp_name || $host, $path);
 
         # Insert group into url table
-        $dbh->do("INSERT OR IGNORE INTO url (id, type, path) VALUES (?, ?, ?)",
-            undef, $grp_id, "group", $path);
+        $dbh->do("INSERT OR IGNORE INTO url (path, grp_id) VALUES (?, ?)",
+            undef, $path, $grp_id);
 
         $dbh->do("INSERT OR IGNORE INTO node (id, grp_id, name, path) VALUES (?, ?, ?, ?)",
             undef, $node_id, $grp_id, $host, $path);
 
         # Insert node into url table
-        $dbh->do("INSERT OR IGNORE INTO url (id, type, path) VALUES (?, ?, ?)",
-            undef, $node_id, "node", $path);
+        $dbh->do("INSERT OR IGNORE INTO url (path, node_id) VALUES (?, ?)",
+            undef, $path, $node_id);
 
         # Set notify_alias for notification testing
         $dbh->do("INSERT OR IGNORE INTO node_attr (id, name, value) VALUES (?, 'notify_alias', ?)",
@@ -118,8 +125,8 @@ sub generate_sample_db {
             $dbh->do("INSERT OR IGNORE INTO service_attr (id, name, value) VALUES (?, 'contacts', 'testcontact')",
                 undef, $svc_id);
 
-            $dbh->do("INSERT OR IGNORE INTO url (id, type, path) VALUES (?, ?, ?)",
-                undef, $svc_id, "service", $svc_path);
+            $dbh->do("INSERT OR IGNORE INTO url (path, service_id) VALUES (?, ?)",
+                undef, $svc_path, $svc_id);
 
             my $scenario = $service_scenarios[$svc_idx % scalar(@service_scenarios)];
 

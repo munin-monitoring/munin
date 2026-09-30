@@ -55,7 +55,7 @@ my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 });
 
 # Get a valid service path for testing
-my ($valid_path) = $dbh->selectrow_array("SELECT path FROM url WHERE type = 'service' LIMIT 1");
+my ($valid_path) = $dbh->selectrow_array("SELECT path FROM url WHERE service_id IS NOT NULL LIMIT 1");
 diag("valid_path: $valid_path") if $valid_path;
 unless ($valid_path) {
 	diag("No services in test DB, skipping");
@@ -244,7 +244,7 @@ subtest 'pinpoint time range' => sub {
 subtest 'URL with dots in path' => sub {
 	# Some services have dots in their paths
 	my ($dot_path) = $dbh->selectrow_array(
-		"SELECT path FROM url WHERE type = 'service' AND path LIKE '%.%' LIMIT 1"
+		"SELECT path FROM url WHERE service_id IS NOT NULL AND path LIKE '%.%' LIMIT 1"
 	);
 	if ($dot_path) {
 		my $output = capture_request("/$dot_path-hour.png");

@@ -106,7 +106,7 @@ is($update->run(), UPDATE_RUNS, "update run populates DB");
 
 my $dbh = Munin::Master::Update::get_dbh(1);
 my $services = $dbh->selectall_arrayref(
-	"SELECT path FROM url WHERE type = ?", {}, "service"
+	"SELECT path FROM url WHERE service_id IS NOT NULL"
 );
 ok(scalar @$services > 0, "DB has services");
 

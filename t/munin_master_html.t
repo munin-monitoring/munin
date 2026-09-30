@@ -74,9 +74,9 @@ my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 });
 
 # Get valid paths for testing
-my ($valid_service_path) = $dbh->selectrow_array("SELECT path FROM url WHERE type = 'service' LIMIT 1");
-my ($valid_group_path) = $dbh->selectrow_array("SELECT path FROM url WHERE type = 'group' LIMIT 1");
-my ($valid_node_path) = $dbh->selectrow_array("SELECT path FROM url WHERE type = 'node' LIMIT 1");
+my ($valid_service_path) = $dbh->selectrow_array("SELECT path FROM url WHERE service_id IS NOT NULL LIMIT 1");
+my ($valid_group_path) = $dbh->selectrow_array("SELECT path FROM url WHERE grp_id IS NOT NULL LIMIT 1");
+my ($valid_node_path) = $dbh->selectrow_array("SELECT path FROM url WHERE node_id IS NOT NULL LIMIT 1");
 
 diag("service: $valid_service_path, group: $valid_group_path, node: $valid_node_path");
 

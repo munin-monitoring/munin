@@ -93,8 +93,8 @@ sub insert_svc {
         undef, $o{id}, $o{node_id}, $o{name}, $o{path}, $o{title});
     $dbh->do("INSERT OR IGNORE INTO service_attr (id, name, value) VALUES (?, 'contacts', 'testcontact')",
         undef, $o{id});
-    $dbh->do("INSERT OR IGNORE INTO url (id, type, path) VALUES (?, 'service', ?)",
-        undef, $o{id}, $o{path});
+    $dbh->do("INSERT OR IGNORE INTO url (path, service_id) VALUES (?, ?)",
+        undef, $o{path}, $o{id});
 }
 
 sub remove_svc {
@@ -105,7 +105,7 @@ sub remove_svc {
         $dbh->do("DELETE FROM ds_attr WHERE id = ?", undef, $row->[0]);
     }
     $dbh->do("DELETE FROM ds WHERE service_id = ?", undef, $svc_id);
-    $dbh->do("DELETE FROM url WHERE id = ? AND type = 'service'", undef, $svc_id);
+    $dbh->do("DELETE FROM url WHERE service_id = ?", undef, $svc_id);
     $dbh->do("DELETE FROM service WHERE id = ?", undef, $svc_id);
 }
 
@@ -325,7 +325,7 @@ is(alarm_of($base_ds + 2), 'ok', "u5: dns/errors recovered → ok");
     is($state_count, $ds_count, "every ds has a state entry");
 
     my $svc_no_url = $dbh->selectrow_array(
-        "SELECT count(*) FROM service s WHERE NOT EXISTS (SELECT 1 FROM url u WHERE u.id=s.id AND u.type='service')"
+        "SELECT count(*) FROM service s WHERE NOT EXISTS (SELECT 1 FROM url u WHERE u.service_id=s.id)"
     );
     is($svc_no_url, 0, "every service has a URL");
 

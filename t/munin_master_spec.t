@@ -73,7 +73,7 @@ subtest 'SampleDB structure' => sub {
     ok(exists $ds_types{DERIVE}, "DERIVE type exists");
     ok(exists $ds_types{COUNTER}, "COUNTER type exists");
 
-    my $urls = $dbh->selectall_arrayref("SELECT id, type, path FROM url ORDER BY id");
+    my $urls = $dbh->selectall_arrayref("SELECT grp_id, node_id, service_id, path FROM url ORDER BY id");
     ok(scalar @$urls >= 20, "URLs created");
 
     my $state = $dbh->selectall_arrayref("SELECT id, type, alarm FROM state WHERE type = 'ds'");
