@@ -7,7 +7,6 @@ use POSIX;
 use HTML::Template::Pro;
 
 use Munin::Master::Utils;
-use Munin::Master::Config;
 
 use Munin::Common::Logger;
 
@@ -55,8 +54,7 @@ sub handle_request
 			gif => "image/gif",
 		);
 
-		my $staticdir = Munin::Master::Update::get_param("staticdir")
-			|| Munin::Master::Config->instance()->{config}->{staticdir};
+		my $staticdir = Munin::Master::Update::get_param("staticdir");
 		my $filename = "$staticdir/$page";
 		my $fh = new IO::File("$filename");
 
@@ -573,8 +571,7 @@ RENDERING:
 		print $cgi->header( "-Content-Type" => "text/html",
 			-Cache_Control => "public, max-age=3600", # 1h for HTML pages
 		);
-		my $tmpldir = Munin::Master::Update::get_param("tmpldir")
-			|| Munin::Master::Config->instance()->{config}->{tmpldir};
+		my $tmpldir = Munin::Master::Update::get_param("tmpldir");
 		my $template = HTML::Template::Pro->new(
 			filename => "$tmpldir/$template_filename",
 			loop_context_vars => 1,
