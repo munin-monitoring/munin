@@ -245,6 +245,11 @@ docker-test-one:
 	$(DOCKER) run --rm --shm-size=128m --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build test --test-files t/$(FILE)'
 
+# Run tests and show failure summary at end
+docker-show-fail:
+	$(DOCKER) run --rm --shm-size=128m --add-host testing.acme.com:127.0.0.1 \
+		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build test $(TESTS) 2>&1 | tee /tmp/test-output.log; RC=$$?; if [ $$RC -ne 0 ]; then ./script/show-test-failures /tmp/test-output.log; fi; exit $$RC'
+
 # Run lint in Docker
 docker-lint:
 	$(DOCKER) run --rm -v $(CURDIR):/app munin-dev sh -c 'perl Build.PL && make lint'

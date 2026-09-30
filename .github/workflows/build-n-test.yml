@@ -68,15 +68,7 @@ jobs:
 
       - name: Show test failures
         if: failure()
-        run: |
-          echo "=== Failed Test Files ==="
-          grep -E "\.t.*(Failed|Failed \d)" test-output.log | head -20
-          echo ""
-          echo "=== Test Failure Summary ==="
-          grep -E "^(not ok|Failed|ERROR|#.*Failed)" test-output.log | head -50
-          echo ""
-          echo "=== Detailed Failures ==="
-          grep -B2 -A5 "not ok" test-output.log | head -100
+        run: ./script/show-test-failures test-output.log
 
       # Upload coverage to Coveralls
       - name: Upload to Coveralls
