@@ -228,9 +228,10 @@ sub get_override {
 sub _create_rundir_if_missing {
     my ($self) = @_;
 
-    unless (-d $config->{rundir}) {
-	mkdir $config->{rundir}, oct(700)
-            or croak "Failed to create rundir (".$config->{rundir}."): $!";
+    my $rundir = get_param('rundir');
+    unless (-d $rundir) {
+	mkdir $rundir, oct(700)
+            or croak "Failed to create rundir (".$rundir."): $!";
 
     }
 }
@@ -247,8 +248,9 @@ sub _create_workers {
     @hosts = shuffle(@hosts);
     @hosts = sort { $a->{update_priority} <=> $b->{update_priority} } @hosts;
 
-    if (defined $config->{limit_hosts} && %{$config->{limit_hosts}}) {
-        @hosts = grep { $config->{limit_hosts}{$_->{name}} } @hosts
+    my $limit_hosts = get_param('limit_hosts');
+    if (defined $limit_hosts && %{$limit_hosts}) {
+        @hosts = grep { $limit_hosts->{$_->{name}} } @hosts
     }
 
     # Only create the "update yes" hosts
@@ -296,10 +298,10 @@ sub _run_workers {
 
 	use Parallel::ForkManager;
 
-	my $max_processes = $config->{max_processes};
+	my $max_processes = get_param('max_processes') || 16;
 
 	# Do NOT fork if not set
-	$max_processes = 0 unless $config->{fork};
+	$max_processes = 0 unless get_param('fork');
 
 	my $pm = Parallel::ForkManager->new($max_processes);
 
