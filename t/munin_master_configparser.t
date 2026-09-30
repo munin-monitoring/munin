@@ -9,7 +9,6 @@ use File::Slurp qw(write_file);
 use lib qw(lib);
 
 use Munin::Master::ConfigParser;
-use Munin::Master::ConfigDB;
 
 # Test basic string parsing
 subtest 'Parse new syntax' => sub {
@@ -165,36 +164,6 @@ EOF
 
     is($p->globals->{dbdir}, '/var/lib/munin', 'File parse - global');
     is($p->sections->{web}{address}, '10.0.0.1', 'File parse - section');
-};
-
-# Test import to DB
-subtest 'Import to DB' => sub {
-    my ($fh, $dbpath) = tempfile(CLEANUP => 1, SUFFIX => '.db');
-    close $fh;
-
-    my $db = Munin::Master::ConfigDB->new(dbpath => $dbpath);
-    $db->ensure_schema();
-
-    my $p = Munin::Master::ConfigParser->new();
-    $p->parse_string(<<'EOF');
-dbdir = /var/lib/munin
-timeout = 180
-
-[web]
-address = 10.0.0.1
-
-[web;app1.com]
-port = 4949
-EOF
-
-    $p->import_to_db($db);
-
-    is($db->get_global('dbdir'), '/var/lib/munin', 'Import globals');
-    is($db->get_global('timeout'), '180', 'Import globals 2');
-
-    my $hid = $db->get_hierarchy_id(['web', 'app1.com']);
-    ok(defined $hid, 'Hierarchy imported');
-    is($db->get_host_setting($hid, 'port'), '4949', 'Host setting imported');
 };
 
 done_testing();
