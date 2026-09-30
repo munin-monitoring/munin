@@ -188,13 +188,13 @@ subtest 'URL lookup for services' => sub {
     my $dbh = Munin::Master::Update::get_dbh(1);
 
     # Test the URL query that Graph.pm uses
-    my $sth = $dbh->prepare_cached("SELECT id, type FROM url LIMIT 1");
+    my $sth = $dbh->prepare_cached("SELECT grp_id, node_id, service_id FROM url LIMIT 1");
     $sth->execute();
-    my ($id, $type) = $sth->fetchrow_array();
+    my ($grp_id, $node_id, $service_id) = $sth->fetchrow_array();
     $sth->finish();
 
+    my $id = $grp_id // $node_id // $service_id;
     ok(defined $id, 'Found a URL');
-    ok(defined $type, 'URL has type');
 };
 
 # ============================================================================
@@ -286,7 +286,7 @@ subtest 'group hierarchy' => sub {
     my $sth = $dbh->prepare_cached("
         SELECT g.id, g.name, u.path
         FROM grp g
-        INNER JOIN url u ON u.id = g.id AND u.type = 'group'
+        INNER JOIN url u ON u.grp_id = g.id
         WHERE g.p_id = 0
         ORDER BY g.name ASC
     ");
@@ -325,7 +325,7 @@ subtest 'node listing' => sub {
     $sth = $dbh->prepare_cached("
         SELECT n.id, n.name, u.path
         FROM node n
-        INNER JOIN url u ON u.id = n.id AND u.type = 'node'
+        INNER JOIN url u ON u.node_id = n.id
         WHERE n.grp_id = ?
         ORDER BY n.name ASC
     ");
