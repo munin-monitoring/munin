@@ -149,7 +149,7 @@ sub handle_request
 
 	# Groups nav
 	{
-		my $sth = $dbh->prepare_cached("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' WHERE g.p_id = 0 ORDER BY g.name ASC");
+		my $sth = $dbh->prepare_cached("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.grp_id = g.id WHERE g.p_id = 0 ORDER BY g.name ASC");
 		$sth->execute();
 
 		my $rootgroups = [];
@@ -194,9 +194,9 @@ sub handle_request
 		{
 			# Constructing the recursive datastructure.
 			# Note that it is quite naive, and not optimized for speed.
-			my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ? ORDER BY g.name ASC");
-			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = 0 ORDER BY g.name ASC");
-			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
+			my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.grp_id = g.id AND p_id = ? ORDER BY g.name ASC");
+			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.grp_id = g.id AND p_id = 0 ORDER BY g.name ASC");
+			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.node_id = n.id AND n.grp_id = ? ORDER BY n.name ASC");
 
 			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, undef, $graph_ext);
 			$template_params{NGROUPS} = scalar(@{$template_params{GROUPS}});
@@ -230,9 +230,9 @@ sub handle_request
 
 		my $sth = $dbh->prepare_cached("SELECT nu.path, n.name, su.path, s.name, d.critical, d.warning, d.unknown FROM ds d
 				LEFT OUTER JOIN service s ON s.id = d.service_id
-				LEFT OUTER JOIN url su ON su.id = s.id and su.type = 'service'
+				LEFT OUTER JOIN url su ON su.service_id = s.id
 				LEFT OUTER JOIN node n ON n.id = s.node_id
-				LEFT OUTER JOIN url nu ON nu.id = n.id and nu.type = 'node'
+				LEFT OUTER JOIN url nu ON nu.node_id = n.id
 				WHERE d.critical = 1 OR d.warning = 1 OR d.unknown = 1
 			");
 		$sth->execute();
@@ -331,7 +331,16 @@ sub handle_request
 
 	my ($id, $type);
 	{
-		my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
+		my $sth_url = $dbh->prepare_cached("
+			SELECT 
+				COALESCE(grp_id, node_id, service_id) as id,
+				CASE 
+					WHEN grp_id IS NOT NULL THEN 'group'
+					WHEN node_id IS NOT NULL THEN 'node'
+					WHEN service_id IS NOT NULL THEN 'service'
+				END as type
+			FROM url WHERE path = ?
+		");
 		$sth_url->execute($path);
 		($id, $type) = $sth_url->fetchrow_array;
 		$sth_url->finish();
@@ -346,9 +355,9 @@ sub handle_request
 
 		# Constructing the recursive datastructure.
 		# Note that it is quite naive, and not optimized for speed.
-		my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ? ORDER BY g.name ASC");
-		my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = 0 ORDER BY g.name ASC");
-		my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
+		my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.grp_id = g.id AND p_id = ? ORDER BY g.name ASC");
+		my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.grp_id = g.id AND p_id = 0 ORDER BY g.name ASC");
+		my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.node_id = n.id AND n.grp_id = ? ORDER BY n.name ASC");
 
 		my $sth_p_id = $dbh->prepare_cached("SELECT g.p_id FROM grp g WHERE g.id = ?");
 		$sth_p_id->execute($id);
@@ -429,7 +438,7 @@ sub handle_request
 		# Construct list of peers
 		my $sth_peer = $dbh->prepare_cached(
 			"SELECT n.name, u.path FROM node n
-			INNER JOIN url u ON n.id = u.id AND u.type = 'node'
+			INNER JOIN url u ON u.node_id = n.id
 			WHERE n.grp_id = (SELECT n.grp_id FROM node n WHERE n.id = ?)
 			ORDER BY n.name ASC");
 		$sth_peer->execute($id);
@@ -693,7 +702,7 @@ sub _get_params_services_for_comparison {
 	# Get node and service pairs
 	my $sth_node = $dbh->prepare_cached(
 		"SELECT n.name, u.path, s.path, s.title FROM node n
-		INNER JOIN url u ON u.id = n.id AND u.type = 'node'
+		INNER JOIN url u ON u.node_id = n.id
 		LEFT JOIN
 			( SELECT s.id AS id, s.node_id AS node_id, s.service_title AS title, u_s.path AS path FROM service s
 			INNER JOIN url u_s ON s.id = u_s.id AND u_s.type = 'service'
@@ -744,7 +753,7 @@ sub _get_params_services_by_name {
 		"SELECT s.id, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url,
 		n.name AS node_name, u_n.path AS node_url
 		FROM service s
-		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
+		INNER JOIN url u ON u.service_id = s.id
 		INNER JOIN node n ON n.id = s.node_id
 		INNER JOIN url u_n ON u_n.id = s.node_id AND u_n.type = 'node'
 		WHERE s.name = ?
@@ -780,7 +789,7 @@ sub _get_params_services {
 									(SELECT MAX(critical) FROM ds WHERE service_id = s.id) as state_critical
 		FROM service s
 		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
-		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
+		INNER JOIN url u ON u.service_id = s.id
 		WHERE s.node_id = ?
 		AND EXISTS (select sa.id from service_attr sa where sa.id = s.id)
 		ORDER BY service_title ASC");

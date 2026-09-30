@@ -247,9 +247,15 @@ sub _db_url {
 	my ($self, $type, $id, $path, $p_type, $p_id) = @_;
 	my $dbh = $self->{dbh};
 
+	# Allowed column names for url table - prevents SQL injection
+	my %col_map = (group => 'grp_id', node => 'node_id', service => 'service_id');
+
 	if ($p_type) {
-		my $sth_g_url = $dbh->prepare_cached("SELECT path FROM url WHERE type = ? AND id = ?");
-		$sth_g_url->execute($p_type, $p_id);
+		my $p_col = $col_map{$p_type} or die "Unknown url type: $p_type";
+		# Validate column name is from allowed set
+		die "Invalid column" unless $p_col =~ /^(grp_id|node_id|service_id)$/;
+		my $sth_g_url = $dbh->prepare_cached("SELECT path FROM url WHERE $p_col = ?");
+		$sth_g_url->execute($p_id);
 		my ($p_path) = $sth_g_url->fetchrow_array();
 		$sth_g_url->finish();
 
@@ -257,17 +263,16 @@ sub _db_url {
 		$path = "$p_path/$path" if $p_path;
 	}
 
-	# Path is UNIQUE - remove any existing entry with this path first
-	# (path might be reassigned to a different resource)
-	my $sth_del = $dbh->prepare_cached('DELETE FROM url WHERE path = ?');
-	$sth_del->execute($path);
+	my $col = $col_map{$type} or die "Unknown url type: $type";
+	# Validate column name is from allowed set
+	die "Invalid column" unless $col =~ /^(grp_id|node_id|service_id)$/;
 
-	# Upsert our entry
-	my $sth_u_url = $dbh->prepare_cached("UPDATE url SET path = ? WHERE type = ? AND id = ?");
-	my $nb_rows_affected = $sth_u_url->execute($path, $type, $id);
+	# Try UPDATE first, then INSERT
+	my $sth_u_url = $dbh->prepare_cached("UPDATE url SET path = ? WHERE $col = ?");
+	my $nb_rows_affected = $sth_u_url->execute($path, $id);
 	unless ($nb_rows_affected > 0) {
-		my $sth_url = $dbh->prepare_cached('INSERT INTO url (type, id, path) VALUES (?, ?, ?)');
-		$sth_url->execute($type, $id, $path);
+		my $sth_url = $dbh->prepare_cached("INSERT INTO url (path, $col) VALUES (?, ?)");
+		$sth_url->execute($path, $id);
 	}
 }
 
@@ -307,7 +312,12 @@ sub _db_mkgrp {
 		# Removal of grp is *unsupported* yet.
 	}
 
-	$self->_db_url("group", $grp_id, $grp_name);
+	# Pass parent info to build full path for nested groups
+	if ($p_id) {
+		$self->_db_url("group", $grp_id, $grp_name, "group", $p_id);
+	} else {
+		$self->_db_url("group", $grp_id, $grp_name);
+	}
 
 	return $grp_id;
 }

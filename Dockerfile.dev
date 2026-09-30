@@ -55,9 +55,9 @@ RUN cpanm --notest Directory::Scratch File::ReadBackwards IO::Scalar
 COPY libdevel-cover-report-coveralls-perl*.deb* /tmp/
 RUN if ls /tmp/libdevel-cover-report-coveralls-perl*.deb 1>/dev/null 2>&1; then \
         dpkg -i /tmp/libdevel-cover-report-coveralls-perl*.deb || apt-get install -yf; \
-        rm /tmp/*.deb*; \
+        rm -f /tmp/*.deb* /tmp/*.dummy; \
     else \
-        rm -f /tmp/.no-coveralls-deb; \
+        rm -f /tmp/*.dummy; \
         cpanm --notest Devel::Cover::Report::Coveralls; \
     fi
 

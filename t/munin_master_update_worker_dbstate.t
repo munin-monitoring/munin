@@ -54,10 +54,12 @@ $dbh->do("CREATE TABLE IF NOT EXISTS service_categories (
     PRIMARY KEY (id, category)
 )");
 $dbh->do("CREATE TABLE IF NOT EXISTS url (
-    id INTEGER,
-    type VARCHAR,
-    path VARCHAR,
-    PRIMARY KEY (id, type)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    path VARCHAR UNIQUE NOT NULL,
+    grp_id INTEGER REFERENCES grp(id),
+    node_id INTEGER REFERENCES node(id),
+    service_id INTEGER REFERENCES service(id),
+    CHECK ((grp_id IS NOT NULL) + (node_id IS NOT NULL) + (service_id IS NOT NULL) = 1)
 )");
 
 # ============================================================================

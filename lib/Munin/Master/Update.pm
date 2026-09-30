@@ -408,8 +408,15 @@ sub _db_init {
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
 
 	# Table that contains all the URL paths, in order to have a very fast lookup
-	$dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER NOT NULL, type VARCHAR NOT NULL, path VARCHAR NOT NULL, PRIMARY KEY(id,type))");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_url_path ON url (path)");
+	# FK to grp/node/service - no cascade, error if referenced
+	$dbh->do("CREATE TABLE IF NOT EXISTS url (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		path VARCHAR UNIQUE NOT NULL,
+		grp_id INTEGER REFERENCES grp(id),
+		node_id INTEGER REFERENCES node(id),
+		service_id INTEGER REFERENCES service(id),
+		CHECK ((grp_id IS NOT NULL) + (node_id IS NOT NULL) + (service_id IS NOT NULL) = 1)
+	)");
 
 	# Note, this table is referenced by composite key (type,id) in order to be
 	# able to have any kind of states. Such as whole node states for example.
