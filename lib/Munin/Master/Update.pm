@@ -493,9 +493,11 @@ sub _db_groups_update {
 
 	my $dbh = get_dbh();
 
-	# Clear existing groups, nodes, and node attributes
+	# Clear existing groups, nodes, node attributes, and URLs
+	# URLs must be cleared too - they have UNIQUE constraint on path
 	$dbh->do('DELETE FROM node_attr');
 	$dbh->do('DELETE FROM node');
+	$dbh->do('DELETE FROM url');
 	$dbh->do('DELETE FROM grp WHERE id != 0');  # Keep root
 
 	my $sth_grp = $dbh->prepare('INSERT INTO grp (p_id, name) VALUES (?, ?)');
