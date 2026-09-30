@@ -228,7 +228,8 @@ sub get_override {
 sub _create_rundir_if_missing {
     my ($self) = @_;
 
-    my $rundir = get_param('rundir');
+    # Use config singleton - needed before DB exists
+    my $rundir = $config->{rundir};
     unless (-d $rundir) {
 	mkdir $rundir, oct(700)
             or croak "Failed to create rundir (".$rundir."): $!";
