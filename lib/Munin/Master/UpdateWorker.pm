@@ -257,12 +257,10 @@ sub _db_url {
 		$path = "$p_path/$path" if $p_path;
 	}
 
-	my $sth_u_url = $dbh->prepare_cached("UPDATE url SET path = ? WHERE type = ? AND id = ?");
-	my $nb_rows_affected = $sth_u_url->execute($path, $type, $id);
-	unless ($nb_rows_affected > 0) {
-		my $sth_url = $dbh->prepare_cached('INSERT INTO url (type, id, path) VALUES (?, ?, ?)');
-		$sth_url->execute($type, $id, $path);
-	}
+	# Use INSERT OR REPLACE to handle UNIQUE constraint on path
+	# Path might exist for different (type, id) if config changed
+	my $sth_url = $dbh->prepare_cached('INSERT OR REPLACE INTO url (id, type, path) VALUES (?, ?, ?)');
+	$sth_url->execute($id, $type, $path);
 }
 
 sub _db_mkgrp {
