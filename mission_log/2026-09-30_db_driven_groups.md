@@ -143,3 +143,107 @@ t/munin_master_configparser.t    -- 9 subtests, all pass
 4. **Remove $config from Update.pm** -- Replace module-level `my $config = Config->instance()->{config}` with `get_param()` calls.
 
 5. **Consider module responsibilities** -- Config: parsing. ConfigDB: storage. Update: orchestration. HTML/Limits: read-only queries.
+
+---
+
+## Session 2: Monitoring & Perl Style (2026-09-30)
+
+### What We Did
+
+Discussed how to monitor HTML.pm and Graph.pm performance. Also analyzed Perl code patterns in the codebase.
+
+#### Monitoring approaches explored
+
+1. **Direct DB writes from HTTP handlers** -- Rejected. HTML.pm/Graph.pm run via web server, shouldn't write to DB.
+
+2. **Scoped RW DBH in Limits.pm** -- User suggested wrapping writes. Then questioned if it's overcomplex.
+
+3. **Move writes to Update.pm** -- User suggested Limits calls Update for writes. Then reconsidered.
+
+4. **Timer-based processes get RW, web gets RO** -- Settled model:
+   - Update.pm, UpdateWorker.pm, Limits.pm: RW (timer-based, no inbound)
+   - HTML.pm, Graph.pm: RO (web server, inbound traffic)
+
+5. **Stats collection approaches explored:**
+   - Stats file + timer imports
+   - Return stats to caller
+   - Unix socket to stats daemon
+   - Syslog / journald
+   - systemd state files
+
+6. **Final decision:** Append to state files via systemd `RuntimeDirectory=`
+   - HTML.pm/Graph.pm append timing to `$RUNTIME_DIRECTORY/stats-*.log`
+   - Plugin reads these files
+   - Systemd manages directory lifecycle
+
+#### Perl style analysis
+
+User questioned use of `//` (defined-or) operator. Investigated codebase patterns:
+
+| Pattern | Count | Notes |
+|---------|-------|-------|
+| `\|\|` | 64 | Most common, but fails on 0/"" |
+| `//` | 55 | Recent (Sep 4, 2026), handles 0/"" |
+| `defined ? :` | 6 | Oldest style, verbose |
+
+`//` was introduced Sep 4, 2026 in Limits.pm rewrite by Steve SCHNEPP. Before that, codebase used `defined $x ? $x : $default`.
+
+For env var paths, `||` is safe (empty = unset, "0" isn't valid path).
+
+### What We Learned
+
+#### Technical
+
+1. **systemd provides env vars for state directories:**
+   - `StateDirectory=` -> `$STATE_DIRECTORY` (`/var/lib/munin/`)
+   - `RuntimeDirectory=` -> `$RUNTIME_DIRECTORY` (`/run/munin/`)
+   - `CacheDirectory=` -> `$CACHE_DIRECTORY` (`/var/cache/munin/`)
+
+2. **Perl `||` vs `//`:**
+   - `||` treats 0 and "" as false
+   - `//` only treats undef as false
+   - For env vars: `||` is fine (empty = unset)
+
+3. **Git blame reveals style history:**
+   - `//` is recent addition (Sep 4, 2026)
+   - Older code used `defined ? :` pattern
+   - Codebase is transitioning styles
+
+#### Process
+
+1. **Explore multiple approaches before settling** -- Discussed 6+ monitoring approaches. Sometimes the conversation finds the right answer by elimination.
+
+2. **Check blame for style questions** -- When user questioned `//`, blame showed it was recent. Good practice for style consistency questions.
+
+### What We Decided
+
+1. **Timer-based processes get RW DBH** -- Update, UpdateWorker, Limits run via timer, no inbound connectivity, safe for writes.
+
+2. **Web-based processes get RO DBH** -- HTML, Graph run via web server, must be read-only.
+
+3. **Stats via systemd RuntimeDirectory** -- Simple append-only files in `/run/munin/`, managed by systemd.
+
+4. **Use `||` for env vars** -- Most common pattern in codebase, safe for paths.
+
+### Rules Added
+
+- **Timer vs web access pattern** -- Timer-based: RW. Web-based: RO. Clear boundary.
+- **systemd env vars for paths** -- Use `$RUNTIME_DIRECTORY` etc. instead of hardcoding.
+
+### What We'd Do Differently
+
+1. **Consider monitoring earlier** -- Performance instrumentation should be part of design, not an afterthought.
+
+2. **Check style with blame before discussing** -- Could have saved time by checking blame immediately when `//` was questioned.
+
+### Files Changed
+
+No files changed in this session -- discussion only.
+
+### Next Steps
+
+1. **Implement stats logging** -- Add timing to HTML.pm/Graph.pm, append to `$RUNTIME_DIRECTORY`.
+
+2. **Create munin_master_stats plugin** -- Read stats files, emit performance graphs.
+
+3. **Continue DB-driven groups work** -- Remove config singleton, use get_override in UpdateWorker.
