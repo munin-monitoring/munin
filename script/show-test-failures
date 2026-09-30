@@ -1,0 +1,19 @@
+#!/bin/sh
+# Show test failure summary from test output log
+# Usage: show-test-failures < test-output.log
+
+LOG="${1:-/tmp/test-output.log}"
+
+if [ ! -f "$LOG" ]; then
+    echo "No test output log found: $LOG" >&2
+    exit 1
+fi
+
+echo "=== Failed Test Files ==="
+grep -E "\.t.*(Failed|Failed \d)" "$LOG" | head -20
+echo ""
+echo "=== Test Failure Summary ==="
+grep -E "^(not ok|Failed|ERROR|#.*Failed)" "$LOG" | head -50
+echo ""
+echo "=== Detailed Failures ==="
+grep -B2 -A5 "not ok" "$LOG" | head -100
