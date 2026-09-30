@@ -19,8 +19,6 @@ use RRDs;
 
 use Munin::Master::Update;
 
-my $config = Munin::Master::Config->instance()->{config};
-
 my $DEBUG          = 0;
 my $VERBOSE        = 0;
 my $do_usage       = 0;
@@ -425,7 +423,7 @@ my %contact_pipes;
 
 sub _compute_cdef_value {
     my ($dbh, $ds_id, $cdef_expr) = @_;
-    my $dbdir = $config->{dbdir};
+    my $dbdir = Munin::Master::Update::get_param('dbdir', $dbh);
 
     # --------------------------------------------------------------------
     # Get RRD file and source DS names for this CDEF.
