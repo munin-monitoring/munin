@@ -21,7 +21,7 @@ sub create
 	{
 		use Munin::Master::Update;
 		my $dbh = Munin::Master::Update::get_dbh(1);
-		my $row_ref = $dbh->selectall_arrayref("SELECT path FROM url WHERE type = ?", {}, "service");
+		my $row_ref = $dbh->selectall_arrayref("SELECT path FROM url WHERE service_id IS NOT NULL");
 
 		# Process results
 		@paths = map {

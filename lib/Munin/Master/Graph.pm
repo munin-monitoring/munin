@@ -188,7 +188,16 @@ sub handle_request
 	DEBUG "($graph_path, $time, $start, $end, $format)\n";
 
 	# Find the service to display
-	my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
+	my $sth_url = $dbh->prepare_cached("
+		SELECT 
+			COALESCE(grp_id, node_id, service_id) as id,
+			CASE 
+				WHEN grp_id IS NOT NULL THEN 'group'
+				WHEN node_id IS NOT NULL THEN 'node'
+				WHEN service_id IS NOT NULL THEN 'service'
+			END as type
+		FROM url WHERE path = ?
+	");
 	if (not defined($sth_url)) {
 		# potential cause: permission problem
 		my $msg = "Failed to access database: " . $DBI::errstr;
