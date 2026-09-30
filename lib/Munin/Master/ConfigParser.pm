@@ -234,45 +234,6 @@ sub has_errors {
     return scalar @{$self->{errors}};
 }
 
-=head1 IMPORT TO DB
-
-=head2 import_to_db($configdb)
-
-Import parsed config into a ConfigDB object.
-
-=cut
-
-sub import_to_db {
-    my ($self, $configdb) = @_;
-
-    # Import globals
-    for my $key (keys %{$self->{globals}}) {
-        $configdb->insert_global($key, $self->{globals}{$key});
-    }
-
-    # Import sections
-    for my $section_key (keys %{$self->{sections}}) {
-        my $settings = $self->{sections}{$section_key};
-        my @parts = split /;/, $section_key;
-
-        # Ensure hierarchy exists
-        my $hid = $configdb->ensure_hierarchy(\@parts);
-
-        # Store settings
-        for my $key (keys %$settings) {
-            $configdb->insert_host_setting($hid, $key, $settings->{$key});
-        }
-    }
-
-    # Import globs
-    for my $glob (@{$self->{globs}}) {
-        my ($pattern, $context, $name, $value) = @$glob;
-        $configdb->insert_glob($pattern, $context, $name, $value);
-    }
-
-    return;
-}
-
 1;
 
 __END__
