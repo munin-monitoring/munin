@@ -188,16 +188,7 @@ sub handle_request
 	DEBUG "($graph_path, $time, $start, $end, $format)\n";
 
 	# Find the service to display
-	my $sth_url = $dbh->prepare_cached("
-		SELECT 
-			COALESCE(grp_id, node_id, service_id) as id,
-			CASE 
-				WHEN grp_id IS NOT NULL THEN 'group'
-				WHEN node_id IS NOT NULL THEN 'node'
-				WHEN service_id IS NOT NULL THEN 'service'
-			END as type
-		FROM url WHERE path = ?
-	");
+	my $sth_url = $dbh->prepare_cached("SELECT grp_id, node_id, service_id FROM url WHERE path = ?");
 	if (not defined($sth_url)) {
 		# potential cause: permission problem
 		my $msg = "Failed to access database: " . $DBI::errstr;
@@ -205,18 +196,19 @@ sub handle_request
 		die $msg;
 	}
 	$sth_url->execute($graph_path);
-	my ($id, $type) = $sth_url->fetchrow_array;
+	my ($grp_id, $node_id, $service_id) = $sth_url->fetchrow_array;
 	$sth_url->finish();
 
-	if (! defined $id) {
+	if (! defined $grp_id && ! defined $node_id && ! defined $service_id) {
 		# Not found
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
 			"-X-Reason" => "'$graph_path' Not Found in DB",
 		);
 		goto CLEANUP;
-	} elsif ($type ne "service") {
+	} elsif (! defined $service_id) {
 		# Not supported yet
+		my $type = defined $grp_id ? 'group' : 'node';
 		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
 			"-X-Reason" => "'$type' graphing is not supported yet",
@@ -224,7 +216,7 @@ sub handle_request
 		goto CLEANUP;
 	}
 
-	DEBUG "found node=$id, type=$type";
+	DEBUG "found service=$service_id";
 
 	my $dbdir = Munin::Master::Update::get_param("dbdir", $dbh);
 
@@ -232,30 +224,30 @@ sub handle_request
 	my $sth;
 
 	$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = ?");
-	$sth->execute($id, "graph_title");
+	$sth->execute($service_id, "graph_title");
 	my ($graph_title) = $sth->fetchrow_array();
 
-	$sth->execute($id, "graph_period");
+	$sth->execute($service_id, "graph_period");
 	my ($graph_period) = $sth->fetchrow_array();
 	$graph_period = "second" unless $graph_period;
 
 	# Note that graph_vtitle is *NOT* supported anymore
-	$sth->execute($id, "graph_vlabel");
+	$sth->execute($service_id, "graph_vlabel");
 	my ($graph_vlabel) = $sth->fetchrow_array();
 	$graph_vlabel =~ s/\$\{graph_period\}/$graph_period/g if $graph_vlabel;
 
 	# Note: This will be the graph order computed in munin-update,
 	# not the graph_order emitted by the plugin.
-	$sth->execute($id, "graph_order");
+	$sth->execute($service_id, "graph_order");
 	my ($graph_order) = $sth->fetchrow_array() || "";
 	DEBUG "graph_order: $graph_order";
 
-	$sth->execute($id, "graph_args");
+	$sth->execute($service_id, "graph_args");
 	my ($graph_args) = $sth->fetchrow_array() || "";
 	my @rrd_graph_args = split /\s+/, $graph_args;
 	DEBUG "graph_args: $graph_args";
 
-	$sth->execute($id, "graph_printf");
+	$sth->execute($service_id, "graph_printf");
 	my ($graph_printf) = $sth->fetchrow_array();
 	if (! defined $graph_printf) {
 		# If the base unit is 1024 then 1012.56 is a valid
@@ -263,7 +255,7 @@ sub handle_request
 		$graph_printf = ($graph_args =~ /--base\s+1024/) ? "%7.2lf" : "%6.2lf";
 	}
 
-	$sth->execute($id, "graph_scale");
+	$sth->execute($service_id, "graph_scale");
 	my ($graph_scale) = $sth->fetchrow_array() || "";
 	DEBUG "graph_scale: $graph_scale";
 	if (lc($graph_scale) eq 'no') {
@@ -314,7 +306,7 @@ sub handle_request
 		WHERE ds.service_id = ?
 		ORDER BY ds.ordr ASC
 	");
-	$sth->execute($id);
+	$sth->execute($service_id);
 
 	# Collect the field set in the graph and
 	my $graph_has_negative = 0;

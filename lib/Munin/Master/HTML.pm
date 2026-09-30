@@ -329,28 +329,20 @@ sub handle_request
 	# Remove an eventual [/index].html
 	$path =~ s/(\/index)?\.html$//;
 
-	my ($id, $type);
+	# DB CHECK constraint ensures exactly one of grp_id, node_id, service_id is set
+	my ($grp_id, $node_id, $service_id);
 	{
-		my $sth_url = $dbh->prepare_cached("
-			SELECT 
-				COALESCE(grp_id, node_id, service_id) as id,
-				CASE 
-					WHEN grp_id IS NOT NULL THEN 'group'
-					WHEN node_id IS NOT NULL THEN 'node'
-					WHEN service_id IS NOT NULL THEN 'service'
-				END as type
-			FROM url WHERE path = ?
-		");
+		my $sth_url = $dbh->prepare_cached("SELECT grp_id, node_id, service_id FROM url WHERE path = ?");
 		$sth_url->execute($path);
-		($id, $type) = $sth_url->fetchrow_array;
+		($grp_id, $node_id, $service_id) = $sth_url->fetchrow_array;
 		$sth_url->finish();
 	}
 
-	if (! defined $id) {
+	if (! defined $grp_id && ! defined $node_id && ! defined $service_id) {
 		# Not found
 		print "HTTP/1.0 404 Not found\r\n";
 		goto CLEANUP;
-	} elsif ($type eq "group") {
+	} elsif (defined $grp_id) {
 		# Shared code for group views and comparison views
 
 		# Constructing the recursive datastructure.
@@ -360,7 +352,7 @@ sub handle_request
 		my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.node_id = n.id AND n.grp_id = ? ORDER BY n.name ASC");
 
 		my $sth_p_id = $dbh->prepare_cached("SELECT g.p_id FROM grp g WHERE g.id = ?");
-		$sth_p_id->execute($id);
+		$sth_p_id->execute($grp_id);
 		my ($_p_id) = $sth_p_id->fetchrow_array;
 		$sth_p_id->finish();
 		my $sth_peer;
@@ -368,7 +360,7 @@ sub handle_request
 		# Check for top level groups
 		if (defined $_p_id) {
 			$sth_peer = $sth_grp;
-			$sth_peer->execute($id);
+			$sth_peer->execute($grp_id);
 		} else {
 			$sth_peer = $sth_grp_root;
 			$sth_peer->execute();
@@ -407,11 +399,11 @@ sub handle_request
 				INNER JOIN service s ON s.node_id = n.id
 				INNER JOIN service_categories sa_c ON sa_c.id = s.id
 				WHERE n.grp_id = ? ORDER BY sa_c.category ASC");
-			$sth_cat->execute($id);
+			$sth_cat->execute($grp_id);
 
 			$template_params{CATEGORIES} = [];
 			while (my ($cat_name) = $sth_cat->fetchrow_array) {
-				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id, $graph_ext, $comparison);
+				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $grp_id, $graph_ext, $comparison);
 			}
 
 			# Force-reduce navigation panel
@@ -422,7 +414,7 @@ sub handle_request
 			$template_filename = 'munin-domainview.tmpl';
 
 			# Main page
-			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, $id, $graph_ext);
+			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, $grp_id, $graph_ext);
 			$template_params{NGROUPS} = scalar(@{$template_params{GROUPS}});
 
 			# Shows "[ d w m y ]"
@@ -431,7 +423,7 @@ sub handle_request
 				1 < scalar grep { defined($_->{'NCATEGORIES'}) && $_->{'NCATEGORIES'} } @{$template_params{GROUPS}};
 		}
 
-	} elsif ($type eq "node") {
+	} elsif (defined $node_id) {
 		# Emit node template
 		$template_filename = 'munin-nodeview.tmpl';
 
@@ -441,7 +433,7 @@ sub handle_request
 			INNER JOIN url u ON u.node_id = n.id
 			WHERE n.grp_id = (SELECT n.grp_id FROM node n WHERE n.id = ?)
 			ORDER BY n.name ASC");
-		$sth_peer->execute($id);
+		$sth_peer->execute($node_id);
 
 		my $peers = [];
 		while (my ($_name, $_url) = $sth_peer->fetchrow_array) {
@@ -457,11 +449,11 @@ sub handle_request
 			INNER JOIN service_categories sc ON sc.id = s.id
 			WHERE s.node_id = ?
 			ORDER BY graph_category");
-		$sth_category->execute($id);
+		$sth_category->execute($node_id);
 
 		my $categories = [];
 		while (my ($_category_name) = $sth_category->fetchrow_array) {
-			push @$categories, _get_params_services($path, $dbh, $_category_name, undef, $id, $graph_ext);
+			push @$categories, _get_params_services($path, $dbh, $_category_name, undef, $node_id, $graph_ext);
 		}
 
 		$template_params{CATEGORIES} = $categories;
@@ -475,7 +467,7 @@ sub handle_request
 
 		$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
 
-	} elsif ($type eq "service") {
+	} else {  # service_id (CHECK constraint ensures one is set)
 		# Emit service template
 		$template_filename = 'munin-serviceview.tmpl';
 
@@ -487,18 +479,18 @@ sub handle_request
 									FROM service
 									LEFT JOIN service_categories ON service.id = service_categories.id
 									WHERE service.id = ?");
-		$sth->execute($id);
+		$sth->execute($service_id);
 		my ($graph_name, $graph_title, $graph_info, $multigraph, $category, $state_warning, $state_critical) = $sth->fetchrow_array();
 		$sth->finish();
 
 		$sth = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
-		$sth->execute($id);
+		$sth->execute($service_id);
 		my ($graph_category) = $sth->fetchrow_array();
 		$sth->finish();
 		$graph_category //= 'other';
 
 		$sth = $dbh->prepare_cached("SELECT n.id FROM node n INNER JOIN service s ON s.node_id = n.id WHERE s.id = ?");
-		$sth->execute($id);
+		$sth->execute($service_id);
 		my ($node_id) = $sth->fetchrow_array();
 		$sth->finish();
 
@@ -533,7 +525,7 @@ sub handle_request
 
 		# Create the params
 		my %service_template_params;
-		$service_template_params{FIELDINFO} = _get_params_fields($dbh, $id);
+		$service_template_params{FIELDINFO} = _get_params_fields($dbh, $service_id);
 		my $cgi_graph_url = '/';
 		my $epoch_now = time;
 		my %epoch_start = (
