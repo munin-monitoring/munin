@@ -1,6 +1,6 @@
 #!/bin/sh
 # Show test failure summary from test output log
-# Usage: show-test-failures < test-output.log
+# Usage: show-test-failures <test-output.log>
 
 LOG="${1:-/tmp/test-output.log}"
 
@@ -10,10 +10,22 @@ if [ ! -f "$LOG" ]; then
 fi
 
 echo "=== Failed Test Files ==="
-grep -E "\.t.*(Failed|Failed \d)" "$LOG" | head -20
+grep -E "\.t.*(Wstat|Failed)" "$LOG" | head -20
+
 echo ""
 echo "=== Test Failure Summary ==="
 grep -E "^(not ok|Failed|ERROR|#.*Failed)" "$LOG" | head -50
+
+echo ""
+echo "=== Errors and Compilation Failures ==="
+grep -E "(Can't |Undefined |compilation aborted| Died|syntax error)" "$LOG" | head -30
+
 echo ""
 echo "=== Detailed Failures ==="
+# Show context around "not ok" lines
 grep -B2 -A5 "not ok" "$LOG" | head -100
+
+echo ""
+echo "=== Context Around Died Tests ==="
+# Show context around exit codes 254/255
+grep -B5 -A2 "exited 25[45]" "$LOG" | head -60
