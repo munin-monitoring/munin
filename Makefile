@@ -236,19 +236,27 @@ docker-dev:
 docker-dev-stop:
 	$(DOCKER) compose down
 
-# Run tests in Docker — same env as CI
+# --- Test execution -------------------------------------------------------
+# prove --shuffle mixes slow and fast tests across jobs; a hand-maintained
+# order is fragile as the suite changes. The harness log records the order
+# used -- reproduce locally by passing those files to prove in that order.
+JOBS  ?= $(shell nproc)
+TESTS ?= t/*.t
+PROVE  = prove --shuffle --timer -j$(JOBS) -Iblib/lib -Iblib/arch
+
+# Run tests in Docker - same env as CI
 docker-test:
-	$(DOCKER) run --rm --shm-size=128m --add-host testing.acme.com:127.0.0.1 \
-		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build test $(TESTS)'
+	$(DOCKER) run --rm --shm-size=512m --add-host testing.acme.com:127.0.0.1 \
+		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build && TMPDIR=/dev/shm $(PROVE) $(TESTS)'
 
 docker-test-one:
-	$(DOCKER) run --rm --shm-size=128m --add-host testing.acme.com:127.0.0.1 \
-		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build test --test-files t/$(FILE)'
+	$(DOCKER) run --rm --shm-size=256m --add-host testing.acme.com:127.0.0.1 \
+		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build && TMPDIR=/dev/shm prove --timer -j1 -Iblib/lib -Iblib/arch t/$(FILE)'
 
 # Run tests and show failure summary at end
 docker-show-fail:
-	$(DOCKER) run --rm --shm-size=128m --add-host testing.acme.com:127.0.0.1 \
-		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build test $(TESTS) 2>&1 | tee /tmp/test-output.log; RC=$$?; if [ $$RC -ne 0 ]; then ./script/show-test-failures /tmp/test-output.log; fi; exit $$RC'
+	$(DOCKER) run --rm --shm-size=512m --add-host testing.acme.com:127.0.0.1 \
+		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build && TMPDIR=/dev/shm $(PROVE) $(TESTS) > /tmp/test-output.log 2>&1; RC=$$?; cat /tmp/test-output.log; if [ $$RC -ne 0 ]; then ./script/show-test-failures /tmp/test-output.log; fi; exit $$RC'
 
 # Run lint in Docker
 docker-lint:
