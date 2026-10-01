@@ -27,8 +27,7 @@ sub generate_sample_db {
     $dbh->do("CREATE TABLE IF NOT EXISTS ds (id $db_serial_type PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR, type VARCHAR DEFAULT 'GAUGE', ordr INTEGER DEFAULT 0, unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
     $dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
     $dbh->do("CREATE TABLE IF NOT EXISTS url (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        path VARCHAR UNIQUE NOT NULL,
+        path VARCHAR PRIMARY KEY,
         grp_id INTEGER REFERENCES grp(id),
         node_id INTEGER REFERENCES node(id),
         service_id INTEGER REFERENCES service(id),

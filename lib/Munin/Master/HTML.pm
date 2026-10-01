@@ -697,7 +697,7 @@ sub _get_params_services_for_comparison {
 		INNER JOIN url u ON u.node_id = n.id
 		LEFT JOIN
 			( SELECT s.id AS id, s.node_id AS node_id, s.service_title AS title, u_s.path AS path FROM service s
-			INNER JOIN url u_s ON s.id = u_s.id AND u_s.type = 'service'
+			INNER JOIN url u_s ON u_s.service_id = s.id
 			WHERE s.name = ? ) AS s ON n.id = s.node_id
 		WHERE n.grp_id = ?
 		ORDER BY n.name, s.title ASC");
@@ -747,7 +747,7 @@ sub _get_params_services_by_name {
 		FROM service s
 		INNER JOIN url u ON u.service_id = s.id
 		INNER JOIN node n ON n.id = s.node_id
-		INNER JOIN url u_n ON u_n.id = s.node_id AND u_n.type = 'node'
+		INNER JOIN url u_n ON u_n.node_id = s.node_id
 		WHERE s.name = ?
 		ORDER BY node_name ASC");
 	$sth->execute($service_name);

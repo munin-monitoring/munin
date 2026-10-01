@@ -409,9 +409,9 @@ sub _db_init {
 
 	# Table that contains all the URL paths, in order to have a very fast lookup
 	# FK to grp/node/service - no cascade, error if referenced
+	# path is the identity (lookups are by path), no surrogate id needed
 	$dbh->do("CREATE TABLE IF NOT EXISTS url (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		path VARCHAR UNIQUE NOT NULL,
+		path VARCHAR PRIMARY KEY,
 		grp_id INTEGER REFERENCES grp(id),
 		node_id INTEGER REFERENCES node(id),
 		service_id INTEGER REFERENCES service(id),
