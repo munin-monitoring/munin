@@ -107,7 +107,9 @@ subtest 'import groups from config' => sub {
     diag($@) if $@;
 
     # Verify with get_hosts
-    my $hosts = Munin::Master::Update::get_hosts();
+    my $hosts_dbh = Munin::Master::Update::get_dbh();
+    my $hosts = Munin::Master::Update::get_hosts($hosts_dbh);
+    $hosts_dbh->disconnect();
     ok(ref $hosts eq 'ARRAY', 'get_hosts returns arrayref');
     is(scalar @$hosts, 4, 'Found 4 hosts');
 
@@ -122,7 +124,9 @@ subtest 'import groups from config' => sub {
 };
 
 subtest 'host attributes imported correctly' => sub {
-    my $hosts = Munin::Master::Update::get_hosts();
+    my $hosts_dbh = Munin::Master::Update::get_dbh();
+    my $hosts = Munin::Master::Update::get_hosts($hosts_dbh);
+    $hosts_dbh->disconnect();
 
     # Find app1.example.com
     my ($app1) = grep { $_->isa('Munin::Master::Host') && $_->{host_name} eq 'app1.example.com' } @$hosts;
@@ -179,7 +183,9 @@ subtest 're-import clears old data' => sub {
     # Re-import
     $update->_db_groups_update();
 
-    my $hosts = Munin::Master::Update::get_hosts();
+    my $hosts_dbh = Munin::Master::Update::get_dbh();
+    my $hosts = Munin::Master::Update::get_hosts($hosts_dbh);
+    $hosts_dbh->disconnect();
     is(scalar @$hosts, 4, 'Re-import restores all 4 hosts');
 };
 
@@ -221,30 +227,33 @@ subtest 'config overrides imported' => sub {
     diag($@) if $@;
 
     # Check host-level override
-    my $val = Munin::Master::Update::get_override('app1.example.com', '', '', 'timeout');
+    my $ovr_dbh = Munin::Master::Update::get_dbh();
+    my $val = Munin::Master::Update::get_override('app1.example.com', '', '', 'timeout', $ovr_dbh);
     is($val, '60', 'Host-level timeout override found');
 
     # Check service-level override
-    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', '', 'graph_title');
+    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', '', 'graph_title', $ovr_dbh);
     is($val, 'CPU Usage', 'Service-level graph_title override found');
 
     # Check field-level override
-    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'warning');
+    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'warning', $ovr_dbh);
     is($val, '80', 'Field-level warning override found');
 
-    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'critical');
+    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'critical', $ovr_dbh);
     is($val, '95', 'Field-level critical override found');
 
-    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'label');
+    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'label', $ovr_dbh);
     is($val, 'User', 'Field-level label override found');
 
     # Check db1 timeout
-    $val = Munin::Master::Update::get_override('db1.example.com', '', '', 'timeout');
+    $val = Munin::Master::Update::get_override('db1.example.com', '', '', 'timeout', $ovr_dbh);
     is($val, '120', 'db1 timeout override found');
 
     # Check nonexistent returns undef
-    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'nonexistent');
+    $val = Munin::Master::Update::get_override('app1.example.com', 'cpu', 'user', 'nonexistent', $ovr_dbh);
     is($val, undef, 'Nonexistent override returns undef');
+
+    $ovr_dbh->disconnect();
 };
 
 done_testing();
