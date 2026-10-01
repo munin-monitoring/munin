@@ -492,3 +492,112 @@ summary + select_re all filter to `^lib/Munin|^script/munin`.
 4. **CI coverage budget decision** -- parallel+fixed still ~10-15 min.
 5. **Write contention under real fork=1 load** -- deliberately not
    optimized (minimize locked timings later, or advise PostgreSQL).
+
+---
+
+## Session Continuation 2: graph_static.t -- mock RRDs::graph, keep the cmdlines (DESIGNED, NOT YET IMPLEMENTED)
+
+**Status at log time:** design converged through discussion + code
+reading; the test file is untouched (clean tree). Everything below is
+the plan a future session should implement directly.
+
+### Motivation
+
+`t/munin_master_graph_static.t` is the worst offender of the giants:
+191s wall / 333s CPU in the last full run (was 109s earlier -- it
+inflates badly under -j4 contention). It exercises
+`Munin::Master::Static::Graph::create()` -- munin's static site export,
+which renders every service graph for all five time periods as PNGs via
+`RRDs::graph` and writes them under `_site/`. The cost is almost
+entirely real rrdtool rendering: 25 services x 5 periods = 125 graph
+renders of 15-DS graphs.
+
+The test's actual assertions are weak for that cost: "PNGs were
+produced" and "all time periods present". It never inspects a single
+command line -- yet the command lines ARE the interesting artifact:
+they are fully determined by the synthetic DB (SampleDB + SampleRRD).
+
+### Direction (user)
+
+Mock `RRDs::graph` so the test stops paying for rendering, but verify
+the real command lines instead -- possible precisely because the DB is
+synthetic and deterministic. Two iterations agreed:
+
+1. **Log every `RRDs::graph` call; assert they all follow a pattern.**
+2. **1% of calls hit the real `RRDs::graph`** -- a canary that keeps
+   the fixture honest: if SampleDB/SampleRRD drift from what the
+   renderer needs, the 1% real renders start failing.
+
+### What we learned reading the code
+
+- **Call path:** `Static::Graph::create($jobs, $dest)` lists service
+  paths from `url WHERE service_id IS NOT NULL`, builds
+  `"$path-{year,month,week,day,hour}.png"`, then per path: PFM worker
+  -> mock CGI (`path_info => "/$path"`) -> STDOUT redirected to the
+  output file -> `Munin::Master::Graph::handle_request($cgi)`.
+- **RRDs::graph is called in exactly one place:** `RRDs_graph()` in
+  Graph.pm (wrapper around `RRDs::graph(@_)` + `RRDs::error()`); reached
+  via `RRDs_graph_or_dump()` for the PNG branch. Mock target:
+  `RRDs::graph` itself, so both the wrapper and any future caller are
+  covered.
+- **The command line** (@rrd_cmd, built in handle_request) is, in
+  order: temp outfile (File::Temp, `.png` suffix), `@rrd_graph_args`
+  (from `graph_args` attr -- empty in SampleDB), `@rrd_header`
+  (`--title "Graph <svc> - for the last <period>"`, `--watermark
+  "Munin <ver>"`, `--imgformat PNG`, `--start end-4000s|end-2000m|
+  end-12000m|end-48000m|end-400d`, `--slope-mode`, fonts, 6 colors,
+  `--width 400`, `--height 175`, `--border 0`, `--end <epoch>`),
+  then `@rrd_sum` (empty in fixture), `@rrd_def` (DEF:avg/min/max per
+  DS pointing at `$dbdir/<path>/<svc>.rrd` or old-style per-field
+  files, DS names like `idle-g` or `42`), `@rrd_cdef` (empty in
+  fixture), `@rrd_vdef` (4 VDEFs per DS), `@rrd_legend` (4 COMMENTs),
+  `@rrd_gfx` (drawcmds + 4 GPRINTs per DS), `@rrd_gfx_negatives`
+  (empty), then the day/night CDEFs + AREA lines (AREA suppressed for
+  month/year per period).
+- **PFM `new(0)` does NOT fork** (probed empirically: `start()` returns
+  0 in-process), so the test's `create(0, ...)` call runs every render
+  in-process -- the mock can log to a plain in-memory array/file, no
+  IPC needed.
+- **`RRDs::error` must be mocked alongside `RRDs::graph`:**
+  `RRDs_graph()` calls it after every graph call; without the paired
+  mock, the error state of the real RRDs library would leak into the
+  mocked path. Mock graph -> return success; mock error -> return undef
+  (or the real error for the 1% real calls).
+- **RRDs::last is also called** (lastupdate VRULE, when `rrd:last` attr
+  is missing -- SampleDB sets none, so every render calls
+  `RRDs::last($_rrdfile)`). It reads real RRD headers: cheap, and it
+  validates the SampleRRD files exist. Leave it real.
+- **The1% canary must survive PFM**: with `create(0,...)` there is no
+  fork, so a `rand() < 0.01` check inside the mock is fine as-is.
+
+### The pattern to assert (from the code + fixture)
+
+For each logged call, given outfile and args:
+- outfile ends in `.png`
+- `--imgformat PNG`; `--watermark` starts with `Munin `
+- `--title` matches `/^Graph \S+ - for the last (hour|day|week|month|year)$/`
+- `--start` is the %times string for that period
+  (end-4000s/end-2000m/end-12000m/end-48000m/end-400d); `--end` is
+  the epoch of `time()` at render (allow a small window)
+- `--width 400 --height 175 --border 0`, `--slope-mode` present
+- exactly 3 DEF per DS (avg/min/max), all referencing files under
+  `$dbdir` that SampleRRD created (assert `-f` on the parsed path --
+  ties the cmdline to the fixture)
+- VDEF/GPRINT counts == 4 x DS count; legend has 4 COMMENTs
+- day/night block: the 5 CDEFs present; AREA lines present except for
+  month (no n_d_b*) and year (no n_d_* at all)
+- call count == 125 (25 services x 5 periods); each service path
+  appears exactly 5 times, once per period
+
+### Next steps (implementation checklist)
+
+1. Rewrite `t/munin_master_graph_static.t`: keep SampleDB+SampleRRD
+   fixture + `create(0, ...)`; mock `RRDs::graph` (log + 1% real) and
+   `RRDs::error` via Test::MockModule; capture calls in an arrayref.
+2. Assert the pattern above; keep the PNG-existence checks (they now
+   verify the redirect plumbing, not rrdtool).
+3. Run solo, then full suite; expect graph_static.t to drop from ~191s
+   to fixture-generation time (SampleRRD create+update of 25 RRDs with
+   30d of data is the remaining cost -- shrink `generate_sample_rrds`
+   data volume if it still dominates).
+4. Re-measure shuffle -j4 wall time; update the giants table.
