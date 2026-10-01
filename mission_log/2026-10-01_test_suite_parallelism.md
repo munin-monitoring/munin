@@ -601,3 +601,139 @@ For each logged call, given outfile and args:
    30d of data is the remaining cost -- shrink `generate_sample_rrds`
    data volume if it still dominates).
 4. Re-measure shuffle -j4 wall time; update the giants table.
+
+---
+
+## Session Continuation 3: graph_static.t mock (implemented, simplified) + two stragglers (2026-10-01)
+
+Same day as the log above; HEAD at session start `119bcc616`. The
+Session Continuation 2 design ("mock RRDs::graph, keep the cmdlines")
+was still marked DESIGNED, NOT YET IMPLEMENTED. This session implemented
+it -- in a deliberately simplified form per direction: "cut the chase,
+simply try. Mock the RRD::graph call by generating a fixed PNG."
+
+### What We Did
+
+1. **Probed that Test::MockModule can reach the XS `RRDs::graph`.**
+   Wrote a throwaway probe (`out/mock_probe.pl`) that mocked `RRDs::graph`
+   and `RRDs::error`, called the real `RRDs::graph`, and confirmed the
+   mock intercepts (logged 1 call, wrote "FAKE" to the outfile) and that
+   `\&RRDs::graph` is a real CODE ref for the canary fallback. This
+   settled the one open risk in the design -- whether an XS function is
+   mockable at all -- before touching the test. Probe deleted after.
+
+2. **Rewrote `t/munin_master_graph_static.t`** (kept the SampleDB +
+   SampleRRD fixture and `create(0, ...)`):
+   - Mock `RRDs::graph`: append `@args` (post-outfile) to `@graph_calls`,
+     write a fixed 1x1 PNG (embedded `pack("H*")`) to the outfile,
+     return `(1, 1)`.
+   - Mock `RRDs::error`: return `undef` (RRDs_graph() consults it after
+     every call; without the paired mock the real library's error state
+     leaks into the mocked path). `RRDs::last` left real -- reads RRD
+     headers only and validates the SampleRRD files exist.
+   - Kept the PNG-existence + all-periods checks (they now verify the
+     STDOUT-redirect plumbing, not rrdtool).
+   - Added: every produced PNG is non-empty (the mock's fixed content),
+     and `scalar(@graph_calls) == 125` (25 service paths x 5 periods) --
+     pins the render loop so a re-render/skip regression shows up with
+     zero rrdtool cost.
+   - Dropped the unused `File::Temp`/`File::Path` imports and the manual
+     `remove_tree` (TestState auto-cleans).
+
+3. **Found and fixed a redefinition warning** surfaced by the test run:
+   `Subroutine print_version_and_exit redefined at Limits.pm line 120`.
+   Root cause: `Limits.pm` did `use Munin::Master::Utils;`, whose
+   `@EXPORT` includes `print_version_and_exit`, *and* defined its own
+   local sub (line 120) printing the specific `munin-limits $VERSION`.
+   The pre-rewrite module had no local sub and used Utils' generic
+   export -- but Utils' generic text ("munin version ...") is wrong for
+   the munin-limits binary, so the specific sub is the one to keep.
+   Verified the fix idiom empirically (`use Foo ()` loads the module but
+   imports nothing; `Foo::bar` still resolves fully-qualified), then:
+   `use Munin::Master::Utils ();` + fully-qualified the single real call
+   site (`Munin::Master::Utils::exit_if_run_by_super_user()`). Only two
+   Utils symbols were used module-wide (`exit_if_run_by_super_user`,
+   `print_version_and_exit`); the latter has its own local def. Warning
+   gone; limits.t still 43/43.
+
+4. **Found and fixed the `.pi/` MANIFEST leak.** Every Build.PL printed
+   `Added to MANIFEST: .pi/out/...` (the pi agent harness's own
+   command-output dir). `MANIFEST.SKIP` had `^out/` (anchored, so it
+   never matches `.pi/out/`) but nothing for `.pi/`. Added `^\.pi/`.
+
+### Validation (honest)
+
+- graph_static.t solo: **ok, 6 tests, ~40s** (was ~82s serial / ~191s
+  in-shuffle before the mock).
+- limits.t solo after the Utils fix: **ok, 43 tests**, no redefinition
+  warning.
+- MANIFEST.SKIP fix: after `./Build realclean` + fresh `Build.PL`, a
+  newly generated MANIFEST has **0 `.pi/` lines** and nothing added.
+  (First run after the edit still showed 145 because the *stale* MANIFEST
+  was being reconciled; the rewrite under the new skip is what silences
+  it -- worth knowing so a single noisy run isn't misread as failure.)
+- **Full suite from the clean state: PASS, 33 files, 490 tests, 194s
+  wall** at shuffle -j4 (was 267-281s at the log's final state;
+  graph_static.t alone ~82s -> ~40s). Test count 488 -> 490 (the
+  graph_static rewrite went 2 tests -> 6).
+
+### What We Learned
+
+1. **Probe the mockable-sub question before designing around it.** The
+   design's one real unknown -- can Test::MockModule intercept an XS
+   function like `RRDs::graph`? -- was settled by a 20-line probe, not
+   by reading Test::MockModule docs or gambling on the rewrite.
+2. **`use Foo ()` = load, import nothing** (verified, not assumed). It's
+   the clean fix for "module exports X but I define my own X": keep the
+   specific sub, drop the import collision, fully-qualify the one real
+   call. Safer than deleting the local sub (which would silently change
+   `munin-limits --version` output to Utils' generic text).
+3. **A generated MANIFEST is stateful.** A MANIFEST.SKIP fix can look
+   like it failed on the first run (stale MANIFEST being reconciled) and
+   pass on the second. Verify from `realclean`, not from a re-run.
+4. **Anchored MANIFEST.SKIP patterns don't match nested dirs.** `^out/`
+   never matches `.pi/out/`. If a skip is meant to be recursive, it
+   needs the right anchor (or an unanchored form).
+5. **Pre-existing warnings can ride along on a green run.** html_static.t
+   emits repeated `substr outside of string ... HTML.pm line 812` (from
+   `_get_params_services`: `substr($_url, 1 + length($base_path))` when a
+   service's `url.path` is shorter than `base_path`+1, or undef). Zero
+   edits to HTML.pm/url this session -- not a regression, and the test
+   passes -- but the sliced `URLX` degrades a service link, so it's a
+   real (if low-severity) defect worth a look, not just noise.
+
+### What We Decided
+
+1. **Fixed-PNG mock, not the full cmdline-assertion design.** Per
+   direction ("cut the chase"), the implemented test mocks `RRDs::graph`
+   to write a fixed PNG and pins the *call count* (125), but does **not**
+   yet assert the per-arg cmdline pattern from the Continuation-2 design
+   (title/start/DEF/VDEF/GPRINT counts, day-night CDEFs) and has **no 1%
+   real-render canary**. The canary ref (`\&RRDs::graph`) was proven to
+   work in the probe, so the remaining design work is straightforward if
+   we want the stronger assertions later.
+2. **Keep the specific `print_version_and_exit`** in Limits.pm (correct
+   output for the binary); suppress the Utils import collision rather
+   than deleting the local sub.
+3. **`^\.pi/` added to MANIFEST.SKIP** -- the agent harness's output dir
+   is not dist content.
+
+### Files Changed (this session)
+
+| File | Purpose |
+|------|---------|
+| `t/munin_master_graph_static.t` | mock RRDs::graph (fixed PNG + call log) + RRDs::error; keep plumbing checks; add nonempty-PNG + 125-call-count asserts |
+| `lib/Munin/Master/Limits.pm` | `use Munin::Master::Utils ();` + fully-qualify `exit_if_run_by_super_user` -- kills the `print_version_and_exit` redefinition warning |
+| `MANIFEST.SKIP` | add `^\.pi/` so the agent harness's `.pi/out/` never enters MANIFEST |
+
+### Next Steps
+
+1. **(optional) Restore the stronger graph_static assertions** from the
+   Continuation-2 design -- per-arg cmdline pattern + 1% real-render
+   canary -- now that the XS mock is proven. Only worth it if we want the
+   test to catch fixture drift, not just render-loop regressions.
+2. **HTML.pm:812 `substr outside of string`** -- pre-existing, low
+   severity (degrades a service link when `url.path` < `base_path`+1).
+   Guard the substr or fix the fixture's base_path; not urgent.
+3. **Commit this session's three files** -- validated but uncommitted at
+   log time (graph_static.t, Limits.pm, MANIFEST.SKIP).
