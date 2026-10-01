@@ -141,7 +141,8 @@ unless ($all_ready) {
 # SETUP: Temp directory
 # ============================================================================
 
-$temp_dir = tempdir("rrdcached-int-$$-XXXXXX", TMPDIR => 1, CLEANUP => 0);
+use TestState;
+$temp_dir = TestState::state_dir();
 my $dbdir    = "$temp_dir/db";
 my $sockpath = "$temp_dir/rrdcached.sock";
 my $journald = "$temp_dir/journal";

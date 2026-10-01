@@ -33,7 +33,8 @@ require Munin::Master::Limits;
 
 Munin::Common::Logger::configure(output => 'screen', level => 'error');
 
-my $tmpdir = tempdir("lifecycle-$$-XXXXXX", TMPDIR => 1, CLEANUP => 1);
+use TestState;
+my $tmpdir = TestState::state_dir();
 my $dbfile = "$tmpdir/datafile.sqlite";
 SampleDB::generate_sample_db($dbfile);
 

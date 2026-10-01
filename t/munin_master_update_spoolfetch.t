@@ -65,7 +65,8 @@ unless ($all_ready) {
 }
 
 # Generate config with actual ports
-$temp_dir = tempdir("update-spoolfetch-$$-XXXXXX", TMPDIR => 1, CLEANUP => 0);
+use TestState;
+$temp_dir = TestState::state_dir();
 
 my $conf_file = "$temp_dir/munin.conf";
 open my $fh, '>', $conf_file or die "Cannot write $conf_file: $!";

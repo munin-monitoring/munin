@@ -32,7 +32,8 @@ require SampleDB;
 require SampleRRD;
 require Munin::Master::Config;
 
-my $tmpdir = tempdir("spec-$$-XXXXXX", TMPDIR => 1, CLEANUP => 1);
+use TestState;
+my $tmpdir = TestState::state_dir();
 
 my $dbfile = "$tmpdir/datafile.sqlite";
 SampleDB::generate_sample_db($dbfile);

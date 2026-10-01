@@ -6,7 +6,7 @@ use Test::Exception;
 use File::Temp qw(tempfile tempdir);
 use File::Slurp qw(write_file);
 
-use lib qw(lib);
+use lib qw(lib t/lib);
 
 use Munin::Master::ConfigParser;
 
@@ -151,7 +151,8 @@ EOF
 
 # Test file parsing
 subtest 'Parse file' => sub {
-    my $dir = tempdir(CLEANUP => 1);
+use TestState;
+    my $dir = TestState::state_dir();
     my $file = "$dir/test.conf";
     write_file($file, <<'EOF');
 dbdir = /var/lib/munin

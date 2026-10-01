@@ -6,6 +6,7 @@ use File::Spec;
 use File::Temp qw(tempdir);
 use File::Basename qw(dirname);
 use FindBin;
+use lib qw(lib t/lib);
 use Test::More;
 use RRDs;
 use File::Path qw(make_path remove_tree);
@@ -13,7 +14,8 @@ use File::Path qw(make_path remove_tree);
 my $script = "$FindBin::Bin/../script/munin-migrate-rrd";
 plan skip_all => "Script not found: $script" unless -f $script;
 
-my $tmpdir = tempdir(CLEANUP => 1);
+use TestState;
+my $tmpdir = TestState::state_dir();
 my $dbdir = "$tmpdir/rrd";
 make_path($dbdir, { mode => 0755 });
 

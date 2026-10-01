@@ -8,10 +8,11 @@ use strict;
 use warnings;
 use File::Temp qw(tempdir);
 use File::Path qw(make_path remove_tree);
+use TestState;
 
 sub generate_test_certs {
     my ($dir) = @_;
-    $dir //= tempdir("tls-XXXXXX", TMPDIR => 1);
+    $dir //= TestState::state_dir();
 
     my $ca_dir = "$dir/CA";
     make_path($ca_dir);
