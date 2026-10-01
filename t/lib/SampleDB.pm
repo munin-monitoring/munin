@@ -95,7 +95,7 @@ sub generate_sample_db {
         my $grp_name = ($host eq "localhost") ? "acme.com" : "";
         my $path = ($host eq "localhost") ? "acme.com/$host" : "$host";
 
-        $dbh->do("INSERT OR IGNORE INTO grp (id, name, path) VALUES (?, ?, ?)",
+        $dbh->do("INSERT OR IGNORE INTO grp (id, p_id, name, path) VALUES (?, 0, ?, ?)",
             undef, $grp_id, $grp_name || $host, $path);
 
         # Insert group into url table
@@ -105,9 +105,10 @@ sub generate_sample_db {
         $dbh->do("INSERT OR IGNORE INTO node (id, grp_id, name, path) VALUES (?, ?, ?, ?)",
             undef, $node_id, $grp_id, $host, $path);
 
-        # Insert node into url table
+        # Insert node into url table - use different path than group
+        my $node_url_path = "$path/$host";
         $dbh->do("INSERT OR IGNORE INTO url (path, node_id) VALUES (?, ?)",
-            undef, $path, $node_id);
+            undef, $node_url_path, $node_id);
 
         # Set notify_alias for notification testing
         $dbh->do("INSERT OR IGNORE INTO node_attr (id, name, value) VALUES (?, 'notify_alias', ?)",
@@ -116,8 +117,8 @@ sub generate_sample_db {
         my $svc_idx = 0;
         for my $svc (@services) {
             my $svc_path = "$path/$svc";
-            $dbh->do("INSERT OR IGNORE INTO service (id, node_id, name, path) VALUES (?, ?, ?, ?)",
-                undef, $svc_id, $node_id, $svc, $svc_path);
+            $dbh->do("INSERT OR IGNORE INTO service (id, node_id, name, path, service_title) VALUES (?, ?, ?, ?, ?)",
+                undef, $svc_id, $node_id, $svc, $svc_path, "Graph $svc");
 
             # Set graph_title and contacts
             $dbh->do("INSERT OR IGNORE INTO service_attr (id, name, value) VALUES (?, 'graph_title', ?)",
@@ -127,6 +128,13 @@ sub generate_sample_db {
 
             $dbh->do("INSERT OR IGNORE INTO url (path, service_id) VALUES (?, ?)",
                 undef, $svc_path, $svc_id);
+
+            # Add category for this service
+            my $category = ($svc eq 'cpu' || $svc eq 'load') ? 'system' :
+                          ($svc eq 'memory' || $svc eq 'disk') ? 'storage' :
+                          'network';
+            $dbh->do("INSERT OR IGNORE INTO service_categories (id, category) VALUES (?, ?)",
+                undef, $svc_id, $category);
 
             my $scenario = $service_scenarios[$svc_idx % scalar(@service_scenarios)];
 
