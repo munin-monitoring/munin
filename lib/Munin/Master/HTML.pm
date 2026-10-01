@@ -26,6 +26,12 @@ sub handle_request
 	my %cookies = CGI::Cookie->fetch;
 	my $path = $cgi->path_info();
 
+	# One read-only handle per request, threaded through every helper below
+	# instead of reconnecting per query. Opened where SQL is first needed:
+	# the static branch needs it for staticdir, the main body below needs it
+	# throughout; pure redirects need no SQL at all.
+	use Munin::Master::Update;
+
 	# Handle static page now, since there is no need to do any SQL
 	if ($path =~ m/static\/(.+)$/) {
 		# Emit the static page
@@ -54,7 +60,8 @@ sub handle_request
 			gif => "image/gif",
 		);
 
-		my $staticdir = Munin::Master::Update::get_param("staticdir");
+		my $dbh = Munin::Master::Update::get_dbh(1);
+		my $staticdir = Munin::Master::Update::get_param("staticdir", $dbh);
 		my $filename = "$staticdir/$page";
 		my $fh = new IO::File("$filename");
 
@@ -114,7 +121,6 @@ sub handle_request
 	$path =~ s,/$,,;
 
 	# Ok, now SQL is needed to go further
-	use Munin::Master::Update;
 	my $dbh = Munin::Master::Update::get_dbh(1);
 
 	my $comparison;
@@ -572,7 +578,7 @@ RENDERING:
 		print $cgi->header( "-Content-Type" => "text/html",
 			-Cache_Control => "public, max-age=3600", # 1h for HTML pages
 		);
-		my $tmpldir = Munin::Master::Update::get_param("tmpldir");
+		my $tmpldir = Munin::Master::Update::get_param("tmpldir", $dbh);
 		my $template = HTML::Template::Pro->new(
 			filename => "$tmpldir/$template_filename",
 			loop_context_vars => 1,

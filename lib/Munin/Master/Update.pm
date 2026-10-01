@@ -53,7 +53,13 @@ sub run {
 	# Import groups/hosts from config into SQL
 	$self->_db_groups_update();
 
-	$self->{workers} = $self->_create_workers();
+	# Build the worker list on an explicit handle, then close it: no
+	# handle may be open when _run_workers forks.
+	{
+		my $work_dbh = get_dbh();
+		$self->{workers} = $self->_create_workers($work_dbh);
+		$work_dbh->disconnect();
+	}
         my $nb_workers = $self->_run_workers();
 
 	# Import contacts and config overrides into SQL
@@ -134,11 +140,14 @@ sub get_dbh {
 	return $dbh;
 }
 
+# Lookup helpers take an explicit handle (prescriptive): a phase opens one,
+# threads it, and closes it before forking. No cached/global handle, no
+# silent reconnects -- a missing handle is a programming error.
 sub get_param {
 	my ($param_name, $dbh) = @_;
-	my $dbh_local = $dbh || get_dbh(1);
+	die "get_param: dbh required\n" unless $dbh;
 	my $sql = 'SELECT value FROM param WHERE name = ?';
-	my ($param_value) = $dbh_local->selectrow_array($sql, undef, ($param_name));
+	my ($param_value) = $dbh->selectrow_array($sql, undef, ($param_name));
 	return $param_value;
 }
 
@@ -147,7 +156,7 @@ sub get_param {
 # Host objects have get_full_path() using the stored path.
 sub get_hosts {
 	my ($dbh) = @_;
-	my $dbh_local = $dbh || get_dbh(1);
+	die "get_hosts: dbh required\n" unless $dbh;
 
 	my $sql = q{
 		SELECT n.id, n.name, n.path, g.name as group_name
@@ -156,13 +165,13 @@ sub get_hosts {
 		ORDER BY n.name
 	};
 
-	my $sth = $dbh_local->prepare($sql);
+	my $sth = $dbh->prepare($sql);
 	$sth->execute();
 
 	my @hosts;
 	while (my $row = $sth->fetchrow_hashref) {
 		# Get all attributes for this node
-		my $attr_sth = $dbh_local->prepare(
+		my $attr_sth = $dbh->prepare(
 			'SELECT name, value FROM node_attr WHERE id = ?'
 		);
 		$attr_sth->execute($row->{id});
@@ -203,10 +212,10 @@ sub get_hosts {
 # Returns undef if not found.
 sub get_override {
 	my ($host_name, $service_name, $field_name, $attr_name, $dbh) = @_;
-	my $dbh_local = $dbh || get_dbh(1);
+	die "get_override: dbh required\n" unless $dbh;
 
 	# Try exact match first (field-level override)
-	my ($value) = $dbh_local->selectrow_array(
+	my ($value) = $dbh->selectrow_array(
 		'SELECT value FROM config_override WHERE host_name = ? AND service_name = ? AND field_name = ? AND name = ?',
 		undef, $host_name, $service_name // '', $field_name // '', $attr_name
 	);
@@ -215,7 +224,7 @@ sub get_override {
 
 	# Fall back to service-level override (empty field_name)
 	if (defined $field_name && $field_name ne '') {
-		($value) = $dbh_local->selectrow_array(
+		($value) = $dbh->selectrow_array(
 			'SELECT value FROM config_override WHERE host_name = ? AND service_name = ? AND field_name = ? AND name = ?',
 			undef, $host_name, $service_name // '', '', $attr_name
 		);
@@ -223,7 +232,7 @@ sub get_override {
 	}
 
 	# Fall back to host-level override (empty service and field)
-	($value) = $dbh_local->selectrow_array(
+	($value) = $dbh->selectrow_array(
 		'SELECT value FROM config_override WHERE host_name = ? AND service_name = ? AND field_name = ? AND name = ?',
 		undef, $host_name, '', '', $attr_name
 	);
@@ -245,9 +254,9 @@ sub _create_rundir_if_missing {
 
 
 sub _create_workers {
-    my ($self) = @_;
+    my ($self, $dbh) = @_;
 
-    my @hosts = @{ get_hosts() };
+    my @hosts = @{ get_hosts($dbh) };
 
     # Use user-defined ordering, slow hosts should run first for
     # better global throughput, keep shuffle() to shuffle hosts within
@@ -255,7 +264,7 @@ sub _create_workers {
     @hosts = shuffle(@hosts);
     @hosts = sort { $a->{update_priority} <=> $b->{update_priority} } @hosts;
 
-    my $limit_hosts = get_param('limit_hosts');
+    my $limit_hosts = get_param('limit_hosts', $dbh);
     if (defined $limit_hosts && %{$limit_hosts}) {
         @hosts = grep { $limit_hosts->{$_->{name}} } @hosts
     }
@@ -305,10 +314,14 @@ sub _run_workers {
 
 	use Parallel::ForkManager;
 
-	my $max_processes = get_param('max_processes') || 16;
+	# Params are read on an explicit handle, closed before WORKER_LOOP:
+	# fork() must see no open handle.
+	my $dbh = get_dbh();
+	my $max_processes = get_param('max_processes', $dbh) || 16;
 
 	# Do NOT fork if not set
-	$max_processes = 0 unless get_param('fork');
+	$max_processes = 0 unless get_param('fork', $dbh);
+	$dbh->disconnect();
 
 	my $pm = Parallel::ForkManager->new($max_processes);
 

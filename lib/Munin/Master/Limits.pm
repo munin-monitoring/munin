@@ -59,10 +59,13 @@ sub limits_main {
 
 # Find all services with warning/critical defined, evaluate each
 sub _process_limits {
+    # Explicit R/W handle for this process; threaded through the service
+    # loop, closed at the end of the run (munin-limits is one process per
+    # cycle -- see Update.pm for the handle rules).
     my $dbh = Munin::Master::Update::get_dbh();
 
     # Find all services that have at least one DS with warning or critical
-    my $sth = $dbh->prepare(q{
+    my $sth = $dbh->prepare_cached(q{
         SELECT DISTINCT s.id, s.name, s.path, n.name AS node_name, g.path AS group_path
         FROM service s
         INNER JOIN node n ON n.id = s.node_id
@@ -89,8 +92,9 @@ sub _process_service {
 
     DEBUG "processing service: $service_name";
 
-    # Read service context from SQL
-    my $sth_ctx = $dbh->prepare(q{
+    # Read service context from SQL (single row: selectrow_array runs
+    # prepare_cached + execute + fetch + finish, leaving no active cursor)
+    my ($host_alias, $graph_title, $contacts) = $dbh->selectrow_array(q{
         SELECT
             MAX(CASE WHEN na.name = 'notify_alias' THEN na.value END) AS host_alias,
             MAX(CASE WHEN sa.name = 'graph_title' THEN sa.value END) AS graph_title,
@@ -100,9 +104,7 @@ sub _process_service {
         LEFT JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_title'
         LEFT JOIN node_attr na ON na.id = n.id AND na.name = 'notify_alias'
         WHERE s.id = ?
-    });
-    $sth_ctx->execute($service_id);
-    my ($host_alias, $graph_title, $contacts) = $sth_ctx->fetchrow_array;
+    }, undef, $service_id);
 
     $host_alias //= $node_name;
     $graph_title //= $service_name;
@@ -122,7 +124,7 @@ sub _process_service {
     );
 
     # Process each DS in this service
-    my $sth_ds = $dbh->prepare(q{
+    my $sth_ds = $dbh->prepare_cached(q{
         SELECT d.id, d.name, d.type
         FROM ds d
         WHERE d.service_id = ?
@@ -186,7 +188,7 @@ sub _process_ds {
     my ($dbh, $ds_id, $ds_name, $ds_type, $service) = @_;
 
     # Read DS attrs from SQL — plugin defaults
-    my $sth_attr = $dbh->prepare('SELECT name, value FROM ds_attr WHERE id = ?');
+    my $sth_attr = $dbh->prepare_cached('SELECT name, value FROM ds_attr WHERE id = ?');
     $sth_attr->execute($ds_id);
     my %attrs;
     while (my ($k, $v) = $sth_attr->fetchrow_array) {
@@ -194,7 +196,7 @@ sub _process_ds {
     }
 
     # Read config overrides — wins over plugin defaults
-    my $sth_ov = $dbh->prepare('SELECT name, value FROM override WHERE ds_id = ?');
+    my $sth_ov = $dbh->prepare_cached('SELECT name, value FROM override WHERE ds_id = ?');
     $sth_ov->execute($ds_id);
     while (my ($k, $v) = $sth_ov->fetchrow_array) {
         $attrs{$k} = $v;
@@ -227,7 +229,7 @@ sub _process_ds {
         # Store computed value immediately so HTML/graphs can show it
         # even if threshold evaluation hasn't run yet
         if (defined $value) {
-            my $sth_store = $dbh->prepare(q{
+            my $sth_store = $dbh->prepare_cached(q{
                 UPDATE state SET last_value = ?, last_epoch = ?
                 WHERE ds_id = ?
             });
@@ -239,13 +241,13 @@ sub _process_ds {
     my ($warn, $crit) = _parse_thresholds($warn_str, $crit_str);
     return unless defined $warn || defined $crit;
 
-    # Read state from SQL
-    my $sth_state = $dbh->prepare(q{
+    # Read state from SQL (single row per ds; selectrow_array finishes the
+    # cursor so the next prepare_cached sees no active statement)
+    my ($last_epoch, $last_value, $prev_epoch, $prev_value, $old_state, $old_num_unknowns)
+        = $dbh->selectrow_array(q{
         SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns
         FROM state WHERE ds_id = ?
-    });
-    $sth_state->execute($ds_id);
-    my ($last_epoch, $last_value, $prev_epoch, $prev_value, $old_state, $old_num_unknowns) = $sth_state->fetchrow_array;
+    }, undef, $ds_id);
 
     $old_state       //= 'ok';
     $old_num_unknowns //= 0;
@@ -350,14 +352,14 @@ sub _process_ds {
     }
 
     # Write alarm to SQL
-    my $sth_ins = $dbh->prepare(q{
+    my $sth_ins = $dbh->prepare_cached(q{
         INSERT INTO state (ds_id, alarm, num_unknowns)
         SELECT ?, ?, ?
         WHERE NOT EXISTS (SELECT 1 FROM state WHERE ds_id = ?)
     });
     $sth_ins->execute($ds_id, $new_state, $new_num_unknowns, $ds_id);
 
-    my $sth_upt = $dbh->prepare(q{UPDATE state SET alarm = ?, num_unknowns = ? WHERE ds_id = ?});
+    my $sth_upt = $dbh->prepare_cached(q{UPDATE state SET alarm = ?, num_unknowns = ? WHERE ds_id = ?});
     $sth_upt->execute($new_state, $new_num_unknowns, $ds_id);
 
     $dbh->commit();
@@ -429,20 +431,18 @@ sub _compute_cdef_value {
     # --------------------------------------------------------------------
     # Get RRD file and source DS names for this CDEF.
     # --------------------------------------------------------------------
-    my $sth_rrd = $dbh->prepare(q{
+    my ($ds_name, $rrd_file) = $dbh->selectrow_array(q{
         SELECT d.name, da.value
         FROM ds d
         INNER JOIN ds_attr da ON da.id = d.id AND da.name = 'rrd:file'
         WHERE d.id = ?
-    });
-    $sth_rrd->execute($ds_id);
-    my ($ds_name, $rrd_file) = $sth_rrd->fetchrow_array;
+    }, undef, $ds_id);
     return unless defined $rrd_file;
     $rrd_file = File::Spec->catfile($dbdir, $rrd_file);
     return unless -f $rrd_file;
 
     # Get all DS in same service (for source DS lookup)
-    my $sth_svc = $dbh->prepare(q{
+    my $sth_svc = $dbh->prepare_cached(q{
         SELECT d.id, d.name, da_file.value as rrd_file, da_field.value as rrd_field
         FROM ds d
         INNER JOIN ds_attr da_file ON da_file.id = d.id AND da_file.name = 'rrd:file'
@@ -537,7 +537,7 @@ sub _generate_service_message {
     }
     # Also check global default contacts from param table
     unless (@contacts) {
-        my $global = Munin::Master::Update::get_param('contacts');
+        my $global = Munin::Master::Update::get_param('contacts', $dbh);
         @contacts = split /\s+/, $global if $global;
     }
     return unless @contacts;
@@ -546,17 +546,16 @@ sub _generate_service_message {
         next if $contact_name eq 'none';
         next if @limit_contacts && !grep { $_ eq $contact_name } @limit_contacts;
 
-        # Read contact from SQL
-        my $sth_c = $dbh->prepare('SELECT id FROM contact WHERE name = ?');
-        $sth_c->execute($contact_name);
-        my ($contact_id) = $sth_c->fetchrow_array;
+        # Read contact from SQL (single row)
+        my ($contact_id) = $dbh->selectrow_array(
+            'SELECT id FROM contact WHERE name = ?', undef, $contact_name);
         unless ($contact_id) {
             WARN "Missing contact: $contact_name; skipping";
             next;
         }
 
         # Read contact attrs from SQL
-        my $sth_ca = $dbh->prepare('SELECT name, value FROM contact_attr WHERE id = ?');
+        my $sth_ca = $dbh->prepare_cached('SELECT name, value FROM contact_attr WHERE id = ?');
         $sth_ca->execute($contact_id);
         my %ca;
         while (my ($k, $v) = $sth_ca->fetchrow_array) {
@@ -587,15 +586,13 @@ sub _generate_service_message {
 
         INFO "state of $service->{group}::$service->{host}::$service->{plugin} has changed to $service->{worst}, notifying $contact_name";
 
-        # Read notification state from SQL
-        my $sth_n = $dbh->prepare(q{
+        # Read notification state from SQL (single row)
+        my ($notif_id, $num_messages) = $dbh->selectrow_array(q{
             SELECT id, num_messages FROM notification
             WHERE contact_id = ? AND service_id = (
                 SELECT id FROM service WHERE name = ? LIMIT 1
             )
-        });
-        $sth_n->execute($contact_id, $service->{plugin});
-        my ($notif_id, $num_messages) = $sth_n->fetchrow_array;
+        }, undef, $contact_id, $service->{plugin});
 
         # Check max_messages
         my $max_messages = $ca{max_messages} // 0;
