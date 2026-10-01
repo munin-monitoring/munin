@@ -726,14 +726,62 @@ simply try. Mock the RRD::graph call by generating a fixed PNG."
 | `lib/Munin/Master/Limits.pm` | `use Munin::Master::Utils ();` + fully-qualify `exit_if_run_by_super_user` -- kills the `print_version_and_exit` redefinition warning |
 | `MANIFEST.SKIP` | add `^\.pi/` so the agent harness's `.pi/out/` never enters MANIFEST |
 
+### Follow-up investigations (same session, post-commit)
+
+Two of the deferred items were run to ground. Both closed with evidence;
+neither needed a code change.
+
+**1. `node_test_spool.pl` -> TestState: closed as a no-op.** The spool
+node is `exec`'d standalone and the parent kills it with SIGTERM. Both
+`tempdir(CLEANUP => 1)` (what it uses now) and `TestState` clean up via
+`END` blocks -- and `END` does **not** run on an uncaught SIGTERM. A
+probe confirmed it: child died on signal 15, no `END block ran`. So the
+migration would leak identically (both already land in tmpfs; docker
+sets `TMPDIR=/dev/shm`, and the container is ephemeral). The "never
+tempdir(CLEANUP => 0)" rule doesn't apply -- this uses `CLEANUP => 1`,
+and no END-based cleanup fires on SIGTERM regardless of mechanism.
+Not worth doing.
+
+**2. HTML.pm:812 `substr outside of string`: root cause is the fixture,
+not HTML.pm.** Temporarily instrumented the substr (captured `base_path`
++ `url` on the out-of-range case, then reverted -- clean diff) and ran
+`html_static.t`. The pairing is unambiguous:
+
+```
+base_path=<aesir/aesir>              url=<(aesir/load)>
+base_path=<acme.com/localhost/localhost>  url=<(acme.com/localhost/cpu)>
+```
+
+`base_path` is the **node** url; the service `url` sits at **group**
+level, missing the node segment. `substr($_url, 1+length($base_path))`
+assumes each service url is nested under the node path -- which
+production *guarantees*: `_db_url` (UpdateWorker.pm) prefixes every
+child path with its parent's url (`$path = "$p_path/$path" if
+$p_path`), so a service url is always `node_path/service_name`.
+SampleDB violates that invariant: it builds service urls as `$path/$svc`
+(group-level) but node urls as `$path/$host` (an extra `$host`), so the
+service is never under the node. HTML.pm is correct for real data; a
+substr guard would only mask the fixture bug. The principled fix is
+SampleDB's url nesting, but that touches url paths feeding ~6 test files
+with hardcoded path assumptions -- a real change, deferred on purpose.
+
 ### Next Steps
 
-1. **(optional) Restore the stronger graph_static assertions** from the
-   Continuation-2 design -- per-arg cmdline pattern + 1% real-render
-   canary -- now that the XS mock is proven. Only worth it if we want the
-   test to catch fixture drift, not just render-loop regressions.
-2. **HTML.pm:812 `substr outside of string`** -- pre-existing, low
-   severity (degrades a service link when `url.path` < `base_path`+1).
-   Guard the substr or fix the fixture's base_path; not urgent.
-3. **Commit this session's three files** -- validated but uncommitted at
-   log time (graph_static.t, Limits.pm, MANIFEST.SKIP).
+1. **(optional, scope-cut) Restore the stronger graph_static
+   assertions** -- per-arg cmdline pattern + 1% real-render canary. The
+   XS mock + `original()` ref are proven, so this is straightforward if
+   wanted later; user chose the simple fixed-PNG mock for now.
+2. **Fix SampleDB url nesting** (root cause of HTML.pm:812) -- make
+   service urls nest under node urls the way `_db_url` does in
+   production. Real change: verify the ~6 dependent test files' hardcoded
+   paths. Not urgent (cosmetic warning + degraded peer link in tests).
+3. ~~Commit this session's three files~~ -- done (see Commits below).
+
+### Commits (this session)
+
+| Commit | Subject |
+|--------|---------|
+| 0240b46f3 | test: mock RRDs::graph in graph_static.t with fixed PNG |
+| 89d5f5339 | fix: stop print_version_and_exit redefinition warning in Limits.pm |
+| 5fea59bb9 | build: skip .pi/ agent-harness output in MANIFEST.SKIP |
+| 29563dd12 | docs: log graph_static.t mock session + two straggler fixes |
