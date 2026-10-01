@@ -50,7 +50,12 @@ sub generate_sample_db {
 
     # Create a test contact with a safe command
     $dbh->do("INSERT OR IGNORE INTO contact (id, name) VALUES (1, 'testcontact')");
-    $dbh->do("INSERT OR IGNORE INTO contact_attr (id, name, value) VALUES (1, 'command', '/bin/true')");
+    # A command that consumes stdin until EOF and exits 0, like a real mailer.
+    # /bin/true exits at once instead, which breaks pipe semantics (EPIPE on
+    # every write -> refork storm -> zombie pileup). No shell metacharacters:
+    # exec() falls back to the shell when it sees any, and the shell would
+    # mangle <STDIN> into a redirection from a nonexistent file.
+    $dbh->do("INSERT OR IGNORE INTO contact_attr (id, name, value) VALUES (1, 'command', 'perl -ne1')");
     $dbh->do("INSERT OR IGNORE INTO contact_attr (id, name, value) VALUES (1, 'text', '\${var:group} :: \${var:host} :: \${var:graph_title} \${var:worst}')");
 
     my @hosts = ("localhost", "acme.com", "aesir", "asynjur", "svartalfar");
