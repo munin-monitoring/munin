@@ -32,7 +32,8 @@ my $config_obj = Munin::Master::Config->instance();
 my $config = $config_obj->{config};
 
 # Set up dbdir for the test
-$config->{dbdir} = '/tmp/munin_test';
+use TestState;
+$config->{dbdir} = TestState::state_dir();
 
 # Parse a test config with groups and hosts
 my $test_config = <<'EOF';

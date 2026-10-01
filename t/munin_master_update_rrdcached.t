@@ -15,7 +15,8 @@ use File::Path qw(remove_tree);
 # at module load time via: my $config = Munin::Master::Config->instance()->{config}
 use Munin::Master::Config;
 
-my $temp_dir = tempdir("rrdcached-$$-XXXXXX", TMPDIR => 1, CLEANUP => 1);
+use TestState;
+my $temp_dir = TestState::state_dir();
 my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir}            = $temp_dir;
 $config->{rrdcached_socket} = "";    # default: no rrdcached

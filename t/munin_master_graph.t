@@ -21,7 +21,8 @@ use Munin::Master::Graph;
 my $config = Munin::Master::Config->instance()->{"config"};
 $config->parse_config_from_file("t/config/munin.conf");
 
-my $dbdir = tempdir("graph-$$-XXXXXX", TMPDIR => 1, CLEANUP => 0);
+use TestState;
+my $dbdir = TestState::state_dir();
 $config->{dbdir} = $dbdir;
 $config->{tmpldir} = "web/templates/";
 
@@ -67,7 +68,8 @@ unless ($valid_path) {
 # HELPER: Capture handle_request output
 # ============================================================================
 
-my $tmpdir = tempdir("graph-capture-$$-XXXXXX", TMPDIR => 1, CLEANUP => 1);
+use TestState;
+my $tmpdir = TestState::state_dir();
 
 # ============================================================================
 # HELPER: Capture handle_request output

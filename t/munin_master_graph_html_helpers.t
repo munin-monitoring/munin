@@ -22,7 +22,8 @@ Munin::Common::Logger::configure(
 
 # Generate fresh test database
 require SampleDB;
-my $tmpdir = tempdir(CLEANUP => 1);
+use TestState;
+my $tmpdir = TestState::state_dir();
 my $dbfile = "$tmpdir/datafile.sqlite";
 SampleDB::generate_sample_db($dbfile);
 

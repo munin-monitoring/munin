@@ -130,7 +130,8 @@ Munin::Common::Logger::configure(
 );
 
 my $config = Munin::Master::Config->instance()->{"config"};
-my $dbdir  = tempdir("limits-$$-XXXXXX", TMPDIR => 1, CLEANUP => 0);
+use TestState;
+my $dbdir  = TestState::state_dir();
 $config->{dbdir}  = $dbdir;
 $config->{fork}   = 0;
 

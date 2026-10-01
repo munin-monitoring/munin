@@ -24,7 +24,8 @@ use Munin::Master::Config;
 my $config = Munin::Master::Config->instance()->{"config"};
 $config->parse_config_from_file("t/config/munin.conf");
 
-my $dbdir = tempdir("html-static-$$-XXXXXX", TMPDIR => 1, CLEANUP => 0);
+use TestState;
+my $dbdir = TestState::state_dir();
 $config->{dbdir} = $dbdir;
 $config->{tmpldir} = "web/templates/";
 $config->{staticdir} = "$dbdir/static";

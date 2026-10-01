@@ -8,7 +8,8 @@ use Test::More;
 use File::Temp qw(tempdir);
 use RRDs;
 
-use lib qw(lib);
+use lib qw(lib t/lib);
+use TestState;
 use Munin::Master::Limits;
 
 # Fixed epoch for deterministic RRD testing
@@ -114,7 +115,7 @@ subtest 'CDEF expression token parsing' => sub {
 
 # Test RRDs::xport with CDEFs
 subtest 'RRDs::xport CDEF computation' => sub {
-    my $dir = tempdir(CLEANUP => 1);
+    my $dir = TestState::state_dir();
     my $rrd = make_test_rrd($dir);
 
     my @args = (
@@ -145,7 +146,7 @@ subtest 'RRDs::xport CDEF computation' => sub {
 
 # Test batch CDEF computation
 subtest 'batch CDEF computation' => sub {
-    my $dir = tempdir(CLEANUP => 1);
+    my $dir = TestState::state_dir();
     my $rrd = make_test_rrd($dir);
 
     my @args = (
