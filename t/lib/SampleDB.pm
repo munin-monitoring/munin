@@ -33,13 +33,13 @@ sub generate_sample_db {
         service_id INTEGER REFERENCES service(id),
         CHECK ((grp_id IS NOT NULL) + (node_id IS NOT NULL) + (service_id IS NOT NULL) = 1)
     )");
-    $dbh->do("CREATE TABLE IF NOT EXISTS state (ds_id INTEGER REFERENCES ds(id), node_id INTEGER REFERENCES node(id), last_epoch INTEGER, last_value VARCHAR, prev_epoch INTEGER, prev_value VARCHAR, alarm VARCHAR, num_unknowns INTEGER DEFAULT 0, CHECK ((ds_id IS NOT NULL) + (node_id IS NOT NULL) = 1))");
+    $dbh->do("CREATE TABLE IF NOT EXISTS state (ds_id INTEGER REFERENCES ds(id), node_id INTEGER REFERENCES node(id), last_epoch INTEGER, last_value VARCHAR, prev_epoch INTEGER, prev_value VARCHAR, alarm VARCHAR, num_unknowns INTEGER DEFAULT 0, prev_alarm VARCHAR, eval_value VARCHAR, extinfo VARCHAR, CHECK ((ds_id IS NOT NULL) + (node_id IS NOT NULL) = 1))");
     $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_ds ON state (ds_id)");
     $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_node ON state (node_id)");
     $dbh->do("CREATE TABLE IF NOT EXISTS contact (id $db_serial_type PRIMARY KEY, name VARCHAR UNIQUE)");
     $dbh->do("CREATE TABLE IF NOT EXISTS contact_attr (id INTEGER REFERENCES contact(id), name VARCHAR, value VARCHAR)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS notification (id $db_serial_type PRIMARY KEY, contact_id INTEGER REFERENCES contact(id), service_id INTEGER REFERENCES service(id), severity VARCHAR, sent_at INTEGER, num_messages INTEGER DEFAULT 0)");
-    $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification ON notification (contact_id, service_id)");
+    $dbh->do("CREATE TABLE IF NOT EXISTS notification_tracking (id $db_serial_type PRIMARY KEY, contact_id INTEGER REFERENCES contact(id), service_id INTEGER REFERENCES service(id), severity VARCHAR, sent_at INTEGER, num_messages INTEGER DEFAULT 0)");
+    $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification_tracking ON notification_tracking (contact_id, service_id)");
     $dbh->do("CREATE TABLE IF NOT EXISTS override (ds_id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
     $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_override ON override (ds_id, name)");
     $dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");

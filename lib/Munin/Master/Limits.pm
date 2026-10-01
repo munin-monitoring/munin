@@ -7,14 +7,18 @@ use Exporter;
 
 our (@ISA, @EXPORT);
 @ISA    = qw ( Exporter );
-@EXPORT = qw ( limits_main );
+@EXPORT = qw ( limits_startup limits_main );
 
 use POSIX qw ( strftime WNOHANG );
 use Getopt::Long;
 use Time::HiRes;
 use Text::Balanced qw ( extract_bracketed );
 use Scalar::Util qw( looks_like_number );
+use File::Spec;
 use Munin::Common::Logger;
+use Munin::Common::Defaults;
+use Munin::Master::Config;
+use Munin::Master::Utils;
 use RRDs;
 
 use Munin::Master::Update;
@@ -42,13 +46,109 @@ my %default_text = (
 );
 
 
+# CLI/config entry point for the standalone script. Restored from the
+# pre-SQL rewrite: script/munin-limits calls this before limits_main and
+# the rewrite had dropped it, breaking the script at startup.
+sub limits_startup {
+    my ($args) = @_;
+    local @ARGV = @{$args};
+
+    my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
+
+    $do_usage = 1 unless GetOptions(
+        "host=s"        => \@limit_hosts,
+        "service=s"     => \@limit_services,
+        "contact=s"     => \@limit_contacts,
+        "config=s"      => \$conffile,
+        "debug"         => \$DEBUG,
+        "verbose"       => \$VERBOSE,
+        "screen"        => \$screen,
+        "force!"        => \$force,
+        "always-send=s" => \@always_send,
+        "force-run-as-root!" => \$force_run_as_root,
+        "version!"      => \$do_version,
+        "help"          => \$do_usage,
+    );
+
+    print_usage_and_exit()   if $do_usage;
+    print_version_and_exit() if $do_version;
+
+    if ($DEBUG || $screen) {
+        my %log;
+        $log{output} = 'screen' if $screen;
+        $log{level}  = 'debug'  if $DEBUG;
+        Munin::Common::Logger::configure(%log);
+    }
+
+    exit_if_run_by_super_user() unless $force_run_as_root;
+
+    @always_send = qw{ok warning critical unknown} if $force;
+
+    # Everything below runs off SQL, but get_dbh() and the fork decision
+    # read dbdir/fork/max_processes from the config singleton.
+    my $globconfig = Munin::Master::Config->instance();
+    my $config = $globconfig->{config};
+    $config->parse_config_from_file($conffile);
+}
+
+
+sub print_usage_and_exit {
+    print "Usage: $0 [options]
+
+Options:
+    --help          View this message.
+    --debug         View debug messages.
+    --screen        Send log messages to the screen (STDERR).
+    --always-send <severity list>
+                    Send messages to contacts even if state has
+                    not changed since the last run. The list is a
+                    space or comma separated list of severities.
+                    Choose from one or more of \"critical\",
+                    \"warning\", \"unknown\" and \"ok\".
+    --force         Alias for \"--always-send ok,warning,critical,unknown\".
+    --service <service>     Limit notified services to <service>.
+    --host <host>           Limit notified hosts to <host>.
+    --contact <contact>     Limit notified contacts to <contact>.
+    --config <file> Use <file> as configuration file.
+                    [$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf]
+
+";
+    exit 0;
+}
+
+
+sub print_version_and_exit {
+    print "munin-limits $Munin::Common::Defaults::MUNIN_VERSION\n";
+    exit 0;
+}
+
+
+# Three phases, cleanly separated:
+#
+#   1. Work list:  per-host list of services having threshold-ed ds,
+#                  built in memory. The dbh is closed before returning --
+#                  no handle may be open when phase 2 forks.
+#   2. Evaluation: per-host (Parallel::ForkManager, or inline when
+#                  fork=0). Each child opens its own R/W dbh, evaluates
+#                  ds thresholds, writes state (alarm, num_unknowns,
+#                  prev_alarm, eval_value, extinfo), closes. NO
+#                  notification logic in children.
+#   3. Delivery:   serial tail in the master. Reads results FROM the DB
+#                  (state IS the transport between phases), builds
+#                  messages, resolves contacts, delivers -- contacts
+#                  serialized, one mailer per contact, sequential.
+#
+# The DB is the only channel between phases: it works identically when
+# phase 2 runs inline (fork=0, as tests do) and when it forks.
 sub limits_main {
     $SIG{PIPE} = 'IGNORE';
 
     my $update_time = Time::HiRes::time;
-    INFO "Starting limits (inline)";
+    INFO "Starting limits";
 
-    _process_limits();
+    my $work = _build_work_list();
+    _evaluate_limits($work);
+    _deliver_notifications($work);
 
     _close_pipes();
 
@@ -57,16 +157,15 @@ sub limits_main {
 }
 
 
-# Find all services with warning/critical defined, evaluate each
-sub _process_limits {
-    # Explicit R/W handle for this process; threaded through the service
-    # loop, closed at the end of the run (munin-limits is one process per
-    # cycle -- see Update.pm for the handle rules).
+# Phase 1: per-host work list, in memory. Opens one handle, threads it,
+# closes it -- fork() in phase 2 must see no open handle.
+sub _build_work_list {
     my $dbh = Munin::Master::Update::get_dbh();
 
-    # Find all services that have at least one DS with warning or critical
+    # Hosts having services with at least one DS with warning or critical
     my $sth = $dbh->prepare_cached(q{
-        SELECT DISTINCT s.id, s.name, s.path, n.name AS node_name, g.path AS group_path
+        SELECT DISTINCT n.name AS node_name, g.path AS group_path,
+               s.id AS service_id, s.name AS service_name
         FROM service s
         INNER JOIN node n ON n.id = s.node_id
         INNER JOIN grp g ON g.id = n.grp_id
@@ -75,55 +174,107 @@ sub _process_limits {
         WHERE da.name IN ('warning', 'critical')
           AND da.value IS NOT NULL
           AND da.value != ''
+        ORDER BY n.name, s.name
     });
     $sth->execute();
 
-    while (my ($service_id, $service_name, $service_path, $node_name, $group_path) = $sth->fetchrow_array) {
-        _process_service($dbh, $service_id, $service_name, $node_name, $group_path);
+    my %by_node;
+    while (my ($node_name, $group_path, $service_id, $service_name) = $sth->fetchrow_array) {
+        next if @limit_hosts    && !grep { $_ eq $node_name } @limit_hosts;
+        next if @limit_services && !grep { $_ eq $service_name } @limit_services;
+        push @{$by_node{$node_name}{services}}, {
+            service_id   => $service_id,
+            service_name => $service_name,
+        };
+        $by_node{$node_name}{group_path} //= $group_path;
     }
 
     $dbh->disconnect();
+
+    return [
+        map {
+            { node_name => $_, %{$by_node{$_}} }
+        } sort keys %by_node
+    ];
 }
 
 
-# Evaluate thresholds for a single service
+# Phase 2: per-host threshold evaluation. Children write state only.
+sub _evaluate_limits {
+    my ($work) = @_;
+
+    return unless @{$work};
+
+    my $config = Munin::Master::Config->instance()->{config};
+    my $max_processes = $config->{max_processes} || 16;
+
+    # Do NOT fork if not set (tests run inline with fork=0)
+    unless ($config->{fork}) {
+        my $dbh = Munin::Master::Update::get_dbh();
+        _process_host($dbh, $_) for @{$work};
+        $dbh->disconnect();
+        return;
+    }
+
+    use Parallel::ForkManager;
+
+    my $pm = Parallel::ForkManager->new($max_processes);
+
+    # Handle child process failures
+    my $nb_workers_failed = 0;
+    $pm->run_on_finish(
+        sub {
+            my ($pid, $exit_code) = @_;
+
+            $exit_code = 0 unless defined $exit_code;
+            INFO "limits host worker pid:$pid, exit_code:$exit_code";
+
+            $nb_workers_failed++ if $exit_code;
+        }
+    );
+
+    HOST_LOOP:
+    for my $host (@{$work}) {
+        my $host_pid = $pm->start($host);
+        next HOST_LOOP if $host_pid;
+
+        # Child: own handle, no notifications, results via the DB
+        my $res = eval {
+            my $dbh = Munin::Master::Update::get_dbh();
+            _process_host($dbh, $host);
+            $dbh->disconnect();
+            1;
+        };
+        WARN "limits evaluation failed for $host->{node_name}: $@" unless $res;
+
+        $pm->finish($res ? 0 : 1);    # never returns in the child
+    }
+
+    $pm->wait_all_children;
+}
+
+
+# Evaluate thresholds for every service of one host
+sub _process_host {
+    my ($dbh, $host) = @_;
+
+    for my $svc (@{$host->{services}}) {
+        _process_service(
+            $dbh, $svc->{service_id}, $svc->{service_name},
+            $host->{node_name}, $host->{group_path}
+        );
+    }
+}
+
+
+# Evaluate thresholds for a single service. Writes state; builds no
+# messages -- the serial tail rebuilds everything from the DB.
 sub _process_service {
     my ($dbh, $service_id, $service_name, $node_name, $group_path) = @_;
 
     DEBUG "processing service: $service_name";
 
-    # Read service context from SQL (single row: selectrow_array runs
-    # prepare_cached + execute + fetch + finish, leaving no active cursor)
-    my ($host_alias, $graph_title, $contacts) = $dbh->selectrow_array(q{
-        SELECT
-            MAX(CASE WHEN na.name = 'notify_alias' THEN na.value END) AS host_alias,
-            MAX(CASE WHEN sa.name = 'graph_title' THEN sa.value END) AS graph_title,
-            MAX(CASE WHEN sa.name = 'contacts' THEN sa.value END) AS contacts
-        FROM service s
-        INNER JOIN node n ON n.id = s.node_id
-        LEFT JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_title'
-        LEFT JOIN node_attr na ON na.id = n.id AND na.name = 'notify_alias'
-        WHERE s.id = ?
-    }, undef, $service_id);
-
-    $host_alias //= $node_name;
-    $graph_title //= $service_name;
-    $contacts   //= '';
-
-    # Build service hash for message_expand (read from SQL, not config tree)
-    my %service = (
-        group      => $group_path,
-        host       => $host_alias,
-        plugin     => $service_name,
-        graph_title => $graph_title,
-        contacts   => $contacts,
-        worst      => 'OK',
-        worstid    => 0,
-        state_changed => 0,
-        recovered  => {},
-    );
-
-    # Process each DS in this service
+    # All DS of this service
     my $sth_ds = $dbh->prepare_cached(q{
         SELECT d.id, d.name, d.type
         FROM ds d
@@ -132,78 +283,55 @@ sub _process_service {
     });
     $sth_ds->execute($service_id);
 
-    my %stats = (critical => [], warning => [], unknown => [], ok => [], foks => []);
-
+    my @ds;
     while (my ($ds_id, $ds_name, $ds_type) = $sth_ds->fetchrow_array) {
-        my $result = _process_ds($dbh, $ds_id, $ds_name, $ds_type, \%service);
-        next unless defined $result;
+        push @ds, [$ds_id, $ds_name, $ds_type];
+    }
 
-        my ($state, $value, $extinfo) = @$result;
+    # ds_attr and override fetched ONCE per service, not per ds/check:
+    # the dominant DBI bucket was ~60k single-row attr fetches per run.
+    my (%attrs, %overrides);
+    if (@ds) {
+        my $in = join ',', ('?') x scalar @ds;
+        my @ids = map { $_->[0] } @ds;
 
-        my $existing = $service{fields} // '';
-        $service{fields} = "$existing $ds_name";
-        $service{$ds_name} = {
-            state  => $state,
-            label  => $ds_name,
-            value  => $value,
-            extinfo => $extinfo,
-        };
-
-        push @{$stats{$state}}, $ds_name;
-        if ($state eq 'ok' && $service{recovered}{$ds_name}) {
-            push @{$stats{foks}}, $ds_name;
+        my $sth_attr = $dbh->prepare_cached("SELECT id, name, value FROM ds_attr WHERE id IN ($in)");
+        $sth_attr->execute(@ids);
+        while (my ($id, $k, $v) = $sth_attr->fetchrow_array) {
+            $attrs{$id}{$k} = $v;
         }
 
-        if ($state eq 'critical') {
-            $service{worst} = 'CRITICAL';
-            $service{worstid} = 2;
-        } elsif ($state eq 'warning' && $service{worstid} < 2) {
-            $service{worst} = 'WARNING';
-            $service{worstid} = 1;
-        } elsif ($state eq 'unknown' && $service{worstid} == 0) {
-            $service{worst} = 'UNKNOWN';
-            $service{worstid} = 3;
+        my $sth_ov = $dbh->prepare_cached("SELECT ds_id, name, value FROM override WHERE ds_id IN ($in)");
+        $sth_ov->execute(@ids);
+        while (my ($id, $k, $v) = $sth_ov->fetchrow_array) {
+            $overrides{$id}{$k} = $v;
         }
     }
 
-    $service{cfields}  = join ' ', @{$stats{critical}};
-    $service{wfields}  = join ' ', @{$stats{warning}};
-    $service{ufields}  = join ' ', @{$stats{unknown}};
-    $service{fofields} = join ' ', @{$stats{foks}};
-    $service{ofields}  = join ' ', @{$stats{ok}};
-    $service{fofields} //= $service{ofields};
-    $service{numcfields}  = scalar @{$stats{critical}};
-    $service{numwfields}  = scalar @{$stats{warning}};
-    $service{numufields}  = scalar @{$stats{unknown}};
-    $service{numfofields} = scalar @{$stats{foks}};
-    $service{numofields}  = scalar @{$stats{ok}};
+    for my $d (@ds) {
+        my ($ds_id, $ds_name, $ds_type) = @$d;
+        my %merged = %{$attrs{$ds_id} // {}};
+        @merged{keys %{$overrides{$ds_id} // {}}} = values %{$overrides{$ds_id} // {}};
 
-    # Send notifications
-    _generate_service_message($dbh, \%service, \%stats);
+        _process_ds($dbh, $ds_id, $ds_name, $ds_type, \%merged);
+    }
+
+    $dbh->commit();
 }
 
 
-# Evaluate thresholds for a single DS
+# Evaluate thresholds for a single DS and upsert state.
+# State columns are the phase-2 -> phase-3 transport:
+#   alarm       current evaluation result
+#   prev_alarm  alarm before this evaluation (edge detection:
+#               alarm != prev_alarm == state just changed)
+#   eval_value  the evaluated value shown in messages
+#   extinfo     threshold-violation detail shown in messages
 sub _process_ds {
-    my ($dbh, $ds_id, $ds_name, $ds_type, $service) = @_;
+    my ($dbh, $ds_id, $ds_name, $ds_type, $attrs) = @_;
 
-    # Read DS attrs from SQL — plugin defaults
-    my $sth_attr = $dbh->prepare_cached('SELECT name, value FROM ds_attr WHERE id = ?');
-    $sth_attr->execute($ds_id);
-    my %attrs;
-    while (my ($k, $v) = $sth_attr->fetchrow_array) {
-        $attrs{$k} = $v;
-    }
-
-    # Read config overrides — wins over plugin defaults
-    my $sth_ov = $dbh->prepare_cached('SELECT name, value FROM override WHERE ds_id = ?');
-    $sth_ov->execute($ds_id);
-    while (my ($k, $v) = $sth_ov->fetchrow_array) {
-        $attrs{$k} = $v;
-    }
-
-    my $warn_str = $attrs{warning};
-    my $crit_str = $attrs{critical};
+    my $warn_str = $attrs->{warning};
+    my $crit_str = $attrs->{critical};
 
     # Skip if no thresholds
     return unless defined $warn_str || defined $crit_str;
@@ -223,9 +351,9 @@ sub _process_ds {
     # - This makes CDEF values queryable like any other DS
     # --------------------------------------------------------------------
     my $value;
-    my $is_cdef = defined $attrs{cdef} && $attrs{cdef} ne '';
+    my $is_cdef = defined $attrs->{cdef} && $attrs->{cdef} ne '';
     if ($is_cdef) {
-        $value = _compute_cdef_value($dbh, $ds_id, $attrs{cdef});
+        $value = _compute_cdef_value($dbh, $ds_id, $attrs->{cdef});
         # Store computed value immediately so HTML/graphs can show it
         # even if threshold evaluation hasn't run yet
         if (defined $value) {
@@ -273,23 +401,6 @@ sub _process_ds {
             $value = ($last_value - $prev_value) / ($last_epoch - $prev_epoch);
         }
     }
-    if (!defined $last_value || $last_value eq 'U') {
-        $value = 'U';
-    } elsif (time > $last_epoch + $heartbeat) {
-        $value = 'U';
-    } elsif (!$ds_type || $ds_type eq 'GAUGE') {
-        $value = $last_value;
-    } elsif (!defined $prev_value || $prev_value eq 'U') {
-        $value = 'U';
-    } elsif ($last_epoch == $prev_epoch || $last_epoch > $prev_epoch + $heartbeat) {
-        $value = 'U';
-    } elsif ($ds_type eq 'ABSOLUTE') {
-        $value = $last_value / ($last_epoch - $prev_epoch);
-    } elsif ($ds_type eq 'COUNTER' && $last_value < $prev_value) {
-        $value = 'U';
-    } else {
-        $value = ($last_value - $prev_value) / ($last_epoch - $prev_epoch);
-    }
 
     # De-taint
     if (!defined $value || $value eq 'U') {
@@ -305,16 +416,16 @@ sub _process_ds {
     my $new_num_unknowns = 0;
     my $extinfo = '';
 
-    my $unknown_limit = defined $attrs{unknown_limit} ? $attrs{unknown_limit} : 3;
+    my $unknown_limit = defined $attrs->{unknown_limit} ? $attrs->{unknown_limit} : 3;
 
     if ($value eq 'unknown') {
         $new_state = 'unknown';
-        $extinfo = $attrs{extinfo} // 'Value is unknown.';
+        $extinfo = $attrs->{extinfo} // 'Value is unknown.';
         if ($old_state ne 'unknown') {
             $new_num_unknowns = $old_num_unknowns + 1;
             if ($old_num_unknowns < $unknown_limit) {
                 $new_state = $old_state;
-                $extinfo = $attrs{extinfo} // '';
+                $extinfo = $attrs->{extinfo} // '';
             }
         } else {
             $new_num_unknowns = $old_num_unknowns;
@@ -324,8 +435,8 @@ sub _process_ds {
         if ((defined $crit->[0] && $value < $crit->[0]) ||
             (defined $crit->[1] && $value > $crit->[1])) {
             $new_state = 'critical';
-            $extinfo = defined $attrs{extinfo}
-                ? "$value (not in $crange): $attrs{extinfo}"
+            $extinfo = defined $attrs->{extinfo}
+                ? "$value (not in $crange): $attrs->{extinfo}"
                 : "Value is $value. Critical range ($crange) exceeded";
         }
     }
@@ -335,36 +446,29 @@ sub _process_ds {
         if ((defined $warn->[0] && $value < $warn->[0]) ||
             (defined $warn->[1] && $value > $warn->[1])) {
             $new_state = 'warning';
-            $extinfo = defined $attrs{extinfo}
-                ? "$value (not in $wrange): $attrs{extinfo}"
+            $extinfo = defined $attrs->{extinfo}
+                ? "$value (not in $wrange): $attrs->{extinfo}"
                 : "Value is $value. Warning range ($wrange) exceeded";
         }
     }
 
-    # Track state change
-    if ($new_state ne $old_state) {
-        $service->{state_changed} = 1;
-        if ($old_state eq 'ok' && $new_state ne 'ok') {
-            # nothing
-        } elsif ($new_state eq 'ok' && $old_state ne 'ok') {
-            $service->{recovered}{$ds_name} = 1;
-        }
-    }
-
-    # Write alarm to SQL
-    my $sth_ins = $dbh->prepare_cached(q{
-        INSERT INTO state (ds_id, alarm, num_unknowns)
-        SELECT ?, ?, ?
-        WHERE NOT EXISTS (SELECT 1 FROM state WHERE ds_id = ?)
+    # Single upsert (was: NOT-EXISTS insert + blind UPDATE, two round
+    # trips per ds). prev_alarm records the pre-evaluation alarm so the
+    # serial tail can detect edges without any IPC.
+    my $sth_upsert = $dbh->prepare_cached(q{
+        INSERT INTO state (ds_id, alarm, num_unknowns, prev_alarm, eval_value, extinfo)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT (ds_id) DO UPDATE SET
+            alarm        = excluded.alarm,
+            num_unknowns = excluded.num_unknowns,
+            prev_alarm   = excluded.prev_alarm,
+            eval_value   = excluded.eval_value,
+            extinfo      = excluded.extinfo
     });
-    $sth_ins->execute($ds_id, $new_state, $new_num_unknowns, $ds_id);
-
-    my $sth_upt = $dbh->prepare_cached(q{UPDATE state SET alarm = ?, num_unknowns = ? WHERE ds_id = ?});
-    $sth_upt->execute($new_state, $new_num_unknowns, $ds_id);
-
-    $dbh->commit();
-
-    return [$new_state, $value, $extinfo];
+    $sth_upsert->execute(
+        $ds_id, $new_state, $new_num_unknowns,
+        $old_state, $value, $extinfo,
+    );
 }
 
 
@@ -526,7 +630,153 @@ sub _compute_cdef_value {
     return;
 }
 
-# Send notifications for service state changes — all tracking in SQL
+
+# Phase 3: serial notification delivery. Reads evaluated state FROM the
+# DB -- phase 2 children are long gone by now. Contacts are serialized:
+# one mailer per contact, messages written sequentially to its pipe.
+sub _deliver_notifications {
+    my ($work) = @_;
+
+    my $dbh = Munin::Master::Update::get_dbh();
+
+    for my $host (@{$work}) {
+        for my $svc (@{$host->{services}}) {
+            my ($service, $stats) = _read_service_state(
+                $dbh, $svc, $host
+            );
+            next unless $service;
+
+            _generate_service_message($dbh, $service, $stats);
+        }
+    }
+
+    # Ledger upserts above run in this handle's transaction (AutoCommit=0):
+    # commit them, or disconnect rolls the whole delivery back.
+    $dbh->commit();
+    $dbh->disconnect();
+}
+
+
+# Rebuild the per-service message context from state rows. Mirrors what
+# the evaluation used to hand over in memory; state_changed and
+# recovered are derived from the prev_alarm edge column.
+sub _read_service_state {
+    my ($dbh, $svc, $host) = @_;
+
+    my ($service_id, $service_name) = @{$svc}{qw(service_id service_name)};
+
+    # Service context from SQL (single row)
+    my ($host_alias, $graph_title, $contacts) = $dbh->selectrow_array(q{
+        SELECT
+            MAX(CASE WHEN na.name = 'notify_alias' THEN na.value END) AS host_alias,
+            MAX(CASE WHEN sa.name = 'graph_title' THEN sa.value END) AS graph_title,
+            MAX(CASE WHEN sa.name = 'contacts' THEN sa.value END) AS contacts
+        FROM service s
+        INNER JOIN node n ON n.id = s.node_id
+        LEFT JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_title'
+        LEFT JOIN node_attr na ON na.id = n.id AND na.name = 'notify_alias'
+        WHERE s.id = ?
+    }, undef, $service_id);
+
+    $host_alias  //= $host->{node_name};
+    $graph_title //= $service_name;
+    $contacts    //= '';
+
+    # Evaluated DS of this service. eval_value IS NOT NULL marks rows the
+    # limits evaluation actually wrote (the update phase leaves it NULL);
+    # the ds_attr EXISTS clause keeps the universe identical to the work
+    # list -- ds whose thresholds were removed since last run drop out.
+    my $sth = $dbh->prepare_cached(q{
+        SELECT d.name, st.alarm, st.prev_alarm, st.eval_value, st.extinfo
+        FROM ds d
+        INNER JOIN state st ON st.ds_id = d.id
+        WHERE d.service_id = ?
+          AND st.eval_value IS NOT NULL
+          AND EXISTS (
+              SELECT 1 FROM ds_attr da
+              WHERE da.id = d.id
+                AND da.name IN ('warning', 'critical')
+                AND da.value IS NOT NULL AND da.value != ''
+          )
+        ORDER BY d.ordr
+    });
+    $sth->execute($service_id);
+
+    my %service = (
+        _service_id  => $service_id,
+        group       => $host->{group_path},
+        host        => $host_alias,
+        plugin      => $service_name,
+        graph_title => $graph_title,
+        contacts    => $contacts,
+        worst       => 'OK',
+        worstid     => 0,
+        state_changed => 0,
+        recovered   => {},
+    );
+    my %stats = (critical => [], warning => [], unknown => [], ok => [], foks => []);
+
+    my $any = 0;
+    while (my ($ds_name, $alarm, $prev_alarm, $eval_value, $extinfo) = $sth->fetchrow_array) {
+        $any = 1;
+
+        $alarm     //= 'ok';
+        $prev_alarm //= 'ok';
+        $eval_value //= 'unknown';
+        $extinfo   //= '';
+
+        my $existing = $service{fields} // '';
+        $service{fields} = "$existing $ds_name";
+        $service{$ds_name} = {
+            state   => $alarm,
+            label   => $ds_name,
+            value   => $eval_value,
+            extinfo => $extinfo,
+        };
+
+        push @{$stats{$alarm}}, $ds_name;
+
+        if ($alarm ne $prev_alarm) {
+            $service{state_changed} = 1;
+            if ($prev_alarm ne 'ok' && $alarm eq 'ok') {
+                $service{recovered}{$ds_name} = 1;
+                push @{$stats{foks}}, $ds_name;
+            }
+        }
+
+        if ($alarm eq 'critical') {
+            $service{worst} = 'CRITICAL';
+            $service{worstid} = 2;
+        } elsif ($alarm eq 'warning' && $service{worstid} < 2) {
+            $service{worst} = 'WARNING';
+            $service{worstid} = 1;
+        } elsif ($alarm eq 'unknown' && $service{worstid} == 0) {
+            $service{worst} = 'UNKNOWN';
+            $service{worstid} = 3;
+        }
+    }
+
+    return unless $any;
+
+    $service{cfields}  = join ' ', @{$stats{critical}};
+    $service{wfields}  = join ' ', @{$stats{warning}};
+    $service{ufields}  = join ' ', @{$stats{unknown}};
+    $service{fofields} = join ' ', @{$stats{foks}};
+    $service{ofields}  = join ' ', @{$stats{ok}};
+    $service{fofields} //= $service{ofields};
+    $service{numcfields}  = scalar @{$stats{critical}};
+    $service{numwfields}  = scalar @{$stats{warning}};
+    $service{numufields}  = scalar @{$stats{unknown}};
+    $service{numfofields} = scalar @{$stats{foks}};
+    $service{numofields}  = scalar @{$stats{ok}};
+
+    return (\%service, \%stats);
+}
+
+
+# Send notifications for service state changes -- all tracking in SQL.
+# Runs serially in the master: the pipes below are per-contact and every
+# message is written in order, so delivery is deterministic.
 sub _generate_service_message {
     my ($dbh, $service, $stats) = @_;
 
@@ -586,19 +836,22 @@ sub _generate_service_message {
 
         INFO "state of $service->{group}::$service->{host}::$service->{plugin} has changed to $service->{worst}, notifying $contact_name";
 
-        # Read notification state from SQL (single row)
+        # Read send ledger from SQL (single row)
         my ($notif_id, $num_messages) = $dbh->selectrow_array(q{
-            SELECT id, num_messages FROM notification
-            WHERE contact_id = ? AND service_id = (
-                SELECT id FROM service WHERE name = ? LIMIT 1
-            )
-        }, undef, $contact_id, $service->{plugin});
+            SELECT id, num_messages FROM notification_tracking
+            WHERE contact_id = ? AND service_id = ?
+        }, undef, $contact_id, $service->{_service_id});
 
-        # Check max_messages
+        # A state transition always gets through and resets the counter
+        # (a new alarm deserves a fresh message budget). Repeats of the
+        # current state are throttled by max_messages.
+        my $state_changed = $service->{state_changed};
         my $max_messages = $ca{max_messages} // 0;
-        if ($max_messages && $num_messages && $num_messages >= $max_messages) {
-            DEBUG "Max messages reached for $contact_name on $service->{plugin}";
-            next;
+        if (!$state_changed) {
+            if ($max_messages && $num_messages && $num_messages >= $max_messages) {
+                DEBUG "Max messages reached for $contact_name on $service->{plugin}";
+                next;
+            }
         }
 
         # Expand message template
@@ -610,7 +863,7 @@ sub _generate_service_message {
         $cmd = _message_expand($service, $cmd);
         $cmd =~ s/^\s*[|><]+//;
 
-        # Open pipe if needed — track in SQL, pipe handle in %contact_pipes
+        # Open pipe if needed -- track in SQL, pipe handle in %contact_pipes
         my $pipe = $contact_pipes{$contact_name};
         if (!defined $pipe) {
             pipe(my $r, my $w) or WARN "Failed to open pipe for $contact_name: $!";
@@ -621,13 +874,6 @@ sub _generate_service_message {
                 $pipe = $w;
                 $contact_pipes{$contact_name}   = $pipe;
                 $contact_pids{$contact_name}    = $pid;
-                # Reset notification count in SQL
-                if ($notif_id) {
-                    $dbh->do('UPDATE notification SET num_messages = 0 WHERE id = ?', undef, $notif_id);
-                } else {
-                    $dbh->do('INSERT INTO notification (contact_id, severity, num_messages) VALUES (?, ?, 0)',
-                        undef, $contact_id, $service->{worst});
-                }
             } else {
                 close $w;
                 open(STDIN, '<&', $r);
@@ -645,15 +891,20 @@ sub _generate_service_message {
             delete $contact_pipes{$contact_name};
         }
 
-        # Update notification count in SQL
+        # Update the send ledger. service_id MUST be part of the key:
+        # without it the ON CONFLICT never matches (NULLs don't collide
+        # in the unique index), rows grow unbounded, and throttling
+        # never accumulates. Transitions reset the counter; repeats
+        # increment it.
+        my $new_count = $state_changed ? 1 : ($num_messages // 0) + 1;
         $dbh->do(q{
-            INSERT INTO notification (contact_id, severity, sent_at, num_messages)
-            VALUES (?, ?, ?, 1)
+            INSERT INTO notification_tracking (contact_id, service_id, severity, sent_at, num_messages)
+            VALUES (?, ?, ?, ?, ?)
             ON CONFLICT (contact_id, service_id) DO UPDATE SET
-                num_messages = num_messages + 1,
+                num_messages = excluded.num_messages,
                 sent_at = excluded.sent_at,
                 severity = excluded.severity
-        }, undef, $contact_id, $service->{worst}, time());
+        }, undef, $contact_id, $service->{_service_id}, $service->{worst}, time(), $new_count);
     }
 }
 
@@ -701,11 +952,12 @@ sub _reap_command {
 }
 
 
-# Validate severity list
+# Validate severity list. Constant membership set -- this ran hundreds of
+# thousands of times per suite pass with a nested grep.
+my %VALID_SEVERITY = map { $_ => 1 } qw(ok warning critical unknown);
 sub _validate_severities {
     my ($list) = @_;
-    my @valid = qw(ok warning critical unknown);
-    return [ grep { my $s = $_; grep { $_ eq $s } @valid } @$list ];
+    return [ grep { $VALID_SEVERITY{$_} } @$list ];
 }
 
 
@@ -785,6 +1037,12 @@ Munin::Master::Limits - Evaluate thresholds and send notifications
   limits_main();
 
 =head1 DESCRIPTION
+
+Three phases: an in-memory per-host work list, per-host threshold
+evaluation (optionally parallel) writing results to the state table,
+and a serial notification tail that rebuilds messages from those state
+rows. The state table is the only channel between phases -- no IPC, no
+staging files.
 
 All data is read from SQL. No Perl config tree walking.
 Config is imported into SQL at startup by Update.pm.

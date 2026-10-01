@@ -439,16 +439,35 @@ sub _db_init {
 
 	# Per-entity state tracking. FK columns instead of polymorphic (type,id) --
 	# no cascade, error if referenced. CHECK ensures exactly one FK is set.
+	# prev_alarm/eval_value/extinfo are written by the limits evaluation and
+	# read by the serial notification tail: prev_alarm gives edge detection
+	# (alarm != prev_alarm == state just changed), eval_value/extinfo are the
+	# message content so notifications can be rebuilt from the DB alone.
 	$dbh->do("CREATE TABLE IF NOT EXISTS state (
 		ds_id INTEGER REFERENCES ds(id),
 		node_id INTEGER REFERENCES node(id),
 		last_epoch INTEGER, last_value VARCHAR,
 		prev_epoch INTEGER, prev_value VARCHAR,
 		alarm VARCHAR, num_unknowns INTEGER DEFAULT 0,
+		prev_alarm VARCHAR, eval_value VARCHAR, extinfo VARCHAR,
 		CHECK ((ds_id IS NOT NULL) + (node_id IS NOT NULL) = 1)
 	)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_ds ON state (ds_id)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_node ON state (node_id)");
+
+	# Migrate pre-existing state tables (CREATE IF NOT EXISTS skips them)
+	if ($db_driver eq "Pg") {
+		for my $col (qw(prev_alarm eval_value extinfo)) {
+			$dbh->do("ALTER TABLE state ADD COLUMN IF EXISTS $col VARCHAR");
+		}
+	} else {
+		my %state_cols = map { $_->[1] => 1 }
+			@{ $dbh->selectall_arrayref("PRAGMA table_info(state)") };
+		for my $col (qw(prev_alarm eval_value extinfo)) {
+			next if $state_cols{$col};
+			$dbh->do("ALTER TABLE state ADD COLUMN $col VARCHAR");
+		}
+	}
 
 	# Munin stats
 	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp TIMESTAMPTZ, type VARCHAR, name VARCHAR, duration NUMERIC)");
@@ -458,8 +477,11 @@ sub _db_init {
 	$dbh->do("CREATE TABLE IF NOT EXISTS contact_attr (id INTEGER REFERENCES contact(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_contact_attr ON contact_attr (id, name)");
 
-	# Notification tracking — replaces in-memory pipe state
-	$dbh->do("CREATE TABLE IF NOT EXISTS notification (
+	# Send ledger: last-sent severity, sent_at, throttle counter num_messages.
+	# NOT config -- decision inputs are state.alarm (current), contact attrs
+	# (always_send/command/text), and this ledger (dupe avoidance). Renamed
+	# from `notification` accordingly; migration below renames in place.
+	$dbh->do("CREATE TABLE IF NOT EXISTS notification_tracking (
 		id $db_serial_type PRIMARY KEY,
 		contact_id INTEGER REFERENCES contact(id),
 		service_id INTEGER REFERENCES service(id),
@@ -467,7 +489,18 @@ sub _db_init {
 		sent_at INTEGER,
 		num_messages INTEGER DEFAULT 0
 	)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification ON notification (contact_id, service_id)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification_tracking ON notification_tracking (contact_id, service_id)");
+
+	# Migrate the pre-rename table. The ledger must survive: it carries
+	# transition memory (throttling) across cycles.
+	my ($old_notif) = $db_driver eq "Pg"
+		? $dbh->selectrow_array("SELECT to_regclass('notification')")
+		: $dbh->selectrow_array("SELECT name FROM sqlite_master WHERE type='table' AND name='notification'");
+	if ($old_notif) {
+		$dbh->do("ALTER TABLE notification RENAME TO notification_tracking");
+		$dbh->do("DROP INDEX IF EXISTS u_notification");
+		$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification_tracking ON notification_tracking (contact_id, service_id)");
+	}
 
 	# Config file overrides — plugin defaults go to ds_attr, config overrides go here
 	$dbh->do("CREATE TABLE IF NOT EXISTS override (ds_id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
@@ -614,35 +647,62 @@ sub _db_import_config {
 
 	my $dbh = get_dbh();
 
-	# Clear existing contacts, overrides, and config overrides
-	# notification first: it references contact (no cascade, error if referenced)
-	$dbh->do('DELETE FROM notification');
-	$dbh->do('DELETE FROM contact_attr');
-	$dbh->do('DELETE FROM contact');
+	# Config overrides are wiped wholesale: they mirror the config tree and
+	# are re-imported below.
 	$dbh->do('DELETE FROM override');
 	$dbh->do('DELETE FROM config_override');
 
-	my $sth_c  = $dbh->prepare('INSERT INTO contact (name) VALUES (?)');
-	my $sth_ca = $dbh->prepare('INSERT INTO contact_attr (id, name, value) VALUES (?, ?, ?)');
-
-	# Walk the config tree for contacts
+	# Contacts are upserted by name, not wiped: contact ids must be stable
+	# across cycles or the send ledger (keyed by contact_id) resets every
+	# run and max_messages throttling never accumulates. Contacts that
+	# vanish from config are removed, ledger rows included (FK, no cascade).
 	my $contacts = $config->{"contact"};
+	my @contact_names;
+	if ($contacts && ref $contacts eq 'HASH') {
+		for my $child (values %$contacts) {
+			next unless ref $child eq 'HASH';
+			next if $child->{_};
+			my $name = $child->{_}->{name} // next;
+			push @contact_names, $name;
+		}
+	}
+
+	my $sth_c = $dbh->prepare('INSERT OR IGNORE INTO contact (name) VALUES (?)');
+	$sth_c->execute($_) for @contact_names;
+
+	if (@contact_names) {
+		my $in = join ',', ('?') x @contact_names;
+		$dbh->do("DELETE FROM notification_tracking WHERE contact_id NOT IN (SELECT id FROM contact WHERE name IN ($in))", undef, @contact_names);
+		$dbh->do("DELETE FROM contact_attr WHERE id NOT IN (SELECT id FROM contact WHERE name IN ($in))", undef, @contact_names);
+		$dbh->do("DELETE FROM contact WHERE name NOT IN ($in)", undef, @contact_names);
+	} else {
+		$dbh->do('DELETE FROM notification_tracking');
+		$dbh->do('DELETE FROM contact_attr');
+		$dbh->do('DELETE FROM contact');
+	}
+
+	my $sth_id  = $dbh->prepare('SELECT id FROM contact WHERE name = ?');
+	my $sth_ca  = $dbh->prepare('DELETE FROM contact_attr WHERE id = ?');
+	my $sth_ca2 = $dbh->prepare('INSERT INTO contact_attr (id, name, value) VALUES (?, ?, ?)');
+
+	# Walk the config tree for contacts and re-import their attributes
 	if ($contacts && ref $contacts eq 'HASH') {
 		for my $child (values %$contacts) {
 			next unless ref $child eq 'HASH';
 			next if $child->{_};
 
 			my $name = $child->{_}->{name} // next;
+			my ($contact_id) = $dbh->selectrow_array($sth_id, undef, $name);
+			next unless $contact_id;
 
-			$sth_c->execute($name);
-			my $contact_id = $dbh->last_insert_id(undef, undef, 'contact', 'id');
+			$sth_ca->execute($contact_id);
 
 			# Import all attributes
 			for my $key (keys %$child) {
 				next if $key eq '_';
 				my $val = $child->{$key};
 				next if ref $val;
-				$sth_ca->execute($contact_id, $key, $val);
+				$sth_ca2->execute($contact_id, $key, $val);
 			}
 		}
 	}

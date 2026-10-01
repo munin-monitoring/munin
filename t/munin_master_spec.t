@@ -209,7 +209,7 @@ subtest 'Limits: integration with SampleDB' => sub {
     ok(grep { $_ eq 'ok' } @alarms, "some states are ok");
     ok(grep { $_ ne 'ok' } @alarms, "some states are non-ok (thresholds triggered)");
 
-    my $notif_count = $dbh->selectrow_array("SELECT count(*) FROM notification");
+    my $notif_count = $dbh->selectrow_array("SELECT count(*) FROM notification_tracking");
     ok($notif_count >= 0, "notification table accessible");
 
     $dbh->disconnect();
@@ -448,7 +448,7 @@ subtest 'Limits: max_messages' => sub {
 
     $dbh_rw->do("INSERT OR REPLACE INTO contact_attr (id, name, value) VALUES (1, 'max_messages', '1')");
     $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'testcontact')");
-    $dbh_rw->do("INSERT OR REPLACE INTO notification (contact_id, service_id, severity, num_messages) VALUES (1, 1, 'warning', 1)");
+    $dbh_rw->do("INSERT OR REPLACE INTO notification_tracking (contact_id, service_id, severity, num_messages) VALUES (1, 1, 'warning', 1)");
     $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
     $dbh_rw->disconnect();
 
@@ -459,7 +459,7 @@ subtest 'Limits: max_messages' => sub {
     });
 
     my ($num_msgs) = $dbh->selectrow_array(
-        "SELECT num_messages FROM notification WHERE contact_id = 1 AND service_id = 1"
+        "SELECT num_messages FROM notification_tracking WHERE contact_id = 1 AND service_id = 1"
     );
     is($num_msgs, 1, "notification skipped at max_messages limit");
     $dbh->disconnect();
