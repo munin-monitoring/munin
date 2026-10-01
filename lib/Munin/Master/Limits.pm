@@ -9,7 +9,7 @@ our (@ISA, @EXPORT);
 @ISA    = qw ( Exporter );
 @EXPORT = qw ( limits_main );
 
-use POSIX qw ( strftime );
+use POSIX qw ( strftime WNOHANG );
 use Getopt::Long;
 use Time::HiRes;
 use Text::Balanced qw ( extract_bracketed );
@@ -392,6 +392,7 @@ sub _parse_thresholds {
 
 
 my %contact_pipes;
+my %contact_pids;    # contact name => pid of its notification command
 
 # ========================================================================
 # CDEF VALUE COMPUTATION
@@ -621,7 +622,8 @@ sub _generate_service_message {
             if ($pid) {
                 close $r;
                 $pipe = $w;
-                $contact_pipes{$contact_name} = $pipe;
+                $contact_pipes{$contact_name}   = $pipe;
+                $contact_pids{$contact_name}    = $pid;
                 # Reset notification count in SQL
                 if ($notif_id) {
                     $dbh->do('UPDATE notification SET num_messages = 0 WHERE id = ?', undef, $notif_id);
@@ -634,7 +636,7 @@ sub _generate_service_message {
                 open(STDIN, '<&', $r);
                 close(STDOUT);
                 exec($cmd) or WARN "Failed exec for $contact_name: $!";
-                exit;
+                exit 127;    # exec failed: make it visible via exit status
             }
         }
 
@@ -642,6 +644,7 @@ sub _generate_service_message {
         if (!print $pipe $txt, "\n") {
             WARN "Writing to pipe for $contact_name failed: $!";
             close $pipe;
+            _reap_command($contact_name, delete $contact_pids{$contact_name});
             delete $contact_pipes{$contact_name};
         }
 
@@ -666,6 +669,38 @@ sub _close_pipes {
         }
     }
     %contact_pipes = ();
+
+    # Close write ends first (done above) so children see EOF and exit;
+    # then reap them, reporting commands that failed.
+    for my $name (sort keys %contact_pids) {
+        _reap_command($name, delete $contact_pids{$name});
+    }
+}
+
+# Wait briefly for a notification command to finish, and report failures.
+# Without this the child is never reaped: it lingers as a zombie under the
+# limits process, and a command that died silently looks like one that
+# delivered the notification.
+sub _reap_command {
+    my ($name, $pid) = @_;
+    return unless $pid;
+
+    for (1 .. 100) {
+        my $kid = waitpid($pid, WNOHANG);
+        if ($kid == $pid) {
+            my $status = $?;
+            my $detail = $status & 127
+                ? "signal " . ($status & 127)
+                  . (($status & 128) ? " (core dumped)" : "")
+                : "exit code " . ($status >> 8);
+            WARN "notification command for $name exited with $detail"
+                if $status != 0;
+            return;
+        }
+        return if $kid == -1;    # not ours anymore (already reaped)
+        Time::HiRes::sleep(0.01);
+    }
+    WARN "notification command for $name (pid $pid) still running; not reaped";
 }
 
 
