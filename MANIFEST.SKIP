@@ -75,3 +75,7 @@
 
 # Avoid sandbox
 ^sandbox/
+
+# Avoid local debug artifacts and prove state
+^out/
+^\.prove$
