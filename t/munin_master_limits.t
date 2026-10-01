@@ -161,7 +161,7 @@ ok(grep { $_ eq 'critical' || $_ eq 'warning' || $_ eq 'unknown' } @alarms,
     "some states are non-ok (thresholds triggered)");
 
 # Check that notification table was created (even if empty)
-my $notif_count = $dbh->selectrow_array("SELECT count(*) FROM notification");
+my $notif_count = $dbh->selectrow_array("SELECT count(*) FROM notification_tracking");
 ok($notif_count >= 0, "notification table accessible");
 
 # --- Part 5: Override test ---
@@ -383,7 +383,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 $dbh_rw->do("INSERT OR REPLACE INTO contact_attr (id, name, value) VALUES (1, 'max_messages', '1')");
 $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'testcontact')");
 # Create notification with num_messages=1 for service cpu (id=1)
-$dbh_rw->do("INSERT OR REPLACE INTO notification (contact_id, service_id, severity, num_messages) VALUES (1, 1, 'warning', 1)");
+$dbh_rw->do("INSERT OR REPLACE INTO notification_tracking (contact_id, service_id, severity, num_messages) VALUES (1, 1, 'warning', 1)");
 $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
@@ -395,7 +395,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     ReadOnly   => 1,
 });
 my ($num_msgs) = $dbh->selectrow_array(
-    "SELECT num_messages FROM notification WHERE contact_id = 1 AND service_id = 1"
+    "SELECT num_messages FROM notification_tracking WHERE contact_id = 1 AND service_id = 1"
 );
 # num_messages should still be 1 — notification skipped due to max_messages
 is($num_msgs, 1, "max_messages: notification skipped at limit");
