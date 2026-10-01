@@ -18,7 +18,11 @@ use File::Spec;
 use Munin::Common::Logger;
 use Munin::Common::Defaults;
 use Munin::Master::Config;
-use Munin::Master::Utils;
+# Parens = load, import nothing. Utils' @EXPORT includes
+# print_version_and_exit, which would collide with the specific one below
+# (and its generic "munin version ..." text is wrong for munin-limits
+# anyway). The single real Utils call is fully-qualified at its use site.
+use Munin::Master::Utils ();
 use RRDs;
 
 use Munin::Master::Update;
@@ -80,7 +84,7 @@ sub limits_startup {
         Munin::Common::Logger::configure(%log);
     }
 
-    exit_if_run_by_super_user() unless $force_run_as_root;
+    Munin::Master::Utils::exit_if_run_by_super_user() unless $force_run_as_root;
 
     @always_send = qw{ok warning critical unknown} if $force;
 
