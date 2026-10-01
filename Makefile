@@ -266,11 +266,18 @@ docker-lint:
 docker-shell:
 	$(DOCKER) run --rm -it --shm-size=128m -v $(CURDIR):/app munin-dev bash
 
-# Run coverage in Docker
+# Run coverage in Docker: parallel prove under Devel::Cover. Each test process
+# writes its own cover_db/runs/<ts>.<pid> file, so -j needs no coordination;
+# cover merges the runs at report time. -select_re filters to production code:
+# tests load modules from lib/ via "use lib", so the old "blib/lib|blib/script"
+# select matched nothing (coverage uploaded to Coveralls was empty).
 docker-cover:
-	$(DOCKER) run --rm --shm-size=256m --add-host testing.acme.com:127.0.0.1 \
+	$(DOCKER) run --rm --shm-size=1g --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm \
 		perl Build.PL && \
+		./Build && \
 		rm -rf cover_db && \
-		cover -test -select "blib/lib|blib/script"'
+		PERL5OPT="-MDevel::Cover" TMPDIR=/dev/shm $(PROVE) $(TESTS) && \
+		cover -silent -select_re "^lib/Munin|^script/munin" -report html_basic -outputdir cover_db && \
+		cover -silent -select_re "^lib/Munin|^script/munin" -summary'
 
