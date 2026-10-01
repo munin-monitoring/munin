@@ -150,7 +150,7 @@ my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 
 # Check that state table has alarm values set
 my $states = $dbh->selectall_arrayref(
-    "SELECT id, alarm, num_unknowns FROM state WHERE type = 'ds'"
+    "SELECT ds_id, alarm, num_unknowns FROM state "
 );
 ok(scalar @$states > 0, "state table has DS entries");
 
@@ -177,7 +177,7 @@ $dbh_rw->disconnect();
 limits_main();
 
 # Re-read state for ds_id=1 to verify override was applied
-my ($alarm1) = $dbh->selectrow_array("SELECT alarm FROM state WHERE id = 1 AND type = 'ds'");
+my ($alarm1) = $dbh->selectrow_array("SELECT alarm FROM state WHERE ds_id = 1");
 ok(defined $alarm1, "override test: state exists for ds_id=1");
 
 # --- Part 6: CDEF skip path ---
@@ -201,7 +201,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 
 # DS id=2 now has cdef, so it should be skipped in processing
 # The state alarm should remain unchanged from what SampleDB set
-my ($alarm2) = $dbh->selectrow_array("SELECT alarm FROM state WHERE id = 2 AND type = 'ds'");
+my ($alarm2) = $dbh->selectrow_array("SELECT alarm FROM state WHERE ds_id = 2");
 ok(defined $alarm2, "CDEF skip: state exists for ds_id=2");
 
 # --- Part 7: unknown_limit path ---
@@ -211,7 +211,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     RaiseError => 1,
     AutoCommit => 1,
 });
-$dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE id = 3 AND type = 'ds'");
+$dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE ds_id = 3");
 $dbh_rw->disconnect();
 
 # Run multiple times to accumulate unknowns
@@ -225,7 +225,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     ReadOnly   => 1,
 });
 my ($alarm3, $num_unk3) = $dbh->selectrow_array(
-    "SELECT alarm, num_unknowns FROM state WHERE id = 3 AND type = 'ds'"
+    "SELECT alarm, num_unknowns FROM state WHERE ds_id = 3"
 );
 ok(defined $alarm3, "unknown_limit: state exists for ds_id=3");
 # After enough runs, num_unknowns should exceed default limit (3)
@@ -247,7 +247,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     RaiseError => 1,
     AutoCommit => 1,
 });
-$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
 limits_main();
@@ -257,7 +257,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     AutoCommit => 1,
     ReadOnly   => 1,
 });
-my ($alarm1_after) = $dbh->selectrow_array("SELECT alarm FROM state WHERE id = 1 AND type = 'ds'");
+my ($alarm1_after) = $dbh->selectrow_array("SELECT alarm FROM state WHERE ds_id = 1");
 is($alarm1_after, 'ok', "recovery: ds_id=1 recovered from warning to ok");
 
 $dbh->disconnect();
@@ -270,7 +270,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     AutoCommit => 1,
 });
 my $old_epoch = time() - 1200;
-$dbh_rw->do("UPDATE state SET last_epoch = ?, num_unknowns = 0, alarm = 'ok' WHERE id = 1 AND type = 'ds'", undef, $old_epoch);
+$dbh_rw->do("UPDATE state SET last_epoch = ?, num_unknowns = 0, alarm = 'ok' WHERE ds_id = 1", undef, $old_epoch);
 $dbh_rw->disconnect();
 
 # Run 4x: 3 to accumulate unknowns past default limit (3), 4th to trigger
@@ -284,7 +284,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     ReadOnly   => 1,
 });
 my ($val_heartbeat) = $dbh->selectrow_array(
-    "SELECT alarm FROM state WHERE id = 1 AND type = 'ds'"
+    "SELECT alarm FROM state WHERE ds_id = 1"
 );
 # Heartbeat expired -> value becomes 'U' -> unknown state
 is($val_heartbeat, 'unknown', "heartbeat timeout: ds_id=1 becomes unknown");
@@ -299,7 +299,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 });
 my $now10 = time();
 $dbh_rw->do(
-    "UPDATE state SET last_epoch = ?, last_value = '100', prev_epoch = ?, prev_value = '200', alarm = 'ok' WHERE id = 14 AND type = 'ds'",
+    "UPDATE state SET last_epoch = ?, last_value = '100', prev_epoch = ?, prev_value = '200', alarm = 'ok' WHERE ds_id = 14",
     undef, $now10, $now10 - 60
 );
 $dbh_rw->disconnect();
@@ -315,7 +315,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     ReadOnly   => 1,
 });
 my ($val_counter) = $dbh->selectrow_array(
-    "SELECT alarm FROM state WHERE id = 14 AND type = 'ds'"
+    "SELECT alarm FROM state WHERE ds_id = 14"
 );
 is($val_counter, 'unknown', "COUNTER wrap: ds_id=14 becomes unknown when last < prev");
 $dbh->disconnect();
@@ -329,7 +329,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 });
 $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'ghostcontact')");
 # Ensure state_changed triggers notification path
-$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
 # Should warn about missing contact but not crash
@@ -341,7 +341,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     ReadOnly   => 1,
 });
 my ($val_ghost) = $dbh->selectrow_array(
-    "SELECT alarm FROM state WHERE id = 1 AND type = 'ds'"
+    "SELECT alarm FROM state WHERE ds_id = 1"
 );
 ok(defined $val_ghost, "missing contact: limits did not crash");
 $dbh->disconnect();
@@ -356,7 +356,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 $dbh_rw->do("INSERT OR IGNORE INTO contact (id, name) VALUES (2, 'nocommand')");
 # No command attr inserted — triggers WARN at line 390
 $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'nocommand')");
-$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
 limits_main();
@@ -367,7 +367,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     ReadOnly   => 1,
 });
 my ($val_nocmd) = $dbh->selectrow_array(
-    "SELECT alarm FROM state WHERE id = 1 AND type = 'ds'"
+    "SELECT alarm FROM state WHERE ds_id = 1"
 );
 ok(defined $val_nocmd, "missing command: limits did not crash");
 $dbh->disconnect();
@@ -383,7 +383,7 @@ $dbh_rw->do("INSERT OR REPLACE INTO contact_attr (id, name, value) VALUES (1, 'm
 $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'testcontact')");
 # Create notification with num_messages=1 for service cpu (id=1)
 $dbh_rw->do("INSERT OR REPLACE INTO notification (contact_id, service_id, severity, num_messages) VALUES (1, 1, 'warning', 1)");
-$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
 limits_main();
@@ -409,7 +409,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 });
 $dbh_rw->do("INSERT OR REPLACE INTO ds_attr (id, name, value) VALUES (5, 'unknown_limit', '1')");
 # Set value to U so it triggers unknown path
-$dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE id = 5 AND type = 'ds'");
+$dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE ds_id = 5");
 $dbh_rw->disconnect();
 
 # First run: unknown_limit=1, num_unknowns goes 0->1, stays ok (below limit)
@@ -423,7 +423,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     ReadOnly   => 1,
 });
 my ($alarm_ul, $num_unk_ul) = $dbh->selectrow_array(
-    "SELECT alarm, num_unknowns FROM state WHERE id = 5 AND type = 'ds'"
+    "SELECT alarm, num_unknowns FROM state WHERE ds_id = 5"
 );
 is($alarm_ul, 'unknown', "unknown_limit attr: triggers unknown with limit=1");
 $dbh->disconnect();
@@ -437,7 +437,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 });
 my $now15 = time();
 $dbh_rw->do(
-    "UPDATE state SET last_epoch = ?, last_value = '500', prev_epoch = ?, prev_value = 'U', alarm = 'ok' WHERE id = 7 AND type = 'ds'",
+    "UPDATE state SET last_epoch = ?, last_value = '500', prev_epoch = ?, prev_value = 'U', alarm = 'ok' WHERE ds_id = 7",
     undef, $now15, $now15 - 60
 );
 $dbh_rw->disconnect();
@@ -450,7 +450,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     ReadOnly   => 1,
 });
 my ($val_derive) = $dbh->selectrow_array(
-    "SELECT alarm FROM state WHERE id = 7 AND type = 'ds'"
+    "SELECT alarm FROM state WHERE ds_id = 7"
 );
 is($val_derive, 'unknown', "DERIVE prev_value=U: becomes unknown");
 $dbh->disconnect();
@@ -466,7 +466,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 $dbh_rw->do("UPDATE ds SET type = 'ABSOLUTE' WHERE id = 8");
 my $now16 = time();
 $dbh_rw->do(
-    "UPDATE state SET last_epoch = ?, last_value = '1000', prev_epoch = ?, prev_value = '200', alarm = 'ok' WHERE id = 8 AND type = 'ds'",
+    "UPDATE state SET last_epoch = ?, last_value = '1000', prev_epoch = ?, prev_value = '200', alarm = 'ok' WHERE ds_id = 8",
     undef, $now16, $now16 - 100
 );
 $dbh_rw->do("DELETE FROM override WHERE ds_id = 8");
@@ -480,7 +480,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     ReadOnly   => 1,
 });
 my ($val_abs) = $dbh->selectrow_array(
-    "SELECT alarm FROM state WHERE id = 8 AND type = 'ds'"
+    "SELECT alarm FROM state WHERE ds_id = 8"
 );
 # ABSOLUTE: value = 1000 / (now - (now-100)) = 1000/100 = 10
 # warn=1000, crit=5000 -> 10 is OK
@@ -503,7 +503,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     RaiseError => 1,
     AutoCommit => 1,
 });
-$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 31 AND type = 'ds'");
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 31");
 $dbh_rw->disconnect();
 
 limits_main();
@@ -514,7 +514,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     ReadOnly   => 1,
 });
 my ($val_svc_attr) = $dbh->selectrow_array(
-    "SELECT alarm FROM state WHERE id = 31 AND type = 'ds'"
+    "SELECT alarm FROM state WHERE ds_id = 31"
 );
 ok(defined $val_svc_attr, "contact from service_attr: notification sent");
 $dbh->disconnect();
@@ -526,7 +526,7 @@ $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     AutoCommit => 1,
 });
 $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'none testcontact')");
-$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+$dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
 limits_main();
@@ -537,7 +537,7 @@ $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     ReadOnly   => 1,
 });
 my ($val_none) = $dbh->selectrow_array(
-    "SELECT alarm FROM state WHERE id = 1 AND type = 'ds'"
+    "SELECT alarm FROM state WHERE ds_id = 1"
 );
 ok(defined $val_none, "contact 'none' skip: limits did not crash");
 $dbh->disconnect();

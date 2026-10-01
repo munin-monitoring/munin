@@ -229,7 +229,7 @@ sub _process_ds {
         if (defined $value) {
             my $sth_store = $dbh->prepare(q{
                 UPDATE state SET last_value = ?, last_epoch = ?
-                WHERE id = ? AND type = 'ds'
+                WHERE ds_id = ?
             });
             $sth_store->execute(sprintf('%.6f', $value), time(), $ds_id);
         }
@@ -242,7 +242,7 @@ sub _process_ds {
     # Read state from SQL
     my $sth_state = $dbh->prepare(q{
         SELECT last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns
-        FROM state WHERE id = ? AND type = 'ds'
+        FROM state WHERE ds_id = ?
     });
     $sth_state->execute($ds_id);
     my ($last_epoch, $last_value, $prev_epoch, $prev_value, $old_state, $old_num_unknowns) = $sth_state->fetchrow_array;
@@ -351,13 +351,13 @@ sub _process_ds {
 
     # Write alarm to SQL
     my $sth_ins = $dbh->prepare(q{
-        INSERT INTO state (id, type, alarm, num_unknowns)
-        SELECT ?, 'ds', ?, ?
-        WHERE NOT EXISTS (SELECT 1 FROM state WHERE id = ? AND type = 'ds')
+        INSERT INTO state (ds_id, alarm, num_unknowns)
+        SELECT ?, ?, ?
+        WHERE NOT EXISTS (SELECT 1 FROM state WHERE ds_id = ?)
     });
     $sth_ins->execute($ds_id, $new_state, $new_num_unknowns, $ds_id);
 
-    my $sth_upt = $dbh->prepare(q{UPDATE state SET alarm = ?, num_unknowns = ? WHERE id = ? AND type = 'ds'});
+    my $sth_upt = $dbh->prepare(q{UPDATE state SET alarm = ?, num_unknowns = ? WHERE ds_id = ?});
     $sth_upt->execute($new_state, $new_num_unknowns, $ds_id);
 
     $dbh->commit();

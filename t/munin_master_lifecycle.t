@@ -61,7 +61,7 @@ sub count {
 sub alarm_of {
     my ($ds_id) = @_;
     my $dbh = dbh_ro();
-    my ($a) = $dbh->selectrow_array("SELECT alarm FROM state WHERE id=? AND type='ds'", undef, $ds_id);
+    my ($a) = $dbh->selectrow_array("SELECT alarm FROM state WHERE ds_id=?", undef, $ds_id);
     $dbh->disconnect();
     $a;
 }
@@ -70,7 +70,7 @@ sub set_value {
     my ($dbh, $ds_id, $val) = @_;
     my $epoch = $NOW + $TICK;
     $dbh->do(
-        "UPDATE state SET last_epoch=?, prev_epoch=?, prev_value=last_value, last_value=?, num_unknowns=0 WHERE id=? AND type='ds'",
+        "UPDATE state SET last_epoch=?, prev_epoch=?, prev_value=last_value, last_value=?, num_unknowns=0 WHERE ds_id=?",
         undef, $epoch, $epoch - 60, $val, $ds_id
     );
 }
@@ -83,7 +83,7 @@ sub insert_ds {
         undef, $o{id}, $o{warn}) if defined $o{warn};
     $dbh->do("INSERT OR IGNORE INTO ds_attr (id, name, value) VALUES (?, 'critical', ?)",
         undef, $o{id}, $o{crit}) if defined $o{crit};
-    $dbh->do("INSERT OR IGNORE INTO state (id, type, last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns) VALUES (?, 'ds', ?, ?, ?, ?, ?, ?)",
+    $dbh->do("INSERT OR IGNORE INTO state (ds_id, node_id, last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns) VALUES (?, NULL, ?, ?, ?, ?, ?, ?)",
         undef, $o{id}, $NOW + $TICK, $o{value}, $NOW + $TICK - 60, $o{prev} // "U", $o{alarm} // "ok", 0);
 }
 
@@ -101,7 +101,7 @@ sub remove_svc {
     my ($dbh, $svc_id) = @_;
     my $ds_ids = $dbh->selectall_arrayref("SELECT id FROM ds WHERE service_id = ?", undef, $svc_id);
     for my $row (@$ds_ids) {
-        $dbh->do("DELETE FROM state WHERE id = ? AND type = 'ds'", undef, $row->[0]);
+        $dbh->do("DELETE FROM state WHERE ds_id = ?", undef, $row->[0]);
         $dbh->do("DELETE FROM ds_attr WHERE id = ?", undef, $row->[0]);
     }
     $dbh->do("DELETE FROM ds WHERE service_id = ?", undef, $svc_id);
@@ -171,7 +171,7 @@ $TICK = 600;
     set_value($dbh, 12, "99");   # value2: 99>80 → critical (was warning)
     # DERIVE: set prev_value so rate is computed correctly
     $dbh->do(
-        "UPDATE state SET last_value='5500', prev_value='500' WHERE id=8 AND type='ds'"
+        "UPDATE state SET last_value='5500', prev_value='500' WHERE ds_id=8"
     );
     $dbh->disconnect();
 }
@@ -276,7 +276,7 @@ is(count("service"), $base_svc, "u4: service count back to baseline");
 {
     my $dbh = dbh_ro();
     my $orphaned = $dbh->selectrow_array(
-        "SELECT count(*) FROM state WHERE type='ds' AND id NOT IN (SELECT id FROM ds)"
+        "SELECT count(*) FROM state WHERE ds_id NOT IN (SELECT id FROM ds)"
     );
     is($orphaned, 0, "u4: no orphaned state");
     $dbh->disconnect();
@@ -321,7 +321,7 @@ is(alarm_of($base_ds + 2), 'ok', "u5: dns/errors recovered → ok");
 {
     my $dbh = dbh_ro();
     my $ds_count    = $dbh->selectrow_array("SELECT count(*) FROM ds");
-    my $state_count = $dbh->selectrow_array("SELECT count(*) FROM state WHERE type='ds'");
+    my $state_count = $dbh->selectrow_array("SELECT count(*) FROM state ");
     is($state_count, $ds_count, "every ds has a state entry");
 
     my $svc_no_url = $dbh->selectrow_array(
@@ -330,7 +330,7 @@ is(alarm_of($base_ds + 2), 'ok', "u5: dns/errors recovered → ok");
     is($svc_no_url, 0, "every service has a URL");
 
     my $orphaned = $dbh->selectrow_array(
-        "SELECT count(*) FROM state WHERE type='ds' AND id NOT IN (SELECT id FROM ds)"
+        "SELECT count(*) FROM state WHERE ds_id NOT IN (SELECT id FROM ds)"
     );
     is($orphaned, 0, "no orphaned state");
     $dbh->disconnect();

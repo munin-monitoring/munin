@@ -418,14 +418,18 @@ sub _db_init {
 		CHECK ((grp_id IS NOT NULL) + (node_id IS NOT NULL) + (service_id IS NOT NULL) = 1)
 	)");
 
-	# Note, this table is referenced by composite key (type,id) in order to be
-	# able to have any kind of states. Such as whole node states for example.
-	$dbh->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
+	# Per-entity state tracking. FK columns instead of polymorphic (type,id) --
+	# no cascade, error if referenced. CHECK ensures exactly one FK is set.
+	$dbh->do("CREATE TABLE IF NOT EXISTS state (
+		ds_id INTEGER REFERENCES ds(id),
+		node_id INTEGER REFERENCES node(id),
 		last_epoch INTEGER, last_value VARCHAR,
 		prev_epoch INTEGER, prev_value VARCHAR,
-		alarm VARCHAR, num_unknowns INTEGER DEFAULT 0
-		)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
+		alarm VARCHAR, num_unknowns INTEGER DEFAULT 0,
+		CHECK ((ds_id IS NOT NULL) + (node_id IS NOT NULL) = 1)
+	)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_ds ON state (ds_id)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_node ON state (node_id)");
 
 	# Munin stats
 	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp TIMESTAMPTZ, type VARCHAR, name VARCHAR, duration NUMERIC)");
