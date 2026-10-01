@@ -76,7 +76,7 @@ subtest 'SampleDB structure' => sub {
     my $urls = $dbh->selectall_arrayref("SELECT grp_id, node_id, service_id, path FROM url");
     ok(scalar @$urls >= 20, "URLs created");
 
-    my $state = $dbh->selectall_arrayref("SELECT id, type, alarm FROM state WHERE type = 'ds'");
+    my $state = $dbh->selectall_arrayref("SELECT ds_id, alarm FROM state ");
     ok(scalar @$state >= 20, "state entries for DS");
 
     my $contacts = $dbh->selectall_arrayref("SELECT id, name FROM contact");
@@ -200,7 +200,7 @@ subtest 'Limits: integration with SampleDB' => sub {
     });
 
     my $states = $dbh->selectall_arrayref(
-        "SELECT id, alarm, num_unknowns FROM state WHERE type = 'ds'"
+        "SELECT ds_id, alarm, num_unknowns FROM state "
     );
     ok(scalar @$states > 0, "state table has DS entries");
 
@@ -234,7 +234,7 @@ subtest 'Limits: override threshold' => sub {
         RaiseError => 1, AutoCommit => 1, ReadOnly => 1,
     });
 
-    my ($alarm1) = $dbh->selectrow_array("SELECT alarm FROM state WHERE id = 1 AND type = 'ds'");
+    my ($alarm1) = $dbh->selectrow_array("SELECT alarm FROM state WHERE ds_id = 1");
     ok(defined $alarm1, "override applied");
 
     # Cleanup override
@@ -259,7 +259,7 @@ subtest 'Limits: unknown_limit' => sub {
     $dbh_rw->do("INSERT OR REPLACE INTO ds_attr (id, name, value) VALUES (5, 'unknown_limit', '1')");
     # Clear any existing override to ensure clean state
     $dbh_rw->do("DELETE FROM override WHERE ds_id = 5");
-    $dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE id = 5 AND type = 'ds'");
+    $dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE ds_id = 5");
     $dbh_rw->disconnect();
 
     # First run: stays ok
@@ -272,7 +272,7 @@ subtest 'Limits: unknown_limit' => sub {
     });
 
     my ($alarm, $num_unk) = $dbh->selectrow_array(
-        "SELECT alarm, num_unknowns FROM state WHERE id = 5 AND type = 'ds'"
+        "SELECT alarm, num_unknowns FROM state WHERE ds_id = 5"
     );
     is($alarm, 'unknown', "unknown_limit=1 triggers unknown after 2 runs");
     ok($num_unk >= 1, "num_unknowns incremented");
@@ -292,7 +292,7 @@ subtest 'Limits: heartbeat timeout' => sub {
     # Set last_epoch far in the past
     my $old_epoch = $NOW - 1200;
     $dbh_rw->do(
-        "UPDATE state SET last_epoch = ?, num_unknowns = 0, alarm = 'ok' WHERE id = 1 AND type = 'ds'",
+        "UPDATE state SET last_epoch = ?, num_unknowns = 0, alarm = 'ok' WHERE ds_id = 1",
         undef, $old_epoch
     );
     $dbh_rw->disconnect();
@@ -307,7 +307,7 @@ subtest 'Limits: heartbeat timeout' => sub {
     });
 
     my ($alarm) = $dbh->selectrow_array(
-        "SELECT alarm FROM state WHERE id = 1 AND type = 'ds'"
+        "SELECT alarm FROM state WHERE ds_id = 1"
     );
     is($alarm, 'unknown', "heartbeat timeout triggers unknown");
     $dbh->disconnect();
@@ -324,7 +324,7 @@ subtest 'Limits: COUNTER wrap' => sub {
 
     # ds_id=14 is COUNTER type; set last_value < prev_value
     $dbh_rw->do(
-        "UPDATE state SET last_epoch = ?, last_value = '100', prev_epoch = ?, prev_value = '200', alarm = 'ok' WHERE id = 14 AND type = 'ds'",
+        "UPDATE state SET last_epoch = ?, last_value = '100', prev_epoch = ?, prev_value = '200', alarm = 'ok' WHERE ds_id = 14",
         undef, $NOW, $NOW - 60
     );
     $dbh_rw->disconnect();
@@ -339,7 +339,7 @@ subtest 'Limits: COUNTER wrap' => sub {
     });
 
     my ($alarm) = $dbh->selectrow_array(
-        "SELECT alarm FROM state WHERE id = 14 AND type = 'ds'"
+        "SELECT alarm FROM state WHERE ds_id = 14"
     );
     is($alarm, 'unknown', "COUNTER wrap triggers unknown");
     $dbh->disconnect();
@@ -356,7 +356,7 @@ subtest 'Limits: DERIVE with undefined prev_value' => sub {
 
     # ds_id=7 is DERIVE type; set prev_value=U
     $dbh_rw->do(
-        "UPDATE state SET last_epoch = ?, last_value = '500', prev_epoch = ?, prev_value = 'U', alarm = 'ok' WHERE id = 7 AND type = 'ds'",
+        "UPDATE state SET last_epoch = ?, last_value = '500', prev_epoch = ?, prev_value = 'U', alarm = 'ok' WHERE ds_id = 7",
         undef, $NOW, $NOW - 60
     );
     $dbh_rw->disconnect();
@@ -368,7 +368,7 @@ subtest 'Limits: DERIVE with undefined prev_value' => sub {
     });
 
     my ($alarm) = $dbh->selectrow_array(
-        "SELECT alarm FROM state WHERE id = 7 AND type = 'ds'"
+        "SELECT alarm FROM state WHERE ds_id = 7"
     );
     is($alarm, 'unknown', "DERIVE prev_value=U triggers unknown");
     $dbh->disconnect();
@@ -386,7 +386,7 @@ subtest 'Limits: recovery tracking' => sub {
     # ds_id=1 idle value=50, warn=80, crit=95 -> should be OK
     # Reset all state fields to ensure clean test
     $dbh_rw->do(
-        "UPDATE state SET alarm = 'warning', last_value = '50', last_epoch = ?, prev_epoch = ?, num_unknowns = 0 WHERE id = 1 AND type = 'ds'",
+        "UPDATE state SET alarm = 'warning', last_value = '50', last_epoch = ?, prev_epoch = ?, num_unknowns = 0 WHERE ds_id = 1",
         undef, $NOW, $NOW - 60
     );
     $dbh_rw->disconnect();
@@ -397,7 +397,7 @@ subtest 'Limits: recovery tracking' => sub {
         RaiseError => 1, AutoCommit => 1, ReadOnly => 1,
     });
 
-    my ($alarm) = $dbh->selectrow_array("SELECT alarm FROM state WHERE id = 1 AND type = 'ds'");
+    my ($alarm) = $dbh->selectrow_array("SELECT alarm FROM state WHERE ds_id = 1");
     is($alarm, 'ok', "recovery from warning to ok");
     $dbh->disconnect();
 };
@@ -412,7 +412,7 @@ subtest 'Limits: missing contact' => sub {
     });
 
     $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'ghostcontact')");
-    $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+    $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
     $dbh_rw->disconnect();
 
     # Should warn but not crash
@@ -430,7 +430,7 @@ subtest 'Limits: missing command' => sub {
 
     $dbh_rw->do("INSERT OR IGNORE INTO contact (id, name) VALUES (2, 'nocommand')");
     $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'nocommand')");
-    $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+    $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
     $dbh_rw->disconnect();
 
     lives_ok { Munin::Master::Limits::limits_main() } "missing command does not crash";
@@ -448,7 +448,7 @@ subtest 'Limits: max_messages' => sub {
     $dbh_rw->do("INSERT OR REPLACE INTO contact_attr (id, name, value) VALUES (1, 'max_messages', '1')");
     $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'testcontact')");
     $dbh_rw->do("INSERT OR REPLACE INTO notification (contact_id, service_id, severity, num_messages) VALUES (1, 1, 'warning', 1)");
-    $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE id = 1 AND type = 'ds'");
+    $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
     $dbh_rw->disconnect();
 
     Munin::Master::Limits::limits_main();

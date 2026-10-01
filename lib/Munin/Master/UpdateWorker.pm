@@ -593,13 +593,13 @@ sub _db_state_update {
 	return unless defined $ds_id;
 
 	# Update the state with the new values
-	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE id = ? AND type = ?");
-	my $rows_u = $sth_state_u->execute($when, $value, $ds_id, "ds");
+	my $sth_state_u = $dbh->prepare_cached("UPDATE state SET prev_epoch = last_epoch, prev_value = last_value, last_epoch = ?, last_value = ? WHERE ds_id = ?");
+	my $rows_u = $sth_state_u->execute($when, $value, $ds_id);
 	if ($rows_u eq "0E0") {
 		# No line exists yet. Create It.
-		my $sth_state_i = $dbh->prepare_cached("INSERT INTO state (id, type) VALUES (?, ?)");
-		$sth_state_i->execute($ds_id, "ds");
-		$sth_state_u->execute($when, $value, $ds_id, "ds");
+		my $sth_state_i = $dbh->prepare_cached("INSERT INTO state (ds_id) VALUES (?)");
+		$sth_state_i->execute($ds_id);
+		$sth_state_u->execute($when, $value, $ds_id);
 	}
 
 	return $ds_id;

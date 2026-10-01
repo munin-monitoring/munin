@@ -33,8 +33,9 @@ sub generate_sample_db {
         service_id INTEGER REFERENCES service(id),
         CHECK ((grp_id IS NOT NULL) + (node_id IS NOT NULL) + (service_id IS NOT NULL) = 1)
     )");
-    $dbh->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR, last_epoch INTEGER, last_value VARCHAR, prev_epoch INTEGER, prev_value VARCHAR, alarm VARCHAR, num_unknowns INTEGER DEFAULT 0)");
-    $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
+    $dbh->do("CREATE TABLE IF NOT EXISTS state (ds_id INTEGER REFERENCES ds(id), node_id INTEGER REFERENCES node(id), last_epoch INTEGER, last_value VARCHAR, prev_epoch INTEGER, prev_value VARCHAR, alarm VARCHAR, num_unknowns INTEGER DEFAULT 0, CHECK ((ds_id IS NOT NULL) + (node_id IS NOT NULL) = 1))");
+    $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_ds ON state (ds_id)");
+    $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_node ON state (node_id)");
     $dbh->do("CREATE TABLE IF NOT EXISTS contact (id $db_serial_type PRIMARY KEY, name VARCHAR UNIQUE)");
     $dbh->do("CREATE TABLE IF NOT EXISTS contact_attr (id INTEGER REFERENCES contact(id), name VARCHAR, value VARCHAR)");
     $dbh->do("CREATE TABLE IF NOT EXISTS notification (id $db_serial_type PRIMARY KEY, contact_id INTEGER REFERENCES contact(id), service_id INTEGER REFERENCES service(id), severity VARCHAR, sent_at INTEGER, num_messages INTEGER DEFAULT 0)");
@@ -205,7 +206,7 @@ sub generate_sample_db {
                     $alarm = "warning";
                 }
 
-                $dbh->do("INSERT OR IGNORE INTO state (id, type, last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns) VALUES (?, 'ds', ?, ?, ?, ?, ?, ?)",
+                $dbh->do("INSERT OR IGNORE INTO state (ds_id, node_id, last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns) VALUES (?, NULL, ?, ?, ?, ?, ?, ?)",
                     undef, $ds_id, $now, $last_val, $prev_time, $prev_val, $alarm, $num_unk);
 
                 $ds_id++;
