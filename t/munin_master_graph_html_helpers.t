@@ -343,8 +343,11 @@ subtest 'node listing' => sub {
 
 # ============================================================================
 # _get_params_groups - tests the full function including node processing
+# SampleDB creates: 5 hosts (localhost, acme.com, aesir, asynjur, svartalfar)
+# Each host has 5 services: cpu, memory, disk, network, load
+# Categories: system (cpu, load), storage (memory, disk), network
 # ============================================================================
-subtest '_get_params_groups with nodes' => sub {
+subtest '_get_params_groups returns correct data from SampleDB' => sub {
     my $dbh = Munin::Master::Update::get_dbh(1);
 
     # Get prepared statements like HTML.pm does
@@ -361,7 +364,6 @@ subtest '_get_params_groups with nodes' => sub {
         INNER JOIN url u ON u.node_id = n.id AND n.grp_id = ?
         ORDER BY n.name ASC");
 
-    # Call the function with no parent group (root level)
     require Munin::Master::HTML;
     my $groups = Munin::Master::HTML::_get_params_groups(
         '', $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, undef, 'png'
@@ -369,23 +371,119 @@ subtest '_get_params_groups with nodes' => sub {
 
     ok(ref $groups eq 'ARRAY', '_get_params_groups returns arrayref');
 
-    # Check structure of each group
+    # SampleDB creates one group per host: acme.com, aesir, asynjur, svartalfar
+    # localhost is in acme.com group
+    my %expected_groups = map { $_ => 1 } qw(acme.com aesir asynjur svartalfar);
+    my %found_groups;
+
     for my $g (@$groups) {
-        ok(defined $g->{NAME}, "Group has NAME: $g->{NAME}");
-        ok(defined $g->{URL}, "Group has URL: $g->{URL}");
+        $found_groups{$g->{NAME}} = 1;
+
+        ok(defined $g->{NAME}, "Group has NAME");
+        like($g->{URL}, qr/\/$/, "Group URL ends with /");
         ok(ref $g->{GROUPS} eq 'ARRAY', "Group has GROUPS array");
         ok(defined $g->{NGROUPS}, "Group has NGROUPS");
 
-        # Check nodes in this group
+        # Each group should have nodes
+        my $node_count = 0;
         for my $n (@{$g->{GROUPS}}) {
-            # Node entries have CATEGORIES, group entries have GROUPS
             if (exists $n->{CATEGORIES}) {
+                $node_count++;
+
                 ok(defined $n->{NAME}, "Node has NAME: $n->{NAME}");
-                ok(defined $n->{URL}, "Node has URL: $n->{URL}");
+                like($n->{URL}, qr/\/$/, "Node URL ends with /");
                 ok(ref $n->{CATEGORIES} eq 'ARRAY', "Node has CATEGORIES array");
                 ok(defined $n->{NCATEGORIES}, "Node has NCATEGORIES");
+
+                # Node should have categories from SampleDB
+                my %expected_categories = map { $_ => 1 } qw(system storage network);
+                for my $cat (@{$n->{CATEGORIES}}) {
+                    ok(defined $cat->{NAME}, "Category has NAME: $cat->{NAME}");
+                    ok(defined $expected_categories{$cat->{NAME}}, "Category '$cat->{NAME}' is valid");
+                }
+
+                # NCATEGORIES should match actual categories
+                is(scalar @{$n->{CATEGORIES}}, $n->{NCATEGORIES},
+                    "NCATEGORIES matches actual count for node $n->{NAME}");
             }
         }
+
+        ok($node_count > 0, "Group '$g->{NAME}' has at least one node");
+    }
+
+    # Verify we found all expected groups
+    for my $expected (keys %expected_groups) {
+        ok($found_groups{$expected}, "Found expected group: $expected");
+    }
+};
+
+# ============================================================================
+# _get_params_services - tests service retrieval with categories
+# ============================================================================
+subtest '_get_params_services returns correct data' => sub {
+    my $dbh = Munin::Master::Update::get_dbh(1);
+    require Munin::Master::HTML;
+
+    # SampleDB: cpu is in 'system' category
+    # localhost has node_id, let's find it
+    my ($node_id) = $dbh->selectrow_array("SELECT id FROM node WHERE name = 'localhost'");
+    ok(defined $node_id, 'Got node_id for localhost');
+
+    my $result = Munin::Master::HTML::_get_params_services(
+        '', $dbh, 'system', undef, $node_id, 'png'
+    );
+
+    ok(ref $result eq 'HASH', '_get_params_services returns hashref');
+    is($result->{NAME}, 'system', 'Category name is system');
+    ok(ref $result->{SERVICES} eq 'ARRAY', 'SERVICES is arrayref');
+
+    # SampleDB: cpu and load are in 'system' category
+    my @service_names = map { $_->{NAME} } @{$result->{SERVICES}};
+    my %expected_services = map { $_ => 1 } ('Graph cpu', 'Graph load');
+
+    for my $svc_name (@service_names) {
+        ok(defined $expected_services{$svc_name}, "Service '$svc_name' is expected");
+    }
+
+    # Check service structure
+    for my $svc (@{$result->{SERVICES}}) {
+        ok(defined $svc->{NAME}, "Service has NAME: $svc->{NAME}");
+        ok(defined $svc->{URLX}, "Service has URLX: $svc->{URLX}");
+        ok(defined $svc->{IMGday}, "Service has IMGday");
+    }
+};
+
+# ============================================================================
+# _get_params_fields - tests field retrieval for a service
+# ============================================================================
+subtest '_get_params_fields returns correct data' => sub {
+    my $dbh = Munin::Master::Update::get_dbh(1);
+    require Munin::Master::HTML;
+
+    # Get a service ID (cpu for localhost)
+    my ($service_id) = $dbh->selectrow_array("
+        SELECT s.id FROM service s
+        INNER JOIN node n ON s.node_id = n.id
+        WHERE n.name = 'localhost' AND s.name = 'cpu'
+    ");
+    ok(defined $service_id, 'Got service_id for cpu');
+
+    my $fields = Munin::Master::HTML::_get_params_fields($dbh, $service_id);
+
+    ok(ref $fields eq 'ARRAY', '_get_params_fields returns arrayref');
+
+    # SampleDB creates all ds_defs for every service
+    my @field_names = map { $_->{FIELD} } @$fields;
+    my %expected_fields = map { $_ => 1 } qw(idle user system used free cached rx tx in out value1 value2 value3 value4 value5);
+
+    for my $field_name (@field_names) {
+        ok(defined $expected_fields{$field_name}, "Field '$field_name' is expected");
+    }
+
+    # Check field structure
+    for my $field (@$fields) {
+        ok(defined $field->{FIELD}, "Field has FIELD: $field->{FIELD}");
+        ok(defined $field->{TYPE}, "Field has TYPE: $field->{TYPE}");
     }
 };
 
