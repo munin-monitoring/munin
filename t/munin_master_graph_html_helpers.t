@@ -342,6 +342,54 @@ subtest 'node listing' => sub {
 };
 
 # ============================================================================
+# _get_params_groups - tests the full function including node processing
+# ============================================================================
+subtest '_get_params_groups with nodes' => sub {
+    my $dbh = Munin::Master::Update::get_dbh(1);
+
+    # Get prepared statements like HTML.pm does
+    my $sth_grp_normal = $dbh->prepare_cached("
+        SELECT g.id, g.name, u.path FROM grp g
+        INNER JOIN url u ON u.grp_id = g.id AND p_id = ?
+        ORDER BY g.name ASC");
+    my $sth_grp_root = $dbh->prepare_cached("
+        SELECT g.id, g.name, u.path FROM grp g
+        INNER JOIN url u ON u.grp_id = g.id AND p_id = 0
+        ORDER BY g.name ASC");
+    my $sth_node = $dbh->prepare_cached("
+        SELECT n.id, n.name, u.path, n.path FROM node n
+        INNER JOIN url u ON u.node_id = n.id AND n.grp_id = ?
+        ORDER BY n.name ASC");
+
+    # Call the function with no parent group (root level)
+    require Munin::Master::HTML;
+    my $groups = Munin::Master::HTML::_get_params_groups(
+        '', $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, undef, 'png'
+    );
+
+    ok(ref $groups eq 'ARRAY', '_get_params_groups returns arrayref');
+
+    # Check structure of each group
+    for my $g (@$groups) {
+        ok(defined $g->{NAME}, "Group has NAME: $g->{NAME}");
+        ok(defined $g->{URL}, "Group has URL: $g->{URL}");
+        ok(ref $g->{GROUPS} eq 'ARRAY', "Group has GROUPS array");
+        ok(defined $g->{NGROUPS}, "Group has NGROUPS");
+
+        # Check nodes in this group
+        for my $n (@{$g->{GROUPS}}) {
+            # Node entries have CATEGORIES, group entries have GROUPS
+            if (exists $n->{CATEGORIES}) {
+                ok(defined $n->{NAME}, "Node has NAME: $n->{NAME}");
+                ok(defined $n->{URL}, "Node has URL: $n->{URL}");
+                ok(ref $n->{CATEGORIES} eq 'ARRAY', "Node has CATEGORIES array");
+                ok(defined $n->{NCATEGORIES}, "Node has NCATEGORIES");
+            }
+        }
+    }
+};
+
+# ============================================================================
 # Service categories - what HTML.pm uses for category views
 # ============================================================================
 subtest 'service categories' => sub {
