@@ -76,7 +76,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          docker run --rm -v $(pwd):/app -e GITHUB_TOKEN munin-dev cover -report coveralls
+          docker run --rm -v $(pwd):/app -e GITHUB_TOKEN munin-dev \
+            cover -silent -select_re "^lib/Munin|^script/munin" -report coveralls
 
       # Upload coverage HTML as artifact for inspection
       - name: Upload coverage HTML
