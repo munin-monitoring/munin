@@ -1,14 +1,34 @@
 # Mission Logs
 
-Detailed session logs following the [mission-log skill](../../.agents/skills/mission-log/SKILL.md).
-Written for future us: the journey, the dead ends, and the rules we extracted.
+Detailed session logs documenting exploratory work, design journeys, and
+implementation adventures -- what happened, why decisions were made, and what
+was learned. Written for future us: the goal is to allow yourself to forget,
+then find it again.
 
-| Date | Topic | Log |
-|------|-------|-----|
-| 2026-09-24 | Multi-DS RRD migration, CI optimization, logging cleanup | [2026-09-24_multi_ds_rrd_migration.md](2026-09-24_multi_ds_rrd_migration.md) |
-| 2026-09-25 | UpdateWorker CRUD refactoring, dirty_config fix, logger refactor, TLS/RRDCACHED/Graph/HTML test coverage, time utilities | [2026-09-25_updateworker_crud.md](2026-09-25_updateworker_crud.md) |
-| 2026-09-27 | Defaults.pm static refactor (drop code generation) | [2026-09-27_defaults_refactoring.md](2026-09-27_defaults_refactoring.md) |
-| 2026-09-27 | Test coverage expansion, dead code removal, continuation-line fix | [2026-09-27_test_coverage.md](2026-09-27_test_coverage.md) |
-| 2026-09-30 | DB-driven groups (SQLite-first config), RW/RO DBH split, singleton removal | [2026-09-30_db_driven_groups.md](2026-09-30_db_driven_groups.md) |
-| 2026-09-30 | URL table FK schema refactor (polymorphic -> explicit FK columns) | [2026-09-30_url_fk_schema.md](2026-09-30_url_fk_schema.md) |
-| 2026-10-01 | State table FK refactor, url path-PK, PRAGMA foreign_keys enforcement | [2026-10-01_state_table_fk_enforcement.md](2026-10-01_state_table_fk_enforcement.md) |
+Mission logs are our tracer bullets:
+
+> "In the Captain's Log you will find a detailed description of what our
+> product team is building and the intention behind our product decisions.
+> The audience of the Captain's Log is future Captains."
+> -- Steve SCHNEPP, [Mission Logs are our Tracer Bullets - Always Use Them](https://blog.pwkf.org/2023/02/15/mission-logs.html) (2023)
+
+Three purposes:
+
+1. **Show where your bullets land** -- document the current position, what
+   was tested, and which assumptions need to change. In a PoC, the journey
+   IS the result.
+2. **Show where others' bullets land** -- so teammates avoid retrying your
+   failures and can aim for different paths.
+3. **Deter "this can't be done" critics** -- showing you're working silences
+   most arguments about whether it should be tried.
+
+Even failed experiments produce valuable knowledge when logged.
+
+## Conventions
+
+- One file per topic: `YYYY-MM-DD_topic.md` (short hyphenated slug).
+- Multiple sessions on the same topic append as `## Session N: Title (date)`.
+- Rules that emerge from a session may be promoted to `AGENTS.md` or project
+  docs; reference them from the log.
+- Significant architectural decisions may also get an ADR -- the log records
+  the journey, the ADR records the decision.
