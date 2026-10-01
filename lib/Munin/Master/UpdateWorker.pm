@@ -442,8 +442,17 @@ sub _db_service {
 	for my $old_field (keys %fields_old) {
 		unless (exists $fields->{$old_field}) {
 			DEBUG "_db_service: deleting stale ds '$old_field' from service $service_id";
-			my $sth_del_ds = $dbh->prepare_cached('DELETE FROM ds WHERE service_id = ? AND name = ?');
-			$sth_del_ds->execute($service_id, $old_field);
+			my $sth_sel_ds = $dbh->prepare_cached('SELECT id FROM ds WHERE service_id = ? AND name = ?');
+			$sth_sel_ds->execute($service_id, $old_field);
+			my ($old_ds_id) = $sth_sel_ds->fetchrow_array();
+			$sth_sel_ds->finish();
+			if (defined $old_ds_id) {
+				# Children first - FK safe ordering (no cascade, error if referenced)
+				$dbh->prepare_cached('DELETE FROM state WHERE ds_id = ?')->execute($old_ds_id);
+				$dbh->prepare_cached('DELETE FROM override WHERE ds_id = ?')->execute($old_ds_id);
+				$dbh->prepare_cached('DELETE FROM ds_attr WHERE id = ?')->execute($old_ds_id);
+				$dbh->prepare_cached('DELETE FROM ds WHERE id = ?')->execute($old_ds_id);
+			}
 		}
 	}
 
@@ -804,7 +813,11 @@ sub uw_handle_config {
 	# Now safe to do this since RRD loop above has added rrd:file/rrd:field attrs
 	{
 		my $dbh_purge = $self->{dbh};
-		my $sth_del_ds = $dbh_purge->prepare_cached('DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)');
+		# Children first - FK safe ordering (no cascade, error if referenced)
+		my $sth_noattr = 'SELECT id FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)';
+		$dbh_purge->do("DELETE FROM state WHERE ds_id IN ($sth_noattr)", undef, $service_id);
+		$dbh_purge->do("DELETE FROM override WHERE ds_id IN ($sth_noattr)", undef, $service_id);
+		my $sth_del_ds = $dbh_purge->prepare_cached("DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)");
 		$sth_del_ds->execute($service_id);
 	}
 
