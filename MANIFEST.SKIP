@@ -79,3 +79,6 @@
 # Avoid local debug artifacts and prove state
 ^out/
 ^\.prove$
+
+# Avoid the pi agent harness command-output dir
+^\.pi/
