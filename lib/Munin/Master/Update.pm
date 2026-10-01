@@ -506,6 +506,17 @@ sub _db_groups_update {
 
 	# Clear existing groups, nodes, node attributes, and URLs
 	# URLs must be cleared too - they have UNIQUE constraint on path
+	#
+	# NOTE: this legacy wipe-and-reimport relies on id-churn stability: the
+	# service/ds/state tables reference node/grp ids that get re-created with
+	# identical ids each cycle (full wipe + same import order). FK enforcement
+	# would reject the wipe (services still reference the old node rows), so
+	# this one connection runs with FK off. Proper fix is a diff-based upsert
+	# import (see mission log follow-ups).
+	my $db_driver = $ENV{MUNIN_DBDRIVER} || "$config->{dbdriver}";
+	$dbh->{AutoCommit} = 1;  # commit+detach, so the PRAGMA runs outside a txn
+	$dbh->do("PRAGMA foreign_keys=OFF;") if $db_driver eq "SQLite";
+	$dbh->{AutoCommit} = 0;
 	$dbh->do('DELETE FROM node_attr');
 	$dbh->do('DELETE FROM node');
 	$dbh->do('DELETE FROM url');
@@ -585,6 +596,8 @@ sub _db_import_config {
 	my $dbh = get_dbh();
 
 	# Clear existing contacts, overrides, and config overrides
+	# notification first: it references contact (no cascade, error if referenced)
+	$dbh->do('DELETE FROM notification');
 	$dbh->do('DELETE FROM contact_attr');
 	$dbh->do('DELETE FROM contact');
 	$dbh->do('DELETE FROM override');

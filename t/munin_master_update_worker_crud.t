@@ -43,15 +43,15 @@ sub create_test_db {
     )");
 
     $dbh->do("CREATE TABLE IF NOT EXISTS state (
-        id INTEGER,
-        type VARCHAR,
+        ds_id INTEGER REFERENCES ds(id),
+        node_id INTEGER,
         last_epoch INTEGER,
         last_value VARCHAR,
         prev_epoch INTEGER,
         prev_value VARCHAR,
         alarm VARCHAR,
         num_unknowns INTEGER DEFAULT 0,
-        PRIMARY KEY (id, type)
+        CHECK ((ds_id IS NOT NULL) + (node_id IS NOT NULL) = 1)
     )");
 }
 
