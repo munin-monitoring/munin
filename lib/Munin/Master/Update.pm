@@ -118,6 +118,12 @@ sub get_dbh {
 	$dbh->do("PRAGMA main.synchronous=$db_synchronous_mode;") if $db_driver eq "SQLite";
 	DEBUG "get_dbh: PRAGMA main.synchronous=$db_synchronous_mode;" if $db_driver eq "SQLite";
 
+	# Enforce FK constraints - SQLite defaults to off. Without this the
+	# url/state FK columns are purely decorative. Must run outside a txn.
+	# (the groups import in Update.pm deliberately runs its own conn with FK off)
+	$dbh->do("PRAGMA foreign_keys=ON;") if $db_driver eq "SQLite";
+	DEBUG "get_dbh: PRAGMA foreign_keys=ON;" if $db_driver eq "SQLite";
+
 	# AutoCommit when readonly is a no-op anyway
 	$dbh->{AutoCommit} = $ENV{MUNIN_DB_AUTOCOMMIT} || $config->{db_autocommit} || 0;
 	$dbh->{AutoCommit} = 1 if $is_read_only;
