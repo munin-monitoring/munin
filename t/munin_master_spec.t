@@ -38,7 +38,7 @@ my $dbfile = TestUtils::generate_sample_db_and_rrds($tmpdir);
 # nothing -- needs no tmpldir or t/config/munin.conf parse.
 my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir} = $tmpdir;
-$config->{fork} = 0;
+$config->{fork} = TestUtils::cell_fork();
 
 Munin::Common::Logger::configure(
     output => 'screen',
