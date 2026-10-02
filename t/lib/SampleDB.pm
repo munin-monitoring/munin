@@ -121,7 +121,18 @@ sub generate_sample_db {
 
         my $svc_idx = 0;
         for my $svc (@services) {
+            # service.path column: group-level. lifecycle.t queries this
+            # column directly; production never populates it at all
+            # (UpdateWorker inserts service (node_id, name) only), so we
+            # keep the legacy value here and do NOT nest it.
             my $svc_path = "$path/$svc";
+            # service url.path: nested under the NODE url, matching
+            # production _db_url (service url = node url + "/" + plugin).
+            # Without the node segment the service is never under its
+            # node, so HTML.pm's substr($_url, 1+length($base_path))
+            # overruns and returns undef (the 'substr outside of string'
+            # warning in html_static.t).
+            my $svc_url_path = "$node_url_path/$svc";
             $dbh->do("INSERT OR IGNORE INTO service (id, node_id, name, path, service_title) VALUES (?, ?, ?, ?, ?)",
                 undef, $svc_id, $node_id, $svc, $svc_path, "Graph $svc");
 
@@ -132,7 +143,7 @@ sub generate_sample_db {
                 undef, $svc_id);
 
             $dbh->do("INSERT OR IGNORE INTO url (path, service_id) VALUES (?, ?)",
-                undef, $svc_path, $svc_id);
+                undef, $svc_url_path, $svc_id);
 
             # Add category for this service
             my $category = ($svc eq 'cpu' || $svc eq 'load') ? 'system' :

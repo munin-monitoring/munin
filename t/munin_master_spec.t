@@ -13,6 +13,19 @@ use Test::Exception;
 use DBI;
 use File::Temp qw(tempdir);
 use File::Path qw(remove_tree);
+use File::Find qw(find);
+
+# Core glob()'s '**' does not recurse -- it behaves like '*', which only
+# matched files sitting at exactly one directory level. Collect files at
+# any depth so these assertions match their intent. Static HTML/graph
+# output mirrors url.path nesting (group/node/service), i.e. 0-2 levels.
+sub rglob {
+    my ($dir, $re) = @_;
+    my @found;
+    return @found unless -d $dir;
+    find({ wanted => sub { push @found, $File::Find::name if /$re/ }, no_chdir => 1 }, $dir);
+    return @found;
+}
 
 # ============================================================================
 # Deterministic time - no real time() calls during test
@@ -94,7 +107,7 @@ subtest 'SampleDB structure' => sub {
 # ============================================================================
 
 subtest 'SampleRRD structure' => sub {
-    my @rrd_files = glob("$tmpdir/**/*.rrd");
+    my @rrd_files = rglob($tmpdir, qr/\.rrd\z/);
     ok(scalar @rrd_files > 0, "RRD files created");
 
     my $sample_rrd = $rrd_files[0];
@@ -511,12 +524,12 @@ subtest 'Graph: static generation' => sub {
 
     Munin::Master::Static::Graph::create(0, $graphdir);
 
-    my @pngs = glob("$graphdir/**/*.png");
+    my @pngs = rglob($graphdir, qr/\.png\z/);
     ok(scalar @pngs > 0, "PNG files generated");
 
     # Check for time period variants
     for my $period (qw(hour day week month year)) {
-        my @found = glob("$graphdir/**/*-$period.png");
+        my @found = rglob($graphdir, qr/-\Q$period\E\.png\z/);
         ok(scalar @found > 0, "generated $period graphs");
     }
 };
