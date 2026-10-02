@@ -940,6 +940,9 @@ sub _reap_command {
     for (1 .. 100) {
         my $kid = waitpid($pid, WNOHANG);
         if ($kid == $pid) {
+            ## no critic qw(Variables::ProhibitPunctuationVars)
+            # $? is Perl's only channel for waitpid() exit status; there
+            # is no non-punctuation equivalent to suppress to instead.
             my $status = $?;
             my $detail = $status & 127
                 ? "signal " . ($status & 127)
