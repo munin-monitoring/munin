@@ -1969,3 +1969,173 @@ New this session:
    matrix pattern extends directly (TestPG + env routing).
 8. **PR description needs updating** -- the branch now carries the
    matrix work (5 commits) beyond the earlier scope.
+
+---
+
+## Session Continuation 11: the matrix, part 2 -- whole-suite configurations (2026-10-02)
+
+Session 10 built the focused limits matrix. This session makes the
+WHOLE suite run under each test configuration, wires it into CI, and
+pays down the sqlite-only assumptions the pg configuration exposed.
+
+### What We Did
+
+1. **Vocabulary.** "Cell" (my house term from spreadsheet/DOE
+   usage) confused a reader. Prose now says **test configuration**;
+   identifiers renamed with it: `cell_fork` -> `fork_mode`,
+   `cell_dbdriver` -> `db_driver`, `@CELLS`/`$cell` ->
+   `@TEST_VARIANTS`/`$test_variant` (the user chose `$test_variant`
+   over `$cfg`, which would have collided visually with munin's
+   `$config` singleton).
+
+2. **Makefile args.** `make docker-test FORK=<0|1> DBDRIVER=<sqlite|pg>`
+   -- two orthogonal arguments, every combination runnable (defaults:
+   the usual local shape sqlite+fork+nproc). Exported as
+   `MUNIN_TEST_FORK`/`MUNIN_TEST_DBDRIVER`. `make docker-test-matrix`
+   runs the three selected configurations sequentially -- the local
+   dev mirror of the CI matrix. **Cost-consciousness is a local-dev
+   concern only; CI always runs the full matrix.** serial+pgsql stays
+   runnable but unselected (no deployment shape, no CPU cycles).
+
+3. **Fork pins became configuration-driven** (8 tests hard-pinned
+   `fork = 0`) -- which immediately exposed the END-in-children bug
+   class a THIRD time (update/httpd_graph/spoolfetch/rrdcached_
+   integration tests: unguarded END killed the shared nodes, deleted
+   the state dir under the master, and `$? = 0` masked worker exit
+   codes). All pid-guarded. rrdcached_integration's recency check now
+   sets `RRDCACHED_ADDRESS` explicitly -- at fork=0 the inline workers
+   leaked that env into the test process (the side effect the check
+   silently relied on).
+
+4. **CI workflow rebuilt** (`.github/workflows/build-n-test.yml`):
+   `dev-image` builds the docker image ONCE per run (both db drivers +
+   in-image postgres) and shares it as an artifact -- per-job
+   actions/cache would race on a Dockerfile change. `test` =
+   strategy.matrix over the three configurations, one make invocation
+   per job under Devel::Cover (docker-cover IS docker-test with
+   coverage -- the job's pass/fail is the configuration's verdict).
+   `coverage` gathers every configuration's run files (prefixed per
+   configuration -- `<timestamp>.<pid>` collides across containers),
+   reports once, uploads to Coveralls **once** -- parallel uploads
+   race (last POST wins, the number flaps). Runs even on partial
+   failures. Lint stays in the `build` job (id kept for branch
+   protection).
+
+5. **pg plumbing** (TestUtils): `_pg_route`/`_pg_scratch` export
+   `MUNIN_DBURL/DBDRIVER/DBUSER` process-wide at fixture generation --
+   `get_dbh` reads ENV, not the memo, so every production-style handle
+   follows the configuration. `dbh_ro`/`dbh_rw` create scratch DBs on
+   demand for tests that build their own schema. TestPG's END
+   `DROP ... WITH (FORCE)` reverted: FORCE terminates the test's own
+   still-open sessions and their DESTROY fatals during teardown --
+   best-effort drop (ignored "being accessed" noise in an ephemeral
+   container) is the lesser evil.
+
+6. **The pg chase** -- every failure root-caused, none suppressed:
+   - **sqlite-only INSERT forms**: `INSERT OR REPLACE` (17 sites,
+     limits.t/spec.t) -> `ON CONFLICT (key) DO UPDATE SET excluded.*`
+     (REPLACE means overwrite -- DO NOTHING would silently change
+     behavior); `INSERT OR IGNORE` (9 sites, lifecycle.t) ->
+     `ON CONFLICT DO NOTHING`.
+   - **`AUTOINCREMENT`** is sqlite-only -> portable `SERIAL` (pg) /
+     `INTEGER` rowid (sqlite).
+   - **Boolean CHECK arithmetic** (`(x IS NOT NULL) + ...`) ->
+     `CAST(... AS INTEGER)` -- the same bug fixed in `_db_init`
+     earlier, present in crud.t/dbstate.t's schema copies.
+   - **pg validates REFERENCES targets at CREATE time**; sqlite
+     silently tolerates missing ones. Missing `grp`/`node` (and later
+     `param`/`override`/`config_override`) broke crud/dbstate on pg.
+   - **Accidental soft-fail masking**: before `node` existed,
+     `_get_names_for_ds` failed softly on sqlite and the
+     get_override loop was skipped entirely -- crud.t "passed" by
+     never reaching the path. Fixing node surfaced the next missing
+     table. Fixture completeness = every table the exercised
+     production paths READ.
+   - **FK-safe delete order**: tests removed `service`/`ds` rows while
+     `service_attr`/`service_categories`/`notification_tracking`
+     (send ledger!)/`state`/`override`/`ds_attr` still referenced
+     them -- silent on sqlite (FKs off by default), fatal on pg.
+   - **limits.t handles across limits_main**: the matrix's
+     handle-across-fork lesson reappeared in the legacy test -- pg's
+     connection teardown makes children's exit-time DESTROY fatal
+     where sqlite shrugged (which is why the sqlite legs never showed
+     it).
+
+### What We Learned
+
+1. **A soft failure that changes control flow is a masked test.**
+   crud.t's missing `node` table didn't fail anything on sqlite -- it
+   silently skipped the override-checking code the subtest claimed to
+   exercise. Fixing the prerequisite exposed the next gap; both had to
+   close for the fixture to mean anything.
+2. **Destruction semantics differ per backend in ways that hide
+   bugs.** A handle inherited by a forked child is survivable on
+   sqlite (file-backed) and fatal on pg (one socket, server tears it
+   down). The same discipline -- no handle open across a fork -- is
+   required by production anyway; the pg leg just enforces it.
+3. **DROP DATABASE WITH (FORCE) is a footgun in test cleanup** -- it
+   terminates live sessions, including the exiting process's own, and
+   their DESTROY fatals during global destruction. Best-effort cleanup
+   beats aggressive cleanup when the container is ephemeral.
+4. **End-to-end pg runs find what targeted probes miss.** Every find
+   above came from running the FULL suite on pg, one failure at a
+   time; each fix immediately revealed the next layer (node ->
+   config_override -> delete order -> ...). Worth the 5-minute loop.
+5. **Uppercase vs lowercase severity vocabularies** (message words
+   OK/WARNING/CRITICAL/UNKNOWN vs state alarms) keep biting
+   assertions -- documented now, still worth re-checking when writing
+   ledger queries.
+
+### What We Decided
+
+1. **Test configuration** as the house word (CI-agnostic,
+   self-explanatory); the mission log's older "cell" mentions stay as
+   history.
+2. **CI always runs the full matrix; local dev chooses its subset.**
+   The local target mirrors CI exactly.
+3. **Coverage collected per configuration, merged, uploaded once** --
+   the union is the truthful number for the commit.
+4. **docker-cover as the matrix job's single invocation** -- one make
+   call per job gives both the verdict and the coverage data.
+
+### Test Results
+
+```
+parallel+pgsql (FORK=1 DBDRIVER=pg) ...... PASS 35 files, 502 tests, 297s
+parallel+sqlite (default FORK=1) ......... PASS 35 files, 502 tests, 206s
+serial+sqlite (FORK=0) ................... PASS 35 files, 502 tests, 197s
+```
+
+### Commits (this stretch)
+
+| Commit | Subject |
+|--------|---------|
+| 2af539059 | test: call it a test configuration, not a cell |
+| ee4dce39b | ci: full test matrix with merged coverage, uploaded once |
+| 37718c729 | test: pg plumbing -- env routing, on-demand scratch dbs, best-effort drops |
+| 845525646 | test: portable SQL and FK-safe operations the pg configuration exposed |
+
+### Next Steps
+
+Carried forward unchanged:
+1. (optional) graph_static cmdline assertions + 1% real-render canary.
+2. Reap budget tuning (1s WNOHANG is a guess).
+3. Write contention under real fork=1 load -- the matrix's parallel
+   legs now run this shape on every suite run (max_processes=2 in the
+   limits test; update legs use the conf value). Worth probing higher
+   fan-out deliberately.
+4. Pre-existing warnings (3 sets): Limits.pm:549, Graph.pm:765/869,
+   update_worker_crud.t `no such table: node` noise (sqlite-leg soft
+   fails inside UpdateWorker queries -- related to the accidental-
+   masking find above; now worth fixing properly).
+5. Second breadcrumb branch unexamined (Session 9).
+6. `_db_stats` TO_TIMESTAMP pg branch still untested (update-path
+   only); the matrix pattern extends if wanted.
+7. **dbstate.t passes the pg leg partly by accident** -- its node
+   table is empty, so `_get_names_for_ds` skips the get_override loop
+   (the same masking crud.t had). Seed node rows + add
+   config_override to make its scenarios exercise the path for real.
+8. First CI run after merge will validate the workflow end-to-end
+   (image artifact size, cache behavior, Coveralls upload from the
+   merged report) -- watch the dev-image job's artifact transfer
+   time.
