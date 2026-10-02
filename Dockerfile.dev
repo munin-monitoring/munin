@@ -62,6 +62,16 @@ RUN if ls /tmp/libdevel-cover-report-coveralls-perl*.deb 1>/dev/null 2>&1; then 
         cpanm --notest Devel::Cover::Report::Coveralls; \
     fi
 
+# PostgreSQL server for the pg cell of the test matrix (multiprocess +
+# pgsql). In-image rather than a CI service so every environment that
+# runs docker-test exercises the Pg code paths. Trust auth on local
+# connections: this is a disposable test container, not a production
+# database. Kept as its own layer after the cached apt/cpanm layers so a
+# routine image rebuild does not redo them.
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql \
+    && sed -i -E '/^local[[:space:]]+all/ s/[[:space:]]+peer$/ trust/; /^host[[:space:]]+all/ s/[[:space:]]+(scram-sha-256|md5|peer)$/ trust/' /etc/postgresql/*/main/pg_hba.conf \
+    && rm -rf /var/lib/apt/lists/*
+
 # Hostname mapping handled at runtime via --add-host in docker run
 
 WORKDIR /app
