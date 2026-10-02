@@ -181,8 +181,11 @@ sub dbh_ro {
         # On demand: tests that build their own schema through
         # dbh_rw/dbh_ro never call generate_sample_db.
         _pg_scratch() unless $PG_DBNAME;
+        # No ReadOnly attr on pg: DBI warns "Setting ReadOnly in
+        # AutoCommit mode has no effect". The handle is used read-only
+        # by convention here, same as before.
         return DBI->connect("dbi:Pg:dbname=$PG_DBNAME", "postgres", undef,
-            { RaiseError => 1, ReadOnly => 1 });
+            { RaiseError => 1 });
     }
     return DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1, ReadOnly => 1 });
 }

@@ -44,6 +44,11 @@ END {
         # DROP DATABASE fails while any handle is still connected; in an
         # ephemeral container a leftover scratch db costs nothing, so
         # failures here are deliberately ignored.
+        # Best-effort drop: END runs before global destruction, so the
+        # test's own handles may still be open and the drop errors with
+        # "being accessed by other users" -- harmless noise in an
+        # ephemeral container. WITH (FORCE) is worse: it terminates
+        # those sessions and their DESTROY fatals during teardown.
         eval { $dbh->do("DROP DATABASE IF EXISTS $db->[1]") };
     }
 }
