@@ -398,7 +398,12 @@ sub _db_init {
 	my ($self, $dbh) = @_;
 
 	my $db_serial_type = "INTEGER";
-	my $db_driver = $ENV{MUNIN_DBDRIVER} || "$config->{dbdriver}";
+	# The handle is the truth about the driver: env/config decided how
+	# get_dbh CONNECTED, but _db_init may be handed any handle (the test
+	# fixture opens its own). Asking the handle keeps the per-driver
+	# branches (SERIAL, state migrations) consistent with the actual
+	# connection instead of with ambient environment.
+	my $db_driver = $dbh->{Driver}->{Name};
 	$db_serial_type = "SERIAL" if $db_driver eq "Pg";
 
 	# Sets some session vars
@@ -429,12 +434,15 @@ sub _db_init {
 	# Table that contains all the URL paths, in order to have a very fast lookup
 	# FK to grp/node/service - no cascade, error if referenced
 	# path is the identity (lookups are by path), no surrogate id needed
+	# CHECK casts: sqlite evaluates IS NOT NULL as 0/1 so the sum works
+	# there, but pg yields booleans and has no boolean + operator. CAST
+	# to INTEGER is accepted by both engines.
 	$dbh->do("CREATE TABLE IF NOT EXISTS url (
 		path VARCHAR PRIMARY KEY,
 		grp_id INTEGER REFERENCES grp(id),
 		node_id INTEGER REFERENCES node(id),
 		service_id INTEGER REFERENCES service(id),
-		CHECK ((grp_id IS NOT NULL) + (node_id IS NOT NULL) + (service_id IS NOT NULL) = 1)
+		CHECK (CAST((grp_id IS NOT NULL) AS INTEGER) + CAST((node_id IS NOT NULL) AS INTEGER) + CAST((service_id IS NOT NULL) AS INTEGER) = 1)
 	)");
 
 	# Per-entity state tracking. FK columns instead of polymorphic (type,id) --
@@ -450,23 +458,28 @@ sub _db_init {
 		prev_epoch INTEGER, prev_value VARCHAR,
 		alarm VARCHAR, num_unknowns INTEGER DEFAULT 0,
 		prev_alarm VARCHAR, eval_value VARCHAR, extinfo VARCHAR,
-		CHECK ((ds_id IS NOT NULL) + (node_id IS NOT NULL) = 1)
+		CHECK (CAST((ds_id IS NOT NULL) AS INTEGER) + CAST((node_id IS NOT NULL) AS INTEGER) = 1)
 	)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_ds ON state (ds_id)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_node ON state (node_id)");
 
-	# Migrate pre-existing state tables (CREATE IF NOT EXISTS skips them)
+	# Migrate pre-existing state tables (CREATE IF NOT EXISTS skips them).
+	# pg has no ADD COLUMN IF EXISTS (that is MariaDB syntax), so both
+	# engines check for the column first -- information_schema on pg,
+	# PRAGMA table_info on sqlite -- and ALTER only when missing.
+	my %state_cols;
 	if ($db_driver eq "Pg") {
-		for my $col (qw(prev_alarm eval_value extinfo)) {
-			$dbh->do("ALTER TABLE state ADD COLUMN IF EXISTS $col VARCHAR");
-		}
+		%state_cols = map { $_ => 1 }
+			@{ $dbh->selectcol_arrayref(
+				"SELECT column_name FROM information_schema.columns "
+				. "WHERE table_name = 'state'") };
 	} else {
-		my %state_cols = map { $_->[1] => 1 }
+		%state_cols = map { $_->[1] => 1 }
 			@{ $dbh->selectall_arrayref("PRAGMA table_info(state)") };
-		for my $col (qw(prev_alarm eval_value extinfo)) {
-			next if $state_cols{$col};
-			$dbh->do("ALTER TABLE state ADD COLUMN $col VARCHAR");
-		}
+	}
+	for my $col (qw(prev_alarm eval_value extinfo)) {
+		next if $state_cols{$col};
+		$dbh->do("ALTER TABLE state ADD COLUMN $col VARCHAR");
 	}
 
 	# Munin stats
@@ -565,7 +578,9 @@ sub _db_groups_update {
 	# would reject the wipe (services still reference the old node rows), so
 	# this one connection runs with FK off. Proper fix is a diff-based upsert
 	# import (see mission log follow-ups).
-	my $db_driver = $ENV{MUNIN_DBDRIVER} || "$config->{dbdriver}";
+	# Handle-truth, same as _db_init: this pragma applies to the handle
+	# we were given, whatever the ambient env says.
+	my $db_driver = $dbh->{Driver}->{Name};
 	$dbh->{AutoCommit} = 1;  # commit+detach, so the PRAGMA runs outside a txn
 	$dbh->do("PRAGMA foreign_keys=OFF;") if $db_driver eq "SQLite";
 	$dbh->{AutoCommit} = 0;
