@@ -272,9 +272,13 @@ docker-show-fail:
 docker-lint:
 	$(DOCKER) run --rm -v $(CURDIR):/app munin-dev sh -c 'perl Build.PL && make lint'
 
-# Sweep the CI test matrix locally: the three selected configurations. The
-# fourth combination (FORK=0 DBDRIVER=pg) is runnable but unselected
-# in CI; invoke docker-test with those args directly if you need it.
+# Sweep the CI test matrix locally -- the local dev version of the
+# GitHub Actions test matrix: the same three configurations, the same
+# FORK/DBDRIVER arguments, run sequentially (CI runs them as parallel
+# jobs). Cost-consciousness is a local-dev concern only; CI always
+# runs the full matrix. The fourth combination (FORK=0 DBDRIVER=pg) is
+# runnable but unselected; invoke docker-test with those args directly
+# if you need it.
 .PHONY: docker-test-matrix
 docker-test-matrix:
 	$(MAKE) docker-test JOBS=$(JOBS) FORK=0 DBDRIVER=sqlite

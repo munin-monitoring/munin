@@ -8,7 +8,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  # Build the dev image exactly once per run; every other job loads it
+  # from this artifact. Per-job actions/cache would race on a
+  # Dockerfile change: parallel jobs all miss and all rebuild.
+  dev-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -29,7 +32,7 @@ jobs:
           wget -q https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.32.tar.gz
           tar xzf Devel-Cover-Report-Coveralls-0.32.tar.gz
           cd Devel-Cover-Report-Coveralls-0.32
-          DEB_BUILD_OPTIONS=nocheck dh-make-perl make --build .
+          DEB_BUILD_OPTIONS=nocheck dh-make-perl --build .
 
       - name: Copy .deb to build context
         run: |
@@ -39,47 +42,149 @@ jobs:
             touch libdevel-cover-report-coveralls-perl.deb.dummy
           fi
 
-      - name: Cache Docker image
-        id: cache-docker
-        uses: actions/cache@v6
-        with:
-          path: /tmp/munin-dev.tar
-          key: ${{ runner.os }}-munin-dev-${{ hashFiles('Dockerfile.dev') }}
-
-      - if: ${{ steps.cache-docker.outputs.cache-hit != 'true' }}
-        name: Build dev container
+      - name: Build dev container
         run: |
           docker build -t munin-dev -f Dockerfile.dev .
-          docker save munin-dev > /tmp/munin-dev.tar
+          docker save munin-dev | gzip > /tmp/munin-dev.tar.gz
 
-      - if: ${{ steps.cache-docker.outputs.cache-hit == 'true' }}
-        name: Load cached dev container
-        run: docker load < /tmp/munin-dev.tar
+      - name: Upload dev container
+        uses: actions/upload-artifact@v7
+        with:
+          name: munin-dev-image
+          path: /tmp/munin-dev.tar.gz
 
-      # Lint first — fast, fails early before expensive coverage run
+  # Lint first -- fast, fails early before the expensive test matrix.
+  # Job id kept as "build" so existing branch-protection checks keep
+  # matching.
+  build:
+    needs: dev-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Load dev container
+        uses: actions/download-artifact@v7
+        with:
+          name: munin-dev-image
+          path: /tmp
+      - run: gunzip -c /tmp/munin-dev.tar.gz | docker load
+
       - name: Lint
         run: make docker-lint
 
-      # Full test suite with coverage
-      - name: Test with coverage
+  # Full test matrix: one make invocation per test configuration, run
+  # under Devel::Cover. docker-cover IS docker-test with coverage --
+  # the same suite, so each job's pass/fail is that configuration's
+  # test verdict. Coverage run files are uploaded for the merge job;
+  # no coverage is reported per job. This is the CI half of the
+  # matrix; `make docker-test-matrix` is its local dev mirror (same
+  # configurations and arguments, sequential).
+  test:
+    needs: dev-image
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Three of the four FORK x DBDRIVER combinations.
+        # serial+pgsql is runnable (make docker-test FORK=0
+        # DBDRIVER=pg) but unselected: no deployment shape runs it, so
+        # CI does not spend CPU cycles on it.
+        include:
+          - config: serial-sqlite
+            make_args: "JOBS=4 FORK=0 DBDRIVER=sqlite"
+          - config: parallel-sqlite
+            make_args: "JOBS=4 FORK=1 DBDRIVER=sqlite"
+          - config: parallel-pgsql
+            make_args: "JOBS=4 FORK=1 DBDRIVER=pg"
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Load dev container
+        uses: actions/download-artifact@v7
+        with:
+          name: munin-dev-image
+          path: /tmp
+      - run: gunzip -c /tmp/munin-dev.tar.gz | docker load
+
+      - name: Test with coverage (${{ matrix.config }})
         run: |
-          make docker-cover 2>&1 | tee test-output.log
+          make docker-cover ${{ matrix.make_args }} 2>&1 | tee test-output-${{ matrix.config }}.log
           exit ${PIPESTATUS[0]}
 
       - name: Show test failures
         if: failure()
-        run: ./script/show-test-failures test-output.log
+        run: ./script/show-test-failures test-output-${{ matrix.config }}.log
 
-      # Upload coverage to Coveralls
-      - name: Upload to Coveralls
+      # <timestamp>.<pid> run-file names collide across containers; the
+      # merge does not care about names, only uniqueness.
+      - name: Prefix coverage run files
         if: always()
+        run: |
+          for f in cover_db/runs/*; do
+            mv "$f" "cover_db/runs/${{ matrix.config }}-$(basename "$f")"
+          done
+
+      - name: Upload coverage runs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cover-runs-${{ matrix.config }}
+          path: cover_db/runs/
+
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-output-${{ matrix.config }}
+          path: test-output-${{ matrix.config }}.log
+
+  # Merge the coverage runs from every configuration into one report,
+  # and upload to Coveralls exactly once per workflow run. Coveralls
+  # treats each upload as the commit's status: parallel uploads from
+  # matrix jobs would race (last POST wins, the published number flaps
+  # between single-configuration values). The merged report is the
+  # union -- a branch covered in any configuration counts as covered.
+  # Runs even when some configurations failed: whatever ran is still
+  # worth reporting.
+  coverage:
+    needs: [dev-image, test]
+    if: always() && needs.test.result != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Load dev container
+        uses: actions/download-artifact@v7
+        with:
+          name: munin-dev-image
+          path: /tmp
+      - run: gunzip -c /tmp/munin-dev.tar.gz | docker load
+
+      - name: Gather coverage runs from all configurations
+        uses: actions/download-artifact@v7
+        with:
+          pattern: cover-runs-*
+          merge-multiple: true
+          path: cover_db/runs
+
+      # Report-time select: tests load production code from lib/ via
+      # "use lib", so the database contains lib/Munin/... paths, never
+      # blib/lib/... (matching blib/ uploaded empty data to Coveralls
+      # for years while paying the full instrumentation tax).
+      - name: Report over the merged runs
+        run: |
+          docker run --rm -v $(pwd):/app munin-dev sh -c '
+            cover -silent -select_re "^lib/Munin|^script/munin" \
+                  -report html_basic -outputdir cover_db &&
+            cover -silent -select_re "^lib/Munin|^script/munin" -summary'
+
+      - name: Upload to Coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker run --rm -v $(pwd):/app -e GITHUB_TOKEN munin-dev \
             cover -silent -select_re "^lib/Munin|^script/munin" -report coveralls
 
-      # Upload coverage HTML as artifact for inspection
       - name: Upload coverage HTML
         if: always()
         uses: actions/upload-artifact@v7
@@ -87,10 +192,9 @@ jobs:
           name: coverage-html
           path: cover_db/
 
-      # Upload test output log as artifact
-      - name: Upload test log
+      - name: Upload merged test logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: test-output
-          path: test-output.log
+          name: test-outputs
+          path: test-output-*.log
