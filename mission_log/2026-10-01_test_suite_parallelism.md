@@ -10,6 +10,51 @@ way.
 
 ---
 
+## Working Directives (from the user, 2026-10-01/02)
+
+Recorded here because a new session reads AGENTS.md and this log, not the
+conversation history. Several of these override or clarify standing
+instructions -- applying AGENTS.md verbatim would trip over them.
+
+1. **The bash output plugin allows unlimited output -- do not redirect
+   or pipe.** The user crafted a bash output plugin; the standing AGENTS.md
+   advice ("debug: files not pipes -> run `cmd > out/cmd.out 2>
+   out/cmd.err`, then read/grep those files") is superseded. Run the
+   command directly and read its output. Redirecting to files and then
+   tail/grepping them is unnecessary overhead.
+
+2. **Use the `read` tool for file contents, not bash.** No `sed -n`,
+   `cat`, `head`, `tail`, or bash `grep` to inspect a file. Corrected
+   twice early ("use read for it"; "avoid using bash for reading files,
+   grepping and using head/tail"). Bash is for *running* things --
+   tests, git, perl one-liners -- not for reading files.
+
+3. **Use `edit` for changes, not full-file rewrites.** "use edit not
+   rewrite which is more error prone." Surgical `edit` calls with exact
+   `oldText` are preferred; whole-file `write` is the error-prone path.
+   One accepted exception this session: byte-identical multi-site
+   substitutions (8+ identical call sites) went through a scoped
+   `perl -pi` after grep-confirmed identity -- still not a rewrite, and
+   still diff-reviewed afterward.
+
+4. **Explain every deviation from the common method in a comment.**
+   "if not using the common method, always explain why in a comment."
+   This became a project rule (Continuation 6) and was applied
+   retroactively across the suite -- 13 justifications in 12 files.
+
+5. **Prefer the simple working solution over the elaborate design.**
+   On the graph_static mock: "let's just cut the chase and simply try.
+   Mock the RRD::graph call by generating a fixed PNG." The fixed-PNG
+   mock shipped; the stronger per-arg cmdline-assertion design stayed
+   optional and unimplemented.
+
+6. **Append to the mission log at the end of each session.** "and of
+   course, do append to the mission log at the end." Work is committed
+   first, then documented -- and "update mission log.
+   comprehensively" means the full treatment, not a stub.
+
+---
+
 ## What We Did
 
 ### Part 0: Mission Log Skill Amendment (side quest)
@@ -1468,3 +1513,103 @@ by diff-exclusion or stash-compare, none investigated):
 was surveyed has been either factored into TestUtils or justified in a
 comment. Remaining t/ work is behavioral (the canary, the warnings),
 not structural.
+
+---
+
+## Session Continuation 8: Node sub redefinition warning (2026-10-02)
+
+Small session. Picked up item 7 from the pre-existing-warnings list:
+`Subroutine Munin::Master::Node::_node_write_single redefined` in
+node_multigraph.t. Investigated, fixed, verified.
+
+### What We Did
+
+1. **Read the cause.** `create_mock_node` installed two Node subs
+   (`*_node_write_single`, `*_node_read`) via raw glob assignment on
+   **every call** -- over subs already loaded by `require
+   Munin::Master::Node`. Seven nodes per run meant the warning fired
+   seven times.
+
+2. **First fix reduced the noise but did not eliminate it.** Moved the
+   install out of `create_mock_node` into a one-time load-time block.
+   The warning dropped from 7x to 1x but persisted -- because the
+   overwrite itself is what Perl warns about, regardless of frequency.
+
+3. **Second fix eliminated it.** Added `no warnings 'redefine';` in the
+   scoped install block. The overwrite is intentional (mocking the real
+   subs for a unit test), so suppressing the warning is correct, not
+   masking -- and the comment says so.
+
+4. **Verified the once-installed shared subs are sound.** Both mocked
+   subs read only from `$self` (no closure over `create_mock_node`'s
+   lexicals), so per-call re-installation was pure redundancy. Each
+   `create_mock_node` call blesses a *new* hash carrying its own
+   `_config_lines`, so the 7 tests still validate the shared subs
+   against 7 different canned configs -- not passing vacuously.
+
+5. **Straggler swept.** Dropped the dead `use Test::MockModule;` --
+   confirmed unused in the committed version too (pre-existing, not
+   introduced here; the straggler discipline applies to imports that
+   outlive their use, wherever they came from).
+
+### What We Learned
+
+1. **"Redefinition" warnings have two shapes: accidental and
+   intentional.** Accidental ones mean a load-order bug; intentional
+   ones (test mocks replacing real subs) are fixed by *scoping the
+   suppression*, not by frequency reduction. Moving the install out of
+   the per-node helper addressed redundancy but not the warning -- the
+   pragma addressed the warning. Both were worth doing; neither alone
+   was sufficient.
+2. **Per-instance data survives shared subs when state lives on
+   `$self`.** The safety of "install once" hinged on the mocked subs
+   closing over nothing. Had they closed over `create_mock_node`'s
+   lexicals, one install would have frozen the first node's config across
+   all seven. Worth checking closure capture before deduplicating any
+   install-time mock.
+
+### What We Decided
+
+1. **`no warnings 'redefine'` scoped to the install block**, not file-
+   wide -- limits the suppression to the one intentional overwrite.
+2. **`create_mock_node` keeps its name and role** (bless the per-instance
+   hash); only the redundant install moved out.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `t/munin_master_node_multigraph.t` | install the two Node mocks once at load with `no warnings 'redefine'`; create_mock_node now only blesses the hash; dead `use Test::MockModule` removed |
+
+### Test Results
+
+```
+node_multigraph.t solo ................... ok 7 tests, 1s; redefinition
+    warning GONE (was 7x per run).
+
+full make docker-test ..................... PASS 33 files, 490 tests,
+    227s wall at shuffle -j4.
+```
+
+### Commits
+
+| Commit | Subject |
+|--------|---------|
+| a398da8e5 | test: fix Node sub redefinition warning in node_multigraph.t |
+
+### Next Steps
+
+Carried forward unchanged:
+1. (optional, scope-cut) graph_static cmdline assertions + 1%
+   real-render canary.
+2. Reap budget tuning (1s WNOHANG is a guess).
+3. CI coverage budget decision.
+4. Write contention under real fork=1 load.
+
+Pre-existing warnings -- **three sets remain** (item 7 now fixed):
+5. Limits.pm:549 `$dbdir` undef in `_compute_cdef_value`.
+6. Graph.pm:765 `$tpng` / 869 `$legend` uninitialized in DEBUG paths.
+7. ~~Node::_node_write_single / _node_read redefinition~~ -- **fixed**
+   (this session).
+8. update_worker_crud.t `no such table: node` (DBD::SQLite prepare
+   noise around schema creation).
