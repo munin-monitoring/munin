@@ -2184,3 +2184,73 @@ parses.
   before any report step, or a merge job downstream starves. The
   earlier log entry said "cover merges runs at report time"; it should
   have said "merges AND clears".
+
+---
+
+## Session Continuation 13: the 0.0% upload -- a coverage db is more than runs/ (2026-10-02)
+
+CI's matrix went green; Coveralls recorded **0.0% (-89.0%)**. Twice.
+A green pipeline uploading zero coverage meant the merged database
+was empty at report time -- and the debugging arc below is worth
+keeping for its wrong turns as much as its right one.
+
+### The wrong turns (kept honest)
+
+1. **Theory: entry renaming broke name parsing.** Experiment B
+   (prefixed run entries -> empty summary) seemed to confirm it; the
+   workflow comment even asserted "the merge does not care about
+   names" and then shipped a prefixing scheme that contradicted it.
+   WRONG: experiments B and C (per-config subdirectories) both ran on
+   *tarball-extracted* state -- structurally gutted (see below). The
+   naming theory was never isolated from the real variable.
+2. The gather step shipped with a second defect visible in the CI
+   paste: `basename` of the tarball yielded `cover_runs` (identical in
+   every job -- the config name lives in the artifact SUBDIRECTORY),
+   so all entries got one meaningless prefix. Fixed -- and still
+   irrelevant to the root cause.
+3. **The decisive md5 check came fourth, not first.** Fresh vs
+   extracted `cover.14` files: byte-identical. DB-layer reads on
+   extracted entries populate `{runs}` fine; `merge_runs` discovers
+   every non-dot entry via readdir with NO name parsing (DB.pm:149).
+   `my $DB = "cover.14"` is the database FORMAT VERSION, not a pid.
+
+### The real mechanism
+
+A healthy ``cover_db`` contains **``digests``, ``runs/`` AND
+``structure/``** -- structure and digests are written by the
+*collection* phase into the base db (every covered process updates
+them at exit), not into its run entry. The tarball captured
+``cover_db/runs/`` only. On merge: coverage data merged, but the
+report's ``Structure->read_all`` found nothing to attribute files to --
+and the empty report **exits 0**, which is how 0% rode a green
+pipeline to Coveralls.
+
+### The fix: use the tool's own merge path
+
+``/usr/bin/cover`` merges whole databases given as arguments: for each
+extra db in @ARGV it consumes that db's runs AND merges its structure
+(``cover -report X primary.db extra1.db extra2.db``). So:
+
+- ``docker-cover`` tarballs the **entire** ``cover_db``
+  (``cover_db.tgz``; ``COVER_REPORT=0`` in CI skips per-config
+  reports -- the merge job reports once).
+- Each test job uploads ``cover-db-<config>``; the coverage job
+  untars each into ``cover_db-<config>/`` (strip the top component)
+  and runs ONE report with the first as primary and the rest as merge
+  args -- nothing renamed, nothing hand-merged.
+- Validated locally: two whole-db tarballs through the exact CI
+  command shape render real numbers (Config.pm 50%, populated Total
+  row).
+
+### Rules Added
+
+- **A coverage db is more than runs/:** ``structure/`` and ``digests``
+  are written by collection into the base db. Archive the WHOLE db or
+  the report cannot attribute anything -- and it will say so by
+  uploading 0% with exit 0.
+- **Prefer the tool's merge path over hand-merging:** ``cover -report
+  X primary extra1 extra2`` merges runs and structure per db.
+- **An A/B experiment must differ in exactly one variable.** Both
+  naming experiments ran on gutted tarball state and "proved" a theory
+  that did not exist. Run the md5/state comparison FIRST when two
+  states supposedly differ only by handling.

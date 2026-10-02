@@ -291,17 +291,21 @@ docker-shell:
 
 # Run coverage in Docker: parallel prove under Devel::Cover. Each test process
 # writes its own cover_db/runs/<ts>.<pid> file, so -j needs no coordination.
-# The runs are TARBALLED right after prove: `cover -report` CONSUMES
-# cover_db/runs (merges every run into the cover_db database and clears
-# the directory) -- a successful covered run leaves runs/ empty, which
-# is exactly how the CI merge job starved. COVER_REPORT=0 skips the
-# per-configuration reports entirely: CI reports once, in the merge
-# job, over all configurations' runs. -select_re filters to production
+# The ENTIRE cover_db is tarballed after prove -- runs/, structure/ AND
+# digests. Structure and digests are written by the collection phase
+# into the base db; a runs-only archive merges into a database the
+# report cannot attribute (no structure -> empty report -> 0% on
+# Coveralls with a green pipeline). `cover -report` CONSUMES
+# cover_db/runs (merges into the db and clears it), so collect-then-tar
+# before any report. COVER_REPORT=0 skips the per-configuration
+# reports: CI reports once, in the merge job, over all configurations
+# via cover's own multi-db merge (`cover -report X primary extra1
+# extra2` merges runs AND structure). -select_re filters to production
 # code at report time: tests load modules from lib/ via "use lib", so
 # the old "blib/lib|blib/script" select matched nothing (coverage
 # uploaded to Coveralls was empty).
-COVER_REPORT      ?= 1
-COVER_RUNS_TARBALL ?= cover_runs.tgz
+COVER_REPORT       ?= 1
+COVER_DB_TARBALL   ?= cover_db.tgz
 COVER_REPORT_CMDS_1 = && cover -silent -select_re "^lib/Munin|^script/munin" -report html_basic -outputdir cover_db && cover -silent -select_re "^lib/Munin|^script/munin" -summary
 COVER_REPORT_CMDS_0 =
 
@@ -310,7 +314,7 @@ docker-cover:
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm \
 		perl Build.PL && \
 		./Build && \
-		rm -rf cover_db $(COVER_RUNS_TARBALL) && \
+		rm -rf cover_db $(COVER_DB_TARBALL) && \
 		PERL5OPT="-MDevel::Cover" TMPDIR=/dev/shm $(PROVE) $(TESTS) && \
-		tar czf $(COVER_RUNS_TARBALL) cover_db/runs $(COVER_REPORT_CMDS_$(COVER_REPORT))'
+		tar czf $(COVER_DB_TARBALL) cover_db $(COVER_REPORT_CMDS_$(COVER_REPORT))'
 

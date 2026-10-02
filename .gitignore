@@ -14,6 +14,7 @@ plans/
 /build/
 /_build/
 /cover_db/
+/cover_db.tgz
 /cover_runs.tgz
 /out/
 /.prove

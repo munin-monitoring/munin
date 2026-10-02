@@ -117,16 +117,12 @@ jobs:
         if: failure()
         run: ./script/show-test-failures test-output-${{ matrix.config }}.log
 
-      # The runs are tarballed by docker-cover right after prove,
-      # because `cover -report` consumes cover_db/runs (merges and
-      # clears). COVER_REPORT=0 skips per-configuration reports; the
-      # merge job reports once over everything.
-      - name: Upload coverage runs
+      - name: Upload coverage database
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: cover-runs-${{ matrix.config }}
-          path: cover_runs.tgz
+          name: cover-db-${{ matrix.config }}
+          path: cover_db.tgz
           if-no-files-found: ignore
 
       - name: Upload test log
@@ -158,54 +154,65 @@ jobs:
           path: /tmp
       - run: gunzip -c /tmp/munin-dev.tar.gz | docker load
 
-      - name: Download coverage run tarballs
+      - name: Download coverage databases
         uses: actions/download-artifact@v7
         with:
-          pattern: cover-runs-*
+          pattern: cover-db-*
           path: .
 
-      - name: Gather coverage runs from all configurations
+      - name: Unpack coverage databases
         run: |
-          # Each artifact lands in its own subdirectory (no
-          # merge-multiple: the tarballs share one filename). Untar
-          # into cover_db/runs with a per-configuration prefix --
-          # <timestamp>.<pid> collides across containers; the merge
-          # does not care about names, only uniqueness.
+          # Each configuration's tarball holds a COMPLETE cover_db
+          # (runs/, structure/ AND digests). The structure is written
+          # by the collection phase into the base db; a runs-only
+          # archive merges into a database the report cannot attribute
+          # -> empty report -> 0% on Coveralls with a green pipeline.
+          # Nothing is renamed: cover merges whole databases itself.
           shopt -s nullglob
-          mkdir -p cover_db/runs
-          tarballs=(cover-runs-*/*.tgz)
-          if [ ${#tarballs[@]} -eq 0 ]; then
-            echo "No coverage tarballs found (test jobs produced nothing)"
-            exit 0
+          dbs=(cover-db-*/*.tgz)
+          if [ ${#dbs[@]} -eq 0 ]; then
+            echo "No coverage databases found (test jobs produced nothing)"
+            exit 1
           fi
-          for tgz in "${tarballs[@]}"; do
-            cfg=$(basename "$tgz" .tgz)
-            cfg=${cfg#cover-runs-}
-            mkdir -p "/tmp/runs-$cfg"
-            tar xzf "$tgz" -C "/tmp/runs-$cfg"
-            for f in /tmp/runs-$cfg/cover_db/runs/*; do
-              mv "$f" "cover_db/runs/$cfg-$(basename "$f")"
-            done
+          for tgz in "${dbs[@]}"; do
+            cfg=$(basename "$(dirname "$tgz")")
+            cfg=${cfg#cover-db-}
+            dir="cover_db-$cfg"
+            rm -rf "$dir"
+            mkdir -p "$dir"
+            tar xzf "$tgz" -C "$dir" --strip-components=1
+            echo "Unpacked $dir: $(ls "$dir" | tr '\n' ' ')"
           done
-          ls -la cover_db/runs | head
 
-      # Report-time select: tests load production code from lib/ via
-      # "use lib", so the database contains lib/Munin/... paths, never
+      # cover merges whole databases given as arguments: for each
+      # extra db it consumes that db's runs and merges its structure.
+      # First db is primary, the rest merge into it. Report-time
+      # select: tests load production code from lib/ via "use lib",
+      # so the database contains lib/Munin/... paths, never
       # blib/lib/... (matching blib/ uploaded empty data to Coveralls
       # for years while paying the full instrumentation tax).
-      - name: Report over the merged runs
+      - name: Report over the merged databases
         run: |
-          docker run --rm -v $(pwd):/app munin-dev sh -c '
-            cover -silent -select_re "^lib/Munin|^script/munin" \
-                  -report html_basic -outputdir cover_db &&
-            cover -silent -select_re "^lib/Munin|^script/munin" -summary'
+          dbs=(cover_db-*/)
+          dbs=("${dbs[@]%/}")
+          primary="${dbs[0]}"
+          merges="${dbs[@]:1}"
+          echo "Primary: $primary; merging:${merges}"
+          docker run --rm -v $(pwd):/app munin-dev sh -c "
+            cover -silent -select_re \"^lib/Munin|^script/munin\" \
+                  -report html_basic -outputdir cover_db $primary $merges &&
+            cover -silent -select_re \"^lib/Munin|^script/munin\" -summary $primary $merges"
 
       - name: Upload to Coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          dbs=(cover_db-*/)
+          dbs=("${dbs[@]%/}")
+          primary="${dbs[0]}"
+          merges="${dbs[@]:1}"
           docker run --rm -v $(pwd):/app -e GITHUB_TOKEN munin-dev \
-            cover -silent -select_re "^lib/Munin|^script/munin" -report coveralls
+            cover -silent -select_re "^lib/Munin|^script/munin" -report coveralls $primary $merges
 
       - name: Upload coverage HTML
         if: always()
