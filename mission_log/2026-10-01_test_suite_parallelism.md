@@ -16,12 +16,14 @@ Recorded here because a new session reads AGENTS.md and this log, not the
 conversation history. Several of these override or clarify standing
 instructions -- applying AGENTS.md verbatim would trip over them.
 
-1. **The bash output plugin allows unlimited output -- do not redirect
-   or pipe.** The user crafted a bash output plugin; the standing AGENTS.md
-   advice ("debug: files not pipes -> run `cmd > out/cmd.out 2>
-   out/cmd.err`, then read/grep those files") is superseded. Run the
-   command directly and read its output. Redirecting to files and then
-   tail/grepping them is unnecessary overhead.
+1. **(REVOKED 2026-10-02) ~~The bash output plugin allows unlimited
+   output -- do not redirect or pipe.~~** The user crafted a bash output
+   plugin; the standing AGENTS.md advice ("debug: files not pipes ->
+   run `cmd > out/cmd.out 2> out/cmd.err`, then read/grep those files")
+   was superseded. **The plugin has since been removed**, so the
+   AGENTS.md advice is back in force: for debug output, redirect to
+   files (`> out/cmd.out 2> out/cmd.err`) and read/grep the files.
+   Directives 2-6 below remain correct.
 
 2. **Use the `read` tool for file contents, not bash.** No `sed -n`,
    `cat`, `head`, `tail`, or bash `grep` to inspect a file. Corrected
