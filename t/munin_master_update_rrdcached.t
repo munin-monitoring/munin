@@ -11,6 +11,8 @@ use File::Path qw(remove_tree);
 # SETUP
 # ============================================================================
 
+# Not setup_test_config(): sets rrdcached_socket + logdir + fork and
+# never parses a conf -- the socket path is allocated per-run.
 # Must set up config BEFORE loading UpdateWorker, as it captures $config
 # at module load time via: my $config = Munin::Master::Config->instance()->{config}
 use Munin::Master::Config;

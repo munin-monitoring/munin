@@ -60,6 +60,9 @@ unless ($all_ready) {
 use TestState;
 $temp_dir = TestState::state_dir();
 
+# Not setup_test_config(): generates its own conf with the ephemeral
+# ports the forked test nodes actually bound -- t/config/munin.conf's
+# fixed ports would collide.
 my $conf_file = "$temp_dir/munin.conf";
 open my $fh, '>', $conf_file or die "Cannot write $conf_file: $!";
 print $fh "dbdir   $temp_dir\n";

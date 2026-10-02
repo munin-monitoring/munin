@@ -96,6 +96,9 @@ print $fh "[testing.acme.com]\n";
 print $fh "     port $ports[1]\n";
 close $fh;
 
+# Not setup_test_config(): generates its own conf with the ephemeral
+# ports the forked test nodes actually bound -- t/config/munin.conf's
+# fixed ports would collide.
 my $config = Munin::Master::Config->instance()->{"config"};
 $config->parse_config_from_file($conf_file);
 

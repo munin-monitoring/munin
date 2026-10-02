@@ -127,6 +127,9 @@ Munin::Common::Logger::configure(
     "level"  => "info",
 );
 
+# Not setup_test_config(): runs limits_main inline (fork=0) and renders
+# nothing -- needs no tmpldir, and no t/config/munin.conf parse (that
+# conf sets /dev/shm paths and host defs this test never reads).
 my $config = Munin::Master::Config->instance()->{"config"};
 use TestState;
 my $dbdir  = TestState::state_dir();
