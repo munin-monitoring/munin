@@ -1615,3 +1615,145 @@ Pre-existing warnings -- **three sets remain** (item 7 now fixed):
    (this session).
 8. update_worker_crud.t `no such table: node` (DBD::SQLite prepare
    noise around schema creation).
+
+---
+
+## Session Continuation 9: jquery unminification + untracked-file archaeology (2026-10-02)
+
+Small session, two parts: a directive correction, and a swap of the
+minified jQuery for the unminified build. The investigation into two
+mystery untracked files turned up an unmerged branch that had already
+made the same change a year and a half ago.
+
+### What We Did
+
+1. **Revoked Working Directive 1.** The user removed the bash-output
+   plugin ("I removed the plugin, so please redo the redirects"). The
+   AGENTS.md debug rule is back in force: redirect to `out/*.out` /
+   `out/*.err` files and read/grep them. Directives 2-6 stand. Recorded
+   in the log's directive list; committed as 3f9fbf5fd.
+
+2. **Investigated two untracked files** (`web/static/js/jquery-3.7.1.js`
+   and `contrib/plugin-gallery/www/static/js/jquery-3.7.1.js`, both dated
+   Sep 30 23:09). No source reference pointed at them; only the
+   `.min.js` twins were tracked. The untracked files were byte-identical
+   (sha256) to files added by commit `5adbd4eea` "autocommit"
+   (2025-04-14) on the **unmerged** branch
+   `breadcrumb-19d94a149077ff68ffbb37364d0ee82c59fa6f2d` -- which had
+   already done exactly the change the user then requested: delete both
+   `.min.js`, add the unminified files, point both templates at them.
+   That branch carries 2655 commits not on `feat/url-fk-schema` (it
+   tracks a newer/different line of development; only the second breadcrumb
+   branch remains unexamined).
+
+3. **Answered "why 2 versions of jquery in the main site?" with
+   history archaeology** (`git log --all --oneline --name-only --
+   'web/**'`): the main site never had two live versions. Timeline:
+   jquery-1.8.3 + lazyload plugin (pre-2021) -> jquery-1.12.4 (added
+   2021-02-06 `d541735c0`/`2d0c0abf6`) -> jquery-3.7.1 minified-only
+   (2023-09-13 `435e12ac4` deleted the 1.12.4 sources and shipped only
+   `.min.js`). The old versions exist only in git history -- zero copies
+   on disk. The plugin-gallery carries its own copy **by design**: it is
+   a standalone static export with its own DocumentRoot
+   (`gallery-build.sh` rsyncs `contrib/plugin-gallery/www/static` into
+   the target dir), so its vendored assets are not duplication.
+
+4. **Swapped minified -> unminified.** Verified the on-disk file is
+   genuine jQuery v3.7.1 (MIT banner, dated 2023-08-28). `git rm` both
+   `.min.js`, `git add` both unminified files, updated the only two
+   references repo-wide (`web/templates/partial/head.tmpl:9`,
+   `contrib/plugin-gallery/static/gallery-footer.html:7`) via edit.
+   User's rationale: "we are not a high load website anyway" -- the
+   readable source is worth more than ~200KB saved.
+
+5. **Synced the sandbox install tree.** `sandbox/` is the untracked
+   install prefix used by the docker image; its copies of the js dir and
+   templates were stale (old min.js, old head.tmpl). Install makes those
+   files read-only -- `chmod u+w` before copying, restore `a-w` after.
+   The install does not self-clean: the deleted min.js had to be removed
+   by hand.
+
+6. **Regenerated MANIFEST from scratch.** The untracked generated
+   MANIFEST still listed the deleted min.js after `./Build manifest` --
+   that action is **additive only** (adds missing files, never prunes
+   gone ones). `rm MANIFEST MANIFEST.bak && perl Build.PL` produced a
+   clean one (only unminified entries). Echoes the Session-3 lesson:
+   MANIFEST is stateful; verify from fresh generation, not a re-run.
+
+7. **Validation:** full `make docker-test` -- **PASS, 33 files, 490
+   tests, 188s** wall at shuffle -j4. Visible warnings were the known
+   pre-existing sets (Graph.pm `$tpng`/`$legend`, UpdateWorker
+   `no such table: node`, HTML.pm `$tmpldir` in handle_request.t) --
+   none touched by this change. Working tree clean after commit.
+
+### What We Learned
+
+1. **Untracked files in a mostly-clean tree deserve a "why are you
+   here" investigation before deletion.** This one led to the breadcrumb
+   branch discovery -- the change had already been made, tested nowhere,
+   and sat unmerged for 18 months. Deleting blindly would have been
+   fine here, but the investigation also answered the user's "2
+   versions?" question with evidence instead of assertion.
+2. **`git log --all` shows history across every ref.** Files deleted
+   from HEAD still appear in `--all --name-only` listings -- that is
+   exactly how the jquery-1.12.4.js question ("is that still around?")
+   got answered: lifecycle via `--diff-filter=AD`, zero copies on disk.
+3. **`./Build manifest` is additive only.** Stale entries for deleted
+   files survive it; only a fresh generation (rm + Build.PL) prunes.
+4. **Install trees (sandbox/) are read-only and don't self-clean.**
+   Reinstalling copies changed files but leaves orphans; sync or
+   reinstall from scratch after removing source files.
+5. **The gallery's separate jquery copy is by design, not drift.**
+   Standalone static export, own DocumentRoot -- factoring it into the
+   main site's copy would couple two independently deployed artifacts.
+
+### What We Decided
+
+1. **Serve unminified jQuery 3.7.1 everywhere** (both the main web UI
+   and the standalone gallery); references updated, not removed -- the
+   scripts are still needed.
+2. **Redo the change on this branch rather than merge from the
+   breadcrumb branch.** 2655 commits of divergence; cherry-picking an
+   "autocommit" tip is riskier than replaying a 6-file swap whose
+   content was verified identical (sha256) to what we shipped.
+3. **Directive list updated in place** -- directive 1 marked REVOKED
+   with the reason and date; a future session reading the log header
+   sees the current rule, not a stale one.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `web/static/js/jquery-3.7.1.min.js` | removed (git rm) |
+| `web/static/js/jquery-3.7.1.js` | added -- the served build now |
+| `contrib/plugin-gallery/www/static/js/jquery-3.7.1.min.js` | removed (git rm) |
+| `contrib/plugin-gallery/www/static/js/jquery-3.7.1.js` | added |
+| `web/templates/partial/head.tmpl` | script src -> jquery-3.7.1.js |
+| `contrib/plugin-gallery/static/gallery-footer.html` | script src -> jquery-3.7.1.js |
+| `sandbox/etc/static/js/`, `sandbox/etc/templates/` | untracked install tree synced (rm min, copy js + tmpl) |
+| `MANIFEST` | untracked; regenerated fresh (min.js entries gone) |
+| `mission_log/2026-10-01_test_suite_parallelism.md` | directive 1 revoked; this session logged |
+
+### Commits
+
+| Commit | Subject |
+|--------|---------|
+| 3f9fbf5fd | docs: revoke bash-output-plugin directive; redirects back in force |
+| 225ff77ec | web: drop minified jquery; serve unminified 3.7.1 |
+
+### Next Steps
+
+Carried forward unchanged:
+1. (optional, scope-cut) graph_static cmdline assertions + 1%
+   real-render canary.
+2. Reap budget tuning (1s WNOHANG is a guess).
+3. CI coverage budget decision.
+4. Write contention under real fork=1 load.
+5. Pre-existing warnings (3 sets): Limits.pm:549, Graph.pm:765/869,
+   update_worker_crud.t `no such table: node`.
+
+New this session:
+6. **Second breadcrumb branch unexamined** --
+   `breadcrumb-b41c2547464aa6cf01faa9f396d093efd46c80c7` may carry more
+   unmerged work; review or delete both breadcrumb branches once their
+   provenance is confirmed.
