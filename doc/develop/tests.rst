@@ -341,7 +341,11 @@ Devel::Cover mechanics worth knowing:
   nothing matches.  Verify with ``cover -summary`` after a run.
 
 In CI, coverage is a product of the test matrix: each configuration collects
-runs, a final job gathers them into one ``cover_db/runs/`` (prefix the
+runs, which ``docker-cover`` tarballs immediately -- ``cover -report``
+CONSUMES ``cover_db/runs`` (merges every run into the database and
+clears the directory), so a run that reports successfully leaves the
+runs gone.  A final job gathers the tarballs into one ``cover_db/runs/``
+(prefix the
 run-file names per configuration -- ``<timestamp>.<pid>`` collides across
 containers), reports once over the merged database and uploads to
 Coveralls **once** per workflow run.  Uploading from every configuration would

@@ -52,6 +52,7 @@
 
 # Avoid Devel::Cover and Devel::CoverX::Covered files.
 \bcover_db\b
+\bcover_runs\.tgz\b
 \bcovered\b
 
 # Avoid MYMETA files

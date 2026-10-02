@@ -110,28 +110,24 @@ jobs:
 
       - name: Test with coverage (${{ matrix.config }})
         run: |
-          make docker-cover ${{ matrix.make_args }} 2>&1 | tee test-output-${{ matrix.config }}.log
+          make docker-cover COVER_REPORT=0 ${{ matrix.make_args }} 2>&1 | tee test-output-${{ matrix.config }}.log
           exit ${PIPESTATUS[0]}
 
       - name: Show test failures
         if: failure()
         run: ./script/show-test-failures test-output-${{ matrix.config }}.log
 
-      # <timestamp>.<pid> run-file names collide across containers; the
-      # merge does not care about names, only uniqueness.
-      - name: Prefix coverage run files
-        if: always()
-        run: |
-          for f in cover_db/runs/*; do
-            mv "$f" "cover_db/runs/${{ matrix.config }}-$(basename "$f")"
-          done
-
+      # The runs are tarballed by docker-cover right after prove,
+      # because `cover -report` consumes cover_db/runs (merges and
+      # clears). COVER_REPORT=0 skips per-configuration reports; the
+      # merge job reports once over everything.
       - name: Upload coverage runs
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: cover-runs-${{ matrix.config }}
-          path: cover_db/runs/
+          path: cover_runs.tgz
+          if-no-files-found: ignore
 
       - name: Upload test log
         if: always()
@@ -162,12 +158,36 @@ jobs:
           path: /tmp
       - run: gunzip -c /tmp/munin-dev.tar.gz | docker load
 
-      - name: Gather coverage runs from all configurations
+      - name: Download coverage run tarballs
         uses: actions/download-artifact@v7
         with:
           pattern: cover-runs-*
-          merge-multiple: true
-          path: cover_db/runs
+          path: .
+
+      - name: Gather coverage runs from all configurations
+        run: |
+          # Each artifact lands in its own subdirectory (no
+          # merge-multiple: the tarballs share one filename). Untar
+          # into cover_db/runs with a per-configuration prefix --
+          # <timestamp>.<pid> collides across containers; the merge
+          # does not care about names, only uniqueness.
+          shopt -s nullglob
+          mkdir -p cover_db/runs
+          tarballs=(cover-runs-*/*.tgz)
+          if [ ${#tarballs[@]} -eq 0 ]; then
+            echo "No coverage tarballs found (test jobs produced nothing)"
+            exit 0
+          fi
+          for tgz in "${tarballs[@]}"; do
+            cfg=$(basename "$tgz" .tgz)
+            cfg=${cfg#cover-runs-}
+            mkdir -p "/tmp/runs-$cfg"
+            tar xzf "$tgz" -C "/tmp/runs-$cfg"
+            for f in /tmp/runs-$cfg/cover_db/runs/*; do
+              mv "$f" "cover_db/runs/$cfg-$(basename "$f")"
+            done
+          done
+          ls -la cover_db/runs | head
 
       # Report-time select: tests load production code from lib/ via
       # "use lib", so the database contains lib/Munin/... paths, never

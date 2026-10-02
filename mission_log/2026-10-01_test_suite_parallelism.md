@@ -2139,3 +2139,48 @@ Carried forward unchanged:
    (image artifact size, cache behavior, Coveralls upload from the
    merged report) -- watch the dev-image job's artifact transfer
    time.
+
+---
+
+## Session Continuation 12: cover -report consumes the runs (2026-10-02)
+
+CI's first real matrix run: all three test jobs failed identically at
+the run-prefixing step -- ``cover_db/runs/*: No such file or
+directory``. The jobs were not red because of their configurations;
+they were red because their post-processing tripped over its own
+missing input.
+
+### The mechanism (first-principles local smoke)
+
+``make docker-cover`` on one tiny test: exit 0, real coverage numbers
+in the summary -- and ``cover_db/runs/`` EMPTY afterwards. Devel::Cover
+1.38 writes per-process run DIRECTORIES (``runs/<ts>.<pid>/``), and
+``cover -report`` **consumes** them: it merges every run into the
+cover_db database and clears the directory. So every CI job that
+*SUCCEEDED* arrived at the prefix step with nothing to prefix -- which
+is why all three configurations failed in exactly the same place.
+
+### Fix
+
+- ``docker-cover`` tarballs the runs (``cover_runs.tgz``) right after
+  prove, before any report step, and grows a ``COVER_REPORT`` knob
+  (default 1 = current local behavior: report immediately, now after
+  the tarball). CI sets ``COVER_REPORT=0``: per-configuration reports
+  were wasted work anyway -- the merge job reports once.
+- Workflow: each test job uploads its tarball (one artifact per
+  configuration; no prefix step to starve); the merge job untars all
+  tarballs into one ``cover_db/runs/`` with per-configuration prefixes,
+  nullglob-guarded so a job that produced nothing says so instead of
+  dying on a literal glob.
+- ``cover_runs.tgz`` added to .gitignore + MANIFEST.SKIP.
+
+Validated locally: COVER_REPORT=0 -> tarball + runs preserved + no
+report; COVER_REPORT=1 -> tarball + report; both exit 0; workflow YAML
+parses.
+
+### Rule Added
+
+- **``cover -report`` consumes ``cover_db/runs``** -- collect-then-tar
+  before any report step, or a merge job downstream starves. The
+  earlier log entry said "cover merges runs at report time"; it should
+  have said "merges AND clears".
