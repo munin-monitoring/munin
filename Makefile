@@ -244,23 +244,42 @@ JOBS  ?= $(shell nproc)
 TESTS ?= t/*.t
 PROVE  = prove --shuffle --timer -j$(JOBS) -Iblib/lib -Iblib/arch
 
+# Test-matrix cell selection. Every FORK x DBDRIVER combination is
+# runnable (e.g. FORK=0 DBDRIVER=pg works locally); the CI matrix
+# simply selects the three that map to real deployment shapes --
+# serial+pgsql is not invalid, just not worth CPU cycles. Default =
+# the usual local shape: sqlite + fork + jobs=nproc. CI pins every
+# cell explicitly. docker-test-matrix sweeps the CI cells locally.
+FORK     ?= 1
+DBDRIVER ?= sqlite
+TESTENV   = -e MUNIN_TEST_FORK=$(FORK) -e MUNIN_TEST_DBDRIVER=$(DBDRIVER)
+
 # Run tests in Docker - same env as CI
 docker-test:
-	$(DOCKER) run --rm --shm-size=512m --add-host testing.acme.com:127.0.0.1 \
+	$(DOCKER) run --rm --shm-size=512m $(TESTENV) --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build && TMPDIR=/dev/shm $(PROVE) $(TESTS)'
 
 docker-test-one:
-	$(DOCKER) run --rm --shm-size=256m --add-host testing.acme.com:127.0.0.1 \
+	$(DOCKER) run --rm --shm-size=256m $(TESTENV) --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build && TMPDIR=/dev/shm prove --timer -j1 -Iblib/lib -Iblib/arch t/$(FILE)'
 
 # Run tests and show failure summary at end
 docker-show-fail:
-	$(DOCKER) run --rm --shm-size=512m --add-host testing.acme.com:127.0.0.1 \
+	$(DOCKER) run --rm --shm-size=512m $(TESTENV) --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build && TMPDIR=/dev/shm $(PROVE) $(TESTS) > /tmp/test-output.log 2>&1; RC=$$?; cat /tmp/test-output.log; if [ $$RC -ne 0 ]; then ./script/show-test-failures /tmp/test-output.log; fi; exit $$RC'
 
 # Run lint in Docker
 docker-lint:
 	$(DOCKER) run --rm -v $(CURDIR):/app munin-dev sh -c 'perl Build.PL && make lint'
+
+# Sweep the CI test matrix locally: the three selected cells. The
+# fourth combination (FORK=0 DBDRIVER=pg) is runnable but unselected
+# in CI; invoke docker-test with those args directly if you need it.
+.PHONY: docker-test-matrix
+docker-test-matrix:
+	$(MAKE) docker-test JOBS=$(JOBS) FORK=0 DBDRIVER=sqlite
+	$(MAKE) docker-test JOBS=$(JOBS) FORK=1 DBDRIVER=sqlite
+	$(MAKE) docker-test JOBS=$(JOBS) FORK=1 DBDRIVER=pg
 
 # Shell into dev container
 docker-shell:
@@ -272,7 +291,7 @@ docker-shell:
 # tests load modules from lib/ via "use lib", so the old "blib/lib|blib/script"
 # select matched nothing (coverage uploaded to Coveralls was empty).
 docker-cover:
-	$(DOCKER) run --rm --shm-size=1g --add-host testing.acme.com:127.0.0.1 \
+	$(DOCKER) run --rm --shm-size=1g $(TESTENV) --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm \
 		perl Build.PL && \
 		./Build && \

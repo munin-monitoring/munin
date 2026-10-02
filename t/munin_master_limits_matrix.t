@@ -4,13 +4,13 @@ use warnings;
 use lib qw(lib t/lib);
 
 use Test::More;
+use Time::HiRes ();
 
 use Munin::Master::Config;
 use Munin::Master::Limits;
 use Munin::Master::Update;
 use SampleDB;
 use TestState;
-use TestUtils;
 
 # The limits test matrix: ONE test body, every deployment shape.
 #
@@ -27,13 +27,34 @@ use TestUtils;
 # real server -- end-to-end, not white-box probes. If a cell fails,
 # that deployment shape is broken.
 
+# The cells are a SELECTION, not a validity filter: all four
+# FORK x DBDRIVER combinations run -- serial+pgsql is simply unlisted
+# because no deployment shape runs it, so neither this test nor CI
+# spends cycles on it (run it by hand: the machinery supports it).
+# Under a pinned matrix cell (MUNIN_TEST_FORK/MUNIN_TEST_DBDRIVER set
+# by a CI job) only the matching cell runs; without the env (local
+# runs) all three sweep.
 my @CELLS = (
     { name => "serial/sqlite",   fork => 0, driver => "SQLite" },
     { name => "parallel/sqlite", fork => 1, driver => "SQLite" },
     { name => "parallel/pgsql",  fork => 1, driver => "Pg" },
 );
 
-for my $cell (@CELLS) {
+my $pinned = grep { defined $ENV{$_} }
+    qw(MUNIN_TEST_FORK MUNIN_TEST_DBDRIVER);
+my @run = grep {
+       (!$pinned || !defined $ENV{MUNIN_TEST_FORK}
+            || ($ENV{MUNIN_TEST_FORK} ? 1 : 0) == $_->{fork})
+    && (!$pinned || !defined $ENV{MUNIN_TEST_DBDRIVER}
+            || ($ENV{MUNIN_TEST_DBDRIVER} eq "pg" ? "Pg" : "SQLite")
+                eq $_->{driver})
+} @CELLS;
+plan skip_all => "pinned matrix cell is outside the tested selection "
+    . "(run without MUNIN_TEST_FORK/MUNIN_TEST_DBDRIVER to sweep all)"
+    if $pinned && !@run;
+
+for my $cell (@run) {
+    my $t0 = Time::HiRes::time;
     subtest $cell->{name} => sub {
         # The cell dimension is environment, not code: fork mode and
         # backend are config/env, the test body is identical.
@@ -70,11 +91,20 @@ for my $cell (@CELLS) {
             SampleDB::generate_sample_db($fixture, "Pg");
         }
         else {
-            TestUtils::generate_sample_db($fixture);
+            # Direct, not TestUtils::generate_sample_db: that helper
+            # routes on the ambient matrix cell, and this test
+            # arranges its own cells -- a pinned CI env must not steer
+            # the other cells.
+            SampleDB::generate_sample_db("$fixture/datafile.sqlite");
         }
 
         _exercise($cell, $fixture);
     };
+    # Wall time per cell, so regressions in a single shape are visible
+    # in every run's output (the harness only reports per-file times).
+    diag(sprintf("%s: %.1fs wall (fixture + 2 limits_main runs%s)",
+        $cell->{name}, Time::HiRes::time - $t0,
+        $cell->{driver} eq "Pg" ? " + in-image postgres startup" : ""));
 }
 
 done_testing();
