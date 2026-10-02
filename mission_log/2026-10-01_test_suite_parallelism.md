@@ -1145,3 +1145,216 @@ New this session:
    covered the SampleDB/TestState-heavy tests; update_worker/rrdcached/
    spoolfetch tests have their own node-fixture boilerplate that may
    factor similarly (not examined this session).
+
+---
+
+## Session Continuation 6: named builders + DBI connect audit (2026-10-02)
+
+Two follow-ups to Continuation 5, both user-directed. First: replace
+`generate_sample_data`'s opaque positional boolean with named
+functions. Second: audit the DBI connect boilerplate "from first
+principles" -- it was possible some cruft was left over. It was. The
+session also produced a new project rule that got applied retroactively
+across the whole suite.
+
+### What We Did
+
+1. **Split `generate_sample_data($dir, $with_rrds)` into two named
+   functions.** The positional `0` at call sites read as a mystery
+   ("generate_sample_db($tmpdir, 0)" -- what does the 0 mean?). Now:
+   `generate_sample_db($dir)` (DB-only: limits/lifecycle/handle_request)
+   and `generate_sample_db_and_rrds($dir)` (render tests). The second
+   delegates to the first, so the SampleDB build is written once. Nine
+   call sites updated; no boolean anywhere.
+
+2. **Audited every `DBI->connect` in t/ from first principles.** The
+   survey found ~50 copy-pasted connect blocks: 30 in limits.t, 20 in
+   spec.t, plus single sites in graph.t, html.t, lifecycle.t,
+   update_worker_crud.t, update_worker_dbstate.t. Every one was one of
+   exactly two variants (rw / ro). lifecycle.t already solved this
+   locally with `dbh_ro()`/`dbh_rw()` subs -- the precedent to
+   generalize.
+
+3. **Verified two cruft claims empirically** before acting on them (a
+   probe in the dev container, not docs):
+   - `AutoCommit => 1` is **redundant**: DBI's default is on. Connect
+     with just `{ RaiseError => 1 }` and `{AutoCommit}` is 1.
+   - `PrintError` is **moot** alongside `RaiseError => 1`: RaiseError
+     dies on bad SQL before PrintError would warn. One site
+     (update_worker_dbstate.t) set both -- the redundant one dropped.
+
+4. **Factored the connects into `TestUtils::dbh_ro` / `dbh_rw`.** The
+   helpers omit the redundant AutoCommit and document why ("do not
+   re-add"). Converted 50 sites via a reviewable perl substitution
+   script (`out/refactor_dbi.pl`, reported per-file counts: 30/20, ro/rw
+   split) plus the single sites by hand. `my $dbh =` vs bare `$dbh =`
+   assignment preserved at every site.
+
+5. **Found one connect that must NOT be factored.** update_groups.t's
+   `*Munin::Master::Update::get_dbh` override uses `AutoCommit => 0` --
+   which looks exactly like the cruft just removed. It is not: production
+   `get_dbh` (Update.pm:128-136) defaults AutoCommit to 0 and honors
+   `$is_read_only` / `MUNIN_DB_AUTOCOMMIT`. The override must reproduce
+   that contract faithfully; a test helper's connection defaults would
+   hide a divergence between the mock and real update runs. Left raw,
+   with the reason in a comment.
+
+6. **Swept dead `use DBI;` after the refactor.** With connects in
+   TestUtils (which does `require DBI` internally), five files had zero
+   `DBI->`/`DBI::` references left. Verified by count before removing.
+   crud.t/dbstate.t gained `use TestUtils;` in its place (their connects
+   moved to the helper). SampleDB.pm keeps its raw connect -- it is
+   *required by* TestUtils (`generate_sample_db` does `require SampleDB`),
+   so depending back would be a circular load; also dropped its redundant
+   `AutoCommit => 1`.
+
+7. **New project rule, applied retroactively.** User, mid-session: "if
+   not using the common method, always explain why in a comment." The
+   DBI audit had just surfaced the update_groups.t case where an
+   unexplained deviation *looked* like cruft -- exactly the failure mode
+   the rule prevents. Swept every config block and connect that bypasses
+   a TestUtils helper and added the missing justification (13 comments
+   across 12 files), grouped by reason:
+   - limits/spec/lifecycle: run limits_main inline (fork=0), render
+     nothing -- no tmpldir, no shared-conf parse.
+   - handle_request/graph_html_helpers: need dburl + MUNIN_DBURL env,
+     which setup_test_config does not set.
+   - httpd_graph/update/spoolfetch/rrdcached_integration: generate their
+     own conf with the **ephemeral ports** forked test nodes actually
+     bound; t/config/munin.conf's fixed ports would collide.
+   - update_rrdcached: sets rrdcached_socket/logdir/fork, never parses a
+     conf (socket path is per-run).
+   - update_groups.t: parses a generated group/host conf from a string to
+     exercise config import; the shared conf has no groups.
+   - SampleDB.pm / update_groups.t get_dbh: raw connect, reasons above.
+   config.t untouched: `Config->instance` there is the subject under
+   test, not a setup helper -- no reader would wonder "why not
+   setup_test_config."
+
+### What We Learned
+
+#### Technical
+
+1. **Verify attribute defaults empirically before calling them cruft.**
+   Both claims (`AutoCommit => 1` redundant, `PrintError` moot) were
+   confirmed with a 6-line probe in the dev container, not from memory
+   or docs. The probe cost nothing and made the deletions safe.
+2. **An unexplained deviation reads as an oversight.** update_groups.t's
+   `AutoCommit => 0` was indistinguishable from the cruft being removed
+   -- until the comment made the intent legible. Without it, the next
+   factoring pass would "clean it up" and silently break the mock's
+   fidelity to production.
+3. **Layering constrains factoring.** SampleDB.pm cannot use
+   TestUtils::dbh_rw because TestUtils requires SampleDB. The dependency
+   arrow decides which side owns the raw connect; the comment records
+   which side that is.
+4. **Named functions beat positional booleans** at every call site. The
+   `0` was the kind of magic value that costs a reader a detour to
+   decode; the split also made the DB-only vs render split explicit in
+   the API.
+5. **A factoring pass should keep looking after the first layer.**
+   Continuation 5 surveyed "what else can be factored" but stopped at
+   the fixture/config layer. The DBI connects -- the largest duplication
+   in the suite (50 sites) -- went unnoticed until the user prompted for
+   a first-principles audit. "What else" deserves the same scrutiny as
+   the original target.
+
+#### Process
+
+1. **User-prompted audits find what self-directed ones miss.** The
+   connect boilerplate was invisible to the Continuation-5 survey
+   precisely because that survey was framed around the helpers just
+   built. A fresh frame ("check for leftover cruft") surfaced it.
+2. **Mechanical bulk edits need a reviewable artifact.** The 50-connect
+   conversion went through a small perl script that printed per-file
+   before/after counts -- the diff review then had a number to check
+   against, not just eyeballs.
+3. **Rules get applied retroactively, not just recorded.** The "explain
+   why" rule was stated mid-session and the sweep happened in the same
+   session. A rule recorded for "later" tends to stay later.
+
+### What We Decided
+
+1. **`generate_sample_db` / `generate_sample_db_and_rrds`** replace the
+   positional-boolean `generate_sample_data`. Delegation keeps one
+   SampleDB build.
+2. **`TestUtils::dbh_ro` / `dbh_rw`** own all test sqlite connections.
+   Helpers omit redundant `AutoCommit` and document the omission.
+3. **update_groups.t's get_dbh override stays raw** -- faithful mock of
+   production's AutoCommit-0 contract; comment records why.
+4. **SampleDB.pm keeps its raw connect** -- circular-load constraint;
+   comment records which side owns it.
+5. **Every non-common-method setup carries a "why" comment.** 13
+   justifications across 12 files, grouped by reason. config.t exempt
+   (subject under test).
+
+### Rules Added
+
+- **Explain deviations in a comment.** When code does not use the
+  shared helper for a step, say why at the site. Unexplained deviation
+  reads as an oversight and invites a well-meaning cleanup that breaks
+  it (the update_groups.t AutoCommit-0 case).
+- **Named functions over positional booleans** for helper arguments.
+- **Verify attribute/option defaults empirically** before deleting them
+  as cruft -- a 6-line probe beats a memory-based claim.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `t/lib/TestUtils.pm` | split generate_sample_data into generate_sample_db + generate_sample_db_and_rrds; add dbh_ro / dbh_rw (no redundant AutoCommit, documented) |
+| `t/lib/SampleDB.pm` | keep raw connect (circular-load constraint, commented); drop redundant AutoCommit => 1 |
+| `t/munin_master_limits.t` | 30 connects -> dbh_ro/dbh_rw; dead use DBI removed; config deviation commented |
+| `t/munin_master_spec.t` | 20 connects -> dbh_ro/dbh_rw; dead use DBI removed; config deviation commented |
+| `t/munin_master_graph.t`, `t/munin_master_html.t` | single connect -> dbh_rw; dead use DBI removed; call sites renamed |
+| `t/munin_master_lifecycle.t` | dbh_ro/dbh_rw subs delegate to TestUtils; dead use DBI removed; config deviation commented |
+| `t/munin_master_update_worker_crud.t`, `t/munin_master_update_worker_dbstate.t` | connect -> dbh_rw (dbstate: dropped moot PrintError); use DBI -> use TestUtils |
+| `t/munin_master_handle_request.t`, `t/munin_master_graph_html_helpers.t`, `t/munin_master_graph_static.t`, `t/munin_master_html_static.t` | call sites renamed to generate_sample_db(_and_rrds); dburl config deviation commented |
+| `t/munin_master_httpd_graph.t`, `t/munin_master_update.t`, `t/munin_master_update_spoolfetch.t`, `t/munin_master_update_rrdcached_integration.t` | generated-conf deviation commented (ephemeral ports) |
+| `t/munin_master_update_rrdcached.t` | config deviation commented (per-run socket path) |
+| `t/munin_master_update_groups.t` | get_dbh override: AutoCommit-0 fidelity commented; conf-from-string deviation commented |
+
+### Test Results
+
+```
+perl -c all touched files ................. OK (12 files)
+
+full make docker-test (after commit 1) .... PASS 33 files, 490 tests,
+    222s wall at shuffle -j4.
+full make docker-test (after commit 2) .... PASS 33 files, 490 tests,
+    227s wall at shuffle -j4.
+
+DBI audit totals: 50 connects factored (limits.t 30 = 14 ro + 16 rw;
+    spec.t 20 = 9 ro + 11 rw), 5 dead 'use DBI' removed, 1 faithful
+    mock left raw with justification, 13 why-comments across 12 files.
+```
+
+### Commits
+
+| Commit | Subject |
+|--------|---------|
+| 2ce1188b9 | test: name TestUtils fixture builders; factor DBI connects |
+| 2308d4ab2 | test: justify every non-common-method setup in a comment |
+
+### Next Steps
+
+Carried forward unchanged (none affected by this session):
+1. (optional, scope-cut) graph_static cmdline assertions + 1%
+   real-render canary.
+2. Reap budget tuning (1s WNOHANG is a guess).
+3. CI coverage budget decision.
+4. Write contention under real fork=1 load.
+5. Pre-existing warnings: Limits.pm:549, Graph.pm:765/869.
+
+Status updates:
+6. ~~generate_sample_data's `$with_rrds` positional~~ -- **done** (this
+   session, split into named functions).
+7. **Survey the rest of t/ for factoring candidates** -- partially
+   addressed: the DBI connects in update_worker/rrdcached/spoolfetch
+   tests are now factored and their config deviations documented, but
+   the node-fixture boilerplate those tests share (test-node forking,
+   port allocation, conf generation) was NOT surveyed for factoring.
+   The generated-conf tests (httpd_graph/update/spoolfetch/
+   rrdcached_integration) each write near-identical conf-generation
+   blocks -- a `generate_test_conf($dir, \%nodes)` helper is the obvious
+   candidate if anyone wants the next pass.
