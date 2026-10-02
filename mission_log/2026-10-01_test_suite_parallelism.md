@@ -1349,12 +1349,122 @@ Carried forward unchanged (none affected by this session):
 Status updates:
 6. ~~generate_sample_data's `$with_rrds` positional~~ -- **done** (this
    session, split into named functions).
-7. **Survey the rest of t/ for factoring candidates** -- partially
-   addressed: the DBI connects in update_worker/rrdcached/spoolfetch
-   tests are now factored and their config deviations documented, but
-   the node-fixture boilerplate those tests share (test-node forking,
-   port allocation, conf generation) was NOT surveyed for factoring.
-   The generated-conf tests (httpd_graph/update/spoolfetch/
-   rrdcached_integration) each write near-identical conf-generation
-   blocks -- a `generate_test_conf($dir, \%nodes)` helper is the obvious
-   candidate if anyone wants the next pass.
+7. ~~Survey the rest of t/ for factoring candidates~~ -- **done**
+   across Continuations 6-7: DBI connects factored, config deviations
+   documented, and the generated-conf blocks now live in
+   `TestUtils::generate_test_conf` (see Continuation 7).
+
+---
+
+## Session Continuation 7: generate_test_conf -- the flagged next pass (2026-10-02)
+
+Continuation 6's Next Steps named the candidate explicitly: the
+generated-conf tests "each write near-identical conf-generation blocks --
+a `generate_test_conf($dir, \%nodes)` helper is the obvious candidate."
+This session is that pass, and it is deliberately small.
+
+### What We Did
+
+1. **Compared all four conf-generation blocks before touching anything.**
+   Extracted each block (`awk` from `my $conf_file` to `close $fh`) and
+   ran `diff` pairwise rather than trusting the eyeball read:
+   - httpd_graph.t == update.t == spoolfetch.t -- **byte-identical**
+     (28 lines: same four dirs under `$temp_dir`, same five-node layout,
+     same ephemeral `$ports` from `get_free_ports(3)`).
+   - update_rrdcached_integration.t -- **genuinely different**: separate
+     `html`/`run` subdirs, a `rrdcached_socket` line, and loop-generated
+     `group-$i`/`host-$i` nodes instead of the fixed five.
+
+2. **Added `TestUtils::generate_test_conf($dir, $ports)`** for the three
+   identical cases. The helper owns the filehandle (open/print/close
+   moves inside) and returns the conf path. Its pod records *why*
+   rrdcached_integration is excluded -- folding it in would need an
+   option bag (dir overrides, extra key, node-generator callback) that
+   obscures more than it dedups. That is the Continuation-5
+   `parse_config_from_file` lesson applied to a second case.
+
+3. **Converted the three callers** to a one-liner each; added
+   `use TestUtils;` to the three files (none imported it). Verified no
+   leftover `$fh` references -- the helper owns the handle now. The
+   `# Not setup_test_config()` comments stayed: the helper is *not*
+   `setup_test_config`, the tests still generate their own conf with
+   ephemeral ports, so the justification remains true.
+
+### What We Learned
+
+1. **diff beats the eyeball for "is this byte-identical?"** Three blocks
+   that looked identical at a glance were confirmed identical by
+   extraction + `diff` before any edit. If they had differed in
+   whitespace or a stray key, the bulk edit would have silently
+   picked one variant.
+2. **A helper named in a Next Steps list gets done; an unnamed one
+   lingers.** Continuation 6 wrote down `generate_test_conf($dir,
+   \%nodes)` as the candidate with its reason. This session was a
+   straight execution of that note -- the documentation paid for itself
+   as a handoff, even to the same person a session later.
+3. **The option-bag test applies per-helper, not per-file.**
+   rrdcached_integration sits in the same *file family* as the three
+   converted tests but has different *needs*; the unit of factoring is
+   the identical block, not the test file.
+
+### What We Decided
+
+1. **`generate_test_conf($dir, $ports)` takes a ports arrayref**, not a
+   node list -- the three identical blocks share one fixed five-node
+   layout parameterized only by port. A `\%nodes` structure would have
+   been speculative generality for a shape no caller uses.
+2. **rrdcached_integration stays unconverted**, with the exclusion
+   documented in the helper's pod (not just in the caller), so the next
+   person meets the reason at the point of temptation.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `t/lib/TestUtils.pm` | add generate_test_conf($dir, $ports); pod records the rrdcached exclusion |
+| `t/munin_master_httpd_graph.t` | 28-line conf block -> one-liner; use TestUtils added |
+| `t/munin_master_update.t` | same |
+| `t/munin_master_update_spoolfetch.t` | same |
+
+### Test Results
+
+```
+perl -c all 4 touched files ............... OK
+
+full make docker-test ..................... PASS 33 files, 490 tests,
+    181s wall at shuffle -j4.
+    (Node::_node_write_single redefinition warning in node_multigraph.t
+    observed this run: PRE-EXISTING -- node_multigraph.t / Node.pm are
+    not in this diff. Same family as the other proven non-regressions;
+    not investigated this session.)
+```
+
+### Commits
+
+| Commit | Subject |
+|--------|---------|
+| dcd0be786 | test: factor integration-test conf generation into TestUtils |
+
+### Next Steps
+
+Carried forward unchanged:
+1. (optional, scope-cut) graph_static cmdline assertions + 1%
+   real-render canary.
+2. Reap budget tuning (1s WNOHANG is a guess).
+3. CI coverage budget decision.
+4. Write contention under real fork=1 load.
+
+Pre-existing warnings, now four known sets (all proven non-regressions
+by diff-exclusion or stash-compare, none investigated):
+5. Limits.pm:549 `$dbdir` undef in `_compute_cdef_value`.
+6. Graph.pm:765 `$tpng` / 869 `$legend` uninitialized in DEBUG paths.
+7. **Node::_node_write_single / _node_read redefinition** in
+   node_multigraph.t (lines 44/49) -- new observation this session;
+   the test redefines Node subs that are already loaded.
+8. update_worker_crud.t `no such table: node` (DBD::SQLite prepare
+   noise around schema creation).
+
+**Factoring survey is now closed** -- every repeated block in t/ that
+was surveyed has been either factored into TestUtils or justified in a
+comment. Remaining t/ work is behavioral (the canary, the warnings),
+not structural.
