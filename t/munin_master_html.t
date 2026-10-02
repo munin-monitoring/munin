@@ -23,10 +23,9 @@ use warnings;
 use lib qw(lib t/lib);
 
 use Test::More;
-use TestUtils;    # setup_test_config, generate_sample_data, mock_update_get_param
+use TestUtils;    # setup_test_config, generate_sample_db_and_rrds, mock_update_get_param
 use CGI;
 use File::Path qw(remove_tree);
-use DBI;
 
 use Munin::Common::Logger;
 use Munin::Master::HTML;
@@ -47,15 +46,12 @@ Munin::Common::Logger::configure(
 );
 
 # Generate sample data
-my $dbfile = TestUtils::generate_sample_data($dbdir);
+my $dbfile = TestUtils::generate_sample_db_and_rrds($dbdir);
 
 # Mock Munin::Master::Update
 my $mock_update = TestUtils::mock_update_get_param($config);
 
-my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-	RaiseError => 1,
-	AutoCommit => 1,
-});
+my $dbh = TestUtils::dbh_rw($dbfile);
 
 # Get valid paths for testing
 my ($valid_service_path) = $dbh->selectrow_array("SELECT path FROM url WHERE service_id IS NOT NULL LIMIT 1");

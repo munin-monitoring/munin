@@ -7,9 +7,12 @@ package TestUtils;
 #                            recurse; '**' silently degenerates to '*')
 #   setup_test_config     -- parse t/config/munin.conf, point dbdir at a
 #                            fresh TestState dir, set tmpldir
-#   generate_sample_data  -- build SampleDB (+ SampleRRD) in a dir
+#   generate_sample_db    -- build SampleDB in a dir (DB-only tests)
+#   generate_sample_db_and_rrds -- build SampleDB + SampleRRD (render tests)
 #   mock_update_get_param -- Munin::Master::Update::get_param mock reading
 #                            from the Config singleton
+#   dbh_ro / dbh_rw       -- read-only / read-write DBI handles for a
+#                            test sqlite db
 
 use strict;
 use warnings;
@@ -51,22 +54,31 @@ sub setup_test_config {
     return ($config, $dbdir);
 }
 
-# Build the sample fixture in $dir. Returns the sqlite db path. Set
-# $with_rrds to 0 to skip SampleRRD (limits-style tests only need the DB).
+# Build the SampleDB fixture in $dir. Returns the sqlite db path.
+# DB-only tests (limits, lifecycle, handle_request) use this -- no RRDs.
 #
-#   my $dbfile = TestUtils::generate_sample_data($dbdir);
-sub generate_sample_data {
-    my ($dir, $with_rrds) = @_;
-    $with_rrds = 1 unless defined $with_rrds;
+#   my $dbfile = TestUtils::generate_sample_db($dbdir);
+sub generate_sample_db {
+    my ($dir) = @_;
 
     require SampleDB;
     my $dbfile = "$dir/datafile.sqlite";
     SampleDB::generate_sample_db($dbfile);
 
-    if ($with_rrds) {
-        require SampleRRD;
-        SampleRRD::generate_sample_rrds($dir);
-    }
+    return $dbfile;
+}
+
+# Build SampleDB + SampleRRD in $dir. Graph/HTML render tests need the
+# RRD files. Returns the sqlite db path.
+#
+#   my $dbfile = TestUtils::generate_sample_db_and_rrds($dbdir);
+sub generate_sample_db_and_rrds {
+    my ($dir) = @_;
+
+    my $dbfile = generate_sample_db($dir);
+
+    require SampleRRD;
+    SampleRRD::generate_sample_rrds($dir);
 
     return $dbfile;
 }
@@ -87,6 +99,31 @@ sub mock_update_get_param {
     });
 
     return $mock;
+}
+
+# Read-only and read-write DBI handles for a test sqlite db. These
+# replace the ~50 copy-pasted DBI->connect blocks in limits.t and spec.t.
+#
+# First-principles cruft findings (verified empirically 2026-10-02):
+#   - AutoCommit => 1 is REDUNDANT: DBI's default is on, so stating it
+#     changes nothing. Omitted here on purpose -- do not re-add.
+#   - PrintError is MOOT alongside RaiseError => 1: RaiseError dies
+#     before PrintError would warn. Never set both.
+# ReadOnly opens the db read-only (DBI core attr, DBD::SQLite honors it)
+# so a SELECT-only test cannot mutate the fixture by accident.
+#
+#   my $ro = TestUtils::dbh_ro($dbfile);
+#   my $rw = TestUtils::dbh_rw($dbfile);
+sub dbh_ro {
+    my ($dbfile) = @_;
+    require DBI;
+    return DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1, ReadOnly => 1 });
+}
+
+sub dbh_rw {
+    my ($dbfile) = @_;
+    require DBI;
+    return DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1 });
 }
 
 1;

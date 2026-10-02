@@ -9,7 +9,6 @@ use warnings;
 use lib qw(lib t/lib);
 
 use Test::More;
-use DBI;
 use File::Path qw(remove_tree);
 
 # ============================================================================
@@ -34,7 +33,7 @@ Munin::Common::Logger::configure(output => 'screen', level => 'error');
 use TestState;
 use TestUtils;
 my $tmpdir = TestState::state_dir();
-my $dbfile = TestUtils::generate_sample_data($tmpdir, 0);
+my $dbfile = TestUtils::generate_sample_db($tmpdir);
 
 my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir} = $tmpdir;
@@ -44,8 +43,8 @@ $config->{fork} = 0;
 # Helpers
 # ---------------------------------------------------------------------------
 
-sub dbh_ro { DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1, AutoCommit => 1, ReadOnly => 1 }) }
-sub dbh_rw { DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1, AutoCommit => 1 }) }
+sub dbh_ro { TestUtils::dbh_ro($dbfile) }
+sub dbh_rw { TestUtils::dbh_rw($dbfile) }
 
 sub count {
     my ($table, $where) = @_;

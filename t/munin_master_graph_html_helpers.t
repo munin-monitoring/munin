@@ -23,7 +23,7 @@ Munin::Common::Logger::configure(
 use TestState;
 use TestUtils;
 my $tmpdir = TestState::state_dir();
-my $dbfile = TestUtils::generate_sample_data($tmpdir, 0);
+my $dbfile = TestUtils::generate_sample_db($tmpdir);
 
 # Configure to use our temp database
 my $config = Munin::Master::Config->instance()->{config};

@@ -4,7 +4,6 @@ use warnings;
 use lib qw(lib t/lib);
 
 use Test::More;
-use DBI;
 use File::Path qw(remove_tree);
 use Time::HiRes;
 
@@ -135,17 +134,13 @@ $config->{dbdir}  = $dbdir;
 $config->{fork}   = 0;
 
 use TestUtils;
-my $dbfile = TestUtils::generate_sample_data($dbdir, 0);
+my $dbfile = TestUtils::generate_sample_db($dbdir);
 
 # Run limits_main
 limits_main();
 
 # Verify state was updated in DB
-my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+my $dbh = TestUtils::dbh_ro($dbfile);
 
 # Check that state table has alarm values set
 my $states = $dbh->selectall_arrayref(
@@ -165,10 +160,7 @@ ok($notif_count >= 0, "notification table accessible");
 # --- Part 5: Override test ---
 
 # Add an override to change warning threshold (use writable connection)
-my $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+my $dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("INSERT OR REPLACE INTO override (ds_id, name, value) VALUES (1, 'warning', '30')");
 $dbh_rw->disconnect();
 
@@ -183,20 +175,13 @@ ok(defined $alarm1, "override test: state exists for ds_id=1");
 
 # Add a CDEF attr to a DS that also has warning/critical
 # This should cause _process_ds to skip it (line 207)
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("INSERT OR REPLACE INTO ds_attr (id, name, value) VALUES (2, 'cdef', '1,INDEX,+')");
 $dbh_rw->disconnect();
 
 limits_main();
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 
 # DS id=2 now has cdef, so it should be skipped in processing
 # The state alarm should remain unchanged from what SampleDB set
@@ -206,10 +191,7 @@ ok(defined $alarm2, "CDEF skip: state exists for ds_id=2");
 # --- Part 7: unknown_limit path ---
 
 # Set ds_id=3 value to U and alarm=ok to test unknown_limit accumulation
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE ds_id = 3");
 $dbh_rw->disconnect();
 
@@ -218,11 +200,7 @@ for my $i (1..5) {
     limits_main();
 }
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($alarm3, $num_unk3) = $dbh->selectrow_array(
     "SELECT alarm, num_unknowns FROM state WHERE ds_id = 3"
 );
@@ -233,29 +211,19 @@ ok($num_unk3 >= 0, "unknown_limit: num_unknowns tracked ($num_unk3)");
 # --- Part 8: Recovery tracking ---
 
 # Remove override from Part 5 first, restore original warning=80
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("DELETE FROM override WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
 # ds_id=1 idle value=50, warn=80, crit=95 -> OK
 # Set alarm=warning to simulate prior warning state
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
 limits_main();
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($alarm1_after) = $dbh->selectrow_array("SELECT alarm FROM state WHERE ds_id = 1");
 is($alarm1_after, 'ok', "recovery: ds_id=1 recovered from warning to ok");
 
@@ -264,10 +232,7 @@ $dbh->disconnect();
 # --- Part 9: Heartbeat timeout (line 231) ---
 
 # Set last_epoch far in the past so time > last_epoch + 600
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 my $old_epoch = time() - 1200;
 $dbh_rw->do("UPDATE state SET last_epoch = ?, num_unknowns = 0, alarm = 'ok' WHERE ds_id = 1", undef, $old_epoch);
 $dbh_rw->disconnect();
@@ -277,11 +242,7 @@ for my $i (1..4) {
     limits_main();
 }
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($val_heartbeat) = $dbh->selectrow_array(
     "SELECT alarm FROM state WHERE ds_id = 1"
 );
@@ -292,10 +253,7 @@ $dbh->disconnect();
 # --- Part 10: COUNTER wrap (line 241-242) ---
 
 # ds_id=14 is COUNTER type; set last_value < prev_value to trigger wrap -> 'U'
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 my $now10 = time();
 $dbh_rw->do(
     "UPDATE state SET last_epoch = ?, last_value = '100', prev_epoch = ?, prev_value = '200', alarm = 'ok' WHERE ds_id = 14",
@@ -308,11 +266,7 @@ for my $i (1..4) {
     limits_main();
 }
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($val_counter) = $dbh->selectrow_array(
     "SELECT alarm FROM state WHERE ds_id = 14"
 );
@@ -322,10 +276,7 @@ $dbh->disconnect();
 # --- Part 11: Missing contact (line 375-377) ---
 
 # Set service contacts to a non-existent contact name
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'ghostcontact')");
 # Ensure state_changed triggers notification path
 $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
@@ -334,11 +285,7 @@ $dbh_rw->disconnect();
 # Should warn about missing contact but not crash
 limits_main();
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($val_ghost) = $dbh->selectrow_array(
     "SELECT alarm FROM state WHERE ds_id = 1"
 );
@@ -348,10 +295,7 @@ $dbh->disconnect();
 # --- Part 12: Missing command (line 389-391) ---
 
 # Create a contact with no command attr
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("INSERT OR IGNORE INTO contact (id, name) VALUES (2, 'nocommand')");
 # No command attr inserted — triggers WARN at line 390
 $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'nocommand')");
@@ -360,11 +304,7 @@ $dbh_rw->disconnect();
 
 limits_main();
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($val_nocmd) = $dbh->selectrow_array(
     "SELECT alarm FROM state WHERE ds_id = 1"
 );
@@ -374,10 +314,7 @@ $dbh->disconnect();
 # --- Part 13: max_messages limit (line 423-426) ---
 
 # Set testcontact with max_messages=1
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("INSERT OR REPLACE INTO contact_attr (id, name, value) VALUES (1, 'max_messages', '1')");
 $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'testcontact')");
 # Create notification with num_messages=1 for service cpu (id=1)
@@ -387,11 +324,7 @@ $dbh_rw->disconnect();
 
 limits_main();
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($num_msgs) = $dbh->selectrow_array(
     "SELECT num_messages FROM notification_tracking WHERE contact_id = 1 AND service_id = 1"
 );
@@ -402,10 +335,7 @@ $dbh->disconnect();
 # --- Part 14: unknown_limit attr (line 261) ---
 
 # Set ds_id=5 with custom unknown_limit=1 (instead of default 3)
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("INSERT OR REPLACE INTO ds_attr (id, name, value) VALUES (5, 'unknown_limit', '1')");
 # Set value to U so it triggers unknown path
 $dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE ds_id = 5");
@@ -416,11 +346,7 @@ limits_main();
 # Second run: num_unknowns=1 >= unknown_limit=1, triggers unknown
 limits_main();
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($alarm_ul, $num_unk_ul) = $dbh->selectrow_array(
     "SELECT alarm, num_unknowns FROM state WHERE ds_id = 5"
 );
@@ -430,10 +356,7 @@ $dbh->disconnect();
 # --- Part 15: DERIVE with undefined prev_value (line 236) ---
 
 # ds_id=7 is DERIVE type (rx); set prev_value=U
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 my $now15 = time();
 $dbh_rw->do(
     "UPDATE state SET last_epoch = ?, last_value = '500', prev_epoch = ?, prev_value = 'U', alarm = 'ok' WHERE ds_id = 7",
@@ -443,11 +366,7 @@ $dbh_rw->disconnect();
 
 for my $i (1..4) { limits_main(); }
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($val_derive) = $dbh->selectrow_array(
     "SELECT alarm FROM state WHERE ds_id = 7"
 );
@@ -458,10 +377,7 @@ $dbh->disconnect();
 
 # Add a temporary ABSOLUTE DS via ds_attr on an existing GAUGE DS
 # We'll use ds_id=8 (tx, DERIVE) and change its type to ABSOLUTE
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("UPDATE ds SET type = 'ABSOLUTE' WHERE id = 8");
 my $now16 = time();
 $dbh_rw->do(
@@ -473,11 +389,7 @@ $dbh_rw->disconnect();
 
 limits_main();
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($val_abs) = $dbh->selectrow_array(
     "SELECT alarm FROM state WHERE ds_id = 8"
 );
@@ -487,10 +399,7 @@ is($val_abs, 'ok', "ABSOLUTE: value=10 computed correctly, within thresholds");
 $dbh->disconnect();
 
 # Restore type
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("UPDATE ds SET type = 'DERIVE' WHERE id = 8");
 $dbh_rw->disconnect();
 
@@ -498,20 +407,13 @@ $dbh_rw->disconnect();
 
 # Service 3 (disk on localhost) already has contacts='testcontact' from SampleDB
 # This tests the split path at line 358
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 31");
 $dbh_rw->disconnect();
 
 limits_main();
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($val_svc_attr) = $dbh->selectrow_array(
     "SELECT alarm FROM state WHERE ds_id = 31"
 );
@@ -520,21 +422,14 @@ $dbh->disconnect();
 
 # --- Part 18: contact_name eq 'none' skip (line 368) ---
 
-$dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-});
+$dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'none testcontact')");
 $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
 limits_main();
 
-$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    ReadOnly   => 1,
-});
+$dbh = TestUtils::dbh_ro($dbfile);
 my ($val_none) = $dbh->selectrow_array(
     "SELECT alarm FROM state WHERE ds_id = 1"
 );

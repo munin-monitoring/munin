@@ -5,7 +5,7 @@ use lib qw(lib t/lib);
 
 use Test::More;
 use Test::Exception;
-use DBI;
+use TestUtils;    # dbh_rw
 use File::Temp qw(tempfile);
 
 # Load real UpdateWorker
@@ -65,10 +65,7 @@ sub create_test_worker {
 my ($dbh, $tempfile);
 BEGIN {
     ($dbh, $tempfile) = tempfile(CLEANUP => 1);
-    $dbh = DBI->connect("dbi:SQLite:dbname=$tempfile", "", "", {
-        RaiseError => 1,
-        AutoCommit => 1,
-    });
+    $dbh = TestUtils::dbh_rw($tempfile);
     create_test_db($dbh);
 }
 
