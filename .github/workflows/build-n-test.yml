@@ -56,8 +56,8 @@ jobs:
   # Lint -- the serial gate for everything below: fast and
   # deterministic, so a lint failure must not spend three covered
   # matrix jobs (~20 min each) discovering what lint already knew.
-  # NB: renaming a job renames its status check; if branch protection
-  # lists a required check by the old name, update the repo settings.
+  # Branch protection gates the whole pipeline, so job/check renames
+  # here do not affect PR gating.
   lint:
     needs: dev-image
     runs-on: ubuntu-latest
