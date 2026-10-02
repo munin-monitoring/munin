@@ -5,7 +5,7 @@ use lib qw(lib t/lib);
 
 use Test::More;
 use Test::Differences;
-use DBI;
+use TestUtils;    # dbh_rw
 use File::Temp qw(tempfile);
 
 # Load real UpdateWorker
@@ -18,11 +18,7 @@ use Munin::Master::UpdateWorker;
 my ($tempfh, $tempfile) = tempfile(CLEANUP => 1);
 close $tempfh;
 
-my $dbh = DBI->connect("dbi:SQLite:dbname=$tempfile", "", "", {
-    RaiseError => 1,
-    AutoCommit => 1,
-    PrintError => 0,
-});
+my $dbh = TestUtils::dbh_rw($tempfile);
 
 # Create schema matching production
 $dbh->do("CREATE TABLE IF NOT EXISTS service (

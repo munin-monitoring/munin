@@ -11,7 +11,7 @@ use lib qw(lib t/lib);
 
 use Test::More;
 use File::Path qw(remove_tree);
-use TestUtils;    # rglob, setup_test_config, generate_sample_data, mock_update_get_param
+use TestUtils;    # rglob, setup_test_config, generate_sample_db_and_rrds, mock_update_get_param
 
 use Munin::Common::Logger;
 use Munin::Master::Config;
@@ -33,7 +33,7 @@ Munin::Common::Logger::configure(
 );
 
 # Generate sample data
-my $dbfile = TestUtils::generate_sample_data($dbdir);
+my $dbfile = TestUtils::generate_sample_db_and_rrds($dbdir);
 
 # Mock Munin::Master::Update
 my $mock_update = TestUtils::mock_update_get_param($config);

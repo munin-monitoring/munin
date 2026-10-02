@@ -13,7 +13,7 @@ use Munin::Master::Static::CGI;
 use TestState;
 use TestUtils;
 my $tmpdir = TestState::state_dir();
-my $dbfile = TestUtils::generate_sample_data($tmpdir, 0);
+my $dbfile = TestUtils::generate_sample_db($tmpdir);
 
 # Configure
 require_ok('Munin::Master::Config');

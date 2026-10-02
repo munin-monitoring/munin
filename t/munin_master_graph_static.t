@@ -5,7 +5,7 @@ use lib qw(lib t/lib);
 
 use Test::More;
 use Test::MockModule;
-use TestUtils;    # rglob, setup_test_config, generate_sample_data, mock_update_get_param
+use TestUtils;    # rglob, setup_test_config, generate_sample_db_and_rrds, mock_update_get_param
 
 require_ok( 'Munin::Master::Static::Graph' );
 require_ok( 'Munin::Master::Config' );
@@ -20,7 +20,7 @@ Munin::Common::Logger::configure(
 );
 
 # Generate sample RRDs and DB at test time
-my $dbfile = TestUtils::generate_sample_data($dbdir);
+my $dbfile = TestUtils::generate_sample_db_and_rrds($dbdir);
 
 my $mock_update = TestUtils::mock_update_get_param($config);
 

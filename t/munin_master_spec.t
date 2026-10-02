@@ -10,9 +10,8 @@ use lib qw(lib t/lib);
 
 use Test::More;
 use Test::Exception;
-use DBI;
 use File::Path qw(remove_tree);
-use TestUtils;    # rglob, generate_sample_data, mock_update_get_param
+use TestUtils;    # rglob, generate_sample_db_and_rrds, mock_update_get_param
 
 # ============================================================================
 # Deterministic time - no real time() calls during test
@@ -33,7 +32,7 @@ require Munin::Master::Config;
 use TestState;
 my $tmpdir = TestState::state_dir();
 
-my $dbfile = TestUtils::generate_sample_data($tmpdir);
+my $dbfile = TestUtils::generate_sample_db_and_rrds($tmpdir);
 
 my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir} = $tmpdir;
@@ -49,9 +48,7 @@ Munin::Common::Logger::configure(
 # ============================================================================
 
 subtest 'SampleDB structure' => sub {
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1, ReadOnly => 1,
-    });
+    my $dbh = TestUtils::dbh_ro($dbfile);
 
     my $groups = $dbh->selectall_arrayref("SELECT id, name, path FROM grp ORDER BY id");
     ok(scalar @$groups >= 5, "at least 5 groups");
@@ -192,9 +189,7 @@ subtest 'Limits: message expansion' => sub {
 subtest 'Limits: integration with SampleDB' => sub {
     Munin::Master::Limits::limits_main();
 
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1, ReadOnly => 1,
-    });
+    my $dbh = TestUtils::dbh_ro($dbfile);
 
     my $states = $dbh->selectall_arrayref(
         "SELECT ds_id, alarm, num_unknowns FROM state "
@@ -216,9 +211,7 @@ subtest 'Limits: integration with SampleDB' => sub {
 # ============================================================================
 
 subtest 'Limits: override threshold' => sub {
-    my $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1,
-    });
+    my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
     # Add override to change warning threshold
     $dbh_rw->do("INSERT OR REPLACE INTO override (ds_id, name, value) VALUES (1, 'warning', '30')");
@@ -227,18 +220,14 @@ subtest 'Limits: override threshold' => sub {
     # Re-run limits
     Munin::Master::Limits::limits_main();
 
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1, ReadOnly => 1,
-    });
+    my $dbh = TestUtils::dbh_ro($dbfile);
 
     my ($alarm1) = $dbh->selectrow_array("SELECT alarm FROM state WHERE ds_id = 1");
     ok(defined $alarm1, "override applied");
 
     # Cleanup override
     $dbh->disconnect();
-    $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1,
-    });
+    $dbh_rw = TestUtils::dbh_rw($dbfile);
     $dbh_rw->do("DELETE FROM override WHERE ds_id = 1");
     $dbh_rw->disconnect();
 };
@@ -248,9 +237,7 @@ subtest 'Limits: override threshold' => sub {
 # ============================================================================
 
 subtest 'Limits: unknown_limit' => sub {
-    my $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1,
-    });
+    my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
     # Set custom unknown_limit=1 for ds_id=5
     $dbh_rw->do("INSERT OR REPLACE INTO ds_attr (id, name, value) VALUES (5, 'unknown_limit', '1')");
@@ -264,9 +251,7 @@ subtest 'Limits: unknown_limit' => sub {
     # Second run: triggers unknown
     Munin::Master::Limits::limits_main();
 
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1, ReadOnly => 1,
-    });
+    my $dbh = TestUtils::dbh_ro($dbfile);
 
     my ($alarm, $num_unk) = $dbh->selectrow_array(
         "SELECT alarm, num_unknowns FROM state WHERE ds_id = 5"
@@ -282,9 +267,7 @@ subtest 'Limits: unknown_limit' => sub {
 # ============================================================================
 
 subtest 'Limits: heartbeat timeout' => sub {
-    my $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1,
-    });
+    my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
     # Set last_epoch far in the past
     my $old_epoch = $NOW - 1200;
@@ -299,9 +282,7 @@ subtest 'Limits: heartbeat timeout' => sub {
         Munin::Master::Limits::limits_main();
     }
 
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1, ReadOnly => 1,
-    });
+    my $dbh = TestUtils::dbh_ro($dbfile);
 
     my ($alarm) = $dbh->selectrow_array(
         "SELECT alarm FROM state WHERE ds_id = 1"
@@ -315,9 +296,7 @@ subtest 'Limits: heartbeat timeout' => sub {
 # ============================================================================
 
 subtest 'Limits: COUNTER wrap' => sub {
-    my $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1,
-    });
+    my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
     # ds_id=14 is COUNTER type; set last_value < prev_value
     $dbh_rw->do(
@@ -331,9 +310,7 @@ subtest 'Limits: COUNTER wrap' => sub {
         Munin::Master::Limits::limits_main();
     }
 
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1, ReadOnly => 1,
-    });
+    my $dbh = TestUtils::dbh_ro($dbfile);
 
     my ($alarm) = $dbh->selectrow_array(
         "SELECT alarm FROM state WHERE ds_id = 14"
@@ -347,9 +324,7 @@ subtest 'Limits: COUNTER wrap' => sub {
 # ============================================================================
 
 subtest 'Limits: DERIVE with undefined prev_value' => sub {
-    my $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1,
-    });
+    my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
     # ds_id=7 is DERIVE type; set prev_value=U
     $dbh_rw->do(
@@ -360,9 +335,7 @@ subtest 'Limits: DERIVE with undefined prev_value' => sub {
 
     for my $i (1..4) { Munin::Master::Limits::limits_main(); }
 
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1, ReadOnly => 1,
-    });
+    my $dbh = TestUtils::dbh_ro($dbfile);
 
     my ($alarm) = $dbh->selectrow_array(
         "SELECT alarm FROM state WHERE ds_id = 7"
@@ -376,9 +349,7 @@ subtest 'Limits: DERIVE with undefined prev_value' => sub {
 # ============================================================================
 
 subtest 'Limits: recovery tracking' => sub {
-    my $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1,
-    });
+    my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
     # ds_id=1 idle value=50, warn=80, crit=95 -> should be OK
     # Reset all state fields to ensure clean test
@@ -390,9 +361,7 @@ subtest 'Limits: recovery tracking' => sub {
 
     Munin::Master::Limits::limits_main();
 
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1, ReadOnly => 1,
-    });
+    my $dbh = TestUtils::dbh_ro($dbfile);
 
     my ($alarm) = $dbh->selectrow_array("SELECT alarm FROM state WHERE ds_id = 1");
     is($alarm, 'ok', "recovery from warning to ok");
@@ -404,9 +373,7 @@ subtest 'Limits: recovery tracking' => sub {
 # ============================================================================
 
 subtest 'Limits: missing contact' => sub {
-    my $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1,
-    });
+    my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
     $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'ghostcontact')");
     $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
@@ -421,9 +388,7 @@ subtest 'Limits: missing contact' => sub {
 # ============================================================================
 
 subtest 'Limits: missing command' => sub {
-    my $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1,
-    });
+    my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
     $dbh_rw->do("INSERT OR IGNORE INTO contact (id, name) VALUES (2, 'nocommand')");
     $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'nocommand')");
@@ -438,9 +403,7 @@ subtest 'Limits: missing command' => sub {
 # ============================================================================
 
 subtest 'Limits: max_messages' => sub {
-    my $dbh_rw = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1,
-    });
+    my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
     $dbh_rw->do("INSERT OR REPLACE INTO contact_attr (id, name, value) VALUES (1, 'max_messages', '1')");
     $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'testcontact')");
@@ -450,9 +413,7 @@ subtest 'Limits: max_messages' => sub {
 
     Munin::Master::Limits::limits_main();
 
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1, ReadOnly => 1,
-    });
+    my $dbh = TestUtils::dbh_ro($dbfile);
 
     my ($num_msgs) = $dbh->selectrow_array(
         "SELECT num_messages FROM notification_tracking WHERE contact_id = 1 AND service_id = 1"
@@ -470,9 +431,7 @@ subtest 'HTML: static generation' => sub {
     require Cwd;
 
     # Insert tmpldir into param table
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-        RaiseError => 1, AutoCommit => 1,
-    });
+    my $dbh = TestUtils::dbh_rw($dbfile);
     my $tmpldir = Cwd::abs_path("web/templates");
     $dbh->do("INSERT OR REPLACE INTO param (name, value) VALUES ('tmpldir', ?)", undef, $tmpldir);
     $dbh->disconnect();
