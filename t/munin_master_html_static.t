@@ -13,9 +13,22 @@ use Test::More;
 use Test::MockModule;
 use File::Temp qw(tempdir);
 use File::Path qw(remove_tree);
+use File::Find qw(find);
 
 use Munin::Common::Logger;
 use Munin::Master::Config;
+
+# Core glob()'s '**' does not recurse -- it behaves like '*', which only
+# matched pages sitting at exactly one directory level. Collect files at
+# any depth so these assertions match their intent. Service pages are
+# nested under their node url (as in production), i.e. two+ levels deep.
+sub rglob {
+	my ($dir, $re) = @_;
+	my @found;
+	return @found unless -d $dir;
+	find({ wanted => sub { push @found, $File::Find::name if /$re/ }, no_chdir => 1 }, $dir);
+	return @found;
+}
 
 # ============================================================================
 # SETUP
@@ -64,7 +77,7 @@ require Munin::Master::Static::HTML;
 subtest 'static HTML creates files' => sub {
 	Munin::Master::Static::HTML::create(0, $site_dir);
 
-	my @htmls = glob("$site_dir/**/*.html");
+	my @htmls = rglob($site_dir, qr/\.html\z/);
 	ok(scalar(@htmls) > 0, "produced HTML files (" . scalar(@htmls) . ")");
 };
 
@@ -74,41 +87,43 @@ subtest 'overview page generated' => sub {
 };
 
 subtest 'service pages generated' => sub {
-	my @services = glob("$site_dir/**/*cpu*.html");
+	my @services = rglob($site_dir, qr/cpu.*\.html\z/);
 	ok(scalar(@services) > 0, "cpu service pages exist");
 };
 
 subtest 'node pages generated' => sub {
-	my @nodes = glob("$site_dir/**/localhost/*.html");
+	# Node pages live at <group>/<node>/<node>.html (url nesting)
+	my @nodes = rglob($site_dir, qr{localhost/[^/]+\.html\z});
 	ok(scalar(@nodes) > 0, "localhost node pages exist");
 };
 
 subtest 'group pages generated' => sub {
+	# Group pages sit at the site root: acme.com.html
 	my @groups = glob("$site_dir/acme.com*.html");
 	ok(scalar(@groups) > 0, "acme.com group pages exist");
 };
 
 subtest 'category pages generated' => sub {
 	# Categories are generated as part of the node/group pages
-	my @htmls = glob("$site_dir/**/*.html");
+	my @htmls = rglob($site_dir, qr/\.html\z/);
 	ok(scalar(@htmls) > 10, "many HTML pages generated");
 };
 
 subtest 'problems page generated' => sub {
 	# Problems page is only generated if there are problems
 	# In test data, we have some warning/critical states
-	my @htmls = glob("$site_dir/**/*.html");
+	my @htmls = rglob($site_dir, qr/\.html\z/);
 	ok(scalar(@htmls) > 0, "HTML pages exist");
 };
 
 subtest 'dynazoom page generated' => sub {
 	# Dynazoom is a special page, may not be in static generation
-	my @htmls = glob("$site_dir/**/*.html");
+	my @htmls = rglob($site_dir, qr/\.html\z/);
 	ok(scalar(@htmls) > 0, "HTML pages exist");
 };
 
 subtest 'HTML files have content' => sub {
-	my @htmls = glob("$site_dir/**/*.html");
+	my @htmls = rglob($site_dir, qr/\.html\z/);
 	my $has_content = 0;
 	for my $html (@htmls) {
 		if (-s $html > 100) {
@@ -120,7 +135,7 @@ subtest 'HTML files have content' => sub {
 };
 
 subtest 'HTML files contain Munin' => sub {
-	my @htmls = glob("$site_dir/**/*.html");
+	my @htmls = rglob($site_dir, qr/\.html\z/);
 	my $has_munin = 0;
 	for my $html (@htmls) {
 		open my $fh, '<', $html or next;

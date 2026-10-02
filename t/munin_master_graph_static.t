@@ -5,6 +5,18 @@ use lib qw(lib t/lib);
 
 use Test::More;
 use Test::MockModule;
+use File::Find qw(find);
+
+# Core glob()'s '**' does not recurse -- it behaves like '*', which only
+# matched pages sitting at exactly one directory level. Collect files at
+# any depth so these assertions match their intent.
+sub rglob {
+	my ($dir, $re) = @_;
+	my @found;
+	return @found unless -d $dir;
+	find({ wanted => sub { push @found, $File::Find::name if /$re/ }, no_chdir => 1 }, $dir);
+	return @found;
+}
 
 require_ok( 'Munin::Master::Static::Graph' );
 require_ok( 'Munin::Master::Config' );
@@ -70,13 +82,13 @@ Munin::Master::Static::Graph::create(0, $dbdir . "/_site");
 
 # Verify PNGs were produced (verifies the STDOUT-redirect plumbing,
 # not rrdtool -- the content is the fixed PNG from the mock)
-my @pngs = glob("$dbdir/_site/**/*.png");
+my @pngs = rglob("$dbdir/_site", qr/\.png\z/);
 ok(scalar(@pngs) > 0, "graph create produced PNG files");
 
 # Verify we have year/month/week/day/hour for at least one service
 my $has_all = 1;
 for my $period (qw(year month week day hour)) {
-	my @found = glob("$dbdir/_site/**/*-$period.png");
+	my @found = rglob("$dbdir/_site", qr/-\Q$period\E\.png\z/);
 	if (scalar(@found) == 0) {
 		$has_all = 0;
 		last;
