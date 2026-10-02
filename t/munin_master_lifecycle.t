@@ -39,7 +39,7 @@ my $dbfile = TestUtils::generate_sample_db($tmpdir);
 # nothing -- needs no tmpldir or t/config/munin.conf parse.
 my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir} = $tmpdir;
-$config->{fork} = TestUtils::cell_fork();
+$config->{fork} = TestUtils::fork_mode();
 
 # ---------------------------------------------------------------------------
 # Helpers

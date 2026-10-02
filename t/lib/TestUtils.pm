@@ -56,31 +56,51 @@ sub setup_test_config {
     return ($config, $dbdir);
 }
 
-# --- test-matrix cell (Makefile FORK/DBDRIVER args -> container env) ---
+# --- test-matrix configuration (Makefile FORK/DBDRIVER args -> container env) ---
 #
 # Every FORK x DBDRIVER combination is runnable; the CI matrix selects
 # the three that map to real deployment shapes. When the env is absent
 # (prove run directly, outside docker) the default is the usual local
 # shape: sqlite + fork.
-my $PG_DBNAME;    # pg cells: current scratch database for this process
+my $PG_DBNAME;    # pg configurations: current scratch database for this process
 
-sub cell_fork {
+sub fork_mode {
     return exists $ENV{MUNIN_TEST_FORK}
         ? ($ENV{MUNIN_TEST_FORK} ? 1 : 0)
         : 1;
 }
 
-sub cell_dbdriver {
+sub db_driver {
     my $d = exists $ENV{MUNIN_TEST_DBDRIVER}
         ? $ENV{MUNIN_TEST_DBDRIVER}
         : "sqlite";
     return $d eq "pg" ? "Pg" : "SQLite";
 }
 
+# Route the production handle path (get_dbh reads env/config, not our
+# memo) and any TestUtils helper to this process's scratch database.
+sub _pg_route {
+    my ($dbname) = @_;
+    $PG_DBNAME = $dbname;
+    $ENV{MUNIN_DBURL}    = $dbname;
+    $ENV{MUNIN_DBDRIVER} = "Pg";
+    $ENV{MUNIN_DBUSER}   = "postgres";
+}
+
+sub _pg_scratch {
+    require TestPG;
+    my $dbname = TestPG::scratch_db();
+    die "TestUtils: pg configuration but no usable postgres server "
+      . "(see t/lib/TestPG.pm; or run without MUNIN_TEST_DBDRIVER=pg)\n"
+        unless $dbname;
+    _pg_route($dbname);
+    return $dbname;
+}
+
 # Build the SampleDB fixture in $dir. Returns the sqlite db path.
 # DB-only tests (limits, lifecycle, handle_request) use this -- no RRDs.
 #
-# pg cells: the fixture goes to a per-process scratch database -- a
+# pg configurations: the fixture goes to a per-process scratch database -- a
 # FRESH one per call, matching sqlite's fresh-file-per-call semantics
 # (tests mutate state between generate calls and expect pristine
 # fixtures; into a populated database SampleDB's ON CONFLICT DO NOTHING
@@ -93,14 +113,10 @@ sub generate_sample_db {
 
     require SampleDB;
 
-    if (cell_dbdriver() eq "Pg") {
-        require TestPG;
-        $PG_DBNAME = TestPG::scratch_db();
-        die "TestUtils: pg cell but no usable postgres server "
-          . "(see t/lib/TestPG.pm; or run without MUNIN_TEST_DBDRIVER=pg)\n"
-            unless $PG_DBNAME;
-        SampleDB::generate_sample_db($PG_DBNAME, "Pg");
-        return $PG_DBNAME;
+    if (db_driver() eq "Pg") {
+        my $dbname = _pg_scratch();
+        SampleDB::generate_sample_db($dbname, "Pg");
+        return $dbname;
     }
 
     my $dbfile = "$dir/datafile.sqlite";
@@ -158,13 +174,13 @@ sub mock_update_get_param {
 sub dbh_ro {
     my ($dbfile) = @_;
     require DBI;
-    # pg cell: route to the process's scratch database. The passed
+    # pg configuration: route to the process's scratch database. The passed
     # $dbfile is sqlite-shaped (tests build it from TestState dirs
     # regardless of backend) and advisory here.
-    if (cell_dbdriver() eq "Pg") {
-        die "TestUtils::dbh_ro: pg cell but no fixture generated yet "
-          . "(call generate_sample_db first)\n"
-            unless $PG_DBNAME;
+    if (db_driver() eq "Pg") {
+        # On demand: tests that build their own schema through
+        # dbh_rw/dbh_ro never call generate_sample_db.
+        _pg_scratch() unless $PG_DBNAME;
         return DBI->connect("dbi:Pg:dbname=$PG_DBNAME", "postgres", undef,
             { RaiseError => 1, ReadOnly => 1 });
     }
@@ -174,10 +190,8 @@ sub dbh_ro {
 sub dbh_rw {
     my ($dbfile) = @_;
     require DBI;
-    if (cell_dbdriver() eq "Pg") {
-        die "TestUtils::dbh_rw: pg cell but no fixture generated yet "
-          . "(call generate_sample_db first)\n"
-            unless $PG_DBNAME;
+    if (db_driver() eq "Pg") {
+        _pg_scratch() unless $PG_DBNAME;
         return DBI->connect("dbi:Pg:dbname=$PG_DBNAME", "postgres", undef,
             { RaiseError => 1 });
     }
@@ -206,9 +220,9 @@ sub generate_test_conf {
     print $fh "rundir  $dir\n";
     print $fh "local_address 127.0.0.1\n";
     print $fh "graph_data_size debug\n";
-    # Cell-driven: the parallel cells exercise the forked update path
+    # Configuration-driven: the parallel configurations exercise the forked update path
     # through the conf, not only through the config singleton.
-    print $fh "fork " . cell_fork() . "\n";
+    print $fh "fork " . fork_mode() . "\n";
     print $fh "\n";
     print $fh "[aesir;alfheim.aesir;aegir.alfheim.aesir]\n";
     print $fh "     address 127.0.0.1\n";

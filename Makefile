@@ -244,12 +244,12 @@ JOBS  ?= $(shell nproc)
 TESTS ?= t/*.t
 PROVE  = prove --shuffle --timer -j$(JOBS) -Iblib/lib -Iblib/arch
 
-# Test-matrix cell selection. Every FORK x DBDRIVER combination is
+# Test-matrix configuration selection. Every FORK x DBDRIVER combination is
 # runnable (e.g. FORK=0 DBDRIVER=pg works locally); the CI matrix
 # simply selects the three that map to real deployment shapes --
 # serial+pgsql is not invalid, just not worth CPU cycles. Default =
 # the usual local shape: sqlite + fork + jobs=nproc. CI pins every
-# cell explicitly. docker-test-matrix sweeps the CI cells locally.
+# configuration explicitly. docker-test-matrix sweeps the CI configurations locally.
 FORK     ?= 1
 DBDRIVER ?= sqlite
 TESTENV   = -e MUNIN_TEST_FORK=$(FORK) -e MUNIN_TEST_DBDRIVER=$(DBDRIVER)
@@ -272,7 +272,7 @@ docker-show-fail:
 docker-lint:
 	$(DOCKER) run --rm -v $(CURDIR):/app munin-dev sh -c 'perl Build.PL && make lint'
 
-# Sweep the CI test matrix locally: the three selected cells. The
+# Sweep the CI test matrix locally: the three selected configurations. The
 # fourth combination (FORK=0 DBDRIVER=pg) is runnable but unselected
 # in CI; invoke docker-test with those args directly if you need it.
 .PHONY: docker-test-matrix

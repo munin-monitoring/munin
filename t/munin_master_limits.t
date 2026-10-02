@@ -134,7 +134,7 @@ my $config = Munin::Master::Config->instance()->{"config"};
 use TestState;
 my $dbdir  = TestState::state_dir();
 $config->{dbdir}  = $dbdir;
-$config->{fork}   = TestUtils::cell_fork();
+$config->{fork}   = TestUtils::fork_mode();
 
 use TestUtils;
 my $dbfile = TestUtils::generate_sample_db($dbdir);

@@ -14,27 +14,27 @@ use TestState;
 
 # The limits test matrix: ONE test body, every deployment shape.
 #
-# The same behavioral assertions run in each cell -- serial/parallel x
+# The same behavioral assertions run in each configuration -- serial/parallel x
 # sqlite/pgsql, minus serial/pgsql (no deployment runs that shape). A
 # correct implementation produces the same outcomes everywhere:
 # evaluation writes state, the send ledger is stable and keyed by
 # service, notifications are delivered, no children leak, FK
-# constraints hold. Cells whose backend is missing (no postgres server)
-# skip cleanly; the assertions never change per cell.
+# constraints hold. Configurations whose backend is missing (no postgres server)
+# skip cleanly; the assertions never change per configuration.
 #
-# The pg cells exercise the real Update::_db_init (schema + Pg
+# The pg configurations exercise the real Update::_db_init (schema + Pg
 # branches), get_dbh's Pg path, and the ON CONFLICT upserts against a
-# real server -- end-to-end, not white-box probes. If a cell fails,
+# real server -- end-to-end, not white-box probes. If a configuration fails,
 # that deployment shape is broken.
 
-# The cells are a SELECTION, not a validity filter: all four
+# The configurations are a SELECTION, not a validity filter: all four
 # FORK x DBDRIVER combinations run -- serial+pgsql is simply unlisted
 # because no deployment shape runs it, so neither this test nor CI
 # spends cycles on it (run it by hand: the machinery supports it).
-# Under a pinned matrix cell (MUNIN_TEST_FORK/MUNIN_TEST_DBDRIVER set
-# by a CI job) only the matching cell runs; without the env (local
+# Under a pinned matrix configuration (MUNIN_TEST_FORK/MUNIN_TEST_DBDRIVER set
+# by a CI job) only the matching configuration runs; without the env (local
 # runs) all three sweep.
-my @CELLS = (
+my @TEST_VARIANTS = (
     { name => "serial/sqlite",   fork => 0, driver => "SQLite" },
     { name => "parallel/sqlite", fork => 1, driver => "SQLite" },
     { name => "parallel/pgsql",  fork => 1, driver => "Pg" },
@@ -48,24 +48,24 @@ my @run = grep {
     && (!$pinned || !defined $ENV{MUNIN_TEST_DBDRIVER}
             || ($ENV{MUNIN_TEST_DBDRIVER} eq "pg" ? "Pg" : "SQLite")
                 eq $_->{driver})
-} @CELLS;
-plan skip_all => "pinned matrix cell is outside the tested selection "
+} @TEST_VARIANTS;
+plan skip_all => "pinned matrix configuration is outside the tested selection "
     . "(run without MUNIN_TEST_FORK/MUNIN_TEST_DBDRIVER to sweep all)"
     if $pinned && !@run;
 
-for my $cell (@run) {
+for my $test_variant (@run) {
     my $t0 = Time::HiRes::time;
-    subtest $cell->{name} => sub {
-        # The cell dimension is environment, not code: fork mode and
+    subtest $test_variant->{name} => sub {
+        # The configuration dimension is environment, not code: fork mode and
         # backend are config/env, the test body is identical.
         my $config = Munin::Master::Config->instance()->{config};
-        $config->{fork} = $cell->{fork};
+        $config->{fork} = $test_variant->{fork};
         # 5 fixture hosts vs 2 slots: PFM queueing is actually
         # exercised, not just "does start() return a pid".
         $config->{max_processes} = 2;
 
         my $fixture;    # sqlite: state dir; pg: scratch dbname
-        if ($cell->{driver} eq "Pg") {
+        if ($test_variant->{driver} eq "Pg") {
             require TestPG;
             $fixture = TestPG::scratch_db();
             plan skip_all => "no usable postgres server "
@@ -76,47 +76,47 @@ for my $cell (@run) {
             $fixture = TestState::state_dir();
         }
 
-        # get_dbh routing: pg cells go through the Pg driver against the
-        # scratch db; sqlite cells must not inherit any ambient env.
+        # get_dbh routing: pg configurations go through the Pg driver against the
+        # scratch db; sqlite configurations must not inherit any ambient env.
         local $ENV{MUNIN_DBURL};
         local $ENV{MUNIN_DBDRIVER};
         local $ENV{MUNIN_DBUSER};
-        if ($cell->{driver} eq "Pg") {
+        if ($test_variant->{driver} eq "Pg") {
             $ENV{MUNIN_DBURL}    = $fixture;
             $ENV{MUNIN_DBDRIVER} = "Pg";
             $ENV{MUNIN_DBUSER}   = "postgres";
         }
 
-        if ($cell->{driver} eq "Pg") {
+        if ($test_variant->{driver} eq "Pg") {
             SampleDB::generate_sample_db($fixture, "Pg");
         }
         else {
             # Direct, not TestUtils::generate_sample_db: that helper
-            # routes on the ambient matrix cell, and this test
-            # arranges its own cells -- a pinned CI env must not steer
-            # the other cells.
+            # routes on the ambient matrix configuration, and this test
+            # arranges its own configurations -- a pinned CI env must not steer
+            # the other configurations.
             SampleDB::generate_sample_db("$fixture/datafile.sqlite");
         }
 
-        _exercise($cell, $fixture);
+        _exercise($test_variant, $fixture);
     };
-    # Wall time per cell, so regressions in a single shape are visible
+    # Wall time per configuration, so regressions in a single shape are visible
     # in every run's output (the harness only reports per-file times).
     diag(sprintf("%s: %.1fs wall (fixture + 2 limits_main runs%s)",
-        $cell->{name}, Time::HiRes::time - $t0,
-        $cell->{driver} eq "Pg" ? " + in-image postgres startup" : ""));
+        $test_variant->{name}, Time::HiRes::time - $t0,
+        $test_variant->{driver} eq "Pg" ? " + in-image postgres startup" : ""));
 }
 
 done_testing();
 
-# Identical assertions for every cell.
+# Identical assertions for every configuration.
 sub _exercise {
-    my ($cell, $fixture) = @_;
+    my ($test_variant, $fixture) = @_;
 
     my $config = Munin::Master::Config->instance()->{config};
     # get_dbh's sqlite fallback is "$dbdir/datafile.sqlite"; the pg
     # path reads MUNIN_DBURL and ignores dbdir entirely.
-    $config->{dbdir} = $fixture unless $cell->{driver} eq "Pg";
+    $config->{dbdir} = $fixture unless $test_variant->{driver} eq "Pg";
 
     # Run 1: transitions fire, notifications flow.
     my $ran = eval { limits_main(); 1 };
@@ -128,7 +128,7 @@ sub _exercise {
     # on pg) -- assertions never read the DB through a special door.
     #
     # Handle discipline: NO test-side handle may stay open while
-    # limits_main runs in a parallel cell. forked children inherit
+    # limits_main runs in a parallel configuration. forked children inherit
     # open DBI handles, and their exit-time DESTROY disconnects them
     # for real -- the server tears down the shared connection and the
     # master's next query dies with "server closed the connection
@@ -169,7 +169,7 @@ sub _exercise {
     is($keyed, $ledger, "every ledger row is keyed by service_id");
     is($bad_sev, 0, "ledger severities are valid message states");
 
-    # 4. No leaked children. Meaningful for the parallel cells (PFM
+    # 4. No leaked children. Meaningful for the parallel configurations (PFM
     # children must be reaped); trivially true for serial -- which is
     # the point: the same expectation everywhere. (If ps is missing the
     # capture is empty and the count is 0.)
@@ -197,7 +197,7 @@ sub _exercise {
     is($ledger2, $ledger, "ledger row count stable across runs");
     cmp_ok($sum2, '>=', $sum1, "repeat sends only update existing rows");
 
-    # 6. FK enforcement is real in every cell: a dangling url->node
+    # 6. FK enforcement is real in every configuration: a dangling url->node
     # reference must be rejected. get_dbh sets the sqlite pragma, pg
     # enforces natively -- same expectation, both drivers.
     my $rw = Munin::Master::Update::get_dbh();

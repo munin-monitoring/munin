@@ -1,6 +1,6 @@
 package TestPG;
 
-# PostgreSQL server support for the pg cells of the test matrix.
+# PostgreSQL server support for the pg configurations of the test matrix.
 #
 # The dev image (Dockerfile.dev) ships a postgresql server with trust
 # auth on local connections. This module starts the cluster when it is
@@ -11,8 +11,8 @@ package TestPG;
 # Skip policy -- the whole one: every entry point returns undef when no
 # usable server exists (outside the dev image, without DBD::Pg, or with
 # a server that refuses to start), and the calling test skips the pg
-# cells. The sqlite cells run everywhere; the pg cells run wherever
-# postgres exists. No test logic differs per cell.
+# configurations. The sqlite configurations run everywhere; the pg configurations run wherever
+# postgres exists. No test logic differs per configuration.
 #
 # Scratch databases are dropped on END when possible. END does not run
 # on SIGTERM (see TestState's notes on the same fact), but the dev
@@ -29,7 +29,7 @@ my @SCRATCH;      # [creator_pid, dbname] pairs, dropped on END by the
 
 END {
     # Pid-guarded, for the same reason as TestState: forked children
-    # (Parallel::ForkManager workers in the parallel cells) inherit
+    # (Parallel::ForkManager workers in the parallel configurations) inherit
     # @SCRATCH and would drop the master's scratch databases when they
     # exit. Only the creating process cleans up.
     for my $db (grep { $_->[0] == $$ } @SCRATCH) {
@@ -79,7 +79,7 @@ sub _available {
 }
 
 # Create a fresh scratch database; undef when no server is available
-# (caller skips the pg cells).
+# (caller skips the pg configurations).
 sub scratch_db {
     return unless _available();
     # Explicit concatenation, not "..._$$_...": that parses as a

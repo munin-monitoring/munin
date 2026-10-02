@@ -78,7 +78,7 @@ my $config = Munin::Master::Config->instance()->{"config"};
 $config->parse_config_from_file($conf_file);
 
 $config->{dbdir} = $temp_dir;
-$config->{fork} = TestUtils::cell_fork();
+$config->{fork} = TestUtils::fork_mode();
 
 Munin::Common::Logger::configure(
 	"output" => "screen",

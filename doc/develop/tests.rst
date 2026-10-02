@@ -123,14 +123,14 @@ Every combination is runnable.  CI selects the three that map to real
 deployment shapes; ``FORK=0 DBDRIVER=pg`` is not *invalid*, it is just
 not worth CPU cycles -- no deployment runs a serial master against
 PostgreSQL.  If you need it locally, the argument works like any
-other.  ``make docker-test-matrix`` sweeps the three CI cells
+other.  ``make docker-test-matrix`` sweeps the three CI configurations
 sequentially.
 
 The defaults are the usual local shape: ``FORK=1``, ``DBDRIVER=sqlite``,
-``JOBS=$(nproc)``.  CI pins every cell explicitly.  The arguments are
+``JOBS=$(nproc)``.  CI pins every configuration explicitly.  The arguments are
 exported into the container as ``MUNIN_TEST_FORK`` and
 ``MUNIN_TEST_DBDRIVER``; test helpers read them (see
-``TestUtils::cell_fork`` / ``cell_dbdriver``).  When you run ``prove``
+``TestUtils::fork_mode`` / ``db_driver``).  When you run ``prove``
 by hand outside docker the env is absent and helpers default to the
 usual shape.
 
@@ -140,7 +140,7 @@ What each dimension exercises:
   ``Munin::Master::Update::_run_workers`` and
   ``Munin::Master::Limits::_evaluate_limits``: children opening their
   own handles, writing state concurrently, and being reaped.  Fork
-  pins in tests go through ``TestUtils::cell_fork()`` instead of
+  pins in tests go through ``TestUtils::fork_mode()`` instead of
   hard-coded ``0``.
 * ``DBDRIVER=pg`` -- the PostgreSQL branches of
   ``Munin::Master::Update::_db_init`` (``SERIAL`` columns, the state
@@ -148,13 +148,13 @@ What each dimension exercises:
   and every ``ON CONFLICT`` upsert against a real server.  Test
   fixtures are generated into per-process scratch databases by
   ``t/lib/TestPG.pm`` (the dev image ships the server; outside the
-  image those cells skip cleanly).
+  image those configurations skip cleanly).
 
 ``t/munin_master_limits_matrix.t`` is the focused version of the same
 idea: one assertion body (state written, ledger stable and keyed by
 service, notifications delivered, no leaked children, FK constraints
-enforced) run against three cells.  Without the matrix env it sweeps
-all three; inside a CI matrix job it runs only the pinned cell.
+enforced) run against three configurations.  Without the matrix env it sweeps
+all three; inside a CI matrix job it runs only the pinned configuration.
 
 
 Test infrastructure (t/lib)
@@ -185,7 +185,7 @@ Shared plumbing; use it instead of copy-pasting setup blocks:
   own extra keys.
 * ``generate_sample_db($dir)`` / ``generate_sample_db_and_rrds($dir)``
   -- build the SampleDB fixture (plus RRD files for render tests).
-  On pg cells the fixture goes to a fresh per-process scratch
+  On pg configurations the fixture goes to a fresh per-process scratch
   database; the return value is whatever you pass to ``dbh_ro`` /
   ``dbh_rw``.
 * ``dbh_ro($dbfile)`` / ``dbh_rw($dbfile)`` -- the only sanctioned way
@@ -193,13 +193,13 @@ Shared plumbing; use it instead of copy-pasting setup blocks:
   moot ``PrintError`` are deliberately omitted; do not re-add.
 * ``generate_test_conf($dir, \@ports)`` -- integration-test munin.conf
   with the ephemeral ports forked test nodes actually bound.  Fork
-  value follows the matrix cell.
+  value follows the matrix configuration.
 * ``mock_update_get_param($config)`` -- returns the
   ``Test::MockModule``; the caller must hold it or the mock dies.
 * ``rglob($dir, $re)`` -- recursive glob via File::Find.  Core perl's
   ``glob('**/*.x')`` does NOT recurse; ``**`` silently degrades to
   ``*``.
-* ``cell_fork()`` / ``cell_dbdriver()`` -- the matrix cell, read from
+* ``fork_mode()`` / ``db_driver()`` -- the matrix configuration, read from
   ``MUNIN_TEST_FORK`` / ``MUNIN_TEST_DBDRIVER``.
 
 What is deliberately NOT factored: ``Logger::configure`` calls (args
@@ -211,12 +211,12 @@ parameters.  Factor by repeated *body*, not by repeated name.
 TestPG
 ------
 
-PostgreSQL support for pg cells.  Starts the in-image cluster if
+PostgreSQL support for pg configurations.  Starts the in-image cluster if
 needed, waits for readiness, hands out ``munin_test_<pid>_<n>``
 scratch databases (pid-suffixed: parallel prove jobs cannot collide),
 drops them at process exit (pid-guarded, like TestState).  Every entry
 point returns undef when no server is usable and the caller skips the
-pg cells -- that is the whole skip policy.
+pg configurations -- that is the whole skip policy.
 
 SampleDB / SampleRRD
 ---------------------
@@ -287,7 +287,7 @@ SQL portability (sqlite and PostgreSQL)
 =======================================
 
 The SQL layer runs on both backends; the suite runs on both, and the
-rules below are what keeps the pg cells green:
+rules below are what keeps the pg configurations green:
 
 * ``x IS NOT NULL`` is 0/1 arithmetic on sqlite but yields booleans on
   pg, and pg has no ``+`` on booleans.  Write
@@ -340,15 +340,15 @@ Devel::Cover mechanics worth knowing:
   ``-select_re`` (regex) filters, with a fall-back-to-all quirk when
   nothing matches.  Verify with ``cover -summary`` after a run.
 
-In CI, coverage is a product of the test matrix: each cell collects
+In CI, coverage is a product of the test matrix: each configuration collects
 runs, a final job gathers them into one ``cover_db/runs/`` (prefix the
-run-file names per cell -- ``<timestamp>.<pid>`` collides across
+run-file names per configuration -- ``<timestamp>.<pid>`` collides across
 containers), reports once over the merged database and uploads to
-Coveralls **once** per workflow run.  Uploading from every cell would
+Coveralls **once** per workflow run.  Uploading from every configuration would
 race: Coveralls treats each upload as the commit's status and the
 last POST wins, so three parallel uploads would flap the published
-number between single-cell values.  The merged report is the union --
-a branch covered in any cell counts as covered.
+number between single-configuration values.  The merged report is the union --
+a branch covered in any configuration counts as covered.
 
 
 Continuous integration
@@ -360,7 +360,7 @@ requests to master:
 * **lint** -- ``make docker-lint``: perlcritic (``.perlcriticrc``)
   over ``lib/`` and ``script/``, shellcheck, codespell, trailing
   whitespace.  Fatal; runs first because it is fast.
-* **test matrix** -- three jobs, one per selected cell
+* **test matrix** -- three jobs, one per selected configuration
   (``JOBS=4 FORK=0 DBDRIVER=sqlite``, ``JOBS=4 FORK=1
   DBDRIVER=sqlite``, ``JOBS=4 FORK=1 DBDRIVER=pg``), each running
   ``make docker-test`` with those arguments.
