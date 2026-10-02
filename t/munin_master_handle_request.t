@@ -4,18 +4,16 @@ use warnings;
 use lib qw(lib t/lib);
 
 use Test::More;
-use File::Temp qw(tempdir);
 use File::Path qw(rmtree);
 
 # Use the existing CGI mock from Static module
 use Munin::Master::Static::CGI;
 
 # Generate fresh test database
-require SampleDB;
 use TestState;
+use TestUtils;
 my $tmpdir = TestState::state_dir();
-my $dbfile = "$tmpdir/datafile.sqlite";
-SampleDB::generate_sample_db($dbfile);
+my $dbfile = TestUtils::generate_sample_data($tmpdir, 0);
 
 # Configure
 require_ok('Munin::Master::Config');

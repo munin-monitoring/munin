@@ -10,37 +10,17 @@ use warnings;
 use lib qw(lib t/lib);
 
 use Test::More;
-use Test::MockModule;
-use File::Temp qw(tempdir);
 use File::Path qw(remove_tree);
-use File::Find qw(find);
+use TestUtils;    # rglob, setup_test_config, generate_sample_data, mock_update_get_param
 
 use Munin::Common::Logger;
 use Munin::Master::Config;
-
-# Core glob()'s '**' does not recurse -- it behaves like '*', which only
-# matched pages sitting at exactly one directory level. Collect files at
-# any depth so these assertions match their intent. Service pages are
-# nested under their node url (as in production), i.e. two+ levels deep.
-sub rglob {
-	my ($dir, $re) = @_;
-	my @found;
-	return @found unless -d $dir;
-	find({ wanted => sub { push @found, $File::Find::name if /$re/ }, no_chdir => 1 }, $dir);
-	return @found;
-}
 
 # ============================================================================
 # SETUP
 # ============================================================================
 
-my $config = Munin::Master::Config->instance()->{"config"};
-$config->parse_config_from_file("t/config/munin.conf");
-
-use TestState;
-my $dbdir = TestState::state_dir();
-$config->{dbdir} = $dbdir;
-$config->{tmpldir} = "web/templates/";
+my ($config, $dbdir) = TestUtils::setup_test_config();
 $config->{staticdir} = "$dbdir/static";
 
 my $site_dir = "$dbdir/_site";
@@ -53,20 +33,10 @@ Munin::Common::Logger::configure(
 );
 
 # Generate sample data
-require SampleRRD;
-require SampleDB;
-
-my $dbfile = "$dbdir/datafile.sqlite";
-SampleDB::generate_sample_db($dbfile);
-SampleRRD::generate_sample_rrds($dbdir);
+my $dbfile = TestUtils::generate_sample_data($dbdir);
 
 # Mock Munin::Master::Update
-my $mock_update = Test::MockModule->new("Munin::Master::Update");
-$mock_update->redefine("get_param", sub {
-	my $param = shift;
-	return $config->{$param} if defined $config->{$param};
-	return undef;
-});
+my $mock_update = TestUtils::mock_update_get_param($config);
 
 # ============================================================================
 # TESTS: Static HTML generation
@@ -77,7 +47,7 @@ require Munin::Master::Static::HTML;
 subtest 'static HTML creates files' => sub {
 	Munin::Master::Static::HTML::create(0, $site_dir);
 
-	my @htmls = rglob($site_dir, qr/\.html\z/);
+	my @htmls = TestUtils::rglob($site_dir, qr/\.html\z/);
 	ok(scalar(@htmls) > 0, "produced HTML files (" . scalar(@htmls) . ")");
 };
 
@@ -87,13 +57,13 @@ subtest 'overview page generated' => sub {
 };
 
 subtest 'service pages generated' => sub {
-	my @services = rglob($site_dir, qr/cpu.*\.html\z/);
+	my @services = TestUtils::rglob($site_dir, qr/cpu.*\.html\z/);
 	ok(scalar(@services) > 0, "cpu service pages exist");
 };
 
 subtest 'node pages generated' => sub {
 	# Node pages live at <group>/<node>/<node>.html (url nesting)
-	my @nodes = rglob($site_dir, qr{localhost/[^/]+\.html\z});
+	my @nodes = TestUtils::rglob($site_dir, qr{localhost/[^/]+\.html\z});
 	ok(scalar(@nodes) > 0, "localhost node pages exist");
 };
 
@@ -105,25 +75,25 @@ subtest 'group pages generated' => sub {
 
 subtest 'category pages generated' => sub {
 	# Categories are generated as part of the node/group pages
-	my @htmls = rglob($site_dir, qr/\.html\z/);
+	my @htmls = TestUtils::rglob($site_dir, qr/\.html\z/);
 	ok(scalar(@htmls) > 10, "many HTML pages generated");
 };
 
 subtest 'problems page generated' => sub {
 	# Problems page is only generated if there are problems
 	# In test data, we have some warning/critical states
-	my @htmls = rglob($site_dir, qr/\.html\z/);
+	my @htmls = TestUtils::rglob($site_dir, qr/\.html\z/);
 	ok(scalar(@htmls) > 0, "HTML pages exist");
 };
 
 subtest 'dynazoom page generated' => sub {
 	# Dynazoom is a special page, may not be in static generation
-	my @htmls = rglob($site_dir, qr/\.html\z/);
+	my @htmls = TestUtils::rglob($site_dir, qr/\.html\z/);
 	ok(scalar(@htmls) > 0, "HTML pages exist");
 };
 
 subtest 'HTML files have content' => sub {
-	my @htmls = rglob($site_dir, qr/\.html\z/);
+	my @htmls = TestUtils::rglob($site_dir, qr/\.html\z/);
 	my $has_content = 0;
 	for my $html (@htmls) {
 		if (-s $html > 100) {
@@ -135,7 +105,7 @@ subtest 'HTML files have content' => sub {
 };
 
 subtest 'HTML files contain Munin' => sub {
-	my @htmls = rglob($site_dir, qr/\.html\z/);
+	my @htmls = TestUtils::rglob($site_dir, qr/\.html\z/);
 	my $has_munin = 0;
 	for my $html (@htmls) {
 		open my $fh, '<', $html or next;

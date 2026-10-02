@@ -4,9 +4,8 @@ use warnings;
 use lib qw(lib t/lib);
 
 use Test::More;
-use Test::MockModule;
+use TestUtils;    # setup_test_config, generate_sample_data, mock_update_get_param
 use CGI;
-use File::Temp qw(tempdir);
 use File::Path qw(remove_tree);
 use DBI;
 use POSIX qw(:sys_wait_h);
@@ -18,13 +17,7 @@ use Munin::Master::Graph;
 # SETUP
 # ============================================================================
 
-my $config = Munin::Master::Config->instance()->{"config"};
-$config->parse_config_from_file("t/config/munin.conf");
-
-use TestState;
-my $dbdir = TestState::state_dir();
-$config->{dbdir} = $dbdir;
-$config->{tmpldir} = "web/templates/";
+my ($config, $dbdir) = TestUtils::setup_test_config();
 
 system("mkdir", "-p", "$dbdir/_site");
 
@@ -34,21 +27,11 @@ Munin::Common::Logger::configure(
 );
 
 # Generate sample data
-require SampleRRD;
-require SampleDB;
-
-my $dbfile = "$dbdir/datafile.sqlite";
-SampleDB::generate_sample_db($dbfile);
-SampleRRD::generate_sample_rrds($dbdir);
+my $dbfile = TestUtils::generate_sample_data($dbdir);
 
 # Mock Munin::Master::Update to use our dbdir
 use Munin::Master::Update;
-my $mock_update = Test::MockModule->new("Munin::Master::Update");
-$mock_update->redefine("get_param", sub {
-	my $param = shift;
-	return $config->{$param} if defined $config->{$param};
-	return undef;
-});
+my $mock_update = TestUtils::mock_update_get_param($config);
 
 my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 	RaiseError => 1,

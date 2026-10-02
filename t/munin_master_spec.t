@@ -11,21 +11,8 @@ use lib qw(lib t/lib);
 use Test::More;
 use Test::Exception;
 use DBI;
-use File::Temp qw(tempdir);
 use File::Path qw(remove_tree);
-use File::Find qw(find);
-
-# Core glob()'s '**' does not recurse -- it behaves like '*', which only
-# matched files sitting at exactly one directory level. Collect files at
-# any depth so these assertions match their intent. Static HTML/graph
-# output mirrors url.path nesting (group/node/service), i.e. 0-2 levels.
-sub rglob {
-    my ($dir, $re) = @_;
-    my @found;
-    return @found unless -d $dir;
-    find({ wanted => sub { push @found, $File::Find::name if /$re/ }, no_chdir => 1 }, $dir);
-    return @found;
-}
+use TestUtils;    # rglob, generate_sample_data, mock_update_get_param
 
 # ============================================================================
 # Deterministic time - no real time() calls during test
@@ -41,16 +28,12 @@ BEGIN {
 # Setup
 # ============================================================================
 
-require SampleDB;
-require SampleRRD;
 require Munin::Master::Config;
 
 use TestState;
 my $tmpdir = TestState::state_dir();
 
-my $dbfile = "$tmpdir/datafile.sqlite";
-SampleDB::generate_sample_db($dbfile);
-SampleRRD::generate_sample_rrds($tmpdir);
+my $dbfile = TestUtils::generate_sample_data($tmpdir);
 
 my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir} = $tmpdir;
@@ -107,7 +90,7 @@ subtest 'SampleDB structure' => sub {
 # ============================================================================
 
 subtest 'SampleRRD structure' => sub {
-    my @rrd_files = rglob($tmpdir, qr/\.rrd\z/);
+    my @rrd_files = TestUtils::rglob($tmpdir, qr/\.rrd\z/);
     ok(scalar @rrd_files > 0, "RRD files created");
 
     my $sample_rrd = $rrd_files[0];
@@ -510,26 +493,20 @@ subtest 'HTML: static generation' => sub {
 
 subtest 'Graph: static generation' => sub {
     require Munin::Master::Static::Graph;
-    require Test::MockModule;
 
-    my $mock = Test::MockModule->new("Munin::Master::Update");
-    $mock->redefine("get_param", sub {
-        my $param = shift;
-        return $config->{$param} if defined $config->{$param};
-        return undef;
-    });
+    my $mock = TestUtils::mock_update_get_param($config);
 
     my $graphdir = "$tmpdir/_graph";
     system("mkdir", "-p", $graphdir);
 
     Munin::Master::Static::Graph::create(0, $graphdir);
 
-    my @pngs = rglob($graphdir, qr/\.png\z/);
+    my @pngs = TestUtils::rglob($graphdir, qr/\.png\z/);
     ok(scalar @pngs > 0, "PNG files generated");
 
     # Check for time period variants
     for my $period (qw(hour day week month year)) {
-        my @found = rglob($graphdir, qr/-\Q$period\E\.png\z/);
+        my @found = TestUtils::rglob($graphdir, qr/-\Q$period\E\.png\z/);
         ok(scalar @found > 0, "generated $period graphs");
     }
 };
