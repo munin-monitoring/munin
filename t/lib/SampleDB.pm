@@ -1,5 +1,6 @@
 #!/usr/bin/perl
-# Generate sample SQLite database for tests.
+# Generate sample database for tests (SQLite by default, Pg for the pg
+# cells of the limits matrix).
 # Replaces committed datafile.sqlite that may be stale.
 
 use strict;
@@ -9,58 +10,54 @@ use DBI;
 package SampleDB;
 
 sub generate_sample_db {
-    my ($dbfile) = @_;
+    my ($dbfile, $driver) = @_;
+    $driver //= "SQLite";
 
     # Raw DBI->connect, not TestUtils::dbh_rw: this module is required BY
     # TestUtils (generate_sample_db does `require SampleDB`), so depending
     # back on TestUtils would be a circular load. SampleDB is the lower-
-    # level fixture builder; TestUtils composes on top of it. RaiseError
-    # is always correct here; AutoCommit is omitted (DBI defaults to on).
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    # level fixture builder; TestUtils composes on top of it.
+    #
+    # Driver-aware: the same fixture body builds the sqlite databases
+    # the render tests use and the pg scratch databases of the limits
+    # matrix. $dbfile is a filename for SQLite and a database name for
+    # Pg. RaiseError is always correct here. AutoCommit off mirrors
+    # production get_dbh (Update.pm): _db_init commits internally, and
+    # one commit at the end covers the data.
+    my $user = $driver eq "Pg" ? "postgres" : "";
+    my $dbh = DBI->connect("dbi:$driver:dbname=$dbfile", $user, undef, {
         RaiseError => 1,
     });
 
-    # Full schema matching Update.pm
-    my $db_serial_type = "INTEGER";
-    $dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS grp (id $db_serial_type PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS node (id $db_serial_type PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR, spoolepoch INTEGER)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS service (id $db_serial_type PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS ds (id $db_serial_type PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR, type VARCHAR DEFAULT 'GAUGE', ordr INTEGER DEFAULT 0, unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS url (
-        path VARCHAR PRIMARY KEY,
-        grp_id INTEGER REFERENCES grp(id),
-        node_id INTEGER REFERENCES node(id),
-        service_id INTEGER REFERENCES service(id),
-        CHECK ((grp_id IS NOT NULL) + (node_id IS NOT NULL) + (service_id IS NOT NULL) = 1)
-    )");
-    $dbh->do("CREATE TABLE IF NOT EXISTS state (ds_id INTEGER REFERENCES ds(id), node_id INTEGER REFERENCES node(id), last_epoch INTEGER, last_value VARCHAR, prev_epoch INTEGER, prev_value VARCHAR, alarm VARCHAR, num_unknowns INTEGER DEFAULT 0, prev_alarm VARCHAR, eval_value VARCHAR, extinfo VARCHAR, CHECK ((ds_id IS NOT NULL) + (node_id IS NOT NULL) = 1))");
-    $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_ds ON state (ds_id)");
-    $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_node ON state (node_id)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS contact (id $db_serial_type PRIMARY KEY, name VARCHAR UNIQUE)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS contact_attr (id INTEGER REFERENCES contact(id), name VARCHAR, value VARCHAR)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS notification_tracking (id $db_serial_type PRIMARY KEY, contact_id INTEGER REFERENCES contact(id), service_id INTEGER REFERENCES service(id), severity VARCHAR, sent_at INTEGER, num_messages INTEGER DEFAULT 0)");
-    $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification_tracking ON notification_tracking (contact_id, service_id)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS override (ds_id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-    $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_override ON override (ds_id, name)");
-    $dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
-    $dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp TIMESTAMPTZ, type VARCHAR, name VARCHAR, duration NUMERIC)");
+    # FK enforcement on, same as production get_dbh -- and in the same
+    # ORDER: the PRAGMA must run while AutoCommit is still on. sqlite
+    # silently ignores foreign_keys changes inside a transaction, and
+    # AutoCommit=>0 at connect time can begin one before the pragma.
+    # (get_dbh sets the PRAGMAs first, then flips AutoCommit.)
+    $dbh->do("PRAGMA foreign_keys=ON") if $driver eq "SQLite";
+    $dbh->{AutoCommit} = 0;
+
+    # Schema from the REAL production creator, not a copy. The test
+    # matrix must exercise Update::_db_init's per-driver branches (SERIAL
+    # vs INTEGER, the state/notification migrations, the grp root row) --
+    # a private copy would only prove the fixture agrees with itself.
+    # Verified superset-compatible before switching: every table this
+    # fixture inserts into exists in _db_init with identical columns.
+    require Munin::Master::Update;
+    Munin::Master::Update::_db_init(undef, $dbh);
 
     # Insert a global default contact
-    $dbh->do("INSERT OR IGNORE INTO param (name, value) VALUES ('contacts', 'testcontact')");
+    $dbh->do("INSERT INTO param (name, value) VALUES ('contacts', 'testcontact') ON CONFLICT DO NOTHING");
 
     # Create a test contact with a safe command
-    $dbh->do("INSERT OR IGNORE INTO contact (id, name) VALUES (1, 'testcontact')");
+    $dbh->do("INSERT INTO contact (id, name) VALUES (1, 'testcontact') ON CONFLICT DO NOTHING");
     # A command that consumes stdin until EOF and exits 0, like a real mailer.
     # /bin/true exits at once instead, which breaks pipe semantics (EPIPE on
     # every write -> refork storm -> zombie pileup). No shell metacharacters:
     # exec() falls back to the shell when it sees any, and the shell would
     # mangle <STDIN> into a redirection from a nonexistent file.
-    $dbh->do("INSERT OR IGNORE INTO contact_attr (id, name, value) VALUES (1, 'command', 'perl -ne1')");
-    $dbh->do("INSERT OR IGNORE INTO contact_attr (id, name, value) VALUES (1, 'text', '\${var:group} :: \${var:host} :: \${var:graph_title} \${var:worst}')");
+    $dbh->do("INSERT INTO contact_attr (id, name, value) VALUES (1, 'command', 'perl -ne1') ON CONFLICT DO NOTHING");
+    $dbh->do("INSERT INTO contact_attr (id, name, value) VALUES (1, 'text', '\${var:group} :: \${var:host} :: \${var:graph_title} \${var:worst}') ON CONFLICT DO NOTHING");
 
     my @hosts = ("localhost", "acme.com", "aesir", "asynjur", "svartalfar");
     my @services = ("cpu", "memory", "disk", "network", "load");
@@ -101,26 +98,34 @@ sub generate_sample_db {
     my $prev_time = $now - 60;
 
     for my $host (@hosts) {
-        my $grp_name = ($host eq "localhost") ? "acme.com" : "";
+        # Group NAME is the leaf of the path chain, like production's
+        # config import names it: a group path "acme.com/localhost" is
+        # the group "localhost" nested under "acme.com" (see
+        # t/config/munin.conf's [aesir;alfheim.aesir] syntax), NOT a
+        # second group named "acme.com". Naming it after the parent
+        # collided under the real schema's r_g_grp (p_id, name) unique
+        # index -- the second insert no-oped and left dangling url/node
+        # FK references (invisible while sqlite ran with FKs off).
+        my $grp_name = $host;
         my $path = ($host eq "localhost") ? "acme.com/$host" : "$host";
 
-        $dbh->do("INSERT OR IGNORE INTO grp (id, p_id, name, path) VALUES (?, 0, ?, ?)",
-            undef, $grp_id, $grp_name || $host, $path);
+        $dbh->do("INSERT INTO grp (id, p_id, name, path) VALUES (?, 0, ?, ?) ON CONFLICT DO NOTHING",
+            undef, $grp_id, $grp_name, $path);
 
         # Insert group into url table
-        $dbh->do("INSERT OR IGNORE INTO url (path, grp_id) VALUES (?, ?)",
+        $dbh->do("INSERT INTO url (path, grp_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
             undef, $path, $grp_id);
 
-        $dbh->do("INSERT OR IGNORE INTO node (id, grp_id, name, path) VALUES (?, ?, ?, ?)",
+        $dbh->do("INSERT INTO node (id, grp_id, name, path) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING",
             undef, $node_id, $grp_id, $host, $path);
 
         # Insert node into url table - use different path than group
         my $node_url_path = "$path/$host";
-        $dbh->do("INSERT OR IGNORE INTO url (path, node_id) VALUES (?, ?)",
+        $dbh->do("INSERT INTO url (path, node_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
             undef, $node_url_path, $node_id);
 
         # Set notify_alias for notification testing
-        $dbh->do("INSERT OR IGNORE INTO node_attr (id, name, value) VALUES (?, 'notify_alias', ?)",
+        $dbh->do("INSERT INTO node_attr (id, name, value) VALUES (?, 'notify_alias', ?) ON CONFLICT DO NOTHING",
             undef, $node_id, "${host}_alias");
 
         my $svc_idx = 0;
@@ -137,23 +142,23 @@ sub generate_sample_db {
             # overruns and returns undef (the 'substr outside of string'
             # warning in html_static.t).
             my $svc_url_path = "$node_url_path/$svc";
-            $dbh->do("INSERT OR IGNORE INTO service (id, node_id, name, path, service_title) VALUES (?, ?, ?, ?, ?)",
+            $dbh->do("INSERT INTO service (id, node_id, name, path, service_title) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
                 undef, $svc_id, $node_id, $svc, $svc_path, "Graph $svc");
 
             # Set graph_title and contacts
-            $dbh->do("INSERT OR IGNORE INTO service_attr (id, name, value) VALUES (?, 'graph_title', ?)",
+            $dbh->do("INSERT INTO service_attr (id, name, value) VALUES (?, 'graph_title', ?) ON CONFLICT DO NOTHING",
                 undef, $svc_id, "Graph $svc");
-            $dbh->do("INSERT OR IGNORE INTO service_attr (id, name, value) VALUES (?, 'contacts', 'testcontact')",
+            $dbh->do("INSERT INTO service_attr (id, name, value) VALUES (?, 'contacts', 'testcontact') ON CONFLICT DO NOTHING",
                 undef, $svc_id);
 
-            $dbh->do("INSERT OR IGNORE INTO url (path, service_id) VALUES (?, ?)",
+            $dbh->do("INSERT INTO url (path, service_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
                 undef, $svc_url_path, $svc_id);
 
             # Add category for this service
             my $category = ($svc eq 'cpu' || $svc eq 'load') ? 'system' :
                           ($svc eq 'memory' || $svc eq 'disk') ? 'storage' :
                           'network';
-            $dbh->do("INSERT OR IGNORE INTO service_categories (id, category) VALUES (?, ?)",
+            $dbh->do("INSERT INTO service_categories (id, category) VALUES (?, ?) ON CONFLICT DO NOTHING",
                 undef, $svc_id, $category);
 
             my $scenario = $service_scenarios[$svc_idx % scalar(@service_scenarios)];
@@ -178,28 +183,28 @@ sub generate_sample_db {
                     $rrd_field_name = "$ds->{name}-$type_id";
                 }
 
-                $dbh->do("INSERT OR IGNORE INTO ds (id, service_id, name, type) VALUES (?, ?, ?, ?)",
+                $dbh->do("INSERT INTO ds (id, service_id, name, type) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING",
                     undef, $ds_id, $svc_id, $ds->{name}, $ds->{type});
 
                 # Always add rrd attrs
-                $dbh->do("INSERT OR IGNORE INTO ds_attr (id, name, value) VALUES (?, ?, ?)",
+                $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
                     undef, $ds_id, "rrd:file", $rrd_file);
-                $dbh->do("INSERT OR IGNORE INTO ds_attr (id, name, value) VALUES (?, ?, ?)",
+                $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
                     undef, $ds_id, "rrd:field", $rrd_field_name);
 
                 # Add warning/critical if defined
                 if (defined $ds->{warn}) {
-                    $dbh->do("INSERT OR IGNORE INTO ds_attr (id, name, value) VALUES (?, 'warning', ?)",
+                    $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (?, 'warning', ?) ON CONFLICT DO NOTHING",
                         undef, $ds_id, $ds->{warn});
                 }
                 if (defined $ds->{crit}) {
-                    $dbh->do("INSERT OR IGNORE INTO ds_attr (id, name, value) VALUES (?, 'critical', ?)",
+                    $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (?, 'critical', ?) ON CONFLICT DO NOTHING",
                         undef, $ds_id, $ds->{crit});
                 }
 
                 # Add extinfo for testing
                 if ($ds->{name} eq "idle") {
-                    $dbh->do("INSERT OR IGNORE INTO ds_attr (id, name, value) VALUES (?, 'extinfo', 'idle CPU usage')",
+                    $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (?, 'extinfo', 'idle CPU usage') ON CONFLICT DO NOTHING",
                         undef, $ds_id);
                 }
 
@@ -226,7 +231,7 @@ sub generate_sample_db {
                     $alarm = "warning";
                 }
 
-                $dbh->do("INSERT OR IGNORE INTO state (ds_id, node_id, last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns) VALUES (?, NULL, ?, ?, ?, ?, ?, ?)",
+                $dbh->do("INSERT INTO state (ds_id, node_id, last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns) VALUES (?, NULL, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
                     undef, $ds_id, $now, $last_val, $prev_time, $prev_val, $alarm, $num_unk);
 
                 $ds_id++;
@@ -238,6 +243,7 @@ sub generate_sample_db {
         $grp_id++;
     }
 
+    $dbh->commit();
     $dbh->disconnect();
 }
 
