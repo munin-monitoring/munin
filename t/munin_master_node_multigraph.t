@@ -9,7 +9,6 @@ use warnings;
 use lib qw(lib t/lib);
 
 use Test::More;
-use Test::MockModule;
 use Time::HiRes qw(gettimeofday);
 use IO::Socket::INET;
 
@@ -20,24 +19,15 @@ use IO::Socket::INET;
 require Munin::Master::Config;
 require Munin::Master::Node;
 
-# ============================================================================
-# HELPER: Create mock Node with canned responses
-# ============================================================================
-
-sub create_mock_node {
-    my ($config_lines) = @_;
-
-    # Create a blessed hash that looks like a Node
-    my $node = bless {
-        host    => 'localhost',
-        address => '127.0.0.1',
-        port    => 4949,
-        _config_lines => $config_lines,
-        _written      => [],
-    }, 'Munin::Master::Node';
-
-    # Mock the internal methods
+# Mock the internal methods ONCE, after the require. Both subs read only
+# from $self (no closure over create_mock_node's lexicals), so installing
+# them per node was pure redundancy -- and every re-install re-triggered
+# Perl's 'Subroutine redefined' warning, since the real subs are already
+# loaded. The overwrite below is intentional, hence the warning pragma;
+# scoped block keeps `no strict 'refs'` local.
+{
     no strict 'refs';
+    no warnings 'redefine';
     *{'Munin::Master::Node::_node_write_single'} = sub {
         my ($self, $line) = @_;
         push @{$self->{_written}}, $line;
@@ -47,8 +37,24 @@ sub create_mock_node {
         my ($self) = @_;
         return $self->{_config_lines};
     };
+}
 
-    return $node;
+# ============================================================================
+# HELPER: Create mock Node with canned responses
+# ============================================================================
+
+sub create_mock_node {
+    my ($config_lines) = @_;
+
+    # Create a blessed hash that looks like a Node. The internal methods
+    # are mocked once at load time (above).
+    return bless {
+        host    => 'localhost',
+        address => '127.0.0.1',
+        port    => 4949,
+        _config_lines => $config_lines,
+        _written      => [],
+    }, 'Munin::Master::Node';
 }
 
 # ============================================================================
