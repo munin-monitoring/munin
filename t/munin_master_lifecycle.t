@@ -77,23 +77,23 @@ sub set_value {
 
 sub insert_ds {
     my ($dbh, %o) = @_;
-    $dbh->do("INSERT OR IGNORE INTO ds (id, service_id, name, type) VALUES (?, ?, ?, ?)",
+    $dbh->do("INSERT INTO ds (id, service_id, name, type) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING",
         undef, $o{id}, $o{svc_id}, $o{name}, $o{type});
-    $dbh->do("INSERT OR IGNORE INTO ds_attr (id, name, value) VALUES (?, 'warning', ?)",
+    $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (?, 'warning', ?) ON CONFLICT DO NOTHING",
         undef, $o{id}, $o{warn}) if defined $o{warn};
-    $dbh->do("INSERT OR IGNORE INTO ds_attr (id, name, value) VALUES (?, 'critical', ?)",
+    $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (?, 'critical', ?) ON CONFLICT DO NOTHING",
         undef, $o{id}, $o{crit}) if defined $o{crit};
-    $dbh->do("INSERT OR IGNORE INTO state (ds_id, node_id, last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns) VALUES (?, NULL, ?, ?, ?, ?, ?, ?)",
+    $dbh->do("INSERT INTO state (ds_id, node_id, last_epoch, last_value, prev_epoch, prev_value, alarm, num_unknowns) VALUES (?, NULL, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
         undef, $o{id}, $NOW + $TICK, $o{value}, $NOW + $TICK - 60, $o{prev} // "U", $o{alarm} // "ok", 0);
 }
 
 sub insert_svc {
     my ($dbh, %o) = @_;
-    $dbh->do("INSERT OR IGNORE INTO service (id, node_id, name, path, service_title) VALUES (?, ?, ?, ?, ?)",
+    $dbh->do("INSERT INTO service (id, node_id, name, path, service_title) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
         undef, $o{id}, $o{node_id}, $o{name}, $o{path}, $o{title});
-    $dbh->do("INSERT OR IGNORE INTO service_attr (id, name, value) VALUES (?, 'contacts', 'testcontact')",
+    $dbh->do("INSERT INTO service_attr (id, name, value) VALUES (?, 'contacts', 'testcontact') ON CONFLICT DO NOTHING",
         undef, $o{id});
-    $dbh->do("INSERT OR IGNORE INTO url (path, service_id) VALUES (?, ?)",
+    $dbh->do("INSERT INTO url (path, service_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
         undef, $o{path}, $o{id});
 }
 
@@ -106,6 +106,14 @@ sub remove_svc {
     }
     $dbh->do("DELETE FROM ds WHERE service_id = ?", undef, $svc_id);
     $dbh->do("DELETE FROM url WHERE service_id = ?", undef, $svc_id);
+    # Dependents before the service row: FKs are enforced on pg (and on
+    # sqlite through get_dbh), so everything referencing service(id) --
+    # service_attr, service_categories, and the notification_tracking
+    # send ledger -- must go first. sqlite's default FK-off used to
+    # mask the wrong order.
+    $dbh->do("DELETE FROM service_attr WHERE id = ?", undef, $svc_id);
+    $dbh->do("DELETE FROM service_categories WHERE id = ?", undef, $svc_id);
+    $dbh->do("DELETE FROM notification_tracking WHERE service_id = ?", undef, $svc_id);
     $dbh->do("DELETE FROM service WHERE id = ?", undef, $svc_id);
 }
 
@@ -194,8 +202,8 @@ $TICK = 900;
 
 {
     my $dbh = dbh_rw();
-    $dbh->do("INSERT OR IGNORE INTO grp (id, name, path) VALUES (6, 'niflheim', 'niflheim')");
-    $dbh->do("INSERT OR IGNORE INTO node (id, grp_id, name, path) VALUES (6, 6, 'niflheim', 'niflheim')");
+    $dbh->do("INSERT INTO grp (id, name, path) VALUES (6, 'niflheim', 'niflheim') ON CONFLICT DO NOTHING");
+    $dbh->do("INSERT INTO node (id, grp_id, name, path) VALUES (6, 6, 'niflheim', 'niflheim') ON CONFLICT DO NOTHING");
 
     my $svc_id = $base_svc + 1;
     insert_svc($dbh, id => $svc_id, node_id => 6, name => "dns",

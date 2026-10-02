@@ -20,9 +20,13 @@ close $tempfh;
 
 my $dbh = TestUtils::dbh_rw($tempfile);
 
+# Portable serial: sqlite auto-assigns INTEGER PRIMARY KEY (rowid
+# alias -- the AUTOINCREMENT keyword is sqlite-only); pg needs SERIAL.
+my $serial = $dbh->{Driver}->{Name} eq "Pg" ? "SERIAL" : "INTEGER";
+
 # Create schema matching production
 $dbh->do("CREATE TABLE IF NOT EXISTS service (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id $serial PRIMARY KEY,
     node_id INTEGER NOT NULL,
     name VARCHAR NOT NULL
 )");
@@ -33,7 +37,7 @@ $dbh->do("CREATE TABLE IF NOT EXISTS service_attr (
     PRIMARY KEY (id, name)
 )");
 $dbh->do("CREATE TABLE IF NOT EXISTS ds (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id $serial PRIMARY KEY,
     service_id INTEGER REFERENCES service(id),
     name VARCHAR NOT NULL,
     ordr INTEGER DEFAULT 0
@@ -49,12 +53,27 @@ $dbh->do("CREATE TABLE IF NOT EXISTS service_categories (
     category VARCHAR NOT NULL,
     PRIMARY KEY (id, category)
 )");
+# grp and node must exist BEFORE url/state: pg validates REFERENCES
+# targets at CREATE time, sqlite tolerates missing ones silently
+# (production _db_init creates them first for the same reason).
+$dbh->do("CREATE TABLE IF NOT EXISTS grp (
+    id $serial PRIMARY KEY,
+    p_id INTEGER,
+    name VARCHAR,
+    path VARCHAR
+)");
+$dbh->do("CREATE TABLE IF NOT EXISTS node (
+    id $serial PRIMARY KEY,
+    grp_id INTEGER REFERENCES grp(id),
+    name VARCHAR,
+    path VARCHAR
+)");
 $dbh->do("CREATE TABLE IF NOT EXISTS url (
     path VARCHAR PRIMARY KEY,
     grp_id INTEGER REFERENCES grp(id),
     node_id INTEGER REFERENCES node(id),
     service_id INTEGER REFERENCES service(id),
-    CHECK ((grp_id IS NOT NULL) + (node_id IS NOT NULL) + (service_id IS NOT NULL) = 1)
+    CHECK (CAST((grp_id IS NOT NULL) AS INTEGER) + CAST((node_id IS NOT NULL) AS INTEGER) + CAST((service_id IS NOT NULL) AS INTEGER) = 1)
 )");
 $dbh->do("CREATE TABLE IF NOT EXISTS state (
     ds_id INTEGER REFERENCES ds(id),
@@ -62,7 +81,7 @@ $dbh->do("CREATE TABLE IF NOT EXISTS state (
     last_epoch INTEGER, last_value VARCHAR,
     prev_epoch INTEGER, prev_value VARCHAR,
     alarm VARCHAR, num_unknowns INTEGER DEFAULT 0,
-    CHECK ((ds_id IS NOT NULL) + (node_id IS NOT NULL) = 1)
+    CHECK (CAST((ds_id IS NOT NULL) AS INTEGER) + CAST((node_id IS NOT NULL) AS INTEGER) = 1)
 )");
 $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_ds ON state (ds_id)");
 $dbh->do("CREATE TABLE IF NOT EXISTS override (
