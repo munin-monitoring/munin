@@ -359,7 +359,9 @@ requests to master:
 
 * **lint** -- ``make docker-lint``: perlcritic (``.perlcriticrc``)
   over ``lib/`` and ``script/``, shellcheck, codespell, trailing
-  whitespace.  Fatal; runs first because it is fast.
+  whitespace.  Fatal, and a serial gate: the test matrix waits for it
+  -- a lint failure must not spend three covered matrix jobs
+  (~20 minutes each) discovering what lint already knew.
 * **test matrix** -- three jobs, one per selected configuration
   (``JOBS=4 FORK=0 DBDRIVER=sqlite``, ``JOBS=4 FORK=1
   DBDRIVER=sqlite``, ``JOBS=4 FORK=1 DBDRIVER=pg``), each running

@@ -53,10 +53,12 @@ jobs:
           name: munin-dev-image
           path: /tmp/munin-dev.tar.gz
 
-  # Lint first -- fast, fails early before the expensive test matrix.
-  # Job id kept as "build" so existing branch-protection checks keep
-  # matching.
-  build:
+  # Lint -- the serial gate for everything below: fast and
+  # deterministic, so a lint failure must not spend three covered
+  # matrix jobs (~20 min each) discovering what lint already knew.
+  # NB: renaming a job renames its status check; if branch protection
+  # lists a required check by the old name, update the repo settings.
+  lint:
     needs: dev-image
     runs-on: ubuntu-latest
     steps:
@@ -80,7 +82,7 @@ jobs:
   # matrix; `make docker-test-matrix` is its local dev mirror (same
   # configurations and arguments, sequential).
   test:
-    needs: dev-image
+    needs: [dev-image, lint]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
