@@ -948,3 +948,200 @@ stash-compare at last commit ......... all four warnings (Limits:549,
    regressions): Limits.pm:549 `$dbdir` undef in `_compute_cdef_value`,
    Graph.pm:765 `$tpng` / 869 `$legend` uninitialized in the DEBUG
    timing/legend paths.
+
+---
+
+## Session Continuation 5: factoring shared test setup into TestUtils (2026-10-02)
+
+Session 4 left three byte-identical `rglob` subs in the test suite (one
+per file that needed them). User asked to factor that into a test utils
+module and survey what else could be factored. The survey found
+considerably more duplication than just rglob, and the cleanup surfaced
+a pile of dead imports left behind by earlier sessions.
+
+### What We Did
+
+1. **Surveyed for duplication by repeated body, not by name.** Grepped
+   for the candidates that had accumulated across the SampleDB/TestState
+   work:
+   - `rglob` sub: 3 byte-identical copies (graph_static.t,
+     html_static.t, spec.t).
+   - `get_param` mock closure: 5 byte-identical copies (graph.t, html.t,
+     graph_static.t, html_static.t, spec.t).
+   - config-setup block (`Config->instance` + `parse_config_from_file` +
+     `TestState::state_dir` + dbdir/tmpldir): 4 identical (graph.t,
+     html.t, graph_static.t, html_static.t).
+   - SampleDB+SampleRRD generation: 9 files; a further 4 use
+     SampleDB-only (no RRDs).
+   - `Logger::configure`: 14 sites; `parse_config_from_file`: 8 sites --
+     surveyed, deliberately not factored (see Decisions).
+
+2. **Created `t/lib/TestUtils.pm`** with four helpers, each documented
+   with its call-site example:
+   - `rglob($dir, $re)` -- recursive glob via File::Find (core
+     `glob('**/*.x')` does not recurse).
+   - `setup_test_config()` -- parse t/config/munin.conf, allocate a
+     TestState dbdir, set tmpldir; returns `($config, $dbdir)` so
+     callers add extra keys (staticdir, fork) on top.
+   - `generate_sample_data($dir, $with_rrds)` -- SampleDB (+ SampleRRD
+     unless `$with_rrds` is 0); returns the db path.
+   - `mock_update_get_param($config)` -- installs the get_param mock,
+     returns the Test::MockModule so the caller holds it in scope.
+
+3. **Converted 9 test files** to the helpers. Net **-122 lines** across
+   those files (40 insertions, 162 deletions).
+
+4. **Cleaned up dead imports** the factoring exposed (straggler
+   discipline: grep for what became unused after removing code):
+   - `use File::Temp qw(tempdir);` in **8 files** -- `tempdir()` was
+     never called in any of them; the tests had migrated to
+     `TestState::state_dir()` in an earlier session but the import was
+     left behind. Proven dead: no `tempdir(` call and no `File::Temp->`
+     usage anywhere (the only `->new(` hits were CGI and
+     Test::MockModule).
+   - `use Test::MockModule;` in html_static.t -- its only use (the
+     get_param mock) moved to TestUtils.
+   - `require SampleDB;` in spec.t -- its only call moved to
+     `generate_sample_data`.
+
+5. **Verification:** `perl -c` on all 10 touched files (all OK), then
+   the full CI-equivalent `make docker-test`.
+
+### What We Learned
+
+#### Technical
+
+1. **Factor by repeated body, not by name.** The strongest duplication
+   signal was byte-identical sub/closure bodies (rglob x3, get_param
+   mock x5). A one-line repeated call (`Logger::configure`) is not worth
+   a helper; a 6-line identical sub is.
+2. **Dead imports accumulate across sessions.** The 8 dead
+   `File::Temp qw(tempdir)` imports were residue of the earlier
+   TestState migration: the code that used `tempdir()` was replaced,
+   but the import was never removed. Every refactor that replaces a
+   module's calls should grep for that module's now-unused imports.
+3. **A helper that returns the mock keeps ownership explicit.**
+   `mock_update_get_param` returns the Test::MockModule because the mock
+   dies with the object -- if the helper created and discarded it, the
+   mock would vanish before the test ran. Documenting that in the pod
+   prevents a future "simplify" that breaks it.
+4. **Positional boolean args are opaque at call sites.**
+   `generate_sample_data($tmpdir, 0)` -- the `0` means "no RRDs" but
+   reads as a mystery. Noted as a design smell; a named param or split
+   functions would read better. Left as-is this session (mechanical
+   change, not worth the churn), flagged for later.
+5. **What *not* to factor matters as much as what to.**
+   `Logger::configure` (args vary: info vs error, and some tests depend
+   on the level), `parse_config_from_file` (4 standard-conf sites
+   factor; the other 4 parse a *generated* `$conf_file` with different
+   keys -- forcing them into one helper needs an option bag that
+   obscures more than it dedups), DBI connect boilerplate (3-way
+   variance: dbname DSN vs dburl vs `$ENV{MUNIN_DBURL}`, rw vs ro).
+   Unifying these would trade visible variance for hidden parameters.
+
+#### Process
+
+1. **The straggler rule paid off immediately.** AGENTS.md's "grep for
+   stragglers after removing code, functions, or exports" found three
+   dead imports in the very files just edited. Without it they'd have
+   shipped.
+2. **One multi-part edit misfired; reading the result caught it.** The
+   html_static.t import-block edit dropped `use File::Path
+   qw(remove_tree);` (still needed -- the test calls
+   `remove_tree($dbdir)`) and left a duplicate `use TestUtils;` because
+   TestUtils had been added earlier in the same file. Reading the file
+   back after the edit surfaced both; a follow-up edit fixed it. Rule:
+   after an edit that touches adjacent import lines, read the block back
+   before moving on.
+3. **Mechanical multi-site replacement belongs in `perl -pi`, not the
+   edit tool.** Eight byte-identical `= rglob(` call sites and eight
+   identical `use File::Temp` lines: the edit tool requires unique
+   matches, so a scoped `perl -pi -e` substitution was the right tool --
+   but only after confirming the pattern was truly identical everywhere
+   (grep first).
+4. **Full suite even for mechanical refactors.** The change touched 10
+   files of test infrastructure; the suite is the only thing that proves
+   the helpers behave identically to the code they replaced. 184s is
+   cheap insurance.
+
+### What We Decided
+
+1. **TestUtils.pm holds exactly four helpers** (rglob,
+   setup_test_config, generate_sample_data, mock_update_get_param). One
+   module for shared test plumbing, alongside the existing
+   TestState/TestTLS/SampleDB/SampleRRD -- not folded into TestState,
+   whose charter is state directories.
+2. **setup_test_config returns `($config, $dbdir)`** rather than a
+   fully-built config, so callers add their own extra keys (staticdir,
+   fork, dburl) on top. A single mega-helper with every optional key
+   would obscure each test's actual config.
+3. **generate_sample_data keeps the `$with_rrds` positional** for now
+   (mechanical churn not worth it); named param or split functions is
+   the follow-up.
+4. **Not factored: Logger::configure, parse_config_from_file
+   (generated-conf sites), DBI connect boilerplate** -- variance is real
+   and visible; unifying would hide it behind parameters (see Learnings
+   #5).
+
+### Rules Added
+
+- **Grep for now-unused imports after moving code into a helper** -- the
+  straggler check. Dead imports ship silently otherwise.
+- **After an edit touching adjacent import lines, read the block back**
+  -- caught a dropped `use File::Path` and a duplicate `use TestUtils`
+  this session.
+- **Factor by repeated body, not by name** -- byte-identical 6-line
+  subs/closures are the signal; repeated one-line calls are not.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `t/lib/TestUtils.pm` | NEW: rglob, setup_test_config, generate_sample_data, mock_update_get_param |
+| `t/munin_master_graph.t` | use TestUtils (config, data, mock); drop dead File::Temp + Test::MockModule |
+| `t/munin_master_html.t` | same as graph.t |
+| `t/munin_master_graph_static.t` | use TestUtils (rglob, config, data, mock); drop File::Find + File::Temp |
+| `t/munin_master_html_static.t` | same as graph_static.t; drop dead Test::MockModule + File::Temp |
+| `t/munin_master_spec.t` | use TestUtils (rglob, data, mock); drop File::Find + File::Temp + dead require SampleDB |
+| `t/munin_master_limits.t` | use TestUtils::generate_sample_data($dir, 0); drop File::Temp |
+| `t/munin_master_lifecycle.t` | same as limits.t |
+| `t/munin_master_handle_request.t` | same as limits.t |
+| `t/munin_master_graph_html_helpers.t` | same as limits.t |
+
+### Test Results
+
+```
+perl -c all 10 touched files ................. OK
+
+full make docker-test ....................... PASS 33 files, 490 tests,
+    184s wall at shuffle -j4.
+    (Graph.pm $tpng/$legend + UpdateWorker 'no such table: node'
+    warnings are the pre-existing set proven non-regressions by the
+    Session-4 stash-compare.)
+```
+
+### Commits
+
+| Commit | Subject |
+|--------|---------|
+| b69af8d72 | test: factor shared setup into TestUtils |
+
+### Next Steps
+
+Carried forward unchanged from Session 4 (none affected by this
+refactor):
+1. (optional, scope-cut) graph_static cmdline assertions + 1%
+   real-render canary.
+2. Reap budget tuning (1s WNOHANG is a guess).
+3. CI coverage budget decision.
+4. Write contention under real fork=1 load.
+5. Pre-existing warnings: Limits.pm:549, Graph.pm:765/869.
+
+New this session:
+6. **generate_sample_data's `$with_rrds` positional** -- switch to a
+   named param or split into `generate_sample_db` /
+   `generate_sample_db_and_rrds` for call-site readability.
+7. **Survey the rest of t/ for factoring candidates** -- the survey
+   covered the SampleDB/TestState-heavy tests; update_worker/rrdcached/
+   spoolfetch tests have their own node-fixture boilerplate that may
+   factor similarly (not examined this session).
