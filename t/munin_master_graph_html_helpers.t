@@ -4,7 +4,6 @@ use warnings;
 use lib qw(lib t/lib);
 
 use Test::More;
-use File::Temp qw(tempdir);
 use File::Path qw(rmtree);
 
 # Test Graph.pm and HTML.pm helper functions
@@ -21,11 +20,10 @@ Munin::Common::Logger::configure(
 );
 
 # Generate fresh test database
-require SampleDB;
 use TestState;
+use TestUtils;
 my $tmpdir = TestState::state_dir();
-my $dbfile = "$tmpdir/datafile.sqlite";
-SampleDB::generate_sample_db($dbfile);
+my $dbfile = TestUtils::generate_sample_data($tmpdir, 0);
 
 # Configure to use our temp database
 my $config = Munin::Master::Config->instance()->{config};

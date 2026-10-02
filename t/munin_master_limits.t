@@ -5,7 +5,6 @@ use lib qw(lib t/lib);
 
 use Test::More;
 use DBI;
-use File::Temp qw(tempdir);
 use File::Path qw(remove_tree);
 use Time::HiRes;
 
@@ -135,9 +134,8 @@ my $dbdir  = TestState::state_dir();
 $config->{dbdir}  = $dbdir;
 $config->{fork}   = 0;
 
-use SampleDB;
-my $dbfile = "$dbdir/datafile.sqlite";
-SampleDB::generate_sample_db($dbfile);
+use TestUtils;
+my $dbfile = TestUtils::generate_sample_data($dbdir, 0);
 
 # Run limits_main
 limits_main();

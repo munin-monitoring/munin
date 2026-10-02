@@ -5,29 +5,12 @@ use lib qw(lib t/lib);
 
 use Test::More;
 use Test::MockModule;
-use File::Find qw(find);
-
-# Core glob()'s '**' does not recurse -- it behaves like '*', which only
-# matched pages sitting at exactly one directory level. Collect files at
-# any depth so these assertions match their intent.
-sub rglob {
-	my ($dir, $re) = @_;
-	my @found;
-	return @found unless -d $dir;
-	find({ wanted => sub { push @found, $File::Find::name if /$re/ }, no_chdir => 1 }, $dir);
-	return @found;
-}
+use TestUtils;    # rglob, setup_test_config, generate_sample_data, mock_update_get_param
 
 require_ok( 'Munin::Master::Static::Graph' );
 require_ok( 'Munin::Master::Config' );
 
-my $config = Munin::Master::Config->instance()->{"config"};
-$config->parse_config_from_file("t/config/munin.conf");
-
-use TestState;
-my $dbdir = TestState::state_dir();
-$config->{dbdir} = $dbdir;
-$config->{tmpldir} = "web/templates/";
+my ($config, $dbdir) = TestUtils::setup_test_config();
 
 system("mkdir", "-p", "$dbdir/_site");
 
@@ -37,19 +20,9 @@ Munin::Common::Logger::configure(
 );
 
 # Generate sample RRDs and DB at test time
-require SampleRRD;
-require SampleDB;
+my $dbfile = TestUtils::generate_sample_data($dbdir);
 
-my $dbfile = "$dbdir/datafile.sqlite";
-SampleDB::generate_sample_db($dbfile);
-SampleRRD::generate_sample_rrds($dbdir);
-
-my $mock_update = Test::MockModule->new("Munin::Master::Update");
-$mock_update->redefine("get_param", sub {
-	my $param = shift;
-	return $config->{$param} if defined $config->{$param};
-	return undef;
-});
+my $mock_update = TestUtils::mock_update_get_param($config);
 
 # Mock RRDs::graph: log every call and write a fixed PNG instead of
 # rendering. The DB is synthetic and deterministic, so the command lines
@@ -82,13 +55,13 @@ Munin::Master::Static::Graph::create(0, $dbdir . "/_site");
 
 # Verify PNGs were produced (verifies the STDOUT-redirect plumbing,
 # not rrdtool -- the content is the fixed PNG from the mock)
-my @pngs = rglob("$dbdir/_site", qr/\.png\z/);
+my @pngs = TestUtils::rglob("$dbdir/_site", qr/\.png\z/);
 ok(scalar(@pngs) > 0, "graph create produced PNG files");
 
 # Verify we have year/month/week/day/hour for at least one service
 my $has_all = 1;
 for my $period (qw(year month week day hour)) {
-	my @found = rglob("$dbdir/_site", qr/-\Q$period\E\.png\z/);
+	my @found = TestUtils::rglob("$dbdir/_site", qr/-\Q$period\E\.png\z/);
 	if (scalar(@found) == 0) {
 		$has_all = 0;
 		last;

@@ -10,7 +10,6 @@ use lib qw(lib t/lib);
 
 use Test::More;
 use DBI;
-use File::Temp qw(tempdir);
 use File::Path qw(remove_tree);
 
 # ============================================================================
@@ -27,16 +26,15 @@ BEGIN {
 # Setup
 # ============================================================================
 
-require SampleDB;
 require Munin::Master::Config;
 require Munin::Master::Limits;
 
 Munin::Common::Logger::configure(output => 'screen', level => 'error');
 
 use TestState;
+use TestUtils;
 my $tmpdir = TestState::state_dir();
-my $dbfile = "$tmpdir/datafile.sqlite";
-SampleDB::generate_sample_db($dbfile);
+my $dbfile = TestUtils::generate_sample_data($tmpdir, 0);
 
 my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir} = $tmpdir;
