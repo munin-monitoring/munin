@@ -1757,3 +1757,215 @@ New this session:
    `breadcrumb-b41c2547464aa6cf01faa9f396d093efd46c80c7` may carry more
    unmerged work; review or delete both breadcrumb branches once their
    provenance is confirmed.
+
+---
+
+## Session Continuation 10: the test matrix -- serial/parallel x sqlite/pgsql (2026-10-02)
+
+Branch: `feat/test-matrix`. Prompted by coverage gaps the user named
+explicitly: `limits_startup()` untested, the Parallel::ForkManager
+path in `_evaluate_limits()` never exercised, the pg path in
+Update.pm untested. User asked whether a 2x2 matrix made sense,
+refined it to three cells (serial+pgsql "doesn't make sense in real
+life"), and set the design constraint that shaped everything: **the
+matrix must work seamlessly -- no cell-specific tests for what are all
+valid conditions**. One test body, N environments; a correct
+implementation satisfies the same outcomes everywhere.
+
+### What We Did
+
+1. **Postgres in the dev image** (`Dockerfile.dev`, own layer after the
+   cached apt/cpanm layers). Trust auth on local connections --
+   disposable test container. First sed pass missed `local all
+   postgres` (only `local all all` matched), so root->postgres over the
+   socket failed peer auth; fixed to all `local all` + `host all`
+   lines. CI runs the same image, so the pg cell activates there with
+   no workflow change.
+
+2. **`t/lib/TestPG.pm`**: starts the in-image cluster if down, waits
+   for readiness, hands out `munin_test_<pid>_<n>` scratch databases.
+   Skip policy is the whole module: every entry point returns undef
+   when no server is usable and the calling cell skips. END cleanup is
+   pid-guarded (see finds).
+
+3. **SampleDB became the uniform fixture**: driver parameter (SQLite
+   default, Pg), schema from the REAL `Update::_db_init` instead of a
+   private copy, `INSERT OR IGNORE` -> `ON CONFLICT DO NOTHING`,
+   AutoCommit off + one commit (mirroring get_dbh), PRAGMA order fixed
+   (below), group names = leaf of the path chain (below). Verified
+   from first principles on both engines: identical counts (grp 6,
+   node 5, service 25, ds 375, url 35, state 375), zero dangling FKs,
+   dangling inserts rejected by both.
+
+4. **`t/munin_master_limits_matrix.t`**: one `_exercise()` body, 12
+   assertions, three cells (`serial/sqlite`, `parallel/sqlite`,
+   `parallel/pgsql`; max_processes=2 vs 5 hosts so PFM queueing is
+   real). Assertions: limits_main completes; state written; alarm mix
+   identical across cells; ledger delivered and EVERY row keyed by
+   service_id (the unbounded-growth guard); severities valid; zero
+   zombie children after wait_all_children; run-2 ledger row count
+   stable (repeat sends update existing rows -- throttled, not
+   suppressed, per the default always_send critical,warning);
+   FK-enforced dangling insert rejected (through get_dbh, the
+   production door). pg cells route via MUNIN_DBURL/DBDRIVER/DBUSER
+   env; sqlite cells explicitly clear ambient env.
+
+5. **`t/munin_master_limits_startup.t`**: every variable limits_startup
+   touches is lexical, so all behavioral: --help/--version subprocess
+   contracts (exit 0 + text), root guard (exit 1 + "Aborting", live
+   only when running as root), --config parse into the Config
+   singleton, and --force proven end-to-end -- contact always_send
+   pinned empty makes the steady state deterministic (run 2 frozen),
+   --force must strictly increase sends (run 3).
+
+### What We Learned (the finds -- all fixed at root cause)
+
+1. **`_db_init` had never successfully run on PostgreSQL** since the
+   FK-schema work. Three independent sqlite-isms: (a) url/state CHECK
+   constraints do `(x IS NOT NULL) + (y IS NOT NULL)` -- sqlite
+   evaluates to 0/1 arithmetic, pg yields booleans with no `+`
+   operator; CAST(... AS INTEGER) works on both. (b) The state
+   migration used `ALTER TABLE ... ADD COLUMN IF EXISTS` -- MariaDB
+   syntax; pg has none. Both engines now check existence first
+   (information_schema / PRAGMA) and ALTER only when missing. (c)
+   Per-driver branches read `$ENV{MUNIN_DBDRIVER}`/config instead of
+   the handle -- a pg handle could take the sqlite PRAGMA path. The
+   handle is the truth: `$dbh->{Driver}->{Name}` (fixed in
+   _db_init and _db_import_config; get_dbh legitimately keeps env --
+   env decides how to CONNECT).
+2. **SampleDB's private schema had drifted**: no `r_g_grp (p_id, name)`
+   unique index, so two groups named `acme.com` coexisted. With the
+   real schema the second insert no-oped and url/node rows dangled --
+   invisible while sqlite ran FKs-off, fatal on pg. Root cause of the
+   naming: munin config paths (`[aesir;alfheim.aesir]`) are nested
+   group chains, and production names groups by LEAF. The fixture gave
+   the nested group its parent's name. Fix: name = leaf (localhost),
+   paths untouched. `graph_html_helpers.t` asserted "5 groups: acme.com
+   x2" -- **the test had encoded the fixture bug**; expectations
+   corrected. Ledger count in the matrix went 20 -> 25: the acme.com
+   host's data had been silently dropped all along.
+3. **PRAGMA foreign_keys is silently ignored inside a transaction**.
+   SampleDB's connect set AutoCommit=>0 in the connect attrs, so the
+   pragma no-oped and FKs stayed off even after "enabling" them --
+   proven by a probe whose raw connection also had FKs off (the probe
+   itself was the symptom; the fix is pragma-before-AutoCommit-off,
+   same order as get_dbh).
+4. **END cleanup runs in forked children.** PFM workers inherit test
+   helper state and clean up on exit: TestState's END deleted the
+   master's state dirs (phase 3: "unable to open database file");
+   TestPG's unguarded END would drop the master's DATABASE. Both
+   helpers now pid-guard their END blocks. This is the same class of
+   bug twice in one session -- END-based cleanup and forked tests do
+   not mix without a pid guard.
+5. **Never hold DBI handles open across a forking call.** The matrix's
+   assertion handle ($chk, opened before run 1) was inherited by PFM
+   children; their exit-time DESTROY disconnected it FOR REAL -- the
+   server tears down the shared connection and the master's next query
+   dies with "server closed the connection unexpectedly" (pg log
+   clean: the server never died). Production limits follows this rule
+   already (no handle open across phase-2 forks); the test now
+   brackets every run with open/assert/close. A killed backend from
+   an inherited handle would look identical to a server crash -- the
+   clean pg log is what pointed away from the server.
+6. **Two vocabularies by design**: state alarms are lowercase
+   (ok/warning/critical/unknown); the ledger stores MESSAGE severity,
+   the worst-state words (OK/WARNING/CRITICAL/UNKNOWN). Assertions
+   must use the right one per table.
+7. **Repeat sends are throttled, not suppressed**: default
+   always_send (critical,warning) means every service with a matching
+   alarm resends every run; num_messages increments (resets on
+   transition). The invariant worth asserting is ledger row-count
+   stability, not a frozen counter sum.
+8. **`"..._$$_..."` parses as a scalar-ref deref of $_** (undef -> "Can't
+   use an undefined value as a SCALAR reference"), not as pid+suffix.
+   Build such strings with explicit concatenation.
+9. **prove rejects a planless file even when every assertion passes**
+   (startup.t shipped without done_testing(): 11/11 ok, exit 254).
+
+### What We Decided
+
+1. **Three cells**: serial/sqlite, parallel/sqlite, parallel/pgsql.
+   serial/pgsql dropped -- no deployment shape runs it.
+2. **Seamless by construction**: one assertion body; the cell dimension
+   is environment (config fork flag + DB env), never test logic. Skip
+   = the cell's backend unavailable (TestPG returns undef).
+3. **Fixture schema comes from production code** (_db_init), not a
+   private copy -- drift had hidden a real bug and a test had baked
+   the bug in.
+4. **Handle-based driver detection** in schema code; env only where
+   env decides the connection (get_dbh).
+5. **Commit granularity for bisect** (5 commits): dev-image postgres;
+   _db_init pg portability; TestState pid-guard; SampleDB uniform
+   fixture (+helpers-test expectations); TestPG + matrix + startup.
+
+### Rules Added
+
+- **No DBI handle may be open across a forking call** -- children
+  inherit handles and their exit-time DESTROY disconnects/rolls back
+  shared state. Open, work, close, around every fork.
+- **END-based cleanup in test helpers must be pid-guarded** -- forked
+  children run END too and will clean up the master's resources.
+- **Test fixtures must build schema through the production path** -- a
+  private schema copy drifts, hides production bugs, and invites tests
+  to encode the drift as expectation.
+- **Connection-behavior PRAGMAs run before the transaction starts** --
+  sqlite silently ignores foreign_keys changes inside a txn.
+- **Ask the handle which driver it is** (`$dbh->{Driver}->{Name}`),
+  not the ambient env, in code that operates on a given handle.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile.dev` | postgresql server layer + trust auth on local connections |
+| `t/lib/TestPG.pm` | NEW: in-image cluster start, scratch databases, pid-guarded END, skip-if-unavailable |
+| `t/lib/TestState.pm` | END cleanup pid-guarded (children no longer delete the master's dirs) |
+| `t/lib/SampleDB.pm` | driver param; schema via real _db_init; ON CONFLICT DO NOTHING; pragma order; leaf group naming |
+| `t/munin_master_limits_matrix.t` | NEW: one body, 3 cells, 12 identical assertions, per-cell skip |
+| `t/munin_master_limits_startup.t` | NEW: limits_startup first principles (CLI contracts, root guard, config parse, --force behavioral) |
+| `t/munin_master_graph_html_helpers.t` | group-name expectations corrected (fixture bug encoded there) |
+| `lib/Munin/Master/Update.pm` | _db_init/_db_import_config pg portability + handle-based driver detection |
+
+### Test Results
+
+```
+fixture probe (both engines) ..... identical counts, 0 dangling FKs,
+                                    dangling inserts rejected on both
+matrix solo ...................... 3 cells x 12 assertions, all green,
+                                    exit 0 (ledger 20 -> 25 rows after
+                                    the group-naming fix)
+full make docker-test ............ PASS 35 files, 504 tests, 245s
+make docker-lint ................. exit 0, 0 perlcritic findings
+```
+
+### Commits (this session)
+
+| Commit | Subject |
+|--------|---------|
+| a5b7da2b2 | build: ship postgresql server in the dev image |
+| 442552b6a | fix: make _db_init actually run on PostgreSQL |
+| a4c9c647a | test: pid-guard TestState's END cleanup |
+| 1825b7310 | test: uniform SampleDB fixture on the real schema |
+| ac6a23630 | test: limits matrix (3 cells) + limits_startup first principles |
+
+### Next Steps
+
+Carried forward unchanged:
+1. (optional, scope-cut) graph_static cmdline assertions + 1%
+   real-render canary.
+2. Reap budget tuning (1s WNOHANG is a guess).
+3. CI coverage budget decision.
+4. Write contention under real fork=1 load -- note: the matrix's
+   parallel cells now run this shape on every suite run; sqlite held
+   up at max_processes=2. Worth re-probing at higher fan-out.
+5. Pre-existing warnings (3 sets): Limits.pm:549, Graph.pm:765/869,
+   update_worker_crud.t `no such table: node`.
+6. Second breadcrumb branch unexamined (see Session 9).
+
+New this session:
+7. **`_db_stats`'s `TO_TIMESTAMP` pg branch is still untested** --
+   limits never writes stats rows; only an update cycle against pg
+   would exercise it. If an update-path pg cell is ever wanted, the
+   matrix pattern extends directly (TestPG + env routing).
+8. **PR description needs updating** -- the branch now carries the
+   matrix work (5 commits) beyond the earlier scope.
