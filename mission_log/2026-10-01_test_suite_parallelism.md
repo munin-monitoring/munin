@@ -785,3 +785,166 @@ with hardcoded path assumptions -- a real change, deferred on purpose.
 | 89d5f5339 | fix: stop print_version_and_exit redefinition warning in Limits.pm |
 | 5fea59bb9 | build: skip .pi/ agent-harness output in MANIFEST.SKIP |
 | 29563dd12 | docs: log graph_static.t mock session + two straggler fixes |
+| d667ff189 | docs: record two follow-up investigations (TestState no-op, HTML.pm root cause) |
+
+---
+
+## Session Continuation 4: SampleDB url nesting -- the HTML.pm:812 fix (2026-10-02)
+
+Continuation 3 root-caused the `substr outside of string` warning to the
+SampleDB fixture (service urls not nested under node urls) and deferred
+the fix as "a real change." User chose to do it. This session implements
+it, and the work turns up a second latent bug that had been hiding
+behind the first.
+
+### What We Did
+
+1. **Confirmed the production invariant before touching anything.**
+   `_db_url` (UpdateWorker.pm:246) prefixes every child path with its
+   parent's url: `_db_url("service", $service_id, $plugin, "node",
+   $node_id)` (line 472) makes `service.url.path = node.url.path + "/" +
+   plugin`. SampleDB built service paths from the group-level `$path`
+   (`"$path/$svc"`), so the service was never under its node -- the
+   `substr($_url, 1+length($base_path))` in `_get_params_services`
+   overran and returned undef.
+
+2. **Found that production never populates `service.path`.**
+   UpdateWorker.pm:376 does `INSERT INTO service (node_id, name)` -- no
+   path column. So SampleDB writing a path into `service.path` is itself
+   non-production behavior. Checked the only two readers: HTML.pm:702's
+   `s.path` is a **derived-table alias** (`LEFT JOIN (SELECT ... u_s.path
+   AS path ...) AS s`) so it resolves to the *url* path, not the column;
+   Graph.pm:982's `s.path` IS the real column but only as an optional
+   alias-match fallback (`s.name = ? OR s.path = ?`) that is dead in
+   production (column always NULL). And lifecycle.t:269 queries
+   `service WHERE path = 'svartalfar/load'` -- a direct read of the
+   column that constrains the fix.
+
+3. **Split the two concerns** rather than nesting both. Kept `$svc_path`
+   (group-level) in the `service.path` column for lifecycle.t; wrote the
+   new node-nested `$svc_url_path = "$node_url_path/$svc"` into the `url`
+   table where HTML.pm reads it. `rrd:file` left untouched, so RRD
+   resolution (`File::Spec->catfile($dbdir, rrd_file)`) still matches
+   where SampleRRD wrote the files.
+
+4. **The fix exposed a second latent bug.** First run: graph_static.t and
+   html_static.t each failed 2 tests. Probe (mkdir two-level tree, run
+   `glob("**/*.png")`): **core Perl glob does NOT recurse -- `**`
+   degenerates to `*`** (matched `a/f1.png`, not `a/b/f2.png`). The globs
+   had passed *by accident* on the old flat layout (aesir-family service
+   pages sat at exactly one directory level). Nesting deepened the `_site`
+   output by one level, so the non-recursive globs matched nothing.
+
+5. **Fixed the globs to match their intent** -- replaced `glob("**/*.x")`
+   with an `rglob()` File::Find helper in three tests: graph_static.t,
+   html_static.t, and spec.t (spec.t also had the latent `**/*.rrd` and
+   `**/*.png` bugs). html_static.t was a near-full rewrite (several
+   `**/*.html` sites were byte-identical, so targeted edits could not
+   address them uniquely).
+
+6. **spec.t:17 was caught ONLY by the full suite.** My targeted 4-test
+   run (lifecycle, html_static, graph_static, html) passed; the
+   CI-equivalent `make docker-test` caught `Graph: static generation`
+   failing on the same non-recursive glob. This is the project rule
+   "local pass != CI pass" earning its keep -- spec.t was not in my
+   subset.
+
+7. **Proved warning provenance by stash-compare.** The full-suite output
+   carried `Limits.pm:549`, `HTML.pm:812`, `Graph.pm:765` (`$tpng`), and
+   `Graph.pm:869` (`$legend`) warnings. Rather than assume, stashed the
+   changes and re-ran the 4 warning-emitting tests at the last commit:
+   **all four fire in the baseline too** -- none introduced here. And
+   HTML.pm:812 fires heavily in the baseline but is *gone* with the fix,
+   confirming the fix does what it claims. (The baseline graph.t also
+   prints `valid_path: acme.com/localhost/cpu`; with the fix it is
+   `acme.com/localhost/localhost/cpu` -- direct evidence of the nesting.)
+
+### What We Learned
+
+1. **Core Perl `glob('**/*.x')` does not recurse.** `**` silently
+   degenerates to `*`. Verified by probe, not docs. For "any depth" use
+   `File::Find` (or `bsd_glob` with the right flags). This bug was latent
+   in three tests and only surfaced when the fixture got *more correct*.
+2. **A correct fixture fix can expose latent test bugs that passed by
+   accident.** The globs were always wrong; the flat url layout was
+   masking them. Making the data match production pulled the rug out.
+3. **Targeted test runs miss regressions.** spec.t:17 failed only in the
+   full suite -- it wasn't in the 4-test subset. The CI-equivalent full
+   run before commit is non-negotiable (project rule, and it caught a
+   real failure here).
+4. **Stash-compare is the definitive way to prove warning provenance.**
+   "I didn't touch that file" is a hypothesis; re-running the same tests
+   at the parent commit with the changes stashed is proof. It also
+   doubled as positive confirmation of the fix (812 gone with, present
+   without).
+5. **`service.path` is legacy; `url.path` is the real consumer.**
+   Production never writes `service.path`; every HTML/Graph/Static query
+   joins `u.path`. When a fixture writes both from one variable, the
+   invariant that matters is the url one -- but a test reading the
+   legacy column (lifecycle.t) forces you to keep both, not collapse
+   them.
+
+### What We Decided
+
+1. **Nest the service `url.path` under the node; leave `service.path`
+   group-level.** Production-faithful where it matters (the url table),
+   and lifecycle.t:269 keeps working untouched. Nesting both would have
+   broken that test for no benefit -- the column is dead in production.
+2. **Fix the test globs, not the fixture depth.** The globs' *intent* was
+   "any depth"; they were buggy. Reverting the nesting to satisfy a
+   non-recursive glob would enshrine the bug.
+3. **rglob() as a local helper per test file** (not a shared t/lib
+   module) -- three small self-contained copies, consistent with the
+   tests' existing style.
+
+### Files Changed
+
+| File | Purpose |
+|------|---------|
+| `t/lib/SampleDB.pm` | split `$svc_path` (service.path column, group-level) from `$svc_url_path` (url table, node-nested); rrd:file untouched |
+| `t/munin_master_graph_static.t` | rglob() replaces non-recursive `**/*.png` globs |
+| `t/munin_master_html_static.t` | rglob() replaces `**/*.html` / `**/*cpu*.html` / `**/localhost/*.html`; near-full rewrite (identical lines) |
+| `t/munin_master_spec.t` | rglob() replaces `**/*.rrd` and `**/*.png` globs (Part 2 + Part 17) |
+
+### Test Results
+
+```
+targeted 4-test run (post-fix) ....... ok 80 tests, 121s
+    (lifecycle, html_static, graph_static, html)
+
+full make docker-test ............... FAIL: spec.t:17 (Graph: static
+    generation) -- non-recursive glob; NOT in the 4-test subset.
+    Also surfaced pre-existing Limits.pm:549 / Graph.pm:765+869 warnings.
+
+full make docker-test (post-rglob) ... PASS 33 files, 490 tests, 201s
+    wall at shuffle -j4.
+
+stash-compare at last commit ......... all four warnings (Limits:549,
+    HTML:812, Graph:765, Graph:869) present in baseline -> pre-existing,
+    none introduced here. HTML:812 fires in baseline, gone with fix.
+    valid_path: acme.com/localhost/cpu (baseline) ->
+    acme.com/localhost/localhost/cpu (fixed) = nesting evidence.
+```
+
+### Commits
+
+| Commit | Subject |
+|--------|---------|
+| 5b1446128 | test: nest SampleDB service urls under nodes; fix non-recursive globs |
+
+### Next Steps
+
+1. ~~Fix SampleDB url nesting~~ -- **done** (this session).
+2. **(optional, scope-cut) Restore the stronger graph_static
+   assertions** -- per-arg cmdline pattern + 1% real-render canary. XS
+   mock + `original()` proven; straightforward if wanted later.
+3. **Reap budget tuning** -- 1s WNOHANG is a guess; real SMTP mailers
+   take 2-5s and would WARN every cycle.
+4. **CI coverage budget decision** -- parallel+fixed select still ~10-15
+   min.
+5. **Write contention under real fork=1 load** -- deliberately not
+   optimized; minimize locked timings later, or advise PostgreSQL.
+6. **Pre-existing warnings** (out of scope here, proven not to be
+   regressions): Limits.pm:549 `$dbdir` undef in `_compute_cdef_value`,
+   Graph.pm:765 `$tpng` / 869 `$legend` uninitialized in the DEBUG
+   timing/legend paths.
