@@ -11,9 +11,13 @@ package SampleDB;
 sub generate_sample_db {
     my ($dbfile) = @_;
 
+    # Raw DBI->connect, not TestUtils::dbh_rw: this module is required BY
+    # TestUtils (generate_sample_db does `require SampleDB`), so depending
+    # back on TestUtils would be a circular load. SampleDB is the lower-
+    # level fixture builder; TestUtils composes on top of it. RaiseError
+    # is always correct here; AutoCommit is omitted (DBI defaults to on).
     my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
         RaiseError => 1,
-        AutoCommit => 1,
     });
 
     # Full schema matching Update.pm

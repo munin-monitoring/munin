@@ -34,6 +34,8 @@ my $tmpdir = TestState::state_dir();
 
 my $dbfile = TestUtils::generate_sample_db_and_rrds($tmpdir);
 
+# Not setup_test_config(): runs limits_main inline (fork=0) and renders
+# nothing -- needs no tmpldir or t/config/munin.conf parse.
 my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir} = $tmpdir;
 $config->{fork} = 0;

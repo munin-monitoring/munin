@@ -25,6 +25,8 @@ use TestUtils;
 my $tmpdir = TestState::state_dir();
 my $dbfile = TestUtils::generate_sample_db($tmpdir);
 
+# Not setup_test_config(): needs dburl + MUNIN_DBURL env (the code under
+# test reads the DSN from env), not tmpldir.
 # Configure to use our temp database
 my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir} = $tmpdir;

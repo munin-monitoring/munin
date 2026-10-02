@@ -35,6 +35,9 @@ my $config = $config_obj->{config};
 use TestState;
 $config->{dbdir} = TestState::state_dir();
 
+# Not setup_test_config(): parses a generated group/host conf from a
+# string to exercise config import, and overrides get_dbh -- the shared
+# t/config/munin.conf has no groups to import.
 # Parse a test config with groups and hosts
 my $test_config = <<'EOF';
 dbdir /var/lib/munin
@@ -74,7 +77,12 @@ my $update = bless {
     config => $config,
 }, 'Munin::Master::Update';
 
-# Override get_dbh to use our temp DB
+# Override get_dbh to use our temp DB. Raw DBI->connect, NOT
+# TestUtils::dbh_rw: this must faithfully mock production's get_dbh
+# (Update.pm:128-136), which sets AutoCommit 0 by default and honors
+# $is_read_only / MUNIN_DB_AUTOCOMMIT. Reproducing that contract here is
+# the point -- a test helper's connection defaults would hide a
+# divergence between this mock and real update runs.
 no warnings 'redefine';
 *Munin::Master::Update::get_dbh = sub {
     my ($is_read_only) = @_;

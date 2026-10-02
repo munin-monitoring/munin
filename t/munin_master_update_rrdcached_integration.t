@@ -195,6 +195,9 @@ ok(-w $sockpath, "rrdcached socket file is writable");
 # SETUP: Munin config
 # ============================================================================
 
+# Not setup_test_config(): generates its own conf with the ephemeral
+# ports the forked test nodes actually bound -- t/config/munin.conf's
+# fixed ports would collide.
 my $conf_file = "$temp_dir/munin.conf";
 open my $fh, '>', $conf_file or die "Cannot write $conf_file: $!";
 
