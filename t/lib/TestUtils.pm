@@ -13,6 +13,8 @@ package TestUtils;
 #                            from the Config singleton
 #   dbh_ro / dbh_rw       -- read-only / read-write DBI handles for a
 #                            test sqlite db
+#   generate_test_conf    -- integration-test munin.conf with ephemeral
+#                            ports for forked test nodes
 
 use strict;
 use warnings;
@@ -124,6 +126,52 @@ sub dbh_rw {
     my ($dbfile) = @_;
     require DBI;
     return DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1 });
+}
+
+# Generate the integration-test munin.conf with the ephemeral ports the
+# forked test nodes actually bound. All four dirs (dbdir/htmldir/logdir/
+# rundir) point at $dir; $ports is an arrayref of 3 ports. Returns the
+# conf file path.
+#
+# NOT used by update_rrdcached_integration.t: that test needs separate
+# html/run dirs, an rrdcached_socket line, and loop-generated group/host
+# nodes -- folding it in would need an option bag that obscures more than
+# it dedups.
+#
+#   my $conf_file = TestUtils::generate_test_conf($temp_dir, \@ports);
+sub generate_test_conf {
+    my ($dir, $ports) = @_;
+
+    my $conf_file = "$dir/munin.conf";
+    open my $fh, '>', $conf_file or die "Cannot write $conf_file: $!";
+    print $fh "dbdir   $dir\n";
+    print $fh "htmldir $dir\n";
+    print $fh "logdir  $dir\n";
+    print $fh "rundir  $dir\n";
+    print $fh "local_address 127.0.0.1\n";
+    print $fh "graph_data_size debug\n";
+    print $fh "fork 0\n";
+    print $fh "\n";
+    print $fh "[aesir;alfheim.aesir;aegir.alfheim.aesir]\n";
+    print $fh "     address 127.0.0.1\n";
+    print $fh "     port $ports->[0]\n";
+    print $fh "\n";
+    print $fh "[asynjur;asgard.asynjur;alaisiagae.asgard.asynjur]\n";
+    print $fh "     address 127.0.0.1\n";
+    print $fh "     port $ports->[1]\n";
+    print $fh "\n";
+    print $fh "[svartalfar;jotunheim.svartalfar;astrild.jotunheim.svartalfar]\n";
+    print $fh "     address 127.0.0.1\n";
+    print $fh "     port $ports->[2]\n";
+    print $fh "\n";
+    print $fh "[localhost]\n";
+    print $fh "     port $ports->[0]\n";
+    print $fh "\n";
+    print $fh "[testing.acme.com]\n";
+    print $fh "     port $ports->[1]\n";
+    close $fh;
+
+    return $conf_file;
 }
 
 1;

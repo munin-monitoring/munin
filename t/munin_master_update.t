@@ -65,36 +65,10 @@ unless ($all_ready) {
 
 # Generate config with actual ports
 use TestState;
+use TestUtils;
 $temp_dir = TestState::state_dir();
 
-my $conf_file = "$temp_dir/munin.conf";
-open my $fh, '>', $conf_file or die "Cannot write $conf_file: $!";
-print $fh "dbdir   $temp_dir\n";
-print $fh "htmldir $temp_dir\n";
-print $fh "logdir  $temp_dir\n";
-print $fh "rundir  $temp_dir\n";
-print $fh "local_address 127.0.0.1\n";
-print $fh "graph_data_size debug\n";
-print $fh "fork 0\n";
-print $fh "\n";
-print $fh "[aesir;alfheim.aesir;aegir.alfheim.aesir]\n";
-print $fh "     address 127.0.0.1\n";
-print $fh "     port $ports[0]\n";
-print $fh "\n";
-print $fh "[asynjur;asgard.asynjur;alaisiagae.asgard.asynjur]\n";
-print $fh "     address 127.0.0.1\n";
-print $fh "     port $ports[1]\n";
-print $fh "\n";
-print $fh "[svartalfar;jotunheim.svartalfar;astrild.jotunheim.svartalfar]\n";
-print $fh "     address 127.0.0.1\n";
-print $fh "     port $ports[2]\n";
-print $fh "\n";
-print $fh "[localhost]\n";
-print $fh "     port $ports[0]\n";
-print $fh "\n";
-print $fh "[testing.acme.com]\n";
-print $fh "     port $ports[1]\n";
-close $fh;
+my $conf_file = TestUtils::generate_test_conf($temp_dir, \@ports);
 
 # Not setup_test_config(): generates its own conf with the ephemeral
 # ports the forked test nodes actually bound -- t/config/munin.conf's
