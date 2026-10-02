@@ -38,7 +38,7 @@ my $dbfile = TestUtils::generate_sample_db_and_rrds($tmpdir);
 # nothing -- needs no tmpldir or t/config/munin.conf parse.
 my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir} = $tmpdir;
-$config->{fork} = 0;
+$config->{fork} = TestUtils::fork_mode();
 
 Munin::Common::Logger::configure(
     output => 'screen',
@@ -216,7 +216,7 @@ subtest 'Limits: override threshold' => sub {
     my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
     # Add override to change warning threshold
-    $dbh_rw->do("INSERT OR REPLACE INTO override (ds_id, name, value) VALUES (1, 'warning', '30')");
+    $dbh_rw->do("INSERT INTO override (ds_id, name, value) VALUES (1, 'warning', '30') ON CONFLICT (ds_id, name) DO UPDATE SET value = excluded.value");
     $dbh_rw->disconnect();
 
     # Re-run limits
@@ -242,7 +242,7 @@ subtest 'Limits: unknown_limit' => sub {
     my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
     # Set custom unknown_limit=1 for ds_id=5
-    $dbh_rw->do("INSERT OR REPLACE INTO ds_attr (id, name, value) VALUES (5, 'unknown_limit', '1')");
+    $dbh_rw->do("INSERT INTO ds_attr (id, name, value) VALUES (5, 'unknown_limit', '1') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
     # Clear any existing override to ensure clean state
     $dbh_rw->do("DELETE FROM override WHERE ds_id = 5");
     $dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE ds_id = 5");
@@ -377,7 +377,7 @@ subtest 'Limits: recovery tracking' => sub {
 subtest 'Limits: missing contact' => sub {
     my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
-    $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'ghostcontact')");
+    $dbh_rw->do("INSERT INTO service_attr (id, name, value) VALUES (1, 'contacts', 'ghostcontact') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
     $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
     $dbh_rw->disconnect();
 
@@ -392,8 +392,8 @@ subtest 'Limits: missing contact' => sub {
 subtest 'Limits: missing command' => sub {
     my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
-    $dbh_rw->do("INSERT OR IGNORE INTO contact (id, name) VALUES (2, 'nocommand')");
-    $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'nocommand')");
+    $dbh_rw->do("INSERT INTO contact (id, name) VALUES (2, 'nocommand') ON CONFLICT DO NOTHING");
+    $dbh_rw->do("INSERT INTO service_attr (id, name, value) VALUES (1, 'contacts', 'nocommand') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
     $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
     $dbh_rw->disconnect();
 
@@ -407,9 +407,9 @@ subtest 'Limits: missing command' => sub {
 subtest 'Limits: max_messages' => sub {
     my $dbh_rw = TestUtils::dbh_rw($dbfile);
 
-    $dbh_rw->do("INSERT OR REPLACE INTO contact_attr (id, name, value) VALUES (1, 'max_messages', '1')");
-    $dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'testcontact')");
-    $dbh_rw->do("INSERT OR REPLACE INTO notification_tracking (contact_id, service_id, severity, num_messages) VALUES (1, 1, 'warning', 1)");
+    $dbh_rw->do("INSERT INTO contact_attr (id, name, value) VALUES (1, 'max_messages', '1') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
+    $dbh_rw->do("INSERT INTO service_attr (id, name, value) VALUES (1, 'contacts', 'testcontact') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
+    $dbh_rw->do("INSERT INTO notification_tracking (contact_id, service_id, severity, num_messages) VALUES (1, 1, 'warning', 1) ON CONFLICT (contact_id, service_id) DO UPDATE SET severity = excluded.severity, num_messages = excluded.num_messages");
     $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
     $dbh_rw->disconnect();
 
@@ -435,7 +435,7 @@ subtest 'HTML: static generation' => sub {
     # Insert tmpldir into param table
     my $dbh = TestUtils::dbh_rw($dbfile);
     my $tmpldir = Cwd::abs_path("web/templates");
-    $dbh->do("INSERT OR REPLACE INTO param (name, value) VALUES ('tmpldir', ?)", undef, $tmpldir);
+    $dbh->do("INSERT INTO param (name, value) VALUES ('tmpldir', ?) ON CONFLICT (name) DO UPDATE SET value = excluded.value", undef, $tmpldir);
     $dbh->disconnect();
 
     my $htmldir = "$tmpdir/_html";

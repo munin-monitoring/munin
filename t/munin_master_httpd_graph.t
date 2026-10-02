@@ -20,8 +20,16 @@ use constant {
 
 my @child_pids;
 my $temp_dir;
+my $TEST_PID = $$;    # END cleanup runs only in this process
 
 END {
+	# Pid-guarded: forked update workers inherit this END block
+	# (finish() -> exit() runs END in the child).  Unguarded, a worker
+	# kills the shared test nodes, deletes the state dir under the
+	# master, and -- via $? = 0 -- clobbers its own exit code so
+	# run_on_finish never sees worker failures.  Only the original
+	# test process cleans up.
+	return if $$ != $TEST_PID;
 	if (@child_pids) {
 		kill('TERM', @child_pids);
 		for my $pid (@child_pids) {
@@ -70,7 +78,7 @@ my $config = Munin::Master::Config->instance()->{"config"};
 $config->parse_config_from_file($conf_file);
 
 $config->{dbdir} = $temp_dir;
-$config->{fork} = 0;
+$config->{fork} = TestUtils::fork_mode();
 
 Munin::Common::Logger::configure(
 	"output" => "screen",

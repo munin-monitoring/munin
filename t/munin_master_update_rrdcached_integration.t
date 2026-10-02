@@ -9,6 +9,7 @@ use File::Path qw(remove_tree);
 use IO::Socket::INET;
 use POSIX qw(:sys_wait_h);
 use Fcntl qw(:mode);
+use TestUtils;
 
 # ============================================================================
 # CONSTANTS
@@ -34,8 +35,15 @@ unless ($rrdcached_available) {
 my @child_pids;
 my $temp_dir;
 my $rrdcached_pid;
+my $TEST_PID = $$;    # END cleanup runs only in this process
 
 END {
+	# Pid-guarded: forked update workers inherit this END block
+	# (finish() -> exit() runs END in the child) and must not kill the
+	# master's rrdcached/nodes or delete the shared state dir.  Only
+	# the original test process cleans up.
+	return if $$ != $TEST_PID;
+
 	# Kill rrdcached first
 	if ($rrdcached_pid && kill(0, $rrdcached_pid)) {
 		kill 'TERM', $rrdcached_pid;
@@ -232,7 +240,7 @@ require Munin::Master::Config;
 my $config = Munin::Master::Config->instance()->{config};
 $config->parse_config_from_file($conf_file);
 $config->{dbdir} = $dbdir;
-$config->{fork}  = 0;
+$config->{fork}  = TestUtils::fork_mode();
 
 require Munin::Master::Update;
 Munin::Common::Logger::configure(
@@ -257,6 +265,14 @@ ok($files_with_content > 0, "RRD files have content ($files_with_content/" . sca
 
 # Use RRDs::last to auto-flush rrdcached and verify data is recent
 use RRDs;
+# The daemon legitimately holds unflushed updates -- that is what
+# rrdcached is for. RRDs::last only auto-flushes through the daemon
+# when RRDCACHED_ADDRESS is set (the env mechanism UpdateWorker writes
+# with). At fork=1 the workers set it in their own children only, so
+# the reads below must be daemon-aware themselves; at fork=0 the
+# inline workers used to leak it into this process, which is the side
+# effect this line makes explicit.
+$ENV{RRDCACHED_ADDRESS} = $sockpath;
 my $now = time();
 my $recent_files = 0;
 for my $rrd_file (@rrd_files) {

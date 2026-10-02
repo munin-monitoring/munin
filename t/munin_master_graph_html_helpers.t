@@ -347,7 +347,9 @@ subtest 'node listing' => sub {
 #
 # SampleDB creates:
 #   - 5 hosts: localhost, acme.com, aesir, asynjur, svartalfar
-#   - Each host in its own group (group name = host name, except localhost in acme.com)
+#   - Each host in its own group: group name = the leaf host name.
+#     localhost's group path is the nested chain acme.com/localhost
+#     (group "localhost" under "acme.com", per config-path semantics)
 #   - Each host has 5 services: cpu, memory, disk, network, load
 #   - Categories: system (cpu, load), storage (memory, disk), network (network)
 # ============================================================================
@@ -356,11 +358,10 @@ subtest '_get_params_groups returns correct data from SampleDB' => sub {
     require Munin::Master::HTML;
 
     # We know SampleDB creates these groups (from first principles):
-    # - acme.com (for localhost host)
-    # - acme.com (for acme.com host)
-    # - aesir, asynjur, svartalfar
-    # So we have 5 groups total, but only 4 unique names
-    my @expected_group_names = sort qw(acme.com acme.com aesir asynjur svartalfar);
+    # - localhost (path acme.com/localhost: leaf-named nested group)
+    # - acme.com, aesir, asynjur, svartalfar
+    # 5 groups, all uniquely named (r_g_grp enforces (p_id, name) unique)
+    my @expected_group_names = sort qw(localhost acme.com aesir asynjur svartalfar);
     my @expected_node_names = sort qw(localhost acme.com aesir asynjur svartalfar);
 
     # Get prepared statements - these must match what HTML.pm uses
@@ -388,10 +389,10 @@ subtest '_get_params_groups returns correct data from SampleDB' => sub {
 
     # Compare against expected groups from SampleDB
     is_deeply(\@found_group_names, \@expected_group_names,
-        'Group names match SampleDB (5 groups: acme.com x2, aesir, asynjur, svartalfar)');
+        'Group names match SampleDB (5 groups: localhost, acme.com, aesir, asynjur, svartalfar)');
 
     # Verify we have the correct number of groups
-    is(scalar(@$groups), 5, 'Found 5 groups (localhost and acme.com both in acme.com groups)');
+    is(scalar(@$groups), 5, 'Found 5 groups (one per host; localhost nested under acme.com)');
 
     # Collect all node names from result
     my @found_node_names;

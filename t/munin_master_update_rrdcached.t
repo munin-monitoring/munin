@@ -6,13 +6,15 @@ use lib qw(lib t/lib);
 use Test::More;
 use File::Temp qw(tempdir);
 use File::Path qw(remove_tree);
+use TestUtils;
 
 # ============================================================================
 # SETUP
 # ============================================================================
 
-# Not setup_test_config(): sets rrdcached_socket + logdir + fork and
-# never parses a conf -- the socket path is allocated per-run.
+# Not setup_test_config(): sets rrdcached_socket + logdir and never
+# parses a conf -- the socket path is allocated per-run. fork follows
+# the matrix configuration (TestUtils::fork_mode).
 # Must set up config BEFORE loading UpdateWorker, as it captures $config
 # at module load time via: my $config = Munin::Master::Config->instance()->{config}
 use Munin::Master::Config;
@@ -23,7 +25,7 @@ my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir}            = $temp_dir;
 $config->{rrdcached_socket} = "";    # default: no rrdcached
 $config->{logdir}           = $temp_dir;
-$config->{fork}             = 0;
+$config->{fork}             = TestUtils::fork_mode();
 
 use Munin::Master::UpdateWorker;
 

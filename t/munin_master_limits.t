@@ -134,7 +134,7 @@ my $config = Munin::Master::Config->instance()->{"config"};
 use TestState;
 my $dbdir  = TestState::state_dir();
 $config->{dbdir}  = $dbdir;
-$config->{fork}   = 0;
+$config->{fork}   = TestUtils::fork_mode();
 
 use TestUtils;
 my $dbfile = TestUtils::generate_sample_db($dbdir);
@@ -164,11 +164,16 @@ ok($notif_count >= 0, "notification table accessible");
 
 # Add an override to change warning threshold (use writable connection)
 my $dbh_rw = TestUtils::dbh_rw($dbfile);
-$dbh_rw->do("INSERT OR REPLACE INTO override (ds_id, name, value) VALUES (1, 'warning', '30')");
+$dbh_rw->do("INSERT INTO override (ds_id, name, value) VALUES (1, 'warning', '30') ON CONFLICT (ds_id, name) DO UPDATE SET value = excluded.value");
 $dbh_rw->disconnect();
 
-# Re-run limits with override active
+# Re-run limits with override active. Handle discipline: nothing
+# test-side may stay open across limits_main -- forked children
+# inherit handles and their exit-time DESTROY disconnects the shared
+# pg connection out from under us.
+$dbh->disconnect;
 limits_main();
+$dbh = TestUtils::dbh_ro($dbfile);
 
 # Re-read state for ds_id=1 to verify override was applied
 my ($alarm1) = $dbh->selectrow_array("SELECT alarm FROM state WHERE ds_id = 1");
@@ -179,9 +184,10 @@ ok(defined $alarm1, "override test: state exists for ds_id=1");
 # Add a CDEF attr to a DS that also has warning/critical
 # This should cause _process_ds to skip it (line 207)
 $dbh_rw = TestUtils::dbh_rw($dbfile);
-$dbh_rw->do("INSERT OR REPLACE INTO ds_attr (id, name, value) VALUES (2, 'cdef', '1,INDEX,+')");
+$dbh_rw->do("INSERT INTO ds_attr (id, name, value) VALUES (2, 'cdef', '1,INDEX,+') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
 $dbh_rw->disconnect();
 
+$dbh->disconnect;
 limits_main();
 
 $dbh = TestUtils::dbh_ro($dbfile);
@@ -199,6 +205,7 @@ $dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 W
 $dbh_rw->disconnect();
 
 # Run multiple times to accumulate unknowns
+$dbh->disconnect;
 for my $i (1..5) {
     limits_main();
 }
@@ -224,6 +231,7 @@ $dbh_rw = TestUtils::dbh_rw($dbfile);
 $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
+$dbh->disconnect;
 limits_main();
 
 $dbh = TestUtils::dbh_ro($dbfile);
@@ -280,7 +288,7 @@ $dbh->disconnect();
 
 # Set service contacts to a non-existent contact name
 $dbh_rw = TestUtils::dbh_rw($dbfile);
-$dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'ghostcontact')");
+$dbh_rw->do("INSERT INTO service_attr (id, name, value) VALUES (1, 'contacts', 'ghostcontact') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
 # Ensure state_changed triggers notification path
 $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
@@ -299,9 +307,9 @@ $dbh->disconnect();
 
 # Create a contact with no command attr
 $dbh_rw = TestUtils::dbh_rw($dbfile);
-$dbh_rw->do("INSERT OR IGNORE INTO contact (id, name) VALUES (2, 'nocommand')");
+$dbh_rw->do("INSERT INTO contact (id, name) VALUES (2, 'nocommand') ON CONFLICT DO NOTHING");
 # No command attr inserted — triggers WARN at line 390
-$dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'nocommand')");
+$dbh_rw->do("INSERT INTO service_attr (id, name, value) VALUES (1, 'contacts', 'nocommand') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
 $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
@@ -318,10 +326,10 @@ $dbh->disconnect();
 
 # Set testcontact with max_messages=1
 $dbh_rw = TestUtils::dbh_rw($dbfile);
-$dbh_rw->do("INSERT OR REPLACE INTO contact_attr (id, name, value) VALUES (1, 'max_messages', '1')");
-$dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'testcontact')");
+$dbh_rw->do("INSERT INTO contact_attr (id, name, value) VALUES (1, 'max_messages', '1') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
+$dbh_rw->do("INSERT INTO service_attr (id, name, value) VALUES (1, 'contacts', 'testcontact') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
 # Create notification with num_messages=1 for service cpu (id=1)
-$dbh_rw->do("INSERT OR REPLACE INTO notification_tracking (contact_id, service_id, severity, num_messages) VALUES (1, 1, 'warning', 1)");
+$dbh_rw->do("INSERT INTO notification_tracking (contact_id, service_id, severity, num_messages) VALUES (1, 1, 'warning', 1) ON CONFLICT (contact_id, service_id) DO UPDATE SET severity = excluded.severity, num_messages = excluded.num_messages");
 $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 
@@ -339,7 +347,7 @@ $dbh->disconnect();
 
 # Set ds_id=5 with custom unknown_limit=1 (instead of default 3)
 $dbh_rw = TestUtils::dbh_rw($dbfile);
-$dbh_rw->do("INSERT OR REPLACE INTO ds_attr (id, name, value) VALUES (5, 'unknown_limit', '1')");
+$dbh_rw->do("INSERT INTO ds_attr (id, name, value) VALUES (5, 'unknown_limit', '1') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
 # Set value to U so it triggers unknown path
 $dbh_rw->do("UPDATE state SET last_value = 'U', alarm = 'ok', num_unknowns = 0 WHERE ds_id = 5");
 $dbh_rw->disconnect();
@@ -426,7 +434,7 @@ $dbh->disconnect();
 # --- Part 18: contact_name eq 'none' skip (line 368) ---
 
 $dbh_rw = TestUtils::dbh_rw($dbfile);
-$dbh_rw->do("INSERT OR REPLACE INTO service_attr (id, name, value) VALUES (1, 'contacts', 'none testcontact')");
+$dbh_rw->do("INSERT INTO service_attr (id, name, value) VALUES (1, 'contacts', 'none testcontact') ON CONFLICT (id, name) DO UPDATE SET value = excluded.value");
 $dbh_rw->do("UPDATE state SET alarm = 'warning' WHERE ds_id = 1");
 $dbh_rw->disconnect();
 

@@ -15,8 +15,30 @@ use Munin::Master::UpdateWorker;
 sub create_test_db {
     my ($dbh) = @_;
 
+    # Portable serial: sqlite auto-assigns INTEGER PRIMARY KEY (rowid
+    # alias -- the AUTOINCREMENT keyword is sqlite-only); pg needs
+    # SERIAL.
+    my $serial = $dbh->{Driver}->{Name} eq "Pg" ? "SERIAL" : "INTEGER";
+
+    # grp and node before service/url consumers: pg validates
+    # REFERENCES targets at CREATE time, sqlite tolerates missing ones
+    # silently (production _db_init creates them first for the same
+    # reason).
+    $dbh->do("CREATE TABLE IF NOT EXISTS grp (
+        id $serial PRIMARY KEY,
+        p_id INTEGER,
+        name VARCHAR,
+        path VARCHAR
+    )");
+    $dbh->do("CREATE TABLE IF NOT EXISTS node (
+        id $serial PRIMARY KEY,
+        grp_id INTEGER REFERENCES grp(id),
+        name VARCHAR,
+        path VARCHAR
+    )");
+
     $dbh->do("CREATE TABLE IF NOT EXISTS service (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id $serial PRIMARY KEY,
         node_id INTEGER NOT NULL,
         name VARCHAR NOT NULL
     )");
@@ -29,7 +51,7 @@ sub create_test_db {
     )");
 
     $dbh->do("CREATE TABLE IF NOT EXISTS ds (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id $serial PRIMARY KEY,
         service_id INTEGER REFERENCES service(id),
         name VARCHAR NOT NULL,
         ordr INTEGER DEFAULT 0
@@ -51,8 +73,34 @@ sub create_test_db {
         prev_value VARCHAR,
         alarm VARCHAR,
         num_unknowns INTEGER DEFAULT 0,
-        CHECK ((ds_id IS NOT NULL) + (node_id IS NOT NULL) = 1)
+        CHECK (CAST((ds_id IS NOT NULL) AS INTEGER) + CAST((node_id IS NOT NULL) AS INTEGER) = 1)
     )");
+
+    # Tables the exercised production paths read: get_override queries
+    # config_override on every ds attr update, get_param reads param,
+    # and ds updates merge override. Empty is fine -- lookups return
+    # undef and the code falls back. (Before node existed, sqlite
+    # silently skipped this whole path via _get_names_for_ds failing.)
+    $dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
+    $dbh->do("CREATE TABLE IF NOT EXISTS override (
+        ds_id INTEGER REFERENCES ds(id),
+        name VARCHAR,
+        value VARCHAR
+    )");
+    $dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_override ON override (ds_id, name)");
+    $dbh->do("CREATE TABLE IF NOT EXISTS config_override (
+        host_name VARCHAR NOT NULL,
+        service_name VARCHAR NOT NULL DEFAULT '',
+        field_name VARCHAR NOT NULL DEFAULT '',
+        name VARCHAR NOT NULL,
+        value VARCHAR,
+        PRIMARY KEY (host_name, service_name, field_name, name)
+    )");
+
+    # Production queries JOIN node (and grp through it); seed the id the
+    # fixtures and the test worker use (node_id = 1).
+    $dbh->do("INSERT INTO grp (id, p_id, name, path) VALUES (1, 0, 'testgroup', 'testgroup')");
+    $dbh->do("INSERT INTO node (id, grp_id, name, path) VALUES (1, 1, 'testhost', 'testhost')");
 }
 
 # Create a real UpdateWorker object for testing
@@ -238,6 +286,9 @@ subtest 'Clear all attrs' => sub {
 # ============================================================================
 
 subtest 'Create new datasource' => sub {
+    $dbh->do("DELETE FROM state WHERE ds_id IN (SELECT id FROM ds WHERE service_id = 200)");
+    $dbh->do("DELETE FROM override WHERE ds_id IN (SELECT id FROM ds WHERE service_id = 200)");
+    $dbh->do("DELETE FROM ds_attr WHERE id IN (SELECT id FROM ds WHERE service_id = 200)");
     $dbh->do("DELETE FROM ds WHERE service_id = 200");
     $dbh->do("INSERT INTO service (id, node_id, name) VALUES (200, 1, 'test_svc')");
 
@@ -265,6 +316,14 @@ subtest 'Create new datasource' => sub {
 # ============================================================================
 
 subtest 'Update existing datasource attrs' => sub {
+    # FK-safe order: dependents (state/override/ds_attr) before ds --
+    # pg enforces the references that sqlite's default FK-off ignored.
+    $dbh->do("DELETE FROM state WHERE ds_id IN (SELECT id FROM ds WHERE service_id = 200)");
+    $dbh->do("DELETE FROM override WHERE ds_id IN (SELECT id FROM ds WHERE service_id = 200)");
+    $dbh->do("DELETE FROM ds_attr WHERE id IN (SELECT id FROM ds WHERE service_id = 200)");
+    $dbh->do("DELETE FROM state WHERE ds_id IN (SELECT id FROM ds WHERE service_id = 200)");
+    $dbh->do("DELETE FROM override WHERE ds_id IN (SELECT id FROM ds WHERE service_id = 200)");
+    $dbh->do("DELETE FROM ds_attr WHERE id IN (SELECT id FROM ds WHERE service_id = 200)");
     $dbh->do("DELETE FROM ds WHERE service_id = 200");
     $dbh->do("DELETE FROM ds_attr");
     $dbh->do("INSERT INTO ds (id, service_id, name) VALUES (500, 200, 'field1')");
@@ -291,6 +350,9 @@ subtest 'Update existing datasource attrs' => sub {
 # ============================================================================
 
 subtest 'BUG: New attr not in old should INSERT not UPDATE' => sub {
+    $dbh->do("DELETE FROM state WHERE ds_id IN (SELECT id FROM ds WHERE service_id = 200)");
+    $dbh->do("DELETE FROM override WHERE ds_id IN (SELECT id FROM ds WHERE service_id = 200)");
+    $dbh->do("DELETE FROM ds_attr WHERE id IN (SELECT id FROM ds WHERE service_id = 200)");
     $dbh->do("DELETE FROM ds WHERE service_id = 200");
     $dbh->do("DELETE FROM ds_attr");
     $dbh->do("INSERT INTO ds (id, service_id, name) VALUES (501, 200, 'field2')");
@@ -315,6 +377,9 @@ subtest 'BUG: New attr not in old should INSERT not UPDATE' => sub {
 # ============================================================================
 
 subtest 'BUG: Old attr not in new should be DELETED' => sub {
+    $dbh->do("DELETE FROM state WHERE ds_id IN (SELECT id FROM ds WHERE service_id = 200)");
+    $dbh->do("DELETE FROM override WHERE ds_id IN (SELECT id FROM ds WHERE service_id = 200)");
+    $dbh->do("DELETE FROM ds_attr WHERE id IN (SELECT id FROM ds WHERE service_id = 200)");
     $dbh->do("DELETE FROM ds WHERE service_id = 200");
     $dbh->do("DELETE FROM ds_attr");
     $dbh->do("INSERT INTO ds (id, service_id, name) VALUES (502, 200, 'field3')");

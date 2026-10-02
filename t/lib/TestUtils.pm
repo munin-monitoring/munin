@@ -56,14 +56,69 @@ sub setup_test_config {
     return ($config, $dbdir);
 }
 
+# --- test-matrix configuration (Makefile FORK/DBDRIVER args -> container env) ---
+#
+# Every FORK x DBDRIVER combination is runnable; the CI matrix selects
+# the three that map to real deployment shapes. When the env is absent
+# (prove run directly, outside docker) the default is the usual local
+# shape: sqlite + fork.
+my $PG_DBNAME;    # pg configurations: current scratch database for this process
+
+sub fork_mode {
+    return exists $ENV{MUNIN_TEST_FORK}
+        ? ($ENV{MUNIN_TEST_FORK} ? 1 : 0)
+        : 1;
+}
+
+sub db_driver {
+    my $d = exists $ENV{MUNIN_TEST_DBDRIVER}
+        ? $ENV{MUNIN_TEST_DBDRIVER}
+        : "sqlite";
+    return $d eq "pg" ? "Pg" : "SQLite";
+}
+
+# Route the production handle path (get_dbh reads env/config, not our
+# memo) and any TestUtils helper to this process's scratch database.
+sub _pg_route {
+    my ($dbname) = @_;
+    $PG_DBNAME = $dbname;
+    $ENV{MUNIN_DBURL}    = $dbname;
+    $ENV{MUNIN_DBDRIVER} = "Pg";
+    $ENV{MUNIN_DBUSER}   = "postgres";
+}
+
+sub _pg_scratch {
+    require TestPG;
+    my $dbname = TestPG::scratch_db();
+    die "TestUtils: pg configuration but no usable postgres server "
+      . "(see t/lib/TestPG.pm; or run without MUNIN_TEST_DBDRIVER=pg)\n"
+        unless $dbname;
+    _pg_route($dbname);
+    return $dbname;
+}
+
 # Build the SampleDB fixture in $dir. Returns the sqlite db path.
 # DB-only tests (limits, lifecycle, handle_request) use this -- no RRDs.
+#
+# pg configurations: the fixture goes to a per-process scratch database -- a
+# FRESH one per call, matching sqlite's fresh-file-per-call semantics
+# (tests mutate state between generate calls and expect pristine
+# fixtures; into a populated database SampleDB's ON CONFLICT DO NOTHING
+# inserts would no-op and leave stale rows). The dbname is memoized so
+# dbh_ro/dbh_rw route there; the passed $dir still hosts RRDs/confs.
 #
 #   my $dbfile = TestUtils::generate_sample_db($dbdir);
 sub generate_sample_db {
     my ($dir) = @_;
 
     require SampleDB;
+
+    if (db_driver() eq "Pg") {
+        my $dbname = _pg_scratch();
+        SampleDB::generate_sample_db($dbname, "Pg");
+        return $dbname;
+    }
+
     my $dbfile = "$dir/datafile.sqlite";
     SampleDB::generate_sample_db($dbfile);
 
@@ -119,12 +174,30 @@ sub mock_update_get_param {
 sub dbh_ro {
     my ($dbfile) = @_;
     require DBI;
+    # pg configuration: route to the process's scratch database. The passed
+    # $dbfile is sqlite-shaped (tests build it from TestState dirs
+    # regardless of backend) and advisory here.
+    if (db_driver() eq "Pg") {
+        # On demand: tests that build their own schema through
+        # dbh_rw/dbh_ro never call generate_sample_db.
+        _pg_scratch() unless $PG_DBNAME;
+        # No ReadOnly attr on pg: DBI warns "Setting ReadOnly in
+        # AutoCommit mode has no effect". The handle is used read-only
+        # by convention here, same as before.
+        return DBI->connect("dbi:Pg:dbname=$PG_DBNAME", "postgres", undef,
+            { RaiseError => 1 });
+    }
     return DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1, ReadOnly => 1 });
 }
 
 sub dbh_rw {
     my ($dbfile) = @_;
     require DBI;
+    if (db_driver() eq "Pg") {
+        _pg_scratch() unless $PG_DBNAME;
+        return DBI->connect("dbi:Pg:dbname=$PG_DBNAME", "postgres", undef,
+            { RaiseError => 1 });
+    }
     return DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1 });
 }
 
@@ -150,7 +223,9 @@ sub generate_test_conf {
     print $fh "rundir  $dir\n";
     print $fh "local_address 127.0.0.1\n";
     print $fh "graph_data_size debug\n";
-    print $fh "fork 0\n";
+    # Configuration-driven: the parallel configurations exercise the forked update path
+    # through the conf, not only through the config singleton.
+    print $fh "fork " . fork_mode() . "\n";
     print $fh "\n";
     print $fh "[aesir;alfheim.aesir;aegir.alfheim.aesir]\n";
     print $fh "     address 127.0.0.1\n";

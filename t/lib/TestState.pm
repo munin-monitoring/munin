@@ -16,8 +16,11 @@ package TestState;
 #     several directories; each gets its own, in order).
 #   - A directory starts empty -- leftovers from a crashed run with the
 #     same pid are removed first.
-#   - Created directories are removed at process exit (END runs on die;
-#     kill -9 leaks, visibly, not silently).
+#   - Created directories are removed at process exit by the process
+#     that created them (END runs on die; forked children -- e.g.
+#     Parallel::ForkManager workers -- run END too, so cleanup is
+#     pid-guarded and a child never removes the master's tree; kill -9
+#     leaks, visibly, not silently).
 #
 #   my $dbdir = TestState::state_dir();
 #   # .../1234-munin_master_html-1   then later   .../1234-munin_master_html-2
@@ -29,9 +32,14 @@ use File::Path qw(make_path remove_tree);
 
 my $ROOT  = $ENV{MUNIN_TEST_STATE_ROOT} || "/dev/shm/munin-var-lib";
 my $CALLS = 0;
-my @created;
+my @created;    # [creator_pid, dir] pairs
 
-END { remove_tree($_) for @created }
+END {
+    # Pid-guarded: forked children inherit @created and would otherwise
+    # delete the master's state dirs when they exit. Only the creating
+    # process cleans up after itself.
+    remove_tree($_->[1]) for grep { $_->[0] == $$ } @created;
+}
 
 sub state_dir {
     make_path($ROOT) unless -d $ROOT;
@@ -46,7 +54,7 @@ sub state_dir {
     my $dir = sprintf("%s/%d-%s-%d", $ROOT, $$, $test, ++$CALLS);
     remove_tree($dir);    # clean slate: crashed run with same pid
     make_path($dir);
-    push @created, $dir;
+    push @created, [$$, $dir];
     return $dir;
 }
 

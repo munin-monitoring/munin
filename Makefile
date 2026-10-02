@@ -244,40 +244,77 @@ JOBS  ?= $(shell nproc)
 TESTS ?= t/*.t
 PROVE  = prove --shuffle --timer -j$(JOBS) -Iblib/lib -Iblib/arch
 
+# Test-matrix configuration selection. Every FORK x DBDRIVER combination is
+# runnable (e.g. FORK=0 DBDRIVER=pg works locally); the CI matrix
+# simply selects the three that map to real deployment shapes --
+# serial+pgsql is not invalid, just not worth CPU cycles. Default =
+# the usual local shape: sqlite + fork + jobs=nproc. CI pins every
+# configuration explicitly. docker-test-matrix sweeps the CI configurations locally.
+FORK     ?= 1
+DBDRIVER ?= sqlite
+TESTENV   = -e MUNIN_TEST_FORK=$(FORK) -e MUNIN_TEST_DBDRIVER=$(DBDRIVER)
+
 # Run tests in Docker - same env as CI
 docker-test:
-	$(DOCKER) run --rm --shm-size=512m --add-host testing.acme.com:127.0.0.1 \
+	$(DOCKER) run --rm --shm-size=512m $(TESTENV) --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build && TMPDIR=/dev/shm $(PROVE) $(TESTS)'
 
 docker-test-one:
-	$(DOCKER) run --rm --shm-size=256m --add-host testing.acme.com:127.0.0.1 \
+	$(DOCKER) run --rm --shm-size=256m $(TESTENV) --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build && TMPDIR=/dev/shm prove --timer -j1 -Iblib/lib -Iblib/arch t/$(FILE)'
 
 # Run tests and show failure summary at end
 docker-show-fail:
-	$(DOCKER) run --rm --shm-size=512m --add-host testing.acme.com:127.0.0.1 \
+	$(DOCKER) run --rm --shm-size=512m $(TESTENV) --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm perl Build.PL && TMPDIR=/dev/shm ./Build && TMPDIR=/dev/shm $(PROVE) $(TESTS) > /tmp/test-output.log 2>&1; RC=$$?; cat /tmp/test-output.log; if [ $$RC -ne 0 ]; then ./script/show-test-failures /tmp/test-output.log; fi; exit $$RC'
 
 # Run lint in Docker
 docker-lint:
 	$(DOCKER) run --rm -v $(CURDIR):/app munin-dev sh -c 'perl Build.PL && make lint'
 
+# Sweep the CI test matrix locally -- the local dev version of the
+# GitHub Actions test matrix: the same three configurations, the same
+# FORK/DBDRIVER arguments, run sequentially (CI runs them as parallel
+# jobs). Cost-consciousness is a local-dev concern only; CI always
+# runs the full matrix. The fourth combination (FORK=0 DBDRIVER=pg) is
+# runnable but unselected; invoke docker-test with those args directly
+# if you need it.
+.PHONY: docker-test-matrix
+docker-test-matrix:
+	$(MAKE) docker-test JOBS=$(JOBS) FORK=0 DBDRIVER=sqlite
+	$(MAKE) docker-test JOBS=$(JOBS) FORK=1 DBDRIVER=sqlite
+	$(MAKE) docker-test JOBS=$(JOBS) FORK=1 DBDRIVER=pg
+
 # Shell into dev container
 docker-shell:
 	$(DOCKER) run --rm -it --shm-size=128m -v $(CURDIR):/app munin-dev bash
 
 # Run coverage in Docker: parallel prove under Devel::Cover. Each test process
-# writes its own cover_db/runs/<ts>.<pid> file, so -j needs no coordination;
-# cover merges the runs at report time. -select_re filters to production code:
-# tests load modules from lib/ via "use lib", so the old "blib/lib|blib/script"
-# select matched nothing (coverage uploaded to Coveralls was empty).
+# writes its own cover_db/runs/<ts>.<pid> file, so -j needs no coordination.
+# The ENTIRE cover_db is tarballed after prove -- runs/, structure/ AND
+# digests. Structure and digests are written by the collection phase
+# into the base db; a runs-only archive merges into a database the
+# report cannot attribute (no structure -> empty report -> 0% on
+# Coveralls with a green pipeline). `cover -report` CONSUMES
+# cover_db/runs (merges into the db and clears it), so collect-then-tar
+# before any report. COVER_REPORT=0 skips the per-configuration
+# reports: CI reports once, in the merge job, over all configurations
+# via cover's own multi-db merge (`cover -report X primary extra1
+# extra2` merges runs AND structure). -select_re filters to production
+# code at report time: tests load modules from lib/ via "use lib", so
+# the old "blib/lib|blib/script" select matched nothing (coverage
+# uploaded to Coveralls was empty).
+COVER_REPORT       ?= 1
+COVER_DB_TARBALL   ?= cover_db.tgz
+COVER_REPORT_CMDS_1 = && cover -silent -select_re "^lib/Munin|^script/munin" -report html_basic -outputdir cover_db && cover -silent -select_re "^lib/Munin|^script/munin" -summary
+COVER_REPORT_CMDS_0 =
+
 docker-cover:
-	$(DOCKER) run --rm --shm-size=1g --add-host testing.acme.com:127.0.0.1 \
+	$(DOCKER) run --rm --shm-size=1g $(TESTENV) --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm \
 		perl Build.PL && \
 		./Build && \
-		rm -rf cover_db && \
+		rm -rf cover_db $(COVER_DB_TARBALL) && \
 		PERL5OPT="-MDevel::Cover" TMPDIR=/dev/shm $(PROVE) $(TESTS) && \
-		cover -silent -select_re "^lib/Munin|^script/munin" -report html_basic -outputdir cover_db && \
-		cover -silent -select_re "^lib/Munin|^script/munin" -summary'
+		tar czf $(COVER_DB_TARBALL) cover_db $(COVER_REPORT_CMDS_$(COVER_REPORT))'
 
