@@ -13,6 +13,7 @@ use List::Util qw( shuffle );
 
 use Munin::Common::Defaults;
 use Munin::Master::Config;
+use Munin::Master::Schema;
 use Munin::Master::UpdateWorker;
 use Munin::Master::Utils;
 use Munin::Master::Limits;
@@ -134,6 +135,16 @@ sub get_dbh {
 	$dbh->{AutoCommit} = $ENV{MUNIN_DB_AUTOCOMMIT} || $config->{db_autocommit} || 0;
 	$dbh->{AutoCommit} = 1 if $is_read_only;
 	DEBUG "get_dbh: {AutoCommit} = " . $dbh->{AutoCommit};
+
+	# Fail loudly on schema mismatch: verify() is the single runtime
+	# gate, shared by every consumer (update, limits, html, graph,
+	# static renderers) -- today only munin-update used to run
+	# _db_init, the others would limp against a stale schema. There is
+	# no heuristic or repair branch here: daemons never migrate, adopt
+	# or guess; that is munin-upgrade-db's job alone. Memoized per
+	# process -- one cheap query, handles are opened repeatedly, and
+	# migration is offline by contract.
+	Munin::Master::Schema::verify($dbh);
 
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
@@ -397,182 +408,30 @@ sub _handle_worker_result {
 sub _db_init {
 	my ($self, $dbh) = @_;
 
-	my $db_serial_type = "INTEGER";
-	# The handle is the truth about the driver: env/config decided how
-	# get_dbh CONNECTED, but _db_init may be handed any handle (the test
-	# fixture opens its own). Asking the handle keeps the per-driver
-	# branches (SERIAL, state migrations) consistent with the actual
-	# connection instead of with ambient environment.
-	my $db_driver = $dbh->{Driver}->{Name};
-	$db_serial_type = "SERIAL" if $db_driver eq "Pg";
-
-	# Sets some session vars
-	$dbh->do("SET LOCAL client_min_messages = error") if $db_driver eq "Pg";
-
-	# Initialize DB Schema
-	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id $db_serial_type PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS r_g_grp ON grp (p_id, name)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS node (id $db_serial_type PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR, spoolepoch INTEGER)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_node_attr ON node_attr (id, name)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_n_grp ON node (grp_id)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS service (id $db_serial_type PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_service_n_n ON service (node_id, name)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id $db_serial_type PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
-		type VARCHAR DEFAULT 'GAUGE',
-		ordr INTEGER DEFAULT 0,
-		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0,
-		deleted INTEGER DEFAULT 0)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
-
-	# Migrate pre-existing ds tables: add the soft-delete column (same
-	# information_schema/PRAGMA dance as the state migration below).
-	my %ds_cols;
-	if ($db_driver eq "Pg") {
-		%ds_cols = map { $_ => 1 }
-			@{ $dbh->selectcol_arrayref(
-				"SELECT column_name FROM information_schema.columns "
-				. "WHERE table_name = 'ds'") };
+	# Runtime schema code is deliberately minimal: bootstrap a virgin
+	# database, or verify the version and die. All migration logic --
+	# the state-columns, ds.deleted and ds_rrd blocks that used to live
+	# here, plus the notification rename -- is offline in
+	# munin-upgrade-db (Schema::migrate_v0_to_v1). The handle is the
+	# truth about the driver: Schema renders the DDL per handle, so
+	# _db_init may be handed any handle (the test fixture opens its
+	# own).
+	my $state = Munin::Master::Schema::detect($dbh);
+	if ($state eq 'fresh') {
+		Munin::Master::Schema::create_schema($dbh);
+		Munin::Master::Schema::record($dbh,
+			Munin::Master::Schema::CURRENT_SCHEMA_VERSION(),
+			'bootstrap: full schema created');
+	} elsif ($state eq 'unversioned') {
+		die Munin::Master::Schema::mismatch_message($dbh, 'unversioned');
 	} else {
-		%ds_cols = map { $_->[1] => 1 }
-			@{ $dbh->selectall_arrayref("PRAGMA table_info(ds)") };
-	}
-	$dbh->do("ALTER TABLE ds ADD COLUMN deleted INTEGER DEFAULT 0")
-		unless $ds_cols{deleted};
-
-	# RRD file/DS mapping per datasource. Regular columns, not key/value:
-	# this table is owned by the RRD creation loop and is never touched by
-	# the plugin-config attribute diff, so mappings survive between cycles.
-	# One row per ds that has an RRD file; soft-deleted ds keep their row
-	# (and thus their history) -- the update path stops writing for them.
-	$dbh->do("CREATE TABLE IF NOT EXISTS ds_rrd (
-		ds_id INTEGER PRIMARY KEY REFERENCES ds(id),
-		file VARCHAR NOT NULL,
-		field VARCHAR NOT NULL,
-		alias VARCHAR
-	)");
-
-	# Migrate rrd:* key/value attrs into ds_rrd (idempotent). Historical
-	# single-DS files carry the DS name "42"; rrd:field was introduced
-	# later, hence the COALESCE fallback.
-	$dbh->do("INSERT INTO ds_rrd (ds_id, file, field, alias)
-		SELECT f.id, f.value, COALESCE(d.value, '42'), a.value
-		FROM ds_attr f
-		LEFT JOIN ds_attr d ON d.id = f.id AND d.name = 'rrd:field'
-		LEFT JOIN ds_attr a ON a.id = f.id AND a.name = 'rrd:alias'
-		WHERE f.name = 'rrd:file'
-		AND NOT EXISTS (SELECT 1 FROM ds_rrd r WHERE r.ds_id = f.id)");
-
-	# The key/value attrs are retired once migrated
-	$dbh->do("DELETE FROM ds_attr WHERE name IN ('rrd:file', 'rrd:field', 'rrd:alias')");
-
-	# Table that contains all the URL paths, in order to have a very fast lookup
-	# FK to grp/node/service - no cascade, error if referenced
-	# path is the identity (lookups are by path), no surrogate id needed
-	# CHECK casts: sqlite evaluates IS NOT NULL as 0/1 so the sum works
-	# there, but pg yields booleans and has no boolean + operator. CAST
-	# to INTEGER is accepted by both engines.
-	$dbh->do("CREATE TABLE IF NOT EXISTS url (
-		path VARCHAR PRIMARY KEY,
-		grp_id INTEGER REFERENCES grp(id),
-		node_id INTEGER REFERENCES node(id),
-		service_id INTEGER REFERENCES service(id),
-		CHECK (CAST((grp_id IS NOT NULL) AS INTEGER) + CAST((node_id IS NOT NULL) AS INTEGER) + CAST((service_id IS NOT NULL) AS INTEGER) = 1)
-	)");
-
-	# Per-entity state tracking. FK columns instead of polymorphic (type,id) --
-	# no cascade, error if referenced. CHECK ensures exactly one FK is set.
-	# prev_alarm/eval_value/extinfo are written by the limits evaluation and
-	# read by the serial notification tail: prev_alarm gives edge detection
-	# (alarm != prev_alarm == state just changed), eval_value/extinfo are the
-	# message content so notifications can be rebuilt from the DB alone.
-	$dbh->do("CREATE TABLE IF NOT EXISTS state (
-		ds_id INTEGER REFERENCES ds(id),
-		node_id INTEGER REFERENCES node(id),
-		last_epoch INTEGER, last_value VARCHAR,
-		prev_epoch INTEGER, prev_value VARCHAR,
-		alarm VARCHAR, num_unknowns INTEGER DEFAULT 0,
-		prev_alarm VARCHAR, eval_value VARCHAR, extinfo VARCHAR,
-		CHECK (CAST((ds_id IS NOT NULL) AS INTEGER) + CAST((node_id IS NOT NULL) AS INTEGER) = 1)
-	)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_ds ON state (ds_id)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_node ON state (node_id)");
-
-	# Migrate pre-existing state tables (CREATE IF NOT EXISTS skips them).
-	# pg has no ADD COLUMN IF EXISTS (that is MariaDB syntax), so both
-	# engines check for the column first -- information_schema on pg,
-	# PRAGMA table_info on sqlite -- and ALTER only when missing.
-	my %state_cols;
-	if ($db_driver eq "Pg") {
-		%state_cols = map { $_ => 1 }
-			@{ $dbh->selectcol_arrayref(
-				"SELECT column_name FROM information_schema.columns "
-				. "WHERE table_name = 'state'") };
-	} else {
-		%state_cols = map { $_->[1] => 1 }
-			@{ $dbh->selectall_arrayref("PRAGMA table_info(state)") };
-	}
-	for my $col (qw(prev_alarm eval_value extinfo)) {
-		next if $state_cols{$col};
-		$dbh->do("ALTER TABLE state ADD COLUMN $col VARCHAR");
+		# Versioned: the same check get_dbh runs. Dies loudly on any
+		# mismatch -- there is no repair branch in any runtime path.
+		Munin::Master::Schema::verify($dbh);
 	}
 
-	# Munin stats
-	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp TIMESTAMPTZ, type VARCHAR, name VARCHAR, duration NUMERIC)");
-
-	# Contacts for notification
-	$dbh->do("CREATE TABLE IF NOT EXISTS contact (id $db_serial_type PRIMARY KEY, name VARCHAR UNIQUE)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS contact_attr (id INTEGER REFERENCES contact(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_contact_attr ON contact_attr (id, name)");
-
-	# Send ledger: last-sent severity, sent_at, throttle counter num_messages.
-	# NOT config -- decision inputs are state.alarm (current), contact attrs
-	# (always_send/command/text), and this ledger (dupe avoidance). Renamed
-	# from `notification` accordingly; migration below renames in place.
-	$dbh->do("CREATE TABLE IF NOT EXISTS notification_tracking (
-		id $db_serial_type PRIMARY KEY,
-		contact_id INTEGER REFERENCES contact(id),
-		service_id INTEGER REFERENCES service(id),
-		severity VARCHAR,
-		sent_at INTEGER,
-		num_messages INTEGER DEFAULT 0
-	)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification_tracking ON notification_tracking (contact_id, service_id)");
-
-	# Migrate the pre-rename table. The ledger must survive: it carries
-	# transition memory (throttling) across cycles.
-	my ($old_notif) = $db_driver eq "Pg"
-		? $dbh->selectrow_array("SELECT to_regclass('notification')")
-		: $dbh->selectrow_array("SELECT name FROM sqlite_master WHERE type='table' AND name='notification'");
-	if ($old_notif) {
-		$dbh->do("ALTER TABLE notification RENAME TO notification_tracking");
-		$dbh->do("DROP INDEX IF EXISTS u_notification");
-		$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification_tracking ON notification_tracking (contact_id, service_id)");
-	}
-
-	# Config file overrides — plugin defaults go to ds_attr, config overrides go here
-	$dbh->do("CREATE TABLE IF NOT EXISTS override (ds_id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_override ON override (ds_id, name)");
-
-	# Config import overrides — raw config values keyed by host/service/field
-	# Stores everything from munin.conf before inheritance resolution
-	$dbh->do("CREATE TABLE IF NOT EXISTS config_override (
-		host_name VARCHAR NOT NULL,
-		service_name VARCHAR NOT NULL DEFAULT '',
-		field_name VARCHAR NOT NULL DEFAULT '',
-		name VARCHAR NOT NULL,
-		value VARCHAR,
-		PRIMARY KEY (host_name, service_name, field_name, name)
-	)");
-
-	# Initialise the grp _root_ node if not present
+	# Initialise the grp _root_ node if not present. Data init, not
+	# schema: id 0 is the walk root every group import hangs off.
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
 		$dbh->do("INSERT INTO grp (id) VALUES (0);");
 	}
