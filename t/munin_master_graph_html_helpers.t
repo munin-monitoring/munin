@@ -249,11 +249,11 @@ subtest 'data sources and attributes' => sub {
 
     # Test the DS query that Graph.pm uses
     $sth = $dbh->prepare_cached("
-        SELECT ds.name, l.value, rf.value
+        SELECT ds.name, l.value, rr.file
         FROM ds
         LEFT OUTER JOIN ds_attr l ON l.id = ds.id AND l.name = 'label'
-        LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
-        WHERE ds.service_id = ?
+        LEFT OUTER JOIN ds_rrd rr ON rr.ds_id = ds.id
+        WHERE ds.service_id = ? AND ds.deleted = 0
         ORDER BY ds.ordr ASC
     ");
     $sth->execute($service_id);

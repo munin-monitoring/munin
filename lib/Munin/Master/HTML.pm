@@ -144,7 +144,7 @@ sub handle_request
 
 	# Problems nav
 	{
-		my $sth = $dbh->prepare_cached("SELECT SUM(critical), SUM(warning), SUM(unknown) FROM ds");
+		my $sth = $dbh->prepare_cached("SELECT SUM(critical), SUM(warning), SUM(unknown) FROM ds WHERE deleted = 0");
 		$sth->execute();
 		my ($critical, $warning, $unknown) = $sth->fetchrow_array;
 		$sth->finish();
@@ -239,7 +239,7 @@ sub handle_request
 				LEFT OUTER JOIN url su ON su.service_id = s.id
 				LEFT OUTER JOIN node n ON n.id = s.node_id
 				LEFT OUTER JOIN url nu ON nu.node_id = n.id
-				WHERE d.critical = 1 OR d.warning = 1 OR d.unknown = 1
+				WHERE (d.critical = 1 OR d.warning = 1 OR d.unknown = 1) AND d.deleted = 0
 			");
 		$sth->execute();
 
@@ -480,8 +480,8 @@ sub handle_request
 		my $sth;
 
 		$sth = $dbh->prepare_cached("SELECT name,service_title,graph_info,subgraphs,category,
-									(SELECT MAX(warning) FROM ds WHERE service_id = service.id) as state_warning,
-									(SELECT MAX(critical) FROM ds WHERE service_id = service.id) as state_critical
+									(SELECT MAX(warning) FROM ds WHERE service_id = service.id AND deleted = 0) as state_warning,
+									(SELECT MAX(critical) FROM ds WHERE service_id = service.id AND deleted = 0) as state_critical
 									FROM service
 									LEFT JOIN service_categories ON service.id = service_categories.id
 									WHERE service.id = ?");
@@ -783,8 +783,8 @@ sub _get_params_services {
 	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id, $graph_ext) = @_;
 
 	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url,
-									(SELECT MAX(warning) FROM ds WHERE service_id = s.id) as state_warning,
-									(SELECT MAX(critical) FROM ds WHERE service_id = s.id) as state_critical
+									(SELECT MAX(warning) FROM ds WHERE service_id = s.id AND deleted = 0) as state_warning,
+									(SELECT MAX(critical) FROM ds WHERE service_id = s.id AND deleted = 0) as state_critical
 		FROM service s
 		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		INNER JOIN url u ON u.service_id = s.id
@@ -839,7 +839,7 @@ sub _get_params_fields {
 		LEFT JOIN ds_attr a_w ON ds.id = a_w.id AND a_w.name = 'warning'
 		LEFT JOIN ds_attr a_c ON ds.id = a_c.id AND a_c.name = 'critical'
 		LEFT JOIN ds_attr a_i ON ds.id = a_i.id AND a_i.name = 'info'
-		WHERE ds.service_id = ?
+		WHERE ds.service_id = ? AND ds.deleted = 0
 		ORDER BY ds.id ASC");
 	$sth_ds->execute($service_id);
 

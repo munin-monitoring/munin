@@ -40,13 +40,20 @@ $dbh->do("CREATE TABLE IF NOT EXISTS ds (
     id $serial PRIMARY KEY,
     service_id INTEGER REFERENCES service(id),
     name VARCHAR NOT NULL,
-    ordr INTEGER DEFAULT 0
+    ordr INTEGER DEFAULT 0,
+    deleted INTEGER DEFAULT 0
 )");
 $dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (
     id INTEGER REFERENCES ds(id),
     name VARCHAR NOT NULL,
     value VARCHAR,
     PRIMARY KEY (id, name)
+)");
+$dbh->do("CREATE TABLE IF NOT EXISTS ds_rrd (
+    ds_id INTEGER PRIMARY KEY REFERENCES ds(id),
+    file VARCHAR NOT NULL,
+    field VARCHAR NOT NULL,
+    alias VARCHAR
 )");
 $dbh->do("CREATE TABLE IF NOT EXISTS service_categories (
     id INTEGER REFERENCES service(id),
@@ -109,10 +116,10 @@ sub get_service_state {
     my $rows = $sth->fetchall_arrayref({});
     $state{service_attr} = { map { $_->{name} => $_->{value} } @$rows };
 
-    # Get ds and ds_attr
+    # Get ds and ds_attr (visible = not soft-deleted)
     $sth = $dbh->prepare("SELECT ds.id, ds.name as ds_name, ds_attr.name as attr_name, ds_attr.value as attr_value
         FROM ds LEFT JOIN ds_attr ON ds.id = ds_attr.id
-        WHERE ds.service_id = ? ORDER BY ds.name, ds_attr.name");
+        WHERE ds.service_id = ? AND ds.deleted = 0 ORDER BY ds.name, ds_attr.name");
     $sth->execute($service_id);
     $state{ds} = {};
     while (my $row = $sth->fetchrow_hashref()) {

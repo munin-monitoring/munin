@@ -426,10 +426,52 @@ sub _db_init {
 	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id $db_serial_type PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
 		type VARCHAR DEFAULT 'GAUGE',
 		ordr INTEGER DEFAULT 0,
-		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
+		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0,
+		deleted INTEGER DEFAULT 0)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
+
+	# Migrate pre-existing ds tables: add the soft-delete column (same
+	# information_schema/PRAGMA dance as the state migration below).
+	my %ds_cols;
+	if ($db_driver eq "Pg") {
+		%ds_cols = map { $_ => 1 }
+			@{ $dbh->selectcol_arrayref(
+				"SELECT column_name FROM information_schema.columns "
+				. "WHERE table_name = 'ds'") };
+	} else {
+		%ds_cols = map { $_->[1] => 1 }
+			@{ $dbh->selectall_arrayref("PRAGMA table_info(ds)") };
+	}
+	$dbh->do("ALTER TABLE ds ADD COLUMN deleted INTEGER DEFAULT 0")
+		unless $ds_cols{deleted};
+
+	# RRD file/DS mapping per datasource. Regular columns, not key/value:
+	# this table is owned by the RRD creation loop and is never touched by
+	# the plugin-config attribute diff, so mappings survive between cycles.
+	# One row per ds that has an RRD file; soft-deleted ds keep their row
+	# (and thus their history) -- the update path stops writing for them.
+	$dbh->do("CREATE TABLE IF NOT EXISTS ds_rrd (
+		ds_id INTEGER PRIMARY KEY REFERENCES ds(id),
+		file VARCHAR NOT NULL,
+		field VARCHAR NOT NULL,
+		alias VARCHAR
+	)");
+
+	# Migrate rrd:* key/value attrs into ds_rrd (idempotent). Historical
+	# single-DS files carry the DS name "42"; rrd:field was introduced
+	# later, hence the COALESCE fallback.
+	$dbh->do("INSERT INTO ds_rrd (ds_id, file, field, alias)
+		SELECT f.id, f.value, COALESCE(d.value, '42'), a.value
+		FROM ds_attr f
+		LEFT JOIN ds_attr d ON d.id = f.id AND d.name = 'rrd:field'
+		LEFT JOIN ds_attr a ON a.id = f.id AND a.name = 'rrd:alias'
+		WHERE f.name = 'rrd:file'
+		AND NOT EXISTS (SELECT 1 FROM ds_rrd r WHERE r.ds_id = f.id)");
+
+	# The key/value attrs are retired once migrated
+	$dbh->do("DELETE FROM ds_attr WHERE name IN ('rrd:file', 'rrd:field', 'rrd:alias')");
 
 	# Table that contains all the URL paths, in order to have a very fast lookup
 	# FK to grp/node/service - no cascade, error if referenced

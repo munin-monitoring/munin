@@ -282,7 +282,7 @@ sub _process_service {
     my $sth_ds = $dbh->prepare_cached(q{
         SELECT d.id, d.name, d.type
         FROM ds d
-        WHERE d.service_id = ?
+        WHERE d.service_id = ? AND d.deleted = 0
         ORDER BY d.ordr
     });
     $sth_ds->execute($service_id);
@@ -540,21 +540,22 @@ sub _compute_cdef_value {
     # Get RRD file and source DS names for this CDEF.
     # --------------------------------------------------------------------
     my ($ds_name, $rrd_file) = $dbh->selectrow_array(q{
-        SELECT d.name, da.value
+        SELECT d.name, r.file
         FROM ds d
-        INNER JOIN ds_attr da ON da.id = d.id AND da.name = 'rrd:file'
+        INNER JOIN ds_rrd r ON r.ds_id = d.id
         WHERE d.id = ?
     }, undef, $ds_id);
     return unless defined $rrd_file;
     $rrd_file = File::Spec->catfile($dbdir, $rrd_file);
     return unless -f $rrd_file;
 
-    # Get all DS in same service (for source DS lookup)
+    # Get all DS in same service (for source DS lookup). Soft-deleted
+    # fields are included on purpose: a CDEF that references one keeps
+    # working against its last known data.
     my $sth_svc = $dbh->prepare_cached(q{
-        SELECT d.id, d.name, da_file.value as rrd_file, da_field.value as rrd_field
+        SELECT d.id, d.name, r.file as rrd_file, r.field as rrd_field
         FROM ds d
-        INNER JOIN ds_attr da_file ON da_file.id = d.id AND da_file.name = 'rrd:file'
-        LEFT JOIN ds_attr da_field ON da_field.id = d.id AND da_field.name = 'rrd:field'
+        INNER JOIN ds_rrd r ON r.ds_id = d.id
         WHERE d.service_id = (SELECT service_id FROM ds WHERE id = ?)
     });
     $sth_svc->execute($ds_id);
@@ -695,6 +696,7 @@ sub _read_service_state {
         FROM ds d
         INNER JOIN state st ON st.ds_id = d.id
         WHERE d.service_id = ?
+          AND d.deleted = 0
           AND st.eval_value IS NOT NULL
           AND EXISTS (
               SELECT 1 FROM ds_attr da
