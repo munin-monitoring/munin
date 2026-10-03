@@ -611,89 +611,235 @@ sub _db_groups_update {
 
 	my $dbh = get_dbh();
 
-	# Clear existing groups, nodes, node attributes, and URLs
-	# URLs must be cleared too - they have UNIQUE constraint on path
-	#
-	# NOTE: this legacy wipe-and-reimport relies on id-churn stability: the
-	# service/ds/state tables reference node/grp ids that get re-created with
-	# identical ids each cycle (full wipe + same import order). FK enforcement
-	# would reject the wipe (services still reference the old node rows), so
-	# this one connection runs with FK off. Proper fix is a diff-based upsert
-	# import (see mission log follow-ups).
-	# Handle-truth, same as _db_init: this pragma applies to the handle
-	# we were given, whatever the ambient env says.
-	my $db_driver = $dbh->{Driver}->{Name};
-	$dbh->{AutoCommit} = 1;  # commit+detach, so the PRAGMA runs outside a txn
-	$dbh->do("PRAGMA foreign_keys=OFF;") if $db_driver eq "SQLite";
-	$dbh->{AutoCommit} = 0;
-	$dbh->do('DELETE FROM node_attr');
-	$dbh->do('DELETE FROM node');
-	$dbh->do('DELETE FROM url');
-	$dbh->do('DELETE FROM grp WHERE id != 0');  # Keep root
-
-	my $sth_grp = $dbh->prepare('INSERT INTO grp (p_id, name) VALUES (?, ?)');
-	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
-	my $sth_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
-
-	# Walk the config tree for groups and hosts
+	# The config tree is the source of truth for grp/node/node_attr.
+	# Diff-based import with FKs enforced the whole way: ids of surviving
+	# rows are stable (service/ds/state history hangs off them), and rows
+	# gone from the config are swept with their full dependent chains.
+	my (@want_groups, @want_hosts);
 	my $groups = $config->{groups};
-	if ($groups && ref $groups eq 'HASH') {
-		$self->_import_groups_recursive($dbh, $groups, 0, []);
+	$self->_config_tree_walk($groups, '', [], \@want_groups, \@want_hosts)
+		if $groups && ref $groups eq 'HASH';
+
+	# Current DB state: groups by full path (resolved via the p_id
+	# chain), nodes by path with a by-name index to detect group moves.
+	my (%db_groups, %db_nodes, %db_nodes_by_name);
+	{
+		my %grp_by_id;
+		my $sth = $dbh->prepare('SELECT id, p_id, name FROM grp');
+		$sth->execute();
+		while (my $r = $sth->fetchrow_hashref) {
+			$grp_by_id{$r->{id}} = $r;
+		}
+		$sth->finish();
+		for my $id (keys %grp_by_id) {
+			my ($path, $cur, %seen) = ('', $id);
+			while (defined $cur && $cur != 0 && !$seen{$cur}++) {
+				$path = $grp_by_id{$cur}{name} . ($path ? ";$path" : '');
+				$cur = $grp_by_id{$cur}{p_id};
+			}
+			$db_groups{$path} = {
+				id   => $id,
+				name => $grp_by_id{$id}{name},
+				p_id => $grp_by_id{$id}{p_id},
+			};
+		}
+
+		my $sth_n = $dbh->prepare('SELECT id, grp_id, name, path FROM node');
+		$sth_n->execute();
+		while (my $r = $sth_n->fetchrow_hashref) {
+			my $key = defined $r->{path} ? $r->{path} : '';
+			$db_nodes{$key} = $r;
+			push @{$db_nodes_by_name{$r->{name}}}, $r;
+		}
+		$sth_n->finish();
+	}
+
+	# Groups: upsert along the desired paths (the walk emits parents
+	# before children), then sweep leftovers deepest-first.
+	my %grp_id_by_path = map { $_ => $db_groups{$_}{id} } keys %db_groups;
+	$grp_id_by_path{''} = 0;    # root
+	for my $g (@want_groups) {
+		my $parent_id = $grp_id_by_path{$g->{parent}};
+		my $existing = $db_groups{$g->{path}};
+		if (defined $existing) {
+			if ($existing->{name} ne $g->{name}
+			    || ($existing->{p_id} // -1) != $parent_id) {
+				$dbh->prepare('UPDATE grp SET name = ?, p_id = ? WHERE id = ?')
+					->execute($g->{name}, $parent_id, $existing->{id});
+			}
+		} else {
+			$dbh->prepare('INSERT INTO grp (p_id, name, path) VALUES (?, ?, ?)')
+				->execute($parent_id, $g->{name}, $g->{path});
+			$db_groups{$g->{path}} = {
+				id   => $dbh->last_insert_id(undef, undef, 'grp', 'id'),
+				name => $g->{name},
+				p_id => $parent_id,
+			};
+		}
+		$grp_id_by_path{$g->{path}} = $db_groups{$g->{path}}{id};
+	}
+
+	my %want_group_path = map { $_->{path} => 1 } @want_groups;
+	for my $path (sort { length($b) <=> length($a) || $b cmp $a } keys %db_groups) {
+		next if $want_group_path{$path};
+		my $id = $db_groups{$path}{id};
+		next if $id == 0;
+		# Only when no node still references it (the host pass already
+		# swept config-gone hosts); otherwise leave it for the next cycle
+		# rather than break the FK.
+		my ($nb) = $dbh->selectrow_array('SELECT count(1) FROM node WHERE grp_id = ?', undef, $id);
+		next if $nb;
+		$dbh->prepare('DELETE FROM url WHERE grp_id = ?')->execute($id);
+		$dbh->prepare('DELETE FROM grp WHERE id = ?')->execute($id);
+	}
+
+	# Hosts
+	my %want_host_path = map { $_->{path} => 1 } @want_hosts;
+	for my $h (@want_hosts) {
+		my $grp_id = $grp_id_by_path{$h->{grp}};
+		my $node = $db_nodes{$h->{path}};
+		my $old_path;
+		if (!defined $node) {
+			# The host may have moved groups (its path changed): match by
+			# name when unambiguous, so ids -- and the service/ds/state
+			# history on them -- survive the move.
+			my @same_name = @{$db_nodes_by_name{$h->{name}} || []};
+			$node = $same_name[0] if @same_name == 1;
+			$old_path = defined $node
+				? (defined $node->{path} ? $node->{path} : '')
+				: undef;
+		}
+		if (defined $node) {
+			if ($node->{grp_id} != $grp_id || $node->{name} ne $h->{name}
+			    || (defined $old_path && $old_path ne $h->{path})) {
+				$dbh->prepare('UPDATE node SET grp_id = ?, name = ?, path = ? WHERE id = ?')
+					->execute($grp_id, $h->{name}, $h->{path}, $node->{id});
+			}
+			if (defined $old_path) {
+				# Rekey: the moved node must not be swept as stale below
+				delete $db_nodes{$old_path};
+				$db_nodes{$h->{path}} = $node;
+				$node->{path} = $h->{path};
+			}
+		} else {
+			$dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)')
+				->execute($grp_id, $h->{name}, $h->{path});
+			$node = {
+				id     => $dbh->last_insert_id(undef, undef, 'node', 'id'),
+				grp_id => $grp_id,
+				name   => $h->{name},
+				path   => $h->{path},
+			};
+			$db_nodes{$h->{path}} = $node;
+			push @{$db_nodes_by_name{$h->{name}}}, $node;
+		}
+
+		# node_attr: sync to the desired set (insert/update/delete)
+		my %db_attr;
+		my $sth_a = $dbh->prepare('SELECT name, value FROM node_attr WHERE id = ?');
+		$sth_a->execute($node->{id});
+		while (my ($k, $v) = $sth_a->fetchrow_array) {
+			$db_attr{$k} = $v;
+		}
+		$sth_a->finish();
+		for my $k (keys %db_attr) {
+			next if exists $h->{attrs}{$k};
+			$dbh->prepare('DELETE FROM node_attr WHERE id = ? AND name = ?')
+				->execute($node->{id}, $k);
+		}
+		for my $k (sort keys %{$h->{attrs}}) {
+			my $val = $h->{attrs}{$k};
+			if (!exists $db_attr{$k}) {
+				$dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)')
+					->execute($node->{id}, $k, $val);
+			} elsif ($db_attr{$k} ne $val) {
+				$dbh->prepare('UPDATE node_attr SET value = ? WHERE id = ? AND name = ?')
+					->execute($val, $node->{id}, $k);
+			}
+		}
+	}
+
+	# Hosts gone from the config: sweep the full dependent chain
+	for my $path (keys %db_nodes) {
+		next if $want_host_path{$path};
+		$self->_db_remove_node_chain($dbh, $db_nodes{$path}{id});
 	}
 
 	$dbh->commit();
 	INFO "Imported groups and hosts from config into SQL";
 }
 
-# Recursively import groups and their hosts into the DB.
-sub _import_groups_recursive {
-	my ($self, $dbh, $groups, $p_id, $path_parts) = @_;
+# Ordered, FK-safe removal of a node and everything hanging off it.
+# Children first, mirroring the FK graph: state/override/ds_rrd/ds_attr
+# off ds, the rest off service or node.
+sub _db_remove_node_chain {
+	my ($self, $dbh, $node_id) = @_;
 
-	my $sth_grp = $dbh->prepare('INSERT INTO grp (p_id, name) VALUES (?, ?)');
-	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
-	my $sth_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
+	DEBUG "_db_remove_node_chain($node_id)";
+	my $svc_sql = 'SELECT id FROM service WHERE node_id = ?';
+	$dbh->do("DELETE FROM state WHERE node_id = ? OR ds_id IN (SELECT id FROM ds WHERE service_id IN ($svc_sql))",
+		undef, $node_id, $node_id);
+	$dbh->do("DELETE FROM override WHERE ds_id IN (SELECT id FROM ds WHERE service_id IN ($svc_sql))",
+		undef, $node_id);
+	$dbh->do("DELETE FROM ds_rrd WHERE ds_id IN (SELECT id FROM ds WHERE service_id IN ($svc_sql))",
+		undef, $node_id);
+	$dbh->do("DELETE FROM ds_attr WHERE id IN (SELECT id FROM ds WHERE service_id IN ($svc_sql))",
+		undef, $node_id);
+	$dbh->do("DELETE FROM ds WHERE service_id IN ($svc_sql)", undef, $node_id);
+	$dbh->do("DELETE FROM notification_tracking WHERE service_id IN ($svc_sql)", undef, $node_id);
+	$dbh->do("DELETE FROM service_attr WHERE id IN ($svc_sql)", undef, $node_id);
+	$dbh->do("DELETE FROM service_categories WHERE id IN ($svc_sql)", undef, $node_id);
+	$dbh->do("DELETE FROM url WHERE node_id = ? OR service_id IN ($svc_sql)",
+		undef, $node_id, $node_id);
+	$dbh->do("DELETE FROM service WHERE node_id = ?", undef, $node_id);
+	$dbh->do("DELETE FROM node_attr WHERE id = ?", undef, $node_id);
+	$dbh->do("DELETE FROM node WHERE id = ?", undef, $node_id);
+}
+
+# Walk the config tree emitting the desired groups (pre-order, so
+# parents precede children) and hosts. Mirrors the historical import's
+# traversal: only groups' hosts and nested groups are visited.
+sub _config_tree_walk {
+	my ($self, $groups, $parent_path, $path_parts, $want_groups, $want_hosts) = @_;
 
 	for my $group_name (sort keys %$groups) {
 		my $group = $groups->{$group_name};
 		next unless ref $group;  # Skip non-refs (blessed objects are ok)
 
-		# Insert group
-		$sth_grp->execute($p_id, $group_name);
-		my $grp_id = $dbh->last_insert_id(undef, undef, 'grp', 'id');
+		my $grp_path = $parent_path eq '' ? $group_name : "$parent_path;$group_name";
+		push @$want_groups, { path => $grp_path, name => $group_name, parent => $parent_path };
 
-		# Track path for this group
 		my @current_path = (@$path_parts, $group_name);
 
-		# Import hosts in this group
+		# Hosts in this group
 		my $hosts = $group->{hosts};
 		if ($hosts && ref $hosts) {
 			for my $host_name (sort keys %$hosts) {
 				my $host = $hosts->{$host_name};
 				next unless ref $host;
 
-				# Build full path: group1;group2;host
-				my $full_path = join(';', @current_path, $host_name);
-
-				# Insert node
-				$sth_node->execute($grp_id, $host_name, $full_path);
-				my $node_id = $dbh->last_insert_id(undef, undef, 'node', 'id');
-
-				# Insert node attributes
+				my %attrs;
 				for my $attr (qw(address port update update_priority use_node_name)) {
 					my $val = $host->{$attr};
 					next unless defined $val;
 					# Convert Infinity to a large number for storage
 					$val = 999999 if $val eq 'Infinity';
-					$sth_attr->execute($node_id, $attr, $val);
+					$attrs{$attr} = $val;
 				}
+
+				push @$want_hosts, {
+					name  => $host_name,
+					path  => join(';', @current_path, $host_name),
+					grp   => $grp_path,
+					attrs => \%attrs,
+				};
 			}
 		}
 
 		# Recurse into nested groups
 		my $nested_groups = $group->{groups};
-		if ($nested_groups && ref $nested_groups) {
-			$self->_import_groups_recursive($dbh, $nested_groups, $grp_id, \@current_path);
-		}
+		$self->_config_tree_walk($nested_groups, $grp_path, \@current_path, $want_groups, $want_hosts)
+			if $nested_groups && ref $nested_groups;
 	}
 }
 

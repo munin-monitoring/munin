@@ -792,7 +792,9 @@ sub uw_handle_config {
 	my @new_fields;    # ds_names without an established ds_rrd mapping
 	for my $ds_name (keys %fields) {
 		$sth_mapped->execute($ds_ids->{$ds_name});
-		push @new_fields, $ds_name unless $sth_mapped->fetchrow_array;
+		my ($mapped) = $sth_mapped->fetchrow_array;
+		$sth_mapped->finish();
+		push @new_fields, $ds_name unless $mapped;
 	}
 
 	# Group new fields by RRD-compatibility. Type/min/max are per-DS and
@@ -919,7 +921,9 @@ sub uw_handle_fetch {
 				my $sth_map = $self->{dbh}->prepare_cached(
 					'SELECT file, field FROM ds_rrd WHERE ds_id = ?');
 				$sth_map->execute($ds_id);
-				$rrd_map_cache{$ds_id} = [ $sth_map->fetchrow_array ];
+				my @row = $sth_map->fetchrow_array;
+				$sth_map->finish();
+				$rrd_map_cache{$ds_id} = \@row;
 			}
 			($rrd_file, $rrd_field) = @{$rrd_map_cache{$ds_id}};
 		}
