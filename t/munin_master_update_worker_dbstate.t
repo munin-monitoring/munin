@@ -393,6 +393,61 @@ subtest 'Scenario 13: dirty_config fields create datasources' => sub {
     ok(exists $state->{ds}{field2}, "field2 exists");
 };
 
+# Scenario 14: soft delete keeps the row, its attrs and its RRD mapping;
+# a reappearing field resurrects with continuous history
+subtest 'Scenario 14: soft delete and resurrect' => sub {
+    $dbh->do("DELETE FROM service WHERE node_id = 1 AND name = 'soft'");
+    $dbh->do("DELETE FROM ds_rrd");
+    $dbh->do("DELETE FROM ds_attr");
+    $dbh->do("DELETE FROM ds");
+
+    my ($svc_id) = $worker->_db_service('soft',
+        { graph_title => 'Soft' },
+        { keep => { label => 'Keep' }, gone => { label => 'Gone' } }
+    );
+
+    my ($gone_id) = $dbh->selectrow_array(
+        "SELECT id FROM ds WHERE service_id = ? AND name = 'gone'", undef, $svc_id);
+    $dbh->do("INSERT INTO ds_rrd (ds_id, file, field) VALUES (?, 'soft-gone-g.rrd', 'gone-g')",
+        undef, $gone_id);
+
+    # Field disappears from the config
+    ($svc_id) = $worker->_db_service('soft',
+        { graph_title => 'Soft' },
+        { keep => { label => 'Keep' } }
+    );
+
+    my ($deleted) = $dbh->selectrow_array(
+        "SELECT deleted FROM ds WHERE service_id = ? AND name = 'gone'", undef, $svc_id);
+    is($deleted, 1, "stale field is soft-deleted");
+
+    my $state = get_service_state($svc_id);
+    ok(!exists $state->{ds}{gone}, "soft-deleted field hidden from visible state");
+    ok(exists $state->{ds}{keep}, "live field still visible");
+
+    my ($mapping) = $dbh->selectrow_array(
+        "SELECT file FROM ds_rrd WHERE ds_id = ?", undef, $gone_id);
+    is($mapping, 'soft-gone-g.rrd', "RRD mapping survives the soft delete");
+
+    my ($label) = $dbh->selectrow_array(
+        "SELECT value FROM ds_attr WHERE id = ? AND name = 'label'", undef, $gone_id);
+    is($label, 'Gone', "attributes survive the soft delete");
+
+    # Field reappears
+    ($svc_id) = $worker->_db_service('soft',
+        { graph_title => 'Soft' },
+        { keep => { label => 'Keep' }, gone => { label => 'Gone Again' } }
+    );
+
+    ($deleted) = $dbh->selectrow_array(
+        "SELECT deleted FROM ds WHERE service_id = ? AND name = 'gone'", undef, $svc_id);
+    is($deleted, 0, "reappearing field is resurrected");
+
+    $state = get_service_state($svc_id);
+    ok(exists $state->{ds}{gone}, "resurrected field visible again");
+    is($state->{ds}{gone}{attrs}{label}, 'Gone Again', "resurrected field attrs updated");
+};
+
 done_testing();
 
 1;
