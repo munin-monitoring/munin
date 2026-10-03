@@ -1,0 +1,631 @@
+#!/usr/bin/perl
+
+# munin-upgrade-db -- offline schema migration for the munin master.
+#
+# The ONLY place schema evolution happens. Runtime daemons (munin-update,
+# munin-limits, munin-html, munin-graph, static renderers) verify the
+# schema version at get_dbh and die loudly on any mismatch -- they never
+# repair, adopt or guess. This tool runs exactly once during package
+# upgrade: the administrator stops Munin, upgrades, restarts.
+#
+# Connection precedence (house rule): CLI arg > config file > default.
+# The config file is loaded exactly as munin-update loads it.
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Pod::Usage;
+
+use DBI;
+
+use Munin::Common::Defaults;
+use Munin::Master::Config;
+use Munin::Master::Schema qw(CURRENT_SCHEMA_VERSION);
+
+my %opt;
+Getopt::Long::Configure(qw(no_ignore_case auto_abbrev));
+GetOptions(
+    \%opt,
+    'check',
+    'dry-run',
+    'yolo',
+    'dbdir=s',
+    'dburl=s',
+    'dbdriver=s',
+    'dbuser=s',
+    'dbpasswd=s',
+    'config|config_file=s',
+    'help|h',
+) or pod2usage(1);
+pod2usage(0) if $opt{help};
+
+exit main() unless caller;
+
+sub main {
+    my $rc = eval { run() };
+    if (my $err = $@) {
+        chomp $err;
+        print STDERR "munin-upgrade-db: $err\n";
+        return 1;
+    }
+    return defined $rc ? $rc : 0;
+}
+
+sub run {
+    my $config   = _load_config();
+    my ($dburl, $dbdriver, $dbuser, $dbpasswd) = _resolve_connection($config);
+
+    print "munin-upgrade-db: target $dburl (driver $dbdriver)\n";
+
+    my $dbh = DBI->connect("dbi:$dbdriver:dbname=$dburl", $dbuser, $dbpasswd, {
+        RaiseError => 1,
+        PrintError => 0,
+    }) or die "cannot connect to $dburl: $DBI::errstr\n";
+
+    # sqlite: FKs off for the duration of the migration. The FK retrofit
+    # rebuilds tables (DROP TABLE parent fails with FKs enabled and
+    # referencing rows present), and old databases legitimately contain
+    # dangling references from the pre-enforcement era. What keeps
+    # dangling references loud is the strict-mode integrity check below,
+    # not the session pragma.
+    $dbh->do('PRAGMA foreign_keys=OFF') if $dbdriver eq 'SQLite';
+
+    my $state  = Munin::Master::Schema::detect($dbh);
+    my $target = CURRENT_SCHEMA_VERSION;
+    my $shown  = $state eq 'unversioned' ? 'v0 (unversioned)' : "v$state";
+    print "munin-upgrade-db: detected $shown, target v$target\n";
+
+    if ($state eq 'fresh') {
+        print "munin-upgrade-db: fresh database; nothing to do (munin-update bootstraps it)\n";
+        return 0;
+    }
+
+    return $opt{yolo} ? _run_yolo($dbh, $state, $dburl) : _run_strict($dbh, $state, $dburl);
+}
+
+#------------------------------------------------------------------------------
+# Strict mode
+#------------------------------------------------------------------------------
+
+sub _run_strict {
+    my ($dbh, $state, $dburl) = @_;
+    my $target = CURRENT_SCHEMA_VERSION;
+
+    if ($state eq 'unversioned') {
+        my ($ok, @diagnosis) = _acceptance_check($dbh);
+        unless ($ok) {
+            print "munin-upgrade-db: incompatible database at $dburl -- refusing to touch it:\n";
+            print "  $_\n" for @diagnosis;
+            print "munin-upgrade-db: hand-modified or foreign schemas are never guessed at.\n";
+            print "  restore from backup, repair by hand and record a version_history row,\n";
+            print "  or re-run with --yolo if you accept an additive-only heuristic repair\n";
+            return 1;
+        }
+        if ($opt{check}) {
+            print "munin-upgrade-db: upgrade needed: v0 (unversioned) -> v$target\n";
+            print "  pending: $_\n" for Munin::Master::Schema::pending_steps($dbh);
+            return 2;
+        }
+        if ($opt{'dry-run'}) {
+            return _dry_run($dbh, sub { Munin::Master::Schema::migrate_v0_to_v1($dbh) }, $target);
+        }
+        return _apply_steps($dbh, sub { Munin::Master::Schema::migrate_v0_to_v1($dbh) },
+            $target, 'v0 (unversioned)');
+    }
+
+    if ($state > $target) {
+        print "munin-upgrade-db: downgrade unsupported: database at $dburl is v$state, this code expects v$target\n";
+        print "munin-upgrade-db: back up the database and reinstall the matching munin version\n";
+        return 1;
+    }
+
+    if ($state == $target) {
+        my $diff = _fingerprint($dbh);
+        if ($diff->{ok}) {
+            print "munin-upgrade-db: up to date (v$state)\n";
+            _report($diff, 'warning');
+            return 0;
+        }
+        print "munin-upgrade-db: database is stamped v$state but does not match the expected schema:\n";
+        _report($diff, 'problem');
+        print "munin-upgrade-db: restore from backup, repair by hand and record a version_history row,\n";
+        print "                   or re-run with --yolo for additive repair\n";
+        return 1;
+    }
+
+    # Versioned but older: apply steps for each version boundary in
+    # order. Only v0->v1 exists today; the stepwise structure is the
+    # point -- every boundary is one transaction with its own audit rows.
+    if ($opt{check}) {
+        print "munin-upgrade-db: upgrade needed: v$state -> v$target\n";
+        print "  pending: $_\n" for Munin::Master::Schema::pending_steps($dbh);
+        return 2;
+    }
+    if ($opt{'dry-run'}) {
+        return _dry_run($dbh, sub { _migrate_boundaries($dbh, $state, $target) }, $target);
+    }
+    return _apply_steps($dbh, sub { _migrate_boundaries($dbh, $state, $target) },
+        $target, "v$state");
+}
+
+sub _migrate_boundaries {
+    my ($dbh, $state, $target) = @_;
+    my @steps;
+    for my $boundary ($state + 1 .. $target) {
+        if ($boundary == 1) {
+            push @steps, Munin::Master::Schema::migrate_v0_to_v1($dbh);
+        } else {
+            die "no migration defined up to schema version $boundary; upgrade this munin\n";
+        }
+    }
+    return @steps;
+}
+
+# The acceptance check: an unversioned database is accepted only if its
+# core tables all exist and no unknown tables are present. Extra
+# columns are classified: unconstrained -> warn and proceed, constrained
+# -> refuse (a constraint is structural evidence the schema diverged).
+sub _acceptance_check {
+    my ($dbh) = @_;
+    my $driver = $dbh->{Driver}->{Name};
+    my @problems;
+
+    my %tables = map { $_ => 1 } @{ Munin::Master::Schema::all_tables($dbh) };
+    my @missing_core = grep { !$tables{$_} } Munin::Master::Schema::core_tables();
+    push @problems, "missing core table: $_" for @missing_core;
+
+    my %known = map { $_ => 1 } Munin::Master::Schema::known_tables();
+    my @unknown = grep { !$known{$_} } sort keys %tables;
+    push @problems, "unknown table: $_ (no known version declares it)" for @unknown;
+
+    my $diff = _fingerprint($dbh);
+    for my $p (@{ $diff->{problems} }) {
+        next unless $p->{kind} eq 'constrained_extra_column';
+        push @problems, "constrained extra column: $p->{table}.$p->{col} "
+            . '(referenced by a constraint; the schema has diverged)';
+    }
+    for my $w (@{ $diff->{warnings} }) {
+        next unless $w->{kind} eq 'extra_column';
+        print "munin-upgrade-db: warning: unconstrained extra column $w->{table}.$w->{col} kept as-is\n";
+    }
+
+    return (!@problems, @problems);
+}
+
+# Run the migration steps, verify the full fingerprint, check data
+# integrity, append one audit row per applied step, commit. Any failure
+# rolls back the transaction: an interrupted upgrade leaves
+# MAX(version) at the last completed step and the tool can be rerun.
+sub _apply_steps {
+    my ($dbh, $steps_code, $target, $from_label) = @_;
+
+    $dbh->{AutoCommit} = 0;
+    my @steps = $steps_code->();
+    _verify_fingerprint($dbh);
+    _check_data_integrity($dbh);
+    Munin::Master::Schema::record($dbh, $target, $_) for @steps;
+    $dbh->commit();
+
+    print "munin-upgrade-db: $from_label -> v$target applied:\n";
+    print "  step: $_\n" for @steps;
+    print "munin-upgrade-db: schema verified; audit trail appended (version_history)\n";
+    return 0;
+}
+
+# --dry-run: execute the real code path inside a transaction, print the
+# SQL each step executed, roll back. No writes persist.
+sub _dry_run {
+    my ($dbh, $steps_code, $version) = @_;
+
+    my @sql;
+    $dbh->{private_munin_sql_log} = \@sql;
+    $dbh->{AutoCommit} = 0;
+    my @steps = $steps_code->();
+    Munin::Master::Schema::record($dbh, $version, $_) for @steps;
+    $dbh->rollback();
+    $dbh->{private_munin_sql_log} = undef;
+
+    print "munin-upgrade-db: dry run -- SQL that would execute, in order (nothing written):\n";
+    for my $entry (@sql) {
+        my ($sql, @bind) = @$entry;
+        $sql =~ s/\s+/ /g;
+        $sql =~ s/^\s+|\s+$//g;
+        print "  $sql";
+        print '  -- binds: ' . join(', ', map { defined $_ ? $_ : 'NULL' } @bind) if @bind;
+        print "\n";
+    }
+    print "munin-upgrade-db: dry run complete; steps that would apply:\n";
+    print "  step: $_\n" for @steps;
+    return 0;
+}
+
+#------------------------------------------------------------------------------
+# YOLO mode: heuristic repair ladder (tool only, never a runtime path)
+#------------------------------------------------------------------------------
+
+sub _run_yolo {
+    my ($dbh, $state, $dburl) = @_;
+    my $driver = $dbh->{Driver}->{Name};
+    my $target = CURRENT_SCHEMA_VERSION;
+
+    if ($state ne 'unversioned' && $state > $target) {
+        print "munin-upgrade-db: --yolo cannot help: downgrade unsupported (database is v$state, code expects v$target)\n";
+        return 1;
+    }
+    if ($state ne 'unversioned' && $state == $target) {
+        my $diff = _fingerprint($dbh);
+        if ($diff->{ok}) {
+            print "munin-upgrade-db: up to date (v$state); --yolo has nothing to repair\n";
+            return 0;
+        }
+    }
+
+    # Ladder 4, the hard floor: none of grp/node/service/ds exist.
+    # Creating an empty Munin schema over a foreign database would be a
+    # lie about what happened -- refuse even with --yolo.
+    my %tables = map { $_ => 1 } @{ Munin::Master::Schema::all_tables($dbh) };
+    unless (grep { $tables{$_} } qw(grp node service ds)) {
+        print "munin-upgrade-db: --yolo refused: none of the core tables (grp, node, service, ds) exist at $dburl\n";
+        print "munin-upgrade-db: this does not look like a munin database; creating one over it would be a lie\n";
+        return 1;
+    }
+
+    my $actual   = Munin::Master::Schema::introspect($dbh);
+    my $expected = Munin::Master::Schema::expected_schema($driver);
+    my $diff     = Munin::Master::Schema::diff_schema($actual, $expected, $driver);
+
+    # Constrained extras refuse in BOTH modes: additive-only cannot drop
+    # or repair a constraint.
+    my @cextras =
+        grep { $_->{kind} eq 'constrained_extra_column' } @{ $diff->{problems} };
+    if (@cextras) {
+        print "munin-upgrade-db: --yolo refused: constrained extra columns (refused in both modes):\n";
+        print "  - $_->{table}.$_->{col} (constraint-backed)\n" for @cextras;
+        print "munin-upgrade-db: drop the constraint by hand and record a version_history row, or restore from backup\n";
+        return 1;
+    }
+
+    my @missing_tables = map { $_->{table} }
+        grep { $_->{kind} eq 'missing_table' } @{ $diff->{problems} };
+    my @missing_columns = map { "$_->{table}.$_->{col}" }
+        grep { $_->{kind} eq 'missing_column' } @{ $diff->{problems} };
+    my @bad_columns = map { "$_->{table}.$_->{col} ($_->{detail})" }
+        grep { $_->{kind} eq 'column_mismatch' } @{ $diff->{problems} };
+    my @missing_indexes = map { "$_->{table} ($_->{detail})" }
+        grep { $_->{kind} eq 'missing_index' } @{ $diff->{problems} };
+    my @missing_checks = map { "$_->{table}" }
+        grep { $_->{kind} eq 'missing_check' } @{ $diff->{problems} };
+    my @missing_uniq = map { "$_->{table} ($_->{detail})" }
+        grep { $_->{kind} eq 'missing_uniq' } @{ $diff->{problems} };
+    my @missing_pk = map { $_->{table} }
+        grep { $_->{kind} eq 'missing_pk' } @{ $diff->{problems} };
+
+    # Additive-only cannot repair these: refuse with the diagnosis.
+    my @refusals;
+    push @refusals, "missing primary key: $_ (cannot be added additively)" for @missing_pk;
+    push @refusals, "column type/default mismatch: $_ (cannot be altered additively)" for @bad_columns;
+    push @refusals, "missing UNIQUE set: $_ (adding it validates existing data; repair by hand)" for @missing_uniq;
+    push @refusals, "missing CHECK constraint: $_ (cannot be added additively)" for @missing_checks;
+    if (@refusals) {
+        print "munin-upgrade-db: --yolo refused: additive-only cannot repair:\n";
+        print "  - $_\n" for @refusals;
+        print "munin-upgrade-db: restore from backup, or repair by hand and record a version_history row\n";
+        return 1;
+    }
+
+    # What the repair would do (also the --check/--dry-run plan)
+    my %add_columns;    # table => [cols]
+    for my $mc (@missing_columns) {
+        my ($table, $col) = split /\./, $mc, 2;
+        push @{ $add_columns{$table} }, $col;
+    }
+    my @created_indexes;
+    for my $mi (@missing_indexes) {
+        my ($table, $name) = $mi =~ /^(\S+) \((.+)\)\z/;
+        push @created_indexes, { table => $table, name => $name } if defined $name;
+    }
+    my @pending = Munin::Master::Schema::pending_steps($dbh);
+    my %known = map { $_ => 1 } Munin::Master::Schema::known_tables();
+    my @unknown_tables = grep { !$known{$_} } sort keys %tables;
+
+    my @narrative;
+    if ($diff->{ok}) {
+        # Ladder 1: exact adoption -- introspection already matches the
+        # target schema; nothing to migrate, the audit row is the point.
+        push @narrative, "yolo: adopted pre-existing v$target-shaped schema";
+        push @narrative, _kept_extras($diff, \@unknown_tables);
+        my $comment = join('; ', @narrative);
+        if ($opt{check} || $opt{'dry-run'}) {
+            print "munin-upgrade-db: --yolo plan for $dburl (nothing written):\n";
+            print "  adopt the pre-existing schema as v$target\n";
+            print "  append audit row: $comment\n";
+            return 0;
+        }
+        $dbh->{AutoCommit} = 0;
+        Munin::Master::Schema::record($dbh, $target, $comment);
+        $dbh->commit();
+        print "munin-upgrade-db: $comment\n";
+        print "munin-upgrade-db: schema verified; audit trail appended (version_history)\n";
+        return 0;
+    }
+
+    # Ladders 2+3: additive repair. Every applied heuristic is narrated
+    # in the audit comment, with counts.
+    push @narrative, "yolo: repaired v" . ($state eq 'unversioned' ? '0' : $state)
+        . "-shaped schema to v$target";
+    push @narrative, 'created missing tables (' . join(', ', @missing_tables) . ')'
+        if @missing_tables;
+    for my $table (sort keys %add_columns) {
+        push @narrative, "added column" . (@{ $add_columns{$table} } > 1 ? 's' : '')
+            . ' ' . join(', ', @{ $add_columns{$table} }) . " to $table";
+    }
+    push @narrative, 'created missing indexes (' . join(', ', map { "$_->{table}.$_->{name}" } @created_indexes) . ')'
+        if @created_indexes;
+
+    # Plan mode reports what the ladder WOULD do (the pending steps are
+    # the read-only mirror of the migration guards).
+    my @plan = (@narrative, @pending, _kept_extras($diff, \@unknown_tables));
+    if ($opt{check} || $opt{'dry-run'}) {
+        print "munin-upgrade-db: --yolo plan for $dburl (nothing written):\n";
+        print "  $_\n" for @plan;
+        return 0;
+    }
+
+    $dbh->{AutoCommit} = 0;
+    for my $table (@missing_tables) {
+        Munin::Master::Schema::create_table($dbh, $table);
+    }
+    for my $table (sort keys %add_columns) {
+        my $cols = Munin::Master::Schema::_column_set($dbh, $table);
+        for my $col (@{ $add_columns{$table} }) {
+            next if $cols->{$col};    # guarded: may have appeared meanwhile
+            my $spec = Munin::Master::Schema::_table_spec($table);
+            my ($want) = grep { $_->[0] eq $col } @{ $spec->{columns} };
+            my $opts = ($want && ref $want->[2] eq 'HASH') ? $want->[2] : {};
+            my $raw  = $want ? $want->[1] : 'VARCHAR';
+            my $type = $raw eq 'IDPK' ? 'INTEGER' : $raw;
+            my $dflt = defined $opts->{dflt} ? " DEFAULT $opts->{dflt}" : '';
+            $dbh->do("ALTER TABLE $table ADD COLUMN $col $type$dflt");
+        }
+    }
+    for my $idx (@created_indexes) {
+        my $spec = Munin::Master::Schema::_table_spec($idx->{table});
+        my ($want) = grep { $_->{name} eq $idx->{name} } @{ $spec->{indexes} || [] };
+        next unless $want;
+        $dbh->do('CREATE ' . ($want->{unique} ? 'UNIQUE ' : '')
+            . "INDEX IF NOT EXISTS $want->{name} ON $idx->{table} ("
+            . join(', ', @{ $want->{cols} }) . ')');
+    }
+    my @steps = Munin::Master::Schema::migrate_v0_to_v1($dbh, { additive => 1 });
+    _verify_fingerprint($dbh);
+
+    # The audit comment narrates what actually happened, with counts:
+    # the ladder's structural actions, the migration steps as applied,
+    # and everything additive repair deliberately kept.
+    my @executed = (@narrative, @steps, _kept_extras($diff, \@unknown_tables));
+    push @executed, 'created missing table version_history'
+        if grep { $_ eq 'version_history' } @missing_tables;
+    my $comment = join('; ', @executed);
+    Munin::Master::Schema::record($dbh, $target, $comment);
+    $dbh->commit();
+
+    print "munin-upgrade-db: $comment\n";
+    print "munin-upgrade-db: migration steps:\n";
+    print "  step: $_\n" for @steps;
+    print "munin-upgrade-db: schema verified; audit trail appended (version_history)\n";
+    return 0;
+}
+
+# Narration of what additive repair deliberately keeps (never deletes).
+sub _kept_extras {
+    my ($diff, $unknown_tables) = @_;
+    my @bits;
+    my @cols = map { "$_->{table}.$_->{col}" }
+        grep { $_->{kind} eq 'extra_column' } @{ $diff->{warnings} };
+    push @bits, 'kept ' . scalar(@cols) . ' unknown column' . (@cols == 1 ? '' : 's')
+        . ' (' . join(', ', @cols) . ')' if @cols;
+    push @bits, 'kept ' . scalar(@$unknown_tables) . ' unknown table' . (@$unknown_tables == 1 ? '' : 's')
+        . ' (' . join(', ', @$unknown_tables) . ')' if @$unknown_tables;
+    return @bits;
+}
+
+#------------------------------------------------------------------------------
+# Fingerprint verification + data integrity
+#------------------------------------------------------------------------------
+
+sub _fingerprint {
+    my ($dbh) = @_;
+    my $driver = $dbh->{Driver}->{Name};
+    return Munin::Master::Schema::diff_schema(
+        Munin::Master::Schema::introspect($dbh),
+        Munin::Master::Schema::expected_schema($driver),
+        $driver);
+}
+
+sub _verify_fingerprint {
+    my ($dbh) = @_;
+    my $diff = _fingerprint($dbh);
+    return $diff if $diff->{ok};
+    my $msg = 'munin-upgrade-db: schema does not match the expected v'
+        . CURRENT_SCHEMA_VERSION . " schema:\n";
+    $msg .= '  - ' . _fmt_problem($_) . "\n" for @{ $diff->{problems} };
+    $msg .= "munin-upgrade-db: nothing was written (transaction rolled back);\n";
+    $msg .= "                   restore from backup, or re-run with --yolo for additive repair\n";
+    die $msg;
+}
+
+sub _check_data_integrity {
+    my ($dbh) = @_;
+    my $actual = Munin::Master::Schema::introspect($dbh);
+    my @violations;
+    for my $table (sort keys %$actual) {
+        for my $key (sort keys %{ $actual->{$table}{fks} }) {
+            my $fk = $actual->{$table}{fks}{$key};
+            next unless @{ $fk->{cols} } == 1 && @{ $fk->{refcols} } == 1;
+            my ($col)  = @{ $fk->{cols} };
+            my ($rcol) = @{ $fk->{refcols} };
+            my ($n) = $dbh->selectrow_array(
+                "SELECT COUNT(*) FROM $table c
+                 WHERE c.$col IS NOT NULL
+                   AND NOT EXISTS (SELECT 1 FROM $fk->{reftable} p WHERE p.$rcol = c.$col)");
+            push @violations, "$table.$col -> $fk->{reftable}.$rcol ($n dangling row"
+                . ($n == 1 ? '' : 's') . ')' if $n;
+        }
+    }
+    return 1 unless @violations;
+    my $msg = "munin-upgrade-db: database has dangling references (pre-existing data problems):\n";
+    $msg .= "  - $_\n" for @violations;
+    $msg .= "munin-upgrade-db: refusing to stamp an audit trail over inconsistent data;\n";
+    $msg .= "                   restore from backup, fix the rows by hand, or re-run with --yolo\n";
+    $msg .= "                   (additive-only: the rows are kept and narrated)\n";
+    die $msg;
+}
+
+sub _report {
+    my ($diff, $level) = @_;
+    for my $p (@{ $diff->{problems} }) {
+        print "  - " . _fmt_problem($p) . "\n";
+    }
+    for my $w (@{ $diff->{warnings} }) {
+        print "  ~ " . _fmt_problem($w) . "\n";
+    }
+    return;
+}
+
+sub _fmt_problem {
+    my ($p) = @_;
+    my $where = join('.', grep { defined } @{$p}{qw(table col)});
+    my $detail = defined $p->{detail} ? " ($p->{detail})" : '';
+    return "$p->{kind}: $where$detail";
+}
+
+#------------------------------------------------------------------------------
+# Config + connection resolution
+#------------------------------------------------------------------------------
+
+sub _load_config {
+    my $config = Munin::Master::Config->instance()->{config};
+    my $config_file = $opt{config}
+        // $ENV{MUNIN_CONF}
+        // "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
+    if (-f $config_file) {
+        $config->parse_config_from_file($config_file);
+        print "munin-upgrade-db: loaded config $config_file\n";
+    } elsif (defined $opt{config}) {
+        die "config file '$config_file' not found\n";
+    } else {
+        print "munin-upgrade-db: no config file at $config_file; using compiled-in defaults\n";
+    }
+    return $config;
+}
+
+# CLI arg > MUNIN_DB* env > config file > compiled-in default. Each
+# --db* flag overrides the corresponding Munin::Master::Config setting
+# for this invocation only.
+sub _resolve_connection {
+    my ($config) = @_;
+
+    my $dburl = $opt{dburl} // $ENV{MUNIN_DBURL} // $config->{dburl};
+    unless (defined $dburl) {
+        my $dbdir = $opt{dbdir} // $config->{dbdir};
+        $dburl = "$dbdir/datafile.sqlite";
+    }
+    my $dbdriver = $opt{dbdriver} // $ENV{MUNIN_DBDRIVER} // $config->{dbdriver} // 'SQLite';
+    my $dbuser   = $opt{dbuser}   // $ENV{MUNIN_DBUSER}   // $config->{dbuser}   // '';
+    my $dbpasswd = $opt{dbpasswd} // $ENV{MUNIN_DBPASSWD} // $config->{dbpasswd} // '';
+    return ($dburl, $dbdriver, $dbuser, $dbpasswd);
+}
+
+1;
+
+__END__
+
+=encoding utf8
+
+=head1 NAME
+
+munin-upgrade-db - offline schema migration for the munin master
+
+=head1 SYNOPSIS
+
+munin-upgrade-db [--check] [--dry-run] [--yolo]
+  [--dbdir DIR] [--dburl URL] [--dbdriver DRIVER]
+  [--dbuser USER] [--dbpasswd PASSWD] [--config FILE]
+
+=head1 DESCRIPTION
+
+Applies schema changes to munin's SQL database exactly once, during
+package upgrade -- never by the running daemons. The administrator stops
+Munin, upgrades, restarts; this tool runs in between, and its outcome is
+verified before any daemon touches data.
+
+Runtime code (munin-update, munin-limits, munin-html, munin-graph and
+the static renderers) verifies the schema version at the single
+Munin::Master::Update::get_dbh choke point and dies with an actionable
+message on any mismatch. There is no heuristic or repair branch in any
+runtime path: mismatch is always fatal for a daemon.
+
+Connection precedence: C<--dburl> > C<MUNIN_DBURL> > config C<dburl> >
+(C<--dbdir> or config C<dbdir>) + C</datafile.sqlite>; driver, user and
+password resolve the same way. The config file is loaded exactly as
+munin-update loads it.
+
+=head1 MODES
+
+=over
+
+=item B<--check>
+
+Report detected version, target version and pending steps. No writes.
+Exit codes: 0 up-to-date, 2 upgrade needed, 1 error/incompatible.
+
+=item B<--dry-run>
+
+Print the SQL each step would execute, in order (the real code path in
+a rolled-back transaction). No writes. Exit 0 / 1.
+
+=item default>
+
+Run the steps, verify the full fingerprint, append one version_history
+audit row per applied step. Exit 0 success, 1 error/incompatible.
+
+=item B<--yolo>
+
+Tool-only escape hatch: a heuristic repair ladder for databases the
+strict path refuses (ancient, hand-modified, or half-migrated by a
+crashed upgrade). Additive-only -- it never DROPs a table or column and
+never UPDATEs or DELETEs data rows -- and verification is still
+mandatory: yolo that cannot make the schema verify dies loudly.
+Documented for admins as a last resort ("restore from backup first" is
+always the better answer). Packagers must NOT wire --yolo into
+automatic upgrades, and no runtime path may ever call it.
+
+C<--yolo --check> / C<--yolo --dry-run> report what the ladder WOULD
+attempt, without writing. Exit 0 / 1.
+
+=back
+
+=head1 THE AUDIT TRAIL
+
+The schema version lives in the version_history table: one row per
+applied migration step (bootstrap counts as a step), each with the
+target version, a unix epoch timestamp and a human-readable comment.
+The current version is MAX(version). Runtime failure messages cite the
+newest entry, so a "schema mismatch" report immediately shows what the
+database last went through.
+
+=head1 POSTINST CONTRACT (for downstream packagers)
+
+This repository ships no packaging; packagers own the postinst wiring.
+The contract they must honor:
+
+    # Debian: debian/munin-common.postinst, after unpack, before services start
+    if command -v munin-upgrade-db >/dev/null 2>&1; then
+        munin-upgrade-db --check >/dev/null 2>&1 || munin-upgrade-db
+    fi
+    # A non-zero exit must fail the package upgrade: starting new daemons
+    # against an old schema is the data-corruption scenario this exists to
+    # prevent.
+
+=cut
