@@ -71,10 +71,30 @@ sub _split_sql {
     my @stmts;
     for my $chunk (split /;/, $sql) {
         $chunk =~ s/^\s+|\s+$//g;
-        next unless length $chunk;
+        if (!length $chunk) {
+            next;
+        }
         push @stmts, $chunk;
     }
     return @stmts;
+}
+
+# defined-or fallback as a named function (C readers: like a NULL-check
+# macro). Used instead of perl's // operator throughout this file.
+sub defined_or {
+    my ($value, $fallback) = @_;
+    return defined $value ? $value : $fallback;
+}
+
+# One catalog row rendered as a stable string: every column, '|' -joined,
+# empty string for NULL.
+sub _row_string {
+    my ($row) = @_;
+    my @parts;
+    for my $cell (@$row) {
+        push @parts, defined $cell ? $cell : '';
+    }
+    return join('|', @parts);
 }
 
 # Seed a consistent v0 dataset: grp -> node -> service -> ds chain,
@@ -125,8 +145,8 @@ sub run_tool {
     my $pid = open3(my $in, my $out_fh, $err_fh, @cmd);
     close $in;
     local $/;
-    my $stdout = <$out_fh> // '';
-    my $stderr = <$err_fh> // '';
+    my $stdout = defined_or(<$out_fh>, '');
+    my $stderr = defined_or(<$err_fh>, '');
     waitpid($pid, 0);
     my $rc = $? >> 8;
     return ($rc, $stdout . $stderr);
@@ -145,32 +165,46 @@ sub tool_target_args {
 # migration could touch, in deterministic order.
 sub schema_dump {
     my ($dbh) = @_;
+    my @bits;
+
     if ($is_pg) {
-        my @bits;
-        push @bits, map { "T:$_" } @{ $dbh->selectcol_arrayref(
-            "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY 1") };
-        push @bits, map { join('|', map { defined $_ ? $_ : '' } @$_) }
-            @{ $dbh->selectall_arrayref(
-                "SELECT table_name, column_name, data_type, is_nullable,
-                        column_default
-                 FROM information_schema.columns
-                 WHERE table_schema='public'
-                 ORDER BY table_name, ordinal_position") };
-        push @bits, map { "$_->[0]|$_->[1]" }
-            @{ $dbh->selectall_arrayref(
-                "SELECT conrelid::regclass::text, pg_get_constraintdef(oid)
-                 FROM pg_constraint WHERE connamespace='public'::regnamespace
-                 ORDER BY 1, 2") };
-        push @bits, map { "$_->[0]|$_->[1]" }
-            @{ $dbh->selectall_arrayref(
-                "SELECT tablename, indexdef FROM pg_indexes
-                 WHERE schemaname='public' ORDER BY 1, 2") };
+        my $tables = $dbh->selectcol_arrayref(
+            "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY 1");
+        for my $name (@$tables) {
+            push @bits, "T:$name";
+        }
+        my $cols = $dbh->selectall_arrayref(
+            "SELECT table_name, column_name, data_type, is_nullable,
+                    column_default
+             FROM information_schema.columns
+             WHERE table_schema='public'
+             ORDER BY table_name, ordinal_position");
+        for my $row (@$cols) {
+            push @bits, _row_string($row);
+        }
+        my $cons = $dbh->selectall_arrayref(
+            "SELECT conrelid::regclass::text, pg_get_constraintdef(oid)
+             FROM pg_constraint WHERE connamespace='public'::regnamespace
+             ORDER BY 1, 2");
+        for my $row (@$cons) {
+            push @bits, _row_string($row);
+        }
+        my $idxs = $dbh->selectall_arrayref(
+            "SELECT tablename, indexdef FROM pg_indexes
+             WHERE schemaname='public' ORDER BY 1, 2");
+        for my $row (@$idxs) {
+            push @bits, _row_string($row);
+        }
         return join("\n", @bits);
     }
-    return join("\n", map { join('|', map { defined $_ ? $_ : '' } @$_) }
-        @{ $dbh->selectall_arrayref(
-            "SELECT type, name, COALESCE(sql, '') FROM sqlite_master
-             ORDER BY type, name") });
+
+    my $rows = $dbh->selectall_arrayref(
+        "SELECT type, name, COALESCE(sql, '') FROM sqlite_master
+         ORDER BY type, name");
+    for my $row (@$rows) {
+        push @bits, _row_string($row);
+    }
+    return join("\n", @bits);
 }
 
 # sqlite_master.sql text, whitespace-normalized: sqlite rewrites the
@@ -179,13 +213,18 @@ sub schema_dump {
 # from a from-scratch render while whitespace does not survive at all.
 sub normalized_ddl_dump {
     my ($dbh) = @_;
-    die "normalized_ddl_dump is sqlite-only" if $is_pg;
-    return join("\n", map {
-        my $s = $_->[1];
-        $s =~ s/\s+//g;
-        "$_->[0]: $s"
-    } @{ $dbh->selectall_arrayref(
-        "SELECT name, sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY name") });
+    if ($is_pg) {
+        die "normalized_ddl_dump is sqlite-only";
+    }
+    my @lines;
+    my $rows = $dbh->selectall_arrayref(
+        "SELECT name, sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY name");
+    for my $row (@$rows) {
+        my $sql = $row->[1];
+        $sql =~ s/\s+//g;
+        push @lines, "$row->[0]: $sql";
+    }
+    return join("\n", @lines);
 }
 
 sub table_exists {
@@ -213,10 +252,43 @@ sub fingerprint_problems {
 }
 
 sub problem_lines {
-    return join('; ', map {
-        my $w = join('.', grep { defined } @{$_}{qw(table col)});
-        "$_->{kind} $w" . (defined $_->{detail} ? " ($_->{detail})" : '')
-    } @_);
+    my @lines;
+    for my $p (@_) {
+        my @where_parts;
+        push @where_parts, $p->{table} if defined $p->{table};
+        push @where_parts, $p->{col}   if defined $p->{col};
+        my $where = join('.', @where_parts);
+        my $text = "$p->{kind} $where";
+        if (defined $p->{detail}) {
+            $text .= " ($p->{detail})";
+        }
+        push @lines, $text;
+    }
+    return join('; ', @lines);
+}
+
+# pg evidence for test 1: every FK join target, as
+# "child.col -> parent.col" lines, sorted.
+sub pg_fk_dump {
+    my ($dbh) = @_;
+    my $rows = $dbh->selectall_arrayref(
+        "SELECT tc.table_name, kcu.column_name,
+                ccu.table_name, ccu.column_name
+         FROM information_schema.table_constraints tc
+         JOIN information_schema.key_column_usage kcu
+           ON kcu.constraint_name = tc.constraint_name
+          AND kcu.table_schema = tc.table_schema
+         JOIN information_schema.constraint_column_usage ccu
+           ON ccu.constraint_name = tc.constraint_name
+          AND ccu.table_schema = tc.table_schema
+         WHERE tc.constraint_type = 'FOREIGN KEY'
+           AND tc.table_schema = 'public'");
+    my @lines;
+    for my $row (@$rows) {
+        push @lines, "$row->[0]|$row->[1]|$row->[2]|$row->[3]";
+    }
+    @lines = sort @lines;
+    return join("\n", @lines);
 }
 
 # The runtime get_dbh path, pointed at $target via env (get_dbh reads
@@ -274,23 +346,7 @@ sub runtime_get_dbh_ok {
     # sqlite compares normalized sqlite_master text (FK clauses
     # included); pg compares information_schema FK join targets.
     if ($is_pg) {
-        my $fk_dump = sub {
-            my ($dbh) = @_;
-            return join("\n", sort map { "$_->[0]|$_->[1]|$_->[2]|$_->[3]" }
-                @{ $dbh->selectall_arrayref(
-                    "SELECT tc.table_name, kcu.column_name,
-                            ccu.table_name, ccu.column_name
-                     FROM information_schema.table_constraints tc
-                     JOIN information_schema.key_column_usage kcu
-                       ON kcu.constraint_name = tc.constraint_name
-                      AND kcu.table_schema = tc.table_schema
-                     JOIN information_schema.constraint_column_usage ccu
-                       ON ccu.constraint_name = tc.constraint_name
-                      AND ccu.table_schema = tc.table_schema
-                     WHERE tc.constraint_type = 'FOREIGN KEY'
-                       AND tc.table_schema = 'public'") });
-        };
-        is($fk_dump->($v0h), $fk_dump->($freshh),
+        is(pg_fk_dump($v0h), pg_fk_dump($freshh),
             'pg: FK join targets identical to fresh bootstrap');
     } else {
         is(normalized_ddl_dump($v0h), normalized_ddl_dump($freshh),
@@ -357,13 +413,25 @@ sub runtime_get_dbh_ok {
         'SELECT version, tstp, comment FROM version_history ORDER BY id');
     ok(scalar @$hist >= 1, 'version_history holds audit rows');
 
-    my @applied = grep { length($_->[2]) } @$hist;
-    is(scalar @applied, scalar @$hist, 'every audit row has a non-empty comment');
-    ok((grep { $_->[2] =~ /ds_rrd/ } @$hist),
-        'audit trail records the ds_rrd step');
+    my $empty_comments = 0;
+    my $mentions_ds_rrd = 0;
+    my $epoch_ok = 0;
     my $now = time();
-    ok((grep { $_->[1] > $now - 3600 && $_->[1] <= $now + 60 } @$hist),
-        'audit epochs are sane unix timestamps');
+    for my $row (@$hist) {
+        my ($version, $tstp, $comment) = @$row;
+        if (!defined $comment || !length $comment) {
+            $empty_comments++;
+        }
+        if (defined $comment && $comment =~ /ds_rrd/) {
+            $mentions_ds_rrd = 1;
+        }
+        if ($tstp > $now - 3600 && $tstp <= $now + 60) {
+            $epoch_ok = 1;
+        }
+    }
+    is($empty_comments, 0, 'every audit row has a non-empty comment');
+    ok($mentions_ds_rrd, 'audit trail records the ds_rrd step');
+    ok($epoch_ok, 'audit epochs are sane unix timestamps');
 
     my ($maxv) = $v0h->selectrow_array('SELECT MAX(version) FROM version_history');
     is($maxv, CURRENT_SCHEMA_VERSION, 'MAX(version) equals CURRENT_SCHEMA_VERSION');
@@ -377,7 +445,8 @@ sub runtime_get_dbh_ok {
     Munin::Master::Update::_db_init(undef, $freshh);
     my ($boot_comment) = $freshh->selectrow_array(
         "SELECT comment FROM version_history WHERE version = " . CURRENT_SCHEMA_VERSION);
-    like($boot_comment // '', qr/bootstrap: full schema created/,
+    $boot_comment = defined_or($boot_comment, '');
+    like($boot_comment, qr/bootstrap: full schema created/,
         'bootstrap path records its own version_history row');
 }
 
@@ -537,7 +606,7 @@ sub runtime_get_dbh_ok {
         'adoption is narrated');
     my ($comment) = $h->selectrow_array(
         'SELECT comment FROM version_history ORDER BY id DESC LIMIT 1');
-    like($comment // '', qr/adopted pre-existing v1-shaped schema/,
+    like(defined_or($comment, ''), qr/adopted pre-existing v1-shaped schema/,
         'adoption audit row recorded');
 
     # daemons never adopt: the runtime path refuses the pre-adoption
@@ -598,16 +667,16 @@ sub runtime_get_dbh_ok {
     # (f) the audit comment lists every heuristic applied
     my ($comment) = $h->selectrow_array(
         'SELECT comment FROM version_history ORDER BY id DESC LIMIT 1');
-    like($comment // '', qr/yolo: repaired/, 'audit comment is the yolo narrative');
-    like($comment // '', qr/created missing tables \(ds_rrd\)/,
+    like(defined_or($comment, ''), qr/yolo: repaired/, 'audit comment is the yolo narrative');
+    like(defined_or($comment, ''), qr/created missing tables \(ds_rrd\)/,
         'audit comment narrates created tables');
-    like($comment // '', qr/added column deleted to ds/,
+    like(defined_or($comment, ''), qr/added column deleted to ds/,
         'audit comment narrates added columns');
-    like($comment // '', qr/mappings backfilled/,
+    like(defined_or($comment, ''), qr/mappings backfilled/,
         'audit comment carries the backfill count');
-    like($comment // '', qr/legacy rrd:\* attr rows kept \(additive-only\)/,
+    like(defined_or($comment, ''), qr/legacy rrd:\* attr rows kept \(additive-only\)/,
         'audit comment narrates kept legacy rows');
-    like($comment // '', qr/kept 1 unknown column \(service\.legacy_note\)/,
+    like(defined_or($comment, ''), qr/kept 1 unknown column \(service\.legacy_note\)/,
         'audit comment narrates the kept unknown column');
 }
 
@@ -780,7 +849,7 @@ sub runtime_get_dbh_ok {
     } else {
         my ($ddl) = $h->selectrow_array(
             "SELECT sql FROM sqlite_master WHERE name = 'override'");
-        like($ddl // '', qr/REFERENCES ds\(id\)/,
+        like(defined_or($ddl, ''), qr/REFERENCES ds\(id\)/,
             'sqlite: rebuilt table declares REFERENCES ds(id)');
     }
 }

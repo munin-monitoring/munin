@@ -151,10 +151,25 @@ my $states = $dbh->selectall_arrayref(
 );
 ok(scalar @$states > 0, "state table has DS entries");
 
-my @alarms = map { $_->[1] } @$states;
-ok(grep { $_ eq 'ok' } @alarms, "some states are ok");
-ok(grep { $_ eq 'critical' || $_ eq 'warning' || $_ eq 'unknown' } @alarms,
-    "some states are non-ok (thresholds triggered)");
+my @alarms;
+for my $state_row (@$states) {
+    push @alarms, $state_row->[1];
+}
+# Explicit loop + flags, not grep-inside-ok(): a grep that matches
+# nothing returns an empty list, which ok() would read as "no
+# arguments" and pass vacuously (the test name becomes the condition).
+my $any_ok = 0;
+my $any_non_ok = 0;
+for my $alarm (@alarms) {
+    if ($alarm eq 'ok') {
+        $any_ok = 1;
+    }
+    if ($alarm eq 'critical' || $alarm eq 'warning' || $alarm eq 'unknown') {
+        $any_non_ok = 1;
+    }
+}
+ok($any_ok, "some states are ok");
+ok($any_non_ok, "some states are non-ok (thresholds triggered)");
 
 # Check that notification table was created (even if empty)
 my $notif_count = $dbh->selectrow_array("SELECT count(*) FROM notification_tracking");
