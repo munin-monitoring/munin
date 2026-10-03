@@ -62,7 +62,6 @@ t/tls/CA/*.srl
 # Build artifacts
 /selectre/
 out/
-specs/
 *.dummy
 
 # Build/lint output
