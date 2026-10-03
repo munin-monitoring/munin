@@ -238,3 +238,100 @@ are gone from the runtime.
 | `specs/README.md` | New: spec index |
 | `specs/01_OFFLINE_SCHEMA_MIGRATION.md` | The spec itself (tracked now) |
 | `doc/installation/upgrade.rst` | Postinst contract + fail-loud behavior for admins |
+
+---
+
+## Session 2: C-shaped perl for a C/Python audience (2026-10-03)
+
+**Context:** Review point after the implementation landed: the audience
+for this codebase is mostly C and Python developers, and perl gotchas
+are dangerous for them. The ask: use only C patterns, avoid perl
+idioms unless the idiom is obvious -- not "document the traps" but "do
+not write the trap-prone code at all".
+
+### What we did
+
+- **Rewrote the session's perl in C shape.** `Schema.pm`,
+  `script/munin-upgrade-db` and `t/munin_master_schema_migration.t`
+  went from idiomatic perl (map/grep chains, postfix modifiers,
+  `unless`, `//` ladders, closures for the dry-run callbacks) to
+  explicit `for` loops over named variables, `if (...) { }` blocks, and
+  an explicit precedence ladder in `_resolve_connection` that mirrors
+  the CLI > env > config > default contract line by line. The dry-run /
+  apply-step coderefs became a named `_run_migration_steps($dbh,
+  $state, $target)` that both callers share. Behavior is unchanged --
+  the test suite is the arbiter, and it stayed green throughout.
+- **Fixed latent test bugs while building the guardrail.** The
+  list-context probe found five pre-existing vacuous-pass assertions in
+  `t/munin_master_limits.t` and `t/munin_master_spec.t`
+  (`ok(grep { ... } @alarms, "name")`: a grep matching nothing returns
+  an empty list, so ok() receives only the test name -- true -- and the
+  test passes). All five became explicit loops with flags.
+- **`make lint-perl-gotchas`**, wired into `make lint` as a hard
+  dependency. Three evidence-based grep rules: (1) `sort NAME @list`
+  with a builtin allowlist (builtins after `sort` are safe --
+  prototypes and list-op parsing make them terms; user subs are the
+  trap), (2) `ok()/is()/isnt()` containing `grep` or `=~`/`!~` without
+  `scalar()`, (3) `map { ... }` followed by a comma-introducing-a-new
+  list element. Each rule must point at a bug it would have caught; the
+  mission log is the evidence register. Verified both directions: the
+  clean tree passes, a synthetic probe file trips all three.
+- **Docs:** HACKING.pod gained a "Perl pitfalls" section under Coding
+  Style (the three traps, stated for C/Python readers); AGENTS.md
+  gained the standing rule ("write C-shaped perl only...").
+
+### What we learned
+
+### Technical
+
+- **`sort NAME @list` mis-parsing is narrower than feared, and the
+  lint allowlist must reflect that.** Empirical probe: `sort readdir
+  $dh`, `sort grep { } @list`, `sort keys %h`, `sort split /,/ $s`,
+  `sort reverse @list` all sort correctly -- perl parses builtin
+  list-operators and prototype-bearing functions as terms. Only
+  *user-defined* subs become comparators. The first lint draft flagged
+  the correct `sort readdir` code in `SpoolReader.pm`; the allowlist
+  came from the probe, not from guesswork.
+- **`|$` as a top-level grep -E alternative is a zero-width match that
+  swallows every line.** The rule-1 exclusion meant to allow
+  `sort keys` at end-of-line (`...[[:space:]()]|$$`) filtered out
+  *everything*, and the lint silently passed a probe that should have
+  failed. The `$` must sit inside the group: `(...)([[:space:]()]|$)`.
+  A guardrail that cannot fail is worse than none -- probe both
+  directions, always.
+- **The `&&` exclusion for the ok()/is() rule is unsound.** `ok((grep
+  { $a && $b } @list), "name")` -- the `&&` is *inside the grep block*,
+  where it does nothing for the outer list context. One of the five
+  real bugs found was exactly this shape and was being masked by the
+  exclusion. Split the rule: no exclusions for grep-in-ok; `scalar(`
+  only for match-in-ok.
+- **C-shape improved the code, not just the safety.** The explicit
+  precedence ladder in the tool now reads as the spec's contract; the
+  named `_run_migration_steps` removed two closures; `problem_lines`
+  and the dump builders became plain loops a C developer can diff.
+
+### Process
+
+- Rewrite-then-test (the suite stayed green across the whole
+  conversion) beat annotate-and-hope: the traps could not re-emerge
+  because the constructs are gone.
+- The lint rules were derived from bugs that actually happened in this
+  session, then verified to fire on synthetic violations and stay quiet
+  on the real tree. Evidence-based lint has a chance of surviving;
+  style-preference lint does not.
+
+### Rules Added
+
+- **C-shaped perl (promoted to AGENTS.md + HACKING.pod):** explicit
+  for-loops, if-blocks; no map/grep chains, postfix modifiers,
+  `unless`, `//` ladders, or `sort NAME @list`; `scalar()` any
+  `=~`/grep inside `ok()`/`is()`.
+- **`make lint-perl-gotchas`:** the three traps, grepped, wired into
+  `make lint` as a hard dependency.
+
+### What We'd Do Differently
+
+- The first lint draft shipped with an unsound rule (the `&&`
+  exclusion) and an over-broad one (flagging builtin `sort` forms)
+  before the probe forced both corrections. Probe the guardrail against
+  known-good *and* known-bad code in the same breath as writing it.

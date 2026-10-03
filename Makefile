@@ -67,9 +67,10 @@ apply-formatting:
 	@# format munin libraries
 	find lib/ -type f -exec perltidy {} \;
 
-.PHONY: lint lint-munin lint-plugins lint-spelling lint-whitespace
+.PHONY: lint lint-munin lint-perl-gotchas lint-plugins lint-spelling lint-whitespace
 
 lint: lint-munin
+	$(MAKE) lint-perl-gotchas
 	$(MAKE) lint-plugins || true
 	$(MAKE) lint-spelling || true
 	$(MAKE) lint-whitespace || true
@@ -78,6 +79,51 @@ lint-munin: build
 	# Scanning munin code
 	perlcritic --profile .perlcriticrc lib/ script/
 	shellcheck --shell dash getversion script/munin-get script/munin-cron
+
+# Perl constructs that read as one thing and mean another. This codebase
+# is maintained largely by C and Python developers; each rule here
+# exists because the construct broke real code in this repository --
+# see HACKING.pod ("Perl pitfalls") and
+# mission_log/2026-10-03_offline_schema_migration.md. Keep the list
+# evidence-based: every rule must point at a bug it would have caught.
+# (Writing in C-shaped perl -- explicit loops, if-blocks -- avoids all
+# of these by construction; the lint is the net for what slips past.)
+lint-perl-gotchas: PERL_GOTCHA_FILES = $(shell find lib script t xt -type f \( -name '*.pm' -o -name '*.pl' -o -name '*.t' -o -name '*.PL' \) 2>/dev/null)
+lint-perl-gotchas:
+	@# 1. sort NAME @list parses as sort-with-comparator-subroutine: the
+	@#    list comes back UNSORTED. Builtins (keys/map/grep/readdir/...) are
+	@#    exempt -- prototypes and list-op parsing make them terms. Write
+	@#    sort \&name, a sort { } block, or assign-then-sort.
+	@# 2. ok()/is()/isnt() evaluate their arguments in LIST context: a grep
+	@#    or match that comes back empty leaves only the test name, and the
+	@#    test passes vacuously. Wrap the condition in scalar() or use an
+	@#    explicit loop with a flag.
+	@# 3. map { ... } @a, 'literal' -- the block applies to EVERY following
+	@#    list argument, not just @a. Assign the list to a variable first.
+	@bad1=$$(grep -rnE 'sort[[:space:]]+[A-Za-z_][A-Za-z0-9_]*' $(PERL_GOTCHA_FILES) \
+		| grep -vE '^[^:]+:[0-9]+:[[:space:]]*#' \
+		| grep -vE 'sort[[:space:]]+(\{|&|\$$|@|%|")' \
+		| grep -vE 'sort[[:space:]]+(keys|values|map|grep|sort|qw|readdir|split|reverse|uc|lc)([[:space:]()]|$$)'); \
+	bad2=$$(grep -rnE '\b(ok|is|isnt)[[:space:]]*\((\()?grep|\b(ok|is|isnt)[[:space:]]*\(.*(~=|=~|!~)' $(PERL_GOTCHA_FILES) \
+		| grep -vE '^[^:]+:[0-9]+:[[:space:]]*#' \
+		| grep -vE 'scalar\('); \
+	bad3=$$(grep -rnE '(^|[^%A-Za-z0-9_])map[[:space:]]*\{.*\}[[:space:]]+[^();,]*,[[:space:]]*(["'"'"'@])' $(PERL_GOTCHA_FILES) \
+		| grep -vE '^[^:]+:[0-9]+:[[:space:]]*#'); \
+	if [ -n "$$bad1" ] || [ -n "$$bad2" ] || [ -n "$$bad3" ]; then \
+		echo 'Perl gotchas (see HACKING.pod, "Perl pitfalls"):'; \
+		if [ -n "$$bad1" ]; then \
+			echo '  sort-with-comparator-sub (assign first, then sort, or use sort \&name / sort { }):'; \
+			echo "$$bad1" | sed 's/^/    /'; \
+		fi; \
+		if [ -n "$$bad2" ]; then \
+			echo '  match/grep in list context inside ok()/is() (wrap in scalar() or use an explicit loop):'; \
+			echo "$$bad2" | sed 's/^/    /'; \
+		fi; \
+		if [ -n "$$bad3" ]; then \
+			echo '  map block over a comma-list (assign the list first):'; \
+			echo "$$bad3" | sed 's/^/    /'; \
+		fi; \
+		false; fi 2>&1
 
 lint-plugins:
 	@# SC1008: ignore our weird shebang (substituted later)
