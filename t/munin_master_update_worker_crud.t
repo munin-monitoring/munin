@@ -54,7 +54,8 @@ sub create_test_db {
         id $serial PRIMARY KEY,
         service_id INTEGER REFERENCES service(id),
         name VARCHAR NOT NULL,
-        ordr INTEGER DEFAULT 0
+        ordr INTEGER DEFAULT 0,
+        deleted INTEGER DEFAULT 0
     )");
 
     $dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (
@@ -62,6 +63,13 @@ sub create_test_db {
         name VARCHAR NOT NULL,
         value VARCHAR,
         PRIMARY KEY (id, name)
+    )");
+
+    $dbh->do("CREATE TABLE IF NOT EXISTS ds_rrd (
+        ds_id INTEGER PRIMARY KEY REFERENCES ds(id),
+        file VARCHAR NOT NULL,
+        field VARCHAR NOT NULL,
+        alias VARCHAR
     )");
 
     $dbh->do("CREATE TABLE IF NOT EXISTS state (

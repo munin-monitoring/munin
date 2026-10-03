@@ -171,6 +171,11 @@ sub mock_update_get_param {
 #
 #   my $ro = TestUtils::dbh_ro($dbfile);
 #   my $rw = TestUtils::dbh_rw($dbfile);
+#
+# Constraints are enforced by the storage layer on EVERY handle: a FK
+# that is not switched on is decoration ("data is king"). The PRAGMA
+# must run while AutoCommit is on -- sqlite silently ignores
+# foreign_keys changes inside a transaction.
 sub dbh_ro {
     my ($dbfile) = @_;
     require DBI;
@@ -187,7 +192,9 @@ sub dbh_ro {
         return DBI->connect("dbi:Pg:dbname=$PG_DBNAME", "postgres", undef,
             { RaiseError => 1 });
     }
-    return DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1, ReadOnly => 1 });
+    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1, ReadOnly => 1 });
+    $dbh->do("PRAGMA foreign_keys=ON");
+    return $dbh;
 }
 
 sub dbh_rw {
@@ -198,7 +205,9 @@ sub dbh_rw {
         return DBI->connect("dbi:Pg:dbname=$PG_DBNAME", "postgres", undef,
             { RaiseError => 1 });
     }
-    return DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1 });
+    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1 });
+    $dbh->do("PRAGMA foreign_keys=ON");
+    return $dbh;
 }
 
 # Generate the integration-test munin.conf with the ephemeral ports the

@@ -270,9 +270,9 @@ sub handle_request
 		SELECT
 			ds.name,
 			l.value,
-			rf.value,
-			rd.value,
-			ra.value,
+			rr.file,
+			rr.field,
+			rr.alias,
 			rc.value,
 			gc.value,
 			gd.value,
@@ -291,9 +291,7 @@ sub handle_request
 			'dummy' as dummy
 		FROM ds
 		LEFT OUTER JOIN ds_attr l ON l.id = ds.id AND l.name = 'label'
-		LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
-		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
-		LEFT OUTER JOIN ds_attr ra ON ra.id = ds.id AND ra.name = 'rrd:alias'
+		LEFT OUTER JOIN ds_rrd rr ON rr.ds_id = ds.id
 		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'cdef'
 		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'colour'
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
@@ -303,7 +301,7 @@ sub handle_request
 		LEFT OUTER JOIN ds_attr sm ON sm.id = ds.id AND sm.name = 'sum'
 		LEFT OUTER JOIN ds_attr st ON st.id = ds.id AND st.name = 'stack'
 		LEFT OUTER JOIN ds_attr rl ON rl.id = ds.id AND rl.name = 'rrd:last'
-		WHERE ds.service_id = ?
+		WHERE ds.service_id = ? AND ds.deleted = 0
 		ORDER BY ds.ordr ASC
 	");
 	$sth->execute($service_id);
@@ -972,8 +970,8 @@ sub get_alias_rrdfile
 	# This is a virtual DS, we have to fetch the original values
 	my ($_rrdfile, $_rrdfield, $_lastupdated) = $dbh->selectrow_array("
 		SELECT
-			rf.value,
-			rd.value,
+			rr.file,
+			rr.field,
 			rl.value,
 			'dummy' as dummy
 		FROM ds
@@ -981,10 +979,9 @@ sub get_alias_rrdfile
 			s.name = ?
 		OR	s.path = ?
 		)
-		LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
-		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
+		LEFT OUTER JOIN ds_rrd rr ON rr.ds_id = ds.id
 		LEFT OUTER JOIN ds_attr rl ON rl.id = ds.id AND rl.name = 'rrd:last'
-		WHERE ds.name = ?
+		WHERE ds.name = ? AND ds.deleted = 0
 		ORDER BY ds.ordr ASC
 	", undef, $_alias_service, $_alias_service, $_alias_ds);
 	DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield, $_lastupdated)";

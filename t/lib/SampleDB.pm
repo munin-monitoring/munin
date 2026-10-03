@@ -186,11 +186,10 @@ sub generate_sample_db {
                 $dbh->do("INSERT INTO ds (id, service_id, name, type) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING",
                     undef, $ds_id, $svc_id, $ds->{name}, $ds->{type});
 
-                # Always add rrd attrs
-                $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                    undef, $ds_id, "rrd:file", $rrd_file);
-                $dbh->do("INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                    undef, $ds_id, "rrd:field", $rrd_field_name);
+                # RRD file/DS mapping lives in ds_rrd (regular columns,
+                # owned by the RRD creation loop -- never plugin config)
+                $dbh->do("INSERT INTO ds_rrd (ds_id, file, field) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
+                    undef, $ds_id, $rrd_file, $rrd_field_name);
 
                 # Add warning/critical if defined
                 if (defined $ds->{warn}) {
