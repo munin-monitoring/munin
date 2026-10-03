@@ -107,8 +107,8 @@ while(<IOSTAT>){
     }
     $nri{$dev} += $nri;
     $nwi{$dev} += $nwi;
-    $bri{$dev} += ($bri*1024); # The header says kr/i, and we want bytes
-    $bwi{$dev} += ($bwi*1024); # Ditto.
+    $bri{$dev} += int($bri*1024); # The header says kr/i, and we want bytes
+    $bwi{$dev} += int($bwi*1024); # Ditto.
 }
 
 close(IOSTAT);
