@@ -1911,13 +1911,15 @@ sub update_plugins {
     }
 
     my $sth = $dbh->prepare("SHOW PLUGINS");
-    $sth->execute();
-    while (my $row = $sth->fetchrow_hashref()) {
-        next if $row->{'type'} ne 'INFORMATION SCHEMA';
-        my $sec = lc $row->{'name'};
-        next if not exists $plugin_map{$sec};
-        add_graphs($plugin_map{$sec}, $sec, $dbh, %{$graph_plugins{$sec}});
-    }
+    eval {
+        $sth->execute();
+        while (my $row = $sth->fetchrow_hashref()) {
+            next if $row->{'type'} ne 'INFORMATION SCHEMA';
+            my $sec = lc $row->{'name'};
+            next if not exists $plugin_map{$sec};
+            add_graphs($plugin_map{$sec}, $sec, $dbh, %{$graph_plugins{$sec}});
+        }
+    };
     $sth->finish();
 
     my %is_map = (
