@@ -181,12 +181,17 @@ jobs:
         if: failure()
         run: ./script/show-test-failures test-output-${{ matrix.config }}.log
 
+      # One artifact per configuration. FORK=1 configurations carry TWO
+      # tarballs (cover_db_par.tgz + cover_db_seq.tgz: docker-cover's
+      # par/seq split, see the Makefile). The coverage job's
+      # cover-db-* download pattern and cover_db-*/ report glob pick
+      # up every tarball without change.
       - name: Upload coverage database
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: cover-db-${{ matrix.config }}
-          path: cover_db.tgz
+          path: cover_db*.tgz
           if-no-files-found: ignore
 
       - name: Upload test log
