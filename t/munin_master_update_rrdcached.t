@@ -109,8 +109,10 @@ subtest 'No rrdcached: ≤32 points → single vectorized update' => sub {
 
     is(scalar @rrd_update_calls, 1, "exactly 1 RRDs::update call");
     is($rrd_update_calls[0][0], "$temp_dir/test.rrd", "file path correct");
-    # args: ($file, @update_data) — so @_ has file + N entries
-    is(scalar @{$rrd_update_calls[0]} - 1, 10, "all 10 data points in one call");
+    # args: ($file, "-t", $template, @update_data) — so @_ has file + template + N entries
+    is($rrd_update_calls[0][1], "-t", "template flag used");
+    is($rrd_update_calls[0][2], "field", "template name used");
+    is(scalar @{$rrd_update_calls[0]} - 3, 10, "all 10 data points in one call");
     is($ts, 1700000000 + 9 * 300, "returns last timestamp");
 };
 
@@ -128,7 +130,7 @@ subtest 'No rrdcached: >32 points → single vectorized update' => sub {
     my $ts = $worker->_update_rrd_file("test.rrd", "field", $ds_values);
 
     is(scalar @rrd_update_calls, 1, "still 1 call even with >32 points");
-    is(scalar @{$rrd_update_calls[0]} - 1, 50, "all 50 data points in one call");
+    is(scalar @{$rrd_update_calls[0]} - 3, 50, "all 50 data points in one call");
     is($ts, 1700000000 + 49 * 300, "returns last timestamp");
 };
 
@@ -146,7 +148,7 @@ subtest 'With rrdcached: ≤32 points → single update (else branch)' => sub {
     my $ts = $worker->_update_rrd_file("test.rrd", "field", $ds_values);
 
     is(scalar @rrd_update_calls, 1, "1 call — threshold not reached");
-    is(scalar @{$rrd_update_calls[0]} - 1, 20, "all 20 points batched");
+    is(scalar @{$rrd_update_calls[0]} - 3, 20, "all 20 points batched");
     is($ts, 1700000000 + 19 * 300, "returns last timestamp");
 
     disable_rrdcached();
@@ -168,8 +170,8 @@ subtest 'With rrdcached: >32 points → individual updates' => sub {
     is(scalar @rrd_update_calls, 40, "40 individual RRDs::update calls");
     for my $i (0 .. 39) {
         is($rrd_update_calls[$i][0], "$temp_dir/test.rrd", "call $i: correct file");
-        is(scalar @{$rrd_update_calls[$i]}, 2, "call $i: exactly 1 data point (file + 1)");
-        like($rrd_update_calls[$i][1], qr/^\d+:\d+(\.\d+)?$/, "call $i: ts:value format");
+        is(scalar @{$rrd_update_calls[$i]}, 4, "call $i: exactly 1 data point (file + -t + template + 1)");
+        like($rrd_update_calls[$i][3], qr/^\d+:\d+(\.\d+)?$/, "call $i: ts:value format");
     }
     is($ts, 1700000000 + 39 * 300, "returns last timestamp");
 
@@ -209,7 +211,7 @@ subtest 'With rrdcached: exactly 32 points → single update' => sub {
     my $ts = $worker->_update_rrd_file("test.rrd", "field", $ds_values);
 
     is(scalar @rrd_update_calls, 1, "1 call — 32 is not > 32");
-    is(scalar @{$rrd_update_calls[0]} - 1, 32, "all 32 points batched");
+    is(scalar @{$rrd_update_calls[0]} - 3, 32, "all 32 points batched");
 
     disable_rrdcached();
 };
@@ -243,7 +245,7 @@ subtest 'With rrdcached: error on 3rd update stops the loop' => sub {
     my $ts = $worker->_update_rrd_file("test.rrd", "field", $ds_values);
 
     is(scalar @rrd_update_calls, 3, "stopped after 3rd call (error on 3rd)");
-    like($rrd_update_calls[2][1], qr/^\d+:/, "3rd call was attempted");
+    like($rrd_update_calls[2][3], qr/^\d+:/, "3rd call was attempted");
 
     # Restore normal mock
     no warnings 'redefine';
@@ -314,7 +316,7 @@ subtest 'Non-monotonic timestamps are skipped' => sub {
     is(scalar @rrd_update_calls, 1, "1 batched call");
     # Should have 3 entries: 1000:10, 2000:20, 3000:30 (1500 skipped)
     my @entries = @{$rrd_update_calls[0]};
-    shift @entries;  # remove file
+    splice(@entries, 0, 3);  # remove file, -t, template
     is(scalar @entries, 3, "non-monotonic timestamp 1500 filtered out");
     like($entries[0], qr/^1000:/, "first entry correct");
     like($entries[1], qr/^2000:/, "second entry correct");
@@ -338,7 +340,7 @@ subtest 'rrdcached_socket not writable → warn and skip rrdcached' => sub {
 
     # Should fall through to the else branch (single update)
     is(scalar @rrd_update_calls, 1, "single call — rrdcached skipped");
-    is(scalar @{$rrd_update_calls[0]} - 1, 40, "all 40 points batched");
+    is(scalar @{$rrd_update_calls[0]} - 3, 40, "all 40 points batched");
 
     disable_rrdcached();
 };
@@ -370,7 +372,7 @@ subtest 'rrdcached_socket exists but not writable → warn and skip' => sub {
 
     # Should fall through: socket exists but not writable
     is(scalar @rrd_update_calls, 1, "single call — rrdcached socket not writable");
-    is(scalar @{$rrd_update_calls[0]} - 1, 40, "all 40 points batched");
+    is(scalar @{$rrd_update_calls[0]} - 3, 40, "all 40 points batched");
 
     chmod 0644, $ro_socket;  # restore for cleanup
     disable_rrdcached();

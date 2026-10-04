@@ -40,13 +40,20 @@ $dbh->do("CREATE TABLE IF NOT EXISTS ds (
     id $serial PRIMARY KEY,
     service_id INTEGER REFERENCES service(id),
     name VARCHAR NOT NULL,
-    ordr INTEGER DEFAULT 0
+    ordr INTEGER DEFAULT 0,
+    deleted INTEGER DEFAULT 0
 )");
 $dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (
     id INTEGER REFERENCES ds(id),
     name VARCHAR NOT NULL,
     value VARCHAR,
     PRIMARY KEY (id, name)
+)");
+$dbh->do("CREATE TABLE IF NOT EXISTS ds_rrd (
+    ds_id INTEGER PRIMARY KEY REFERENCES ds(id),
+    file VARCHAR NOT NULL,
+    field VARCHAR NOT NULL,
+    alias VARCHAR
 )");
 $dbh->do("CREATE TABLE IF NOT EXISTS service_categories (
     id INTEGER REFERENCES service(id),
@@ -109,10 +116,10 @@ sub get_service_state {
     my $rows = $sth->fetchall_arrayref({});
     $state{service_attr} = { map { $_->{name} => $_->{value} } @$rows };
 
-    # Get ds and ds_attr
+    # Get ds and ds_attr (visible = not soft-deleted)
     $sth = $dbh->prepare("SELECT ds.id, ds.name as ds_name, ds_attr.name as attr_name, ds_attr.value as attr_value
         FROM ds LEFT JOIN ds_attr ON ds.id = ds_attr.id
-        WHERE ds.service_id = ? ORDER BY ds.name, ds_attr.name");
+        WHERE ds.service_id = ? AND ds.deleted = 0 ORDER BY ds.name, ds_attr.name");
     $sth->execute($service_id);
     $state{ds} = {};
     while (my $row = $sth->fetchrow_hashref()) {
@@ -384,6 +391,61 @@ subtest 'Scenario 13: dirty_config fields create datasources' => sub {
     is(scalar keys %{$state->{ds}}, 2, "datasources created for dirty_config fields");
     ok(exists $state->{ds}{field1}, "field1 exists");
     ok(exists $state->{ds}{field2}, "field2 exists");
+};
+
+# Scenario 14: soft delete keeps the row, its attrs and its RRD mapping;
+# a reappearing field resurrects with continuous history
+subtest 'Scenario 14: soft delete and resurrect' => sub {
+    $dbh->do("DELETE FROM service WHERE node_id = 1 AND name = 'soft'");
+    $dbh->do("DELETE FROM ds_rrd");
+    $dbh->do("DELETE FROM ds_attr");
+    $dbh->do("DELETE FROM ds");
+
+    my ($svc_id) = $worker->_db_service('soft',
+        { graph_title => 'Soft' },
+        { keep => { label => 'Keep' }, gone => { label => 'Gone' } }
+    );
+
+    my ($gone_id) = $dbh->selectrow_array(
+        "SELECT id FROM ds WHERE service_id = ? AND name = 'gone'", undef, $svc_id);
+    $dbh->do("INSERT INTO ds_rrd (ds_id, file, field) VALUES (?, 'soft-gone-g.rrd', 'gone-g')",
+        undef, $gone_id);
+
+    # Field disappears from the config
+    ($svc_id) = $worker->_db_service('soft',
+        { graph_title => 'Soft' },
+        { keep => { label => 'Keep' } }
+    );
+
+    my ($deleted) = $dbh->selectrow_array(
+        "SELECT deleted FROM ds WHERE service_id = ? AND name = 'gone'", undef, $svc_id);
+    is($deleted, 1, "stale field is soft-deleted");
+
+    my $state = get_service_state($svc_id);
+    ok(!exists $state->{ds}{gone}, "soft-deleted field hidden from visible state");
+    ok(exists $state->{ds}{keep}, "live field still visible");
+
+    my ($mapping) = $dbh->selectrow_array(
+        "SELECT file FROM ds_rrd WHERE ds_id = ?", undef, $gone_id);
+    is($mapping, 'soft-gone-g.rrd', "RRD mapping survives the soft delete");
+
+    my ($label) = $dbh->selectrow_array(
+        "SELECT value FROM ds_attr WHERE id = ? AND name = 'label'", undef, $gone_id);
+    is($label, 'Gone', "attributes survive the soft delete");
+
+    # Field reappears
+    ($svc_id) = $worker->_db_service('soft',
+        { graph_title => 'Soft' },
+        { keep => { label => 'Keep' }, gone => { label => 'Gone Again' } }
+    );
+
+    ($deleted) = $dbh->selectrow_array(
+        "SELECT deleted FROM ds WHERE service_id = ? AND name = 'gone'", undef, $svc_id);
+    is($deleted, 0, "reappearing field is resurrected");
+
+    $state = get_service_state($svc_id);
+    ok(exists $state->{ds}{gone}, "resurrected field visible again");
+    is($state->{ds}{gone}{attrs}{label}, 'Gone Again', "resurrected field attrs updated");
 };
 
 done_testing();

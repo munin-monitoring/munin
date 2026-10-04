@@ -152,6 +152,7 @@ my $build = Module::Build->new(
             script/munin-node-configure
             script/munin-run
             script/munin-update
+            script/munin-upgrade-db
             )
     ],
     test_requires => {

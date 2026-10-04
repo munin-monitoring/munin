@@ -381,7 +381,7 @@ sub _db_service {
 	DEBUG "_db_service.service_id:$service_id";
 
 	# Save the existing values
-	my (%service_attrs_old, %fields_old);
+	my (%service_attrs_old, %fields_old, %deleted_old);
 	{
 		my $sth_service_attrs = $dbh->prepare_cached("SELECT name, value FROM service_attr WHERE id = ?");
 		$sth_service_attrs->execute($service_id);
@@ -391,12 +391,13 @@ sub _db_service {
 		}
 		$sth_service_attrs->finish();
 
-		my $sth_fields_attr = $dbh->prepare_cached("SELECT ds.name as field, ds_attr.name as attr, ds_attr.value FROM ds
+		my $sth_fields_attr = $dbh->prepare_cached("SELECT ds.name as field, ds_attr.name as attr, ds_attr.value, ds.deleted FROM ds
 			LEFT OUTER JOIN ds_attr ON ds.id = ds_attr.id WHERE ds.service_id = ?");
 		$sth_fields_attr->execute($service_id);
 
-		while (my ($_field, $_name, $_value) = $sth_fields_attr->fetchrow_array()) {
-			$fields_old{$_field}{$_name} = $_value;
+		while (my ($_field, $_name, $_value, $_deleted) = $sth_fields_attr->fetchrow_array()) {
+			$fields_old{$_field}{$_name} = $_value if defined $_name;
+			$deleted_old{$_field} = $_deleted || 0;
 		}
 		$sth_fields_attr->finish();
 	}
@@ -438,22 +439,16 @@ sub _db_service {
 		$ds_ids{$field_name} = $ds_id;
 	}
 
-	# Delete datasources that are no longer in the config
+	# Soft-delete datasources that are no longer in the config: keep the
+	# row, its attributes, its RRD mapping and its state -- the update
+	# path simply stops writing for them, and a field that reappears
+	# resurrects with continuous RRD history.
 	for my $old_field (keys %fields_old) {
-		unless (exists $fields->{$old_field}) {
-			DEBUG "_db_service: deleting stale ds '$old_field' from service $service_id";
-			my $sth_sel_ds = $dbh->prepare_cached('SELECT id FROM ds WHERE service_id = ? AND name = ?');
-			$sth_sel_ds->execute($service_id, $old_field);
-			my ($old_ds_id) = $sth_sel_ds->fetchrow_array();
-			$sth_sel_ds->finish();
-			if (defined $old_ds_id) {
-				# Children first - FK safe ordering (no cascade, error if referenced)
-				$dbh->prepare_cached('DELETE FROM state WHERE ds_id = ?')->execute($old_ds_id);
-				$dbh->prepare_cached('DELETE FROM override WHERE ds_id = ?')->execute($old_ds_id);
-				$dbh->prepare_cached('DELETE FROM ds_attr WHERE id = ?')->execute($old_ds_id);
-				$dbh->prepare_cached('DELETE FROM ds WHERE id = ?')->execute($old_ds_id);
-			}
-		}
+		next if exists $fields->{$old_field};
+		next if $deleted_old{$old_field};
+		DEBUG "_db_service: soft-deleting stale ds '$old_field' from service $service_id";
+		$dbh->prepare_cached('UPDATE ds SET deleted = 1 WHERE service_id = ? AND name = ?')
+			->execute($service_id, $old_field);
 	}
 
 	# Update the ordering of fields
@@ -534,6 +529,10 @@ sub _db_ds_update {
 		my $sth_ds = $dbh->prepare_cached("INSERT INTO ds (service_id, name) VALUES (?, ?)");
 		$sth_ds->execute($service_id, $field_name);
 		$ds_id = _get_last_insert_id($dbh, "ds");
+	} else {
+		# Resurrect a soft-deleted field that reappeared in the config
+		$dbh->prepare_cached('UPDATE ds SET deleted = 0 WHERE id = ? AND deleted = 1')
+			->execute($ds_id);
 	}
 
 	# Apply config overrides (wins over node-reported values)
@@ -590,7 +589,7 @@ sub _db_state_update {
 	my $sth_ds = $dbh->prepare_cached("
 		SELECT ds.id FROM ds
 		JOIN service s ON ds.service_id = s.id AND s.node_id = ? AND s.name = ?
-		WHERE ds.name = ?");
+		WHERE ds.name = ? AND ds.deleted = 0");
 	$sth_ds->execute($node_id, $plugin, $field);
 	my ($ds_id) = $sth_ds->fetchrow_array();
 	DEBUG "_db_state_update.ds_id:$ds_id";
@@ -776,50 +775,75 @@ sub uw_handle_config {
 	# Create/Update the service
 	my ($service_id, $service_attrs_old, $fields_old, $ds_ids) = $self->_db_service($plugin, \%service_attr, \%fields);
 
-	# Create the RRDs
+	# Create the RRDs.
+	# Fields with an established ds_rrd mapping keep it (stateful). New
+	# fields are grouped by RRD-compatibility -- same step (update_rate)
+	# and RRAs (graph_data_size) -- and share one multi-DS RRD file per
+	# group when possible. RRDtool cannot add a DS to an existing file,
+	# so fields appearing later fall back to a per-field file.
+	#
+	# The mapping lives in ds_rrd (regular columns): the plugin-config
+	# attribute diff never touches that table, so mappings cannot be lost
+	# between cycles and late fields cannot be regrouped into a multi-DS
+	# file that does not hold their DS.
+	my $dbh = $self->{dbh};
+	my $sth_mapped = $dbh->prepare_cached('SELECT 1 FROM ds_rrd WHERE ds_id = ?');
+
+	my @new_fields;    # ds_names without an established ds_rrd mapping
 	for my $ds_name (keys %fields) {
+		$sth_mapped->execute($ds_ids->{$ds_name});
+		my ($mapped) = $sth_mapped->fetchrow_array;
+		$sth_mapped->finish();
+		push @new_fields, $ds_name unless $mapped;
+	}
+
+	# Group new fields by RRD-compatibility. Type/min/max are per-DS and
+	# can differ inside a group; step & RRAs cannot.
+	my %groups;    # group key => [ [ds_name, ds_config], ... ]
+	for my $ds_name (@new_fields) {
 		# Merge attributes from ds & service
 		my $ds_config = { %service_attr, %{$fields{$ds_name}} };
-		my $ds_id = $ds_ids->{$ds_name};
+		push @{$groups{$self->_get_rrd_group_key($ds_config)}}, [$ds_name, $ds_config];
+	}
 
-		my $first_epoch = time - (12 * 3600); # XXX - we should be able to have some delay in the past for spoolfetched plugins
-		my $rrd_file = $self->_create_rrd_file_if_needed($plugin, $ds_name, $ds_config, $first_epoch);
+	# Deterministic group order, hence deterministic file naming
+	my @group_keys = sort keys %groups;
 
-		# Stateful: only set rrd:file and rrd:field if not already present
-		my $dbh = $self->{dbh};
-		my $sth_check = $dbh->prepare_cached('SELECT value FROM ds_attr WHERE id = ? AND name = ?');
-		$sth_check->execute($ds_id, 'rrd:file');
-		my ($existing_rrd_file) = $sth_check->fetchrow_array;
+	my $first_epoch = time - (12 * 3600); # XXX - we should be able to have some delay in the past for spoolfetched plugins
 
-		if (!defined $existing_rrd_file) {
-			# New field - set rrd:file and rrd:field
-			my $rrd_field = $self->_get_rrd_field_name($ds_name, $ds_config);
-			my $sth_ds_attr = $dbh->prepare_cached('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
-			$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
-			$sth_ds_attr->execute($ds_id, "rrd:field", $rrd_field);
+	my %new_rrd_file;    # ds_name => rrd file of the new fields
+	my $multi_group_nb = 0;
+	for my $key (@group_keys) {
+		my $group = $groups{$key};
+		if (@$group > 1) {
+			# Multi-DS: one file for all compatible fields of the service
+			$multi_group_nb++;
+			my $suffix = $multi_group_nb > 1 ? "-$multi_group_nb" : "";
+			my $rrd_file = $self->_get_rrd_group_file_name($plugin, $suffix);
+			$self->_create_rrd_file_if_needed($rrd_file, $plugin, $group, $first_epoch);
+			$new_rrd_file{$_->[0]} = $rrd_file for @$group;
 		} else {
-			# Existing field - verify rrd:field is set
-			$sth_check->execute($ds_id, 'rrd:field');
-			my ($existing_rrd_field) = $sth_check->fetchrow_array;
-			if (!defined $existing_rrd_field) {
-				my $rrd_field = $self->_get_rrd_field_name($ds_name, $ds_config);
-				my $sth_update = $dbh->prepare_cached('UPDATE ds_attr SET value = ? WHERE id = ? AND name = ?');
-				$sth_update->execute($rrd_field, $ds_id, 'rrd:field');
-			}
+			# Single field: keep the traditional per-field file
+			my ($ds_name, $ds_config) = @{$group->[0]};
+			my $rrd_file = $self->_get_rrd_file_name($plugin, $ds_name, $ds_config);
+			$self->_create_rrd_file_if_needed($rrd_file, $plugin, $group, $first_epoch);
+			$new_rrd_file{$ds_name} = $rrd_file;
 		}
 	}
 
-	# Purge ds that have no attributes (plugin stopped exposing them)
-	# Now safe to do this since RRD loop above has added rrd:file/rrd:field attrs
-	{
-		my $dbh_purge = $self->{dbh};
-		# Children first - FK safe ordering (no cascade, error if referenced)
-		my $sth_noattr = 'SELECT id FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)';
-		$dbh_purge->do("DELETE FROM state WHERE ds_id IN ($sth_noattr)", undef, $service_id);
-		$dbh_purge->do("DELETE FROM override WHERE ds_id IN ($sth_noattr)", undef, $service_id);
-		my $sth_del_ds = $dbh_purge->prepare_cached("DELETE FROM ds WHERE service_id = ? AND NOT EXISTS (SELECT * FROM ds_attr WHERE ds_attr.id = ds.id)");
-		$sth_del_ds->execute($service_id);
+	# Stateful: store the mapping only for fields that had none
+	my $sth_map_ins = $dbh->prepare_cached('INSERT INTO ds_rrd (ds_id, file, field) VALUES (?, ?, ?)');
+	for my $ds_name (@new_fields) {
+		my $ds_config = { %service_attr, %{$fields{$ds_name}} };
+		$sth_map_ins->execute($ds_ids->{$ds_name},
+			$new_rrd_file{$ds_name},
+			$self->_get_rrd_field_name($ds_name, $ds_config));
 	}
+
+	# Note: fields that disappear from the config are soft-deleted
+	# (ds.deleted = 1) in _db_service -- their rows, attributes, RRD
+	# mappings and state are kept and the update path simply stops
+	# writing for them. There is nothing to purge here.
 
 	# timestamp == 0 means "Nothing was updated". We only count on the
 	# "fetch" part to provide us good timestamp info, as the "config" part
@@ -845,6 +869,12 @@ sub uw_handle_fetch {
 
 	# timestamp == 0 means "Nothing was updated"
 	my $last_timestamp = 0;
+
+	# Buffered RRD updates: { rrd_file => { when => { rrd_ds_name => value } } }
+	# Fields sharing a multi-DS RRD file are updated together (one RRDtool
+	# update per file & timestamp), flushed at the end of this fetch.
+	my %pending_rrd_updates;
+	my %rrd_map_cache;    # ds_id => [rrd_file, rrd_field]
 
 	$self->{dbh}->begin_work() if $self->{dbh}->{AutoCommit};
 
@@ -886,32 +916,27 @@ sub uw_handle_fetch {
 
 		my ($rrd_file, $rrd_field);
 		{
-			# XXX - Quite inefficient, but works
-			my $dbh = $self->{dbh};
-			my $sth_rrdinfos = $dbh->prepare_cached(
-				"SELECT name, value FROM ds_attr WHERE id = ? AND name in (
-					'rrd:file',
-					'rrd:field'
-				)"
-			);
-			$sth_rrdinfos->execute($ds_id);
-			while ( my @row = $sth_rrdinfos->fetchrow_array ) {
-				$rrd_file  = $row[1] if $row[0] eq "rrd:file";
-				$rrd_field = $row[1] if $row[0] eq "rrd:field";
+			# ds_rrd holds the file/DS mapping; memoize it per fetch
+			unless (exists $rrd_map_cache{$ds_id}) {
+				my $sth_map = $self->{dbh}->prepare_cached(
+					'SELECT file, field FROM ds_rrd WHERE ds_id = ?');
+				$sth_map->execute($ds_id);
+				my @row = $sth_map->fetchrow_array;
+				$sth_map->finish();
+				$rrd_map_cache{$ds_id} = \@row;
 			}
-			$sth_rrdinfos->finish();
+			($rrd_file, $rrd_field) = @{$rrd_map_cache{$ds_id}};
 		}
 
-		# This is a little convoluted but is needed as the API permits
-		# vectorized updates
-		my $ds_values = {
-			"value" => [ $value, ],
-			"when" => [ $when, ],
-		};
-		DEBUG "self->_update_rrd_file($rrd_file, $field, $ds_values";
-		$self->_update_rrd_file($rrd_file, $field, $ds_values);
-
+		# Buffer the RRD update until the whole fetch is parsed: a single
+		# RRDtool update must carry all the DS sharing one file at one
+		# timestamp.
+		next unless defined $rrd_file && defined $rrd_field;
+		$pending_rrd_updates{$rrd_file}{$when}{$rrd_field} = $value;
 	}
+
+	# Flush the buffered RRD updates in timestamp order
+	$self->_flush_rrd_updates(\%pending_rrd_updates) if %pending_rrd_updates;
 
 	$self->{dbh}->commit() unless $self->{dbh}->{AutoCommit};
 
@@ -940,14 +965,55 @@ sub _get_rrd_data_source_with_defaults {
 
 
 sub _create_rrd_file_if_needed {
-    my ($self, $service, $ds_name, $ds_config, $first_epoch) = @_;
+    my ($self, $rrd_file, $service, $ds_list, $first_epoch) = @_;
 
-    my $rrd_file = $self->_get_rrd_file_name($service, $ds_name, $ds_config);
-    unless (-f $rrd_file) {
-        $self->_create_rrd_file($rrd_file, $service, $ds_name, $ds_config, $first_epoch);
+    # $rrd_file is relative to dbdir, which is what ds_attr stores
+    unless (-f File::Spec->catfile($config->{dbdir}, $rrd_file)) {
+        $self->_create_rrd_file($rrd_file, $service, $ds_list, $first_epoch);
     }
 
     return $rrd_file;
+}
+
+
+# Multi-DS RRD file name: {host_path}-{service}.rrd, with an optional
+# disambiguating suffix (e.g. "-2") when a service has several
+# incompatible field groups.
+sub _get_rrd_group_file_name {
+    my ($self, $service, $suffix) = @_;
+
+    my $path = $self->{host}->get_full_path;
+    $path =~ s{[;:]}{/}g;
+
+    # Multigraph/nested services will have . in the service name in this function.
+    $service =~ s{\.}{-}g;
+
+    my $file = sprintf("%s-%s%s.rrd",
+                       $path,
+                       $service,
+                       $suffix // "");
+
+    DEBUG "rrd filename: $file\n";
+
+    return $file;
+}
+
+
+# Two fields can share one multi-DS RRD file only if their files would be
+# created with the same step & RRA layout. Type/min/max are per-DS and do
+# not matter for grouping.
+sub _get_rrd_group_key {
+    my ($self, $ds_config) = @_;
+
+    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
+    my ($update_rate_in_sec) = parse_update_rate($ds_config->{update_rate});
+    my $resolution = $ds_config->{graph_data_size};
+
+    # Mirror the step decisions in _create_rrd_file: 'normal', 'huge' and
+    # 'debug' hard-code the step to 300s
+    $update_rate_in_sec = 300 if $resolution =~ /^(normal|huge|debug)$/;
+
+    return join("|", $update_rate_in_sec, $resolution);
 }
 
 
@@ -987,9 +1053,9 @@ sub _get_rrd_field_name {
 
 
 sub _create_rrd_file {
-    my ($self, $rrd_file, $service, $ds_name, $ds_config, $first_epoch) = @_;
+    my ($self, $rrd_file, $service, $ds_list, $first_epoch) = @_;
 
-    DEBUG "creating rrd-file for $service->$ds_name: '$rrd_file'";
+    DEBUG "creating rrd-file for $service: '$rrd_file'";
 
     $rrd_file = File::Spec->catfile($config->{dbdir}, $rrd_file);
 
@@ -997,7 +1063,10 @@ sub _create_rrd_file {
 
     my @args;
 
-    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
+    # All DS in one file share the RRA layout: the grouping logic only
+    # merges fields with identical step & graph_data_size, so the first
+    # entry's config is representative.
+    my $ds_config = $self->_get_rrd_data_source_with_defaults($ds_list->[0][1]);
     my $resolution = $ds_config->{graph_data_size};
     my ($update_rate_in_sec, $is_update_aligned) = parse_update_rate($ds_config->{update_rate});
     if ($resolution eq 'normal') {
@@ -1049,10 +1118,18 @@ sub _create_rrd_file {
         $rrd_file,
         "--start", ($first_epoch - $update_rate_in_sec),
 	"-s", $update_rate_in_sec,
-        sprintf('DS:%s:%s:%s:%s:%s',
-                $self->_get_rrd_field_name($ds_name, $ds_config),
-                $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
     );
+
+    # One DS per field; type/heartbeat/min/max are per-DS
+    foreach my $ds_entry (@$ds_list) {
+        my ($name, $cfg) = @$ds_entry;
+        $cfg = $self->_get_rrd_data_source_with_defaults($cfg);
+        push (@args,
+            sprintf('DS:%s:%s:%s:%s:%s',
+                    $self->_get_rrd_field_name($name, $cfg),
+                    $cfg->{type}, $heartbeat, $cfg->{min}, $cfg->{max}),
+        );
+    }
 
     DEBUG "RRDs::create @args";
     RRDs::create @args unless $ENV{NO_UPDATE_RRD};
@@ -1128,8 +1205,49 @@ sub parse_custom_resolution {
 
 # return the number of seconds
 # for the human readable format
+#
+# Flush buffered RRD updates. $pending is
+#     { rrd_file => { when => { rrd_ds_name => value } } }
+# One RRDtool update call is made per (file, DS template); consecutive
+# timestamps sharing the same template are vectorized into a single call.
+# Updates to one file must be strictly increasing in time, so rows are
+# emitted in timestamp order and batching never crosses a template change.
+sub _flush_rrd_updates {
+	my ($self, $pending) = @_;
+
+	for my $rrd_file (sort keys %$pending) {
+		my $by_when = $pending->{$rrd_file};
+
+		my ($template, @whens, @values);
+		my $flush = sub {
+			return unless @whens;
+			$self->_update_rrd_file($rrd_file, $template, {
+				"when" => [@whens],
+				"value" => [@values],
+			});
+			@whens = @values = ();
+		};
+
+		for my $when (sort { $a <=> $b } keys %$by_when) {
+			my $vals = $by_when->{$when};
+			my @ds_names = sort keys %$vals;
+			my $new_template = join(":", @ds_names);
+			my $row = join(":", map { convert_to_float($vals->{$_}) } @ds_names);
+
+			# Flush before starting a new template: the per-file updates
+			# must stay strictly increasing in time
+			$flush->() if defined($template) && $new_template ne $template;
+			$template = $new_template;
+
+			push @whens, $when;
+			push @values, $row;
+		}
+		$flush->();
+	}
+}
+
 sub _update_rrd_file {
-	my ($self, $rrd_file, $ds_name, $ds_values) = @_;
+	my ($self, $rrd_file, $template, $ds_values) = @_;
 
 	$rrd_file = File::Spec->catfile($config->{dbdir}, $rrd_file);
 
@@ -1162,7 +1280,9 @@ sub _update_rrd_file {
 		next if ($current_updated_timestamp && $when <= $current_updated_timestamp);
 
 		# RRDtool does not like scientific format so we convert it.
-		$value = convert_to_float($value);
+		# Multi-DS value strings ("v1:v2:...") are pre-converted by the
+		# caller and must be left alone.
+		$value = convert_to_float($value) unless $value =~ /:/;
 
 		# Schedule for addition
 		push @update_rrd_data, "$when:$value";
@@ -1182,15 +1302,23 @@ sub _update_rrd_file {
 		# will buffer for us as suggested on the rrd mailing-list.
 		# https://lists.oetiker.ch/pipermail/rrd-users/2011-October/018196.html
 		for my $update_rrd_data (@update_rrd_data) {
-			DEBUG "RRDs::update($rrd_file, $update_rrd_data)";
-			RRDs::update($rrd_file, $update_rrd_data) unless $ENV{NO_UPDATE_RRD};
+			DEBUG "RRDs::update($rrd_file, -t $template, $update_rrd_data)";
+			if (defined $template) {
+				RRDs::update($rrd_file, "-t", $template, $update_rrd_data) unless $ENV{NO_UPDATE_RRD};
+			} else {
+				RRDs::update($rrd_file, $update_rrd_data) unless $ENV{NO_UPDATE_RRD};
+			}
 			# Break on error.
 			last if RRDs::error;
 		}
 	} else {
 		# normal vector-update the RRD
-		DEBUG "RRDs::update($rrd_file, @update_rrd_data)";
-		RRDs::update($rrd_file, @update_rrd_data) unless $ENV{NO_UPDATE_RRD};
+		DEBUG "RRDs::update($rrd_file, -t $template, @update_rrd_data)";
+		if (defined $template) {
+			RRDs::update($rrd_file, "-t", $template, @update_rrd_data) unless $ENV{NO_UPDATE_RRD};
+		} else {
+			RRDs::update($rrd_file, @update_rrd_data) unless $ENV{NO_UPDATE_RRD};
+		}
 	}
 
 	if (my $ERROR = RRDs::error) {

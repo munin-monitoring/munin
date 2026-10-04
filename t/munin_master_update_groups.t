@@ -92,10 +92,15 @@ no warnings 'redefine';
         '', '',
         {
             RaiseError => 1,
-            AutoCommit => 0,
             sqlite_unicode => 1,
         }
     ) or die "Cannot connect: $DBI::errstr";
+    # Faithful to production get_dbh: PRAGMAs first, while AutoCommit is
+    # still on (sqlite ignores foreign_keys changes inside a transaction),
+    # then the AutoCommit contract.
+    $dbh->do("PRAGMA foreign_keys=ON;");
+    $dbh->{AutoCommit} = 0;
+    $dbh->{AutoCommit} = 1 if $is_read_only;
     return $dbh;
 };
 use warnings 'redefine';
@@ -181,20 +186,65 @@ subtest 'groups exist in grp table' => sub {
     $dbh->disconnect();
 };
 
-subtest 're-import clears old data' => sub {
-    # Add a host, then re-import
+subtest 're-import diffs: stale swept, survivors keep ids and history' => sub {
+    # Seed a stale host WITH history (service/ds/RRD mapping/state) that
+    # is not in the config, plus history on a surviving host.
     my $dbh = Munin::Master::Update::get_dbh();
-    $dbh->do('DELETE FROM node');
-    $dbh->do('DELETE FROM grp WHERE id != 0');
+    my ($web_id) = $dbh->selectrow_array("SELECT id FROM grp WHERE name = 'web'");
+
+    $dbh->do("INSERT INTO node (grp_id, name, path) VALUES (?, 'stale.example.com', 'web;stale.example.com')", undef, $web_id);
+    my $stale_node = $dbh->last_insert_id(undef, undef, 'node', 'id');
+    $dbh->do("INSERT INTO node_attr (id, name, value) VALUES (?, 'address', '10.9.9.9')", undef, $stale_node);
+    $dbh->do("INSERT INTO service (node_id, name) VALUES (?, 'cpu')", undef, $stale_node);
+    my ($stale_svc) = $dbh->selectrow_array("SELECT id FROM service WHERE node_id = ?", undef, $stale_node);
+    $dbh->do("INSERT INTO ds (service_id, name) VALUES (?, 'load')", undef, $stale_svc);
+    my ($stale_ds) = $dbh->selectrow_array("SELECT id FROM ds WHERE service_id = ?", undef, $stale_svc);
+    $dbh->do("INSERT INTO ds_rrd (ds_id, file, field) VALUES (?, 'stale.rrd', 'load-g')", undef, $stale_ds);
+    $dbh->do("INSERT INTO state (ds_id) VALUES (?)", undef, $stale_ds);
+
+    my ($app1_node) = $dbh->selectrow_array("SELECT id FROM node WHERE path = 'web;app1.example.com'");
+    $dbh->do("INSERT INTO service (node_id, name) VALUES (?, 'cpu')", undef, $app1_node);
+    my ($app1_svc) = $dbh->selectrow_array("SELECT id FROM service WHERE node_id = ?", undef, $app1_node);
+    $dbh->do("INSERT INTO ds (service_id, name) VALUES (?, 'idle')", undef, $app1_svc);
+    my ($app1_ds) = $dbh->selectrow_array("SELECT id FROM ds WHERE service_id = ?", undef, $app1_svc);
+    $dbh->do("INSERT INTO state (ds_id, last_epoch) VALUES (?, 1700000000)", undef, $app1_ds);
+    # get_dbh is AutoCommit=0: commit the fixture or the disconnect
+    # below rolls the whole seed back
+    $dbh->commit();
     $dbh->disconnect();
 
-    # Re-import
+    # Re-import: config unchanged -> survivors untouched, stale swept
     $update->_db_groups_update();
 
-    my $hosts_dbh = Munin::Master::Update::get_dbh();
-    my $hosts = Munin::Master::Update::get_hosts($hosts_dbh);
-    $hosts_dbh->disconnect();
-    is(scalar @$hosts, 4, 'Re-import restores all 4 hosts');
+    my $check = Munin::Master::Update::get_dbh();
+    my $hosts = Munin::Master::Update::get_hosts($check);
+    is(scalar @$hosts, 4, 'stale host removed, 4 config hosts remain');
+
+    my ($gone) = $check->selectrow_array("SELECT count(1) FROM node WHERE id = ?", undef, $stale_node);
+    is($gone, 0, 'stale node row gone');
+    ($gone) = $check->selectrow_array("SELECT count(1) FROM service WHERE node_id = ?", undef, $stale_node);
+    is($gone, 0, 'stale services swept');
+    ($gone) = $check->selectrow_array("SELECT count(1) FROM ds WHERE service_id = ?", undef, $stale_svc);
+    is($gone, 0, 'stale ds swept');
+    ($gone) = $check->selectrow_array("SELECT count(1) FROM ds_rrd WHERE ds_id = ?", undef, $stale_ds);
+    is($gone, 0, 'stale RRD mapping swept');
+    ($gone) = $check->selectrow_array("SELECT count(1) FROM state WHERE ds_id = ?", undef, $stale_ds);
+    is($gone, 0, 'stale state swept');
+    ($gone) = $check->selectrow_array("SELECT count(1) FROM node_attr WHERE id = ?", undef, $stale_node);
+    is($gone, 0, 'stale node attrs swept');
+
+    my ($app1_after) = $check->selectrow_array("SELECT id FROM node WHERE path = 'web;app1.example.com'");
+    is($app1_after, $app1_node, 'survivor keeps its node id');
+    my ($epoch) = $check->selectrow_array("SELECT last_epoch FROM state WHERE ds_id = ?", undef, $app1_ds);
+    is($epoch, 1700000000, 'survivor state history untouched');
+    $check->disconnect();
+
+    # A second import keeps ids stable -- no id churn, by design now
+    $update->_db_groups_update();
+    my $again = Munin::Master::Update::get_dbh();
+    my ($app1_twice) = $again->selectrow_array("SELECT id FROM node WHERE path = 'web;app1.example.com'");
+    is($app1_twice, $app1_node, 'ids stable across re-imports');
+    $again->disconnect();
 };
 
 # Test config_override import

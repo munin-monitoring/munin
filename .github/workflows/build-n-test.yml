@@ -91,6 +91,11 @@ jobs:
         # serial+pgsql is runnable (make docker-test FORK=0
         # DBDRIVER=pg) but unselected: no deployment shape runs it, so
         # CI does not spend CPU cycles on it.
+        # All three run docker-cover's fixed two-pass covered shape
+        # (par pass -j4 over the non-fork tests, then seq pass -j1
+        # over the fork-mode tests -- see the Makefile), so job logs,
+        # artifacts and durations stay directly comparable across the
+        # matrix: variants differ ONLY in FORK and DBDRIVER.
         include:
           - config: serial-sqlite
             make_args: "JOBS=4 FORK=0 DBDRIVER=sqlite"
@@ -100,6 +105,78 @@ jobs:
             make_args: "JOBS=4 FORK=1 DBDRIVER=pg"
     steps:
       - uses: actions/checkout@v7
+
+      # Print the runner's real hardware and limits -- on the HOST, not
+      # in the dev container (the container is pinned by Dockerfile.dev;
+      # this prints what the job actually runs on). Each matrix config
+      # gets its OWN runner instance, so this runs once per
+      # configuration: without these numbers, runner-to-runner lottery
+      # (core count, CPU model, cgroup quota, throttling, RAM) is
+      # indistinguishable from a configuration effect when comparing
+      # job durations. Context:
+      # mission_log/2026-10-04_covered_parallel_perf.md.
+      - name: Runner system info
+        run: |
+          # Diagnostics only: this step must NEVER fail the job. The
+          # default GHA shell is bash -e, and runners vary (a format
+          # field valid on one docker version may not exist on
+          # another). Failures print as text; the tests are what
+          # matter.
+          set +e
+          {
+            echo "runner: ${RUNNER_NAME:-?} arch=${RUNNER_ARCH:-?} os=${RUNNER_OS:-?}"
+            echo
+            echo "== OS / kernel =="
+            uname -a
+            grep PRETTY_NAME /etc/os-release
+            echo
+            echo "== CPU =="
+            echo -n "nproc: "
+            nproc
+            lscpu | grep -E '^(Architecture|CPU\(s\)|Model name|Thread|Core|Socket|CPU max MHz|CPU min MHz)'
+            echo
+            echo "== cgroup limits (effective ceiling for this job) =="
+            for f in cpu.max memory.max memory.current pids.max; do
+              printf '%s: ' "$f"
+              cat "/sys/fs/cgroup/$f" 2>/dev/null || echo "n/a"
+            done
+            echo "cpu.stat (throttling evidence):"
+            cat /sys/fs/cgroup/cpu.stat 2>/dev/null || echo "n/a"
+            echo
+            echo "== RAM / swap =="
+            free -m
+            echo
+            echo "== pressure (PSI): contention the kernel observed =="
+            cat /proc/pressure/cpu 2>/dev/null || echo "cpu: n/a"
+            cat /proc/pressure/memory 2>/dev/null || echo "memory: n/a"
+            echo
+            echo "== disk =="
+            df -h /
+            df -h /var/lib/docker 2>/dev/null || true
+            echo
+            echo "== docker =="
+            docker version --format '{{.Client.Version}} client / {{.Server.Version}} server ({{.Server.Os}}/{{.Server.Arch}})' 2>/dev/null || echo "docker version: n/a"
+            echo -n "storage driver: "
+            docker info --format '{{.Driver}}' 2>/dev/null || echo "n/a"
+            echo
+            echo "== fd limit =="
+            ulimit -n
+          } 2>&1
+
+          # Compact copy on the run's summary page, so durations can be
+          # read against hardware without opening a single job log.
+          if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+            {
+              echo "### Runner system info (${{ matrix.config }})"
+              echo '```'
+              echo "nproc: $(nproc) | $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2- | sed 's/^ *//')"
+              echo "cpu.max: $(cat /sys/fs/cgroup/cpu.max 2>/dev/null || echo n/a)"
+              echo "memory.max: $(cat /sys/fs/cgroup/memory.max 2>/dev/null || echo n/a)"
+              free -m | awk '/^Mem:/{printf "RAM: %dMB total / %dMB free\n", $2, $7} /^Swap:/{printf "swap: %dMB total / %dMB free\n", $2, $7}'
+              df -h / | awk 'NR==2{printf "disk /: %s total / %s free (%s used)\n", $2, $4, $5}'
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Load dev container
         uses: actions/download-artifact@v7
@@ -117,12 +194,33 @@ jobs:
         if: failure()
         run: ./script/show-test-failures test-output-${{ matrix.config }}.log
 
-      - name: Upload coverage database
+      # ONE artifact per tarball, not per configuration. docker-cover
+      # produces cover_db_par.tgz + cover_db_seq.tgz (par pass + seq
+      # pass, see the Makefile), and the coverage job's unpack loop
+      # derives its target directory from the artifact NAME: two
+      # tarballs in one artifact map to one directory, and the loop's
+      # per-tarball rm -rf wipes the first extraction (seq extracts
+      # last alphabetically -> par coverage silently discarded ->
+      # Coveralls cratered; mission_log/2026-10-04 Session 2).
+      # Separate -par / -seq artifacts keep one tarball per directory:
+      # the download pattern cover-db-* and the report glob cover_db-*/
+      # then pick up every database with no coverage-job change. If a
+      # pass dies before tar'ing, its artifact stays empty
+      # (if-no-files-found: ignore) and coverage still ships the pass
+      # that completed.
+      - name: Upload coverage database (par pass)
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: cover-db-${{ matrix.config }}
-          path: cover_db.tgz
+          name: cover-db-${{ matrix.config }}-par
+          path: cover_db_par.tgz
+          if-no-files-found: ignore
+      - name: Upload coverage database (seq pass)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cover-db-${{ matrix.config }}-seq
+          path: cover_db_seq.tgz
           if-no-files-found: ignore
 
       - name: Upload test log

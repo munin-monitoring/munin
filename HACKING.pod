@@ -205,6 +205,43 @@ with those rules by running c<make lint>.
 B<TODO>: discuss perlcritc style, see #1051
 
 
+=head2 PERL PITFALLS
+
+Most of this codebase is maintained by C and Python developers, not by
+Perl developers. Write perl in C-shaped code -- explicit C<for> loops
+over named variables, C<if (...)> blocks, no expression chains -- and
+avoid the constructs below entirely.  They read like one thing and
+mean another, and each one has broken real code in this repository:
+
+=over
+
+=item *
+
+C<sort NAME \@list> parses as I<sort-with-comparator-subroutine>, so
+the list comes back B<unsorted>.  Builtins (C<keys>, C<map>, C<grep>,
+C<readdir>, ...) are exempt; anything else must be C<sort \&name>, a
+C<sort { }> block, or assign-then-sort.
+
+=item *
+
+C<ok(\$x =~ /re/>, "name") and C<ok(grep { ... } \@list>, "name")
+pass B<vacuously> when the condition is false: a failed match or an
+empty grep returns an empty list in list context, so C<ok()> receives
+only the test name -- which is true.  Wrap the condition in
+C<scalar()> or use an explicit loop with a flag.
+
+=item *
+
+C<map { ... } \@a, 'literal'> applies the block to B<every> following
+list argument, not just C<\@a>.  Assign the list to a variable first.
+
+=back
+
+C<make lint-perl-gotchas> (part of C<make lint>) greps for all three;
+the reasoning behind each rule is recorded in
+F<mission_log/2026-10-03_offline_schema_migration.md>.
+
+
 =head2 Commit messages
 
 Please use the present tense ("Add feature" not "Added feature"), the

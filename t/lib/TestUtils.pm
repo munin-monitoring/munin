@@ -77,6 +77,35 @@ sub db_driver {
     return $d eq "pg" ? "Pg" : "SQLite";
 }
 
+# Arm a test deadline that fails CLEANLY on expiry.
+#
+# A bare alarm(N) kills the perl process on SIGALRM with the default
+# signal disposition, which does NOT run END blocks. The pid-guarded
+# END cleanup in the update-family tests never executes, so their
+# forked helpers (node_test.pl servers, rrdcached) outlive the test,
+# inherit its TAP stdout pipe, and hold it open: prove never sees EOF
+# for that file and the whole harness wedges. Observed locally under
+# covered FORK=1 (mission_log/2026-10-04_covered_parallel_perf.md):
+# four zombied test procs, orphaned helpers, prove idle forever. die()
+# runs END, so the trap turns a hang into a clean, reported failure.
+#
+# Budget scaling: the deadlines exist to catch HANGS, not slow
+# instrumentation. Devel::Cover inflates this suite ~5x in CPU, and
+# every forked worker additionally pays a fixed ~4.4s report() at exit
+# (~110-220s per update cycle with SampleDB's 25 workers) -- measured:
+# covered update.t and rrdcached_integration.t died at their 60s
+# budgets while plain runs finish in tens of seconds. Scale the budget
+# when coverage is active so it keeps its meaning; plain runs keep the
+# original value. Same scaling in every matrix variant (it keys on
+# coverage, not on FORK/DBDRIVER).
+sub alarm_or_die {
+    my ($secs) = @_;
+    my $factor = ($ENV{PERL5OPT} || "") =~ /Devel::Cover/ ? 5 : 1;
+    my $effective = $secs * $factor;
+    $SIG{ALRM} = sub { die "test deadline exceeded: ${effective}s (${secs}s x${factor} under coverage)\n" };
+    alarm($effective);
+}
+
 # Route the production handle path (get_dbh reads env/config, not our
 # memo) and any TestUtils helper to this process's scratch database.
 sub _pg_route {
@@ -171,6 +200,11 @@ sub mock_update_get_param {
 #
 #   my $ro = TestUtils::dbh_ro($dbfile);
 #   my $rw = TestUtils::dbh_rw($dbfile);
+#
+# Constraints are enforced by the storage layer on EVERY handle: a FK
+# that is not switched on is decoration ("data is king"). The PRAGMA
+# must run while AutoCommit is on -- sqlite silently ignores
+# foreign_keys changes inside a transaction.
 sub dbh_ro {
     my ($dbfile) = @_;
     require DBI;
@@ -187,7 +221,9 @@ sub dbh_ro {
         return DBI->connect("dbi:Pg:dbname=$PG_DBNAME", "postgres", undef,
             { RaiseError => 1 });
     }
-    return DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1, ReadOnly => 1 });
+    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1, ReadOnly => 1 });
+    $dbh->do("PRAGMA foreign_keys=ON");
+    return $dbh;
 }
 
 sub dbh_rw {
@@ -198,7 +234,9 @@ sub dbh_rw {
         return DBI->connect("dbi:Pg:dbname=$PG_DBNAME", "postgres", undef,
             { RaiseError => 1 });
     }
-    return DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1 });
+    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", { RaiseError => 1 });
+    $dbh->do("PRAGMA foreign_keys=ON");
+    return $dbh;
 }
 
 # Generate the integration-test munin.conf with the ephemeral ports the

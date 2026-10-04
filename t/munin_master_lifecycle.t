@@ -103,6 +103,7 @@ sub remove_svc {
     for my $row (@$ds_ids) {
         $dbh->do("DELETE FROM state WHERE ds_id = ?", undef, $row->[0]);
         $dbh->do("DELETE FROM ds_attr WHERE id = ?", undef, $row->[0]);
+        $dbh->do("DELETE FROM ds_rrd WHERE ds_id = ?", undef, $row->[0]);
     }
     $dbh->do("DELETE FROM ds WHERE service_id = ?", undef, $svc_id);
     $dbh->do("DELETE FROM url WHERE service_id = ?", undef, $svc_id);

@@ -13,6 +13,7 @@ use List::Util qw( shuffle );
 
 use Munin::Common::Defaults;
 use Munin::Master::Config;
+use Munin::Master::Schema;
 use Munin::Master::UpdateWorker;
 use Munin::Master::Utils;
 use Munin::Master::Limits;
@@ -134,6 +135,16 @@ sub get_dbh {
 	$dbh->{AutoCommit} = $ENV{MUNIN_DB_AUTOCOMMIT} || $config->{db_autocommit} || 0;
 	$dbh->{AutoCommit} = 1 if $is_read_only;
 	DEBUG "get_dbh: {AutoCommit} = " . $dbh->{AutoCommit};
+
+	# Fail loudly on schema mismatch: verify() is the single runtime
+	# gate, shared by every consumer (update, limits, html, graph,
+	# static renderers) -- today only munin-update used to run
+	# _db_init, the others would limp against a stale schema. There is
+	# no heuristic or repair branch here: daemons never migrate, adopt
+	# or guess; that is munin-upgrade-db's job alone. Memoized per
+	# process -- one cheap query, handles are opened repeatedly, and
+	# migration is offline by contract.
+	Munin::Master::Schema::verify($dbh);
 
 	# Plainly returns it, but do *not* put it in $self, as it will let Perl
 	# do its GC properly and closing it when out of scope.
@@ -397,140 +408,30 @@ sub _handle_worker_result {
 sub _db_init {
 	my ($self, $dbh) = @_;
 
-	my $db_serial_type = "INTEGER";
-	# The handle is the truth about the driver: env/config decided how
-	# get_dbh CONNECTED, but _db_init may be handed any handle (the test
-	# fixture opens its own). Asking the handle keeps the per-driver
-	# branches (SERIAL, state migrations) consistent with the actual
-	# connection instead of with ambient environment.
-	my $db_driver = $dbh->{Driver}->{Name};
-	$db_serial_type = "SERIAL" if $db_driver eq "Pg";
-
-	# Sets some session vars
-	$dbh->do("SET LOCAL client_min_messages = error") if $db_driver eq "Pg";
-
-	# Initialize DB Schema
-	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id $db_serial_type PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS r_g_grp ON grp (p_id, name)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS node (id $db_serial_type PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR, spoolepoch INTEGER)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_node_attr ON node_attr (id, name)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_n_grp ON node (grp_id)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS service (id $db_serial_type PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_service_n_n ON service (node_id, name)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id $db_serial_type PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
-		type VARCHAR DEFAULT 'GAUGE',
-		ordr INTEGER DEFAULT 0,
-		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
-	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
-
-	# Table that contains all the URL paths, in order to have a very fast lookup
-	# FK to grp/node/service - no cascade, error if referenced
-	# path is the identity (lookups are by path), no surrogate id needed
-	# CHECK casts: sqlite evaluates IS NOT NULL as 0/1 so the sum works
-	# there, but pg yields booleans and has no boolean + operator. CAST
-	# to INTEGER is accepted by both engines.
-	$dbh->do("CREATE TABLE IF NOT EXISTS url (
-		path VARCHAR PRIMARY KEY,
-		grp_id INTEGER REFERENCES grp(id),
-		node_id INTEGER REFERENCES node(id),
-		service_id INTEGER REFERENCES service(id),
-		CHECK (CAST((grp_id IS NOT NULL) AS INTEGER) + CAST((node_id IS NOT NULL) AS INTEGER) + CAST((service_id IS NOT NULL) AS INTEGER) = 1)
-	)");
-
-	# Per-entity state tracking. FK columns instead of polymorphic (type,id) --
-	# no cascade, error if referenced. CHECK ensures exactly one FK is set.
-	# prev_alarm/eval_value/extinfo are written by the limits evaluation and
-	# read by the serial notification tail: prev_alarm gives edge detection
-	# (alarm != prev_alarm == state just changed), eval_value/extinfo are the
-	# message content so notifications can be rebuilt from the DB alone.
-	$dbh->do("CREATE TABLE IF NOT EXISTS state (
-		ds_id INTEGER REFERENCES ds(id),
-		node_id INTEGER REFERENCES node(id),
-		last_epoch INTEGER, last_value VARCHAR,
-		prev_epoch INTEGER, prev_value VARCHAR,
-		alarm VARCHAR, num_unknowns INTEGER DEFAULT 0,
-		prev_alarm VARCHAR, eval_value VARCHAR, extinfo VARCHAR,
-		CHECK (CAST((ds_id IS NOT NULL) AS INTEGER) + CAST((node_id IS NOT NULL) AS INTEGER) = 1)
-	)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_ds ON state (ds_id)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state_node ON state (node_id)");
-
-	# Migrate pre-existing state tables (CREATE IF NOT EXISTS skips them).
-	# pg has no ADD COLUMN IF EXISTS (that is MariaDB syntax), so both
-	# engines check for the column first -- information_schema on pg,
-	# PRAGMA table_info on sqlite -- and ALTER only when missing.
-	my %state_cols;
-	if ($db_driver eq "Pg") {
-		%state_cols = map { $_ => 1 }
-			@{ $dbh->selectcol_arrayref(
-				"SELECT column_name FROM information_schema.columns "
-				. "WHERE table_name = 'state'") };
+	# Runtime schema code is deliberately minimal: bootstrap a virgin
+	# database, or verify the version and die. All migration logic --
+	# the state-columns, ds.deleted and ds_rrd blocks that used to live
+	# here, plus the notification rename -- is offline in
+	# munin-upgrade-db (Schema::migrate_v0_to_v1). The handle is the
+	# truth about the driver: Schema renders the DDL per handle, so
+	# _db_init may be handed any handle (the test fixture opens its
+	# own).
+	my $state = Munin::Master::Schema::detect($dbh);
+	if ($state eq 'fresh') {
+		Munin::Master::Schema::create_schema($dbh);
+		Munin::Master::Schema::record($dbh,
+			Munin::Master::Schema::CURRENT_SCHEMA_VERSION(),
+			'bootstrap: full schema created');
+	} elsif ($state eq 'unversioned') {
+		die Munin::Master::Schema::mismatch_message($dbh, 'unversioned');
 	} else {
-		%state_cols = map { $_->[1] => 1 }
-			@{ $dbh->selectall_arrayref("PRAGMA table_info(state)") };
-	}
-	for my $col (qw(prev_alarm eval_value extinfo)) {
-		next if $state_cols{$col};
-		$dbh->do("ALTER TABLE state ADD COLUMN $col VARCHAR");
+		# Versioned: the same check get_dbh runs. Dies loudly on any
+		# mismatch -- there is no repair branch in any runtime path.
+		Munin::Master::Schema::verify($dbh);
 	}
 
-	# Munin stats
-	$dbh->do("CREATE TABLE IF NOT EXISTS stats (runid VARCHAR NOT NULL, tstp TIMESTAMPTZ, type VARCHAR, name VARCHAR, duration NUMERIC)");
-
-	# Contacts for notification
-	$dbh->do("CREATE TABLE IF NOT EXISTS contact (id $db_serial_type PRIMARY KEY, name VARCHAR UNIQUE)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS contact_attr (id INTEGER REFERENCES contact(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_contact_attr ON contact_attr (id, name)");
-
-	# Send ledger: last-sent severity, sent_at, throttle counter num_messages.
-	# NOT config -- decision inputs are state.alarm (current), contact attrs
-	# (always_send/command/text), and this ledger (dupe avoidance). Renamed
-	# from `notification` accordingly; migration below renames in place.
-	$dbh->do("CREATE TABLE IF NOT EXISTS notification_tracking (
-		id $db_serial_type PRIMARY KEY,
-		contact_id INTEGER REFERENCES contact(id),
-		service_id INTEGER REFERENCES service(id),
-		severity VARCHAR,
-		sent_at INTEGER,
-		num_messages INTEGER DEFAULT 0
-	)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification_tracking ON notification_tracking (contact_id, service_id)");
-
-	# Migrate the pre-rename table. The ledger must survive: it carries
-	# transition memory (throttling) across cycles.
-	my ($old_notif) = $db_driver eq "Pg"
-		? $dbh->selectrow_array("SELECT to_regclass('notification')")
-		: $dbh->selectrow_array("SELECT name FROM sqlite_master WHERE type='table' AND name='notification'");
-	if ($old_notif) {
-		$dbh->do("ALTER TABLE notification RENAME TO notification_tracking");
-		$dbh->do("DROP INDEX IF EXISTS u_notification");
-		$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_notification_tracking ON notification_tracking (contact_id, service_id)");
-	}
-
-	# Config file overrides — plugin defaults go to ds_attr, config overrides go here
-	$dbh->do("CREATE TABLE IF NOT EXISTS override (ds_id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_override ON override (ds_id, name)");
-
-	# Config import overrides — raw config values keyed by host/service/field
-	# Stores everything from munin.conf before inheritance resolution
-	$dbh->do("CREATE TABLE IF NOT EXISTS config_override (
-		host_name VARCHAR NOT NULL,
-		service_name VARCHAR NOT NULL DEFAULT '',
-		field_name VARCHAR NOT NULL DEFAULT '',
-		name VARCHAR NOT NULL,
-		value VARCHAR,
-		PRIMARY KEY (host_name, service_name, field_name, name)
-	)");
-
-	# Initialise the grp _root_ node if not present
+	# Initialise the grp _root_ node if not present. Data init, not
+	# schema: id 0 is the walk root every group import hangs off.
 	unless ($dbh->selectrow_array("SELECT count(1) FROM grp WHERE id = 0")) {
 		$dbh->do("INSERT INTO grp (id) VALUES (0);");
 	}
@@ -569,89 +470,235 @@ sub _db_groups_update {
 
 	my $dbh = get_dbh();
 
-	# Clear existing groups, nodes, node attributes, and URLs
-	# URLs must be cleared too - they have UNIQUE constraint on path
-	#
-	# NOTE: this legacy wipe-and-reimport relies on id-churn stability: the
-	# service/ds/state tables reference node/grp ids that get re-created with
-	# identical ids each cycle (full wipe + same import order). FK enforcement
-	# would reject the wipe (services still reference the old node rows), so
-	# this one connection runs with FK off. Proper fix is a diff-based upsert
-	# import (see mission log follow-ups).
-	# Handle-truth, same as _db_init: this pragma applies to the handle
-	# we were given, whatever the ambient env says.
-	my $db_driver = $dbh->{Driver}->{Name};
-	$dbh->{AutoCommit} = 1;  # commit+detach, so the PRAGMA runs outside a txn
-	$dbh->do("PRAGMA foreign_keys=OFF;") if $db_driver eq "SQLite";
-	$dbh->{AutoCommit} = 0;
-	$dbh->do('DELETE FROM node_attr');
-	$dbh->do('DELETE FROM node');
-	$dbh->do('DELETE FROM url');
-	$dbh->do('DELETE FROM grp WHERE id != 0');  # Keep root
-
-	my $sth_grp = $dbh->prepare('INSERT INTO grp (p_id, name) VALUES (?, ?)');
-	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
-	my $sth_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
-
-	# Walk the config tree for groups and hosts
+	# The config tree is the source of truth for grp/node/node_attr.
+	# Diff-based import with FKs enforced the whole way: ids of surviving
+	# rows are stable (service/ds/state history hangs off them), and rows
+	# gone from the config are swept with their full dependent chains.
+	my (@want_groups, @want_hosts);
 	my $groups = $config->{groups};
-	if ($groups && ref $groups eq 'HASH') {
-		$self->_import_groups_recursive($dbh, $groups, 0, []);
+	$self->_config_tree_walk($groups, '', [], \@want_groups, \@want_hosts)
+		if $groups && ref $groups eq 'HASH';
+
+	# Current DB state: groups by full path (resolved via the p_id
+	# chain), nodes by path with a by-name index to detect group moves.
+	my (%db_groups, %db_nodes, %db_nodes_by_name);
+	{
+		my %grp_by_id;
+		my $sth = $dbh->prepare('SELECT id, p_id, name FROM grp');
+		$sth->execute();
+		while (my $r = $sth->fetchrow_hashref) {
+			$grp_by_id{$r->{id}} = $r;
+		}
+		$sth->finish();
+		for my $id (keys %grp_by_id) {
+			my ($path, $cur, %seen) = ('', $id);
+			while (defined $cur && $cur != 0 && !$seen{$cur}++) {
+				$path = $grp_by_id{$cur}{name} . ($path ? ";$path" : '');
+				$cur = $grp_by_id{$cur}{p_id};
+			}
+			$db_groups{$path} = {
+				id   => $id,
+				name => $grp_by_id{$id}{name},
+				p_id => $grp_by_id{$id}{p_id},
+			};
+		}
+
+		my $sth_n = $dbh->prepare('SELECT id, grp_id, name, path FROM node');
+		$sth_n->execute();
+		while (my $r = $sth_n->fetchrow_hashref) {
+			my $key = defined $r->{path} ? $r->{path} : '';
+			$db_nodes{$key} = $r;
+			push @{$db_nodes_by_name{$r->{name}}}, $r;
+		}
+		$sth_n->finish();
+	}
+
+	# Groups: upsert along the desired paths (the walk emits parents
+	# before children), then sweep leftovers deepest-first.
+	my %grp_id_by_path = map { $_ => $db_groups{$_}{id} } keys %db_groups;
+	$grp_id_by_path{''} = 0;    # root
+	for my $g (@want_groups) {
+		my $parent_id = $grp_id_by_path{$g->{parent}};
+		my $existing = $db_groups{$g->{path}};
+		if (defined $existing) {
+			if ($existing->{name} ne $g->{name}
+			    || ($existing->{p_id} // -1) != $parent_id) {
+				$dbh->prepare('UPDATE grp SET name = ?, p_id = ? WHERE id = ?')
+					->execute($g->{name}, $parent_id, $existing->{id});
+			}
+		} else {
+			$dbh->prepare('INSERT INTO grp (p_id, name, path) VALUES (?, ?, ?)')
+				->execute($parent_id, $g->{name}, $g->{path});
+			$db_groups{$g->{path}} = {
+				id   => $dbh->last_insert_id(undef, undef, 'grp', 'id'),
+				name => $g->{name},
+				p_id => $parent_id,
+			};
+		}
+		$grp_id_by_path{$g->{path}} = $db_groups{$g->{path}}{id};
+	}
+
+	my %want_group_path = map { $_->{path} => 1 } @want_groups;
+	for my $path (sort { length($b) <=> length($a) || $b cmp $a } keys %db_groups) {
+		next if $want_group_path{$path};
+		my $id = $db_groups{$path}{id};
+		next if $id == 0;
+		# Only when no node still references it (the host pass already
+		# swept config-gone hosts); otherwise leave it for the next cycle
+		# rather than break the FK.
+		my ($nb) = $dbh->selectrow_array('SELECT count(1) FROM node WHERE grp_id = ?', undef, $id);
+		next if $nb;
+		$dbh->prepare('DELETE FROM url WHERE grp_id = ?')->execute($id);
+		$dbh->prepare('DELETE FROM grp WHERE id = ?')->execute($id);
+	}
+
+	# Hosts
+	my %want_host_path = map { $_->{path} => 1 } @want_hosts;
+	for my $h (@want_hosts) {
+		my $grp_id = $grp_id_by_path{$h->{grp}};
+		my $node = $db_nodes{$h->{path}};
+		my $old_path;
+		if (!defined $node) {
+			# The host may have moved groups (its path changed): match by
+			# name when unambiguous, so ids -- and the service/ds/state
+			# history on them -- survive the move.
+			my @same_name = @{$db_nodes_by_name{$h->{name}} || []};
+			$node = $same_name[0] if @same_name == 1;
+			$old_path = defined $node
+				? (defined $node->{path} ? $node->{path} : '')
+				: undef;
+		}
+		if (defined $node) {
+			if ($node->{grp_id} != $grp_id || $node->{name} ne $h->{name}
+			    || (defined $old_path && $old_path ne $h->{path})) {
+				$dbh->prepare('UPDATE node SET grp_id = ?, name = ?, path = ? WHERE id = ?')
+					->execute($grp_id, $h->{name}, $h->{path}, $node->{id});
+			}
+			if (defined $old_path) {
+				# Rekey: the moved node must not be swept as stale below
+				delete $db_nodes{$old_path};
+				$db_nodes{$h->{path}} = $node;
+				$node->{path} = $h->{path};
+			}
+		} else {
+			$dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)')
+				->execute($grp_id, $h->{name}, $h->{path});
+			$node = {
+				id     => $dbh->last_insert_id(undef, undef, 'node', 'id'),
+				grp_id => $grp_id,
+				name   => $h->{name},
+				path   => $h->{path},
+			};
+			$db_nodes{$h->{path}} = $node;
+			push @{$db_nodes_by_name{$h->{name}}}, $node;
+		}
+
+		# node_attr: sync to the desired set (insert/update/delete)
+		my %db_attr;
+		my $sth_a = $dbh->prepare('SELECT name, value FROM node_attr WHERE id = ?');
+		$sth_a->execute($node->{id});
+		while (my ($k, $v) = $sth_a->fetchrow_array) {
+			$db_attr{$k} = $v;
+		}
+		$sth_a->finish();
+		for my $k (keys %db_attr) {
+			next if exists $h->{attrs}{$k};
+			$dbh->prepare('DELETE FROM node_attr WHERE id = ? AND name = ?')
+				->execute($node->{id}, $k);
+		}
+		for my $k (sort keys %{$h->{attrs}}) {
+			my $val = $h->{attrs}{$k};
+			if (!exists $db_attr{$k}) {
+				$dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)')
+					->execute($node->{id}, $k, $val);
+			} elsif ($db_attr{$k} ne $val) {
+				$dbh->prepare('UPDATE node_attr SET value = ? WHERE id = ? AND name = ?')
+					->execute($val, $node->{id}, $k);
+			}
+		}
+	}
+
+	# Hosts gone from the config: sweep the full dependent chain
+	for my $path (keys %db_nodes) {
+		next if $want_host_path{$path};
+		$self->_db_remove_node_chain($dbh, $db_nodes{$path}{id});
 	}
 
 	$dbh->commit();
 	INFO "Imported groups and hosts from config into SQL";
 }
 
-# Recursively import groups and their hosts into the DB.
-sub _import_groups_recursive {
-	my ($self, $dbh, $groups, $p_id, $path_parts) = @_;
+# Ordered, FK-safe removal of a node and everything hanging off it.
+# Children first, mirroring the FK graph: state/override/ds_rrd/ds_attr
+# off ds, the rest off service or node.
+sub _db_remove_node_chain {
+	my ($self, $dbh, $node_id) = @_;
 
-	my $sth_grp = $dbh->prepare('INSERT INTO grp (p_id, name) VALUES (?, ?)');
-	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
-	my $sth_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
+	DEBUG "_db_remove_node_chain($node_id)";
+	my $svc_sql = 'SELECT id FROM service WHERE node_id = ?';
+	$dbh->do("DELETE FROM state WHERE node_id = ? OR ds_id IN (SELECT id FROM ds WHERE service_id IN ($svc_sql))",
+		undef, $node_id, $node_id);
+	$dbh->do("DELETE FROM override WHERE ds_id IN (SELECT id FROM ds WHERE service_id IN ($svc_sql))",
+		undef, $node_id);
+	$dbh->do("DELETE FROM ds_rrd WHERE ds_id IN (SELECT id FROM ds WHERE service_id IN ($svc_sql))",
+		undef, $node_id);
+	$dbh->do("DELETE FROM ds_attr WHERE id IN (SELECT id FROM ds WHERE service_id IN ($svc_sql))",
+		undef, $node_id);
+	$dbh->do("DELETE FROM ds WHERE service_id IN ($svc_sql)", undef, $node_id);
+	$dbh->do("DELETE FROM notification_tracking WHERE service_id IN ($svc_sql)", undef, $node_id);
+	$dbh->do("DELETE FROM service_attr WHERE id IN ($svc_sql)", undef, $node_id);
+	$dbh->do("DELETE FROM service_categories WHERE id IN ($svc_sql)", undef, $node_id);
+	$dbh->do("DELETE FROM url WHERE node_id = ? OR service_id IN ($svc_sql)",
+		undef, $node_id, $node_id);
+	$dbh->do("DELETE FROM service WHERE node_id = ?", undef, $node_id);
+	$dbh->do("DELETE FROM node_attr WHERE id = ?", undef, $node_id);
+	$dbh->do("DELETE FROM node WHERE id = ?", undef, $node_id);
+}
+
+# Walk the config tree emitting the desired groups (pre-order, so
+# parents precede children) and hosts. Mirrors the historical import's
+# traversal: only groups' hosts and nested groups are visited.
+sub _config_tree_walk {
+	my ($self, $groups, $parent_path, $path_parts, $want_groups, $want_hosts) = @_;
 
 	for my $group_name (sort keys %$groups) {
 		my $group = $groups->{$group_name};
 		next unless ref $group;  # Skip non-refs (blessed objects are ok)
 
-		# Insert group
-		$sth_grp->execute($p_id, $group_name);
-		my $grp_id = $dbh->last_insert_id(undef, undef, 'grp', 'id');
+		my $grp_path = $parent_path eq '' ? $group_name : "$parent_path;$group_name";
+		push @$want_groups, { path => $grp_path, name => $group_name, parent => $parent_path };
 
-		# Track path for this group
 		my @current_path = (@$path_parts, $group_name);
 
-		# Import hosts in this group
+		# Hosts in this group
 		my $hosts = $group->{hosts};
 		if ($hosts && ref $hosts) {
 			for my $host_name (sort keys %$hosts) {
 				my $host = $hosts->{$host_name};
 				next unless ref $host;
 
-				# Build full path: group1;group2;host
-				my $full_path = join(';', @current_path, $host_name);
-
-				# Insert node
-				$sth_node->execute($grp_id, $host_name, $full_path);
-				my $node_id = $dbh->last_insert_id(undef, undef, 'node', 'id');
-
-				# Insert node attributes
+				my %attrs;
 				for my $attr (qw(address port update update_priority use_node_name)) {
 					my $val = $host->{$attr};
 					next unless defined $val;
 					# Convert Infinity to a large number for storage
 					$val = 999999 if $val eq 'Infinity';
-					$sth_attr->execute($node_id, $attr, $val);
+					$attrs{$attr} = $val;
 				}
+
+				push @$want_hosts, {
+					name  => $host_name,
+					path  => join(';', @current_path, $host_name),
+					grp   => $grp_path,
+					attrs => \%attrs,
+				};
 			}
 		}
 
 		# Recurse into nested groups
 		my $nested_groups = $group->{groups};
-		if ($nested_groups && ref $nested_groups) {
-			$self->_import_groups_recursive($dbh, $nested_groups, $grp_id, \@current_path);
-		}
+		$self->_config_tree_walk($nested_groups, $grp_path, \@current_path, $want_groups, $want_hosts)
+			if $nested_groups && ref $nested_groups;
 	}
 }
 
