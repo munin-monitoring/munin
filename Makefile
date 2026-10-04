@@ -354,17 +354,22 @@ docker-shell:
 # Whole-suite shape: with a single-file TESTS the par pass may be
 # empty -- use docker-test-one for single tests.
 #
-# Coverage collection: each pass collects its OWN whole cover_db
-# (runs/ + structure/ + digests, tarred before any report --
-# `cover -report` CONSUMES runs/, merging into the db and clearing
-# it). CI uploads both tarballs per configuration
-# (cover_db_par.tgz + cover_db_seq.tgz); the coverage merge job needs
-# NO change -- its cover-db-* download pattern and the cover_db-*/
-# report glob are config-agnostic, so the union report simply merges
-# more databases. -select_re filters to production code at report
-# time: tests load modules from lib/ via "use lib", so the old
-# "blib/lib|blib/script" select matched nothing (coverage uploaded to
-# Coveralls was empty).
+# Coverage collection: Debian's Devel::Cover 1.38 IGNORES
+# $DEVEL_COVER_DB (probed: both passes collected into the default
+# ./cover_db when the env was set -- run-dir timestamps span the whole
+# run; the only DEVEL_COVER_* vars in the source are NO_COVERAGE and
+# DB_FORMAT). So the two passes SHARE the default dir sequentially:
+# par pass collects, its whole db (runs/ + structure/ + digests) is
+# tarred, the dir is removed, seq pass collects fresh, tarred again.
+# `cover -report` CONSUMES runs/ (merges into the db and clears it),
+# so collect-then-tar before any report. CI uploads both tarballs per
+# configuration (cover_db_par.tgz + cover_db_seq.tgz); the coverage
+# merge job needs NO change -- its cover-db-* download pattern and the
+# cover_db-*/ report glob are config-agnostic, so the union report
+# simply merges more databases. -select_re filters to production code
+# at report time: tests load modules from lib/ via "use lib", so the
+# old "blib/lib|blib/script" select matched nothing (coverage uploaded
+# to Coveralls was empty).
 COVER_REPORT       ?= 1
 COVER_DB_TARBALL   ?= cover_db.tgz
 PROVE_J1           = prove --shuffle --timer -j1 -Iblib/lib -Iblib/arch
@@ -373,11 +378,12 @@ FORK_TESTS         := $(shell grep -l 'TestUtils::fork_mode\|MUNIN_TEST_FORK' $(
 PAR_TESTS          := $(filter-out $(FORK_TESTS),$(ALL_TESTS))
 COVER_DB_TARBALL_PAR = $(COVER_DB_TARBALL:.tgz=_par.tgz)
 COVER_DB_TARBALL_SEQ = $(COVER_DB_TARBALL:.tgz=_seq.tgz)
-# COVER_REPORT=1 (local default): one report over BOTH dbs at the end
+# COVER_REPORT=1 (local default): report over BOTH passes at the end
 # -- the same multi-db merge shape the CI coverage job uses
-# (`cover -report X primary extra...` merges runs AND structure).
+# (`cover -report X primary extra...` merges runs AND structure). The
+# par tarball is extracted beside the live seq db to feed the merge.
 # COVER_REPORT=0 (CI) skips it; the merge job reports once.
-COVER_REPORT_CMDS_1 = && cover -silent -select_re "^lib/Munin|^script/munin" -report html_basic -outputdir cover_db cover_db cover_db_seq && cover -silent -select_re "^lib/Munin|^script/munin" -summary cover_db cover_db_seq
+COVER_REPORT_CMDS_1 = && mkdir -p cover_db_par && tar xzf $(COVER_DB_TARBALL_PAR) -C cover_db_par --strip-components=1 && cover -silent -select_re "^lib/Munin|^script/munin" -report html_basic -outputdir cover_report cover_db cover_db_par && cover -silent -select_re "^lib/Munin|^script/munin" -summary cover_db cover_db_par
 COVER_REPORT_CMDS_0 =
 
 docker-cover:
@@ -385,9 +391,12 @@ docker-cover:
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm \
 		perl Build.PL && \
 		./Build && \
-		rm -rf cover_db cover_db_seq $(COVER_DB_TARBALL_PAR) $(COVER_DB_TARBALL_SEQ) && \
+		rm -rf cover_db cover_db_par $(COVER_DB_TARBALL_PAR) $(COVER_DB_TARBALL_SEQ) && \
 		PERL5OPT="-MDevel::Cover" TMPDIR=/dev/shm $(PROVE) $(PAR_TESTS) && \
-		PERL5OPT="-MDevel::Cover" DEVEL_COVER_DB=cover_db_seq TMPDIR=/dev/shm $(PROVE_J1) $(FORK_TESTS) && \
 		tar czf $(COVER_DB_TARBALL_PAR) cover_db && \
-		tar czf $(COVER_DB_TARBALL_SEQ) cover_db_seq $(COVER_REPORT_CMDS_$(COVER_REPORT))'
+		echo "par pass runs: $$(ls cover_db/runs | wc -l)" && \
+		rm -rf cover_db && \
+		PERL5OPT="-MDevel::Cover" TMPDIR=/dev/shm $(PROVE_J1) $(FORK_TESTS) && \
+		tar czf $(COVER_DB_TARBALL_SEQ) cover_db && \
+		echo "seq pass runs: $$(ls cover_db/runs | wc -l)" $(COVER_REPORT_CMDS_$(COVER_REPORT))'
 
