@@ -335,84 +335,59 @@ docker-test-matrix:
 docker-shell:
 	$(DOCKER) run --rm -it --shm-size=128m -v $(CURDIR):/app munin-dev bash
 
-# Run coverage in Docker: parallel prove under Devel::Cover. Each test process
-# writes its own cover_db/runs/<ts>.<pid> file, so -j needs no coordination.
-# The ENTIRE cover_db is tarballed after prove -- runs/, structure/ AND
-# digests. Structure and digests are written by the collection phase
-# into the base db; a runs-only archive merges into a database the
-# report cannot attribute (no structure -> empty report -> 0% on
-# Coveralls with a green pipeline). `cover -report` CONSUMES
-# cover_db/runs (merges into the db and clears it), so collect-then-tar
-# before any report. COVER_REPORT=0 skips the per-configuration
-# reports: CI reports once, in the merge job, over all configurations
-# via cover's own multi-db merge (`cover -report X primary extra1
-# extra2` merges runs AND structure). -select_re filters to production
-# code at report time: tests load modules from lib/ via "use lib", so
-# the old "blib/lib|blib/script" select matched nothing (coverage
-# uploaded to Coveralls was empty).
+# Run coverage in Docker: TWO prove passes under Devel::Cover -- the
+# fixed shape for every configuration, no knobs (uniformity across
+# matrix variants keeps cross-variant bug comparisons honest:
+# mission_log/2026-10-04_covered_parallel_perf.md).
+#
+#   1. par pass: tests that do not exercise fork mode, -j$(JOBS)
+#   2. seq pass: the fork-mode tests, one at a time (-j1), box-exclusive
+#
+# Why split: fork-mode tests fan out internally -- the master forks one
+# worker per service per update cycle (25 with SampleDB), and
+# Devel::Cover 1.38 charges EVERY forked child a full report() at exit
+# (own runs/ dir + full structure rewrite + digests into the shared
+# base db; ~4.4s per child measured). Under -j4 several fork tests
+# overlap: parallel-of-parallel -- same cores, more contention, no
+# extra throughput. The fork list is DERIVED from the tests (grep for
+# fork_mode/MUNIN_TEST_FORK) so it cannot drift as tests change.
+# Whole-suite shape: with a single-file TESTS the par pass may be
+# empty -- use docker-test-one for single tests.
+#
+# Coverage collection: each pass collects its OWN whole cover_db
+# (runs/ + structure/ + digests, tarred before any report --
+# `cover -report` CONSUMES runs/, merging into the db and clearing
+# it). CI uploads both tarballs per configuration
+# (cover_db_par.tgz + cover_db_seq.tgz); the coverage merge job needs
+# NO change -- its cover-db-* download pattern and the cover_db-*/
+# report glob are config-agnostic, so the union report simply merges
+# more databases. -select_re filters to production code at report
+# time: tests load modules from lib/ via "use lib", so the old
+# "blib/lib|blib/script" select matched nothing (coverage uploaded to
+# Coveralls was empty).
 COVER_REPORT       ?= 1
 COVER_DB_TARBALL   ?= cover_db.tgz
-COVER_REPORT_CMDS_1 = && cover -silent -select_re "^lib/Munin|^script/munin" -report html_basic -outputdir cover_db && cover -silent -select_re "^lib/Munin|^script/munin" -summary
-COVER_REPORT_CMDS_0 =
-
-# --- Covered-suite split: par pass + seq pass ------------------------
-# Fork-mode tests fan out internally -- the master forks one worker per
-# service per update cycle (25 with SampleDB), and Devel::Cover 1.38
-# charges EVERY forked child a full report() at exit (own runs/ dir +
-# full structure rewrite + digests into the shared base db; ~4.4s per
-# child measured, mission_log/2026-10-04_covered_parallel_perf.md).
-# Under prove -j4 several fork tests overlap: parallel-of-parallel --
-# same cores, more contention, longer walls, no extra throughput. So
-# when FORK=1, docker-cover runs TWO prove passes:
-#   1. par pass: tests that do not exercise fork mode, at -j$(JOBS)
-#   2. seq pass: the fork-mode tests, one at a time (-j1), box-exclusive
-# Each pass collects its OWN whole cover_db (runs/ + structure/ +
-# digests, tarred before any report -- `cover -report` consumes runs/)
-# and CI uploads both tarballs per configuration. The coverage merge
-# job needs NO change: its cover-db-* download pattern and the
-# cover_db-*/ report glob are both config-agnostic, so the union
-# report simply merges more databases.
-# COVER_SPLIT defaults to 1: every matrix configuration runs the same
-# two-pass shape, so all CI jobs are uniform and directly comparable
-# (decision 2026-10-04: matrix consistency beats a per-config
-# optimization; serial-sqlite pays the split too even though FORK=0
-# has no fork fleets -- its fork-list tests still get the idle box in
-# the seq pass, e.g. spec.t ~275s solo vs ~589s stacked at -j4; the
-# price is losing cross-set overlap, quantified in mission_log
-# Session 2). A config can opt out by pinning COVER_SPLIT=0 in its
-# make_args. Whole-suite knob: with a single-file TESTS the par list
-# may be empty; use COVER_SPLIT=0 there.
-COVER_SPLIT      ?= 1
-PROVE_J1         = prove --shuffle --timer -j1 -Iblib/lib -Iblib/arch
-ALL_TESTS        := $(shell ls $(TESTS) 2>/dev/null)
-FORK_TESTS       := $(shell grep -l 'TestUtils::fork_mode\|MUNIN_TEST_FORK' $(ALL_TESTS) 2>/dev/null)
-PAR_TESTS        := $(filter-out $(FORK_TESTS),$(ALL_TESTS))
+PROVE_J1           = prove --shuffle --timer -j1 -Iblib/lib -Iblib/arch
+ALL_TESTS          := $(shell ls $(TESTS) 2>/dev/null)
+FORK_TESTS         := $(shell grep -l 'TestUtils::fork_mode\|MUNIN_TEST_FORK' $(ALL_TESTS) 2>/dev/null)
+PAR_TESTS          := $(filter-out $(FORK_TESTS),$(ALL_TESTS))
 COVER_DB_TARBALL_PAR = $(COVER_DB_TARBALL:.tgz=_par.tgz)
 COVER_DB_TARBALL_SEQ = $(COVER_DB_TARBALL:.tgz=_seq.tgz)
-# Split-mode COVER_REPORT=1: one report over BOTH dbs -- the same
-# multi-db merge shape the CI coverage job uses (`cover -report X
-# primary extra...` merges runs AND structure).
-COVER_REPORT_CMDS_SPLIT_1 = && cover -silent -select_re "^lib/Munin|^script/munin" -report html_basic -outputdir cover_db cover_db cover_db_seq && cover -silent -select_re "^lib/Munin|^script/munin" -summary cover_db cover_db_seq
-COVER_REPORT_CMDS_SPLIT_0 =
-
-ifeq ($(COVER_SPLIT),1)
-COVER_SEQUENCE = \
-	rm -rf cover_db cover_db_seq $(COVER_DB_TARBALL_PAR) $(COVER_DB_TARBALL_SEQ) && \
-	PERL5OPT="-MDevel::Cover" TMPDIR=/dev/shm $(PROVE) $(PAR_TESTS) && \
-	PERL5OPT="-MDevel::Cover" DEVEL_COVER_DB=cover_db_seq TMPDIR=/dev/shm $(PROVE_J1) $(FORK_TESTS) && \
-	tar czf $(COVER_DB_TARBALL_PAR) cover_db && \
-	tar czf $(COVER_DB_TARBALL_SEQ) cover_db_seq $(COVER_REPORT_CMDS_SPLIT_$(COVER_REPORT))
-else
-COVER_SEQUENCE = \
-	rm -rf cover_db $(COVER_DB_TARBALL) && \
-	PERL5OPT="-MDevel::Cover" TMPDIR=/dev/shm $(PROVE) $(TESTS) && \
-	tar czf $(COVER_DB_TARBALL) cover_db $(COVER_REPORT_CMDS_$(COVER_REPORT))
-endif
+# COVER_REPORT=1 (local default): one report over BOTH dbs at the end
+# -- the same multi-db merge shape the CI coverage job uses
+# (`cover -report X primary extra...` merges runs AND structure).
+# COVER_REPORT=0 (CI) skips it; the merge job reports once.
+COVER_REPORT_CMDS_1 = && cover -silent -select_re "^lib/Munin|^script/munin" -report html_basic -outputdir cover_db cover_db cover_db_seq && cover -silent -select_re "^lib/Munin|^script/munin" -summary cover_db cover_db_seq
+COVER_REPORT_CMDS_0 =
 
 docker-cover:
 	$(DOCKER) run --rm --shm-size=1g $(TESTENV) --add-host testing.acme.com:127.0.0.1 \
 		-v $(CURDIR):/app munin-dev sh -c 'TMPDIR=/dev/shm \
 		perl Build.PL && \
 		./Build && \
-		$(COVER_SEQUENCE)'
+		rm -rf cover_db cover_db_seq $(COVER_DB_TARBALL_PAR) $(COVER_DB_TARBALL_SEQ) && \
+		PERL5OPT="-MDevel::Cover" TMPDIR=/dev/shm $(PROVE) $(PAR_TESTS) && \
+		PERL5OPT="-MDevel::Cover" DEVEL_COVER_DB=cover_db_seq TMPDIR=/dev/shm $(PROVE_J1) $(FORK_TESTS) && \
+		tar czf $(COVER_DB_TARBALL_PAR) cover_db && \
+		tar czf $(COVER_DB_TARBALL_SEQ) cover_db_seq $(COVER_REPORT_CMDS_$(COVER_REPORT))'
 
