@@ -92,7 +92,9 @@ Munin::Common::Logger::configure(
 	"level" => "info",
 );
 
-alarm(60);
+# alarm_or_die, not bare alarm: untrapped SIGALRM skips END, orphaned
+# test nodes hold the TAP pipe, prove wedges (see TestUtils).
+TestUtils::alarm_or_die(60);
 
 my $update = Munin::Master::Update->new();
 is($update->run(), UPDATE_RUNS, "first update run returns expected count");

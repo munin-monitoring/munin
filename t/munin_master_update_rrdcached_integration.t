@@ -234,7 +234,9 @@ close $fh;
 # TEST: First update via rrdcached
 # ============================================================================
 
-alarm(UPDATE_TIMEOUT);
+# alarm_or_die, not bare alarm: untrapped SIGALRM skips END, orphaned
+# helpers hold the TAP pipe, prove wedges (see TestUtils).
+TestUtils::alarm_or_die(UPDATE_TIMEOUT);
 
 require Munin::Master::Config;
 my $config = Munin::Master::Config->instance()->{config};

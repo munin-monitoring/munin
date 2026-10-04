@@ -77,6 +77,26 @@ sub db_driver {
     return $d eq "pg" ? "Pg" : "SQLite";
 }
 
+# Arm a test deadline that fails CLEANLY on expiry.
+#
+# A bare alarm(N) kills the perl process on SIGALRM with the default
+# signal disposition, which does NOT run END blocks. The pid-guarded
+# END cleanup in the update-family tests never executes, so their
+# forked helpers (node_test.pl servers, rrdcached) outlive the test,
+# inherit its TAP stdout pipe, and hold it open: prove never sees EOF
+# for that file and the whole harness wedges. Observed locally under
+# covered FORK=1 (mission_log/2026-10-04_covered_parallel_perf.md):
+# four zombied test procs, orphaned helpers, prove idle forever. die()
+# runs END, so the trap turns a hang into a clean, reported failure.
+# The alarm budget itself is unchanged -- tuning it is a separate
+# decision (the fleet's Devel::Cover exit tax makes covered fork-mode
+# cycles much longer than plain ones).
+sub alarm_or_die {
+    my ($secs) = @_;
+    $SIG{ALRM} = sub { die "test deadline exceeded: ${secs}s\n" };
+    alarm($secs);
+}
+
 # Route the production handle path (get_dbh reads env/config, not our
 # memo) and any TestUtils helper to this process's scratch database.
 sub _pg_route {
