@@ -88,13 +88,22 @@ sub db_driver {
 # covered FORK=1 (mission_log/2026-10-04_covered_parallel_perf.md):
 # four zombied test procs, orphaned helpers, prove idle forever. die()
 # runs END, so the trap turns a hang into a clean, reported failure.
-# The alarm budget itself is unchanged -- tuning it is a separate
-# decision (the fleet's Devel::Cover exit tax makes covered fork-mode
-# cycles much longer than plain ones).
+#
+# Budget scaling: the deadlines exist to catch HANGS, not slow
+# instrumentation. Devel::Cover inflates this suite ~5x in CPU, and
+# every forked worker additionally pays a fixed ~4.4s report() at exit
+# (~110-220s per update cycle with SampleDB's 25 workers) -- measured:
+# covered update.t and rrdcached_integration.t died at their 60s
+# budgets while plain runs finish in tens of seconds. Scale the budget
+# when coverage is active so it keeps its meaning; plain runs keep the
+# original value. Same scaling in every matrix variant (it keys on
+# coverage, not on FORK/DBDRIVER).
 sub alarm_or_die {
     my ($secs) = @_;
-    $SIG{ALRM} = sub { die "test deadline exceeded: ${secs}s\n" };
-    alarm($secs);
+    my $factor = ($ENV{PERL5OPT} || "") =~ /Devel::Cover/ ? 5 : 1;
+    my $effective = $secs * $factor;
+    $SIG{ALRM} = sub { die "test deadline exceeded: ${effective}s (${secs}s x${factor} under coverage)\n" };
+    alarm($effective);
 }
 
 # Route the production handle path (get_dbh reads env/config, not our
