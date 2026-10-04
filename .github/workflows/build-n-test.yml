@@ -194,17 +194,33 @@ jobs:
         if: failure()
         run: ./script/show-test-failures test-output-${{ matrix.config }}.log
 
-      # One artifact per configuration. FORK=1 configurations carry TWO
-      # tarballs (cover_db_par.tgz + cover_db_seq.tgz: docker-cover's
-      # par/seq split, see the Makefile). The coverage job's
-      # cover-db-* download pattern and cover_db-*/ report glob pick
-      # up every tarball without change.
-      - name: Upload coverage database
+      # ONE artifact per tarball, not per configuration. docker-cover
+      # produces cover_db_par.tgz + cover_db_seq.tgz (par pass + seq
+      # pass, see the Makefile), and the coverage job's unpack loop
+      # derives its target directory from the artifact NAME: two
+      # tarballs in one artifact map to one directory, and the loop's
+      # per-tarball rm -rf wipes the first extraction (seq extracts
+      # last alphabetically -> par coverage silently discarded ->
+      # Coveralls cratered; mission_log/2026-10-04 Session 2).
+      # Separate -par / -seq artifacts keep one tarball per directory:
+      # the download pattern cover-db-* and the report glob cover_db-*/
+      # then pick up every database with no coverage-job change. If a
+      # pass dies before tar'ing, its artifact stays empty
+      # (if-no-files-found: ignore) and coverage still ships the pass
+      # that completed.
+      - name: Upload coverage database (par pass)
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: cover-db-${{ matrix.config }}
-          path: cover_db*.tgz
+          name: cover-db-${{ matrix.config }}-par
+          path: cover_db_par.tgz
+          if-no-files-found: ignore
+      - name: Upload coverage database (seq pass)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cover-db-${{ matrix.config }}-seq
+          path: cover_db_seq.tgz
           if-no-files-found: ignore
 
       - name: Upload test log
