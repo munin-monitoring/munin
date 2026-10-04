@@ -117,6 +117,12 @@ jobs:
       # mission_log/2026-10-04_covered_parallel_perf.md.
       - name: Runner system info
         run: |
+          # Diagnostics only: this step must NEVER fail the job. The
+          # default GHA shell is bash -e, and runners vary (a format
+          # field valid on one docker version may not exist on
+          # another). Failures print as text; the tests are what
+          # matter.
+          set +e
           {
             echo "runner: ${RUNNER_NAME:-?} arch=${RUNNER_ARCH:-?} os=${RUNNER_OS:-?}"
             echo
@@ -149,7 +155,9 @@ jobs:
             df -h /var/lib/docker 2>/dev/null || true
             echo
             echo "== docker =="
-            docker version --format '{{.Client.Version}} client / {{.Server.Version}} server ({{.Server.Os}}/{{.Server.Arch}}, storage {{.Server.Driver}})'
+            docker version --format '{{.Client.Version}} client / {{.Server.Version}} server ({{.Server.Os}}/{{.Server.Arch}})' 2>/dev/null || echo "docker version: n/a"
+            echo -n "storage driver: "
+            docker info --format '{{.Driver}}' 2>/dev/null || echo "n/a"
             echo
             echo "== fd limit =="
             ulimit -n
