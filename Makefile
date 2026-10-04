@@ -372,13 +372,17 @@ COVER_REPORT_CMDS_0 =
 # job needs NO change: its cover-db-* download pattern and the
 # cover_db-*/ report glob are both config-agnostic, so the union
 # report simply merges more databases.
-# COVER_SPLIT defaults to $(FORK): the split only pays when the tests
-# actually fork. FORK=0's wall is pinned by CPU giants (spec.t etc.),
-# not fork fleets -- serializing its fork-list tests would add a
-# serial chain for nothing. The fork list is DERIVED from the tests
-# (grep) so it cannot drift as tests change. Whole-suite knob: with a
-# single-file TESTS the par list may be empty; use COVER_SPLIT=0 there.
-COVER_SPLIT      ?= $(FORK)
+# COVER_SPLIT defaults to 1: every matrix configuration runs the same
+# two-pass shape, so all CI jobs are uniform and directly comparable
+# (decision 2026-10-04: matrix consistency beats a per-config
+# optimization; serial-sqlite pays the split too even though FORK=0
+# has no fork fleets -- its fork-list tests still get the idle box in
+# the seq pass, e.g. spec.t ~275s solo vs ~589s stacked at -j4; the
+# price is losing cross-set overlap, quantified in mission_log
+# Session 2). A config can opt out by pinning COVER_SPLIT=0 in its
+# make_args. Whole-suite knob: with a single-file TESTS the par list
+# may be empty; use COVER_SPLIT=0 there.
+COVER_SPLIT      ?= 1
 PROVE_J1         = prove --shuffle --timer -j1 -Iblib/lib -Iblib/arch
 ALL_TESTS        := $(shell ls $(TESTS) 2>/dev/null)
 FORK_TESTS       := $(shell grep -l 'TestUtils::fork_mode\|MUNIN_TEST_FORK' $(ALL_TESTS) 2>/dev/null)

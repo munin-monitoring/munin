@@ -91,13 +91,18 @@ jobs:
         # serial+pgsql is runnable (make docker-test FORK=0
         # DBDRIVER=pg) but unselected: no deployment shape runs it, so
         # CI does not spend CPU cycles on it.
+        # Every configuration pins COVER_SPLIT=1: all jobs run the
+        # same two-pass covered shape (par pass -j4 over the non-fork
+        # tests, then seq pass -j1 over the fork-mode tests -- see
+        # docker-cover in the Makefile), so job logs, artifacts and
+        # durations stay directly comparable across the matrix.
         include:
           - config: serial-sqlite
-            make_args: "JOBS=4 FORK=0 DBDRIVER=sqlite"
+            make_args: "JOBS=4 FORK=0 DBDRIVER=sqlite COVER_SPLIT=1"
           - config: parallel-sqlite
-            make_args: "JOBS=4 FORK=1 DBDRIVER=sqlite"
+            make_args: "JOBS=4 FORK=1 DBDRIVER=sqlite COVER_SPLIT=1"
           - config: parallel-pgsql
-            make_args: "JOBS=4 FORK=1 DBDRIVER=pg"
+            make_args: "JOBS=4 FORK=1 DBDRIVER=pg COVER_SPLIT=1"
     steps:
       - uses: actions/checkout@v7
 
