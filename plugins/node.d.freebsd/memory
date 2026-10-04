@@ -30,7 +30,7 @@ fi
 PAGESIZE=$(/sbin/sysctl -n vm.stats.vm.v_page_size)
 MEMSIZE=$(/sbin/sysctl -n vm.stats.vm.v_page_count)
 MEMMAX=$(($PAGESIZE*$MEMSIZE))
-CACHE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_cache_count)
+CACHE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_cache_count 2> /dev/null)
 LAUNDRY_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_laundry_count)
 
 if [ "$1" = "config" ]; then
