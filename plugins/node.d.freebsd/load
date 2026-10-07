@@ -1,20 +1,45 @@
 #!/bin/sh
-#
-# Plugin to monitor the load average on a system.
-#
-# Usage: Link or copy into /etc/munin/node.d/
-#
-# Magic markers (optional - only used by munin-config and some
-# installation scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
 
+: << =cut
 
+=head1 NAME
+
+load - Plugin to monitor the load average on a system.
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin
+
+=over 4
+
+=item load_warn <load>
+
+Warning threshold for load (Default: 10)
+
+=item load_crit <load>
+
+Critical threshold for load (Default: 120)
+
+=back
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown LICENSE
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 # If run with the "autoconf"-parameter, give our opinion on whether we
-# should be run on this system or not. This is optional, and only used
-# by munin-config. In the case of this plugin, we should most probably
+# should be run on this system or not. This is optional, and only used by
+# munin-config. In the case of this plugin, we should most probably
 # always be included.
 
 if [ "$1" = "autoconf" ]; then
@@ -37,6 +62,9 @@ fi
 # graphs should look.
 
 if [ "$1" = "config" ]; then
+        LOAD_WARN=${load_warn:-10}
+        LOAD_CRIT=${load_crit:-120}
+
         # The host name this plugin is for. (Can be overridden to have
         # one machine answer for several)
 
@@ -58,8 +86,8 @@ if [ "$1" = "config" ]; then
         # These two are optional. They are only used if you have
         # configured your munin to tell a Nagios-server about any
         # problems
-        echo 'load.warning 10'
-        echo 'load.critical 120'
+        echo "load.warning $LOAD_WARN"
+        echo "load.critical $LOAD_CRIT"
         # This one is purely to add an explanation to the web page. The first
         # one is for the graph itself, while the second one is for the field
         # "load".
@@ -77,27 +105,3 @@ fi
 
 echo -n "load.value "
 /sbin/sysctl vm.loadavg | cut -f3 -d' '
-
-# How could this plugin have been written in its simplest form?
-# Something like this:
-#
-# ---------------------
-# #!/bin/sh
-
-#
-# if [ "$1" = "config" ]; then
-
-#       echo "graph_title Load average"
-#	echo 'graph_args --base 1000 -l 0'
-#	echo 'graph_vlabel load'
-#       echo "load.label load"
-#       exit 0
-# fi
-# echo -n "load.value "
-# cut -f1 -d' ' < /proc/loadavg
-# ---------------------
-#
-# Except for the Nagios-warnings (which most people don't have any need
-# for) and things used by installation scripts and munin-config (which
-# you don't need if you don't plan on submitting your plugin to the
-# package), the two versions will work identically.
