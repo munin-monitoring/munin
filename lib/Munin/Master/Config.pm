@@ -119,7 +119,6 @@ my %booleans = map {$_ => 1} qw(
     tls_verify_certificate
     update
     use_node_name
-    use_default_node
 );
 
 
