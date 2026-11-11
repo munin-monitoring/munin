@@ -2056,7 +2056,9 @@ sub update_slave {
     # undef when replica is stopped, or when MySQL fails to calculate
     # the lag (which happens depresingly often). (mk-heartbeat fixes
     # this problem.)
-    $data->{seconds_behind_master} ||= 0;
+    # SHOW REPLICA STATUS uses Seconds_Behind_Source, but Munin keeps
+    # the legacy seconds_behind_master field for backward compatibility.
+    $data->{seconds_behind_master} = $data->{seconds_behind_source} || 0;
 
     # Track these two fields so we can trigger warnings if the replica stops
     # running
