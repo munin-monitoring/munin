@@ -935,6 +935,7 @@ EOF
         print <<"EOF";
 multigraph ${plugin_name}_throughput.$graph_id
 graph_title Disk throughput for /dev/$pretty_device
+graph_sum rdbytes wrbytes
 graph_args --base 1024
 graph_vlabel Pr \${graph_period} read (-) / write (+)
 graph_category disk

@@ -264,6 +264,9 @@ sub handle_request
 	    $graph_scale = 1;
 	}
 
+	$sth->execute($service_id, "graph_sum");
+	my ($graph_sum) = $sth->fetchrow_array() || "";
+
 	DEBUG "graph_printf: $graph_printf";
 
 	$sth = $dbh->prepare_cached("
@@ -578,6 +581,79 @@ sub handle_request
 		# Now, create a version for each min/max/avg
 		for my $t (qw(min avg max)) {
 			push @rrd_def, "CDEF:${t}_$_rrdname=${t}_$expanded_cdef";
+		}
+	}
+
+	# Emit totals for the configured graph period
+	if ($graph_sum) {
+		my @sum_fields = grep { defined $_ && $_ ne '' } split(/\s+/, $graph_sum);
+		my @valid_sum_fields;
+		for my $sf (@sum_fields) {
+			next unless exists $row{$sf};
+			push @rrd_vdef, "VDEF:vtotal_$sf=avg_$sf,TOTAL";
+			push @valid_sum_fields, $sf;
+		}
+
+		if (@valid_sum_fields) {
+			my $sum_printf = sub {
+				my ($name) = @_;
+				my $pf = $row{$name}[8];
+				$pf = $graph_printf unless defined $pf;
+				$pf .= "%s" if $graph_scale;
+				return $pf;
+			};
+
+			my $negative_of = sub {
+				my ($name) = @_;
+				return $row{$name}[9];
+			};
+
+			if (@valid_sum_fields == 2) {
+				my ($a, $b) = @valid_sum_fields;
+				my ($in, $out);
+				if (defined $negative_of->($b) && $negative_of->($b) eq $a) {
+					($in, $out) = ($a, $b);
+				} elsif (defined $negative_of->($a) && $negative_of->($a) eq $b) {
+					($in, $out) = ($b, $a);
+				}
+
+				if (defined $in) {
+					push @rrd_gfx, "COMMENT:" . sprintf("%-${longest}s", "Total");
+					push @rrd_gfx, "GPRINT:vtotal_$in:" . $sum_printf->($in) . "\\g";
+					push @rrd_gfx, "COMMENT: / \\g";
+					push @rrd_gfx, "GPRINT:vtotal_$out:" . $sum_printf->($out) . "\\j";
+				} else {
+					for my $sf (@valid_sum_fields) {
+						my $label = $row{$sf}[0] // $sf;
+						$label =~ s/:/\\:/g;
+						my $text = "Total $label";
+						if (length($text) <= $longest) {
+							$text = sprintf("%-${longest}s", $text);
+						} else {
+							$text .= "\\l";
+						}
+						push @rrd_gfx, "COMMENT:$text";
+						push @rrd_gfx, "GPRINT:vtotal_$sf:" . $sum_printf->($sf) . "\\j";
+					}
+				}
+			} elsif (@valid_sum_fields == 1) {
+				my $sf = $valid_sum_fields[0];
+				push @rrd_gfx, "COMMENT:" . sprintf("%-${longest}s", "Total");
+				push @rrd_gfx, "GPRINT:vtotal_$sf:" . $sum_printf->($sf) . "\\j";
+			} else {
+				for my $sf (@valid_sum_fields) {
+					my $label = $row{$sf}[0] // $sf;
+					$label =~ s/:/\\:/g;
+					my $text = "Total $label";
+					if (length($text) <= $longest) {
+						$text = sprintf("%-${longest}s", $text);
+					} else {
+						$text .= "\\l";
+					}
+					push @rrd_gfx, "COMMENT:$text";
+					push @rrd_gfx, "GPRINT:vtotal_$sf:" . $sum_printf->($sf) . "\\j";
+				}
+			}
 		}
 	}
 

@@ -62,6 +62,7 @@ my %legal = map { $_ => 1 } qw(
 	graph_scale
 	graph_sources
 	graph_strategy
+	graph_sum
 	graph_sums
 	graph_title
 	graph_total
