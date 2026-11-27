@@ -1,5 +1,23 @@
 -*- text -*-
 
+munin-2.0.79, 2026-11-27
+
+Kenyon Ralph (3):
+      df, df_inode: keep first mount when a device has multiple mounts (#1693)
+      ntp_states: skip associations with no srcadr (#1696)
+      haproxy_ng: Fix some graphs which sometimes do not render. (#1708)
+
+Nye Liu (2):
+      df, df_inode: keep first mount when a device has multiple mounts
+      ntp_states: skip associations with no srcadr
+
+Trygve Vea (1):
+      haproxy_ng: Fix some graphs which sometimes do not render.
+
+dipohl (1):
+      fix for 'unknown' version in function generate_version_string_from_dir
+
+
 munin-2.0.78, 2026-09-20
 
 Fix Changelog
