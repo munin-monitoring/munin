@@ -297,7 +297,7 @@ jobs:
           dbs=("${dbs[@]%/}")
           primary="${dbs[0]}"
           merges="${dbs[@]:1}"
-          docker run --rm -v $(pwd):/app -e GITHUB_TOKEN munin-dev \
+          docker run --rm -v $(pwd):/app -e COVERALLS_REPO_TOKEN -e GITHUB_TOKEN munin-dev \
             cover -silent -select_re "^lib/Munin|^script/munin" -report coveralls $primary $merges
 
       - name: Upload coverage HTML
