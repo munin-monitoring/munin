@@ -9,42 +9,30 @@ on:
 
 jobs:
   # Build the dev image exactly once per run; every other job loads it
-  # from this artifact. Per-job actions/cache would race on a
-  # Dockerfile change: parallel jobs all miss and all rebuild.
+  # from this artifact -- handoff inside a run is an artifact, NOT a
+  # per-job actions/cache (those would race on a Dockerfile change and
+  # make every job rebuild).
+  #
+  # Across runs the layers live in the Actions cache backend
+  # (type=gha): one builder, no race, and mode=max exports the
+  # intermediate apt/cpanm layers too, so editing anything after them
+  # costs only the tail of the build. --load puts the result back into
+  # the docker daemon for `docker save` below.
   dev-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      - name: Cache Devel-Cover-Report-Coveralls
-        id: cache-coveralls-deb
-        uses: actions/cache@v6
-        with:
-          path: /tmp/coveralls-deb
-          key: ${{ runner.os }}-coveralls-deb-0.32
-
-      - if: ${{ steps.cache-coveralls-deb.outputs.cache-hit != 'true' }}
-        name: Build Devel-Cover-Report-Coveralls .deb
-        run: |
-          mkdir -p /tmp/coveralls-deb
-          sudo apt-get update && sudo apt-get install -y dh-make-perl libdevel-cover-perl libhttp-tiny-perl libio-socket-ssl-perl libjson-pp-perl libyaml-perl libmodule-build-tiny-perl
-          cd /tmp/coveralls-deb
-          wget -q https://cpan.metacpan.org/authors/id/M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.32.tar.gz
-          tar xzf Devel-Cover-Report-Coveralls-0.32.tar.gz
-          cd Devel-Cover-Report-Coveralls-0.32
-          DEB_BUILD_OPTIONS=nocheck dh-make-perl --build .
-
-      - name: Copy .deb to build context
-        run: |
-          if ls /tmp/coveralls-deb/libdevel-cover-report-coveralls-perl*.deb 1>/dev/null 2>&1; then
-            cp /tmp/coveralls-deb/libdevel-cover-report-coveralls-perl*.deb .
-          else
-            touch libdevel-cover-report-coveralls-perl.deb.dummy
-          fi
-
       - name: Build dev container
         run: |
-          docker build -t munin-dev -f Dockerfile.dev .
+          docker buildx create --driver docker-container --use
+          docker buildx build \
+            --file Dockerfile.dev \
+            --tag munin-dev \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            --load \
+            .
           docker save munin-dev | gzip > /tmp/munin-dev.tar.gz
 
       - name: Upload dev container
@@ -303,13 +291,13 @@ jobs:
 
       - name: Upload to Coveralls
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
         run: |
           dbs=(cover_db-*/)
           dbs=("${dbs[@]%/}")
           primary="${dbs[0]}"
           merges="${dbs[@]:1}"
-          docker run --rm -v $(pwd):/app -e GITHUB_TOKEN munin-dev \
+          docker run --rm -v $(pwd):/app -e COVERALLS_REPO_TOKEN -e GITHUB_TOKEN munin-dev \
             cover -silent -select_re "^lib/Munin|^script/munin" -report coveralls $primary $merges
 
       - name: Upload coverage HTML
